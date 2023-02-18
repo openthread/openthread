@@ -2110,7 +2110,7 @@ class NodeImpl:
         self._expect_done()
 
     def get_br_omr_prefix(self):
-        cmd = 'br omrprefix'
+        cmd = 'br omrprefix local'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
@@ -2124,7 +2124,7 @@ class NodeImpl:
         return omr_prefixes
 
     def get_br_on_link_prefix(self):
-        cmd = 'br onlinkprefix'
+        cmd = 'br onlinkprefix local'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
@@ -2137,12 +2137,12 @@ class NodeImpl:
         return prefixes
 
     def get_br_nat64_prefix(self):
-        cmd = 'br nat64prefix'
+        cmd = 'br nat64prefix local'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
     def get_br_favored_nat64_prefix(self):
-        cmd = 'br favorednat64prefix'
+        cmd = 'br nat64prefix favored'
         self.send_command(cmd)
         return self._expect_command_output()[0].split(' ')[0]
 

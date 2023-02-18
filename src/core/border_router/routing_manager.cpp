@@ -121,6 +121,19 @@ exit:
     return error;
 }
 
+RoutingManager::State RoutingManager::GetState(void) const
+{
+    State state = kStateUninitialized;
+
+    VerifyOrExit(IsInitialized());
+    VerifyOrExit(IsEnabled(), state = kStateDisabled);
+
+    state = IsRunning() ? kStateRunning : kStateStopped;
+
+exit:
+    return state;
+}
+
 void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
 {
     LogInfo("User explicitly set RIO Preference to %s", RoutePreferenceToString(aPreference));
@@ -161,7 +174,7 @@ exit:
     return;
 }
 
-Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
+Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
@@ -172,7 +185,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference)
+Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference) const
 {
     Error error = kErrorNone;
 
@@ -184,12 +197,28 @@ exit:
     return error;
 }
 
-Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix)
+Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix) const
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
     aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
+
+exit:
+    return error;
+}
+
+Error RoutingManager::GetFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix = mOnLinkPrefixManager.GetFavoredDiscoveredPrefix();
+
+    if (aPrefix.GetLength() == 0)
+    {
+        aPrefix = mOnLinkPrefixManager.GetLocalPrefix();
+    }
 
 exit:
     return error;

@@ -113,6 +113,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(aInstance, *this)
     , mNetworkData(aInstance, *this)
     , mUdp(aInstance, *this)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mBr(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     , mTcp(aInstance, *this)
 #endif
@@ -539,221 +542,8 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    /**
-     * @cli br (enable,disable)
-     * @code
-     * br enable
-     * Done
-     * @endcode
-     * @code
-     * br disable
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingSetEnabled
-     */
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        SuccessOrExit(error = otBorderRoutingSetEnabled(GetInstancePtr(), enable));
-    }
-    /**
-     * @cli br omrprefix
-     * @code
-     * br omrprefix
-     * fdfc:1ff5:1512:5622::/64
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetOmrPrefix
-     */
-    else if (aArgs[0] == "omrprefix")
-    {
-        otIp6Prefix omrPrefix;
-
-        SuccessOrExit(error = otBorderRoutingGetOmrPrefix(GetInstancePtr(), &omrPrefix));
-        OutputIp6PrefixLine(omrPrefix);
-    }
-    /**
-     * @cli br favoredomrprefix
-     * @code
-     * br favoredomrprefix
-     * fdfc:1ff5:1512:5622::/64 prf:low
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetFavoredOmrPrefix
-     */
-    else if (aArgs[0] == "favoredomrprefix")
-    {
-        otIp6Prefix       prefix;
-        otRoutePreference preference;
-
-        SuccessOrExit(error = otBorderRoutingGetFavoredOmrPrefix(GetInstancePtr(), &prefix, &preference));
-        OutputIp6Prefix(prefix);
-        OutputLine(" prf:%s", PreferenceToString(preference));
-    }
-    /**
-     * @cli br onlinkprefix
-     * @code
-     * br onlinkprefix
-     * fd41:2650:a6f5:0::/64
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetOnLinkPrefix
-     */
-    else if (aArgs[0] == "onlinkprefix")
-    {
-        otIp6Prefix onLinkPrefix;
-
-        SuccessOrExit(error = otBorderRoutingGetOnLinkPrefix(GetInstancePtr(), &onLinkPrefix));
-        OutputIp6PrefixLine(onLinkPrefix);
-    }
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    /**
-     * @cli br nat64prefix
-     * @code
-     * br nat64prefix
-     * fd14:1078:b3d5:b0b0:0:0::/96
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetNat64Prefix
-     */
-    else if (aArgs[0] == "nat64prefix")
-    {
-        otIp6Prefix nat64Prefix;
-
-        SuccessOrExit(error = otBorderRoutingGetNat64Prefix(GetInstancePtr(), &nat64Prefix));
-        OutputIp6PrefixLine(nat64Prefix);
-    }
-    /**
-     * @cli br favorednat64prefix
-     * @code
-     * br favorednat64prefix
-     * fd14:1078:b3d5:b0b0:0:0::/96 prf:low
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetFavoredNat64Prefix
-     */
-    else if (aArgs[0] == "favorednat64prefix")
-    {
-        otIp6Prefix       prefix;
-        otRoutePreference preference;
-
-        SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(GetInstancePtr(), &prefix, &preference));
-        OutputIp6Prefix(prefix);
-        OutputLine(" prf:%s", PreferenceToString(preference));
-    }
-#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    else if (aArgs[0] == "rioprf")
-    {
-        /**
-         * @cli br rioprf
-         * @code
-         * br rioprf
-         * med
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBorderRoutingGetRouteInfoOptionPreference
-         *
-         */
-        if (aArgs[1].IsEmpty())
-        {
-            OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
-        }
-        /**
-         * @cli br rioprf clear
-         * @code
-         * br rioprf clear
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBorderRoutingClearRouteInfoOptionPreference
-         *
-         */
-        else if (aArgs[1] == "clear")
-        {
-            otBorderRoutingClearRouteInfoOptionPreference(GetInstancePtr());
-        }
-        /**
-         * @cli br rioprf (high,med,low)
-         * @code
-         * br rioprf low
-         * Done
-         * @endcode
-         * @cparam br rioprf [@ca{high}|@ca{med}|@ca{low}]
-         * @par api_copy
-         * #otBorderRoutingSetRouteInfoOptionPreference
-         *
-         */
-        else
-        {
-            otRoutePreference preference;
-
-            SuccessOrExit(error = ParsePreference(aArgs[1], preference));
-            otBorderRoutingSetRouteInfoOptionPreference(GetInstancePtr(), preference);
-        }
-    }
-    /**
-     * @cli br prefixtable
-     * @code
-     * br prefixtable
-     * prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med,
-     * router:ff02:0:0:0:0:0:0:1
-     * prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800,
-     * router:ff02:0:0:0:0:0:0:1
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBorderRoutingGetNextPrefixTableEntry
-     *
-     */
-    else if (aArgs[0] == "prefixtable")
-    {
-        otBorderRoutingPrefixTableIterator iterator;
-        otBorderRoutingPrefixTableEntry    entry;
-
-        otBorderRoutingPrefixTableInitIterator(GetInstancePtr(), &iterator);
-
-        while (otBorderRoutingGetNextPrefixTableEntry(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-        {
-            char string[OT_IP6_PREFIX_STRING_SIZE];
-
-            otIp6PrefixToString(&entry.mPrefix, string, sizeof(string));
-            OutputFormat("prefix:%s, on-link:%s, ms-since-rx:%lu, lifetime:%lu, ", string,
-                         entry.mIsOnLink ? "yes" : "no", ToUlong(entry.mMsecSinceLastUpdate),
-                         ToUlong(entry.mValidLifetime));
-
-            if (entry.mIsOnLink)
-            {
-                OutputFormat("preferred:%lu, ", ToUlong(entry.mPreferredLifetime));
-            }
-            else
-            {
-                OutputFormat("route-prf:%s, ", PreferenceToString(entry.mRoutePreference));
-            }
-
-            otIp6AddressToString(&entry.mRouterAddress, string, sizeof(string));
-            OutputLine("router:%s", string);
-        }
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[]) { return mBr.Process(aArgs); }
+#endif
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
@@ -2479,6 +2269,42 @@ template <> otError Interpreter::Process<Cmd("contextreusedelay")>(Arg aArgs[])
 }
 #endif
 
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+void Interpreter::OutputBorderRouterCounters(void)
+{
+    struct BrCounterName
+    {
+        const otPacketsAndBytes otBorderRoutingCounters::*mPacketsAndBytes;
+        const char                                       *mName;
+    };
+
+    static const BrCounterName kCounterNames[] = {
+        {&otBorderRoutingCounters::mInboundUnicast, "Inbound Unicast"},
+        {&otBorderRoutingCounters::mInboundMulticast, "Inbound Multicast"},
+        {&otBorderRoutingCounters::mOutboundUnicast, "Outbound Unicast"},
+        {&otBorderRoutingCounters::mOutboundMulticast, "Outbound Multicast"},
+    };
+
+    const otBorderRoutingCounters *brCounters = otIp6GetBorderRoutingCounters(GetInstancePtr());
+    Uint64StringBuffer             uint64StringBuffer;
+
+    for (const BrCounterName &counter : kCounterNames)
+    {
+        OutputFormat("%s:", counter.mName);
+        OutputFormat(" Packets %s",
+                     Uint64ToString((brCounters->*counter.mPacketsAndBytes).mPackets, uint64StringBuffer));
+        OutputLine(" Bytes %s", Uint64ToString((brCounters->*counter.mPacketsAndBytes).mBytes, uint64StringBuffer));
+    }
+
+    OutputLine("RA Rx: %lu", ToUlong(brCounters->mRaRx));
+    OutputLine("RA TxSuccess: %lu", ToUlong(brCounters->mRaTxSuccess));
+    OutputLine("RA TxFailed: %lu", ToUlong(brCounters->mRaTxFailure));
+    OutputLine("RS Rx: %lu", ToUlong(brCounters->mRsRx));
+    OutputLine("RS TxSuccess: %lu", ToUlong(brCounters->mRsTxSuccess));
+    OutputLine("RS TxFailed: %lu", ToUlong(brCounters->mRsTxFailure));
+}
+#endif // OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+
 template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2528,38 +2354,7 @@ template <> otError Interpreter::Process<Cmd("counters")>(Arg aArgs[])
     {
         if (aArgs[1].IsEmpty())
         {
-            struct BrCounterName
-            {
-                const otPacketsAndBytes otBorderRoutingCounters::*mPacketsAndBytes;
-                const char                                       *mName;
-            };
-
-            static const BrCounterName kCounterNames[] = {
-                {&otBorderRoutingCounters::mInboundUnicast, "Inbound Unicast"},
-                {&otBorderRoutingCounters::mInboundMulticast, "Inbound Multicast"},
-                {&otBorderRoutingCounters::mOutboundUnicast, "Outbound Unicast"},
-                {&otBorderRoutingCounters::mOutboundMulticast, "Outbound Multicast"},
-            };
-
-            const otBorderRoutingCounters *brCounters = otIp6GetBorderRoutingCounters(GetInstancePtr());
-            Uint64StringBuffer             uint64StringBuffer;
-
-            for (const BrCounterName &counter : kCounterNames)
-            {
-                OutputFormat("%s:", counter.mName);
-                OutputFormat(" Packets %s",
-                             Uint64ToString((brCounters->*counter.mPacketsAndBytes).mPackets, uint64StringBuffer));
-                OutputFormat(" Bytes %s",
-                             Uint64ToString((brCounters->*counter.mPacketsAndBytes).mBytes, uint64StringBuffer));
-                OutputNewLine();
-            }
-
-            OutputLine("RA Rx: %lu", ToUlong(brCounters->mRaRx));
-            OutputLine("RA TxSuccess: %lu", ToUlong(brCounters->mRaTxSuccess));
-            OutputLine("RA TxFailed: %lu", ToUlong(brCounters->mRaTxFailure));
-            OutputLine("RS Rx: %lu", ToUlong(brCounters->mRsRx));
-            OutputLine("RS TxSuccess: %lu", ToUlong(brCounters->mRsTxSuccess));
-            OutputLine("RS TxFailed: %lu", ToUlong(brCounters->mRsTxFailure));
+            OutputBorderRouterCounters();
         }
         /**
          * @cli counters br reset

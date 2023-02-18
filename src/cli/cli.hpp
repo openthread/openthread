@@ -57,6 +57,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_br.hpp"
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_history.hpp"
@@ -102,6 +103,7 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 class Interpreter : public OutputImplementer, public Output
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+    friend class Br;
     friend class Commissioner;
     friend class Joiner;
     friend class NetworkData;
@@ -363,6 +365,9 @@ private:
     static otError ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig);
     static otError ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig);
 #endif
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+    void OutputBorderRouterCounters(void);
+#endif
 
     otError ProcessCommand(Arg aArgs[]);
 
@@ -534,6 +539,10 @@ private:
     Dataset     mDataset;
     NetworkData mNetworkData;
     UdpExample  mUdp;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Br mBr;
+#endif
 
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     TcpExample mTcp;

@@ -52,6 +52,11 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
 }
 
+otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance)
+{
+    return MapEnum(AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetState());
+}
+
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance)
 {
     return static_cast<otRoutePreference>(
@@ -92,6 +97,11 @@ exit:
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));
+}
+
+otError otBorderRoutingGetFavoredOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetFavoredOnLinkPrefix(AsCoreType(aPrefix));
 }
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE

@@ -100,6 +100,19 @@ public:
      */
     static constexpr uint16_t kMaxPublishedPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES + 1 +
                                                       OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_OLD_ON_LINK_PREFIXES + 1;
+
+    /**
+     * This enumeration represents the states of `RoutingManager`.
+     *
+     */
+    enum State : uint8_t
+    {
+        kStateUninitialized = OT_BORDER_ROUTING_STATE_UNINITIALIZED, ///< Uninitialized.
+        kStateDisabled      = OT_BORDER_ROUTING_STATE_DISABLED,      ///< Initialized but disabled.
+        kStateStopped       = OT_BORDER_ROUTING_STATE_STOPPED,       ///< Initialized & enabled, but currently stopped.
+        kStateRunning       = OT_BORDER_ROUTING_STATE_RUNNING,       ///< Initialized, enabled, and running.
+    };
+
     /**
      * This constructor initializes the routing manager.
      *
@@ -133,6 +146,26 @@ public:
      *
      */
     Error SetEnabled(bool aEnabled);
+
+    /**
+     * This method indicates whether or not it is currently running.
+     *
+     * In order for the `RoutingManager` to be running it needs to be initialized and enabled, and device being
+     * attached.
+     *
+     * @retval TRUE  The RoutingManager is currently running.
+     * @retval FALSE The RoutingManager is not running.
+     *
+     */
+    bool IsRunning(void) const { return mIsRunning; }
+
+    /**
+     * This method gets the state of `RoutingManager`.
+     *
+     * @returns The current state of `RoutingManager`.
+     *
+     */
+    State GetState(void) const;
 
     /**
      * This method requests the Border Routing Manager to stop.
@@ -197,7 +230,7 @@ public:
      * @retval  kErrorNone          Successfully retrieved the OMR prefix.
      *
      */
-    Error GetOmrPrefix(Ip6::Prefix &aPrefix);
+    Error GetOmrPrefix(Ip6::Prefix &aPrefix) const;
 
     /**
      * This method returns the currently favored off-mesh-routable (OMR) prefix.
@@ -214,7 +247,7 @@ public:
      * @retval  kErrorNone          Successfully retrieved the OMR prefix.
      *
      */
-    Error GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference);
+    Error GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference) const;
 
     /**
      * This method returns the on-link prefix for the adjacent infrastructure link.
@@ -226,10 +259,23 @@ public:
      * @param[out]  aPrefix  A reference to where the prefix will be output to.
      *
      * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
-     * @retval  kErrorNone          Successfully retrieved the on-link prefix.
+     * @retval  kErrorNone          Successfully retrieved the local on-link prefix.
      *
      */
-    Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
+    Error GetOnLinkPrefix(Ip6::Prefix &aPrefix) const;
+
+    /**
+     * This method returns the favored on-link prefix for the adjacent infrastructure link.
+     *
+     * The favored prefix is either a discovered prefix on the infrastructure link or the local on-link prefix.
+     *
+     * @param[out]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the favored on-link prefix.
+     *
+     */
+    Error GetFavoredOnLinkPrefix(Ip6::Prefix &aPrefix) const;
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     /**
@@ -368,15 +414,6 @@ public:
      */
     void HandleSrpServerAutoEnableMode(void);
 #endif
-
-    /**
-     * Gets the state of RoutingManager.
-     *
-     * @retval TRUE  The RoutingManager is currently running.
-     * @retval FALSE The RoutingManager is not running.
-     *
-     */
-    bool IsRunning(void) const { return mIsRunning; }
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -683,6 +720,7 @@ private:
         void               Stop(void);
         void               Evaluate(void);
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
+        const Ip6::Prefix &GetFavoredDiscoveredPrefix(void) const { return mFavoredDiscoveredPrefix; }
         bool               IsInitalEvaluationDone(void) const;
         void               HandleDiscoveredPrefixTableChanged(void);
         bool               ShouldPublish(NetworkData::ExternalRouteConfig &aRouteConfig) const;
@@ -923,6 +961,8 @@ private:
 };
 
 } // namespace BorderRouter
+
+DefineMapEnum(otBorderRoutingState, BorderRouter::RoutingManager::State);
 
 } // namespace ot
 

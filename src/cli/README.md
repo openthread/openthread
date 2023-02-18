@@ -23,7 +23,7 @@ Done
 
 - [ba](#ba)
 - [bbr](#bbr)
-- [br](#br)
+- [br](README_BR.md)
 - [bufferinfo](#bufferinfo)
 - [ccathreshold](#ccathreshold)
 - [channel](#channel)
@@ -350,71 +350,6 @@ Print border agent state.
 ```bash
 > ba state
 Started
-Done
-```
-
-### br
-
-Enbale/disable the Border Routing functionality.
-
-```bash
-> br enable
-Done
-```
-
-```bash
-> br disable
-Done
-```
-
-### br omrprefix
-
-Get the randomly generated off-mesh-routable prefix of the Border Router.
-
-```bash
-> br omrprefix
-fdfc:1ff5:1512:5622::/64
-Done
-```
-
-### br onlinkprefix
-
-Get the randomly generated on-link prefix of the Border Router.
-
-```bash
-> br onlinkprefix
-fd41:2650:a6f5:0::/64
-Done
-```
-
-### br nat64prefix
-
-Get the local NAT64 prefix of the Border Router.
-
-`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required.
-
-```bash
-> br nat64prefix
-fd14:1078:b3d5:b0b0:0:0::/96
-Done
-```
-
-### br rioprf
-
-Get the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
-
-```bash
-> br rioprf
-med
-Done
-```
-
-### br rioprf \<prf\>
-
-Set the preference (which may be 'high', 'med', or 'low') to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
-
-```bash
-> br rioprf low
 Done
 ```
 
