@@ -82,7 +82,7 @@ public:
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
      * This class represents an upstream query transaction. The methods should only be used by
-     * Dns::ServiceDiscovery::Server.
+     * `Dns::ServiceDiscovery::Server`.
      *
      */
     class UpstreamQueryTransaction : public otPlatDnsUpstreamQuery
@@ -100,7 +100,7 @@ public:
         /**
          * This method returns the time when the transaction expires.
          *
-         * @retval  The expire time of the transaction.
+         * @returns The expire time of the transaction.
          *
          */
         TimeMilli GetExpireTime(void) const { return mExpireTime; }
@@ -200,10 +200,11 @@ public:
      * The Transaction will be released.
      *
      * @param[in] aQueryTransaction    A reference to upstream DNS query transaction.
-     * @param[in] aResponseMessage     A reference to response UDP message, should be allocated from Udp::NewMessage.
+     * @param[in] aResponseMessage     A pointer to response UDP message, should be allocated from Udp::NewMessage.
+     *                                 Passing a nullptr means close the transaction without a response.
      *
      */
-    void OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction, Message &aResponseMessage);
+    void OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Message *aResponseMessage);
 
     /**
      * This method enables or disables forwarding DNS queries to platform DNS upstream API.

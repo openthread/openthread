@@ -60,13 +60,13 @@ extern "C" {
 typedef struct otPlatDnsUpstreamQuery otPlatDnsUpstreamQuery;
 
 /**
- * Starts a transaction of upstream query.
+ * Starts an upstream query transaction.
  *
  * - In success case (and errors represented by DNS protocol messages), the platform is expected to call
  *   `otPlatDnsUpstreamQueryDone`.
  * - The OpenThread core may cancel a (possibly timeout) query transaction by calling
- *   `otPlatDnsCancelUpstreamQuery`, the platform should not call `otPlatDnsUpstreamQueryDone` on a
- *   calcelled transaction.
+ *   `otPlatDnsCancelUpstreamQuery`, the platform must not call `otPlatDnsUpstreamQueryDone` on a
+ *   cancelled transaction.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
@@ -78,7 +78,7 @@ void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *
 /**
  * Cancels a transaction of upstream query.
  *
- * The platform must not call `otPlatDnsUpstreamQueryDone` on the same transaction after this function is called.
+ * The platform must call `otPlatDnsUpstreamQueryDone` to release the resources.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
@@ -87,14 +87,17 @@ void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *
 void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn);
 
 /**
- * The platform calls this method to notify OpenThread of a completed DNS query.
+ * The platform calls this function to finish DNS query.
  *
  * The transaction will be released, so the platform must not call on the same transaction twice. This function passes
  * the ownership of `aResponse` to OpenThread stack.
  *
+ * Platform can pass a nullptr to close a transaction without a response.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aTxn       A pointer to the opaque DNS query transaction object.
- * @param[in] aResponse  A message buffer of the DNS response payload.
+ * @param[in] aResponse  A message buffer of the DNS response payload or `nullptr` to close a transaction without a
+ *                       response.
  *
  */
 extern void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse);

@@ -44,24 +44,9 @@
 
 using namespace ot;
 
-OT_TOOL_WEAK void otPlatDnsStartUpstreamQuery(otInstance             *aInstance,
-                                              otPlatDnsUpstreamQuery *aTxn,
-                                              const otMessage        *aQuery)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aTxn);
-    OT_UNUSED_VARIABLE(aQuery);
-}
-
-OT_TOOL_WEAK void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aTxn);
-}
-
 void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse)
 {
-    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryResponse(AsCoreType(aTxn),
-                                                                                              AsCoreType(aResponse));
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryDone(AsCoreType(aTxn),
+                                                                                          AsCoreTypePtr(aResponse));
 }
 #endif

@@ -33,6 +33,7 @@
 
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/dns.h>
 #include <openthread/platform/dso_transport.h>
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>

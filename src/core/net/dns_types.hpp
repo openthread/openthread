@@ -991,14 +991,15 @@ public:
     static bool IsSubDomainOf(const char *aName, const char *aDomain);
 
     /**
-     * This static method tests the two DNS name are the same domain.
+     * This static method tests if the two DNS name are the same domain.
      *
      * Both @p aDomain1 and @p aDomain2 can end without dot ('.').
      *
      * @param[in]  aDomain1  The dot-separated name.
      * @param[in]  aDomain2  The dot-separated domain.
      *
-     * @returns  TRUE if two DNS name are the same domain., FALSE if not.
+     * @retval  TRUE   If the two DNS names are the same domain.
+     * @retval  FALSE  If the two DNS names are not the same domain.
      *
      */
     static bool IsSameDomain(const char *aDomain1, const char *aDomain2);

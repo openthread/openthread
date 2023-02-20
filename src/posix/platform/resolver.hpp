@@ -73,7 +73,7 @@ public:
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in,out]  aErrirFdSet  A reference to the error file descriptors.
+     * @param[in,out]  aErrorFdSet  A reference to the error file descriptors.
      * @param[in,out]  aMaxFd       A reference to the max file descriptor.
      * @param[in,out]  aTimeout     A reference to the timeout.
      *
@@ -84,7 +84,7 @@ public:
      * Handles the result of select.
      *
      * @param[in]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in]  aErrirFdSet  A reference to the error file descriptors.
+     * @param[in]  aErrorFdSet  A reference to the error file descriptors.
      *
      */
     void Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet);

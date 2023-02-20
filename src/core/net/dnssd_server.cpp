@@ -901,18 +901,21 @@ exit:
     return ret;
 }
 
-void Server::OnUpstreamQueryResponse(UpstreamQueryTransaction &aQueryTransaction, Message &aResponseMessage)
+void Server::OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Message *aResponseMessage)
 {
-    Error    error   = kErrorNone;
-    Message *message = &aResponseMessage;
+    Error error = kErrorNone;
 
     VerifyOrExit(aQueryTransaction.IsValid(), error = kErrorInvalidArgs);
-    SuccessOrExit(error = mSocket.SendTo(*message, aQueryTransaction.GetMessageInfo()));
+
+    if (aResponseMessage != nullptr)
+    {
+        error = mSocket.SendTo(*aResponseMessage, aQueryTransaction.GetMessageInfo());
+    }
     ResetUpstreamQueryTransaction(aQueryTransaction, error);
     ResetTimer();
 
 exit:
-    FreeMessageOnError(message, error);
+    FreeMessageOnError(aResponseMessage, error);
 }
 
 Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
@@ -1268,7 +1271,6 @@ void Server::HandleTimer(void)
         if (query.GetExpireTime() <= now)
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
-            ResetUpstreamQueryTransaction(query, kErrorResponseTimeout);
         }
     }
 #endif

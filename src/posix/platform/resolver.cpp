@@ -142,6 +142,8 @@ void Resolver::Cancel(otPlatDnsUpstreamQuery *aTxn)
     {
         CloseTransaction(txn);
     }
+
+    otPlatDnsUpstreamQueryDone(gInstance, aTxn, nullptr);
 }
 
 Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn)
