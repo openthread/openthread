@@ -2588,7 +2588,7 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::Snprintf(char *aDest, u
     len = vsnprintf(aDest, static_cast<size_t>(aSize), aFormat, args);
     va_end(args);
 
-    return (len < 0) ? 0 : (static_cast<uint32_t>(len) > aSize - 1 ? aSize - 1 : static_cast<uint32_t>(len));
+    return (len < 0) ? 0 : Min(static_cast<uint32_t>(len), aSize - 1);
 }
 
 template <typename InterfaceType, typename ProcessContextType>

@@ -296,6 +296,7 @@ void PrepareService1(Srp::Client::Service &aService)
            {kTxtKey3, kTxtValue3, sizeof(kTxtValue3)},
     };
 
+    memset(&aService, 0, sizeof(aService));
     aService.mName          = kServiceName;
     aService.mInstanceName  = kInstanceLabel;
     aService.mSubTypeLabels = kSubLabels;
@@ -313,6 +314,7 @@ void PrepareService2(Srp::Client::Service &aService)
     static const char  kSub4[]           = "_44444444";
     static const char *kSubLabels2[]     = {kSub4, nullptr};
 
+    memset(&aService, 0, sizeof(aService));
     aService.mName          = kService2Name;
     aService.mInstanceName  = kInstance2Label;
     aService.mSubTypeLabels = kSubLabels2;

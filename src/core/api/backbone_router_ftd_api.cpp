@@ -166,8 +166,7 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
         aTimeout = config.mMlrTimeout;
     }
 
-    aTimeout =
-        aTimeout > static_cast<uint32_t>(Mle::kMlrTimeoutMax) ? static_cast<uint32_t>(Mle::kMlrTimeoutMax) : aTimeout;
+    aTimeout = Min(aTimeout, Mle::kMlrTimeoutMax);
     aTimeout = Time::SecToMsec(aTimeout);
 
     return AsCoreType(aInstance).Get<BackboneRouter::MulticastListenersTable>().Add(AsCoreType(aAddress),

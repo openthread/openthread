@@ -766,7 +766,7 @@ Message *Message::Clone(uint16_t aLength) const
     SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
-    offset = GetOffset() < aLength ? GetOffset() : aLength;
+    offset = Min(GetOffset(), aLength);
     messageCopy->SetOffset(offset);
 
     messageCopy->SetSubType(GetSubType());
