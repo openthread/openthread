@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements the DNS platform callbacks into OpenThread and default/weak DNS platform APIs.
+ *   This file implements the DNS platform callbacks into OpenThread.
  */
 
 #include "openthread-core-config.h"
