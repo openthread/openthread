@@ -3116,7 +3116,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * @endcode
          * @par api_copy
          * #otDnsSetNameCompressionEnabled
-         * @cparam dns compression [{@ca{enable|disable}]
+         * @cparam dns compression [@ca{enable|disable}]
          * @par
          * Set the "DNS name compression" mode.
          * @par
@@ -6180,11 +6180,21 @@ template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
     const char *version = otPlatRadioGetVersionString(GetInstancePtr());
 
     VerifyOrExit(version != otGetVersionString(), error = OT_ERROR_NOT_IMPLEMENTED);
-
+    /**
+     * @cli rcp version
+     * @code
+     * rcp version
+     * OPENTHREAD/20191113-00825-g82053cc9d-dirty; SIMULATION; Jun  4 2020 17:53:16
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioGetVersionString
+     */
     if (aArgs[0] == "version")
     {
         OutputLine("%s", version);
     }
+  
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -6193,9 +6203,19 @@ template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 exit:
     return error;
 }
-
+/**
+ * @cli region
+ * @code
+ * region
+ * US
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otPlatRadioGetRegion
+ */
 template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 {
+
     otError  error = OT_ERROR_NONE;
     uint16_t regionCode;
 
@@ -6204,7 +6224,19 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
         SuccessOrExit(error = otPlatRadioGetRegion(GetInstancePtr(), &regionCode));
         OutputLine("%c%c", regionCode >> 8, regionCode & 0xff);
     }
+    /**
+     * @cli region (set)
+     * @code
+     * region US
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otPlatRadioSetRegion
+     * @par
+     * Changing this can affect the transmit power limit.
+     */
     else
+    
     {
         VerifyOrExit(aArgs[0].GetLength() == 2, error = OT_ERROR_INVALID_ARGS);
 
@@ -6218,13 +6250,34 @@ exit:
 }
 
 #if OPENTHREAD_FTD
+/**
+ * @cli releaserouterid (routerid)
+ * @code
+ * releaserouterid 16
+ * Done
+ * @endcode
+ * @cparam releaserouterid [@ca{routerid}]
+ * @par api_copy
+ * #otThreadReleaseRouterId
+ */
 template <> otError Interpreter::Process<Cmd("releaserouterid")>(Arg aArgs[])
+
 {
     return ProcessSet(aArgs, otThreadReleaseRouterId);
 }
 #endif
-
+/**
+ * @cli rloc16
+ * @code
+ * rloc16
+ * 0xdead
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetRloc16
+ */
 template <> otError Interpreter::Process<Cmd("rloc16")>(Arg aArgs[])
+
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -6282,7 +6335,17 @@ exit:
 template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli route
+     * @code
+     * route
+     * 2001:dead:beef:cafe::/64 s med
+     * Done
+     * @endcode
+     * @sa otBorderRouterGetNextRoute
+     * @par
+     * Get the external route list in the local Network Data.
+     */
     if (aArgs[0].IsEmpty())
     {
         otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -6293,6 +6356,23 @@ template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
             mNetworkData.OutputRoute(config);
         }
     }
+    /**
+     * @cli route add
+     * @code
+     * route add 2001:dead:beef:cafe::/64 s med
+     * Done
+     * @endcode
+     * @par
+     * For parameters, use:
+             * *    s: Stable flag
+             * *    n: NAT64 flag
+             * *    prf: Default Router Preference, [high, med, low].
+     * @cparam route add @ca{prefix} [@ca{sn}] [@ca{high}|@ca{med}|@ca{low}]
+     * @par api_copy
+     * #otExternalRouteConfig
+     * @par
+     * Add a valid external route to the Network Data.
+     */
     else if (aArgs[0] == "add")
     {
         otExternalRouteConfig config;
@@ -6300,6 +6380,16 @@ template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
         SuccessOrExit(error = ParseRoute(aArgs + 1, config));
         error = otBorderRouterAddRoute(GetInstancePtr(), &config);
     }
+    /**
+     * @cli route remove
+     * @code
+     * route remove 2001:dead:beef:cafe::/64
+     * Done
+     * @endcode
+     * @cparam route remove [@ca{prefix}]
+     * @par api_copy
+     * #otBorderRouterRemoveRoute
+     */
     else if (aArgs[0] == "remove")
     {
         otIp6Prefix prefix;
@@ -6324,9 +6414,32 @@ template <> otError Interpreter::Process<Cmd("router")>(Arg aArgs[])
     otRouterInfo routerInfo;
     uint16_t     routerId;
     bool         isTable;
-
+    /**
+     * @cli router table
+     * @code
+     * router table
+     * | ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link |
+     * +----+--------+----------+-----------+-------+--------+-----+------------------+------+
+     * | 22 | 0x5800 |       63 |         0 |     0 |      0 |   0 | 0aeb8196c9f61658 |    0 |
+     * | 49 | 0xc400 |       63 |         0 |     3 |      3 |   0 | faa1c03908e2dbf2 |    1 |
+     * Done
+     * @endcode
+     * @sa otThreadGetRouterInfo
+     * @par
+     * Prints a list of routers in a table format.
+     */
     isTable = (aArgs[0] == "table");
-
+    /**
+     * @cli router list
+     * @code
+     * router list
+     * 8 24 50
+     * Done
+     * @endcode
+     * @sa otThreadGetRouterInfo
+     * @par
+     * List allocated Router IDs.
+     */
     if (isTable || (aArgs[0] == "list"))
     {
         uint8_t maxRouterId;
@@ -6375,7 +6488,43 @@ template <> otError Interpreter::Process<Cmd("router")>(Arg aArgs[])
         OutputNewLine();
         ExitNow();
     }
-
+    /**
+     * @cli router (id)
+     * @code
+     * router 50
+     * Alloc: 1
+     * Router ID: 50
+     * Rloc: c800
+     * Next Hop: c800
+     * Link: 1
+     * Ext Addr: e2b3540590b0fd87
+     * Cost: 0
+     * Link Quality In: 3
+     * Link Quality Out: 3
+     * Age: 3
+     * Done
+     * @endcode
+     * @code
+     * router 0xc800
+     * Alloc: 1
+     * Router ID: 50
+     * Rloc: c800
+     * Next Hop: c800
+     * Link: 1
+     * Ext Addr: e2b3540590b0fd87
+     * Cost: 0
+     * Link Quality In: 3
+     * Link Quality Out: 3
+     * Age: 7
+     * Done
+     * @endcode
+     * @cparam router [@ca{id}]
+     * @par api_copy
+     * #otThreadGetRouterInfo
+     * @par
+     * Print diagnostic information for a Thread Router. The id may be a Router ID or
+     * an RLOC16.
+     */
     SuccessOrExit(error = aArgs[0].ParseAsUint16(routerId));
     SuccessOrExit(error = otThreadGetRouterInfo(GetInstancePtr(), routerId, &routerInfo));
 
@@ -6402,22 +6551,63 @@ template <> otError Interpreter::Process<Cmd("router")>(Arg aArgs[])
 exit:
     return error;
 }
-
+/**
+ * @cli routerdowngradethreshold (get,set)
+ * @code routerdowngradethreshold
+ * 23
+ * Done
+ * @endcode
+ * @code routerdowngradethreshold 23
+ * Done
+ * @endcode
+ * @cparam routerdowngradethreshold [@ca{threshold}]
+ * @par
+ * Gets or sets the ROUTER_DOWNGRADE_THRESHOLD value.
+ * @sa otThreadGetRouterDowngradeThreshold
+ * @sa otThreadSetRouterDowngradeThreshold
+ */
 template <> otError Interpreter::Process<Cmd("routerdowngradethreshold")>(Arg aArgs[])
 {
+
     return ProcessGetSet(aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
 
 template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli routereligible
+     * @code
+     * routereligible
+     * Enabled
+     * Done
+     * @endcode
+     * @sa otThreadIsRouterEligible
+     * @par
+     * Indicates whether the router role is enabled or disabled.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(otThreadIsRouterEligible(GetInstancePtr()));
     }
+    /**
+     * @cli routereligible (enable,disable)
+     * @code
+     * routereligible enable
+     * Done 
+     * @endcode
+     * @code
+     * routereligible disable
+     * Done
+     * @endcode
+     * @cparam routereligible [@ca{enable|disable}]
+     * @sa otThreadSetRouterEligible
+     * @par
+     * Enables or disables the router role.
+     */
     else
     {
+
         bool enable;
 
         SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
@@ -6427,22 +6617,72 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
 exit:
     return error;
 }
-
+/**
+ * @cli routerselectionjitter
+ * @code
+ * routerselectionjitter
+ * 120
+ * Done
+ * @endcode
+ * @code
+ * routerselectionjitter 120
+ * Done
+ * @endcode
+ * @cparam routerselectionjitter [@ca{jitter}]
+ * @par
+ * Gets or sets the ROUTER_SELECTION_JITTER value.
+ * @sa otThreadGetRouterSelectionJitter
+ * @sa otThreadSetRouterSelectionJitter
+ */ 
 template <> otError Interpreter::Process<Cmd("routerselectionjitter")>(Arg aArgs[])
 {
+
     return ProcessGetSet(aArgs, otThreadGetRouterSelectionJitter, otThreadSetRouterSelectionJitter);
 }
-
+/**
+ * @cli routerupgradethreshold (get,set)
+ * @code
+ * routerupgradethreshold
+ * 16
+ * Done
+ * @endcode
+ * @code
+ * routerupgradethreshold 16
+ * Done
+ * @endcode
+ * @cparam routerupgradethreshold [@ca{threshold}]
+ * @par
+ * Gets or sets the ROUTER_UPGRADE_THRESHOLD value.
+ * @sa otThreadGetRouterUpgradeThreshold
+ * @sa otThreadSetRouterUpgradeThreshold
+ */
 template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArgs[])
 {
+
     return ProcessGetSet(aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
-
+/**
+ * @cli childrouterlinks (get,set)
+ * @code
+ * childrouterlinks
+ * 16
+ * Done
+ * @endcode
+ * @code
+ * childrouterlinks 16
+ * Done
+ * @endcode
+ * @cparam childrouterlinks [@ca{links}]
+ * @par
+ * Gets or sets the MLE_CHILD_ROUTER_LINKS value.
+ * @sa otThreadGetChildRouterLinks
+ * @sa otThreadSetChildRouterLinks
+ */
 template <> otError Interpreter::Process<Cmd("childrouterlinks")>(Arg aArgs[])
 {
+
     return ProcessGetSet(aArgs, otThreadGetChildRouterLinks, otThreadSetChildRouterLinks);
 }
-
 #endif // OPENTHREAD_FTD
 
 template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
