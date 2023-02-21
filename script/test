@@ -358,13 +358,22 @@ do_build_otbr_docker()
         if [[ -z ${LOCAL_OTBR_DIR} ]]; then
             ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
         else
-            cp -r "${LOCAL_OTBR_DIR}"/* "${otbrdir}"
-            rm -rf "${otbrdir}"/build
+            rsync -r \
+                --exclude=third_party/openthread/repo \
+                --exclude=.git \
+                --exclude=build \
+                "${LOCAL_OTBR_DIR}/." \
+                "${otbrdir}"
         fi
+
         cd "${otbrdir}"
         rm -rf third_party/openthread/repo
-        cp -r "${otdir}" third_party/openthread/repo
+        rsync -r \
+            --exclude=build \
+            "${otdir}/." \
+            third_party/openthread/repo
         rm -rf .git
+
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
             "${docker_build_args[@]}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"

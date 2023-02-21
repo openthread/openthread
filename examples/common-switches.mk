@@ -86,6 +86,7 @@ SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
 SRP_CLIENT                ?= 0
 SRP_SERVER                ?= 0
+TCP                       ?= 0
 THREAD_VERSION            ?= 1.3
 TIME_SYNC                 ?= 0
 TREL                      ?= 0
@@ -327,6 +328,10 @@ endif
 
 ifeq ($(SRP_SERVER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1
+endif
+
+ifeq ($(TCP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TCP_ENABLE=1
 endif
 
 ifeq ($(THREAD_VERSION),1.1)
