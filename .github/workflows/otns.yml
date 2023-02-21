@@ -83,7 +83,7 @@ jobs:
           cd /tmp/otns
           ./script/test py-unittests
         )
-    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
         name: unittests-pcaps
@@ -93,7 +93,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       with:
         name: cov-otns-unittests
         path: tmp/coverage.info
@@ -123,7 +123,7 @@ jobs:
             cd /tmp/otns
             ./script/test py-examples
           )
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: ${{ failure() }}
         with:
           name: examples-pcaps
@@ -133,7 +133,7 @@ jobs:
       - name: Generate Coverage
         run: |
           ./script/test generate_coverage gcc
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: cov-otns-examples
           path: tmp/coverage.info
@@ -186,7 +186,7 @@ jobs:
             cd /tmp/otns
             ./script/test stress-tests ${{ matrix.suite }}
           )
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         if: ${{ failure() }}
         with:
           name: stress-tests-${{ matrix.suite }}-pcaps
@@ -196,7 +196,7 @@ jobs:
       - name: Generate Coverage
         run: |
           ./script/test generate_coverage gcc
-      - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
           name: cov-otns-stress-tests-${{ matrix.suite }}
           path: tmp/coverage.info
