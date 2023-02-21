@@ -78,7 +78,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
  *
- * Define to 1 to enable upstream forwarding support. The platform should implement `otPlatDnsStartUpstreamQuery` and
+ * Define to 1 to enable upstream forwarding support. The platform MUST implement `otPlatDnsStartUpstreamQuery` and
  * `otPlatDnsCancelUpstreamQuery`.
  *
  */
