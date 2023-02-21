@@ -363,7 +363,7 @@ void RoutingManager::HandleReceived(const InfraIf::Icmp6Packet &aPacket, const I
         HandleRouterSolicit(aPacket, aSrcAddress);
         break;
     case Ip6::Icmp::Header::kTypeNeighborAdvert:
-        HandleNeighborAdvertisement(aPacket, aSrcAddress);
+        HandleNeighborAdvertisement(aPacket);
         break;
     default:
         break;
@@ -943,14 +943,14 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
 }
 
-void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
+void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket)
 {
     const Ip6::Nd::NeighborAdvertMessage *naMsg;
 
     VerifyOrExit(aPacket.GetLength() >= sizeof(naMsg));
     naMsg = reinterpret_cast<const Ip6::Nd::NeighborAdvertMessage *>(aPacket.GetBytes());
 
-    mDiscoveredPrefixTable.ProcessNeighborAdvertMessage(*naMsg, aSrcAddress);
+    mDiscoveredPrefixTable.ProcessNeighborAdvertMessage(*naMsg);
 
 exit:
     return;
@@ -1715,14 +1715,14 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void) { mSignalTask.Post(); }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessNeighborAdvertMessage(
-    const Ip6::Nd::NeighborAdvertMessage &aNaMessage,
-    const Ip6::Address                   &aSrcAddress)
+    const Ip6::Nd::NeighborAdvertMessage &aNaMessage)
 {
-    Router *router = mRouters.FindMatching(aSrcAddress);
+    Router *router;
 
-    VerifyOrExit(router != nullptr);
     VerifyOrExit(aNaMessage.IsValid());
-    VerifyOrExit(aNaMessage.GetTargetAddress() == router->mAddress);
+
+    router = mRouters.FindMatching(aNaMessage.GetTargetAddress());
+    VerifyOrExit(router != nullptr);
 
     LogInfo("Received NA from router %s", router->mAddress.ToString().AsCString());
 
