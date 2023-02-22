@@ -183,8 +183,7 @@ public:
         mTxFrame802154.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
         mTxFrame802154.SetIsHeaderUpdated(false);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        mTxFrame802154.SetTxDelay(0);
-        mTxFrame802154.SetTxDelayBaseTime(0);
+        mTxFrame802154.SetTxTime(0);
 #endif
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

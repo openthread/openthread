@@ -1980,21 +1980,20 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
     error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
-                        SPINEL_DATATYPE_UINT8_S                                   // Channel
-                            SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
-                                SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
-                                        SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
-                                            SPINEL_DATATYPE_BOOL_S                // IsARetx
-                                                SPINEL_DATATYPE_BOOL_S            // SkipAes
-                                                    SPINEL_DATATYPE_UINT32_S      // TxDelay
-                                                        SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
+                    SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
+                        SPINEL_DATATYPE_UINT8_S                               // Channel
+                            SPINEL_DATATYPE_UINT8_S                           // MaxCsmaBackoffs
+                                SPINEL_DATATYPE_UINT8_S                       // MaxFrameRetries
+                                    SPINEL_DATATYPE_BOOL_S                    // CsmaCaEnabled
+                                        SPINEL_DATATYPE_BOOL_S                // IsHeaderUpdated
+                                            SPINEL_DATATYPE_BOOL_S            // IsARetx
+                                                SPINEL_DATATYPE_BOOL_S        // SkipAes
+                                                    SPINEL_DATATYPE_UINT32_S, // TxTime
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
                     mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
                     mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
-                    mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+                    mTransmitFrame->mInfo.mTxInfo.mTxTime);
 
     if (error == OT_ERROR_NONE)
     {
@@ -2941,21 +2940,20 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
             bool isARetx;
             bool skipAes;
 
-            unpacked = spinel_datatype_unpack(
-                data, len,
-                SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
-                    SPINEL_DATATYPE_UINT8_S                                   // Channel
-                        SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
-                            SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
-                                SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
-                                    SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
-                                        SPINEL_DATATYPE_BOOL_S                // IsARetx
-                                            SPINEL_DATATYPE_BOOL_S            // SkipAes
-                                                SPINEL_DATATYPE_UINT32_S      // TxDelay
-                                                    SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
-                &frame.mPsdu, &frame.mLength, &frame.mChannel, &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
-                &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated, &isARetx, &skipAes,
-                &frame.mInfo.mTxInfo.mTxDelay, &frame.mInfo.mTxInfo.mTxDelayBaseTime);
+            unpacked = spinel_datatype_unpack(data, len,
+                                              SPINEL_DATATYPE_DATA_WLEN_S                        // Frame data
+                                                  SPINEL_DATATYPE_UINT8_S                        // Channel
+                                                      SPINEL_DATATYPE_UINT8_S                    // MaxCsmaBackoffs
+                                                          SPINEL_DATATYPE_UINT8_S                // MaxFrameRetries
+                                                              SPINEL_DATATYPE_BOOL_S             // CsmaCaEnabled
+                                                                  SPINEL_DATATYPE_BOOL_S         // IsHeaderUpdated
+                                                                      SPINEL_DATATYPE_BOOL_S     // IsARetx
+                                                                          SPINEL_DATATYPE_BOOL_S // SkipAes
+                                                                              SPINEL_DATATYPE_UINT32_S, // TxTime
+                                              &frame.mPsdu, &frame.mLength, &frame.mChannel,
+                                              &frame.mInfo.mTxInfo.mMaxCsmaBackoffs,
+                                              &frame.mInfo.mTxInfo.mMaxFrameRetries, &csmaCaEnabled, &isHeaderUpdated,
+                                              &isARetx, &skipAes, &frame.mInfo.mTxInfo.mTxTime);
 
             VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
             start += Snprintf(start, static_cast<uint32_t>(end - start),
@@ -2965,10 +2963,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelFrame(const uint8_
 
             start = buf;
             start += Snprintf(start, static_cast<uint32_t>(end - start),
-                              "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u"
-                              ", txDelay:%u, txDelayBase:%u",
-                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxDelay,
-                              frame.mInfo.mTxInfo.mTxDelayBaseTime);
+                              "... csmaCaEnabled:%u, isHeaderUpdated:%u, isARetx:%u, skipAes:%u, txTime:%u",
+                              csmaCaEnabled, isHeaderUpdated, isARetx, skipAes, frame.mInfo.mTxInfo.mTxTime);
         }
     }
     break;
