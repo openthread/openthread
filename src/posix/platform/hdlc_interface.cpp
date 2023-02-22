@@ -139,7 +139,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
 }
 
-void HdlcInterface::OnRcpReset(void) { mHdlcDecoder.Reset(); }
+void HdlcInterface::ResetStates(void) { mHdlcDecoder.Reset(); }
 
 otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {

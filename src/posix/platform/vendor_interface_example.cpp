@@ -101,10 +101,12 @@ void VendorInterface::Deinit(void)
 
 uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
-void VendorInterface::OnRcpReset(void)
+void VendorInterface::ResetStates(void)
 {
     // TODO: Implement vendor code here.
 }
+
+otError VendorInterface::HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
 void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {

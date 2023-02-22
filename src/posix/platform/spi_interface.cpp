@@ -85,7 +85,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-void SpiInterface::OnRcpReset(void)
+void SpiInterface::ResetStates(void)
 {
     mSpiTxIsReady         = false;
     mSpiTxRefusedCount    = 0;
@@ -95,9 +95,12 @@ void SpiInterface::OnRcpReset(void)
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
+}
 
+otError SpiInterface::HardwareReset(void)
+{
     TriggerReset();
-    usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
+    return OT_ERROR_NONE;
 }
 
 otError SpiInterface::Init(const Url::Url &aRadioUrl)
@@ -108,7 +111,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint8_t     spiGpioResetLine   = 0;
     uint8_t     spiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
     uint32_t    spiSpeed           = SPI_IOC_WR_MAX_SPEED_HZ;
-    uint32_t    spiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
@@ -145,10 +147,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     {
         spiSpeed = static_cast<uint32_t>(atoi(value));
     }
-    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
-    {
-        spiResetDelay = static_cast<uint32_t>(atoi(value));
-    }
     if ((value = aRadioUrl.GetValue("spi-cs-delay")))
     {
         spiCsDelay = static_cast<uint16_t>(atoi(value));
@@ -164,7 +162,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
 
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
 
-    mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;
@@ -181,12 +178,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
 
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
     InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
-
-    // Reset RCP chip.
-    TriggerReset();
-
-    // Waiting for the RCP chip starts up.
-    usleep(static_cast<useconds_t>(spiResetDelay) * kUsecPerMsec);
 
     return OT_ERROR_NONE;
 }

@@ -158,16 +158,25 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method is called when RCP failure detected and resets internal states of the interface.
+     * This method resets internal states of the interface.
      *
      */
-    void OnRcpReset(void);
+    void ResetStates(void);
 
     /**
      * This method is called when RCP is reset to recreate the connection with it.
      *
      */
     otError ResetConnection(void);
+
+    /**
+     * This method hardware resets the RCP.
+     *
+     * @retval OT_ERROR_NONE             Successfully hardware reseted the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
+     *
+     */
+    otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     /**
      * This method returns the RCP interface metrics.

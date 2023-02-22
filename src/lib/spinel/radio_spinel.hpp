@@ -114,14 +114,13 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
      *                                         (only used when attempts to upgrade from NCP to RCP mode),
      *                                         FALSE otherwise.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
+    void Init(bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
@@ -962,6 +961,7 @@ private:
 
     static void HandleReceivedFrame(void *aContext);
 
+    void    ResetRcp(void);
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsMinHostRcpApiVersion);
@@ -998,7 +998,8 @@ private:
                                         spinel_prop_key_t aKey,
                                         const char       *aFormat,
                                         va_list           aArgs);
-    otError WaitResponse(void);
+    otError WaitResponse(bool aWaitingReset = false);
+    otError WaitForResetReason(void) { return WaitResponse(true); }
     otError SendCommand(uint32_t          aCommand,
                         spinel_prop_key_t aKey,
                         spinel_tid_t      aTid,
@@ -1094,8 +1095,7 @@ private:
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
-    bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
-    int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
+    int16_t mRcpFailureCount; ///< Count of consecutive RCP failures.
 
     // Properties set by core.
     uint8_t      mKeyIdMode;
