@@ -102,6 +102,7 @@ ot_platform_headers                     = \
     openthread/platform/crypto.h          \
     openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \
+    openthread/platform/dns.h             \
     openthread/platform/dso_transport.h   \
     openthread/platform/entropy.h         \
     openthread/platform/flash.h           \

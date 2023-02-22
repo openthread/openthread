@@ -687,6 +687,11 @@ exit:
     return match;
 }
 
+bool Name::IsSameDomain(const char *aDomain1, const char *aDomain2)
+{
+    return IsSubDomainOf(aDomain1, aDomain2) && IsSubDomainOf(aDomain2, aDomain1);
+}
+
 Error ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
 {
     Error error = kErrorNone;

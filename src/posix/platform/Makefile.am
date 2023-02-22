@@ -62,6 +62,7 @@ libopenthread_posix_a_SOURCES             = \
     power.cpp                               \
     power_updater.cpp                       \
     radio.cpp                               \
+    resolver.cpp                            \
     radio_url.cpp                           \
     settings.cpp                            \
     spi_interface.cpp                       \

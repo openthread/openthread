@@ -86,4 +86,11 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().GetCounters();
 }
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().SetUpstreamQueryEnabled(aEnabled);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

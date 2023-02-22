@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,62 +28,25 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the DNS-SD Server.
- *
+ *   This file implements the DNS platform callbacks into OpenThread.
  */
 
-#ifndef CONFIG_DNSSD_SERVER_H_
-#define CONFIG_DNSSD_SERVER_H_
+#include "openthread-core-config.h"
 
-/**
- * @def OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
- *
- * Define to 1 to enable DNS-SD Server support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
-#define OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE 0
+#include <openthread/instance.h>
+#include <openthread/platform/dns.h>
+
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
+#include "common/message.hpp"
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
+using namespace ot;
+
+void otPlatDnsUpstreamQueryDone(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, otMessage *aResponse)
+{
+    return AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().OnUpstreamQueryDone(AsCoreType(aTxn),
+                                                                                          AsCoreTypePtr(aResponse));
+}
 #endif
-
-/**
- * @def OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
- *
- * Define the the DNS-SD Server port.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
-#define OPENTHREAD_CONFIG_DNSSD_SERVER_PORT 53
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
- *
- * Define to 1 to bind DNS-SD server to unspecified interface, 0 to bind to Thread interface.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
-#define OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
- *
- * Specifies the default wait time that DNS-SD Server waits for a query response (e.g. from Discovery Proxy).
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
-#define OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT 6000
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
- *
- * Define to 1 to enable upstream forwarding support. The platform MUST implement `otPlatDnsStartUpstreamQuery` and
- * `otPlatDnsCancelUpstreamQuery`.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-#define OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE 0
-#endif
-
-#endif // CONFIG_DNSSD_SERVER_H_

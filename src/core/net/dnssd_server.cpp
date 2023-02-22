@@ -35,6 +35,8 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#include <openthread/platform/dns.h>
+
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
@@ -52,10 +54,11 @@ namespace ServiceDiscovery {
 
 RegisterLogModule("DnssdServer");
 
-const char Server::kDnssdProtocolUdp[]  = "_udp";
-const char Server::kDnssdProtocolTcp[]  = "_tcp";
-const char Server::kDnssdSubTypeLabel[] = "._sub.";
-const char Server::kDefaultDomainName[] = "default.service.arpa.";
+const char  Server::kDnssdProtocolUdp[]  = "_udp";
+const char  Server::kDnssdProtocolTcp[]  = "_tcp";
+const char  Server::kDnssdSubTypeLabel[] = "._sub.";
+const char  Server::kDefaultDomainName[] = "default.service.arpa.";
+const char *Server::kBlockedDomains[]    = {"ipv4only.arpa."};
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -63,6 +66,9 @@ Server::Server(Instance &aInstance)
     , mQueryCallbackContext(nullptr)
     , mQuerySubscribe(nullptr)
     , mQueryUnsubscribe(nullptr)
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    , mEnableUpstreamQuery(false)
+#endif
     , mTimer(aInstance)
 {
     mCounters.Clear();
@@ -102,6 +108,16 @@ void Server::Stop(void)
             FinalizeQuery(query, Header::kResponseServerFailure);
         }
     }
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    for (UpstreamQueryTransaction &txn : mUpstreamQueryTransactions)
+    {
+        if (txn.IsValid())
+        {
+            ResetUpstreamQueryTransaction(txn, kErrorFailed);
+        }
+    }
+#endif
 
     mTimer.Stop();
 
@@ -145,8 +161,22 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     Message         *responseMessage = nullptr;
     Header           responseHeader;
     NameCompressInfo compressInfo(kDefaultDomainName);
-    Header::Response response                = Header::kResponseSuccess;
-    bool             resolveByQueryCallbacks = false;
+    Header::Response response           = Header::kResponseSuccess;
+    bool             shouldSendResponse = true;
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    if (mEnableUpstreamQuery && ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
+    {
+        error = ResolveByUpstream(aRequestMessage, aMessageInfo);
+        if (error == kErrorNone)
+        {
+            shouldSendResponse = false;
+            ExitNow();
+        }
+        response = Header::kResponseServerFailure;
+        LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
+    }
+#endif
 
     responseMessage = mSocket.NewMessage(0);
     VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
@@ -158,6 +188,14 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     responseHeader.Clear();
     responseHeader.SetType(Header::kTypeResponse);
     responseHeader.SetMessageId(aRequestHeader.GetMessageId());
+    responseHeader.SetQueryType(aRequestHeader.GetQueryType());
+    if (aRequestHeader.IsRecursionDesiredFlagSet())
+    {
+        responseHeader.SetRecursionDesiredFlag();
+    }
+
+    // We may met errors when forwarding the query to the upstream
+    VerifyOrExit(response == Header::kResponseSuccess);
 
     // Validate the query
     VerifyOrExit(aRequestHeader.GetQueryType() == Header::kQueryTypeStandard,
@@ -172,13 +210,11 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     // Answer the questions
     response = ResolveBySrp(responseHeader, *responseMessage, compressInfo);
 #endif
-
-    // Resolve the question using query callbacks if SRP server failed to resolve the questions.
     if (responseHeader.GetAnswerCount() == 0)
     {
         if (kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
         {
-            resolveByQueryCallbacks = true;
+            shouldSendResponse = false;
         }
     }
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -189,7 +225,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #endif
 
 exit:
-    if (error == kErrorNone && !resolveByQueryCallbacks)
+    if (error == kErrorNone && shouldSendResponse)
     {
         SendResponse(responseHeader, response, *responseMessage, aMessageInfo, mSocket);
     }
@@ -839,6 +875,87 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+bool Server::ShouldForwardToUpstream(const Header &aRequestHeader, const Message &aRequestMessage)
+{
+    bool     ret = true;
+    uint16_t readOffset;
+    char     name[Name::kMaxNameSize];
+
+    VerifyOrExit(aRequestHeader.IsRecursionDesiredFlagSet(), ret = false);
+    readOffset = sizeof(Header);
+
+    for (uint16_t i = 0; i < aRequestHeader.GetQuestionCount(); i++)
+    {
+        VerifyOrExit(kErrorNone == Name::ReadName(aRequestMessage, readOffset, name, sizeof(name)), ret = false);
+        readOffset += sizeof(Question);
+
+        VerifyOrExit(!Name::IsSubDomainOf(name, kDefaultDomainName), ret = false);
+        for (const char *blockedDomain : kBlockedDomains)
+        {
+            VerifyOrExit(!Name::IsSameDomain(name, blockedDomain), ret = false);
+        }
+    }
+
+exit:
+    return ret;
+}
+
+void Server::OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Message *aResponseMessage)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aQueryTransaction.IsValid(), error = kErrorInvalidArgs);
+
+    if (aResponseMessage != nullptr)
+    {
+        error = mSocket.SendTo(*aResponseMessage, aQueryTransaction.GetMessageInfo());
+    }
+    ResetUpstreamQueryTransaction(aQueryTransaction, error);
+    ResetTimer();
+
+exit:
+    FreeMessageOnError(aResponseMessage, error);
+}
+
+Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo)
+{
+    UpstreamQueryTransaction *ret = nullptr;
+
+    for (UpstreamQueryTransaction &txn : mUpstreamQueryTransactions)
+    {
+        if (!txn.IsValid())
+        {
+            ret = &txn;
+            txn.Init(aMessageInfo);
+            break;
+        }
+    }
+
+    if (ret != nullptr)
+    {
+        LogInfo("Upstream query transaction %d initialized.", static_cast<int>(ret - mUpstreamQueryTransactions));
+        mTimer.FireAtIfEarlier(ret->GetExpireTime());
+    }
+
+    return ret;
+}
+
+Error Server::ResolveByUpstream(const Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    Error                     error = kErrorNone;
+    UpstreamQueryTransaction *txn   = nullptr;
+
+    txn = AllocateUpstreamQueryTransaction(aMessageInfo);
+    VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
+
+    otPlatDnsStartUpstreamQuery(&GetInstance(), txn, &aRequestMessage);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
 Server::QueryTransaction *Server::NewQuery(const Header           &aResponseHeader,
                                            Message                &aResponseMessage,
                                            const NameCompressInfo &aCompressInfo,
@@ -1143,6 +1260,21 @@ void Server::HandleTimer(void)
         }
     }
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    for (UpstreamQueryTransaction &query : mUpstreamQueryTransactions)
+    {
+        if (!query.IsValid())
+        {
+            continue;
+        }
+
+        if (query.GetExpireTime() <= now)
+        {
+            otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
+        }
+    }
+#endif
+
     ResetTimer();
 }
 
@@ -1170,6 +1302,28 @@ void Server::ResetTimer(void)
             nextExpire = expire;
         }
     }
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    for (UpstreamQueryTransaction &query : mUpstreamQueryTransactions)
+    {
+        TimeMilli expire;
+
+        if (!query.IsValid())
+        {
+            continue;
+        }
+
+        expire = query.GetExpireTime();
+        if (expire <= now)
+        {
+            nextExpire = now;
+        }
+        else if (expire < nextExpire)
+        {
+            nextExpire = expire;
+        }
+    }
+#endif
 
     if (nextExpire < now.GetDistantFuture())
     {
@@ -1245,6 +1399,32 @@ void Server::UpdateResponseCounters(Header::Response aResponseCode)
         break;
     }
 }
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+void Server::UpstreamQueryTransaction::Init(const Ip6::MessageInfo &aMessageInfo)
+{
+    mMessageInfo = aMessageInfo;
+    mValid       = true;
+    mExpireTime  = TimerMilli::GetNow() + kQueryTimeout;
+}
+
+void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError)
+{
+    int index = static_cast<int>(&aTxn - mUpstreamQueryTransactions);
+
+    // Avoid the warnings when info / warn logging is disabled.
+    OT_UNUSED_VARIABLE(index);
+    if (aError == kErrorNone)
+    {
+        LogInfo("Upstream query transaction %d completed.", index);
+    }
+    else
+    {
+        LogWarn("Upstream query transaction %d closed: %s.", index, ErrorToString(aError));
+    }
+    aTxn.Reset();
+}
+#endif
 
 } // namespace ServiceDiscovery
 } // namespace Dns

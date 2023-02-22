@@ -67,6 +67,7 @@ void TestDnsName(void)
     char         name[Dns::Name::kMaxNameSize];
     const char  *subDomain;
     const char  *domain;
+    const char  *domain2;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -209,6 +210,42 @@ void TestDnsName(void)
     subDomain = "my-service._ipps._tcp.default.service.arpa.";
     domain    = "Vice.arpa.";
     VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain));
+
+    domain  = "example.com.";
+    domain2 = "example.com.";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "example.com";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com";
+    domain2 = "ExAmPlE.cOm";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "ExAmPlE.cOm.";
+    VerifyOrQuit(Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "aExAmPlE.cOm.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = "cOm.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.";
+    domain2 = "example.com.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    domain  = "example.com.";
+    domain2 = ".example.com.";
+    VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
 
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");

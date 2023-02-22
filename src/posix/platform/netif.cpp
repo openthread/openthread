@@ -152,6 +152,8 @@ extern int
 #include "common/debug.hpp"
 #include "net/ip6_address.hpp"
 
+#include "resolver.hpp"
+
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 otIp4Cidr    gNat64Cidr;
@@ -207,6 +209,10 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 static constexpr uint32_t kNat64RoutePriority = 100; ///< Priority for route to NAT64 CIDR, 100 means a high priority.
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+ot::Posix::Resolver gResolver;
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -1899,6 +1905,9 @@ void platformNetifSetUp(void)
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.Init();
+#endif
 }
 
 void platformNetifTearDown(void) {}
@@ -1955,6 +1964,10 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     FD_SET(sMLDMonitorFd, aReadFdSet);
     FD_SET(sMLDMonitorFd, aErrorFdSet);
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.UpdateFdSet(aReadFdSet, aErrorFdSet, aMaxFd);
 #endif
 
     if (sTunFd > *aMaxFd)
@@ -2017,6 +2030,10 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
     {
         processMLDEvent(gInstance);
     }
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    gResolver.Process(aReadFdSet, aErrorFdSet);
 #endif
 
 exit:

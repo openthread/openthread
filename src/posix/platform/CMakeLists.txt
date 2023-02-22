@@ -120,6 +120,7 @@ add_library(openthread-posix
     power_updater.cpp
     radio.cpp
     radio_url.cpp
+    resolver.cpp
     settings.cpp
     spi_interface.cpp
     system.cpp

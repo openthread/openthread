@@ -505,4 +505,18 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxn);
+    OT_UNUSED_VARIABLE(aQuery);
+}
+
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+{
+    otPlatDnsUpstreamQueryDone(aInstance, aTxn, nullptr);
+}
+#endif
+
 } // extern "C"
