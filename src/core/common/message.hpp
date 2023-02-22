@@ -1734,15 +1734,33 @@ public:
      */
     uint16_t GetTotalBufferCount(void) const;
 
+    /**
+     * This method returns the maximum number of buffers in use at the same time since OT stack initialization or
+     * since last call to `ResetMaxUsedBufferCount()`.
+     *
+     * @returns The maximum number of buffers in use at the same time so far (buffer allocation watermark).
+     *
+     */
+    uint16_t GetMaxUsedBufferCount(void) const { return mMaxAllocated; }
+
+    /**
+     * This method resets the tracked maximum number of buffers in use.
+     *
+     * @sa GetMaxUsedBufferCount
+     *
+     */
+    void ResetMaxUsedBufferCount(void) { mMaxAllocated = mNumAllocated; }
+
 private:
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
     Error   ReclaimBuffers(Message::Priority aPriority);
 
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    uint16_t                  mNumFreeBuffers;
     Pool<Buffer, kNumBuffers> mBufferPool;
 #endif
+    uint16_t mNumAllocated;
+    uint16_t mMaxAllocated;
 };
 
 inline Instance &Message::GetInstance(void) const { return GetMessagePool()->GetInstance(); }

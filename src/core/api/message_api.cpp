@@ -131,4 +131,6 @@ void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo)
 {
     AsCoreType(aInstance).GetBufferInfo(AsCoreType(aBufferInfo));
 }
+
+void otMessageResetBufferInfo(otInstance *aInstance) { AsCoreType(aInstance).ResetBufferInfo(); }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

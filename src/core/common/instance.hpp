@@ -345,6 +345,15 @@ public:
      */
     void GetBufferInfo(BufferInfo &aInfo);
 
+    /**
+     * This method resets the Message Buffer information counter tracking maximum number buffers in use at the same
+     * time.
+     *
+     * This method resets `mMaxUsedBuffers` in `BufferInfo`.
+     *
+     */
+    void ResetBufferInfo(void);
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**

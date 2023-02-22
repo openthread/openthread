@@ -64,9 +64,8 @@ RegisterLogModule("Message");
 
 MessagePool::MessagePool(Instance &aInstance)
     : InstanceLocator(aInstance)
-#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    , mNumFreeBuffers(kNumBuffers)
-#endif
+    , mNumAllocated(0)
+    , mMaxAllocated(0)
 {
 #if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     otPlatMessagePoolInit(&GetInstance(), kNumBuffers, sizeof(Buffer));
@@ -123,9 +122,8 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
         SuccessOrExit(ReclaimBuffers(aPriority));
     }
 
-#if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-    mNumFreeBuffers--;
-#endif
+    mNumAllocated++;
+    mMaxAllocated = Max(mMaxAllocated, mNumAllocated);
 
     buffer->SetNextBuffer(nullptr);
 
@@ -149,8 +147,9 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else
         mBufferPool.Free(*aBuffer);
-        mNumFreeBuffers++;
 #endif
+        mNumAllocated--;
+
         aBuffer = next;
     }
 }
@@ -170,7 +169,7 @@ uint16_t MessagePool::GetFreeBufferCount(void) const
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
     rval = otPlatMessagePoolNumFreeBuffers(&GetInstance());
 #else
-    rval = mNumFreeBuffers;
+    rval = kNumBuffers - mNumAllocated;
 #endif
 
     return rval;
