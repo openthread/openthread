@@ -499,6 +499,9 @@ private:
     static constexpr uint32_t kKeepAliveTimeout     = 50; // TIMEOUT_COMM_PET (seconds)
     static constexpr uint32_t kRemoveJoinerDelay    = 20; // Delay to remove successfully joined joiner
 
+    static constexpr uint32_t kJoinerSessionTimeoutMillis =
+        1000 * OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT; // Expiration time for active Joiner session
+
     enum ResignMode : uint8_t
     {
         kSendKeepAliveToResign,
@@ -580,6 +583,8 @@ private:
 
     void HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    void HandleJoinerSessionTimer(void);
+
     void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
     static Error SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -599,6 +604,7 @@ private:
 
     using JoinerExpirationTimer = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerExpirationTimer>;
     using CommissionerTimer     = TimerMilliIn<Commissioner, &Commissioner::HandleTimer>;
+    using JoinerSessionTimer    = TimerMilliIn<Commissioner, &Commissioner::HandleJoinerSessionTimer>;
 
     Joiner mJoiners[OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES];
 
@@ -610,6 +616,7 @@ private:
     uint8_t                  mTransmitAttempts;
     JoinerExpirationTimer    mJoinerExpirationTimer;
     CommissionerTimer        mTimer;
+    JoinerSessionTimer       mJoinerSessionTimer;
 
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
