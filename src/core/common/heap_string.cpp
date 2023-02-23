@@ -56,7 +56,11 @@ Error String::Set(const char *aCString)
 
         VerifyOrExit(newBuffer != nullptr, error = kErrorNoBufs);
 
-        Heap::Free(mStringBuffer);
+        if (mStringBuffer != nullptr)
+        {
+            Heap::Free(mStringBuffer);
+        }
+
         mStringBuffer = newBuffer;
     }
 
