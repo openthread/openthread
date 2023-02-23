@@ -191,7 +191,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         pkts.filter_wpan_src64(SED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION) \
+            .filter(lambda p: LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: 4 in p.mle.tlv.link_forward_series)  \
             .filter(lambda p: consts.LINK_METRICS_TYPE_AVERAGE_ENUM_COUNT in p.mle.tlv.metric_type_id_flags.type) \
             .filter(lambda p: consts.LINK_METRICS_METRIC_TYPE_ENUM_PDU_COUNT in p.mle.tlv.metric_type_id_flags.metric) \
@@ -221,7 +221,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         pkts.filter_wpan_src64(SED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION) \
+            .filter(lambda p: LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: 0 in p.mle.tlv.link_forward_series) \
             .filter(lambda p: p.mle.tlv.metric_type_id_flags.type is nullField) \
             .filter(lambda p: p.mle.tlv.metric_type_id_flags.metric is nullField) \
@@ -247,7 +247,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         pkts.filter_wpan_src64(SSED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION) \
+            .filter(lambda p: LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: 2 in p.mle.tlv.link_forward_series) \
             .filter(lambda p: consts.LINK_METRICS_TYPE_AVERAGE_ENUM_EXPONENTIAL in p.mle.tlv.metric_type_id_flags.type) \
             .filter(lambda p: consts.LINK_METRICS_METRIC_TYPE_ENUM_LINK_MARGIN in p.mle.tlv.metric_type_id_flags.metric) \
@@ -284,7 +284,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
             .filter_wpan_dst64(SSED_1) \
             .filter_mle_cmd(consts.MLE_DATA_RESPONSE) \
             .filter_mle_has_tlv(TlvType.LINK_METRICS_REPORT) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.LINK_METRICS_REPORT) \
+            .filter(lambda p: LinkMetricsSubTlvType.LINK_METRICS_REPORT in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: consts.LINK_METRICS_TYPE_AVERAGE_ENUM_EXPONENTIAL in p.mle.tlv.metric_type_id_flags.type) \
             .filter(lambda p: consts.LINK_METRICS_METRIC_TYPE_ENUM_LINK_MARGIN in p.mle.tlv.metric_type_id_flags.metric) \
             .must_next()
@@ -296,7 +296,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
         pkts.filter_wpan_src64(SSED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION) \
+            .filter(lambda p: LinkMetricsSubTlvType.FORWARD_PROBING_REGISTRATION in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: 0 in p.mle.tlv.link_forward_series) \
             .filter(lambda p: p.mle.tlv.metric_type_id_flags.type is nullField) \
             .filter(lambda p: p.mle.tlv.metric_type_id_flags.metric is nullField) \
@@ -330,7 +330,7 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
             .filter_wpan_dst64(SSED_1) \
             .filter_mle_cmd(consts.MLE_DATA_RESPONSE) \
             .filter_mle_has_tlv(TlvType.LINK_METRICS_REPORT) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == LinkMetricsSubTlvType.LINK_METRICS_STATUS) \
+            .filter(lambda p: LinkMetricsSubTlvType.LINK_METRICS_STATUS in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_status_sub_tlv == consts.LINK_METRICS_STATUS_SERIES_ID_NOT_RECOGNIZED) \
             .must_next()
 

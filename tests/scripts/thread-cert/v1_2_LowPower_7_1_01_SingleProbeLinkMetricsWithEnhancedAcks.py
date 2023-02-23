@@ -202,7 +202,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
         pkts.filter_wpan_src64(SED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV) \
+            .filter(lambda p: consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_enh_ack_flags == consts.LINK_METRICS_ENH_ACK_PROBING_REGISTER) \
             .filter(lambda p: p.mle.tlv.link_requested_type_id_flags == '0a') \
             .must_next()
@@ -231,7 +231,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
         # ---- Metrics Enum = 3 (RSSI)
         pkts.filter_wpan_src64(SSED_1) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV) \
+            .filter(lambda p: consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_enh_ack_flags == consts.LINK_METRICS_ENH_ACK_PROBING_REGISTER) \
             .filter(lambda p: p.mle.tlv.link_requested_type_id_flags == '0a0b') \
             .must_next()
@@ -295,7 +295,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
         pkts.filter_wpan_src64(SSED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV) \
+            .filter(lambda p: consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_enh_ack_flags == consts.LINK_METRICS_ENH_ACK_PROBING_CLEAR) \
             .must_next()
 
@@ -340,7 +340,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
         pkts.filter_wpan_src64(SSED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV) \
+            .filter(lambda p: consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_enh_ack_flags == consts.LINK_METRICS_ENH_ACK_PROBING_REGISTER) \
             .filter(lambda p: p.mle.tlv.link_requested_type_id_flags == '090a0b') \
             .must_next()
@@ -369,7 +369,7 @@ class LowPower_7_1_01(thread_cert.TestCase):
         pkts.filter_wpan_src64(SSED_1) \
             .filter_wpan_dst64(LEADER) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_REQUEST) \
-            .filter(lambda p: p.mle.tlv.link_sub_tlv == consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV) \
+            .filter(lambda p: consts.LM_ENHANCED_ACK_CONFIGURATION_SUB_TLV in p.mle.tlv.link_sub_tlv) \
             .filter(lambda p: p.mle.tlv.link_enh_ack_flags == consts.LINK_METRICS_ENH_ACK_PROBING_REGISTER) \
             .filter(lambda p: p.mle.tlv.link_requested_type_id_flags == '12') \
             .must_next()
