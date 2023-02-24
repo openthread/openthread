@@ -40,11 +40,12 @@
 
 #include "coap/coap.hpp"
 #include "thread/tmf.hpp"
+#include <openthread/backbone_router_api.h>
 
 namespace ot {
 namespace BackboneRouter {
 
-constexpr uint16_t kBackboneUdpPort = 61631; ///< Backbone TMF UDP Port
+constexpr uint16_t kBackboneUdpPort = OT_BACKBONE_ROUTER_TMF_UDP_PORT; ///< Backbone TMF UDP Port
 
 /**
  * This class implements functionality of the Backbone TMF agent.

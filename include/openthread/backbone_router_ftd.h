@@ -52,6 +52,8 @@ extern "C" {
  *
  */
 
+#define OT_BACKBONE_ROUTER_TMF_UDP_PORT 61631  ///< The backbone TMF UDP port number.
+
 /**
  * Represents the Backbone Router Status.
  *
