@@ -135,6 +135,10 @@ target_link_libraries(openthread-posix
     PUBLIC
         openthread-platform
     PRIVATE
+        openthread-cli-ftd
+        openthread-ftd
+        openthread-hdlc
+        openthread-spinel-rcp
         openthread-url
         ot-config-ftd
         ot-config
