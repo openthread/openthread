@@ -1080,10 +1080,7 @@ void Client::HandleTimer(void)
             SendQuery(query, info, /* aUpdateTimer */ false);
         }
 
-        if (nextTime > info.mRetransmissionTime)
-        {
-            nextTime = info.mRetransmissionTime;
-        }
+        nextTime = Min(nextTime, info.mRetransmissionTime);
     }
 
     if (nextTime < now.GetDistantFuture())

@@ -1625,10 +1625,7 @@ void Mle::HandleDelayedResponseTimer(void)
 
         if (now < metadata.mSendTime)
         {
-            if (nextSendTime > metadata.mSendTime)
-            {
-                nextSendTime = metadata.mSendTime;
-            }
+            nextSendTime = Min(nextSendTime, metadata.mSendTime);
         }
         else
         {

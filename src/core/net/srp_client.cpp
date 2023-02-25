@@ -1763,9 +1763,9 @@ void Client::UpdateState(void)
                     service.SetState(kToRefresh);
                     shouldUpdate = true;
                 }
-                else if (service.GetLeaseRenewTime() < earliestRenewTime)
+                else
                 {
-                    earliestRenewTime = service.GetLeaseRenewTime();
+                    earliestRenewTime = Min(earliestRenewTime, service.GetLeaseRenewTime());
                 }
 
                 break;

@@ -1285,43 +1285,23 @@ void Server::ResetTimer(void)
 
     for (QueryTransaction &query : mQueryTransactions)
     {
-        TimeMilli expire;
-
         if (!query.IsValid())
         {
             continue;
         }
 
-        expire = query.GetStartTime() + kQueryTimeout;
-        if (expire <= now)
-        {
-            nextExpire = now;
-        }
-        else if (expire < nextExpire)
-        {
-            nextExpire = expire;
-        }
+        nextExpire = Min(nextExpire, Max(now, query.GetStartTime() + kQueryTimeout));
     }
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     for (UpstreamQueryTransaction &query : mUpstreamQueryTransactions)
     {
-        TimeMilli expire;
-
         if (!query.IsValid())
         {
             continue;
         }
 
-        expire = query.GetExpireTime();
-        if (expire <= now)
-        {
-            nextExpire = now;
-        }
-        else if (expire < nextExpire)
-        {
-            nextExpire = expire;
-        }
+        nextExpire = Min(nextExpire, Max(now, query.GetExpireTime()));
     }
 #endif
 
