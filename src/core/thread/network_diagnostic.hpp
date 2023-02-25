@@ -140,10 +140,11 @@ private:
                       Coap::ResponseHandler aHandler = nullptr,
                       void                 *aContext = nullptr);
 
+    Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
+    Error AppendMacCounters(Message &aMessage);
     Error AppendChildTable(Message &aMessage);
-    void  FillMacCountersTlv(MacCountersTlv &aTlv);
-    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse, Tlv &aTlv);
+    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
     static void HandleGetResponse(void                *aContext,
