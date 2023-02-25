@@ -110,8 +110,7 @@ public:
      * @param[in]  aConfig  The Primary Backbone Router service.
      *
      */
-    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
-                                           const BackboneRouter::BackboneRouterConfig &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState, const BackboneRouter::Config &aConfig);
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 

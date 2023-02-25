@@ -76,8 +76,8 @@ void MlrManager::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void MlrManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
-                                                   const BackboneRouter::BackboneRouterConfig &aConfig)
+void MlrManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState,
+                                                   const BackboneRouter::Config &aConfig)
 {
     OT_UNUSED_VARIABLE(aConfig);
 
@@ -474,7 +474,7 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message      
     }
     else
     {
-        otBackboneRouterConfig config;
+        BackboneRouter::Config config;
         uint16_t               reregDelay;
 
         // The Device has just attempted a Multicast Listener Registration which failed, and it retries the same
@@ -632,9 +632,9 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
     }
     else
     {
-        BackboneRouter::BackboneRouterConfig config;
-        uint32_t                             reregDelay;
-        uint32_t                             effectiveMlrTimeout;
+        BackboneRouter::Config config;
+        uint32_t               reregDelay;
+        uint32_t               effectiveMlrTimeout;
 
         IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
 

@@ -52,7 +52,7 @@ namespace ot {
 
 namespace BackboneRouter {
 
-typedef otBackboneRouterConfig BackboneRouterConfig;
+typedef otBackboneRouterConfig Config;
 
 /**
  * This class implements the basic Primary Backbone Router service operations.
@@ -112,7 +112,7 @@ public:
      * @retval kErrorNotFound      No Backbone Router in the Thread Network.
      *
      */
-    Error GetConfig(BackboneRouterConfig &aConfig) const;
+    Error GetConfig(Config &aConfig) const;
 
     /**
      * This method gets the Backbone Router Service ID.
@@ -177,17 +177,17 @@ private:
     void UpdateBackboneRouterPrimary(void);
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-    void               LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const;
+    void               LogBackboneRouterPrimary(State aState, const Config &aConfig) const;
     void               LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const;
     static const char *StateToString(State aState);
     static const char *DomainPrefixStateToString(DomainPrefixState aState);
 #else
-    void LogBackboneRouterPrimary(State, const BackboneRouterConfig &) const {}
+    void LogBackboneRouterPrimary(State, const Config &) const {}
     void LogDomainPrefix(DomainPrefixState, const Ip6::Prefix &) const {}
 #endif
 
-    BackboneRouterConfig mConfig;       ///< Primary Backbone Router information.
-    Ip6::Prefix          mDomainPrefix; ///< Domain Prefix in the Thread network.
+    Config      mConfig;       ///< Primary Backbone Router information.
+    Ip6::Prefix mDomainPrefix; ///< Domain Prefix in the Thread network.
 };
 
 } // namespace BackboneRouter

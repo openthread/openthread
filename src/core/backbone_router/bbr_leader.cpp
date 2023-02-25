@@ -58,7 +58,7 @@ void Leader::Reset(void)
     mDomainPrefix.SetLength(0);
 }
 
-Error Leader::GetConfig(BackboneRouterConfig &aConfig) const
+Error Leader::GetConfig(Config &aConfig) const
 {
     Error error = kErrorNone;
 
@@ -84,7 +84,7 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
+void Leader::LogBackboneRouterPrimary(State aState, const Config &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
@@ -152,9 +152,9 @@ void Leader::Update(void)
 
 void Leader::UpdateBackboneRouterPrimary(void)
 {
-    BackboneRouterConfig config;
-    State                state;
-    uint32_t             origMlrTimeout;
+    Config   config;
+    State    state;
+    uint32_t origMlrTimeout;
 
     Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 

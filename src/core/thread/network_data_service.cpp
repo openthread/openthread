@@ -94,7 +94,7 @@ Error Manager::GetServiceId(const void *aServiceData,
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
+void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const
 {
     const ServerTlv                  *rvalServerTlv  = nullptr;
     const BackboneRouter::ServerData *rvalServerData = nullptr;

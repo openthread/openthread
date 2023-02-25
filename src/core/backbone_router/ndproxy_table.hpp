@@ -40,6 +40,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
@@ -69,6 +70,20 @@ public:
         friend class Clearable<NdProxy>;
 
     public:
+        typedef otBackboneRouterNdProxyCallback Callback; ///< ND Proxy callback.
+
+        /**
+         * This type represents the ND Proxy events.
+         *
+         */
+        enum Event
+        {
+            kAdded   = OT_BACKBONE_ROUTER_NDPROXY_ADDED,   ///< ND Proxy was added.
+            kRemoved = OT_BACKBONE_ROUTER_NDPROXY_REMOVED, ///< ND Proxy was removed.
+            kRenewed = OT_BACKBONE_ROUTER_NDPROXY_RENEWED, ///< ND Proxy was renewed.
+            kCleared = OT_BACKBONE_ROUTER_NDPROXY_CLEARED, ///< All ND Proxies were cleared.
+        };
+
         /**
          * This method gets the Mesh-Local IID of the ND Proxy.
          *
@@ -216,7 +231,7 @@ public:
      * @param[in] aContext   A user context pointer.
      *
      */
-    void SetCallback(otBackboneRouterNdProxyCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
+    void SetCallback(NdProxy::Callback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
     /**
      * This method retrieves the ND Proxy info of the Domain Unicast Address.
@@ -289,14 +304,16 @@ private:
     NdProxy        *FindInvalid(void);
     Ip6::Address    GetDua(NdProxy &aNdProxy);
     void            NotifyDuaRegistrationOnBackboneLink(NdProxy &aNdProxy, bool aIsRenew);
-    void TriggerCallback(otBackboneRouterNdProxyEvent aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
+    void            TriggerCallback(NdProxy::Event aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const;
 
-    NdProxy                                   mProxies[kMaxNdProxyNum];
-    Callback<otBackboneRouterNdProxyCallback> mCallback;
-    bool                                      mIsAnyDadInProcess : 1;
+    NdProxy                     mProxies[kMaxNdProxyNum];
+    Callback<NdProxy::Callback> mCallback;
+    bool                        mIsAnyDadInProcess : 1;
 };
 
 } // namespace BackboneRouter
+
+DefineMapEnum(otBackboneRouterNdProxyEvent, BackboneRouter::NdProxyTable::NdProxy::Event);
 
 } // namespace ot
 
