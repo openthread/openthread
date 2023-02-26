@@ -4943,10 +4943,7 @@ Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuff
     SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
     VerifyOrExit(length >= kMinChallengeSize, error = kErrorParse);
 
-    if (length > kMaxChallengeSize)
-    {
-        length = kMaxChallengeSize;
-    }
+    length = Min(length, kMaxChallengeSize);
 
     ReadBytes(offset, aBuffer.mBuffer, length);
     aBuffer.mLength = static_cast<uint8_t>(length);

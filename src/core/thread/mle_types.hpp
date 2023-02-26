@@ -127,8 +127,8 @@ constexpr uint16_t kMaxChildId = 511; ///< Maximum Child ID
 constexpr uint8_t kRouterIdOffset   = 10; ///< Bit offset of Router ID in RLOC16
 constexpr uint8_t kRlocPrefixLength = 14; ///< Prefix length of RLOC in bytes
 
-constexpr uint8_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
-constexpr uint8_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
+constexpr uint16_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
+constexpr uint16_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
 
 /*
  * Routing Protocol Constants
