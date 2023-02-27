@@ -46,7 +46,7 @@ otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTi
 {
     AssertPointerIsNotNull(aNetworkTime);
 
-    return AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime);
+    return MapEnum(AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime));
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
