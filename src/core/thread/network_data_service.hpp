@@ -544,7 +544,7 @@ public:
      * @param[out]  aConfig      The Primary Backbone Router configuration.
      *
      */
-    void GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const;
+    void GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const;
 #endif
 
     /**

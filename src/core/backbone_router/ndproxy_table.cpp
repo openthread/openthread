@@ -141,7 +141,7 @@ void NdProxyTable::Clear(void)
         proxy.Clear();
     }
 
-    mCallback.InvokeIfSet(OT_BACKBONE_ROUTER_NDPROXY_CLEARED, nullptr);
+    mCallback.InvokeIfSet(MapEnum(NdProxy::kCleared), nullptr);
 
     LogInfo("NdProxyTable::Clear!");
 }
@@ -167,7 +167,7 @@ Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
     proxy = FindByMeshLocalIid(aMeshLocalIid);
     if (proxy != nullptr)
     {
-        TriggerCallback(OT_BACKBONE_ROUTER_NDPROXY_REMOVED, proxy->mAddressIid);
+        TriggerCallback(NdProxy::kRemoved, proxy->mAddressIid);
         Erase(*proxy);
     }
     else
@@ -265,8 +265,7 @@ exit:
     return;
 }
 
-void NdProxyTable::TriggerCallback(otBackboneRouterNdProxyEvent    aEvent,
-                                   const Ip6::InterfaceIdentifier &aAddressIid) const
+void NdProxyTable::TriggerCallback(NdProxy::Event aEvent, const Ip6::InterfaceIdentifier &aAddressIid) const
 {
     Ip6::Address       dua;
     const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
@@ -278,7 +277,7 @@ void NdProxyTable::TriggerCallback(otBackboneRouterNdProxyEvent    aEvent,
     dua.SetPrefix(*prefix);
     dua.SetIid(aAddressIid);
 
-    mCallback.Invoke(aEvent, &dua);
+    mCallback.Invoke(MapEnum(aEvent), &dua);
 
 exit:
     return;
@@ -318,8 +317,7 @@ void NdProxyTable::NotifyDuaRegistrationOnBackboneLink(NdProxyTable::NdProxy &aN
 {
     if (!aNdProxy.mDadFlag)
     {
-        TriggerCallback(aIsRenew ? OT_BACKBONE_ROUTER_NDPROXY_RENEWED : OT_BACKBONE_ROUTER_NDPROXY_ADDED,
-                        aNdProxy.mAddressIid);
+        TriggerCallback(aIsRenew ? NdProxy::kRenewed : NdProxy::kAdded, aNdProxy.mAddressIid);
 
         IgnoreError(Get<BackboneRouter::Manager>().SendProactiveBackboneNotification(
             GetDua(aNdProxy), aNdProxy.GetMeshLocalIid(), aNdProxy.GetTimeSinceLastTransaction()));

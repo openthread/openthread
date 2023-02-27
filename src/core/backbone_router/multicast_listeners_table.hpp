@@ -40,6 +40,7 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -68,6 +69,16 @@ public:
         friend class MulticastListenersTable;
 
     public:
+        typedef otBackboneRouterMulticastListenerCallback Callback; ///< Listener callback.
+        typedef otBackboneRouterMulticastListenerIterator Iterator; ///< Iterator to go over Listener entries.
+        typedef otBackboneRouterMulticastListenerInfo     Info;     ///< Listener info.
+
+        enum Event : uint8_t ///< Listener Event
+        {
+            kEventAdded   = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED,   ///< Listener was added.
+            kEventRemoved = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, ///< Listener was removed.
+        };
+
         /**
          * This constructor initializes the `Listener` object.
          *
@@ -172,27 +183,24 @@ public:
      * @param[in] aContext   A user context pointer.
      *
      */
-    void SetCallback(otBackboneRouterMulticastListenerCallback aCallback, void *aContext);
+    void SetCallback(Listener::Callback aCallback, void *aContext);
 
     /**
      * This method gets the next Multicast Listener.
      *
-     * @param[in] aIterator       A pointer to the Multicast Listener Iterator.
-     * @param[out] aListenerInfo  A pointer to where the Multicast Listener info is placed.
+     * @param[in]  aIterator      A pointer to the Multicast Listener Iterator.
+     * @param[out] aInfo          A reference to output the Multicast Listener info.
      *
      * @retval kErrorNone         Successfully found the next Multicast Listener info.
      * @retval kErrorNotFound     No subsequent Multicast Listener was found.
      *
      */
-    Error GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                  otBackboneRouterMulticastListenerInfo     &aListenerInfo);
+    Error GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo);
 
 private:
-    static constexpr uint16_t kMulticastListenersTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
+    static constexpr uint16_t kTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
-    static_assert(
-        kMulticastListenersTableSize >= 75,
-        "Thread 1.2 Conformance requires the Multicast Listener Table size to be larger than or equal to 75.");
+    static_assert(kTableSize >= 75, "Thread 1.2 Conformance requires table size of at least 75 listeners.");
 
     class IteratorBuilder : InstanceLocator
     {
@@ -206,23 +214,28 @@ private:
         Listener *end(void);
     };
 
-    void LogMulticastListenersTable(const char         *aAction,
-                                    const Ip6::Address &aAddress,
-                                    TimeMilli           aExpireTime,
-                                    Error               aError);
+    enum Action : uint8_t
+    {
+        kAdd,
+        kRemove,
+        kExpire,
+    };
+
+    void Log(Action aAction, const Ip6::Address &aAddress, TimeMilli aExpireTime, Error aError) const;
 
     void FixHeap(uint16_t aIndex);
     bool SiftHeapElemDown(uint16_t aIndex);
     void SiftHeapElemUp(uint16_t aIndex);
     void CheckInvariants(void) const;
 
-    Listener mListeners[kMulticastListenersTableSize];
-    uint16_t mNumValidListeners;
-
-    Callback<otBackboneRouterMulticastListenerCallback> mCallback;
+    Listener                     mListeners[kTableSize];
+    uint16_t                     mNumValidListeners;
+    Callback<Listener::Callback> mCallback;
 };
 
 } // namespace BackboneRouter
+
+DefineMapEnum(otBackboneRouterMulticastListenerEvent, BackboneRouter::MulticastListenersTable::Listener::Event);
 
 /**
  * @}

@@ -273,7 +273,7 @@ void DuaManager::NotifyDuplicateDomainUnicastAddress(void)
 void DuaManager::UpdateReregistrationDelay(void)
 {
     uint16_t               delay = 0;
-    otBackboneRouterConfig config;
+    BackboneRouter::Config config;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().GetConfig(config) == kErrorNone);
 
@@ -338,8 +338,8 @@ exit:
     return;
 }
 
-void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
-                                                   const BackboneRouter::BackboneRouterConfig &aConfig)
+void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State aState,
+                                                   const BackboneRouter::Config &aConfig)
 {
     OT_UNUSED_VARIABLE(aConfig);
 

@@ -54,6 +54,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
@@ -72,7 +73,16 @@ namespace BackboneRouter {
 class Local : public InstanceLocator, private NonCopyable
 {
 public:
-    typedef otBackboneRouterState BackboneRouterState;
+    /**
+     * This enumeration represents Backbone Router state.
+     *
+     */
+    enum State : uint8_t
+    {
+        kStateDisabled  = OT_BACKBONE_ROUTER_STATE_DISABLED,  ///< Backbone function is disabled.
+        kStateSecondary = OT_BACKBONE_ROUTER_STATE_SECONDARY, ///< Secondary Backbone Router.
+        kStatePrimary   = OT_BACKBONE_ROUTER_STATE_PRIMARY,   ///< The Primary Backbone Router.
+    };
 
     /**
      * This constructor initializes the local Backbone Router.
@@ -94,12 +104,10 @@ public:
      * This method retrieves the Backbone Router state.
      *
      *
-     * @retval OT_BACKBONE_ROUTER_STATE_DISABLED   Backbone function is disabled.
-     * @retval OT_BACKBONE_ROUTER_STATE_SECONDARY  Secondary Backbone Router.
-     * @retval OT_BACKBONE_ROUTER_STATE_PRIMARY    Primary Backbone Router.
+     * @returns The current state of Backbone Router.
      *
      */
-    BackboneRouterState GetState(void) const { return mState; }
+    State GetState(void) const { return mState; }
 
     /**
      * This method resets the local Thread Network Data.
@@ -113,7 +121,7 @@ public:
      * @param[out]  aConfig  The local Backbone Router configuration.
      *
      */
-    void GetConfig(BackboneRouterConfig &aConfig) const;
+    void GetConfig(Config &aConfig) const;
 
     /**
      * This method sets local Backbone Router configuration.
@@ -124,13 +132,13 @@ public:
      * @retval kErrorInvalidArgs  The configuration in @p aConfig is invalid.
      *
      */
-    Error SetConfig(const BackboneRouterConfig &aConfig);
+    Error SetConfig(const Config &aConfig);
 
     /**
      * This method registers Backbone Router Dataset to Leader.
      *
-     * @param[in]  aForce True to force registration regardless of current BackboneRouterState.
-     *                    False to decide based on current BackboneRouterState.
+     * @param[in]  aForce True to force registration regardless of current state.
+     *                    False to decide based on current state.
      *
      *
      * @retval kErrorNone            Successfully added the Service entry.
@@ -147,7 +155,7 @@ public:
      * @retval  False if the Backbone Router is not Primary.
      *
      */
-    bool IsPrimary(void) const { return mState == OT_BACKBONE_ROUTER_STATE_PRIMARY; }
+    bool IsPrimary(void) const { return mState == kStatePrimary; }
 
     /**
      * This method indicates whether or not the Backbone Router is enabled.
@@ -156,7 +164,7 @@ public:
      * @retval  False if the Backbone Router is not enabled.
      *
      */
-    bool IsEnabled(void) const { return mState != OT_BACKBONE_ROUTER_STATE_DISABLED; }
+    bool IsEnabled(void) const { return mState != kStateDisabled; }
 
     /**
      * This method sets the Backbone Router registration jitter value.
@@ -181,7 +189,7 @@ public:
      * @param[in]  aConfig  The Primary Backbone Router service.
      *
      */
-    void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const BackboneRouterConfig &aConfig);
+    void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config &aConfig);
 
     /**
      * This method gets the Domain Prefix configuration.
@@ -260,7 +268,7 @@ public:
     }
 
 private:
-    void SetState(BackboneRouterState aState);
+    void SetState(State aState);
     void RemoveService(void);
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
@@ -273,11 +281,11 @@ private:
     void LogDomainPrefix(const char *, Error) {}
 #endif
 
-    BackboneRouterState mState;
-    uint32_t            mMlrTimeout;
-    uint16_t            mReregistrationDelay;
-    uint8_t             mSequenceNumber;
-    uint8_t             mRegistrationJitter;
+    State    mState;
+    uint32_t mMlrTimeout;
+    uint16_t mReregistrationDelay;
+    uint8_t  mSequenceNumber;
+    uint8_t  mRegistrationJitter;
 
     // Indicates whether or not already add Backbone Router Service to local server data.
     // Used to check whether or not in restore stage after reset or whether to remove
@@ -293,6 +301,8 @@ private:
 };
 
 } // namespace BackboneRouter
+
+DefineMapEnum(otBackboneRouterState, BackboneRouter::Local::State);
 
 /**
  * @}
