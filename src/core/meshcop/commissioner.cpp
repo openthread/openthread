@@ -660,14 +660,7 @@ void Commissioner::UpdateJoinerExpirationTimer(void)
             continue;
         }
 
-        if (joiner.mExpirationTime <= now)
-        {
-            next = now;
-        }
-        else if (joiner.mExpirationTime < next)
-        {
-            next = joiner.mExpirationTime;
-        }
+        next = Min(next, Max(now, joiner.mExpirationTime));
     }
 
     if (next < now.GetDistantFuture())

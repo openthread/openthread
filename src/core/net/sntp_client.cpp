@@ -302,10 +302,7 @@ void Client::HandleRetransmissionTimer(void)
             SendCopy(message, messageInfo);
         }
 
-        if (nextTime > queryMetadata.mTransmissionTime)
-        {
-            nextTime = queryMetadata.mTransmissionTime;
-        }
+        nextTime = Min(nextTime, queryMetadata.mTransmissionTime);
     }
 
     if (nextTime < now.GetDistantFuture())

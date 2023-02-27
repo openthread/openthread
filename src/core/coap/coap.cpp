@@ -490,10 +490,7 @@ void CoapBase::HandleRetransmissionTimer(void)
             }
         }
 
-        if (nextTime > metadata.mNextTimerShot)
-        {
-            nextTime = metadata.mNextTimerShot;
-        }
+        nextTime = Min(nextTime, metadata.mNextTimerShot);
     }
 
     if (nextTime < now.GetDistantFuture())
@@ -1586,10 +1583,7 @@ void ResponsesQueue::HandleTimer(void)
             continue;
         }
 
-        if (metadata.mDequeueTime < nextDequeueTime)
-        {
-            nextDequeueTime = metadata.mDequeueTime;
-        }
+        nextDequeueTime = Min(nextDequeueTime, metadata.mDequeueTime);
     }
 
     if (nextDequeueTime < now.GetDistantFuture())
