@@ -57,18 +57,23 @@ clang-format "$@" || die
 
 # ensure EOF newline
 REPLACE=no
+FILES=()
 for arg; do
     case $arg in
         -i)
             REPLACE=yes
             ;;
+        -*) ;;
+        *)
+            FILES+=("$arg")
+            ;;
     esac
 done
 
-file=$arg
-
 [ $REPLACE != yes ] || {
-    [ -n "$(tail -c1 "$file")" ] && echo >>"$file"
+    for file in "${FILES[@]}"; do
+        [ -n "$(tail -c1 "$file")" ] && echo >>"$file"
+    done
 }
 
 exit 0
