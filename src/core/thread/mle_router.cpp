@@ -184,20 +184,6 @@ exit:
     return error;
 }
 
-// If the router was a leader or had more than 5 children prior to reset,
-// the multicast link request is retransmitted as a critical message.
-void MleRouter::SetLinkRequestTransmissionCounter(void)
-{
-    uint16_t numOfChildren = mChildTable.GetNumChildren(Child::kInStateValidOrRestoring);
-
-    mLinkRequestAttempts = kMaxTransmissionCount;
-
-    if (mWasLeader || numOfChildren >= kMinCriticalChildrenCount)
-    {
-        mLinkRequestAttempts = kMaxCriticalTransmissionCount;
-    }
-}
-
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
     Error error = kErrorNone;
@@ -215,7 +201,14 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     switch (mRole)
     {
     case kRoleDetached:
-        SetLinkRequestTransmissionCounter();
+        // If router had more than `kMinCriticalChildrenCount` children
+        // or was a leader prior to reset we treat the multicast Link
+        // Request as a critical message.
+        mLinkRequestAttempts =
+            (mWasLeader || mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) >= kMinCriticalChildrenCount)
+                ? kMaxCriticalTransmissionCount
+                : kMaxTransmissionCount;
+
         SuccessOrExit(error = SendLinkRequest(nullptr));
         mLinkRequestAttempts--;
         ScheduleMessageTransmissionTimer();
@@ -240,10 +233,6 @@ Error MleRouter::BecomeLeader(void)
     Router  *router;
     uint32_t partitionId;
     uint8_t  leaderId;
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    uint8_t minRouterId;
-    uint8_t maxRouterId;
-#endif
 
     VerifyOrExit(!Get<MeshCoP::ActiveDatasetManager>().IsPartiallyComplete(), error = kErrorInvalidState);
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
@@ -253,22 +242,18 @@ Error MleRouter::BecomeLeader(void)
     mRouterTable.Clear();
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    partitionId = mPreferredLeaderPartitionId ? mPreferredLeaderPartitionId : Random::NonCrypto::GetUint32();
+    {
+        uint8_t minId;
+        uint8_t maxId;
+
+        mRouterTable.GetRouterIdRange(minId, maxId);
+        partitionId = mPreferredLeaderPartitionId ? mPreferredLeaderPartitionId : Random::NonCrypto::GetUint32();
+        leaderId    = (IsRouterIdValid(mPreviousRouterId) && minId <= mPreviousRouterId && mPreviousRouterId <= maxId)
+                          ? mPreviousRouterId
+                          : Random::NonCrypto::GetUint8InRange(minId, maxId + 1);
+    }
 #else
     partitionId = Random::NonCrypto::GetUint32();
-#endif
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    mRouterTable.GetRouterIdRange(minRouterId, maxRouterId);
-    if (IsRouterIdValid(mPreviousRouterId) && minRouterId <= mPreviousRouterId && mPreviousRouterId <= maxRouterId)
-    {
-        leaderId = mPreviousRouterId;
-    }
-    else
-    {
-        leaderId = Random::NonCrypto::GetUint8InRange(minRouterId, maxRouterId + 1);
-    }
-#else
     leaderId    = IsRouterIdValid(mPreviousRouterId) ? mPreviousRouterId
                                                      : Random::NonCrypto::GetUint8InRange(0, kMaxRouterId + 1);
 #endif
@@ -327,13 +312,11 @@ void MleRouter::HandleChildStart(AttachMode aMode)
     case kDowngradeToReed:
         SendAddressRelease();
 
-        // reset children info if any
         if (HasChildren())
         {
             RemoveChildren();
         }
 
-        // reset routerId info
         SetRouterId(kInvalidRouterId);
         break;
 
@@ -594,7 +577,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
     if (aNeighbor == nullptr)
     {
         mChallenge.GenerateRandom();
-        mChallengeTimeout = (((2 * kMaxResponseDelay) + kStateUpdatePeriod - 1) / kStateUpdatePeriod);
+        mChallengeTimeout = kChallengeTimeout;
 
         SuccessOrExit(error = message->AppendChallengeTlv(mChallenge));
         destination.SetToLinkLocalAllRoutersMulticast();
@@ -1771,24 +1754,15 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
 #endif
 
     aChild->GenerateChallenge();
-
     SuccessOrExit(error = message->AppendChallengeTlv(aChild->GetChallenge(), aChild->GetChallengeSize()));
-    error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin());
-    SuccessOrExit(error);
-
+    SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
     SuccessOrExit(error = message->AppendConnectivityTlv());
     SuccessOrExit(error = message->AppendVersionTlv());
 
     destination.SetToLinkLocalAddress(aChild->GetExtAddress());
 
-    if (aRoutersOnlyRequest)
-    {
-        delay = 1 + Random::NonCrypto::GetUint16InRange(0, kParentResponseMaxDelayRouters);
-    }
-    else
-    {
-        delay = 1 + Random::NonCrypto::GetUint16InRange(0, kParentResponseMaxDelayAll);
-    }
+    delay = 1 + Random::NonCrypto::GetUint16InRange(0, aRoutersOnlyRequest ? kParentResponseMaxDelayRouters
+                                                                           : kParentResponseMaxDelayAll);
 
     SuccessOrExit(error = message->SendAfterDelay(destination, delay));
 
