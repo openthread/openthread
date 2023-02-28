@@ -367,61 +367,50 @@ exit:
 
 void MleRouter::SetStateRouter(uint16_t aRloc16)
 {
-    SetRloc16(aRloc16);
-
-    SetRole(kRoleRouter);
-    SetAttachState(kAttachStateIdle);
-    mAttachCounter = 0;
-    mAttachTimer.Stop();
-    mMessageTransmissionTimer.Stop();
-    StopAdvertiseTrickleTimer();
-    ResetAdvertiseInterval();
-
-    Get<ThreadNetif>().SubscribeAllRoutersMulticast();
-    mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
-    Get<Mac::Mac>().SetBeaconEnabled(true);
-
-    // remove children that do not have matching RLOC16
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
-    {
-        if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
-        {
-            RemoveNeighbor(child);
-        }
-    }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().UpdateCsl();
-#endif
+    // The `aStartMode` is ignored when used with `kRoleRouter`
+    SetStateRouterOrLeader(kRoleRouter, aRloc16, /* aStartMode */ kStartingAsLeader);
 }
 
 void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
 {
-    IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
-    IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
+    SetStateRouterOrLeader(kRoleLeader, aRloc16, aStartMode);
+}
+
+void MleRouter::SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode)
+{
+    if (aRole == kRoleLeader)
+    {
+        IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Restore());
+        IgnoreError(Get<MeshCoP::PendingDatasetManager>().Restore());
+    }
+
     SetRloc16(aRloc16);
 
-    SetRole(kRoleLeader);
+    SetRole(aRole);
+
     SetAttachState(kAttachStateIdle);
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
     StopAdvertiseTrickleTimer();
     ResetAdvertiseInterval();
-    IgnoreError(GetLeaderAloc(mLeaderAloc.GetAddress()));
-    Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
     mPreviousPartitionIdRouter = mLeaderData.GetPartitionId();
-    Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
-
-    Get<NetworkData::Leader>().Start(aStartMode);
-    Get<MeshCoP::ActiveDatasetManager>().StartLeader();
-    Get<MeshCoP::PendingDatasetManager>().StartLeader();
     Get<Mac::Mac>().SetBeaconEnabled(true);
-    Get<AddressResolver>().Clear();
 
-    // remove children that do not have matching RLOC16
+    if (aRole == kRoleLeader)
+    {
+        IgnoreError(GetLeaderAloc(mLeaderAloc.GetAddress()));
+        Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
+        Get<NetworkData::Leader>().Start(aStartMode);
+        Get<MeshCoP::ActiveDatasetManager>().StartLeader();
+        Get<MeshCoP::PendingDatasetManager>().StartLeader();
+        Get<AddressResolver>().Clear();
+    }
+
+    // Remove children that do not have matching RLOC16
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {
         if (RouterIdFromRloc16(child.GetRloc16()) != mRouterId)
@@ -434,7 +423,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode)
     Get<Mac::Mac>().UpdateCsl();
 #endif
 
-    LogNote("Leader partition id 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
+    LogNote("Partition ID 0x%lx", ToUlong(mLeaderData.GetPartitionId()));
 }
 
 void MleRouter::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer)
