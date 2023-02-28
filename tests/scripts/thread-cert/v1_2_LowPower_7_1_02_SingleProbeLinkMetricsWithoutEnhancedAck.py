@@ -87,6 +87,7 @@ class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         self.assertEqual(self.nodes[SSED_1].get_state(), 'child')
 
         leader_addr = self.nodes[LEADER].get_ip6_address(ADDRESS_TYPE.LINK_LOCAL)
+        sed_extaddr = self.nodes[SED_1].get_addr64()
 
         # Step 3 - Verify connectivity by instructing each device to send an ICMPv6 Echo Request to the DUT
         self.assertTrue(self.nodes[SED_1].ping(leader_addr, timeout=POLL_PERIOD / 1000))
@@ -103,8 +104,12 @@ class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # --- Metric Type ID Flags
         # ---- Type / Average Enum = 1  (Exponential Moving Avg)
         # ---- Metric Enum = 3  (RSSI)
-        # TODO: In this step, SED_1 should set its TxPower to 'High'. But TxPower is not supported on simulation for now.
-        self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        #
+        # In this step, SED_1 should set its TxPower to 'High'. In simulation, this will be implemented by
+        # setting Macfilter on the Rx side (Leader).
+        self.nodes[LEADER].add_allowlist(sed_extaddr, -30)
+        res = self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        rss_1 = int(res['RSSI'])
         self.simulator.go(5)
 
         # Step 6 - SED_1 sends a Single Probe Link Metric for RSSI using MLE Data Request
@@ -117,9 +122,15 @@ class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
         # --- Metric Type ID Flags
         # ---- Type / Average Enum = 1  (Exponential Moving Avg)
         # ---- Metric Enum = 3  (RSSI)
-        # TODO: In this step, SED_1 should set its TxPower to 'Low'. But TxPower is not supported on simulation for now.
-        self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        #
+        # In this step, SED_1 should set its TxPower to 'Low'.
+        self.nodes[LEADER].add_allowlist(sed_extaddr, -95)
+        res = self.nodes[SED_1].link_metrics_query_single_probe(leader_addr, 'r', 'block')
+        rss_2 = int(res['RSSI'])
         self.simulator.go(5)
+
+        # Step 8 - Compare the rssi value in step 5 & 7, RSSI in 5 should be larger than RSSI in 7
+        self.assertTrue(rss_1 > rss_2)
 
         # Step 9 - SSED_1 sends a Single Probe Link Metric for Layer 2 LQI using MLE Data Request
         # MLE Data Request Payload:
@@ -251,9 +262,6 @@ class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
            .filter(lambda p: consts.LINK_METRICS_TYPE_AVERAGE_ENUM_EXPONENTIAL in p.mle.tlv.metric_type_id_flags.type) \
            .filter(lambda p: consts.LINK_METRICS_METRIC_TYPE_ENUM_RSSI in p.mle.tlv.metric_type_id_flags.metric) \
            .must_next()
-
-        # Step 8 - Compare the rssi value in step 5 & 7
-        # TODO: Currently the rssi value is fixed in OT simulation. Will implement it after adding support of simulation rssi.
 
         # Step 9 - SSED_1 sends a Single Probe Link Metric for Layer 2 LQI using MLE Data Request
         # MLE Data Request Payload:
