@@ -66,9 +66,8 @@ public:
     enum Status : int8_t
     {
         kUnsynchronized = OT_NETWORK_TIME_UNSYNCHRONIZED, ///< The device hasn't attached to a network.
-        kResyncNeeded =
-            OT_NETWORK_TIME_RESYNC_NEEDED, ///< The device hasn’t received time sync for more than two periods time.
-        kSynchronized = OT_NETWORK_TIME_SYNCHRONIZED, ///< The device network time is synchronized.
+        kResyncNeeded   = OT_NETWORK_TIME_RESYNC_NEEDED,  ///< The device hasn’t received time sync for 2 periods.
+        kSynchronized   = OT_NETWORK_TIME_SYNCHRONIZED,   ///< The device network time is synchronized.
     };
 
     /**
