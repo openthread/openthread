@@ -6194,7 +6194,7 @@ template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
     {
         OutputLine("%s", version);
     }
-  
+
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -6215,7 +6215,6 @@ exit:
  */
 template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 {
-
     otError  error = OT_ERROR_NONE;
     uint16_t regionCode;
 
@@ -6236,7 +6235,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
      * Changing this can affect the transmit power limit.
      */
     else
-    
+
     {
         VerifyOrExit(aArgs[0].GetLength() == 2, error = OT_ERROR_INVALID_ARGS);
 
@@ -6364,9 +6363,9 @@ template <> otError Interpreter::Process<Cmd("route")>(Arg aArgs[])
      * @endcode
      * @par
      * For parameters, use:
-             * *    s: Stable flag
-             * *    n: NAT64 flag
-             * *    prf: Default Router Preference, [high, med, low].
+     * *    s: Stable flag
+     * *    n: NAT64 flag
+     * *    prf: Default Router Preference, [high, med, low].
      * @cparam route add @ca{prefix} [@ca{sn}] [@ca{high}|@ca{med}|@ca{low}]
      * @par api_copy
      * #otExternalRouteConfig
@@ -6568,7 +6567,6 @@ exit:
  */
 template <> otError Interpreter::Process<Cmd("routerdowngradethreshold")>(Arg aArgs[])
 {
-
     return ProcessGetSet(aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
 
@@ -6594,7 +6592,7 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
      * @cli routereligible (enable,disable)
      * @code
      * routereligible enable
-     * Done 
+     * Done
      * @endcode
      * @code
      * routereligible disable
@@ -6607,7 +6605,6 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
      */
     else
     {
-
         bool enable;
 
         SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
@@ -6633,10 +6630,9 @@ exit:
  * Gets or sets the ROUTER_SELECTION_JITTER value.
  * @sa otThreadGetRouterSelectionJitter
  * @sa otThreadSetRouterSelectionJitter
- */ 
+ */
 template <> otError Interpreter::Process<Cmd("routerselectionjitter")>(Arg aArgs[])
 {
-
     return ProcessGetSet(aArgs, otThreadGetRouterSelectionJitter, otThreadSetRouterSelectionJitter);
 }
 /**
@@ -6658,7 +6654,6 @@ template <> otError Interpreter::Process<Cmd("routerselectionjitter")>(Arg aArgs
  */
 template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArgs[])
 {
-
     return ProcessGetSet(aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
 /**
@@ -6680,7 +6675,6 @@ template <> otError Interpreter::Process<Cmd("routerupgradethreshold")>(Arg aArg
  */
 template <> otError Interpreter::Process<Cmd("childrouterlinks")>(Arg aArgs[])
 {
-
     return ProcessGetSet(aArgs, otThreadGetChildRouterLinks, otThreadSetChildRouterLinks);
 }
 #endif // OPENTHREAD_FTD
