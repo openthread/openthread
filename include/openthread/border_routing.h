@@ -107,6 +107,18 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * This enumeration represents the state of Border Routing Manager.
+ *
+ */
+typedef enum
+{
+    OT_BORDER_ROUTING_STATE_UNINITIALIZED, ///< Routing Manager is uninitialized.
+    OT_BORDER_ROUTING_STATE_DISABLED,      ///< Routing Manager is initialized but disabled.
+    OT_BORDER_ROUTING_STATE_STOPPED,       ///< Routing Manager in initialized and enabled but currently stopped.
+    OT_BORDER_ROUTING_STATE_RUNNING,       ///< Routing Manager is initialized, enabled, and running.
+} otBorderRoutingState;
+
+/**
  * This method initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
@@ -139,6 +151,16 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
  *
  */
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Gets the current state of Border Routing Manager.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The current state of Border Routing Manager.
+ *
+ */
+otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
 
 /**
  * This function gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
@@ -212,19 +234,33 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference);
 
 /**
- * Gets the On-Link Prefix for the adjacent infrastructure link, for example `fd41:2650:a6f5:0::/64`.
+ * Gets the local On-Link Prefix for the adjacent infrastructure link.
  *
- * An On-Link Prefix is a 64-bit prefix that's advertised on the infrastructure link if there isn't already a usable
- * on-link prefix being advertised on the link.
+ * The local On-Link Prefix is a 64-bit prefix that's advertised on the infrastructure link if there isn't already a
+ * usable on-link prefix being advertised on the link.
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
  *
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
- * @retval  OT_ERROR_NONE           Successfully retrieved the on-link prefix.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the local on-link prefix.
  *
  */
 otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the currently favored On-Link Prefix.
+ *
+ * The favored prefix is either a discovered on-link prefix on the infrastructure link or the local on-link prefix.
+ *
+ * @param[in]   aInstance  A pointer to an OpenThread instance.
+ * @param[out]  aPrefix    A pointer to where the prefix will be output to.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the favored on-link prefix.
+ *
+ */
+otError otBorderRoutingGetFavoredOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
  * Gets the local NAT64 Prefix of the Border Router.

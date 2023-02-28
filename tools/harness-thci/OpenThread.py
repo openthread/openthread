@@ -3214,7 +3214,7 @@ class OpenThreadTHCI(object):
     @watched
     def isBorderRoutingEnabled(self):
         try:
-            self.__executeCommand('br omrprefix')
+            self.__executeCommand('br omrprefix local')
             return True
         except CommandError:
             return False
