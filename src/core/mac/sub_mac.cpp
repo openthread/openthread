@@ -411,18 +411,16 @@ void SubMac::StartCsmaBackoff(void)
     uint8_t backoffExponent = kCsmaMinBe + mCsmaBackoffs;
 
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    if (mTransmitFrame.mInfo.mTxInfo.mTxDelay != 0)
+    if (mTransmitFrame.mInfo.mTxInfo.mTxTime != 0)
     {
         SetState(kStateCslTransmit);
 
         if (ShouldHandleTransmitTargetTime())
         {
             if (Time(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()))) <
-                Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) + mTransmitFrame.mInfo.mTxInfo.mTxDelay -
-                    kCcaSampleInterval)
+                Time(mTransmitFrame.mInfo.mTxInfo.mTxTime) - kCcaSampleInterval)
             {
-                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) - kCcaSampleInterval,
-                               mTransmitFrame.mInfo.mTxInfo.mTxDelay);
+                mTimer.FireAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxTime) - kCcaSampleInterval);
             }
             else // Transmit without delay
             {
@@ -507,11 +505,10 @@ void SubMac::BeginTransmit(void)
 
     error = Get<Radio>().Transmit(mTransmitFrame);
 
-    if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
+    if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxTime > 0)
     {
         // Platform `transmit_at` fails and we send the frame directly.
-        mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
-        mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
+        mTransmitFrame.mInfo.mTxInfo.mTxTime = 0;
 
         error = Get<Radio>().Transmit(mTransmitFrame);
     }
