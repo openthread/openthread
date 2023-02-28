@@ -1419,7 +1419,7 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
      * @code
      * bufferinfo reset
      * Done
-     * @enccode
+     * @endcode
      * @par api_copy
      * #otMessageResetBufferInfo
      */
