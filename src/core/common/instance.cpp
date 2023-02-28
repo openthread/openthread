@@ -386,8 +386,9 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
 {
     aInfo.Clear();
 
-    aInfo.mTotalBuffers = Get<MessagePool>().GetTotalBufferCount();
-    aInfo.mFreeBuffers  = Get<MessagePool>().GetFreeBufferCount();
+    aInfo.mTotalBuffers   = Get<MessagePool>().GetTotalBufferCount();
+    aInfo.mFreeBuffers    = Get<MessagePool>().GetFreeBufferCount();
+    aInfo.mMaxUsedBuffers = Get<MessagePool>().GetMaxUsedBufferCount();
 
     Get<MeshForwarder>().GetSendQueue().GetInfo(aInfo.m6loSendQueue);
     Get<MeshForwarder>().GetReassemblyQueue().GetInfo(aInfo.m6loReassemblyQueue);
@@ -412,6 +413,8 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
     GetApplicationCoap().GetCachedResponses().GetInfo(aInfo.mApplicationCoapQueue);
 #endif
 }
+
+void Instance::ResetBufferInfo(void) { Get<MessagePool>().ResetMaxUsedBufferCount(); }
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

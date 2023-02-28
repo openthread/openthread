@@ -359,6 +359,7 @@ Show the current message buffer information.
 
 - The `total` shows total number of message buffers in pool.
 - The `free` shows the number of free message buffers.
+- The `max-used` shows the maximum number of used buffers at the same time since OT stack initialization or last `bufferinfo reset`.
 - This is then followed by info about different queues used by OpenThread stack, each line representing info about a queue.
   - The first number shows number messages in the queue.
   - The second number shows number of buffers used by all messages in the queue.
@@ -368,6 +369,7 @@ Show the current message buffer information.
 > bufferinfo
 total: 40
 free: 40
+max-used: 5
 6lo send: 0 0 0
 6lo reas: 0 0 0
 ip6: 0 0 0
@@ -376,6 +378,15 @@ mle: 0 0 0
 coap: 0 0 0
 coap secure: 0 0 0
 application coap: 0 0 0
+Done
+```
+
+### bufferinfo reset
+
+Reset the message buffer counter tracking maximum number buffers in use at the same time.
+
+```bash
+> bufferinfo reset
 Done
 ```
 

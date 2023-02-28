@@ -1352,6 +1352,7 @@ exit:
  * bufferinfo
  * total: 40
  * free: 40
+ * max-used: 5
  * 6lo send: 0 0 0
  * 6lo reas: 0 0 0
  * ip6: 0 0 0
@@ -1366,6 +1367,8 @@ exit:
  * Gets the current message buffer information.
  * *   `total` displays the total number of message buffers in pool.
  * *   `free` displays the number of free message buffers.
+ * *   `max-used` displays max number of used buffers at the same time since OT stack
+ *     initialization or last `bufferinfo reset`.
  * @par
  * Next, the CLI displays info about different queues used by the OpenThread stack,
  * for example `6lo send`. Each line after the queue represents info about a queue:
@@ -1376,8 +1379,6 @@ exit:
  */
 template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
-
     struct BufferInfoName
     {
         const otMessageQueueInfo otBufferInfo::*mQueuePtr;
@@ -1395,20 +1396,43 @@ template <> otError Interpreter::Process<Cmd("bufferinfo")>(Arg aArgs[])
         {&otBufferInfo::mApplicationCoapQueue, "application coap"},
     };
 
-    otBufferInfo bufferInfo;
+    otError error = OT_ERROR_NONE;
 
-    otMessageGetBufferInfo(GetInstancePtr(), &bufferInfo);
-
-    OutputLine("total: %u", bufferInfo.mTotalBuffers);
-    OutputLine("free: %u", bufferInfo.mFreeBuffers);
-
-    for (const BufferInfoName &info : kBufferInfoNames)
+    if (aArgs[0].IsEmpty())
     {
-        OutputLine("%s: %u %u %lu", info.mName, (bufferInfo.*info.mQueuePtr).mNumMessages,
-                   (bufferInfo.*info.mQueuePtr).mNumBuffers, ToUlong((bufferInfo.*info.mQueuePtr).mTotalBytes));
+        otBufferInfo bufferInfo;
+
+        otMessageGetBufferInfo(GetInstancePtr(), &bufferInfo);
+
+        OutputLine("total: %u", bufferInfo.mTotalBuffers);
+        OutputLine("free: %u", bufferInfo.mFreeBuffers);
+        OutputLine("max-used: %u", bufferInfo.mMaxUsedBuffers);
+
+        for (const BufferInfoName &info : kBufferInfoNames)
+        {
+            OutputLine("%s: %u %u %lu", info.mName, (bufferInfo.*info.mQueuePtr).mNumMessages,
+                       (bufferInfo.*info.mQueuePtr).mNumBuffers, ToUlong((bufferInfo.*info.mQueuePtr).mTotalBytes));
+        }
+    }
+    /**
+     * @cli bufferinfo reset
+     * @code
+     * bufferinfo reset
+     * Done
+     * @enccode
+     * @par api_copy
+     * #otMessageResetBufferInfo
+     */
+    else if (aArgs[0] == "reset")
+    {
+        otMessageResetBufferInfo(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
     }
 
-    return OT_ERROR_NONE;
+    return error;
 }
 
 /**
