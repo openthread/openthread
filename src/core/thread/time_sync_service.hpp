@@ -40,6 +40,7 @@
 
 #include <openthread/network_time.h>
 
+#include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -59,6 +60,17 @@ class TimeSync : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * This enumeration represents Network Time Status
+     *
+     */
+    enum Status : int8_t
+    {
+        kUnsynchronized = OT_NETWORK_TIME_UNSYNCHRONIZED, ///< The device hasn't attached to a network.
+        kResyncNeeded   = OT_NETWORK_TIME_RESYNC_NEEDED,  ///< The device hasn’t received time sync for 2 periods.
+        kSynchronized   = OT_NETWORK_TIME_SYNCHRONIZED,   ///< The device network time is synchronized.
+    };
+
+    /**
      * This constructor initializes the object.
      *
      */
@@ -72,7 +84,7 @@ public:
      * @returns The time synchronization status.
      *
      */
-    otNetworkTimeStatus GetTime(uint64_t &aNetworkTime) const;
+    Status GetTime(uint64_t &aNetworkTime) const;
 
     /**
      * Handle the message which includes time synchronization information.
@@ -205,8 +217,10 @@ private:
 
     Callback<otNetworkTimeSyncCallbackFn> mTimeSyncCallback; ///< Callback when time sync is handled or status updated.
     SyncTimer                             mTimer;            ///< Timer for checking if a resync is required.
-    otNetworkTimeStatus                   mCurrentStatus;    ///< Current network time status.
+    Status                                mCurrentStatus;    ///< Current network time status.
 };
+
+DefineMapEnum(otNetworkTimeStatus, TimeSync::Status);
 
 /**
  * @}
