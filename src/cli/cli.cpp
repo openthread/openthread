@@ -3161,21 +3161,37 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             error = OT_ERROR_INVALID_ARGS;
         }
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-        /**
-         * @cli dns server upstream {enable|disable}
-         * @code
-         * Done
-         * @endcode
-         * @cparam dns server upstream @ca{enable|disable}
-         * @par api_copy
-         * #otDnssdUpstreamQuerySetEnabled
-         */
         else if (aArgs[1] == "upstream")
         {
-            bool enable;
+            /**
+             * @cli dns server upstream
+             * @code
+             * Enabled
+             * Done
+             * @endcode
+             * @par api_copy
+             * #otDnssdUpstreamQueryIsEnabled
+             */
+            if (aArgs[2].IsEmpty())
+            {
+                OutputEnabledDisabledStatus(otDnssdUpstreamQueryIsEnabled(GetInstancePtr()));
+            }
+            /**
+             * @cli dns server upstream {enable|disable}
+             * @code
+             * Done
+             * @endcode
+             * @cparam dns server upstream @ca{enable|disable}
+             * @par api_copy
+             * #otDnssdUpstreamQuerySetEnabled
+             */
+            else
+            {
+                bool enable;
 
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
-            otDnssdUpstreamQuerySetEnabled(GetInstancePtr(), enable);
+                SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
+                otDnssdUpstreamQuerySetEnabled(GetInstancePtr(), enable);
+            }
         }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
         else

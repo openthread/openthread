@@ -207,6 +207,15 @@ public:
     void OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Message *aResponseMessage);
 
     /**
+     * This method indicates whether the server will forward DNS queries to platform DNS upstream API.
+     *
+     * @retval TRUE  If the server will forward DNS queries.
+     * @retval FALSE If the server will not forward DNS queries.
+     *
+     */
+    bool IsUpstreamQueryEnabled(void) const { return mEnableUpstreamQuery; }
+
+    /**
      * This method enables or disables forwarding DNS queries to platform DNS upstream API.
      *
      * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
