@@ -2922,13 +2922,29 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     {
         error = OT_ERROR_INVALID_ARGS;
     }
+    /**
+     * @cli dns compression
+     * @code
+     * dns compression
+     * Enabled
+     * @endcode
+     * @cparam dns compression [@ca{enable|disable}]
+     * @par api_copy
+     * #otDnsIsNameCompressionEnabled
+     * @par
+     * By default DNS name compression is enabled. When disabled,
+     * DNS names are appended as full and never compressed. This
+     * is applicable to OpenThread's DNS and SRP client/server
+     * modules."
+     * 'OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE' is required.
+     */
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "compression")
     {
         /**
-         * @cli dns compression
+         * @cli dns compression (enable,disable)
          * @code
-         * dns compression
+         * dns compression enable
          * Enabled
          * @endcode
          * @code
@@ -2938,8 +2954,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * Disabled
          * Done
          * @endcode
-         * @par api_copy
-         * #otDnsSetNameCompressionEnabled
          * @cparam dns compression [@ca{enable|disable}]
          * @par
          * Set the "DNS name compression" mode.
@@ -2949,6 +2963,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * is applicable to OpenThread's DNS and SRP client/server
          * modules."
          * 'OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE' is required.
+         * @sa otDnsSetNameCompressionEnabled
          */
         if (aArgs[1].IsEmpty())
         {
@@ -2997,6 +3012,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
         }
+        /* clang-format off */
         /**
          * @cli dns config (set)
          * @code
@@ -3025,8 +3041,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * @endcode
          * @par api_copy
          * #otDnsClientSetDefaultConfig
-         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}]
-         * [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}][@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
          * @par
          * We can leave some of the fields as unspecified (or use value zero). The
          * unspecified fields are replaced by the corresponding OT config option
@@ -3034,12 +3049,14 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * query config.
          * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
          */
+        /* clang-format on */
         else
         {
             SuccessOrExit(error = GetDnsConfig(aArgs + 1, config));
             otDnsClientSetDefaultConfig(GetInstancePtr(), config);
         }
     }
+    /* clang-format off */
     /**
      * @cli dns resolve
      * @code
@@ -3052,10 +3069,9 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
      * Done
      * @endcode
+     * @cparam dns resolve @ca{hostname} [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
      * @par api_copy
      * #otDnsClientResolveAddress
-     * @cparam dns resolve [@ca<hostname>] [@ca{dns-server-IP}] [@ca{dns-server-port] [@ca{response-timeout-ms}]
-     * [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
      * @par
      * Send DNS Query to obtain IPv6 address for given hostname.
      * @par
@@ -3070,6 +3086,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * address but the preferred NAT64 prefix is unavailable.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
      */
+    /* clang-format on */
     else if (aArgs[0] == "resolve")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3089,6 +3106,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     }
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    /* clang-format off */
     /**
      * @cli dns browse
      * @code
@@ -3106,21 +3124,33 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      *     TXT:[a=1234] TTL:7300
      * Done
      * @endcode
-     * @cparam dns browse [@ca<service-name>] [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}]
-     *[@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
-     * @par api_copy
-     * #otDnsClientBrowse
+     * @code
+     * dns browse _airplay._tcp.default.service.arpa
+     * DNS browse response for _airplay._tcp.default.service.arpa.
+     * Mac mini
+     *     Port:7000, Priority:0, Weight:0, TTL:10
+     *     Host:Mac-mini.default.service.arpa.
+     *     HostAddress:fd97:739d:386a:1:1c2e:d83c:fcbe:9cf4 TTL:10
+     * Done
+     * @endcode
+     * @cparam dns browse @ca{service-name} [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @sa otDnsClientBrowse
+     * @par
+     * Send a browse (service instance enumeration) DNS query to get the list of services for
+     * given service-name
      * @par
      * The parameters after `service-name` are optional. Any unspecified (or zero) value
      * for these optional parameters is replaced by the value from the current default
      * config (`dns config`).
      * @par
-     * Note: The DNS server IP can be an IPv4 address, which will be synthesized to an
-     * IPv6 address using the preferred NAT64 prefix from the network data. The command
-     * will return `InvalidState` when the DNS server IP is an IPv4 address but the
-     * preferred NAT64 prefix is unavailable.
+     * Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6
+     * address using the preferred NAT64 prefix from the network data. The command will return
+     * `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix
+     * is unavailable. When testing DNS-SD discovery proxy, the zone is not `local` and
+     * instead should be `default.service.arpa`.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
-     **/
+     */
+    /* clang-format on */
     else if (aArgs[0] == "browse")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3129,8 +3159,10 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
                                                 &Interpreter::HandleDnsBrowseResponse, this, config));
         error = OT_ERROR_PENDING;
     }
+    /* clang-format off */
     /**
      * @cli dns service
+     * @cparam dns service @ca{service-instance-label} @ca{service-name} [@ca{DNS-server-IP}] [@ca{DNS-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
      * @par api_copy
      * #otDnsClientResolveService
      * @par
@@ -3148,6 +3180,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * address but the preferred NAT64 prefix is unavailable.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
      */
+    /* clang-format on */
     else if (aArgs[0] == "service")
     {
         VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
