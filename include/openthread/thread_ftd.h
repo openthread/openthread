@@ -68,6 +68,7 @@ typedef struct
     uint16_t     mFrameErrorRate;       ///< Frame error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mMessageErrorRate;     ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mQueuedMessageCnt;     ///< Number of queued messages for the child.
+    uint16_t     mSupervisionInterval;  ///< Supervision interval (in seconds).
     uint8_t      mVersion;              ///< MLE version
     bool         mRxOnWhenIdle : 1;     ///< rx-on-when-idle
     bool         mFullThreadDevice : 1; ///< Full Thread Device

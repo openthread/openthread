@@ -1790,6 +1790,7 @@ Error Mle::SendChildIdRequest(void)
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
     SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
     SuccessOrExit(error = message->AppendVersionTlv());
+    SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
 
     if (!IsFullThreadDevice())
     {
@@ -2055,6 +2056,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
         SuccessOrExit(error = message->AppendSourceAddressTlv());
         SuccessOrExit(error = message->AppendLeaderDataTlv());
         SuccessOrExit(error = message->AppendTimeoutTlv(aTimeout));
+        SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
@@ -2146,6 +2148,10 @@ Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aCh
 
         case Tlv::kMleFrameCounter:
             SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+            break;
+
+        case Tlv::kSupervisionInterval:
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
             break;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -4705,6 +4711,11 @@ exit:
     }
 
     return error;
+}
+
+Error Mle::TxMessage::AppendSupervisionIntervalTlv(uint16_t aInterval)
+{
+    return Tlv::Append<SupervisionIntervalTlv>(*this, aInterval);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

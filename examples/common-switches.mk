@@ -42,7 +42,6 @@ COMMISSIONER              ?= 0
 COVERAGE                  ?= 0
 CHANNEL_MANAGER           ?= 0
 CHANNEL_MONITOR           ?= 0
-CHILD_SUPERVISION         ?= 0
 DATASET_UPDATER           ?= 0
 DEBUG                     ?= 0
 DHCP6_CLIENT              ?= 0
@@ -157,10 +156,6 @@ endif
 
 ifeq ($(CHANNEL_MONITOR),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1
-endif
-
-ifeq ($(CHILD_SUPERVISION),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
 ifeq ($(CSL_RECEIVER),1)

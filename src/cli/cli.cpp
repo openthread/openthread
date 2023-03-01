@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openthread/child_supervision.h>
 #include <openthread/diag.h>
 #include <openthread/dns.h>
 #include <openthread/icmp6.h>
@@ -57,9 +58,6 @@
 #endif
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #include <openthread/server.h>
-#endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-#include <openthread/child_supervision.h>
 #endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include <openthread/platform/misc.h>
@@ -1894,12 +1892,12 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
         if (isTable)
         {
             static const char *const kChildTableTitles[] = {
-                "ID", "RLOC16", "Timeout", "Age", "LQ In",   "C_VN",         "R",
-                "D",  "N",      "Ver",     "CSL", "QMsgCnt", "Extended MAC",
+                "ID", "RLOC16", "Timeout", "Age", "LQ In",   "C_VN",    "R",
+                "D",  "N",      "Ver",     "CSL", "QMsgCnt", "Suprvsn", "Extended MAC",
             };
 
             static const uint8_t kChildTableColumnWidths[] = {
-                5, 8, 12, 12, 7, 6, 1, 1, 1, 3, 3, 7, 18,
+                5, 8, 12, 12, 7, 6, 1, 1, 1, 3, 3, 7, 7, 18,
             };
 
             OutputTableHeader(kChildTableTitles, kChildTableColumnWidths);
@@ -1929,6 +1927,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
                 OutputFormat("|%3u", childInfo.mVersion);
                 OutputFormat("| %1d ", childInfo.mIsCslSynced);
                 OutputFormat("| %5u ", childInfo.mQueuedMessageCnt);
+                OutputFormat("| %5u ", childInfo.mSupervisionInterval);
                 OutputFormat("| ");
                 OutputExtAddress(childInfo.mExtAddress);
                 OutputLine(" |");
@@ -1991,6 +1990,7 @@ template <> otError Interpreter::Process<Cmd("child")>(Arg aArgs[])
     OutputLine("Age: %lu", ToUlong(childInfo.mAge));
     OutputLine("Link Quality In: %u", childInfo.mLinkQualityIn);
     OutputLine("RSSI: %d", childInfo.mAverageRssi);
+    OutputLine("Supervision Interval: %d", childInfo.mSupervisionInterval);
 
 exit:
     return error;
@@ -2099,7 +2099,6 @@ template <> otError Interpreter::Process<Cmd("childmax")>(Arg aArgs[])
 }
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -2127,7 +2126,6 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
          */
         error = ProcessGetSet(aArgs + 1, otChildSupervisionGetCheckTimeout, otChildSupervisionSetCheckTimeout);
     }
-#if OPENTHREAD_FTD
     /**
      * @cli childsupervision interval
      * @code
@@ -2135,8 +2133,6 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
      * 30
      * Done
      * @endcode
-     * @par
-     * This command can only be used with FTD devices.
      * @par api_copy
      * #otChildSupervisionGetInterval
      */
@@ -2149,18 +2145,27 @@ template <> otError Interpreter::Process<Cmd("childsupervision")>(Arg aArgs[])
          * Done
          * @endcode
          * @cparam childsupervision interval @ca{interval-seconds}
-         * @par
-         * This command can only be used with FTD devices.
          * @par api_copy
          * #otChildSupervisionSetInterval
          */
         error = ProcessGetSet(aArgs + 1, otChildSupervisionGetInterval, otChildSupervisionSetInterval);
     }
-#endif
+    else if (aArgs[0] == "failcounter")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("%u", otChildSupervisionGetCheckFailureCounter(GetInstancePtr()));
+            error = OT_ERROR_NONE;
+        }
+        else if (aArgs[1] == "reset")
+        {
+            otChildSupervisionResetCheckFailureCounter(GetInstancePtr());
+            error = OT_ERROR_NONE;
+        }
+    }
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 /** @cli childtimeout
  * @code
@@ -7637,9 +7642,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("childmax"),
         CmdEntry("childrouterlinks"),
 #endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
         CmdEntry("childsupervision"),
-#endif
         CmdEntry("childtimeout"),
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
         CmdEntry("coap"),

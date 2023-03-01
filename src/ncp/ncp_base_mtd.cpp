@@ -40,9 +40,7 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include <openthread/channel_monitor.h>
 #endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #include <openthread/child_supervision.h>
-#endif
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
@@ -2391,8 +2389,6 @@ void NcpBase::HandleJamStateChange(bool aJamState)
 
 #endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_CHECK_TIMEOUT>(void)
 {
     return mEncoder.WriteUint16(otChildSupervisionGetCheckTimeout(mInstance));
@@ -2409,8 +2405,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_CHE
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 

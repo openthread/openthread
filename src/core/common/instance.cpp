@@ -175,13 +175,10 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(*this)
 #endif
-
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #if OPENTHREAD_FTD
     , mChildSupervisor(*this)
 #endif
     , mSupervisionListener(*this)
-#endif
     , mAnnounceBegin(*this)
     , mPanIdQuery(*this)
     , mEnergyScan(*this)

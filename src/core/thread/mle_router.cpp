@@ -1995,6 +1995,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     Child             *child;
     Router            *router;
     uint8_t            numTlvs;
+    uint16_t           supervisionInterval;
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -2032,6 +2033,18 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     // Timeout
     SuccessOrExit(error = Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout));
+
+    // Supervision interval
+    switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+    {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        supervisionInterval = (version <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
+        break;
+    default:
+        ExitNow(error = kErrorParse);
+    }
 
     // TLV Request
     SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList));
@@ -2114,6 +2127,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     child->SetVersion(version);
     child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
     child->SetTimeout(timeout);
+    child->SetSupervisionInterval(supervisionInterval);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     child->ClearLastRxFragmentTag();
 #endif
@@ -2168,6 +2182,7 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     Challenge       challenge;
     LeaderData      leaderData;
     uint32_t        timeout;
+    uint16_t        supervisionInterval;
     Child          *child;
     DeviceMode      oldMode;
     TlvList         requestedTlvList;
@@ -2273,6 +2288,24 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     default:
         ExitNow(error = kErrorParse);
     }
+
+    // Supervision interval
+    switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+    {
+    case kErrorNone:
+        tlvList.Add(Tlv::kSupervisionInterval);
+        break;
+
+    case kErrorNotFound:
+        supervisionInterval =
+            (child->GetVersion() <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
+    }
+
+    child->SetSupervisionInterval(supervisionInterval);
 
     // TLV Request
     switch (aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList))
@@ -2471,6 +2504,21 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
     default:
         ExitNow(error = kErrorParse);
+    }
+
+    {
+        uint16_t supervisionInterval;
+
+        switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
+        {
+        case kErrorNone:
+            child->SetSupervisionInterval(supervisionInterval);
+            break;
+        case kErrorNotFound:
+            break;
+        default:
+            ExitNow(error = kErrorParse);
+        }
     }
 
     // IPv6 Address
@@ -3025,6 +3073,11 @@ void MleRouter::SendChildUpdateResponse(Child                  *aChild,
         case Tlv::kTimeout:
             SuccessOrExit(error = message->AppendTimeoutTlv(aChild->GetTimeout()));
             break;
+
+        case Tlv::kSupervisionInterval:
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild->GetSupervisionInterval()));
+            break;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         case Tlv::kCslClockAccuracy:
             if (!aChild->IsRxOnWhenIdle())

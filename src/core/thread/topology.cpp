@@ -243,23 +243,24 @@ const char *Neighbor::StateToString(State aState)
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
-    mExtAddress         = aChild.GetExtAddress();
-    mTimeout            = aChild.GetTimeout();
-    mRloc16             = aChild.GetRloc16();
-    mChildId            = Mle::ChildIdFromRloc16(aChild.GetRloc16());
-    mNetworkDataVersion = aChild.GetNetworkDataVersion();
-    mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    mLinkQualityIn      = aChild.GetLinkQualityIn();
-    mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
-    mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-    mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
-    mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
-    mQueuedMessageCnt   = aChild.GetIndirectMessageCount();
-    mVersion            = ClampToUint8(aChild.GetVersion());
-    mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
-    mFullThreadDevice   = aChild.IsFullThreadDevice();
-    mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
-    mIsStateRestoring   = aChild.IsStateRestoring();
+    mExtAddress          = aChild.GetExtAddress();
+    mTimeout             = aChild.GetTimeout();
+    mRloc16              = aChild.GetRloc16();
+    mChildId             = Mle::ChildIdFromRloc16(aChild.GetRloc16());
+    mNetworkDataVersion  = aChild.GetNetworkDataVersion();
+    mAge                 = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
+    mLinkQualityIn       = aChild.GetLinkQualityIn();
+    mAverageRssi         = aChild.GetLinkInfo().GetAverageRss();
+    mLastRssi            = aChild.GetLinkInfo().GetLastRss();
+    mFrameErrorRate      = aChild.GetLinkInfo().GetFrameErrorRate();
+    mMessageErrorRate    = aChild.GetLinkInfo().GetMessageErrorRate();
+    mQueuedMessageCnt    = aChild.GetIndirectMessageCount();
+    mVersion             = ClampToUint8(aChild.GetVersion());
+    mRxOnWhenIdle        = aChild.IsRxOnWhenIdle();
+    mFullThreadDevice    = aChild.IsFullThreadDevice();
+    mFullNetworkData     = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
+    mIsStateRestoring    = aChild.IsStateRestoring();
+    mSupervisionInterval = aChild.GetSupervisionInterval();
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
