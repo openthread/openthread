@@ -296,11 +296,12 @@ private:
     protected:
         enum State : uint8_t
         {
-            kNoEntry,  // Entry is unused (there is no entry).
-            kToAdd,    // Entry is ready to be added, monitoring network data to decide if/when to add it.
-            kAdding,   // Entry is being added in network data (random wait interval before add).
-            kAdded,    // Entry is added in network data, monitoring to determine if/when to remove.
-            kRemoving, // Entry is being removed from network data (random wait interval before remove).
+            kNoEntry,   // Entry is unused (there is no entry).
+            kToAdd,     // Entry is ready to be added, monitoring network data to decide if/when to add it.
+            kAdding,    // Entry is being added in network data (random wait interval before add).
+            kAdded,     // Entry is added in network data, monitoring to determine if/when to remove.
+            kRemoving,  // Entry is being removed from network data (random wait interval before remove).
+            kOptimized, // Entry is replaced with a compact prefix to optimize network data use.
         };
 
         // All intervals are in milliseconds.
@@ -418,6 +419,12 @@ private:
     static constexpr uint16_t kMaxRoutingManagerPrefixEntries = 0;
 #endif
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    static const otIp6Prefix kCompactPrefix; // fc00::7
+
+    static constexpr uint16_t kMinPrefixCountToOptimize = 3;
+#endif
+
     class PrefixEntry : public Entry, private NonCopyable
     {
         friend class Entry;
@@ -432,6 +439,12 @@ private:
         void      Unpublish(void);
         void      HandleTimer(void) { Entry::HandleTimer(); }
         void      HandleNotifierEvents(Events aEvents);
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+        bool            CanOptimize(void) const;
+        RoutePreference GetPreference(void) const;
+        void            Optimize(void) { Remove(kOptimized); }
+        void            AddIfOptimized(void);
+#endif
 
     private:
         static constexpr uint8_t kDesiredNumOnMeshPrefix =
@@ -472,6 +485,9 @@ private:
     const PrefixEntry *FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix) const;
     bool               IsAPrefixEntry(const Entry &aEntry) const;
     void               NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    void OptimizeUlaRoutes(void);
+#endif
 #endif
 
     TimerMilli &GetTimer(void) { return mTimer; }
@@ -487,6 +503,9 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     PrefixEntry              mPrefixEntries[kMaxUserPrefixEntries + kMaxRoutingManagerPrefixEntries];
     Callback<PrefixCallback> mPrefixCallback;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    bool mAddedCompactPrefix;
+#endif
 #endif
 
     PublisherTimer mTimer;

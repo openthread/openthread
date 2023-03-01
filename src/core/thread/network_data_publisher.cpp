@@ -58,6 +58,9 @@ Publisher::Publisher(Instance &aInstance)
     : InstanceLocator(aInstance)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mDnsSrpServiceEntry(aInstance)
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    , mAddedCompactPrefix(false)
+#endif
 #endif
     , mTimer(aInstance)
 {
@@ -107,6 +110,10 @@ Error Publisher::PublishExternalRoute(const ExternalRouteConfig &aConfig, Reques
 
     entry->Publish(aConfig, aRequester);
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    OptimizeUlaRoutes();
+#endif
+
 exit:
     return error;
 }
@@ -134,6 +141,10 @@ Error Publisher::UnpublishPrefix(const Ip6::Prefix &aPrefix)
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     entry->Unpublish();
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+    OptimizeUlaRoutes();
+#endif
 
 exit:
     return error;
@@ -215,6 +226,67 @@ void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix
 {
     mPrefixCallback.InvokeIfSet(static_cast<otNetDataPublisherEvent>(aEvent), &aPrefix);
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+
+const otIp6Prefix Publisher::kCompactPrefix = {
+    {{{0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}},
+    7};
+
+void Publisher::OptimizeUlaRoutes(void)
+{
+    uint8_t         count      = 0;
+    RoutePreference preference = kRoutePreferenceLow;
+
+    for (const PrefixEntry &entry : mPrefixEntries)
+    {
+        if (entry.CanOptimize())
+        {
+            count++;
+            preference = Max(preference, entry.GetPreference());
+        }
+    }
+
+    if (count >= kMinPrefixCountToOptimize)
+    {
+        ExternalRouteConfig config;
+
+        for (PrefixEntry &entry : mPrefixEntries)
+        {
+            if (entry.CanOptimize())
+            {
+                entry.Optimize();
+            }
+        }
+
+        config.Clear();
+        config.mPrefix     = kCompactPrefix;
+        config.mStable     = true;
+        config.mPreference = preference;
+
+        IgnoreError(Get<Local>().AddHasRoutePrefix(config));
+
+        if (!mAddedCompactPrefix)
+        {
+            mAddedCompactPrefix = true;
+            LogInfo("Adding compact prefix %s", AsCoreType(&kCompactPrefix).ToString().AsCString());
+        }
+    }
+    else if (mAddedCompactPrefix)
+    {
+        IgnoreError(Get<Local>().RemoveHasRoutePrefix(AsCoreType(&kCompactPrefix)));
+        LogInfo("Removing compact prefix %s", AsCoreType(&kCompactPrefix).ToString().AsCString());
+        mAddedCompactPrefix = false;
+
+        for (PrefixEntry &entry : mPrefixEntries)
+        {
+            entry.AddIfOptimized();
+        }
+    }
+
+    Get<Notifier>().HandleServerDataUpdated();
+}
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
@@ -349,6 +421,9 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
             SetState(kAdded);
         }
         break;
+
+    case kOptimized:
+        break;
     }
 }
 
@@ -465,11 +540,12 @@ void Publisher::Entry::LogUpdateTime(void) const
 const char *Publisher::Entry::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "NoEntry",  // (0) kNoEntry
-        "ToAdd",    // (1) kToAdd
-        "Adding",   // (2) kAdding
-        "Added",    // (3) kAdded
-        "Removing", // (4) kRemoving
+        "NoEntry",   // (0) kNoEntry
+        "ToAdd",     // (1) kToAdd
+        "Adding",    // (2) kAdding
+        "Added",     // (3) kAdded
+        "Removing",  // (4) kRemoving
+        "Optimized", // (5) kOptimized
     };
 
     static_assert(0 == kNoEntry, "kNoEntry value is not correct");
@@ -477,6 +553,7 @@ const char *Publisher::Entry::StateToString(State aState)
     static_assert(2 == kAdding, "kAdding value is not correct");
     static_assert(3 == kAdded, "kAdded value is not correct");
     static_assert(4 == kRemoving, "kRemoving value is not correct");
+    static_assert(5 == kOptimized, "kOptimized value is not correct");
 
     return kStateStrings[aState];
 }
@@ -1050,6 +1127,51 @@ void Publisher::PrefixEntry::CountExternalRouteEntries(uint8_t &aNumEntries, uin
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+
+bool Publisher::PrefixEntry::CanOptimize(void) const
+{
+    bool                canOptimize = false;
+    ExternalRouteConfig config;
+
+    VerifyOrExit(IsInUse() && (mType == kTypeExternalRoute));
+
+    config.SetFromTlvFlags(static_cast<uint8_t>(mFlags));
+    VerifyOrExit(!config.mNat64);
+
+    canOptimize = mPrefix.ContainsPrefix(AsCoreType(&kCompactPrefix));
+
+exit:
+    return canOptimize;
+}
+
+RoutePreference Publisher::PrefixEntry::GetPreference(void) const
+{
+    ExternalRouteConfig config;
+
+    OT_ASSERT(IsInUse() && (mType == kTypeExternalRoute));
+
+    config.SetFromTlvFlags(static_cast<uint8_t>(mFlags));
+
+    return static_cast<RoutePreference>(config.mPreference);
+}
+
+void Publisher::PrefixEntry::AddIfOptimized(void)
+{
+    VerifyOrExit(GetState() == kOptimized);
+
+    // We change the state to `kToAdd` to ensure even if `Add()`
+    // fails, we exit the `kOptimized` state.
+
+    SetState(kToAdd);
+    Add();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 

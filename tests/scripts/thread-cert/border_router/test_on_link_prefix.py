@@ -164,18 +164,18 @@ class MultiThreadNetworks(thread_cert.TestCase):
         br2_omr_prefix = br2.get_br_omr_prefix()
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
-        # Verify that the Border Routers starts advertsing new on-link prefix
+        # Verify that the Border Routers starts advertising new on-link prefix
         # but don't remove the external routes for the radvd on-link prefix
         # immediately, because the SLAAC addresses are still valid.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 3)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 3)
+        # br1 should have 3 ULA based route prefixes which are optimized
+        # and replaced with `fc00::7`.
+
+        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
         self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 2)
         self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
 
-        on_link_prefixes = list(
-            set(br1.get_netdata_non_nat64_prefixes()).intersection(br2.get_netdata_non_nat64_prefixes()))
-        self.assertEqual(len(on_link_prefixes), 1)
-        self.assertEqual(IPv6Network(on_link_prefixes[0]), IPv6Network(br2.get_br_on_link_prefix()))
+        br2_on_link_prefix = br2.get_br_on_link_prefix()
 
         router1_omr_addr = router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
         router2_omr_addr = router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
@@ -184,7 +184,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
         # and preferred Border Router on-link prefix can be reached by Thread
         # devices in network of Border Router 1.
         for host_on_link_addr in [
-                host.get_matched_ula_addresses(on_link_prefixes[0])[0],
+                host.get_matched_ula_addresses(br2_on_link_prefix)[0],
                 host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
         ]:
             self.assertTrue(router1.ping(host_on_link_addr))

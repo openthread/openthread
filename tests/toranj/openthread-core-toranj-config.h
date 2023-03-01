@@ -148,6 +148,23 @@
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES
+ *
+ * Define as 1 to enable Publisher to optimize external route entries which are within ULA range `fc00::/7`.
+ *
+ */
+#define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ULA_ROUTES 1
+
+/**
+ * @def OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES
+ *
+ * Specifies maximum number of prefix (on-mesh prefix or external route) entries reserved by Publisher for use by
+ * user (through OT public APIs).
+ *
+ */
+#define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES 6
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
  *
  * Define to 1 to enable TMF anycast locator functionality.
