@@ -125,6 +125,11 @@ void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, Flags
         *flagsPtr++ = 'n';
     }
 
+    if (aConfig.mCompact)
+    {
+        *flagsPtr++ = 'c';
+    }
+
     *flagsPtr = '\0';
 }
 
@@ -698,6 +703,7 @@ exit:
  * * Flags
  *   * s: Stable flag
  *   * n: NAT64 flag
+ *   * c: Compact flag
  * * Preference `high`, `med`, or `low`
  * * RLOC16 of device which added the route prefix
  * @par

@@ -564,28 +564,33 @@ struct ExternalRoute
 
 template <uint16_t kLength> void VerifyExternalRoutesInNetData(const ExternalRoute (&aExternRoutes)[kLength])
 {
-    otNetworkDataIterator            iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otNetworkDataIterator            iterator;
     NetworkData::ExternalRouteConfig routeConfig;
-    uint16_t                         counter;
 
     Log("VerifyExternalRoutesInNetData()");
 
-    counter = 0;
+    // First check that all `aExternRoutes` are either directly
+    // present in Network Data or covered by a compact
+    // (shorter length) prefix.
 
-    while (otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) == kErrorNone)
+    for (const ExternalRoute &externalRoute : aExternRoutes)
     {
         bool didFind = false;
 
-        counter++;
+        iterator = OT_NETWORK_DATA_ITERATOR_INIT;
 
-        Log("   prefix:%s, prf:%s", routeConfig.GetPrefix().ToString().AsCString(),
-            PreferenceToString(routeConfig.mPreference));
-
-        for (const ExternalRoute &externalRoute : aExternRoutes)
+        while (otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) == kErrorNone)
         {
             if (externalRoute.mPrefix == routeConfig.GetPrefix())
             {
                 VerifyOrQuit(static_cast<int8_t>(routeConfig.mPreference) == externalRoute.mPreference);
+                didFind = true;
+                break;
+            }
+
+            if (externalRoute.mPrefix.ContainsPrefix(routeConfig.GetPrefix()))
+            {
+                VerifyOrQuit(static_cast<int8_t>(routeConfig.mPreference) >= externalRoute.mPreference);
                 didFind = true;
                 break;
             }
@@ -594,7 +599,29 @@ template <uint16_t kLength> void VerifyExternalRoutesInNetData(const ExternalRou
         VerifyOrQuit(didFind);
     }
 
-    VerifyOrQuit(counter == kLength);
+    // Now check the same but for entries in Network Data (make sure
+    // we don't have any unexpected entries in Network Data).
+
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) == kErrorNone)
+    {
+        bool didFind = false;
+
+        Log("   prefix:%s, prf:%s", routeConfig.GetPrefix().ToString().AsCString(),
+            PreferenceToString(routeConfig.mPreference));
+
+        for (const ExternalRoute &externalRoute : aExternRoutes)
+        {
+            if (externalRoute.mPrefix.ContainsPrefix(routeConfig.GetPrefix()))
+            {
+                didFind = true;
+                break;
+            }
+        }
+
+        VerifyOrQuit(didFind);
+    }
 }
 
 void VerifyNoExternalRouteInNetData(void)

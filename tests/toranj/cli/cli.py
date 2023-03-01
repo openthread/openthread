@@ -396,6 +396,15 @@ class Node(object):
     def register_netdata(self):
         self._cli_no_output('netdata register')
 
+    def netdata_publish_prefix(self, prefix, flags=None, prf=None):
+        return self._cli_no_output('netdata publish prefix', prefix, flags, prf)
+
+    def netdata_publish_route(self, prefix, flags=None, prf=None):
+        return self._cli_no_output('netdata publish route', prefix, flags, prf)
+
+    def netdata_unpublish(self, prefix):
+        return self._cli_no_output('netdata unpublish', prefix)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # ping and counters
 

@@ -184,6 +184,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-017-network-data-versions.py
     run cli/test-018-next-hop-and-path-cost.py
     run cli/test-019-netdata-context-id.py
+    run cli/test-020-network-data-publisher-compact-routes.py
     run cli/test-400-srp-client-server.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it

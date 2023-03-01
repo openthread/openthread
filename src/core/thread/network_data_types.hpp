@@ -276,7 +276,7 @@ public:
      * @param[in] aInstance   A reference to the OpenThread instance.
      *
      * @retval TRUE   The config is a valid external route.
-     * @retval FALSE  The config is not a valid extern route.
+     * @retval FALSE  The config is not a valid external route.
      *
      */
     bool IsValid(Instance &aInstance) const;

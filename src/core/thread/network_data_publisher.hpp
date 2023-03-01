@@ -46,6 +46,7 @@
 #include <openthread/netdata_publisher.h>
 
 #include "border_router/routing_manager.hpp"
+#include "common/array.hpp"
 #include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
@@ -296,11 +297,12 @@ private:
     protected:
         enum State : uint8_t
         {
-            kNoEntry,  // Entry is unused (there is no entry).
-            kToAdd,    // Entry is ready to be added, monitoring network data to decide if/when to add it.
-            kAdding,   // Entry is being added in network data (random wait interval before add).
-            kAdded,    // Entry is added in network data, monitoring to determine if/when to remove.
-            kRemoving, // Entry is being removed from network data (random wait interval before remove).
+            kNoEntry,   // Entry is unused (there is no entry).
+            kToAdd,     // Entry is ready to be added, monitoring network data to decide if/when to add it.
+            kAdding,    // Entry is being added in network data (random wait interval before add).
+            kAdded,     // Entry is added in network data, monitoring to determine if/when to remove.
+            kRemoving,  // Entry is being removed from network data (random wait interval before remove).
+            kOptimized, // Entry is replaced with a compact prefix to optimize network data use.
         };
 
         // All intervals are in milliseconds.
@@ -418,6 +420,27 @@ private:
     static constexpr uint16_t kMaxRoutingManagerPrefixEntries = 0;
 #endif
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+    static constexpr uint16_t kMinPrefixCountToOptimize = 3;
+    static constexpr uint16_t kNumCompactPrefixes       = 30;
+
+    class CompactPrefix : public Unequatable<CompactPrefix>
+    {
+    public:
+        static constexpr uint8_t kPrefixLength = 7;
+
+        void GetPrefix(Ip6::Prefix &aPrefix) const { aPrefix.Set(&mPrefix, kPrefixLength); }
+        void SetFrom(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix.GetBytes()[0] & kMask; }
+        bool Matches(const Ip6::Prefix &aPrefix) const;
+        bool operator==(const CompactPrefix &aOther) const { return mPrefix == aOther.mPrefix; }
+
+    private:
+        static constexpr uint8_t kMask = 0xfe; // 0b1111_1110 (first 7 bits)
+
+        uint8_t mPrefix;
+    };
+#endif
+
     class PrefixEntry : public Entry, private NonCopyable
     {
         friend class Entry;
@@ -432,6 +455,13 @@ private:
         void      Unpublish(void);
         void      HandleTimer(void) { Entry::HandleTimer(); }
         void      HandleNotifierEvents(Events aEvents);
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        RoutePreference    GetPreference(void) const;
+        bool               CanOptimize(void) const;
+        void               Optimize(void) { Remove(kOptimized); }
+        void               AddIfOptimized(void);
+#endif
 
     private:
         static constexpr uint8_t kDesiredNumOnMeshPrefix =
@@ -472,6 +502,9 @@ private:
     const PrefixEntry *FindMatchingPrefixEntry(const Ip6::Prefix &aPrefix) const;
     bool               IsAPrefixEntry(const Entry &aEntry) const;
     void               NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix) const;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+    void OptimizeRoutes(void);
+#endif
 #endif
 
     TimerMilli &GetTimer(void) { return mTimer; }
@@ -487,6 +520,9 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     PrefixEntry              mPrefixEntries[kMaxUserPrefixEntries + kMaxRoutingManagerPrefixEntries];
     Callback<PrefixCallback> mPrefixCallback;
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+    Array<CompactPrefix, kNumCompactPrefixes> mCompactPrefixes;
+#endif
 #endif
 
     PublisherTimer mTimer;

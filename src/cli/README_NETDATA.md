@@ -308,6 +308,7 @@ External Routes are listed under `Routes` header:
 - Flags
   - s: Stable flag
   - n: NAT64 flag
+  - c: Compact flag
 - Preference `high`, `med`, or `low`
 - RLOC16 of device which added the route prefix
 

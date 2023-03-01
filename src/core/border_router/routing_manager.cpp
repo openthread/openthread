@@ -1115,13 +1115,18 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
 
 bool RoutingManager::NetworkDataContainsExternalRoute(const Ip6::Prefix &aPrefix) const
 {
+    // This method checks whether Network Data contains an external
+    // route same as `aPrefix` or a sub-prefix covering `aPrefix`.
+    // The sub-prefix check handles the case when Network Data
+    // Publisher uses compact prefixes to reduce Network Data size.
+
     NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
     NetworkData::ExternalRouteConfig routeConfig;
     bool                             contains = false;
 
     while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, routeConfig) == kErrorNone)
     {
-        if (routeConfig.mStable && routeConfig.GetPrefix() == aPrefix)
+        if (routeConfig.mStable && aPrefix.ContainsPrefix(routeConfig.GetPrefix()))
         {
             contains = true;
             break;

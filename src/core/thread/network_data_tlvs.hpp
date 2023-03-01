@@ -468,6 +468,15 @@ public:
     bool IsNat64(void) const { return (mFlags & kNat64Flag) != 0; }
 
     /**
+     * This method indicates whether or not the Compress flag is set.
+     *
+     * @retval TRUE   If the Compress flag is set.
+     * @retval FALSE  If the Compress flag is not set.
+     *
+     */
+    bool IsCompact(void) const { return (mFlags & kCompactFlag) != 0; }
+
+    /**
      * This method returns a pointer to the next HasRouteEntry.
      *
      * @returns A pointer to the next HasRouteEntry.
@@ -508,6 +517,7 @@ private:
     static constexpr uint8_t kPreferenceOffset = 6;
     static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
     static constexpr uint8_t kNat64Flag        = 1 << 5;
+    static constexpr uint8_t kCompactFlag      = 1 << 4;
 
     uint16_t mRloc;
     uint8_t  mFlags;

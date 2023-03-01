@@ -203,6 +203,11 @@ uint8_t ExternalRouteConfig::ConvertToTlvFlags(void) const
         flags |= HasRouteEntry::kNat64Flag;
     }
 
+    if (mCompact)
+    {
+        flags |= HasRouteEntry::kCompactFlag;
+    }
+
     flags |= (RoutePreferenceToValue(mPreference) << HasRouteEntry::kPreferenceOffset);
 
     return flags;
@@ -227,6 +232,7 @@ void ExternalRouteConfig::SetFrom(Instance            &aInstance,
 void ExternalRouteConfig::SetFromTlvFlags(uint8_t aFlags)
 {
     mNat64      = ((aFlags & HasRouteEntry::kNat64Flag) != 0);
+    mCompact    = ((aFlags & HasRouteEntry::kCompactFlag) != 0);
     mPreference = RoutePreferenceFromValue(aFlags >> HasRouteEntry::kPreferenceOffset);
 }
 

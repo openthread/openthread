@@ -107,6 +107,10 @@ Error Publisher::PublishExternalRoute(const ExternalRouteConfig &aConfig, Reques
 
     entry->Publish(aConfig, aRequester);
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+    OptimizeRoutes();
+#endif
+
 exit:
     return error;
 }
@@ -134,6 +138,10 @@ Error Publisher::UnpublishPrefix(const Ip6::Prefix &aPrefix)
     VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
     entry->Unpublish();
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+    OptimizeRoutes();
+#endif
 
 exit:
     return error;
@@ -215,6 +223,148 @@ void Publisher::NotifyPrefixEntryChange(Event aEvent, const Ip6::Prefix &aPrefix
 {
     mPrefixCallback.InvokeIfSet(static_cast<otNetDataPublisherEvent>(aEvent), &aPrefix);
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+
+bool Publisher::CompactPrefix::Matches(const Ip6::Prefix &aPrefix) const
+{
+    Ip6::Prefix prefix;
+
+    GetPrefix(prefix);
+
+    return aPrefix.ContainsPrefix(prefix);
+}
+
+void Publisher::OptimizeRoutes(void)
+{
+    struct CompactPrefixEntry
+    {
+        bool Matches(const Ip6::Prefix &aPrefix) const { return mCompactPrefix.Matches(aPrefix); }
+        bool Matches(const CompactPrefix &aCompactPrefix) const { return (mCompactPrefix == aCompactPrefix); }
+        bool ShouldAdd(void) const { return (mCount >= kMinPrefixCountToOptimize); }
+
+        CompactPrefix   mCompactPrefix;
+        uint8_t         mCount;
+        RoutePreference mPreference;
+    };
+
+    Array<CompactPrefixEntry, kNumCompactPrefixes> newCompactPrefixes;
+
+    // Determine the list of compact prefixes. Go through all prefix
+    // entries that can be optimized, determine the compact prefix,
+    // keep track of count of prefixes that share the same compact
+    // prefix.
+
+    for (const PrefixEntry &prefixEntry : mPrefixEntries)
+    {
+        if (prefixEntry.CanOptimize())
+        {
+            CompactPrefixEntry *compactEntry = newCompactPrefixes.FindMatching(prefixEntry.GetPrefix());
+
+            if (compactEntry != nullptr)
+            {
+                compactEntry->mCount++;
+                compactEntry->mPreference = Max(compactEntry->mPreference, prefixEntry.GetPreference());
+                continue;
+            }
+
+            compactEntry = newCompactPrefixes.PushBack();
+
+            if (compactEntry == nullptr)
+            {
+                continue;
+            }
+
+            compactEntry->mCompactPrefix.SetFrom(prefixEntry.GetPrefix());
+            compactEntry->mCount      = 1;
+            compactEntry->mPreference = prefixEntry.GetPreference();
+        }
+    }
+
+    // Optimize all prefix entries that are covered by a compact prefix
+    // with count same or above the `kMinPrefixCountToOptimize` threshold.
+
+    for (const CompactPrefixEntry &compactEntry : newCompactPrefixes)
+    {
+        ExternalRouteConfig config;
+
+        if (!compactEntry.ShouldAdd())
+        {
+            continue;
+        }
+
+        for (PrefixEntry &prefixEntry : mPrefixEntries)
+        {
+            if (prefixEntry.CanOptimize() && compactEntry.Matches(prefixEntry.GetPrefix()))
+            {
+                prefixEntry.Optimize();
+            }
+        }
+
+        // Add the compact prefix.
+
+        config.Clear();
+        compactEntry.mCompactPrefix.GetPrefix(AsCoreType(&config.mPrefix));
+        config.mStable     = true;
+        config.mCompact    = true;
+        config.mPreference = compactEntry.mPreference;
+
+        IgnoreError(Get<Local>().AddHasRoutePrefix(config));
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        if (!mCompactPrefixes.Contains(compactEntry.mCompactPrefix))
+        {
+            LogInfo("Adding compact prefix %s", AsCoreType(&config.mPrefix).ToString().AsCString());
+        }
+#endif
+    }
+
+    // Remove any previous compact prefix which is no longer present
+    // in the new list or should not be added anymore since its `mCount` is
+    // now below `kMinPrefixCountToOptimize` threshold.
+
+    for (const CompactPrefix &oldCompactPrefix : mCompactPrefixes)
+    {
+        CompactPrefixEntry *compactEntry = newCompactPrefixes.FindMatching(oldCompactPrefix);
+
+        if ((compactEntry == nullptr) || !compactEntry->ShouldAdd())
+        {
+            Ip6::Prefix prefix;
+
+            oldCompactPrefix.GetPrefix(prefix);
+            IgnoreError(Get<Local>().RemoveHasRoutePrefix(prefix));
+
+            LogInfo("Removing compact prefix %s", prefix.ToString().AsCString());
+
+            // Re-add all original prefix entries that were associated
+            // with this compact prefix.
+
+            for (PrefixEntry &prefixEntry : mPrefixEntries)
+            {
+                if (prefixEntry.CanOptimize() && oldCompactPrefix.Matches(prefixEntry.GetPrefix()))
+                {
+                    prefixEntry.AddIfOptimized();
+                }
+            }
+        }
+    }
+
+    // Update `mCompactPrefixes` to track the new list.
+
+    mCompactPrefixes.Clear();
+
+    for (const CompactPrefixEntry &compactEntry : newCompactPrefixes)
+    {
+        if (compactEntry.ShouldAdd())
+        {
+            IgnoreError(mCompactPrefixes.PushBack(compactEntry.mCompactPrefix));
+        }
+    }
+
+    Get<Notifier>().HandleServerDataUpdated();
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
@@ -349,6 +499,9 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
             SetState(kAdded);
         }
         break;
+
+    case kOptimized:
+        break;
     }
 }
 
@@ -465,11 +618,12 @@ void Publisher::Entry::LogUpdateTime(void) const
 const char *Publisher::Entry::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "NoEntry",  // (0) kNoEntry
-        "ToAdd",    // (1) kToAdd
-        "Adding",   // (2) kAdding
-        "Added",    // (3) kAdded
-        "Removing", // (4) kRemoving
+        "NoEntry",   // (0) kNoEntry
+        "ToAdd",     // (1) kToAdd
+        "Adding",    // (2) kAdding
+        "Added",     // (3) kAdded
+        "Removing",  // (4) kRemoving
+        "Optimized", // (5) kOptimized
     };
 
     static_assert(0 == kNoEntry, "kNoEntry value is not correct");
@@ -477,6 +631,7 @@ const char *Publisher::Entry::StateToString(State aState)
     static_assert(2 == kAdding, "kAdding value is not correct");
     static_assert(3 == kAdded, "kAdded value is not correct");
     static_assert(4 == kRemoving, "kRemoving value is not correct");
+    static_assert(5 == kOptimized, "kOptimized value is not correct");
 
     return kStateStrings[aState];
 }
@@ -1050,6 +1205,53 @@ void Publisher::PrefixEntry::CountExternalRouteEntries(uint8_t &aNumEntries, uin
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
+
+bool Publisher::PrefixEntry::CanOptimize(void) const
+{
+    bool                canOptimize = false;
+    ExternalRouteConfig config;
+
+    VerifyOrExit(IsInUse() && (mType == kTypeExternalRoute));
+
+    config.SetFromTlvFlags(static_cast<uint8_t>(mFlags));
+    VerifyOrExit(!config.mNat64);
+
+    VerifyOrExit(mPrefix.GetLength() >= CompactPrefix::kPrefixLength);
+
+    canOptimize = true;
+
+exit:
+    return canOptimize;
+}
+
+RoutePreference Publisher::PrefixEntry::GetPreference(void) const
+{
+    ExternalRouteConfig config;
+
+    OT_ASSERT(IsInUse() && (mType == kTypeExternalRoute));
+
+    config.SetFromTlvFlags(static_cast<uint8_t>(mFlags));
+
+    return static_cast<RoutePreference>(config.mPreference);
+}
+
+void Publisher::PrefixEntry::AddIfOptimized(void)
+{
+    VerifyOrExit(GetState() == kOptimized);
+
+    // We change the state to `kToAdd` to ensure even if `Add()`
+    // fails, we exit the `kOptimized` state.
+
+    SetState(kToAdd);
+    Add();
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_OPTIMIZE_ROUTES
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 

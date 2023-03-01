@@ -94,6 +94,7 @@ typedef struct otExternalRouteConfig
     bool        mNat64 : 1;               ///< Whether this is a NAT64 prefix.
     bool        mStable : 1;              ///< Whether this configuration is considered Stable Network Data.
     bool        mNextHopIsThisDevice : 1; ///< Whether the next hop is this device (value ignored on config add).
+    bool        mCompact : 1;             ///< Whether this prefix is compact (value ignored on config add).
 } otExternalRouteConfig;
 
 /**
