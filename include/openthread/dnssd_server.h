@@ -261,7 +261,7 @@ const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
 void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether the DNSSD server will forward DNS queries to platform DNS upstream API.
+ * Returns whether the DNSSD server will forward DNS queries to the platform DNS upstream API.
  *
  * Available when `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is enabled.
  *

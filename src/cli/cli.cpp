@@ -3166,6 +3166,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             /**
              * @cli dns server upstream
              * @code
+             * dns server upstream
              * Enabled
              * Done
              * @endcode
@@ -3179,6 +3180,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             /**
              * @cli dns server upstream {enable|disable}
              * @code
+             * dns server upstream enable
              * Done
              * @endcode
              * @cparam dns server upstream @ca{enable|disable}
