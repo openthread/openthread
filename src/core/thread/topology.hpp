@@ -1210,7 +1210,21 @@ public:
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+    /**
+     * This method returns the supervision interval (in seconds).
+     *
+     * @returns The supervision interval (in seconds).
+     *
+     */
+    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
+
+    /**
+     * This method sets the supervision interval.
+     *
+     * @param[in] aInterval  The supervision interval (in seconds).
+     *
+     */
+    void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
 
     /**
      * This method increments the number of seconds since last supervision of the child.
@@ -1231,8 +1245,6 @@ public:
      *
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
-
-#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
@@ -1331,9 +1343,8 @@ private:
         uint8_t mAttachChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
     };
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
-#endif
+    uint16_t mSupervisionInterval;     // Supervision interval for the child (in sec).
+    uint16_t mSecondsSinceSupervision; // Number of seconds since last supervision of the child.
 
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };

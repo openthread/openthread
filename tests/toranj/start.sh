@@ -222,7 +222,6 @@ run ncp/test-014-ip6-address-add.py
 run ncp/test-015-same-prefix-on-multiple-nodes.py
 run ncp/test-016-neighbor-table.py
 run ncp/test-017-parent-reset-child-recovery.py
-run ncp/test-018-child-supervision.py
 run ncp/test-019-inform-previous-parent.py
 run ncp/test-020-router-table.py
 run ncp/test-021-address-cache-table.py

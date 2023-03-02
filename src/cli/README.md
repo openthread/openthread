@@ -623,10 +623,10 @@ Print table of attached children.
 
 ```bash
 > child table
-| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |
-+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+
-|   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 | 4ecede68435358ac |
-|   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 | a672a601d2ce37d8 |
+| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt|Suprvsn| Extended MAC     |
++-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+-------+------------------+
+|   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 |   129 | 4ecede68435358ac |
+|   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 |     0 | a672a601d2ce37d8 |
 Done
 ```
 
@@ -646,6 +646,7 @@ Timeout: 100
 Age: 0
 Link Quality In: 3
 RSSI: -20
+Supervision Interval: 129
 Done
 ```
 
@@ -738,6 +739,27 @@ Set the Child Supervision Check Timeout value.
 
 ```bash
 > childsupervision checktimeout 30
+Done
+```
+
+### childsupervision failcounter
+
+Get the current value of supervision check timeout failure counter.
+
+The counter tracks the number of supervision check failures on the child. It is incremented when the child does not hear from its parent within the specified check timeout interval.
+
+```bash
+> childsupervision failcounter
+0
+Done
+```
+
+### childsupervision failcounter reset
+
+Reset the supervision check timeout failure counter to zero.
+
+```bash
+> childsupervision failcounter reset
 Done
 ```
 

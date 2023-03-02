@@ -44,7 +44,6 @@ COAPS                                ?= 1
 COMMISSIONER                         ?= 1
 CHANNEL_MANAGER                      ?= 1
 CHANNEL_MONITOR                      ?= 1
-CHILD_SUPERVISION                    ?= 1
 DAEMON                               ?= 0
 DATASET_UPDATER                      ?= 1
 DHCP6_CLIENT                         ?= 1

@@ -67,7 +67,7 @@ public:
         kMeshForwarder,          ///< `MeshForwarder`
         kMleRouter,              ///< `Mle::MleRouter`
         kAddressResolver,        ///< `AddressResolver`
-        kChildSupervisor,        ///< `Utils::ChildSupervisor`
+        kChildSupervisor,        ///< `ChildSupervisor`
         kIp6FragmentReassembler, ///< `Ip6::Ip6` (handling of fragmented messages)
         kDuaManager,             ///< `DuaManager`
         kMlrManager,             ///< `MlrManager`

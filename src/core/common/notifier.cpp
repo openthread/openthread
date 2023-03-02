@@ -133,9 +133,7 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Manager>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
-#endif
+    Get<ChildSupervisor>().HandleNotifierEvents(events);
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     Get<MeshCoP::DatasetUpdater>().HandleNotifierEvents(events);
 #endif

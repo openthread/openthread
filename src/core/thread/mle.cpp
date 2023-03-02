@@ -1790,6 +1790,7 @@ Error Mle::SendChildIdRequest(void)
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
     SuccessOrExit(error = message->AppendTimeoutTlv(mTimeout));
     SuccessOrExit(error = message->AppendVersionTlv());
+    SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
 
     if (!IsFullThreadDevice())
     {
@@ -2055,6 +2056,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
         SuccessOrExit(error = message->AppendSourceAddressTlv());
         SuccessOrExit(error = message->AppendLeaderDataTlv());
         SuccessOrExit(error = message->AppendTimeoutTlv(aTimeout));
+        SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
@@ -2146,6 +2148,10 @@ Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aCh
 
         case Tlv::kMleFrameCounter:
             SuccessOrExit(error = message->AppendMleFrameCounterTlv());
+            break;
+
+        case Tlv::kSupervisionInterval:
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
             break;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -4707,6 +4713,11 @@ exit:
     return error;
 }
 
+Error Mle::TxMessage::AppendSupervisionIntervalTlv(uint16_t aInterval)
+{
+    return Tlv::Append<SupervisionIntervalTlv>(*this, aInterval);
+}
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 Error Mle::TxMessage::AppendTimeRequestTlv(void)
 {
@@ -4940,10 +4951,7 @@ Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuff
     SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
     VerifyOrExit(length >= kMinChallengeSize, error = kErrorParse);
 
-    if (length > kMaxChallengeSize)
-    {
-        length = kMaxChallengeSize;
-    }
+    length = Min(length, kMaxChallengeSize);
 
     ReadBytes(offset, aBuffer.mBuffer, length);
     aBuffer.mLength = static_cast<uint8_t>(length);

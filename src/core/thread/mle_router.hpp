@@ -542,9 +542,9 @@ public:
 #endif
 
 private:
-    static constexpr uint16_t kDiscoveryMaxJitter            = 250;  // Max jitter delay Discovery Responses (in msec).
-    static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
-    static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
+    static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
+    static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
+    static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
@@ -557,6 +557,9 @@ private:
     static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
     static constexpr uint8_t kMinCriticalChildrenCount = 6;
+
+    static constexpr uint16_t kChildSupervisionDefaultIntervalForOlderVersion =
+        OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL;
 
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
@@ -604,6 +607,7 @@ private:
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
     void  SetStateRouter(uint16_t aRloc16);
     void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
+    void  SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
@@ -628,8 +632,6 @@ private:
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
     void        HandleAdvertiseTrickleTimer(void);
     void        HandleTimeTick(void);
-
-    void SetLinkRequestTransmissionCounter(void);
 
     TrickleTimer mAdvertiseTrickleTimer;
 

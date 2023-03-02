@@ -73,6 +73,8 @@ namespace ot {
  * @}
  */
 
+class SupervisionListener;
+
 /**
  * @namespace ot::Mle
  *
@@ -100,6 +102,7 @@ class Mle : public InstanceLocator, private NonCopyable
 {
     friend class DiscoverScanner;
     friend class ot::Notifier;
+    friend class ot::SupervisionListener;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     friend class ot::LinkMetrics::LinkMetrics;
 #endif
@@ -842,7 +845,7 @@ protected:
 #endif
     };
 
-    static constexpr uint8_t kMaxTlvListSize = 16; ///< Maximum number of TLVs in a `TlvList`.
+    static constexpr uint8_t kMaxTlvListSize = 32; ///< Maximum number of TLVs in a `TlvList`.
 
     /**
      * This type represents a list of TLVs (array of TLV types).
@@ -1116,6 +1119,17 @@ protected:
          *
          */
         Error AppendAddressRegistrationTlv(AddressRegistrationMode aMode = kAppendAllAddresses);
+
+        /**
+         * This method appends a Supervision Interval TLV to the message.
+         *
+         * @param[in]  aInterval  The interval value.
+         *
+         * @retval kErrorNone    Successfully appended the Supervision Interval TLV.
+         * @retval kErrorNoBufs  Insufficient buffers available to append the Supervision Interval TLV.
+         *
+         */
+        Error AppendSupervisionIntervalTlv(uint16_t aInterval);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         /**

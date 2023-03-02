@@ -154,6 +154,7 @@ EXTRA_DIST                                                         = \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
     test_br_upgrade_router_role.py                                   \
+    test_child_supervision.py                                        \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \
@@ -236,6 +237,7 @@ check_SCRIPTS                                                      = \
     test_anycast.py                                                  \
     test_anycast_locator.py                                          \
     test_br_upgrade_router_role.py                                   \
+    test_child_supervision.py                                        \
     test_coap.py                                                     \
     test_coap_block.py                                               \
     test_coap_observe.py                                             \

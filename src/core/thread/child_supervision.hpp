@@ -53,8 +53,6 @@ namespace ot {
 class ThreadNetif;
 class Child;
 
-namespace Utils {
-
 /**
  *
  * Child supervision feature provides a mechanism for parent
@@ -84,8 +82,6 @@ namespace Utils {
  * child table.
  *
  */
-
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_FTD
 
@@ -120,25 +116,6 @@ public:
     void Stop(void);
 
     /**
-     * This method sets the supervision interval.
-     *
-     * Setting the supervision interval to a non-zero value will ensure to start the supervision process (if not
-     * already started).
-     *
-     * @param[in] aInterval If non-zero, the desired supervision interval (in seconds), zero to disable supervision.
-     *
-     */
-    void SetSupervisionInterval(uint16_t aInterval);
-
-    /**
-     * This method returns the supervision interval.
-     *
-     * @returns  The current supervision interval (seconds), or zero if supervision is disabled.
-     *
-     */
-    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
-
-    /**
      * This method returns the destination for a supervision message.
      *
      * @param[in] aMessage The message for which to get the destination.
@@ -165,8 +142,6 @@ private:
     void CheckState(void);
     void HandleTimeTick(void);
     void HandleNotifierEvents(Events aEvents);
-
-    uint16_t mSupervisionInterval;
 };
 
 #endif // #if OPENTHREAD_FTD
@@ -199,6 +174,22 @@ public:
     void Stop(void);
 
     /**
+     * This method sets the supervision interval.
+     *
+     * @param[in] aInterval If non-zero, the desired supervision interval (in seconds), zero to disable supervision.
+     *
+     */
+    void SetInterval(uint16_t aInterval);
+
+    /**
+     * This method returns the supervision interval.
+     *
+     * @returns  The current supervision interval (seconds), or zero if supervision is disabled.
+     *
+     */
+    uint16_t GetInterval(void) const { return mInterval; }
+
+    /**
      * This method sets the supervision check timeout (in seconds).
      *
      * If the child does not hear from its parent within the given check timeout interval, it initiates the re-attach
@@ -222,6 +213,21 @@ public:
     uint16_t GetTimeout(void) const { return mTimeout; }
 
     /**
+     * This method returns the value of supervision check timeout failure counter.
+     *
+     * The counter tracks the number of supervision check failures on the child. It is incremented when the child does
+     * not hear from its parent within the specified check timeout interval.
+     *
+     */
+    uint16_t GetCounter(void) const { return mCounter; }
+
+    /**
+     * This method reset the supervision check timeout failure counter.
+     *
+     */
+    void ResetCounter(void) { mCounter = 0; }
+
+    /**
      * This method updates the supervision listener state. It informs the listener of a received frame.
      *
      * @param[in]   aSourceAddress    The source MAC address of the received frame
@@ -231,7 +237,8 @@ public:
     void UpdateOnReceive(const Mac::Address &aSourceAddress, bool aIsSecure);
 
 private:
-    static constexpr uint16_t kDefaultTimeout = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT; // (seconds)
+    static constexpr uint16_t kDefaultTimeout  = OPENTHREAD_CONFIG_CHILD_SUPERVISION_CHECK_TIMEOUT; // (seconds)
+    static constexpr uint16_t kDefaultInterval = OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL;      // (seconds)
 
     void RestartTimer(void);
     void HandleTimer(void);
@@ -239,17 +246,11 @@ private:
     using ListenerTimer = TimerMilliIn<SupervisionListener, &SupervisionListener::HandleTimer>;
 
     uint16_t      mTimeout;
+    uint16_t      mInterval;
+    uint16_t      mCounter;
     ListenerTimer mTimer;
 };
 
-#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
-/**
- * @}
- *
- */
-
-} // namespace Utils
 } // namespace ot
 
 #endif // CHILD_SUPERVISION_HPP_
