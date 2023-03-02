@@ -53,7 +53,7 @@
  * @defgroup api-net                  IPv6 Networking
  * @{
  *
- * @defgroup api-dns                  DNSv6
+ * @defgroup api-dns                  DNS
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
@@ -167,6 +167,7 @@
  *
  * @defgroup plat-alarm               Alarm
  * @defgroup plat-crypto              Crypto - Platform
+ * @defgroup plat-dns                 DNS - Platform
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
  * @defgroup plat-logging             Logging - Platform
