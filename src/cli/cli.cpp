@@ -5434,6 +5434,215 @@ template <> otError Interpreter::Process<Cmd("nexthop")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+
+template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli meshdiag topology
+     * @code
+     * meshdiag topology
+     * id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - me - leader
+     *    3-links:{ 46 }
+     * id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+     *    3-links:{ 02 51 57 }
+     * id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+     *    3-links:{ 51 57 }
+     * id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+     *    3-links:{ 33 57 }
+     *    2-links:{ 46 }
+     * id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+     *    3-links:{ 46 51 }
+     *    1-links:{ 33 }
+     * Done
+     * @endcode
+     * @par
+     * Discover network topology (list of routers and their connections).
+     * Parameters are optional and indicate additional items to discover. Can be added in any order.
+     * * `ip6-addrs` to discover the list of IPv6 addresses of every router.
+     * * `children` to discover the child table of every router.
+     * @par
+     * Information per router:
+     * * Router ID
+     * * RLOC16
+     * * Extended MAC address
+     * * Whether the router is this device is itself (`me`)
+     * * Whether the router is the parent of this device when device is a child (`parent`)
+     * * Whether the router is `leader`
+     * * Whether the router acts as a border router providing external connectivity (`br`)
+     * * List of routers to which this router has a link:
+     *   * `3-links`: Router IDs to which this router has a incoming link with link quality 3
+     *   * `2-links`: Router IDs to which this router has a incoming link with link quality 2
+     *   * `1-links`: Router IDs to which this router has a incoming link with link quality 1
+     *   * If a list if empty, it is omitted in the out.
+     * * If `ip6-addrs`, list of IPv6 addresses of the router
+     * * If `children`, list of all children of the router. Information per child:
+     *   * RLOC16
+     *   * Incoming Link Quality from perspective of parent to child (zero indicates unknown)
+     *   * Child Device mode (`r` rx-on-when-idle, `d` Full Thread Device, `n` Full Network Data, `-` no flags set)
+     *   * Whether the child is this device itself (`me`)
+     *   * Whether the child acts as a border router providing external connectivity (`br`)
+     * @cparam meshdiag topology [@ca{ip6-addrs}] [@ca{children}]
+     * @sa otMeshDiagDiscoverTopology
+     */
+    if (aArgs[0] == "topology")
+    {
+        otMeshDiagDiscoverConfig config;
+
+        config.mDiscoverIp6Addresses = false;
+        config.mDiscoverChildTable   = false;
+
+        aArgs++;
+
+        for (; !aArgs->IsEmpty(); aArgs++)
+        {
+            if (*aArgs == "ip6-addrs")
+            {
+                config.mDiscoverIp6Addresses = true;
+            }
+            else if (*aArgs == "children")
+            {
+                config.mDiscoverChildTable = true;
+            }
+            else
+            {
+                ExitNow(error = OT_ERROR_INVALID_ARGS);
+            }
+        }
+
+        SuccessOrExit(error = otMeshDiagDiscoverTopology(GetInstancePtr(), &config, HandleMeshDiagDiscoverDone, this));
+        error = OT_ERROR_PENDING;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+
+void Interpreter::HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext)
+{
+    reinterpret_cast<Interpreter *>(aContext)->HandleMeshDiagDiscoverDone(aError, aRouterInfo);
+}
+
+void Interpreter::HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo)
+{
+    VerifyOrExit(aRouterInfo != nullptr);
+
+    OutputFormat("id:%02u rloc16:0x%04x ext-addr:", aRouterInfo->mRouterId, aRouterInfo->mRloc16);
+    OutputExtAddress(aRouterInfo->mExtAddress);
+
+    if (aRouterInfo->mIsThisDevice)
+    {
+        OutputFormat(" - me");
+    }
+
+    if (aRouterInfo->mIsThisDeviceParent)
+    {
+        OutputFormat(" - parent");
+    }
+
+    if (aRouterInfo->mIsLeader)
+    {
+        OutputFormat(" - leader");
+    }
+
+    if (aRouterInfo->mIsBorderRouter)
+    {
+        OutputFormat(" - br");
+    }
+
+    OutputNewLine();
+
+    for (uint8_t linkQuality = 3; linkQuality > 0; linkQuality--)
+    {
+        bool hasLinkQuality = false;
+
+        for (uint8_t entryQuality : aRouterInfo->mLinkQualities)
+        {
+            if (entryQuality == linkQuality)
+            {
+                hasLinkQuality = true;
+                break;
+            }
+        }
+
+        if (hasLinkQuality)
+        {
+            OutputFormat(kIndentSize, "%u-links:{ ", linkQuality);
+
+            for (uint8_t id = 0; id < OT_ARRAY_LENGTH(aRouterInfo->mLinkQualities); id++)
+            {
+                if (aRouterInfo->mLinkQualities[id] == linkQuality)
+                {
+                    OutputFormat("%02u ", id);
+                }
+            }
+
+            OutputLine("}");
+        }
+    }
+
+    if (aRouterInfo->mIp6AddrIterator != nullptr)
+    {
+        otIp6Address ip6Address;
+
+        OutputLine(kIndentSize, "ip6-addrs:");
+
+        while (otMeshDiagGetNextIp6Address(aRouterInfo->mIp6AddrIterator, &ip6Address) == OT_ERROR_NONE)
+        {
+            OutputSpaces(kIndentSize * 2);
+            OutputIp6AddressLine(ip6Address);
+        }
+    }
+
+    if (aRouterInfo->mChildIterator != nullptr)
+    {
+        otMeshDiagChildInfo childInfo;
+        char                linkModeString[kLinkModeStringSize];
+        bool                isFirst = true;
+
+        while (otMeshDiagGetNextChildInfo(aRouterInfo->mChildIterator, &childInfo) == OT_ERROR_NONE)
+        {
+            if (isFirst)
+            {
+                OutputLine(kIndentSize, "children:");
+                isFirst = false;
+            }
+
+            OutputFormat(kIndentSize * 2, "rloc16:0x%04x lq:%u, mode:%s", childInfo.mRloc16, childInfo.mLinkQuality,
+                         LinkModeToString(childInfo.mMode, linkModeString));
+
+            if (childInfo.mIsThisDevice)
+            {
+                OutputFormat(" - me");
+            }
+
+            if (childInfo.mIsBorderRouter)
+            {
+                OutputFormat(" - br");
+            }
+
+            OutputNewLine();
+        }
+
+        if (isFirst)
+        {
+            OutputLine(kIndentSize, "children: none");
+        }
+    }
+
+exit:
+    OutputResult(aError);
+}
+
+#endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+
 #endif // OPENTHREAD_FTD
 
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
@@ -7739,6 +7948,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("mac"),
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
         CmdEntry("macfilter"),
+#endif
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+        CmdEntry("meshdiag"),
 #endif
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("mliid"),

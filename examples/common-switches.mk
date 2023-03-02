@@ -66,6 +66,7 @@ LOG_OUTPUT                ?= APP
 endif
 LINK_RAW                  ?= 0
 MAC_FILTER                ?= 0
+MESH_DIAG                 ?= 0
 MESSAGE_USE_HEAP          ?= 0
 MLE_LONG_ROUTES           ?= 0
 MLR                       ?= 0
@@ -266,6 +267,10 @@ endif
 
 ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
+endif
+
+ifeq ($(MESH_DIAG),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MESH_DIAG_ENABLE=1
 endif
 
 ifeq ($(MESSAGE_USE_HEAP),1)

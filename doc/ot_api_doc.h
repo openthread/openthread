@@ -139,6 +139,7 @@
  * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
  * @defgroup api-logging              Logging - Thread Stack
+ * @defgroup api-mesh-diag            Mesh Diagnostics
  * @defgroup api-ncp                  Network Co-Processor
  * @defgroup api-network-time         Network Time Synchronization
  * @defgroup api-random-group         Random Number Generator

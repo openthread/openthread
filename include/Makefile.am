@@ -68,6 +68,7 @@ openthread_headers                      = \
     openthread/link_metrics.h             \
     openthread/link_raw.h                 \
     openthread/logging.h                  \
+    openthread/mesh_diag.h                \
     openthread/message.h                  \
     openthread/multi_radio.h              \
     openthread/nat64.h                    \

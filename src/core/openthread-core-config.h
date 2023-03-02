@@ -82,6 +82,7 @@
 #include "config/link_raw.h"
 #include "config/logging.h"
 #include "config/mac.h"
+#include "config/mesh_diag.h"
 #include "config/misc.h"
 #include "config/mle.h"
 #include "config/nat64.h"

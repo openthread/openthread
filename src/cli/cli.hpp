@@ -47,6 +47,7 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/logging.h>
+#include <openthread/mesh_diag.h>
 #include <openthread/netdata.h>
 #include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
@@ -402,6 +403,10 @@ private:
                                    const otIp6Address *aMeshLocalAddress,
                                    uint16_t            aRloc16);
     void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
+#endif
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+    static void HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
+    void        HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo);
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleMlrRegResult(void               *aContext,
