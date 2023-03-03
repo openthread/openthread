@@ -264,6 +264,8 @@ bool otThreadIsSingleton(otInstance *aInstance);
 /**
  * This function starts a Thread Discovery scan.
  *
+ * @note A successful call to this function enables the rx-on-when-idle mode for the entire scan procedure.
+ *
  * @param[in]  aInstance              A pointer to an OpenThread instance.
  * @param[in]  aScanChannels          A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
  * @param[in]  aPanId                 The PAN ID filter (set to Broadcast PAN to disable filter).

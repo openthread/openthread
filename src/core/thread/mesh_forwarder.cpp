@@ -733,7 +733,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
             VerifyOrExit(frame != nullptr);
         }
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().IsCslEnabled() && mSendMessage->IsSubTypeMle())
+        else if (Get<Mac::Mac>().IsCslEnabled() && mSendMessage->IsSubTypeMle())
         {
             mSendMessage->SetLinkSecurityEnabled(true);
         }
@@ -1669,7 +1669,10 @@ bool MeshForwarder::CalcIePresent(const Message *aMessage)
     iePresent |= (aMessage != nullptr && aMessage->IsTimeSync());
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    iePresent |= Get<Mac::Mac>().IsCslEnabled();
+    if (!(aMessage != nullptr && aMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest))
+    {
+        iePresent |= Get<Mac::Mac>().IsCslEnabled();
+    }
 #endif
 #endif
 

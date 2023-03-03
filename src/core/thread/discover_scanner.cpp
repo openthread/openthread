@@ -152,6 +152,12 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
     mState       = (mScanChannels.GetNextChannel(mScanChannel) == kErrorNone) ? kStateScanning : kStateScanDone;
 
+    // For rx-off-when-idle device, temporarily enable receiver during discovery procedure.
+    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    }
+
     Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
 
 exit:
@@ -225,6 +231,12 @@ void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
 
 void DiscoverScanner::HandleDiscoverComplete(void)
 {
+    // Restore Data Polling or CSL for rx-off-when-idle device.
+    if (!Get<Mle>().IsDisabled() && !Get<Mle>().IsRxOnWhenIdle())
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    }
+
     switch (mState)
     {
     case kStateIdle:
