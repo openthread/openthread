@@ -2764,6 +2764,7 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     uint16_t                      delay;
 
     VerifyOrExit((message = NewMleMessage(kCommandDiscoveryResponse)) != nullptr, error = kErrorNoBufs);
+    message->SetDirectTransmission();
     message->SetPanId(aDiscoverRequestMessage.GetPanId());
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     // Send the MLE Discovery Response message on same radio link
