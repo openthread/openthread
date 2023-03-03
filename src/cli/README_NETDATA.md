@@ -142,6 +142,8 @@ After the device successfully attaches to a Thread network, the device will retr
 ## Command List
 
 - [help](#help)
+- [length](#length)
+- [maxlength](#maxlength)
 - [publish](#publish)
 - [register](#register)
 - [show](#show)
@@ -158,12 +160,48 @@ Print netdata help menu.
 
 ```bash
 > netdata help
-help
+length
+maxlength
 publish
 register
 show
 steeringdata
 unpublish
+Done
+```
+
+### length
+
+Usage: `netdata length`
+
+Get the current length of (number of bytes) Partition's Thread Network Data.
+
+```bash
+> netdata length
+23
+Done
+```
+
+### maxlength
+
+Usage: `netdata maxlength`
+
+Get the maximum observed length of the Thread Network Data since OT stack initialization or since the last call to `netdata maxlength reset`.
+
+```bash
+> netdata maxlength
+40
+Done
+```
+
+### maxlength reset
+
+Usage: `netdata maxlength reset`
+
+Reset the tracked maximum length of the Thread Network Data.
+
+```bash
+> netdata maxlength reset
 Done
 ```
 

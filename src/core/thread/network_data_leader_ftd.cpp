@@ -117,7 +117,7 @@ void Leader::IncrementVersions(bool aIncludeStable)
     }
 
     mVersion++;
-    Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
+    SignalNetDataChanged();
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)

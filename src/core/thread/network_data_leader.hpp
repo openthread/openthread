@@ -74,6 +74,7 @@ public:
      */
     explicit LeaderBase(Instance &aInstance)
         : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
+        , mMaxLength(0)
     {
         Reset();
     }
@@ -83,6 +84,23 @@ public:
      *
      */
     void Reset(void);
+
+    /**
+     * This method returns the maximum observed Network Data length since OT stack initialization or since the last
+     * call to `ResetMaxLength()`.
+     *
+     * @returns The maximum observed Network Data length (high water mark for Network Data length).
+     *
+     */
+    uint8_t GetMaxLength(void) const { return mMaxLength; }
+
+    /**
+     * This method resets the tracked maximum Network Data Length.
+     *
+     * @sa GetMaxLength
+     *
+     */
+    void ResetMaxLength(void) { mMaxLength = GetLength(); }
 
     /**
      * This method returns the Data Version value for a type (full set or stable subset).
@@ -280,6 +298,8 @@ public:
     Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
 protected:
+    void SignalNetDataChanged(void);
+
     uint8_t mStableVersion;
     uint8_t mVersion;
 
@@ -302,6 +322,7 @@ private:
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
 
     uint8_t mTlvBuffer[kMaxSize];
+    uint8_t mMaxLength;
 };
 
 /**
