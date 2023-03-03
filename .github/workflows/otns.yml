@@ -78,7 +78,7 @@ jobs:
     - name: Run
       run: |
         export OT_DIR=$PWD
-        ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+        ./script/git-tool clone --depth 1 --branch feature/add-wheel-to-install-deps https://github.com/SiliconLabs/ot-ns.git  /tmp/otns
         (
           cd /tmp/otns
           ./script/test py-unittests
@@ -118,7 +118,7 @@ jobs:
       - name: Run
         run: |
           export OT_DIR=$PWD
-          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+          ./script/git-tool clone --depth 1 --branch feature/add-wheel-to-install-deps https://github.com/SiliconLabs/ot-ns.git  /tmp/otns
           (
             cd /tmp/otns
             ./script/test py-examples
@@ -181,7 +181,7 @@ jobs:
       - name: Run
         run: |
           export OT_DIR=$PWD
-          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+          ./script/git-tool clone --depth 1 --branch feature/add-wheel-to-install-deps https://github.com/SiliconLabs/ot-ns.git  /tmp/otns
           (
             cd /tmp/otns
             ./script/test stress-tests ${{ matrix.suite }}
