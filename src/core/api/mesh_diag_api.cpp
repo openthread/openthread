@@ -64,4 +64,28 @@ otError otMeshDiagGetNextChildInfo(otMeshDiagChildIterator *aIterator, otMeshDia
     return AsCoreType(aIterator).GetNextChildInfo(AsCoreType(aChildInfo));
 }
 
+otError otMeshDiagQueryChildTable(otInstance                       *aInstance,
+                                  uint16_t                          aRloc16,
+                                  otMeshDiagQueryChildTableCallback aCallback,
+                                  void                             *aContext)
+{
+    return AsCoreType(aInstance).Get<Utils::MeshDiag>().QueryChildTable(aRloc16, aCallback, aContext);
+}
+
+otError otMeshDiagQueryChildrenIp6Addrs(otInstance                     *aInstance,
+                                        uint16_t                        aRloc16,
+                                        otMeshDiagChildIp6AddrsCallback aCallback,
+                                        void                           *aContext)
+{
+    return AsCoreType(aInstance).Get<Utils::MeshDiag>().QueryChildrenIp6Addrs(aRloc16, aCallback, aContext);
+}
+
+otError otMeshDiagQueryNeighborTable(otInstance                          *aInstance,
+                                     uint16_t                             aRloc16,
+                                     otMeshDiagQueryNeighborTableCallback aCallback,
+                                     void                                *aContext)
+{
+    return AsCoreType(aInstance).Get<Utils::MeshDiag>().QueryNeighborTable(aRloc16, aCallback, aContext);
+}
+
 #endif // OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD

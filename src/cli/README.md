@@ -2039,6 +2039,87 @@ id:62 rloc16:0xf800 ext-addr:ce349873897233a5 ver:4 - br
    children: none
 ```
 
+### meshdiag childtable \<router-rloc16\>
+
+Start a query for child table of a router with a given RLOC16.
+
+Output lists all child entries. Information per child:
+
+- RLOC16
+- Extended MAC address
+- Thread Version
+- Timeout (in seconds)
+- Age (seconds since last heard)
+- Supervision interval (in seconds)
+- Number of queued messages (in case the child is sleepy)
+- Device Mode
+- RSS (average and last) and link margin
+- Error rates, frame tx (at MAC layer), IPv6 message tx (above MAC)
+- CSL info
+  - If synchronized
+  - Period (in unit of 10-symbols-time)
+  - Timeout (in seconds)
+  - Channel
+
+```bash
+> meshdiag childtable 0x6400
+rloc16:0x6402 ext-addr:8e6f4d323bbed1fe ver:4
+    timeout:120 age:36 supvn:129 q-msg:0
+    rx-on:yes type:ftd full-net:yes
+    rss - ave:-20 last:-20 margin:80
+    err-rate - frame:11.51% msg:0.76%
+    csl - sync:no period:0 timeout:0 channel:0
+rloc16:0x6403 ext-addr:ee24e64ecf8c079a ver:4
+    timeout:120 age:19 supvn:129 q-msg:0
+    rx-on:no type:mtd full-net:no
+    rss - ave:-20 last:-20 margin:80
+    err-rate - frame:0.73% msg:0.00%
+    csl - sync:no period:0 timeout:0 channel:0
+Done
+```
+
+### meshdiag childip6 \<parent-rloc16>
+
+Send a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+
+```bash
+> meshdiag childip6 0xdc00
+child-rloc16: 0xdc02
+    fdde:ad00:beef:0:ded8:cd58:b73:2c21
+    fd00:2:0:0:c24a:456:3b6b:c597
+    fd00:1:0:0:120b:95fe:3ecc:d238
+child-rloc16: 0xdc03
+    fdde:ad00:beef:0:3aa6:b8bf:e7d6:eefe
+    fd00:2:0:0:8ff8:a188:7436:6720
+    fd00:1:0:0:1fcf:5495:790a:370f
+Done
+```
+
+### meshdiag neighbortable \<router-rloc16\>
+
+Start a query for router neighbor table of a router with a given RLOC16.
+
+Output lists all router neighbor entries. Information per entry:
+
+- RLOC16
+- Extended MAC address
+- Thread Version
+- Device Mode
+- RSS (average and last) and link margin
+- Error rates, frame tx (at MAC layer), IPv6 message tx (above MAC)
+
+```bash
+> meshdiag neighbortable 0x7400
+rloc16:0x9c00 ext-addr:764788cf6e57a4d2 ver:4
+   rx-on:yes type:ftd full-net:yes
+   rss - ave:-20 last:-20 margin:80
+   err-rate - frame:1.38% msg:0.00%
+rloc16:0x7c00 ext-addr:4ed24fceec9bf6d3 ver:4
+   rx-on:yes type:ftd full-net:yes
+   rss - ave:-20 last:-20 margin:80
+   err-rate - frame:0.72% msg:0.00%
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.

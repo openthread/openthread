@@ -250,7 +250,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(DUT_RLOC).\
             filter_coap_request(DIAG_GET_URI).\
-            filter(lambda p: dut_payload_tlvs == set(p.thread_diagnostic.tlv.type)).\
+            filter(lambda p: dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type)).\
             must_next()
         dut_payload_tlvs.remove(DG_TYPE_LIST_TLV)
         dut_payload_tlvs.remove(DG_ROUTE64_TLV)
@@ -277,7 +277,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -285,7 +285,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
             filter_coap_ack(DIAG_GET_URI).\
             filter(lambda p: {
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 
@@ -304,7 +304,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
                               DG_TYPE_LIST_TLV,
                               DG_TIMEOUT_TLV,
                               DG_CHILD_TABLE_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -327,7 +327,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
                               DG_TYPE_LIST_TLV,
                               DG_BATTERY_LEVEL_TLV,
                               DG_SUPPLY_VOLTAGE_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -347,7 +347,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -370,7 +370,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
             filter(lambda p: {
                               DG_TYPE_LIST_TLV,
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
         pkts.filter_wpan_src64(DUT).\
@@ -378,7 +378,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
             filter_coap_ack(DIAG_GET_URI).\
             filter(lambda p: {
                               DG_MAC_COUNTERS_TLV
-                              } == set(p.thread_diagnostic.tlv.type)
+                              } <= set(p.thread_diagnostic.tlv.type)
                    ).\
             must_next()
 
@@ -401,7 +401,7 @@ class Cert_5_7_02_CoapDiagCommands(thread_cert.TestCase):
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
             filter_coap_request(DIAG_GET_QRY_URI).\
-            filter(lambda p: dut_payload_tlvs == set(p.thread_diagnostic.tlv.type)).\
+            filter(lambda p: dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type)).\
             must_next()
 
         dut_payload_tlvs.remove(DG_TYPE_LIST_TLV)

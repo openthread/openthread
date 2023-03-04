@@ -189,7 +189,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         }
         if self.TOPOLOGY[ROUTER1]['name'] == 'DUT':
             dut_payload_tlvs.update({DG_CONNECTIVITY_TLV, DG_ROUTE64_TLV, DG_CHILD_TABLE_TLV})
-            _qr_pkt.must_verify(lambda p: dut_payload_tlvs == set(p.thread_diagnostic.tlv.type))
+            _qr_pkt.must_verify(lambda p: dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type))
 
             # Step 3: The DUT automatically responds with a DIAG_GET.ans response
             #         MUST contain the requested diagnostic TLVs:
@@ -208,7 +208,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_ipv6_dst(LEADER_RLOC).\
                 filter_coap_request(DIAG_GET_ANS_URI).\
                 filter(lambda p:
-                       dut_payload_tlvs == set(p.thread_diagnostic.tlv.type) and\
+                       dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type) and\
                        {str(p.wpan.src64), colon_hex(dut_addr16, 2), '0f'}
                        < set(p.thread_diagnostic.tlv.general)
                       ).\
@@ -221,7 +221,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_ipv6_dst(REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS).\
                 filter_coap_request(DIAG_GET_QRY_URI).\
                 filter(lambda p:
-                       dut_payload_tlvs == set(p.thread_diagnostic.tlv.type)
+                       dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type)
                       ).\
                 must_next()
 
@@ -240,7 +240,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
                 filter_ipv6_dst(LEADER_RLOC).\
                 filter_coap_request(DIAG_GET_ANS_URI).\
                 filter(lambda p:
-                       dut_payload_tlvs == set(p.thread_diagnostic.tlv.type) and\
+                       dut_payload_tlvs <= set(p.thread_diagnostic.tlv.type) and\
                        {str(p.wpan.src64), colon_hex(dut_addr16, 2), '0f'}
                        < set(p.thread_diagnostic.tlv.general)
                       ).\

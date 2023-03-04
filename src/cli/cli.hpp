@@ -412,6 +412,22 @@ private:
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     static void HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
     void        HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo);
+    static void HandleMeshDiagQueryChildTableResult(otError                     aError,
+                                                    const otMeshDiagChildEntry *aChildEntry,
+                                                    void                       *aContext);
+    void        HandleMeshDiagQueryChildTableResult(otError aError, const otMeshDiagChildEntry *aChildEntry);
+    static void HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                 uint16_t                   aChildRloc16,
+                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator,
+                                                 void                      *aContext);
+    void        HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                 uint16_t                   aChildRloc16,
+                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator);
+    static void HandleMeshDiagQueryNeighborTableResult(otError                        aError,
+                                                       const otMeshDiagNeighborEntry *aNeighborEntry,
+                                                       void                          *aContext);
+    void        HandleMeshDiagQueryNeighborTableResult(otError aError, const otMeshDiagNeighborEntry *aNeighborEntry);
+
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleMlrRegResult(void               *aContext,

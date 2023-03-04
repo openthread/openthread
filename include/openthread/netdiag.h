@@ -87,6 +87,11 @@ enum
     OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL         = 26, ///< Vendor Model TLV
     OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION    = 27, ///< Vendor SW Version TLV
     OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION = 28, ///< Thread Stack Version TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHILD                = 29, ///< Child TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST  = 30, ///< Child IPv6 Address List TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_NEIGHBOR             = 31, ///< Neighbor TLV (router only)
+    OT_NETWORK_DIAGNOSTIC_TLV_ANSWER               = 32, ///< Answer TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID             = 33, ///< Query ID TLV
 };
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.

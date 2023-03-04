@@ -667,6 +667,7 @@ openthread_core_files = [
   "thread/network_data_types.hpp",
   "thread/network_diagnostic.cpp",
   "thread/network_diagnostic.hpp",
+  "thread/network_diagnostic_tlvs.cpp",
   "thread/network_diagnostic_tlvs.hpp",
   "thread/panid_query_server.cpp",
   "thread/panid_query_server.hpp",
