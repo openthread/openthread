@@ -45,7 +45,7 @@
 namespace ot {
 namespace Utils {
 
-using namespace ot::NetworkDiagnostic;
+using namespace NetworkDiagnostic;
 
 RegisterLogModule("MeshDiag");
 
@@ -54,54 +54,21 @@ RegisterLogModule("MeshDiag");
 
 MeshDiag::MeshDiag(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mState(kStateIdle)
     , mTimer(aInstance)
 {
 }
 
 Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(!mTimer.IsRunning(), error = kErrorBusy);
-
-    Get<RouterTable>().GetRouterIdSet(mExpectedRouterIdSet);
-
-    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
-    {
-        if (mExpectedRouterIdSet.Contains(routerId))
-        {
-            SuccessOrExit(error = SendDiagGetTo(Mle::Rloc16FromRouterId(routerId), aConfig));
-        }
-    }
-
-    mDiscoverCallback.Set(aCallback, aContext);
-    mTimer.Start(kResponseTimeout);
-
-exit:
-    return error;
-}
-
-void MeshDiag::Cancel(void)
-{
-    mTimer.Stop();
-    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDiagGetResponse, this));
-}
-
-Error MeshDiag::SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig)
-{
     static constexpr uint8_t kMaxTlvsToRequest = 6;
 
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    uint8_t          tlvs[kMaxTlvsToRequest];
-    uint8_t          tlvsLength = 0;
+    Error   error = kErrorNone;
+    uint8_t tlvs[kMaxTlvsToRequest];
+    uint8_t tlvsLength = 0;
 
-    message = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetRequest);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    IgnoreError(message->SetPriority(Message::kPriorityLow));
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
 
     tlvs[tlvsLength++] = Address16Tlv::kType;
     tlvs[tlvsLength++] = ExtMacAddressTlv::kType;
@@ -118,13 +85,29 @@ Error MeshDiag::SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig)
         tlvs[tlvsLength++] = ChildTableTlv::kType;
     }
 
-    SuccessOrExit(error = Tlv::Append<TypeListTlv>(*message, tlvs, tlvsLength));
+    Get<RouterTable>().GetRouterIdSet(mDiscover.mExpectedRouterIdSet);
 
-    messageInfo.SetSockAddrToRlocPeerAddrTo(aRloc16);
-    error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleDiagGetResponse, this);
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        Ip6::Address destination;
+
+        if (!mDiscover.mExpectedRouterIdSet.Contains(routerId))
+        {
+            continue;
+        }
+
+        destination = Get<Mle::MleRouter>().GetMeshLocal16();
+        destination.GetIid().SetLocator(Mle::Rloc16FromRouterId(routerId));
+
+        SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetRequest, Message::kPriorityLow, destination,
+                                                        tlvs, tlvsLength, HandleDiagGetResponse, this));
+    }
+
+    mDiscover.mCallback.Set(aCallback, aContext);
+    mState = kStateDicoverTopology;
+    mTimer.Start(kResponseTimeout);
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 
@@ -147,7 +130,8 @@ void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::Message
     ChildIterator   childIterator;
 
     SuccessOrExit(aResult);
-    VerifyOrExit((aMessage != nullptr) && mTimer.IsRunning());
+    VerifyOrExit(aMessage != nullptr);
+    VerifyOrExit(mState == kStateDicoverTopology);
 
     SuccessOrExit(routerInfo.ParseFrom(*aMessage));
 
@@ -161,11 +145,12 @@ void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::Message
         routerInfo.mChildIterator = &childIterator;
     }
 
-    mExpectedRouterIdSet.Remove(routerInfo.mRouterId);
+    mDiscover.mExpectedRouterIdSet.Remove(routerInfo.mRouterId);
 
-    if (mExpectedRouterIdSet.GetNumberOfAllocatedIds() == 0)
+    if (mDiscover.mExpectedRouterIdSet.GetNumberOfAllocatedIds() == 0)
     {
-        error = kErrorNone;
+        error  = kErrorNone;
+        mState = kStateIdle;
         mTimer.Stop();
     }
     else
@@ -173,19 +158,122 @@ void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::Message
         error = kErrorPending;
     }
 
-    mDiscoverCallback.InvokeIfSet(error, &routerInfo);
+    mDiscover.mCallback.InvokeIfSet(error, &routerInfo);
 
 exit:
     return;
 }
 
+Error MeshDiag::QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallback, void *aContext)
+{
+    static const uint8_t kTlvTypes[] = {ChildTlv::kType};
+
+    Error        error = kErrorNone;
+    Ip6::Address destination;
+
+    VerifyOrExit(Get<Mle::Mle>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
+    VerifyOrExit(Mle::IsActiveRouter(aRloc16), error = kErrorInvalidArgs);
+    VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNotFound);
+
+    destination = Get<Mle::MleRouter>().GetMeshLocal16();
+    destination.GetIid().SetLocator(aRloc16);
+
+    SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetQuery, Message::kPriorityNormal, destination,
+                                                    kTlvTypes, sizeof(kTlvTypes)));
+
+    mQueryChildTable.mCallback.Set(aCallback, aContext);
+    mQueryChildTable.mRouterRloc16 = aRloc16;
+    mTimer.Start(kResponseTimeout);
+    mState = kStateQueryChildTable;
+
+exit:
+    return error;
+}
+
+bool MeshDiag::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    bool       didPorcess = false;
+    ChildTlv   childTlv;
+    ChildEntry entry;
+    uint16_t   offset;
+
+    VerifyOrExit(mState == kStateQueryChildTable);
+    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == mQueryChildTable.mRouterRloc16);
+
+    while (true)
+    {
+        SuccessOrExit(Tlv::FindTlvOffset(aMessage, ChildTlv::kType, offset));
+
+        IgnoreError(aMessage.Read(offset, &childTlv, sizeof(Tlv)));
+        VerifyOrExit(!childTlv.IsExtended());
+
+        didPorcess = true;
+
+        if (childTlv.GetLength() == 0)
+        {
+            // We reached end of the list.
+            mState = kStateIdle;
+            mTimer.Stop();
+            mQueryChildTable.mCallback.InvokeIfSet(kErrorNone, nullptr);
+            ExitNow();
+        }
+
+        VerifyOrExit(childTlv.GetLength() >= sizeof(ChildTlv) - sizeof(Tlv));
+        IgnoreError(aMessage.Read(offset, childTlv));
+
+        entry.SetFrom(childTlv);
+        mQueryChildTable.mCallback.InvokeIfSet(kErrorPending, &entry);
+
+        // Make sure query operation is not canceled from the
+        // callback.
+        VerifyOrExit(mState == kStateQueryChildTable);
+
+        aMessage.SetOffset(static_cast<uint16_t>(offset + childTlv.GetSize()));
+    }
+
+exit:
+    return didPorcess;
+}
+
+void MeshDiag::Cancel(void)
+{
+    switch (mState)
+    {
+    case kStateIdle:
+    case kStateQueryChildTable:
+        break;
+
+    case kStateDicoverTopology:
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDiagGetResponse, this));
+        break;
+    }
+
+    mState = kStateIdle;
+    mTimer.Stop();
+}
+
 void MeshDiag::HandleTimer(void)
 {
-    // Timed out waiting for response from one or more routers.
+    State oldState = mState;
 
-    IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDiagGetResponse, this));
+    mState = kStateIdle;
 
-    mDiscoverCallback.InvokeIfSet(kErrorResponseTimeout, nullptr);
+    switch (oldState)
+    {
+    case kStateIdle:
+        break;
+
+    case kStateDicoverTopology:
+        IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDiagGetResponse, this));
+        mDiscover.mCallback.InvokeIfSet(kErrorResponseTimeout, nullptr);
+        break;
+
+    case kStateQueryChildTable:
+        mQueryChildTable.mCallback.InvokeIfSet(kErrorResponseTimeout, nullptr);
+        break;
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -301,6 +389,31 @@ Error MeshDiag::ChildIterator::GetNextChildInfo(ChildInfo &aChildInfo)
 
 exit:
     return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// MeshDiag::ChildEntry
+
+void MeshDiag::ChildEntry::SetFrom(const ChildTlv &aChildTlv)
+{
+    mRxOnWhenIdle        = (aChildTlv.GetFlags() & ChildTlv::kFlagsRxOnWhenIdle);
+    mDeviceTypeFtd       = (aChildTlv.GetFlags() & ChildTlv::kFlagsFtd);
+    mFullNetData         = (aChildTlv.GetFlags() & ChildTlv::kFlagsFullNetdta);
+    mCslSynchronized     = (aChildTlv.GetFlags() & ChildTlv::kFlagsCslSync);
+    mSupportsErrRate     = (aChildTlv.GetFlags() & ChildTlv::kFlagsTrackErrRate);
+    mRloc16              = aChildTlv.GetRloc16();
+    mExtAddress          = aChildTlv.GetExtAddress();
+    mVersion             = aChildTlv.GetVersion();
+    mTimeout             = aChildTlv.GetTimeout();
+    mAge                 = aChildTlv.GetAge();
+    mSupervisionInterval = aChildTlv.GetSupervisionInterval();
+    mAverageRssi         = aChildTlv.GetAverageRssi();
+    mLastRssi            = aChildTlv.GetLastRssi();
+    mFrameErrorRate      = aChildTlv.GetFrameErrorRate();
+    mMessageErrorRate    = aChildTlv.GetMessageErrorRate();
+    mQueuedMessageCount  = aChildTlv.GetQueuedMessageCount();
+    mCslPeriod           = aChildTlv.GetCslPeriod();
+    mCslTimeout          = aChildTlv.GetCslTimeout();
 }
 
 } // namespace Utils

@@ -336,11 +336,7 @@ exit:
 template <>
 void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error            error    = kErrorNone;
-    Coap::Message   *response = nullptr;
-    Tmf::MessageInfo responseInfo(GetInstance());
-
-    VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
+    VerifyOrExit(aMessage.IsPostRequest());
 
     LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
             aMessageInfo.GetPeerAddr().ToString().AsCString());
@@ -351,17 +347,125 @@ void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip
         IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
     }
 
-    response = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
-    VerifyOrExit(response != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = AppendRequestedTlvs(aMessage, *response));
-
-    PrepareMessageInfoForDest(aMessageInfo.GetPeerAddr(), responseInfo);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*response, responseInfo));
+    SendAnswer(aMessageInfo.GetPeerAddr(), aMessage);
 
 exit:
-    FreeMessageOnError(response, error);
+    return;
 }
+
+#if OPENTHREAD_MTD
+
+void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
+{
+    Error            error  = kErrorNone;
+    Coap::Message   *answer = nullptr;
+    Tmf::MessageInfo answerInfo(GetInstance());
+
+    answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    VerifyOrExit(answer != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = AppendRequestedTlvs(aRequest, *answer));
+
+    PrepareMessageInfoForDest(aDestination, answerInfo);
+    error = Get<Tmf::Agent>().SendMessage(*answer, answerInfo);
+
+exit:
+    FreeMessageOnError(answer, error);
+}
+
+#elif OPENTHREAD_FTD
+
+void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aRequest)
+{
+    Coap::Message   *answer = nullptr;
+    Tmf::MessageInfo answerInfo(GetInstance());
+    uint16_t         offset;
+    uint16_t         length;
+    uint16_t         endOffset;
+
+    PrepareMessageInfoForDest(aDestination, answerInfo);
+
+    answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+    VerifyOrExit(answer != nullptr);
+
+    SuccessOrExit(Tlv::FindTlvValueOffset(aRequest, Tlv::kTypeList, offset, length));
+    endOffset = offset + length;
+
+    for (; offset < endOffset; offset++)
+    {
+        uint8_t tlvType;
+
+        SuccessOrExit(aRequest.Read(offset, tlvType));
+
+        length = answer->GetLength();
+
+        SuccessOrExit(AppendDiagTlv(tlvType, *answer));
+
+        if (tlvType == ChildTlv::kType)
+        {
+            SuccessOrExit(AppendChildTableAsChildTlvs(answer, answerInfo));
+        }
+        else
+        {
+            SuccessOrExit(AppendDiagTlv(tlvType, *answer));
+
+            if (answer->GetLength() >= kMaxAnswerMessageLength)
+            {
+                IgnoreError(answer->SetLength(length));
+                SuccessOrExit(Get<Tmf::Agent>().SendMessage(*answer, answerInfo));
+
+                answer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+                VerifyOrExit(answer != nullptr);
+                SuccessOrExit(AppendDiagTlv(tlvType, *answer));
+            }
+        }
+    }
+
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*answer, answerInfo));
+    answer = nullptr;
+
+exit:
+    FreeMessage(answer);
+}
+
+Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, const Ip6::MessageInfo &aAnswerInfo)
+{
+    Error    error = kErrorNone;
+    ChildTlv childTlv;
+    uint16_t length;
+
+    OT_ASSERT(aAnswer != nullptr);
+
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        childTlv.InitFrom(child);
+
+        length = aAnswer->GetLength();
+
+        SuccessOrExit(error = childTlv.AppendTo(*aAnswer));
+
+        if (aAnswer->GetLength() >= kMaxAnswerMessageLength)
+        {
+            IgnoreError(aAnswer->SetLength(length));
+            SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*aAnswer, aAnswerInfo));
+
+            aAnswer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+            VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
+
+            SuccessOrExit(error = childTlv.AppendTo(*aAnswer));
+        }
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    childTlv.InitAsEmpty();
+    error = childTlv.AppendTo(*aAnswer);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_FTD
 
 template <>
 void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -442,11 +546,12 @@ Error Client::SendDiagnosticGet(const Ip6::Address &aDestination,
 
     if (aDestination.IsMulticast())
     {
-        error = SendCommand(kUriDiagnosticGetQuery, aDestination, aTlvTypes, aCount);
+        error = SendCommand(kUriDiagnosticGetQuery, Message::kPriorityNormal, aDestination, aTlvTypes, aCount);
     }
     else
     {
-        error = SendCommand(kUriDiagnosticGetRequest, aDestination, aTlvTypes, aCount, &HandleGetResponse, this);
+        error = SendCommand(kUriDiagnosticGetRequest, Message::kPriorityNormal, aDestination, aTlvTypes, aCount,
+                            &HandleGetResponse, this);
     }
 
     SuccessOrExit(error);
@@ -458,6 +563,7 @@ exit:
 }
 
 Error Client::SendCommand(Uri                   aUri,
+                          Message::Priority     aPriority,
                           const Ip6::Address   &aDestination,
                           const uint8_t         aTlvTypes[],
                           uint8_t               aCount,
@@ -484,6 +590,7 @@ Error Client::SendCommand(Uri                   aUri,
     }
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    IgnoreError(message->SetPriority(aPriority));
 
     if (aCount > 0)
     {
@@ -524,7 +631,13 @@ void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &aMessage, const I
     LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
             aMessageInfo.GetPeerAddr().ToString().AsCString());
 
-    mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
+#if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
+    // Let the `MeshDiag` process the message first.
+    if (!Get<Utils::MeshDiag>().HandleDiagnosticGetAnswer(aMessage, aMessageInfo))
+#endif
+    {
+        mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
+    }
 
     IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
@@ -534,7 +647,7 @@ exit:
 
 Error Client::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount)
 {
-    return SendCommand(kUriDiagnosticReset, aDestination, aTlvTypes, aCount);
+    return SendCommand(kUriDiagnosticReset, Message::kPriorityNormal, aDestination, aTlvTypes, aCount);
 }
 
 static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDiagRoute)

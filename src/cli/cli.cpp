@@ -5807,6 +5807,55 @@ template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
         SuccessOrExit(error = otMeshDiagDiscoverTopology(GetInstancePtr(), &config, HandleMeshDiagDiscoverDone, this));
         error = OT_ERROR_PENDING;
     }
+    /**
+     * @cli meshdiag childtable
+     * @code
+     * meshdiag childtable 0x6400
+     * rloc16:0x6402 ext-addr:8e6f4d323bbed1fe ver:4
+     *     timeout:120 age:36 supvn:129 q-msg:0
+     *     rx-on:yes type:ftd full-net:yes
+     *     rss - ave:-20 last:-20
+     *     err-rate - frame:11.51% msg:0.76%
+     *     csl - sync:no period:0 timeout:0
+     * rloc16:0x6403 ext-addr:ee24e64ecf8c079a ver:4
+     *     timeout:120 age:19 supvn:129 q-msg:0
+     *     rx-on:no type:mtd full-net:no
+     *     rss - ave:-20 last:-20
+     *     err-rate - frame:0.73% msg:0.00%
+     *     csl - sync:no period:0 timeout:0
+     * @endcode
+     * @par
+     * Start a query for child table of a router with a given RLOC16.
+     * Output lists all child entries. Information per child:
+     * * RLOC16
+     * * Extended MAC address
+     * * Thread Version
+     * * Timeout (in seconds)
+     * * Age (seconds since last heard)
+     * * Supervision interval (in seconds)
+     * * Number of queued message (in case sleepy)
+     * * Device Mode
+     * * RSS (average and last)
+     * * Error rates (frame, IPv6 message)
+     * * CSL info
+     *   * If synchronized
+     *   * Period (in unit of 10s symbol)
+     *   * Timeout (in seconds)
+     * @cparam meshdiag childtable @ca{router-rloc16}
+     * @sa otMeshDiagQueryChildTable
+     */
+    else if (aArgs[0] == "childtable")
+    {
+        uint16_t routerRloc16;
+
+        SuccessOrExit(error = aArgs[1].ParseAsUint16(routerRloc16));
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = otMeshDiagQueryChildTable(GetInstancePtr(), routerRloc16,
+                                                        HandleMeshDiagQueryChildTableResult, this));
+
+        error = OT_ERROR_PENDING;
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -5932,6 +5981,45 @@ void Interpreter::HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInf
             OutputLine(kIndentSize, "children: none");
         }
     }
+
+exit:
+    OutputResult(aError);
+}
+
+void Interpreter::HandleMeshDiagQueryChildTableResult(otError                     aError,
+                                                      const otMeshDiagChildEntry *aChildEntry,
+                                                      void                       *aContext)
+{
+    reinterpret_cast<Interpreter *>(aContext)->HandleMeshDiagQueryChildTableResult(aError, aChildEntry);
+}
+
+void Interpreter::HandleMeshDiagQueryChildTableResult(otError aError, const otMeshDiagChildEntry *aChildEntry)
+{
+    PercentageStringBuffer stringBuffer;
+
+    VerifyOrExit(aChildEntry != nullptr);
+
+    OutputFormat("rloc16:0x%04x ext-addr:", aChildEntry->mRloc16);
+    OutputExtAddress(aChildEntry->mExtAddress);
+    OutputLine(" ver:%u", aChildEntry->mVersion);
+
+    OutputLine(kIndentSize, "timeout:%lu age:%lu supvn:%u q-msg:%u", ToUlong(aChildEntry->mTimeout),
+               ToUlong(aChildEntry->mAge), aChildEntry->mSupervisionInterval, aChildEntry->mQueuedMessageCount);
+
+    OutputLine(kIndentSize, "rx-on:%s type:%s full-net:%s", aChildEntry->mRxOnWhenIdle ? "yes" : "no",
+               aChildEntry->mDeviceTypeFtd ? "ftd" : "mtd", aChildEntry->mFullNetData ? "yes" : "no");
+
+    OutputLine(kIndentSize, "rss - ave:%d last:%d", aChildEntry->mAverageRssi, aChildEntry->mLastRssi);
+
+    if (aChildEntry->mSupportsErrRate)
+    {
+        OutputFormat(kIndentSize, "err-rate - frame:%s%% ",
+                     PercentageToString(aChildEntry->mFrameErrorRate, stringBuffer));
+        OutputLine("msg:%s%% ", PercentageToString(aChildEntry->mMessageErrorRate, stringBuffer));
+    }
+
+    OutputLine(kIndentSize, "csl - sync:%s period:%u timeout:%lu", aChildEntry->mCslSynchronized ? "yes" : "no",
+               aChildEntry->mCslPeriod, ToUlong(aChildEntry->mCslTimeout));
 
 exit:
     OutputResult(aError);

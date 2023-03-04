@@ -407,6 +407,11 @@ private:
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
     static void HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
     void        HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInfo *aRouterInfo);
+    static void HandleMeshDiagQueryChildTableResult(otError                     aError,
+                                                    const otMeshDiagChildEntry *aChildEntry,
+                                                    void                       *aContext);
+    void        HandleMeshDiagQueryChildTableResult(otError aError, const otMeshDiagChildEntry *aChildEntry);
+
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleMlrRegResult(void               *aContext,

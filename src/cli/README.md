@@ -2038,6 +2038,44 @@ id:62 rloc16:0xf800 ext-addr:ce349873897233a5 ver:4 - br
    children: none
 ```
 
+### meshdiag childtable \<router-rloc16\>
+
+Start a query for child table of a router with a given RLOC16.
+
+Output lists all child entries. Information per child:
+
+- RLOC16
+- Extended MAC address
+- Thread Version
+- Timeout (in seconds)
+- Age (seconds since last heard)
+- Supervision interval (in seconds)
+- Number of queued message (in case sleepy)
+- Device Mode
+- RSS (average and last)
+- Error rates (frame, IPv6 message)
+- CSL info
+  - If synchronized
+  - Period (in unit of 10s symbol)
+  - Timeout (in seconds)
+
+```bash
+> meshdiag childtable 0x6400
+rloc16:0x6402 ext-addr:8e6f4d323bbed1fe ver:4
+    timeout:120 age:36 supvn:129 q-msg:0
+    rx-on:yes type:ftd full-net:yes
+    rss - ave:-20 last:-20
+    err-rate - frame:11.51% msg:0.76%
+    csl - sync:no period:0 timeout:0
+rloc16:0x6403 ext-addr:ee24e64ecf8c079a ver:4
+    timeout:120 age:19 supvn:129 q-msg:0
+    rx-on:no type:mtd full-net:no
+    rss - ave:-20 last:-20
+    err-rate - frame:0.73% msg:0.00%
+    csl - sync:no period:0 timeout:0
+Done
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.

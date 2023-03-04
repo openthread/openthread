@@ -315,6 +315,7 @@ SOURCES_COMMON                                  = \
     thread/network_data_tlvs.cpp                  \
     thread/network_data_types.cpp                 \
     thread/network_diagnostic.cpp                 \
+    thread/network_diagnostic_tlvs.cpp            \
     thread/panid_query_server.cpp                 \
     thread/radio_selector.cpp                     \
     thread/router_table.cpp                       \

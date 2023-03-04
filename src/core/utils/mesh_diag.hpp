@@ -38,6 +38,10 @@
 
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
 
+#if !OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+#error "OPENTHREAD_CONFIG_MESH_DIAG_ENABLE requires OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE"
+#endif
+
 #include <openthread/mesh_diag.h>
 
 #include "coap/coap.hpp"
@@ -46,6 +50,7 @@
 #include "common/message.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/network_diagnostic.hpp"
 #include "thread/network_diagnostic_tlvs.hpp"
 
 struct otMeshDiagIp6AddrIterator
@@ -65,11 +70,14 @@ namespace Utils {
  */
 class MeshDiag : public InstanceLocator
 {
+    friend class ot::NetworkDiagnostic::Client;
+
 public:
     static constexpr uint16_t kVersionUnknown = OT_MESH_DIAG_VERSION_UNKNOWN; ///< Unknown version.
 
-    typedef otMeshDiagDiscoverConfig   DiscoverConfig;   ///< The discovery configuration.
-    typedef otMeshDiagDiscoverCallback DiscoverCallback; ///< The discovery callback function pointer type.
+    typedef otMeshDiagDiscoverConfig          DiscoverConfig;          ///< Discovery configuration.
+    typedef otMeshDiagDiscoverCallback        DiscoverCallback;        ///< Discovery callback.
+    typedef otMeshDiagQueryChildTableCallback QueryChildTableCallback; ///< Query Child Table callback.
 
     /**
      * This type represents an iterator to go over list of IPv6 addresses of a router.
@@ -148,6 +156,14 @@ public:
         uint16_t       mParentRloc16;
     };
 
+    class ChildEntry : public otMeshDiagChildEntry
+    {
+        friend class MeshDiag;
+
+    private:
+        void SetFrom(const NetworkDiagnostic::ChildTlv &aChildTlv);
+    };
+
     /**
      * This constructor initializes the `MeshDiag` instance.
      *
@@ -164,7 +180,7 @@ public:
      * @param[in] aContext         A context to pass in @p aCallback.
      *
      * @retval kErrorNone          The network topology discovery started successfully.
-     * @retval kErrorBusy          A previous discovery request is still ongoing.
+     * @retval kErrorBusy          A previous discovery or query request is still ongoing.
      * @retval kErrorInvalidState  Device is not attached.
      * @retval kErrorNoBufs        Could not allocate buffer to send discovery messages.
      *
@@ -172,9 +188,26 @@ public:
     Error DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext);
 
     /**
-     * This method cancels an ongoing topology discovery if there one, otherwise no action.
+     * This method starts query for child table for a given router.
      *
-     * When ongoing discovery is cancelled, the callback from `DiscoverTopology()` will not be called anymore.
+     * @param[in] aRouter16        The RLOC16 of router to query.
+     * @param[in] aCallback        The callback to report the queried child table.
+     * @param[in] aContext         A context to pass in @p aCallback.
+     *
+     * @retval kErrorNone          The query started successfully.
+     * @retval kErrorBusy          A previous discovery or query request is still ongoing.
+     * @retval kErrorInvalidArgs   The @p aRloc16 is not a valid router RLOC16.
+     * @retval kErrorInvalidState  Device is not attached.
+     * @retval kErrorNoBufs        Could not allocate buffer to send query messages.
+     *
+     */
+    Error QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallback, void *aContext);
+
+    /**
+     * This method cancels an ongoing discovery or query operation if there one, otherwise no action.
+     *
+     * When ongoing discovery is cancelled, the callback from `DiscoverTopology()` or  `QueryChildTable()` will not be
+     * called anymore.
      *
      */
     void Cancel(void);
@@ -184,9 +217,28 @@ private:
 
     static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
 
-    Error SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig);
-    void  HandleTimer(void);
-    void  HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+    enum State : uint8_t
+    {
+        kStateIdle,
+        kStateDicoverTopology,
+        kStateQueryChildTable,
+    };
+
+    struct DiscoverInfo
+    {
+        Callback<DiscoverCallback> mCallback;
+        Mle::RouterIdSet           mExpectedRouterIdSet;
+    };
+
+    struct QueryChildTableInfo
+    {
+        Callback<QueryChildTableCallback> mCallback;
+        uint16_t                          mRouterRloc16;
+    };
+
+    void HandleTimer(void);
+    bool HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleDiagGetResponse(void                *aContext,
                                       otMessage           *aMessage,
@@ -195,9 +247,14 @@ private:
 
     using TimeoutTimer = TimerMilliIn<MeshDiag, &MeshDiag::HandleTimer>;
 
-    Callback<DiscoverCallback> mDiscoverCallback;
-    Mle::RouterIdSet           mExpectedRouterIdSet;
-    TimeoutTimer               mTimer;
+    State        mState;
+    TimeoutTimer mTimer;
+
+    union
+    {
+        DiscoverInfo        mDiscover;
+        QueryChildTableInfo mQueryChildTable;
+    };
 };
 
 } // namespace Utils
