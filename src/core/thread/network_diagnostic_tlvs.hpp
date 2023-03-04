@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for generating and processing MLE TLVs.
+ *   This file includes definitions for generating and processing Network Diagnostics TLVs.
  */
 
 #ifndef NETWORK_DIAGNOSTIC_TLVS_HPP_
@@ -48,6 +48,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/topology.hpp"
 
 namespace ot {
 namespace NetworkDiagnostic {
@@ -69,27 +70,33 @@ public:
      */
     enum Type : uint8_t
     {
-        kExtMacAddress      = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
-        kAddress16          = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
-        kMode               = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout            = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
-        kConnectivity       = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
-        kRoute              = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
-        kLeaderData         = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
-        kNetworkData        = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
-        kIp6AddressList     = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
-        kMacCounters        = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
-        kBatteryLevel       = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
-        kSupplyVoltage      = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
-        kChildTable         = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
-        kChannelPages       = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
-        kTypeList           = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
-        kMaxChildTimeout    = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
-        kVersion            = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
-        kVendorName         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
-        kVendorModel        = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
-        kVendorSwVersion    = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
-        kThreadStackVersion = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
+        kExtMacAddress       = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16           = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
+        kMode                = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout             = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity        = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute               = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData          = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData         = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList      = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel        = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage       = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable          = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages        = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList            = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout     = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kVersion             = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kVendorName          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
+        kVendorModel         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
+        kVendorSwVersion     = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
+        kThreadStackVersion  = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
+        kChild               = OT_NETWORK_DIAGNOSTIC_TLV_CHILD,
+        kChildIp6AddressList = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST,
+        kRouterNeighbor      = OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR,
+        kAnswer              = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
+        kQueryId             = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
+        kMleCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
     };
 
     /**
@@ -223,6 +230,18 @@ typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> Ven
  *
  */
 typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLength> ThreadStackVersionTlv;
+
+/**
+ * Defines Child IPv6 Address List TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kChildIp6AddressList> ChildIp6AddressListTlv;
+
+/**
+ * Defines Query ID TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kQueryId, uint16_t> QueryIdTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 
@@ -665,6 +684,465 @@ public:
         SetType(kTypeList);
         SetLength(sizeof(*this) - sizeof(Tlv));
     }
+} OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_FTD
+
+/**
+ * Implements Child TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChildTlv : public Tlv, public TlvInfo<Tlv::kChild>, public Clearable<ChildTlv>
+{
+public:
+    static constexpr uint8_t kFlagsRxOnWhenIdle = 1 << 7; ///< Device mode - Rx-on when idle.
+    static constexpr uint8_t kFlagsFtd          = 1 << 6; ///< Device mode - Full Thread Device (FTD).
+    static constexpr uint8_t kFlagsFullNetdta   = 1 << 5; ///< Device mode - Full Network Data.
+    static constexpr uint8_t kFlagsCslSync      = 1 << 4; ///< Is CSL capable and CSL synchronized.
+    static constexpr uint8_t kFlagsTrackErrRate = 1 << 3; ///< Supports tracking error rates.
+
+    /**
+     * Initializes the TLV using information from a given `Child`.
+     *
+     * @param[in] aChild   The child to initialize the TLV from.
+     *
+     */
+    void InitFrom(const Child &aChild);
+
+    /**
+     * Initializes the TLV as empty (zero length).
+     *
+     */
+    void InitAsEmpty(void)
+    {
+        SetType(kChild);
+        SetLength(0);
+    }
+
+    /**
+     * Returns the Flags field (`kFlags*` constants define bits in flags).
+     *
+     * @returns The Flags field.
+     *
+     */
+    uint8_t GetFlags(void) const { return mFlags; }
+
+    /**
+     * Returns the RLOC16 field.
+     *
+     * @returns The RLOC16 of the child.
+     *
+     */
+    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+
+    /**
+     * Returns the Extended Address.
+     *
+     * @returns The Extended Address of the child.
+     *
+     */
+    const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+    /**
+     * Returns the Version field.
+     *
+     * @returns The Version of the child.
+     *
+     */
+    uint16_t GetVersion(void) const { return HostSwap16(mVersion); }
+
+    /**
+     * Returns the Timeout field
+     *
+     * @returns The Timeout value in seconds.
+     *
+     */
+    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
+
+    /**
+     * Returns the Age field.
+     *
+     * @returns The Age field (seconds since last heard from the child).
+     *
+     */
+    uint32_t GetAge(void) const { return HostSwap32(mAge); }
+
+    /**
+     * Returns the Connection Time field.
+     *
+     * @returns The Connection Time field (seconds since attach).
+     *
+     */
+    uint32_t GetConnectionTime(void) const { return HostSwap32(mConnectionTime); }
+
+    /**
+     * Returns the Supervision Interval field
+     *
+     * @returns The Supervision Interval in seconds. Zero indicates not used.
+     *
+     */
+    uint16_t GetSupervisionInterval(void) const { return HostSwap16(mSupervisionInterval); }
+
+    /**
+     * Returns the Link Margin field.
+     *
+     * @returns The Link Margin in dB.
+     *
+     */
+    uint8_t GetLinkMargin(void) const { return mLinkMargin; }
+
+    /**
+     * Returns the Average RSSI field.
+     *
+     * @returns The Average RSSI in dBm. 127 if not available or unknown.
+     *
+     */
+    int8_t GetAverageRssi(void) const { return mAverageRssi; }
+
+    /**
+     * Returns the Last RSSI field (RSSI of last received frame from child).
+     *
+     * @returns The Last RSSI field in dBm. 127 if not available or unknown.
+     *
+     */
+    int8_t GetLastRssi(void) const { return mLastRssi; }
+
+    /**
+     * Returns the Frame Error Rate field.
+     *
+     * `kFlagsTrackErrRate` from `GetFlags()` indicates whether or not the implementation supports tracking of error
+     * rates and whether or not the value in this field is valid.
+     *
+     * @returns The Frame Error Rate (0x0000->0%, 0xffff->100%).
+     *
+     */
+    uint16_t GetFrameErrorRate(void) const { return HostSwap16(mFrameErrorRate); }
+
+    /**
+     * Returns the Message Error Rate field.
+     *
+     * `kFlagsTrackErrRate` from `GetFlags()` indicates whether or not the implementation supports tracking of error
+     * rates and whether or not the value in this field is valid.
+     *
+     * @returns The Message Error Rate (0x0000->0%, 0xffff->100%).
+     *
+     */
+    uint16_t GetMessageErrorRate(void) const { return HostSwap16(mMessageErrorRate); }
+
+    /**
+     * Returns the Queued Message Count field.
+     *
+     * @returns The Queued Message Count (number of queued messages for indirect tx to child).
+     *
+     */
+    uint16_t GetQueuedMessageCount(void) const { return HostSwap16(mQueuedMessageCount); }
+
+    /**
+     * Returns the CSL Period in unit of 10 symbols.
+     *
+     * @returns The CSL Period in unit of 10-symbols-time. Zero if CSL is not supported.
+     *
+     */
+    uint16_t GetCslPeriod(void) const { return HostSwap16(mCslPeriod); }
+
+    /**
+     * Returns the CSL Timeout in seconds.
+     *
+     * @returns The CSL Timeout in seconds. Zero if unknown on parent of if CSL Is not supported.
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return HostSwap32(mCslTimeout); }
+
+    /**
+     * Returns the CSL Channel.
+     *
+     * @returns The CSL channel.
+     *
+     */
+    uint8_t GetCslChannel(void) const { return mCslChannel; }
+
+private:
+    uint8_t         mFlags;               // Flags (`kFlags*` constants).
+    uint16_t        mRloc16;              // RLOC16.
+    Mac::ExtAddress mExtAddress;          // Extended Address.
+    uint16_t        mVersion;             // Version.
+    uint32_t        mTimeout;             // Timeout in seconds.
+    uint32_t        mAge;                 // Seconds since last heard from the child.
+    uint32_t        mConnectionTime;      // Seconds since attach.
+    uint16_t        mSupervisionInterval; // Supervision interval in seconds. Zero to indicate not used.
+    uint8_t         mLinkMargin;          // Link margin in dB.
+    int8_t          mAverageRssi;         // Average RSSI. 127 if not available or unknown
+    int8_t          mLastRssi;            // RSSI of last received frame. 127 if not available or unknown.
+    uint16_t        mFrameErrorRate;      // Frame error rate (0x0000->0%, 0xffff->100%).
+    uint16_t        mMessageErrorRate;    // (IPv6) msg error rate (0x0000->0%, 0xffff->100%)
+    uint16_t        mQueuedMessageCount;  // Number of queued messages for indirect tx to child.
+    uint16_t        mCslPeriod;           // CSL Period in unit of 10 symbols.
+    uint32_t        mCslTimeout;          // CSL Timeout in seconds.
+    uint8_t         mCslChannel;          // CSL channel.
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements Child IPv6 Address List Value generation and parsing.
+ *
+ * This TLV can use extended or normal format depending on the number of IPv6 addresses.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChildIp6AddressListTlvValue
+{
+public:
+    /**
+     * Returns the RLOC16 of the child.
+     *
+     * @returns The RLOC16 of the child.
+     *
+     */
+    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+
+    /**
+     * Sets the RLOC16.
+     *
+     * @param[in] aRloc16   The RLOC16 value.
+     *
+     */
+    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
+
+private:
+    uint16_t mRloc16;
+    // Followed by zero or more IPv6 address(es).
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements Router Neighbor TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class RouterNeighborTlv : public Tlv, public TlvInfo<Tlv::kRouterNeighbor>, public Clearable<RouterNeighborTlv>
+{
+public:
+    static constexpr uint8_t kFlagsTrackErrRate = 1 << 7; ///< Supports tracking error rates.
+
+    /**
+     * Initializes the TLV using information from a given `Router`.
+     *
+     * @param[in] aRouter   The router to initialize the TLV from.
+     *
+     */
+    void InitFrom(const Router &aRouter);
+
+    /**
+     * Initializes the TLV as empty (zero length).
+     *
+     */
+    void InitAsEmpty(void)
+    {
+        SetType(kRouterNeighbor);
+        SetLength(0);
+    }
+
+    /**
+     * Returns the Flags field (`kFlags*` constants define bits in flags).
+     *
+     * @returns The Flags field.
+     *
+     */
+    uint8_t GetFlags(void) const { return mFlags; }
+
+    /**
+     * Returns the RLOC16 field.
+     *
+     * @returns The RLOC16 of the router.
+     *
+     */
+    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+
+    /**
+     * Returns the Extended Address.
+     *
+     * @returns The Extended Address of the router.
+     *
+     */
+    const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
+
+    /**
+     * Returns the Version field.
+     *
+     * @returns The Version of the router.
+     *
+     */
+    uint16_t GetVersion(void) const { return HostSwap16(mVersion); }
+
+    /**
+     * Returns the Connection Time field.
+     *
+     * @returns The Connection Time field (seconds since link establishment).
+     *
+     */
+    uint32_t GetConnectionTime(void) const { return HostSwap32(mConnectionTime); }
+
+    /**
+     * Returns the Link Margin field.
+     *
+     * @returns The Link Margin in dB.
+     *
+     */
+    uint8_t GetLinkMargin(void) const { return mLinkMargin; }
+
+    /**
+     * Returns the Average RSSI field.
+     *
+     * @returns The Average RSSI in dBm. 127 if not available or unknown.
+     *
+     */
+    int8_t GetAverageRssi(void) const { return mAverageRssi; }
+
+    /**
+     * Returns the Last RSSI field (RSSI of last received frame from router).
+     *
+     * @returns The Last RSSI field in dBm. 127 if not available or unknown.
+     *
+     */
+    int8_t GetLastRssi(void) const { return mLastRssi; }
+
+    /**
+     * Returns the Frame Error Rate field.
+     *
+     * `kFlagsTrackErrRate` from `GetFlags()` indicates whether or not the implementation supports tracking of error
+     * rates and whether or not the value in this field is valid.
+     *
+     * @returns The Frame Error Rate (0x0000->0%, 0xffff->100%).
+     *
+     */
+    uint16_t GetFrameErrorRate(void) const { return HostSwap16(mFrameErrorRate); }
+
+    /**
+     * Returns the Message Error Rate field.
+     *
+     * `kFlagsTrackErrRate` from `GetFlags()` indicates whether or not the implementation supports tracking of error
+     * rates and whether or not the value in this field is valid.
+     *
+     * @returns The Message Error Rate (0x0000->0%, 0xffff->100%).
+     *
+     */
+    uint16_t GetMessageErrorRate(void) const { return HostSwap16(mMessageErrorRate); }
+
+private:
+    uint8_t         mFlags;            // Flags (`kFlags*` constants).
+    uint16_t        mRloc16;           // RLOC16.
+    Mac::ExtAddress mExtAddress;       // Extended Address.
+    uint16_t        mVersion;          // Version.
+    uint32_t        mConnectionTime;   // Seconds since link establishment.
+    uint8_t         mLinkMargin;       // Link Margin.
+    int8_t          mAverageRssi;      // Average RSSI. 127 if not available or unknown
+    int8_t          mLastRssi;         // RSSI of last received frame. 127 if not available or unknown.
+    uint16_t        mFrameErrorRate;   // Frame error rate (0x0000->0%, 0xffff->100%).
+    uint16_t        mMessageErrorRate; // (IPv6) msg error rate (0x0000->0%, 0xffff->100%)
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_FTD
+
+/**
+ * Implements Answer TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class AnswerTlv : public Tlv, public TlvInfo<Tlv::kAnswer>
+{
+public:
+    /**
+     * Initializes the TLV.
+     *
+     * @param[in] aIndex   The index value.
+     * @param[in] aIsLast  The "IsLast" flag value.
+     *
+     */
+    void Init(uint16_t aIndex, bool aIsLast);
+
+    /**
+     * Indicates whether or not the "IsLast" flag is set
+     *
+     * @retval TRUE   "IsLast" flag si set (this is the last answer for this query).
+     * @retval FALSE  "IsLast" flag is not set (more answer messages are expected for this query).
+     *
+     */
+    bool IsLast(void) const { return GetFlagsIndex() & kIsLastFlag; }
+
+    /**
+     * Gets the index.
+     *
+     * @returns The index.
+     *
+     */
+    uint16_t GetIndex(void) const { return GetFlagsIndex() & kIndexMask; }
+
+private:
+    static constexpr uint16_t kIsLastFlag = 1 << 15;
+    static constexpr uint16_t kIndexMask  = 0x7f;
+
+    uint16_t GetFlagsIndex(void) const { return HostSwap16(mFlagsIndex); }
+    void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = HostSwap16(aFlagsIndex); }
+
+    uint16_t mFlagsIndex;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Represents the MLE Counters.
+ *
+ */
+typedef otNetworkDiagMleCounters MleCounters;
+
+/**
+ * Implements MLE Counters TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MleCountersTlv : public Tlv, public TlvInfo<Tlv::kMleCounters>
+{
+public:
+    /**
+     * Initializes the TLV.
+     *
+     * @param[in] aMleCounter    The MLE counters to initialize the TLV with.
+     *
+     */
+    void Init(const Mle::Counters &aMleCounters);
+
+    /**
+     * Indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     *
+     * Reads the counters from TLV.
+     *
+     * @param[out] aDiagMleCounters   A reference to `NetworkDiagnostic::MleCounters` to populate.
+     *
+     */
+    void Read(MleCounters &aDiagMleCounters) const;
+
+private:
+    uint16_t mDisabledRole;                  // Number of times device entered disabled role.
+    uint16_t mDetachedRole;                  // Number of times device entered detached role.
+    uint16_t mChildRole;                     // Number of times device entered child role.
+    uint16_t mRouterRole;                    // Number of times device entered router role.
+    uint16_t mLeaderRole;                    // Number of times device entered leader role.
+    uint16_t mAttachAttempts;                // Number of attach attempts while device was detached.
+    uint16_t mPartitionIdChanges;            // Number of changes to partition ID.
+    uint16_t mBetterPartitionAttachAttempts; // Number of attempts to attach to a better partition.
+    uint16_t mParentChanges;                 // Number of time device changed its parent.
+    uint64_t mTrackedTime;                   // Milliseconds tracked by next counters.
+    uint64_t mDisabledTime;                  // Milliseconds device has been in disabled role.
+    uint64_t mDetachedTime;                  // Milliseconds device has been in detached role.
+    uint64_t mChildTime;                     // Milliseconds device has been in child role.
+    uint64_t mRouterTime;                    // Milliseconds device has been in router role.
+    uint64_t mLeaderTime;                    // Milliseconds device has been in leader role.
 } OT_TOOL_PACKED_END;
 
 } // namespace NetworkDiagnostic
