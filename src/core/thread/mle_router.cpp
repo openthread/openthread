@@ -632,25 +632,20 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     case kErrorNone:
         if (IsActiveRouter(sourceAddress))
         {
-            Mac::ExtAddress extAddr;
-
-            aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
-
             neighbor = mRouterTable.FindRouterByRloc16(sourceAddress);
             VerifyOrExit(neighbor != nullptr, error = kErrorParse);
             VerifyOrExit(!neighbor->IsStateLinkRequest(), error = kErrorAlready);
 
             if (!neighbor->IsStateValid())
             {
-                neighbor->SetExtAddress(extAddr);
-                neighbor->GetLinkInfo().Clear();
-                neighbor->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
-                neighbor->ResetLinkFailures();
-                neighbor->SetLastHeard(TimerMilli::GetNow());
+                InitNeighbor(*neighbor, aRxInfo);
                 neighbor->SetState(Neighbor::kStateLinkRequest);
             }
             else
             {
+                Mac::ExtAddress extAddr;
+
+                aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
                 VerifyOrExit(neighbor->GetExtAddress() == extAddr);
             }
         }
@@ -811,7 +806,6 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     Error           error = kErrorNone;
     Router         *router;
     Neighbor::State neighborState;
-    Mac::ExtAddress extAddr;
     uint16_t        version;
     Challenge       response;
     uint16_t        sourceAddress;
@@ -971,20 +965,15 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     }
 
     // finish link synchronization
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
-    router->SetExtAddress(extAddr);
+    InitNeighbor(*router, aRxInfo);
     router->SetRloc16(sourceAddress);
     router->GetLinkFrameCounters().SetAll(linkFrameCounter);
     router->SetLinkAckFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
-    router->SetLastHeard(TimerMilli::GetNow());
     router->SetVersion(version);
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
-    router->GetLinkInfo().Clear();
-    router->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
     router->SetLinkQualityOut(LinkQualityForLinkMargin(linkMargin));
-    router->ResetLinkFailures();
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aRxInfo.mKeySequence);
 
@@ -1121,15 +1110,11 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     // - `aSourceAdress` is the read value from `SourceAddressTlv`.
     // - `aLeaderData` is the read value from `LeaderDataTlv`.
 
-    Error                 error      = kErrorNone;
-    const ThreadLinkInfo *linkInfo   = aRxInfo.mMessageInfo.GetThreadLinkInfo();
-    uint8_t               linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
-    Mac::ExtAddress       extAddr;
-    RouteTlv              routeTlv;
-    Router               *router;
-    uint8_t               routerId;
-
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
+    Error    error      = kErrorNone;
+    uint8_t  linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    RouteTlv routeTlv;
+    Router  *router;
+    uint8_t  routerId;
 
     if (Tlv::FindTlv(aRxInfo.mMessage, routeTlv) == kErrorNone)
     {
@@ -1267,11 +1252,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
                 (mRouterTable.GetNeighborCount() < mChildRouterLinks))
             {
-                router->SetExtAddress(extAddr);
-                router->GetLinkInfo().Clear();
-                router->GetLinkInfo().AddRss(linkInfo->GetRss());
-                router->ResetLinkFailures();
-                router->SetLastHeard(TimerMilli::GetNow());
+                InitNeighbor(*router, aRxInfo);
                 router->SetState(Neighbor::kStateLinkRequest);
                 IgnoreError(SendLinkRequest(router));
                 ExitNow(error = kErrorNoRoute);
@@ -1314,11 +1295,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     if (!router->IsStateValid() && !router->IsStateLinkRequest() && (mChallengeTimeout == 0) &&
         (linkMargin >= kLinkRequestMinMargin))
     {
-        router->SetExtAddress(extAddr);
-        router->GetLinkInfo().Clear();
-        router->GetLinkInfo().AddRss(linkInfo->GetRss());
-        router->ResetLinkFailures();
-        router->SetLastHeard(TimerMilli::GetNow());
+        InitNeighbor(*router, aRxInfo);
         router->SetState(Neighbor::kStateLinkRequest);
         IgnoreError(SendLinkRequest(router));
         ExitNow(error = kErrorNoRoute);
@@ -1410,10 +1387,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
         VerifyOrExit((child = mChildTable.GetNewChild()) != nullptr, error = kErrorNoBufs);
 
         // MAC Address
-        child->SetExtAddress(extAddr);
-        child->GetLinkInfo().Clear();
-        child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
-        child->ResetLinkFailures();
+        InitNeighbor(*child, aRxInfo);
         child->SetState(Neighbor::kStateParentRequest);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         child->SetTimeSyncEnabled(Tlv::Find<TimeRequestTlv>(aRxInfo.mMessage, nullptr, 0) == kErrorNone);
