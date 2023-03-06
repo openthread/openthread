@@ -1177,7 +1177,17 @@ instance2
 Done
 ```
 
-> Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix is unavailable.
+```bash
+> dns browse _airplay._tcp.default.service.arpa
+DNS browse response for _airplay._tcp.default.service.arpa.
+Gabe's Mac mini
+    Port:7000, Priority:0, Weight:0, TTL:10
+    Host:Gabes-Mac-mini.default.service.arpa.
+    HostAddress:fd97:739d:386a:1:1c2e:d83c:fcbe:9cf4 TTL:10
+Done
+```
+
+> Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix is unavailable. When testing DNS-SD discovery proxy, the zone is not `local` and instead should be `default.service.arpa`.
 
 ### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
