@@ -66,7 +66,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@a34ca99b4610d924e04c68db79e503e1f79f9f02 # v2.1.39
+      uses: github/codeql-action/init@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -80,6 +80,6 @@ jobs:
         ./script/test build
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@a34ca99b4610d924e04c68db79e503e1f79f9f02 # v2.1.39
+      uses: github/codeql-action/analyze@32dc499307d133bb5085bae78498c0ac2cf762d5 # v2.2.5
       with:
         category: "/language:${{matrix.language}}"
