@@ -1,0 +1,146 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2023, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+for {set i 1} {$i <= 5} {incr i} {
+    spawn_node $i
+}
+
+switch_node 1
+
+send "dataset init new\n"
+expect_line "Done"
+send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+expect_line "Done"
+send "dataset channel 12\n"
+expect_line "Done"
+send "dataset networkname OpenThread-ch12\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+send "dataset active -x\n"
+expect -re {([0-9a-f]+)[\r\n]+Done}
+set dataset $expect_out(1,string) 
+attach
+
+set extaddr_1 [get_extaddr]
+set extpan_1 [get_extpanid]
+set pan_1 [get_panid]
+
+switch_node 2
+
+send "dataset init new\n"
+expect_line "Done"
+send "dataset channel 23\n"
+expect_line "Done"
+send "dataset networkname OpenThread-ch23\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done" 
+attach
+
+set extaddr_2 [get_extaddr]
+set extpan_2 [get_extpanid]
+set pan_2 [get_panid]
+
+switch_node 3
+
+send "dataset set active $dataset\n"
+expect_line "Done"
+send "mode r\n"
+expect_line "Done"
+attach "child"
+
+switch_node 4
+
+send "dataset set active $dataset\n"
+expect_line "Done"
+send "mode -\n"
+expect_line "Done"
+attach "child"
+
+for {set i 3} {$i <= 4} {incr i} {
+    switch_node $i
+
+    send "discover\n"
+    expect "| Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
+    expect "+------------------+------------------+------+------------------+----+-----+-----+"
+    wait_for "" "\\| OpenThread-ch12 +\\| $extpan_1 \\| $pan_1 \\| $extaddr_1 \\| 12 \\| +-?\\d+ \\| +\\d \\|"
+    wait_for "" "\\| OpenThread-ch23 +\\| $extpan_2 \\| $pan_2 \\| $extaddr_2 \\| 23 \\| +-?\\d+ \\| +\\d \\|"
+    wait_for "" "Done"
+}
+
+if {$::env(THREAD_VERSION) != "1.1" && $::env(OT_NODE_TYPE) == "cli"} {
+    send "csl channel 12\n"
+    expect_line "Done"
+    send "csl period 3125\n"
+    expect_line "Done"
+
+    sleep 1
+
+    send "discover\n"
+    expect "| Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
+    expect "+------------------+------------------+------+------------------+----+-----+-----+"
+    wait_for "" "\\| OpenThread-ch12 +\\| $extpan_1 \\| $pan_1 \\| $extaddr_1 \\| 12 \\| +-?\\d+ \\| +\\d \\|"
+    wait_for "" "\\| OpenThread-ch23 +\\| $extpan_2 \\| $pan_2 \\| $extaddr_2 \\| 23 \\| +-?\\d+ \\| +\\d \\|"
+    wait_for "" "Done"
+}
+
+switch_node 1
+send "discover reqcallback enable\n"
+expect_line "Done"
+
+switch_node 5
+send "discover\n"
+expect "Error 13: InvalidState"
+send "ifconfig up\n"
+expect_line "Done"
+send "discover 12\n"
+
+expect "| Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
+expect "+------------------+------------------+------+------------------+----+-----+-----+"
+wait_for "" "\\| OpenThread-ch12 +\\| $extpan_1 \\| $pan_1 \\| $extaddr_1 \\| 12 \\| +-?\\d+ \\| +\\d \\|"
+wait_for "" "Done"
+
+switch_node 1
+expect -re {version=\d,joiner=0}
+
+switch_node 5
+send "ifconfig up\n"
+expect_line "Done"
+send "joiner start 123456\n"
+set timeout 10
+expect "NotFound"
+
+switch_node 1
+expect -re {version=\d,joiner=1}
+
+dispose_all
