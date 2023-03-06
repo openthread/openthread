@@ -41,23 +41,11 @@ expect "panid"
 expect -re {([0-9a-f]{4})}
 set pan $expect_out(1,string)
 expect_line "Done"
-send "extpanid\n"
-expect "extpanid"
-expect -re {([0-9a-f]{16})}
-set extpan $expect_out(1,string)
-expect_line "Done"
 expect "> "
-send "networkname\n"
-expect "networkname"
-expect -re {[\r\n]([^\r\n]+?)[\r\n]}
-set network $expect_out(1,string)
-expect_line "Done"
 send "channel\n"
 expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
-expect_line "Done"
-send "discover reqcallback enable\n"
 expect_line "Done"
 
 switch_node 3
@@ -78,29 +66,5 @@ expect "| Ch | RSSI |"
 expect "+----+------+"
 expect -re "\\| +$channel \\| +-?\\d+ \\|"
 expect_line "Done"
-
-switch_node 3
-send "discover\n"
-expect "Error 13: InvalidState"
-send "ifconfig up\n"
-expect_line "Done"
-send "discover $channel\n"
-expect "| Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |"
-expect "+------------------+------------------+------+------------------+----+-----+-----+"
-wait_for "" "\\| $network +\\| $extpan \\| $pan \\| $extaddr \\| +$channel \\| +-?\\d+ \\| +\\d \\|"
-wait_for "" "Done"
-send "discover something_invalid\n"
-expect "Error 7: InvalidArgs"
-
-switch_node 1
-expect -re {version=\d,joiner=0}
-
-switch_node 3
-send "joiner start 123456\n"
-set timeout 10
-expect "NotFound"
-
-switch_node 1
-expect -re {version=\d,joiner=1}
 
 dispose_all

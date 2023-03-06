@@ -36,12 +36,7 @@ send "dataset panid 0xface\n"
 expect_line "Done"
 send "dataset commit active\n"
 expect_line "Done"
-send "ifconfig up\n"
-expect_line "Done"
-send "thread start\n"
-expect_line "Done"
-wait_for "state" "leader"
-expect_line "Done"
+attach
 
 set extaddr [get_extaddr]
 send "panid\n"
