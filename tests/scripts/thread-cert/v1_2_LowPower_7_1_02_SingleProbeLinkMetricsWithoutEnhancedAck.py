@@ -47,7 +47,7 @@ SERIES_ID_2 = 2
 POLL_PERIOD = 2000  # 2s
 
 
-class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestCase):
+class LowPower_7_1_02_SingleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
     TOPOLOGY = {
         LEADER: {
@@ -91,7 +91,7 @@ class LowPower_7_1_02_SIngleProbeLinkMetricsWithoutEnhancedAck(thread_cert.TestC
 
         # Step 3 - Verify connectivity by instructing each device to send an ICMPv6 Echo Request to the DUT
         self.assertTrue(self.nodes[SED_1].ping(leader_addr, timeout=POLL_PERIOD / 1000))
-        self.assertTrue(self.nodes[SSED_1].ping(leader_addr))
+        self.assertTrue(self.nodes[SSED_1].ping(leader_addr, timeout=(2 * consts.CSL_DEFAULT_PERIOD_IN_SECOND)))
         self.simulator.go(5)
 
         # Step 4 - SED_1 sends a Single Probe Link Metric for RSSI using MLE Data Request
