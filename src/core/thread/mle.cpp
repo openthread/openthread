@@ -1122,6 +1122,15 @@ exit:
 }
 #endif
 
+void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
+{
+    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(aNeighbor.GetExtAddress());
+    aNeighbor.GetLinkInfo().Clear();
+    aNeighbor.GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    aNeighbor.ResetLinkFailures();
+    aNeighbor.SetLastHeard(TimerMilli::GetNow());
+}
+
 void Mle::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(!IsDisabled());
@@ -3085,20 +3094,20 @@ exit:
 
 void Mle::HandleParentResponse(RxInfo &aRxInfo)
 {
-    Error                 error    = kErrorNone;
-    const ThreadLinkInfo *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
-    Challenge             response;
-    uint16_t              version;
-    uint16_t              sourceAddress;
-    LeaderData            leaderData;
-    uint8_t               linkMarginFromTlv;
-    uint8_t               linkMargin;
-    LinkQuality           linkQuality;
-    ConnectivityTlv       connectivityTlv;
-    uint32_t              linkFrameCounter;
-    uint32_t              mleFrameCounter;
-    Mac::ExtAddress       extAddress;
-    Mac::CslAccuracy      cslAccuracy;
+    Error            error = kErrorNone;
+    int8_t           rss   = aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss();
+    Challenge        response;
+    uint16_t         version;
+    uint16_t         sourceAddress;
+    LeaderData       leaderData;
+    uint8_t          linkMarginFromTlv;
+    uint8_t          linkMargin;
+    LinkQuality      linkQuality;
+    ConnectivityTlv  connectivityTlv;
+    uint32_t         linkFrameCounter;
+    uint32_t         mleFrameCounter;
+    Mac::ExtAddress  extAddress;
+    Mac::CslAccuracy cslAccuracy;
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeParameterTlv timeParameterTlv;
 #endif
@@ -3129,7 +3138,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     // Link Margin
     SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
 
-    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(linkInfo->GetRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(rss);
 
     if (linkMargin > linkMarginFromTlv)
     {
@@ -3165,7 +3174,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
         parentinfo.mExtAddr      = extAddress;
         parentinfo.mRloc16       = sourceAddress;
-        parentinfo.mRssi         = linkInfo->GetRss();
+        parentinfo.mRssi         = rss;
         parentinfo.mPriority     = connectivityTlv.GetParentPriority();
         parentinfo.mLinkQuality3 = connectivityTlv.GetLinkQuality3();
         parentinfo.mLinkQuality2 = connectivityTlv.GetLinkQuality2();
@@ -3265,7 +3274,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     // Challenge
     SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidate.mChallenge));
 
-    mParentCandidate.SetExtAddress(extAddress);
+    InitNeighbor(mParentCandidate, aRxInfo);
     mParentCandidate.SetRloc16(sourceAddress);
     mParentCandidate.GetLinkFrameCounters().SetAll(linkFrameCounter);
     mParentCandidate.SetLinkAckFrameCounter(linkFrameCounter);
@@ -3273,9 +3282,6 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     mParentCandidate.SetVersion(version);
     mParentCandidate.SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                               DeviceMode::kModeFullNetworkData));
-    mParentCandidate.GetLinkInfo().Clear();
-    mParentCandidate.GetLinkInfo().AddRss(linkInfo->GetRss());
-    mParentCandidate.ResetLinkFailures();
     mParentCandidate.SetLinkQualityOut(LinkQualityForLinkMargin(linkMarginFromTlv));
     mParentCandidate.SetState(Neighbor::kStateParentResponse);
     mParentCandidate.SetKeySequence(aRxInfo.mKeySequence);

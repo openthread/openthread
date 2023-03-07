@@ -364,10 +364,12 @@ public:
     NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
-     * This method sets all bytes of the Extended Address to zero.
+     * This method returns the Extended Address.
+     *
+     * @returns A const reference to the Extended Address.
      *
      */
-    void ClearExtAddress(void) { memset(&mMacAddr, 0, sizeof(mMacAddr)); }
+    const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
 
     /**
      * This method returns the Extended Address.
@@ -375,7 +377,7 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
+    Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
 
     /**
      * This method sets the Extended Address.

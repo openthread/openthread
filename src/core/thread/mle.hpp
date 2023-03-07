@@ -1462,6 +1462,22 @@ protected:
     void SetAttachState(AttachState aState);
 
     /**
+     * This method initializes a given @p aNeighbor with information from @p aRxInfo.
+     *
+     * This method updates the following properties on @p aNeighbor from @p aRxInfo:
+     *
+     * - Sets the Extended MAC address from `MessageInfo` peer IPv6 address IID.
+     * - Clears the `GetLinkInfo()` and adds RSS from the `GetThreadLinkInfo()`.
+     * - Resets the link failure counter (`ResetLinkFailures()`).
+     * - Sets the "last heard" time to now (`SetLastHeard()`).
+     *
+     * @param[in,out] aNeighbor   The `Neighbor` to initialize.
+     * @param[in]     aRxInfo     The `RxtInfo` to use for initialization.
+     *
+     */
+    void InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
+
+    /**
      * This method clears the parent candidate.
      *
      */
