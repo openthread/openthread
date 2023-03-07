@@ -159,6 +159,66 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
+/**
+ * @cli netdata length
+ * @code
+ * netdata length
+ * 23
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otNetDataGetLength
+ */
+template <> otError NetworkData::Process<Cmd("length")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine("%u", otNetDataGetLength(GetInstancePtr()));
+
+exit:
+    return error;
+}
+
+template <> otError NetworkData::Process<Cmd("maxlength")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli netdata maxlength
+     * @code
+     * netdata maxlength
+     * 40
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNetDataGetMaxLength
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%u", otNetDataGetMaxLength(GetInstancePtr()));
+    }
+    /**
+     * @cli netdata maxlength reset
+     * @code
+     * netdata maxlength reset
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otNetDataResetMaxLength
+     */
+    else if (aArgs[0] == "reset")
+    {
+        otNetDataResetMaxLength(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
 {
@@ -669,6 +729,8 @@ otError NetworkData::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
+        CmdEntry("length"),
+        CmdEntry("maxlength"),
 #if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
         CmdEntry("publish"),
 #endif
@@ -693,7 +755,8 @@ otError NetworkData::Process(Arg aArgs[])
      * @cli netdata help
      * @code
      * netdata help
-     * help
+     * length
+     * maxlength
      * publish
      * register
      * show
