@@ -324,7 +324,7 @@ _LAYER_FIELDS = {
     'mle.tlv.link_enh_ack_flags': _auto,
     'mle.tlv.link_forward_series': _list(_auto),
     'mle.tlv.link_requested_type_id_flags': _list(_hex),
-    'mle.tlv.link_sub_tlv': _auto,
+    'mle.tlv.link_sub_tlv': _list(_auto),
     'mle.tlv.link_status_sub_tlv': _auto,
     'mle.tlv.query_id': _auto,
     'mle.tlv.metric_type_id_flags.type': _list(_hex),
