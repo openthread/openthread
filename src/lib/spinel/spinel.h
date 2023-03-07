@@ -420,7 +420,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 8
+#define SPINEL_RCP_API_VERSION 9
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -3511,19 +3511,27 @@ enum
      * over the radio. This allows the caller to use the radio directly.
      *
      * The frame meta data for the `CMD_PROP_VALUE_SET` contains the following
-     * optional fields.  Default values are used for all unspecified fields.
+     * fields.  Default values are used for all unspecified fields.
      *
-     *  `C` : Channel (for frame tx)
+     *  `C` : Channel (for frame tx) - MUST be included.
      *  `C` : Maximum number of backoffs attempts before declaring CCA failure
      *        (use Thread stack default if not specified)
      *  `C` : Maximum number of retries allowed after a transmission failure
      *        (use Thread stack default if not specified)
      *  `b` : Set to true to enable CSMA-CA for this packet, false otherwise.
      *        (default true).
-     *  `b` : Set to true to indicate it is a retransmission packet, false otherwise.
-     *        (default false).
-     *  `b` : Set to true to indicate that SubMac should skip AES processing, false otherwise.
-     *        (default false).
+     *  `b` : Set to true to indicate if header is updated - related to
+     *        `mIsHeaderUpdated` in `otRadioFrame` (default false).
+     *  `b` : Set to true to indicate it is a retransmission - related to
+     *        `mIsARetx` in `otRadioFrame` (default false).
+     *  `b` : Set to true to indicate security was processed on tx frame
+     *        `mIsSecurityProcessed` in `otRadioFrame` (default false).
+     *  `L` : TX delay interval used for CSL - related to `mTxDelay` in
+     *        `otRadioFrame` (default zero).
+     *  `L` : TX delay based time used for CSL - related to `mTxDelayBaseTime`
+     *        in `otRadioFrame` (default zero).
+     *  `C` : RX channel after TX done (default assumed to be same as
+     *        channel in metadata)
      *
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,

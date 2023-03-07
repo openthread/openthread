@@ -871,6 +871,7 @@ start:
     {
     case Message::kSubTypeMleAnnounce:
         aFrame.SetChannel(aMessage.GetChannel());
+        aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
         panIds.mDestination = Mac::kPanIdBroadcast;
         break;
 

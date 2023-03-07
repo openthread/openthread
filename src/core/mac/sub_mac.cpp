@@ -619,6 +619,19 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 
     SetState(kStateReceive);
 
+#if OPENTHREAD_RADIO
+    if (aFrame.GetChannel() != aFrame.GetRxChannelAfterTxDone())
+    {
+        // On RCP build, we switch immediately to the specified RX
+        // channel if it is different from the channel on which frame
+        // was sent. On FTD or MTD builds we don't need to do
+        // the same as the `Mac` will switch the channel from the
+        // `mCallbacks.TransmitDone()`.
+
+        IgnoreError(Get<Radio>().Receive(aFrame.GetRxChannelAfterTxDone()));
+    }
+#endif
+
     mCallbacks.TransmitDone(aFrame, aAckFrame, aError);
 
 exit:

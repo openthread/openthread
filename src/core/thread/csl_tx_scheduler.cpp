@@ -214,6 +214,11 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame->SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
                                                         : mCslTxChild->GetCslChannel());
 
+    if (frame->GetChannel() != Get<Mac::Mac>().GetPanChannel())
+    {
+        frame->SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
+    }
+
     delay = GetNextCslTransmissionDelay(*mCslTxChild, txDelay, /* aAheadUs */ 0);
 
     // We make sure that delay is less than `mCslFrameRequestAheadUs`
