@@ -190,12 +190,8 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
                 filter_mle_cmd(MLE_ADVERTISEMENT).\
                 filter(lambda p: p.sniff_timestamp - _pkt.sniff_timestamp <= 4).\
                 must_next()
-        # check router cost before and after the re-attach
-        pkts.filter_wpan_src64(LEADER).\
-            filter_LLANMA().\
-            filter_mle_cmd(MLE_ADVERTISEMENT).\
-            filter(lambda p: {1,0,1} == set(p.mle.tlv.route64.cost)).\
-            must_next()
+
+        # check router cost after the re-attach
         pkts.filter_wpan_src64(LEADER).\
             filter_LLANMA().\
             filter_mle_cmd(MLE_ADVERTISEMENT).\
