@@ -112,7 +112,7 @@ class OtbrDocker:
         logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
-        dns = ['--dns=127.0.0.1'] if INFRA_DNS64 == 1 else []
+        dns = ['--dns=127.0.0.1'] if INFRA_DNS64 == 1 else ['--dns=8.8.8.8']
         nat64_prefix = ['--nat64-prefix', '2001:db8:1:ffff::/96'] if INFRA_DNS64 == 1 else []
         os.makedirs('/tmp/coverage/', exist_ok=True)
 
@@ -376,6 +376,10 @@ class OtbrDocker:
         return self.call_dbus_method('org.freedesktop.DBus.Properties', 'Get', 'io.openthread.BorderRouter',
                                      property_name)
 
+    def set_dbus_property(self, property_name, property_value):
+        return self.call_dbus_method('org.freedesktop.DBus.Properties', 'Set', 'io.openthread.BorderRouter',
+                                     property_name, property_value)
+
     def get_border_routing_counters(self):
         counters = self.get_dbus_property('BorderRoutingCounters')
         counters = {
@@ -459,6 +463,16 @@ class OtbrDocker:
             'UDP': self._process_traffic_counters(res[2]),
             'TCP': self._process_traffic_counters(res[3]),
         }
+
+    @property
+    def dns_upstream_query_state(self):
+        return bool(self.get_dbus_property('DnsUpstreamQueryState'))
+
+    @dns_upstream_query_state.setter
+    def dns_upstream_query_state(self, value):
+        if type(value) is not bool:
+            raise ValueError("dns_upstream_query_state must be a bool")
+        return self.set_dbus_property('DnsUpstreamQueryState', value)
 
     def read_border_routing_counters_delta(self):
         old_counters = self._border_routing_counters
