@@ -442,12 +442,12 @@ void Server::CommitSrpUpdate(Error                    aError,
                              const LeaseConfig       &aLeaseConfig)
 {
     Host    *existingHost;
-    uint32_t hostLease;
-    uint32_t hostKeyLease;
-    uint32_t grantedLease;
-    uint32_t grantedKeyLease;
     uint32_t grantedTtl;
-    bool     shouldFreeHost = true;
+    uint32_t hostLease       = 0;
+    uint32_t hostKeyLease    = 0;
+    uint32_t grantedLease    = 0;
+    uint32_t grantedKeyLease = 0;
+    bool     shouldFreeHost  = true;
 
     SuccessOrExit(aError);
 
@@ -824,7 +824,7 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
                                                 const Message         &aMessage,
                                                 const MessageMetadata &aMetadata) const
 {
-    Error    error;
+    Error    error  = kErrorNone;
     uint16_t offset = aMetadata.mOffset;
 
     OT_ASSERT(aHost.GetFullName() == nullptr);
