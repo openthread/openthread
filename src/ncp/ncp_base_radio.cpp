@@ -425,17 +425,22 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
 
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
+
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
+
     SuccessOrExit(mDecoder.ReadBool(isHeaderUpdated));
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated = isHeaderUpdated;
+
     SuccessOrExit(mDecoder.ReadBool(isARetx));
+    aFrame.mInfo.mTxInfo.mIsARetx = isARetx;
+
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
+
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
-    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = isHeaderUpdated;
-    aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
-    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
 
 exit:
     return error;
