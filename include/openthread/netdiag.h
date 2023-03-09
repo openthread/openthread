@@ -82,6 +82,7 @@ enum
     OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES     = 17, ///< Channel Pages TLV
     OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST         = 18, ///< Type List TLV
     OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT = 19, ///< Max Child Timeout TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_VERSION           = 24, ///< Version TLV
 };
 
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
@@ -245,6 +246,7 @@ typedef struct otNetworkDiagTlv
         uint8_t                   mBatteryLevel;
         uint16_t                  mSupplyVoltage;
         uint32_t                  mMaxChildTimeout;
+        uint16_t                  mVersion;
         struct
         {
             uint8_t mCount;
