@@ -33,6 +33,7 @@ set(COMMON_INCLUDES
 set(COMMON_SOURCES
     api/backbone_router_api.cpp
     api/backbone_router_ftd_api.cpp
+    api/ble_secure_api.cpp
     api/border_agent_api.cpp
     api/border_router_api.cpp
     api/border_routing_api.cpp
@@ -148,7 +149,6 @@ set(COMMON_SOURCES
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
-    meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
     meshcop/extended_panid.cpp
     meshcop/joiner.cpp
@@ -158,6 +158,8 @@ set(COMMON_SOURCES
     meshcop/meshcop_tlvs.cpp
     meshcop/network_name.cpp
     meshcop/panid_query_client.cpp
+    meshcop/secure_transport.cpp
+    meshcop/tcat_agent.cpp
     meshcop/timestamp.cpp
     net/checksum.cpp
     net/dhcp6_client.cpp
@@ -185,6 +187,7 @@ set(COMMON_SOURCES
     net/tcp6.cpp
     net/tcp6_ext.cpp
     net/udp6.cpp
+    radio/ble_secure.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
     radio/radio_platform.cpp

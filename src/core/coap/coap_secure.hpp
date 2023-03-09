@@ -31,12 +31,12 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 #include "coap/coap.hpp"
 #include "common/callback.hpp"
-#include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
+#include "meshcop/secure_transport.hpp"
 
 #include <openthread/coap_secure.h>
 
@@ -91,7 +91,7 @@ public:
      * @retval kErrorAlready     Already started.
      *
      */
-    Error Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext);
+    Error Start(MeshCoP::SecureTransport::TransportCallback aCallback, void *aContext);
 
     /**
      * Sets connected callback of this secure CoAP agent.
@@ -153,7 +153,7 @@ public:
      * @returns  A reference to the DTLS object.
      *
      */
-    MeshCoP::Dtls &GetDtls(void) { return mDtls; }
+    MeshCoP::SecureTransport &GetDtls(void) { return mDtls; }
 
     /**
      * Gets the UDP port of this agent.
@@ -409,7 +409,7 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::Dtls               mDtls;
+    MeshCoP::SecureTransport    mDtls;
     Callback<ConnectedCallback> mConnectedCallback;
     ot::MessageQueue            mTransmitQueue;
     TaskletContext              mTransmitTask;
@@ -418,6 +418,6 @@ private:
 } // namespace Coap
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
+#endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 #endif // COAP_SECURE_HPP_

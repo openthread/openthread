@@ -156,7 +156,7 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     , mCommissioner(*this)
 #endif
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
     , mTmfSecureAgent(*this)
 #endif
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -210,6 +210,9 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    , mApplicationBleSecure(*this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     , mPingSender(*this)
@@ -456,7 +459,7 @@ void Instance::GetBufferInfo(BufferInfo &aInfo)
     Get<Tmf::Agent>().GetRequestMessages().GetInfo(aInfo.mCoapQueue);
     Get<Tmf::Agent>().GetCachedResponses().GetInfo(aInfo.mCoapQueue);
 
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
     Get<Tmf::SecureAgent>().GetRequestMessages().GetInfo(aInfo.mCoapSecureQueue);
     Get<Tmf::SecureAgent>().GetCachedResponses().GetInfo(aInfo.mCoapSecureQueue);
 #endif

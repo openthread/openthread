@@ -125,6 +125,7 @@ endif()
 add_library(openthread-posix
     alarm.cpp
     backtrace.cpp
+    ble.cpp
     configuration.cpp
     config_file.cpp
     daemon.cpp

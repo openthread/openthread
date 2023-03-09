@@ -286,7 +286,8 @@ public:
         kTypeSupervision  = 2, ///< A child supervision frame.
         kTypeMacEmptyData = 3, ///< An empty MAC data frame.
         kTypeIp4          = 4, ///< A full uncompressed IPv4 packet, for NAT64.
-        kTypeOther        = 5, ///< Other (data) message.
+        kTypeBle          = 5, ///< A BLE payload message.
+        kTypeOther        = 6, ///< Other (data) message.
     };
 
     /**

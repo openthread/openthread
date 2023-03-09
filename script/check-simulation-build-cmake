@@ -201,6 +201,9 @@ build_all_features()
     # Build with RAM settings
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_SETTINGS_RAM=ON
+
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_BLE_TCAT=ON
 }
 
 build_nest_common()

@@ -214,7 +214,7 @@ private:
     static Error Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 /**
  * Implements functionality of the secure TMF agent.

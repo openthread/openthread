@@ -49,9 +49,9 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_types.hpp"
-#include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "meshcop/secure_transport.hpp"
 #include "thread/discover_scanner.hpp"
 #include "thread/tmf.hpp"
 
