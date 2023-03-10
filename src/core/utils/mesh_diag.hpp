@@ -66,6 +66,8 @@ namespace Utils {
 class MeshDiag : public InstanceLocator
 {
 public:
+    static constexpr uint16_t kVersionUnknown = OT_MESH_DIAG_VERSION_UNKNOWN; ///< Unknown version.
+
     typedef otMeshDiagDiscoverConfig   DiscoverConfig;   ///< The discovery configuration.
     typedef otMeshDiagDiscoverCallback DiscoverCallback; ///< The discovery callback function pointer type.
 

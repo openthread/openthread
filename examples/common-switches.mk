@@ -51,7 +51,7 @@ DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
 DNS_DSO                   ?= 0
-DNS_QUERY_UPSTREAM        ?= 0
+DNS_UPSTREAM_QUERY        ?= 0
 DNSSD_SERVER              ?= 0
 DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
@@ -209,7 +209,7 @@ ifeq ($(DNS_DSO),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1
 endif
 
-ifeq ($(DNS_QUERY_UPSTREAM), 1)
+ifeq ($(DNS_UPSTREAM_QUERY), 1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE=1
 endif
 
@@ -345,6 +345,8 @@ else ifeq ($(THREAD_VERSION),1.2)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=3
 else ifeq ($(THREAD_VERSION),1.3)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=4
+else ifeq ($(THREAD_VERSION),1.3.1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=5
 endif
 
 ifeq ($(TIME_SYNC),1)

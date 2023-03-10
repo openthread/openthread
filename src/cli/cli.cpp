@@ -5478,16 +5478,16 @@ template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
      * @cli meshdiag topology
      * @code
      * meshdiag topology
-     * id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c - me - leader
+     * id:02 rloc16:0x0800 ext-addr:8aa57d2c603fe16c ver:4 - me - leader
      *    3-links:{ 46 }
-     * id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc
+     * id:46 rloc16:0xb800 ext-addr:fe109d277e0175cc ver:4
      *    3-links:{ 02 51 57 }
-     * id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d
+     * id:33 rloc16:0x8400 ext-addr:d2e511a146b9e54d ver:4
      *    3-links:{ 51 57 }
-     * id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352
+     * id:51 rloc16:0xcc00 ext-addr:9aab43ababf05352 ver:4
      *    3-links:{ 33 57 }
      *    2-links:{ 46 }
-     * id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff
+     * id:57 rloc16:0xe400 ext-addr:dae9c4c0e9da55ff ver:4
      *    3-links:{ 46 51 }
      *    1-links:{ 33 }
      * Done
@@ -5502,6 +5502,7 @@ template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
      * * Router ID
      * * RLOC16
      * * Extended MAC address
+     * * Thread Version (if known)
      * * Whether the router is this device is itself (`me`)
      * * Whether the router is the parent of this device when device is a child (`parent`)
      * * Whether the router is `leader`
@@ -5569,6 +5570,11 @@ void Interpreter::HandleMeshDiagDiscoverDone(otError aError, otMeshDiagRouterInf
 
     OutputFormat("id:%02u rloc16:0x%04x ext-addr:", aRouterInfo->mRouterId, aRouterInfo->mRloc16);
     OutputExtAddress(aRouterInfo->mExtAddress);
+
+    if (aRouterInfo->mVersion != OT_MESH_DIAG_VERSION_UNKNOWN)
+    {
+        OutputFormat(" ver:%u", aRouterInfo->mVersion);
+    }
 
     if (aRouterInfo->mIsThisDevice)
     {

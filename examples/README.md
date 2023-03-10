@@ -34,7 +34,7 @@ This page lists the available common switches with description. Unless stated ot
 | DEBUG_UART_LOG | not implemented | Enables the log output for the debug UART. Requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART to be enabled. |
 | DNS_CLIENT | OT_DNS_CLIENT | Enables support for DNS client. Enable this switch on a device that sends a DNS query for AAAA (IPv6) record. |
 | DNS_DSO | OT_DNS_DSO | Enables support for DNS Stateful Operations (DSO). |
-| DNS_QUERY_UPSTREAM | OT_DNS_QUERY_UPSTREAM | Enables forwarding DNS queries to upstream DNS server. |
+| DNS_UPSTREAM_QUERY | OT_DNS_UPSTREAM_QUERY | Enables forwarding DNS queries to upstream DNS server. |
 | DNSSD_SERVER | OT_DNSSD_SERVER | Enables support for DNS-SD server. DNS-SD server use service information from local SRP server to resolve DNS-SD query questions. |
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
 | DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |

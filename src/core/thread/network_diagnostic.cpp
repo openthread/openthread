@@ -50,6 +50,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 
@@ -335,6 +336,10 @@ Error NetworkDiagnostic::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kMode:
         error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::MleRouter>().GetDeviceMode().Get());
+        break;
+
+    case Tlv::kVersion:
+        error = Tlv::Append<VersionTlv>(aMessage, kThreadVersion);
         break;
 
     case Tlv::kTimeout:
@@ -741,6 +746,10 @@ Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage, Iterator 
 
         case Tlv::kMaxChildTimeout:
             SuccessOrExit(error = Tlv::Read<MaxChildTimeoutTlv>(aMessage, offset, aTlvInfo.mData.mMaxChildTimeout));
+            break;
+
+        case Tlv::kVersion:
+            SuccessOrExit(error = Tlv::Read<VersionTlv>(aMessage, offset, aTlvInfo.mData.mVersion));
             break;
 
         default:
