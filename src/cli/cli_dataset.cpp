@@ -1252,6 +1252,29 @@ exit:
     return error;
 }
 
+/**
+ * @cli dataset tlvs
+ * @code
+ * dataset tlvs
+ * 0e080000000000010000000300001635060004001fffe0020...f7f8
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otDatasetConvertToTlvs
+ */
+template <> otError Dataset::Process<Cmd("tlvs")>(Arg aArgs[])
+{
+    otError                  error;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = otDatasetConvertToTlvs(&sDataset, &datasetTlvs));
+    OutputBytesLine(datasetTlvs.mTlvs, datasetTlvs.mLength);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
 template <> otError Dataset::Process<Cmd("updater")>(Arg aArgs[])
@@ -1318,6 +1341,7 @@ otError Dataset::Process(Arg aArgs[])
         CmdEntry("pskc"),
         CmdEntry("securitypolicy"),
         CmdEntry("set"),
+        CmdEntry("tlvs"),
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
         CmdEntry("updater"),
 #endif
@@ -1359,6 +1383,8 @@ otError Dataset::Process(Arg aArgs[])
      * pendingtimestamp
      * pskc
      * securitypolicy
+     * set
+     * tlvs
      * Done
      * @endcode
      * @par

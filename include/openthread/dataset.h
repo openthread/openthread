@@ -583,7 +583,7 @@ otError otDatasetGeneratePskc(const char            *aPassPhrase,
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
- * This function parses an Operational Dataset from a `otOperationalDatasetTlvs`.
+ * Parses an Operational Dataset from a given `otOperationalDatasetTlvs`.
  *
  * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
  * @param[out] aDataset      A pointer to where the dataset will be placed.
@@ -593,6 +593,18 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  *
  */
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
+
+/**
+ * Converts a given Operational Dataset to `otOperationalDatasetTlvs`.
+ *
+ * @param[in]  aDataset      An Operational dataset to convert to TLVs.
+ * @param[out] aDatasetTlvs  A pointer to dataset TLVs to return the result.
+ *
+ * @retval OT_ERROR_NONE          Successfully converted @p aDataset and updated @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset is invalid, does not contain active or pending timestamps.
+ *
+ */
+otError otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
  * @}
