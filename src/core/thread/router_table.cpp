@@ -66,6 +66,12 @@ void RouterTable::Clear(void)
     SignalTableChanged();
 }
 
+bool RouterTable::IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const
+{
+    return (GetActiveRouterCount() == 0) ||
+           SerialNumber::IsGreater(aRouteTlv.GetRouterIdSequence(), GetRouterIdSequence());
+}
+
 void RouterTable::ClearNeighbors(void)
 {
     for (Router &router : mRouters)

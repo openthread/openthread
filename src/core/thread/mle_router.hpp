@@ -579,8 +579,9 @@ private:
     void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
-    Error ProcessRouteTlv(RxInfo &aRxInfo);
-    Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
+    Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
+    Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
+
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressSolicitResponse(const Coap::Message    &aRequest,
