@@ -90,6 +90,8 @@ void MeshDiag::Cancel(void)
 
 Error MeshDiag::SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig)
 {
+    static constexpr uint8_t kMaxTlvsToRequest = 6;
+
     Error            error   = kErrorNone;
     Coap::Message   *message = nullptr;
     Tmf::MessageInfo messageInfo(GetInstance());
