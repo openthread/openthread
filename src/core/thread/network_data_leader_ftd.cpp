@@ -1336,6 +1336,7 @@ void Leader::HandleTimer(void)
 
         if (TimerMilli::GetNow() - mContextLastUsed[i] >= Time::SecToMsec(mContextIdReuseDelay))
         {
+            mContextLastUsed[i].SetValue(0);
             FreeContextId(kMinContextId + i);
         }
         else
