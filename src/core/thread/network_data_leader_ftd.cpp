@@ -1138,8 +1138,11 @@ void Leader::RemoveRlocInPrefix(PrefixTlv       &aPrefix,
     {
         if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
-            context->ClearCompress();
-            StartContextReuseTimer(context->GetContextId());
+	    if (context->IsCompress())
+	    {
+            	context->ClearCompress();
+            	StartContextReuseTimer(context->GetContextId());
+	    }
         }
         else
         {
