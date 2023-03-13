@@ -1003,6 +1003,11 @@ void Leader::FreeContextId(uint8_t aContextId)
 
 void Leader::StartContextReuseTimer(uint8_t aContextId)
 {
+    // Start the reuse timer for `aContextId` if it is not already
+    // scheduled.
+
+    VerifyOrExit(mContextLastUsed[aContextId - kMinContextId].GetValue() == 0);
+
     mContextLastUsed[aContextId - kMinContextId] = TimerMilli::GetNow();
 
     if (mContextLastUsed[aContextId - kMinContextId].GetValue() == 0)
@@ -1010,7 +1015,13 @@ void Leader::StartContextReuseTimer(uint8_t aContextId)
         mContextLastUsed[aContextId - kMinContextId].SetValue(1);
     }
 
-    mTimer.Start(kStateUpdatePeriod);
+    if (!mTimer.IsRunning())
+    {
+        mTimer.Start(kStateUpdatePeriod);
+    }
+
+exit:
+    return;
 }
 
 void Leader::StopContextReuseTimer(uint8_t aContextId) { mContextLastUsed[aContextId - kMinContextId].SetValue(0); }
