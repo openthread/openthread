@@ -61,6 +61,7 @@ RegisterLogModule("NetworkData");
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
     , mWaitingForNetDataSync(false)
+    , mContextIds(aInstance)
     , mTimer(aInstance)
 {
     Reset();
@@ -70,9 +71,7 @@ void Leader::Reset(void)
 {
     LeaderBase::Reset();
 
-    memset(reinterpret_cast<void *>(mContextLastUsed), 0, sizeof(mContextLastUsed));
-    mContextUsed         = 0;
-    mContextIdReuseDelay = kContextIdReuseDelay;
+    mContextIds.Clear();
 }
 
 void Leader::Start(Mle::LeaderStartMode aStartMode)
@@ -852,10 +851,10 @@ Error Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &a
 
     if (dstContext == nullptr)
     {
-        // Allocate a Context ID first. This ensure that if we cannot
-        // allocate, we fail and exit before potentially inserting a
-        // Border Router sub-TLV.
-        SuccessOrExit(error = AllocateContextId(contextId));
+        // Get a new Context ID first. This ensure that if we cannot
+        // get new Context ID, we fail and exit before potentially
+        // inserting a Border Router sub-TLV.
+        SuccessOrExit(error = mContextIds.GetUnallocatedId(contextId));
     }
 
     if (dstBorderRouter == nullptr)
@@ -894,7 +893,7 @@ Error Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &a
     }
 
     dstContext->SetCompress();
-    StopContextReuseTimer(dstContext->GetContextId());
+    mContextIds.MarkAsInUse(dstContext->GetContextId());
 
     VerifyOrExit(!ContainsMatchingEntry(dstBorderRouter, *entry));
 
@@ -973,58 +972,6 @@ const ServiceTlv *Leader::FindServiceById(uint8_t aServiceId) const
 
     return service;
 }
-
-Error Leader::AllocateContextId(uint8_t &aContextId)
-{
-    Error error = kErrorNotFound;
-
-    for (uint8_t contextId = kMinContextId; contextId < kMinContextId + kNumContextIds; contextId++)
-    {
-        if ((mContextUsed & (1 << contextId)) == 0)
-        {
-            mContextUsed |= (1 << contextId);
-            aContextId = contextId;
-            error      = kErrorNone;
-            LogInfo("Allocated Context ID = %d", contextId);
-            break;
-        }
-    }
-
-    return error;
-}
-
-void Leader::FreeContextId(uint8_t aContextId)
-{
-    LogInfo("Free Context Id = %d", aContextId);
-    RemoveContext(aContextId);
-    mContextUsed &= ~(1 << aContextId);
-    IncrementVersions(/* aIncludeStable */ true);
-}
-
-void Leader::StartContextReuseTimer(uint8_t aContextId)
-{
-    // Start the reuse timer for `aContextId` if it is not already
-    // scheduled.
-
-    VerifyOrExit(mContextLastUsed[aContextId - kMinContextId].GetValue() == 0);
-
-    mContextLastUsed[aContextId - kMinContextId] = TimerMilli::GetNow();
-
-    if (mContextLastUsed[aContextId - kMinContextId].GetValue() == 0)
-    {
-        mContextLastUsed[aContextId - kMinContextId].SetValue(1);
-    }
-
-    if (!mTimer.IsRunning())
-    {
-        mTimer.Start(kStateUpdatePeriod);
-    }
-
-exit:
-    return;
-}
-
-void Leader::StopContextReuseTimer(uint8_t aContextId) { mContextLastUsed[aContextId - kMinContextId].SetValue(0); }
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
 {
@@ -1147,15 +1094,15 @@ void Leader::RemoveRlocInPrefix(PrefixTlv       &aPrefix,
 
     if ((context = aPrefix.FindSubTlv<ContextTlv>()) != nullptr)
     {
-        if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
+        if (aPrefix.FindSubTlv<BorderRouterTlv>() == nullptr)
         {
             context->ClearCompress();
-            StartContextReuseTimer(context->GetContextId());
+            mContextIds.ScheduleToRemove(context->GetContextId());
         }
         else
         {
             context->SetCompress();
-            StopContextReuseTimer(context->GetContextId());
+            mContextIds.MarkAsInUse(context->GetContextId());
         }
     }
 }
@@ -1263,6 +1210,8 @@ void Leader::RemoveContext(uint8_t aContextId)
 
         start = prefix->GetNext();
     }
+
+    IncrementVersions(/* aIncludeStable */ true);
 }
 
 void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
@@ -1303,55 +1252,26 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
             continue;
         }
 
-        mContextUsed |= 1 << context->GetContextId();
+        mContextIds.MarkAsInUse(context->GetContextId());
 
-        if (context->IsCompress())
+        if (!context->IsCompress())
         {
-            StopContextReuseTimer(context->GetContextId());
-        }
-        else
-        {
-            StartContextReuseTimer(context->GetContextId());
+            mContextIds.ScheduleToRemove(context->GetContextId());
         }
     }
 }
 
 void Leader::HandleTimer(void)
 {
-    bool contextsWaiting = false;
-
     if (mWaitingForNetDataSync)
     {
         LogInfo("Timed out waiting for netdata on restoring leader role after reset");
         IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
-        ExitNow();
     }
-
-    for (uint8_t i = 0; i < kNumContextIds; i++)
+    else
     {
-        if (mContextLastUsed[i].GetValue() == 0)
-        {
-            continue;
-        }
-
-        if (TimerMilli::GetNow() - mContextLastUsed[i] >= Time::SecToMsec(mContextIdReuseDelay))
-        {
-            mContextLastUsed[i].SetValue(0);
-            FreeContextId(kMinContextId + i);
-        }
-        else
-        {
-            contextsWaiting = true;
-        }
+        mContextIds.HandleTimer();
     }
-
-    if (contextsWaiting)
-    {
-        mTimer.Start(kStateUpdatePeriod);
-    }
-
-exit:
-    return;
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -1392,6 +1312,86 @@ exit:
     return contains;
 }
 #endif
+
+//---------------------------------------------------------------------------------------------------------------------
+// Leader::ContextIds
+
+void Leader::ContextIds::Clear(void)
+{
+    for (uint8_t id = kMinId; id <= kMaxId; id++)
+    {
+        MarkAsUnallocated(id);
+    }
+}
+
+Error Leader::ContextIds::GetUnallocatedId(uint8_t &aId)
+{
+    Error error = kErrorNotFound;
+
+    for (uint8_t id = kMinId; id <= kMaxId; id++)
+    {
+        if (IsUnallocated(id))
+        {
+            aId   = id;
+            error = kErrorNone;
+            break;
+        }
+    }
+
+    return error;
+}
+
+void Leader::ContextIds::ScheduleToRemove(uint8_t aId)
+{
+    VerifyOrExit(IsInUse(aId));
+
+    SetRemoveTime(aId, TimerMilli::GetNow() + Time::SecToMsec(mReuseDelay));
+    Get<Leader>().mTimer.FireAtIfEarlier(GetRemoveTime(aId));
+
+exit:
+    return;
+}
+
+void Leader::ContextIds::SetRemoveTime(uint8_t aId, TimeMilli aTime)
+{
+    uint32_t time = aTime.GetValue();
+
+    while ((time == kUnallocated) || (time == kInUse))
+    {
+        time++;
+    }
+
+    mRemoveTimes[aId - kMinId].SetValue(time);
+}
+
+void Leader::ContextIds::HandleTimer(void)
+{
+    TimeMilli now      = TimerMilli::GetNow();
+    TimeMilli nextTime = now.GetDistantFuture();
+
+    for (uint8_t id = kMinId; id <= kMaxId; id++)
+    {
+        if (IsUnallocated(id) || IsInUse(id))
+        {
+            continue;
+        }
+
+        if (now >= GetRemoveTime(id))
+        {
+            MarkAsUnallocated(id);
+            Get<Leader>().RemoveContext(id);
+        }
+        else
+        {
+            nextTime = Min(nextTime, GetRemoveTime(id));
+        }
+    }
+
+    if (nextTime != now.GetDistantFuture())
+    {
+        Get<Leader>().mTimer.FireAt(nextTime);
+    }
+}
 
 } // namespace NetworkData
 } // namespace ot
