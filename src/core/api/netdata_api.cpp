@@ -94,6 +94,16 @@ otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aI
     return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextService(*aIterator, AsCoreType(aConfig));
 }
 
+otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
+                                          otNetworkDataIterator *aIterator,
+                                          otLowpanContextInfo   *aContextInfo)
+{
+    AssertPointerIsNotNull(aIterator);
+
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNextLowpanContextInfo(*aIterator,
+                                                                                     AsCoreType(aContextInfo));
+}
+
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);

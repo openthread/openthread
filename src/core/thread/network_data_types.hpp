@@ -67,6 +67,7 @@ class HasRouteTlv;
 class HasRouteEntry;
 class ServiceTlv;
 class ServerTlv;
+class ContextTlv;
 
 /**
  * This enumeration represents the Network Data type.
@@ -293,6 +294,28 @@ private:
 };
 
 /**
+ * This class represents 6LoWPAN Context ID information associated with a prefix in Network Data.
+ *
+ */
+class LowpanContextInfo : public otLowpanContextInfo, public Clearable<LowpanContextInfo>
+{
+    friend class NetworkData;
+
+public:
+    /**
+     * This method gets the prefix.
+     *
+     * @return The prefix.
+     *
+     */
+    const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
+
+private:
+    Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
+    void         SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &aContextTlv);
+};
+
+/**
  * This class represents a Service Data.
  *
  */
@@ -392,6 +415,7 @@ private:
 
 DefineCoreType(otBorderRouterConfig, NetworkData::OnMeshPrefixConfig);
 DefineCoreType(otExternalRouteConfig, NetworkData::ExternalRouteConfig);
+DefineCoreType(otLowpanContextInfo, NetworkData::LowpanContextInfo);
 DefineCoreType(otServiceConfig, NetworkData::ServiceConfig);
 DefineCoreType(otServerConfig, NetworkData::ServiceConfig::ServerConfig);
 

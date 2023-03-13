@@ -92,6 +92,7 @@ Error NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, On
     config.mOnMeshPrefix  = &aConfig;
     config.mExternalRoute = nullptr;
     config.mService       = nullptr;
+    config.mLowpanContext = nullptr;
 
     return Iterate(aIterator, aRloc16, config);
 }
@@ -108,6 +109,7 @@ Error NetworkData::GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, E
     config.mOnMeshPrefix  = nullptr;
     config.mExternalRoute = &aConfig;
     config.mService       = nullptr;
+    config.mLowpanContext = nullptr;
 
     return Iterate(aIterator, aRloc16, config);
 }
@@ -124,8 +126,21 @@ Error NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, Service
     config.mOnMeshPrefix  = nullptr;
     config.mExternalRoute = nullptr;
     config.mService       = &aConfig;
+    config.mLowpanContext = nullptr;
 
     return Iterate(aIterator, aRloc16, config);
+}
+
+Error NetworkData::GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const
+{
+    Config config;
+
+    config.mOnMeshPrefix  = nullptr;
+    config.mExternalRoute = nullptr;
+    config.mService       = nullptr;
+    config.mLowpanContext = &aContextInfo;
+
+    return Iterate(aIterator, Mac::kShortAddrBroadcast, config);
 }
 
 Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const
@@ -152,7 +167,8 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-            if ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr))
+            if ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr) ||
+                (aConfig.mLowpanContext != nullptr))
             {
                 subTlvs = As<PrefixTlv>(cur)->GetSubTlvs();
             }
@@ -199,6 +215,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
 
                             aConfig.mExternalRoute = nullptr;
                             aConfig.mService       = nullptr;
+                            aConfig.mLowpanContext = nullptr;
                             aConfig.mOnMeshPrefix->SetFrom(*prefixTlv, *borderRouter, *borderRouterEntry);
 
                             ExitNow(error = kErrorNone);
@@ -223,12 +240,36 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
                         {
                             const HasRouteEntry *hasRouteEntry = hasRoute->GetEntry(index);
 
-                            aConfig.mOnMeshPrefix = nullptr;
-                            aConfig.mService      = nullptr;
+                            aConfig.mOnMeshPrefix  = nullptr;
+                            aConfig.mService       = nullptr;
+                            aConfig.mLowpanContext = nullptr;
                             aConfig.mExternalRoute->SetFrom(GetInstance(), *prefixTlv, *hasRoute, *hasRouteEntry);
 
                             ExitNow(error = kErrorNone);
                         }
+                    }
+
+                    break;
+                }
+
+                case NetworkDataTlv::kTypeContext:
+                {
+                    const ContextTlv *contextTlv = As<ContextTlv>(subCur);
+
+                    if (aConfig.mLowpanContext == nullptr)
+                    {
+                        continue;
+                    }
+
+                    if (iterator.IsNewEntry())
+                    {
+                        aConfig.mOnMeshPrefix  = nullptr;
+                        aConfig.mExternalRoute = nullptr;
+                        aConfig.mService       = nullptr;
+                        aConfig.mLowpanContext->SetFrom(*prefixTlv, *contextTlv);
+
+                        iterator.MarkEntryAsNotNew();
+                        ExitNow(error = kErrorNone);
                     }
 
                     break;
@@ -260,6 +301,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
                     {
                         aConfig.mOnMeshPrefix  = nullptr;
                         aConfig.mExternalRoute = nullptr;
+                        aConfig.mLowpanContext = nullptr;
                         aConfig.mService->SetFrom(*service, *server);
 
                         iterator.MarkEntryAsNotNew();
@@ -344,6 +386,7 @@ bool NetworkData::ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRlo
         config.mOnMeshPrefix  = &prefix;
         config.mExternalRoute = &route;
         config.mService       = &service;
+        config.mLowpanContext = nullptr;
 
         SuccessOrExit(aCompare.Iterate(iterator, aRloc16, config));
 
@@ -643,6 +686,7 @@ Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
     config.mOnMeshPrefix  = &prefixConfig;
     config.mExternalRoute = &routeConfig;
     config.mService       = &serviceConfig;
+    config.mLowpanContext = nullptr;
 
     SuccessOrExit(error = Iterate(aIterator, Mac::kShortAddrBroadcast, config));
 
