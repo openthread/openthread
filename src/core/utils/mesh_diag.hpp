@@ -182,8 +182,7 @@ public:
 private:
     typedef ot::NetworkDiagnostic::Tlv Tlv;
 
-    static constexpr uint32_t kResponseTimeout  = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
-    static constexpr uint8_t  kMaxTlvsToRequest = 5;
+    static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_MESH_DIAG_RESPONSE_TIMEOUT;
 
     Error SendDiagGetTo(uint16_t aRloc16, const DiscoverConfig &aConfig);
     void  HandleTimer(void);
