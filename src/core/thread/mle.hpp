@@ -1360,7 +1360,7 @@ protected:
         /**
          * This method reads CSL Clock Accuracy TLV from a message.
          *
-         * @param[out]      A reference to output the CSL accuracy.
+         * @param[out] aCslAccuracy A reference to output the CSL accuracy.
          *
          * @retval kErrorNone       Successfully read the TLV.
          * @retval kErrorNotFound   TLV was not found in the message.
@@ -1368,6 +1368,20 @@ protected:
          *
          */
         Error ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) const;
+#endif
+
+#if OPENTHREAD_FTD
+        /**
+         * This method reads and validates Route TLV from a message.
+         *
+         * @param[out] aRouteTlv    A reference to output the read Route TLV.
+         *
+         * @retval kErrorNone       Successfully read and validated the Route TLV.
+         * @retval kErrorNotFound   TLV was not found in the message.
+         * @retval kErrorParse      TLV was found but could not be parsed or is not valid.
+         *
+         */
+        Error ReadRouteTlv(RouteTlv &aRouteTlv) const;
 #endif
 
     private:

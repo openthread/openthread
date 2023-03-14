@@ -2772,21 +2772,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
             SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
 #if OPENTHREAD_FTD
-            if (IsFullThreadDevice())
-            {
-                RouteTlv routeTlv;
-
-                switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo, routeTlv))
-                {
-                case kErrorNone:
-                    Get<RouterTable>().UpdateRoutesOnFed(routeTlv, mParent.GetRouterId());
-                    break;
-                case kErrorNotFound:
-                    break;
-                default:
-                    ExitNow(error = kErrorParse);
-                }
-            }
+            SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
 #endif
 
             mRetrieveNewNetworkData = true;
@@ -3395,21 +3381,7 @@ void Mle::HandleChildIdResponse(RxInfo &aRxInfo)
     SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
 #if OPENTHREAD_FTD
-    if (IsFullThreadDevice())
-    {
-        RouteTlv routeTlv;
-
-        switch (Get<MleRouter>().ProcessRouteTlv(aRxInfo, routeTlv))
-        {
-        case kErrorNone:
-            Get<RouterTable>().UpdateRoutesOnFed(routeTlv, RouterIdFromRloc16(sourceAddress));
-            break;
-        case kErrorNotFound:
-            break;
-        default:
-            ExitNow(error = kErrorParse);
-        }
-    }
+    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, RouterIdFromRloc16(sourceAddress)));
 #endif
 
     mParentCandidate.CopyTo(mParent);
@@ -5041,6 +5013,19 @@ Error Mle::RxMessage::ReadCslClockAccuracyTlv(Mac::CslAccuracy &aCslAccuracy) co
     VerifyOrExit(clockAccuracyTlv.IsValid(), error = kErrorParse);
     aCslAccuracy.SetClockAccuracy(clockAccuracyTlv.GetCslClockAccuracy());
     aCslAccuracy.SetUncertainty(clockAccuracyTlv.GetCslUncertainty());
+
+exit:
+    return error;
+}
+#endif
+
+#if OPENTHREAD_FTD
+Error Mle::RxMessage::ReadRouteTlv(RouteTlv &aRouteTlv) const
+{
+    Error error;
+
+    SuccessOrExit(error = Tlv::FindTlv(*this, aRouteTlv));
+    VerifyOrExit(aRouteTlv.IsValid(), error = kErrorParse);
 
 exit:
     return error;

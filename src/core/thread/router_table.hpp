@@ -39,6 +39,7 @@
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/serial_number.hpp"
 #include "common/tasklet.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_tlvs.hpp"
@@ -314,6 +315,18 @@ public:
      *
      */
     TimeMilli GetRouterIdSequenceLastUpdated(void) const { return mRouterIdSequenceLastUpdated; }
+
+    /**
+     * This method determines whether the Router ID Sequence in a received Route TLV is more recent than the current
+     * Router ID Sequence being used by `RouterTable`.
+     *
+     * @param[in] aRouteTlv   The Route TLV to compare.
+     *
+     * @retval TRUE    The Router ID Sequence in @p aRouteTlv is more recent.
+     * @retval FALSE   The Router ID Sequence in @p aRouteTlv is not more recent.
+     *
+     */
+    bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
 
     /**
      * This method returns the number of neighbor links.

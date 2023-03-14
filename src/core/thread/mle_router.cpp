@@ -893,7 +893,8 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
         // Route
         mRouterTable.Clear();
-        SuccessOrExit(error = ProcessRouteTlv(aRxInfo));
+        SuccessOrExit(error = aRxInfo.mMessage.ReadRouteTlv(routeTlv));
+        SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
         router = mRouterTable.FindRouterById(routerId);
         VerifyOrExit(router != nullptr);
 
@@ -935,24 +936,28 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         }
 
         // Route (optional)
-        switch (error = ProcessRouteTlv(aRxInfo, routeTlv))
+        switch (aRxInfo.mMessage.ReadRouteTlv(routeTlv))
         {
         case kErrorNone:
+            VerifyOrExit(routeTlv.IsRouterIdSet(routerId), error = kErrorParse);
+
+            if (mRouterTable.IsRouteTlvIdSequenceMoreRecent(routeTlv))
+            {
+                SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
+                router = mRouterTable.FindRouterById(routerId);
+                OT_ASSERT(router != nullptr);
+            }
+
             mRouterTable.UpdateRoutes(routeTlv, routerId);
-            // Need to update router after ProcessRouteTlv
-            router = mRouterTable.FindRouterById(routerId);
-            OT_ASSERT(router != nullptr);
             break;
 
         case kErrorNotFound:
-            error = kErrorNone;
             break;
 
         default:
-            ExitNow();
+            ExitNow(error = kErrorParse);
         }
 
-        // update routing table
         if (routerId != mRouterId && !IsRouterIdValid(router->GetNextHop()))
         {
             ResetAdvertiseInterval();
@@ -1018,20 +1023,9 @@ exit:
     return error;
 }
 
-Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo)
+Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
 {
-    RouteTlv routeTlv;
-
-    return ProcessRouteTlv(aRxInfo, routeTlv);
-}
-
-Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv)
-{
-    // This method processes Route TLV in a received MLE message
-    // (from `RxInfo`). In case of success, `aRouteTlv` is updated
-    // to return the read/processed route TLV from the message.
-    // If the message contains no Route TLV, `kErrorNotFound` is
-    // returned.
+    // This method processes `aRouteTlv` read from an MLE message.
     //
     // During processing of Route TLV, the entries in the router table
     // may shuffle. This method ensures that the `aRxInfo.mNeighbor`
@@ -1040,7 +1034,7 @@ Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv)
     // (in case `mNeighbor` was pointing to a router entry from the
     // `RouterTable`).
 
-    Error    error;
+    Error    error          = kErrorNone;
     uint16_t neighborRloc16 = Mac::kShortAddrInvalid;
 
     if ((aRxInfo.mNeighbor != nullptr) && Get<RouterTable>().Contains(*aRxInfo.mNeighbor))
@@ -1048,13 +1042,9 @@ Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv)
         neighborRloc16 = aRxInfo.mNeighbor->GetRloc16();
     }
 
-    SuccessOrExit(error = Tlv::FindTlv(aRxInfo.mMessage, aRouteTlv));
+    mRouterTable.UpdateRouterIdSet(aRouteTlv.GetRouterIdSequence(), aRouteTlv.GetRouterIdMask());
 
-    VerifyOrExit(aRouteTlv.IsValid(), error = kErrorParse);
-
-    Get<RouterTable>().UpdateRouterIdSet(aRouteTlv.GetRouterIdSequence(), aRouteTlv.GetRouterIdMask());
-
-    if (IsRouter() && !Get<RouterTable>().IsAllocated(mRouterId))
+    if (IsRouter() && !mRouterTable.IsAllocated(mRouterId))
     {
         IgnoreError(BecomeDetached());
         error = kErrorNoRoute;
@@ -1063,6 +1053,36 @@ Error MleRouter::ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv)
     if (neighborRloc16 != Mac::kShortAddrInvalid)
     {
         aRxInfo.mNeighbor = Get<NeighborTable>().FindNeighbor(neighborRloc16);
+    }
+
+    return error;
+}
+
+Error MleRouter::ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId)
+{
+    // This method reads and processes Route TLV from message on an
+    // FED if message contains one. It returns `kErrorNone` when
+    // successfully processed or if there is no Route TLV in the
+    // message.
+    //
+    // It MUST be used only when device is acting as a child and
+    // for a message received from device's current parent.
+
+    Error    error = kErrorNone;
+    RouteTlv routeTlv;
+
+    VerifyOrExit(IsFullThreadDevice());
+
+    switch (aRxInfo.mMessage.ReadRouteTlv(routeTlv))
+    {
+    case kErrorNone:
+        SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
+        mRouterTable.UpdateRoutesOnFed(routeTlv, aParentId);
+        break;
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
 exit:
@@ -1116,13 +1136,15 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     Router  *router;
     uint8_t  routerId;
 
-    if (Tlv::FindTlv(aRxInfo.mMessage, routeTlv) == kErrorNone)
+    switch (aRxInfo.mMessage.ReadRouteTlv(routeTlv))
     {
-        VerifyOrExit(routeTlv.IsValid(), error = kErrorParse);
-    }
-    else
-    {
-        routeTlv.SetLength(0); // Mark that a Route TLV was not included
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
+        routeTlv.SetLength(0); // Mark that a Route TLV was not included.
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1187,9 +1209,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Process `RouteTlv`
 
-    if (aRxInfo.IsNeighborStateValid() &&
-        ((mRouterTable.GetActiveRouterCount() == 0) ||
-         SerialNumber::IsGreater(routeTlv.GetRouterIdSequence(), mRouterTable.GetRouterIdSequence())))
+    if (aRxInfo.IsNeighborStateValid() && mRouterTable.IsRouteTlvIdSequenceMoreRecent(routeTlv))
     {
         bool processRouteTlv = false;
 
@@ -1216,7 +1236,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
 
         if (processRouteTlv)
         {
-            SuccessOrExit(error = ProcessRouteTlv(aRxInfo));
+            SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
         }
     }
 
