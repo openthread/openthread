@@ -998,8 +998,7 @@ private:
                                         spinel_prop_key_t aKey,
                                         const char       *aFormat,
                                         va_list           aArgs);
-    otError WaitResponse(bool aWaitingReset = false);
-    otError WaitForResetReason(void) { return WaitResponse(true); }
+    otError WaitResponse(bool aHandleRcpTimeout = true);
     otError SendCommand(uint32_t          aCommand,
                         spinel_prop_key_t aKey,
                         spinel_tid_t      aTid,
