@@ -127,7 +127,7 @@ otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags)
 
     if (aArgs[0].IsEmpty())
     {
-        aFlags = kPrefixTypeFavored | kPrefixTypeLocal;
+        aFlags = kPrefixTypeFavored | kPrefixTypeLocal | kPrefixTypePlatform;
         ExitNow();
     }
 
@@ -138,6 +138,10 @@ otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags)
     else if (aArgs[0] == "favored")
     {
         aFlags = kPrefixTypeFavored;
+    }
+    else if (aArgs[0] == "platform")
+    {
+        aFlags = kPrefixTypePlatform;
     }
     else
     {
@@ -189,6 +193,24 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
         OutputFormat("%s", outputPrefixTypes == kPrefixTypeLocal ? "" : "Local: ");
         OutputIp6PrefixLine(local);
     }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+    if (outputPrefixTypes & kPrefixTypePlatform)
+    {
+        otBorderRoutingPlatformOmrPrefixInfo platform;
+
+        SuccessOrExit(error = otBorderRoutingGetPlatformOmrPrefix(GetInstancePtr(), &platform));
+
+        OutputFormat("%s", outputPrefixTypes == kPrefixTypePlatform ? "" : "Platform: ");
+        if (platform.mPrefix.mLength > 0)
+        {
+            OutputIp6Prefix(platform.mPrefix);
+            OutputLine(" Preferred: %us Valid: %us", platform.mPreferredRemainingMs / 1000, platform.mValidRemainingMs / 1000);
+        } else {
+            OutputLine(" -");
+        }
+    }
+#endif
 
     /**
      * @cli br omrprefix favored
@@ -350,6 +372,41 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+/**
+ * @cli br platformra (enable|disable)
+ * @code
+ * br platformra enable
+ * Done
+ * br platformra
+ * Enabled
+ * Done
+ * @endcode
+ * @par
+ * Outputs or set the state of accepting platform generated RA on host netif.
+ * @sa otBorderRoutingSetAcceptingRouterAdvertisementEnabled
+ * @sa otBorderRoutingIsAcceptingRouterAdvertisementEnabled
+ */
+template <> otError Br::Process<Cmd("acceptra")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+    bool    enable;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otBorderRoutingIsAcceptingRouterAdvertisementEnabled(GetInstancePtr()));
+        error = OT_ERROR_NONE;
+    }
+    else if (Interpreter::ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        otBorderRoutingSetAcceptingRouterAdvertisementEnabled(GetInstancePtr(), enable);
+        error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+
 /**
  * @cli br prefixtable
  * @code
@@ -494,6 +551,9 @@ otError Br::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+        CmdEntry("acceptra"),
+#endif
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
 #endif

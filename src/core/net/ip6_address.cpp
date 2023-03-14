@@ -96,6 +96,22 @@ bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
            (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
 }
 
+void Prefix::Tidy(void)
+{
+    uint8_t byteLength      = SizeForLength(mLength);
+    uint8_t lastByteBitMask = ~((1 << (byteLength * 8 - mLength)) - 1);
+
+    if (mLength != 0)
+    {
+        mPrefix.mFields.m8[byteLength - 1] &= lastByteBitMask;
+    }
+
+    for (uint8_t i = byteLength; i < OT_ARRAY_LENGTH(mPrefix.mFields.m8); i++)
+    {
+        mPrefix.mFields.m8[i] = 0;
+    }
+}
+
 bool Prefix::operator==(const Prefix &aOther) const
 {
     return (mLength == aOther.mLength) && (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());

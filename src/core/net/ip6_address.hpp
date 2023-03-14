@@ -173,6 +173,12 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
+     * This method sets the bits after the prefix length to 0.
+     *
+     */
+    void Tidy(void);
+
+    /**
      * This method indicates whether prefix length is valid (smaller or equal to max length).
      *
      * @retval TRUE   The prefix length is valid.

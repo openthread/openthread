@@ -79,6 +79,13 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));
 }
 
+otError otBorderRoutingGetPlatformOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo)
+{
+    AssertPointerIsNotNull(aPrefixInfo);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPlatformOmrPrefix(*aPrefixInfo);
+}
+
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
 {
     otError                                       error;
@@ -144,5 +151,23 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+otError otBorderRoutingAddPrefixByRouterAdvertisement(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ApplyPlatfromGeneratedRouterAdvert(aMessage, aLength);
+    return kErrorNone;
+}
+
+void otBorderRoutingSetAcceptingRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetAcceptingRouterAdvertisementEnabled(aEnabled);
+}
+
+bool otBorderRoutingIsAcceptingRouterAdvertisementEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsAcceptingRouterAdvertisementEnabled();
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

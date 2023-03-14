@@ -107,6 +107,17 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * This structure represents the prefix infomation received from the platform.
+ *
+ */
+typedef struct otBorderRoutingPlatformOmrPrefixInfo
+{
+    otIp6Prefix mPrefix;
+    uint32_t    mPreferredRemainingMs;
+    uint32_t    mValidRemainingMs;
+} otBorderRoutingPlatformOmrPrefixInfo;
+
+/**
  * This enumeration represents the state of Border Routing Manager.
  *
  */
@@ -219,6 +230,26 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
+ * Gets the platform provided off-mesh-routable (OMR) prefix.
+ *
+ * The prefix is extracted from the platform generated RA messages handled by
+ * otBorderRoutingAddPrefixByRouterAdvertisement. When there are no valid platform provided OMR prefix, the returned
+ * prefix length will be 0.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
+ *
+ * @sa otBorderRoutingAddPrefixByRouterAdvertisement
+ *
+ */
+otError otBorderRoutingGetPlatformOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo);
+
+/**
  * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
  *
  * The favored OMR prefix can be discovered from Network Data or can be this device's local OMR prefix.
@@ -325,6 +356,59 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry    *aEntry);
+
+/**
+ * Adds an on mesh prefix from an ICMPv6 RouterAdvertisement message.
+ *
+ * Only the first PIO in the most recent RA message will be applied to the thread network data.
+ *
+ * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
+ * assigned prefix to the thread interface via router advertisement messages.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aMessage  A pointer to an ICMPv6 RouterAdvertisement message.
+ * @param[in] aLength   The length of ICMPv6 RouterAdvertisement message.
+ *
+ * @retval OT_ERROR_NONE          Successfully processed the prefix infomation in the message.
+ * @retval OT_ERROR_INVALID_STATE Routing manager is configured to not handling RA.
+ *
+ */
+otError otBorderRoutingAddPrefixByRouterAdvertisement(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
+
+/**
+ * Enables / Disables accpeting RouterAdvertisement messages on platform interface.
+ *
+ * When this is disabled, calling `otBorderRoutingAddPrefixByRouterAdvertisement` will get `OT_ERROR_INVALID_STATE`.
+ * When setting this to false, the currently published prefix will be removed if it comes from platform generated RA
+ * messages.
+ *
+ * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
+ * assigned prefix to the thread interface via router advertisement messages.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnabled  Whether to accept platform generated RA messages.
+ *
+ * @retval OT_ERROR_NONE Successfully processed the prefix infomation in the message.
+ *
+ */
+void otBorderRoutingSetAcceptingRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Returns the state of accpeting RouterAdvertisement messages on platform interface.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE  Border routing manager accpets platform generated RAs
+ * @retval FALSE Border routing manager dnes not accept platform generated RAs.
+ *
+ */
+bool otBorderRoutingIsAcceptingRouterAdvertisementEnabled(otInstance *aInstance);
 
 /**
  * @}

@@ -526,7 +526,14 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     }
 #endif
 
-    if (err != 0)
+    // Ignore error if
+    if ((err != 0) && errno == EADDRINUSE)
+    {
+        otLogWarnPlat("[netif] Ignoring %s failure (EADDRINUSE): already in the group.",
+                      aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP");
+        err = 0;
+    }
+    else if (err != 0)
     {
         otLogWarnPlat("[netif] %s failure (%d)", aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", errno);
         error = OT_ERROR_FAILED;
@@ -988,6 +995,26 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+static const uint8_t *getIcmpRaMessage(const uint8_t *data, ssize_t length)
+{
+    const uint8_t *ret = nullptr;
+    otIcmp6Header  icmpHeader;
+
+    VerifyOrExit(length >= OT_IP6_HEADER_SIZE + OT_ICMP6_ROUTER_ADVERT_MIN_SIZE);
+    VerifyOrExit((data[0] & 0xf0) == 0x60);
+    VerifyOrExit(data[OT_IP6_HEADER_PROTO_OFFSET] == OT_IP6_PROTO_ICMP6);
+
+    ret = data + OT_IP6_HEADER_SIZE;
+    memcpy(&icmpHeader, ret, sizeof(icmpHeader));
+    VerifyOrExit(icmpHeader.mType == OT_ICMP6_TYPE_ROUTER_ADVERT);
+    VerifyOrExit(icmpHeader.mCode == 0);
+
+exit:
+    return ret;
+}
+#endif
+
 static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
@@ -1010,6 +1037,18 @@ static void processTransmit(otInstance *aInstance)
     {
         rval -= 4;
         offset = 4;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+    if (otBorderRoutingIsAcceptingRouterAdvertisementEnabled(aInstance))
+    {
+        const uint8_t *ra = getIcmpRaMessage(reinterpret_cast<const uint8_t *>(&packet[offset]), rval);
+        if (ra != nullptr)
+        {
+            otBorderRoutingAddPrefixByRouterAdvertisement(aInstance, ra, rval - 40);
+            ExitNow();
+        }
     }
 #endif
 
@@ -1083,12 +1122,31 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
 
 #if defined(__linux__)
 
+static void syncKernelAddresses()
+{
+    for (const otNetifAddress *addr = otIp6GetUnicastAddresses(gInstance); addr; addr = addr->mNext)
+    {
+        otIp6AddressInfo addrinfo;
+        addrinfo.mAddress      = &addr->mAddress;
+        addrinfo.mPreferred    = addr->mPreferred;
+        addrinfo.mPrefixLength = addr->mPrefixLength;
+        addrinfo.mScope        = addr->mScopeOverride;
+        UpdateUnicast(gInstance, addrinfo, true /* isAdded */);
+    }
+
+    for (const otNetifMulticastAddress *addr = otIp6GetMulticastAddresses(gInstance); addr; addr = addr->mNext)
+    {
+        UpdateMulticast(gInstance, addr->mAddress, true /* isAdded */);
+    }
+}
+
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
     struct ifaddrmsg   *ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
     size_t              rtaLength;
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 addr6;
+    bool                needSyncAddressInfo = false;
 
     VerifyOrExit(ifaddr->ifa_index == static_cast<unsigned int>(gNetifIndex) && ifaddr->ifa_family == AF_INET6);
 
@@ -1133,11 +1191,39 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ true, addr, error);
-                if (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)
-                {
-                    error = OT_ERROR_NONE;
-                }
 
+                switch (error)
+                {
+                case OT_ERROR_INVALID_ARGS:
+                    // Adding a link local address results in invalid args, and we should remove the address from
+                    // kernel's record.
+                    // Other errors are not expected in this case.
+                    if (!IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr))
+                    {
+                        break;
+                    }
+                    OT_FALL_THROUGH;
+                case OT_ERROR_REJECTED:
+                    // The platform is trying to add an address but we shouldn't add it, the addresses in thread
+                    // stack and in kernel are not metched. Delete it from the kernel record.
+                    if (!addr.IsMulticast())
+                    {
+                        otIp6AddressInfo addrinfo;
+                        addrinfo.mAddress      = &addr;
+                        addrinfo.mPrefixLength = ifaddr->ifa_prefixlen;
+                        UpdateUnicast(gInstance, addrinfo, false /* isAdded */);
+                    }
+                    else
+                    {
+                        UpdateMulticast(gInstance, addr, false /* isAdded */);
+                    }
+                    OT_FALL_THROUGH;
+                case OT_ERROR_ALREADY:
+                    error = OT_ERROR_NONE;
+                    break;
+                default:
+                    break;
+                }
                 SuccessOrExit(error);
             }
             else if (aNetlinkMessage->nlmsg_type == RTM_DELADDR)
@@ -1152,9 +1238,19 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ false, addr, error);
-                if (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)
+                switch (error)
                 {
+                case OT_ERROR_REJECTED:
+                    // The platform is trying to delete an address but we shouldn't delete it, the addresses in thread
+                    // stack and in kernel are not metched. Resync it later since the ipaddrmsg does not contain some
+                    // info we need. (like preference).
+                    needSyncAddressInfo = true;
+                    OT_FALL_THROUGH;
+                case OT_ERROR_ALREADY:
                     error = OT_ERROR_NONE;
+                    break;
+                default:
+                    break;
                 }
 
                 SuccessOrExit(error);
@@ -1173,6 +1269,11 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     }
 
 exit:
+    if (needSyncAddressInfo)
+    {
+        otLogDebgPlat("[netif] addresses out of sync due to rejected address deletion.");
+        syncKernelAddresses();
+    }
     if (error != OT_ERROR_NONE)
     {
         otLogWarnPlat("[netif] Failed to process event, error:%s", otThreadErrorToString(error));
@@ -1213,6 +1314,11 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         otLogInfoPlat("[netif] Succeeded to enable NAT64");
     }
 #endif
+
+    if (isUp)
+    {
+        syncKernelAddresses();
+    }
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -1527,7 +1633,7 @@ static void processNetlinkEvent(otInstance *aInstance)
             }
             else
             {
-                otLogWarnPlat("[netif] Failed to process request#%u: %s", err->msg.nlmsg_seq, strerror(err->error));
+                otLogWarnPlat("[netif] Failed to process request#%u: %s", err->msg.nlmsg_seq, strerror(-err->error));
             }
 
             break;
