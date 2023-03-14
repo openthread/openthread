@@ -401,11 +401,11 @@ enum
 /**
  * Records the remote host and port for this connection.
  *
- * By default TCP Fast Open is used. This means that this function merely
- * records the remote host and port, and that the TCP connection establishment
- * handshake only happens on the first call to otTcpSendByReference(). TCP Fast
- * Open can be explicitly disabled using @p aFlags, in which case the TCP
- * connection establishment handshake is initiated immediately.
+ * Caller must wait for `otTcpEstablished` callback indicating that TCP
+ * connection establishment handshake is done before it can start sending data
+ * e.g., calling `otTcpSendByReference()`.
+ *
+ * The TCP Fast Open is not yet supported and @p aFlags is ignored.
  *
  * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to connect.
  * @param[in]  aSockName  The IP address and port of the host to which to connect.
