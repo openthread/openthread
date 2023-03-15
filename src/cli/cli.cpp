@@ -5230,6 +5230,16 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networkkey
+     * @code
+     * networkkey
+     * 00112233445566778899aabbccddeeff
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetNetworkKey
+     */
     if (aArgs[0].IsEmpty())
     {
         otNetworkKey networkKey;
@@ -5237,6 +5247,16 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
         otThreadGetNetworkKey(GetInstancePtr(), &networkKey);
         OutputBytesLine(networkKey.m8);
     }
+    /**
+     * @cli networkkey (key)
+     * @code
+     * networkkey 00112233445566778899aabbccddeeff
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetNetworkKey
+     * @cparam networkkey @ca{key}
+     */
     else
     {
         otNetworkKey key;
@@ -5275,10 +5295,32 @@ template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networkname
+     * @code
+     * networkname
+     * OpenThread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetNetworkName
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadGetNetworkName(GetInstancePtr()));
     }
+    /**
+     * @cli networkname (name)
+     * @code
+     * networkname OpenThread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetNetworkName
+     * @cparam networkname @ca{name}
+     * @par
+     * Note: The current commissioning credential becomes stale after changing this value. Use `pskc` to reset.
+     */
     else
     {
         SuccessOrExit(error = otThreadSetNetworkName(GetInstancePtr(), aArgs[0].GetCString()));
@@ -5687,11 +5729,30 @@ exit:
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli panid
+     * @code
+     * panid
+     * 0xdead
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkGetPanId
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("0x%04x", otLinkGetPanId(GetInstancePtr()));
     }
+    /**
+     * @cli panid (panid)
+     * @code
+     * panid 0xdead
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkSetPanId
+     * @cparam panid @ca{panid}
+     */
     else
     {
         error = ProcessSet(aArgs, otLinkSetPanId);
@@ -5703,7 +5764,30 @@ template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli parent
+     * @code
+     * parent
+     * Ext Addr: be1857c6c21dce55
+     * Rloc: 5c00
+     * Link Quality In: 3
+     * Link Quality Out: 3
+     * Age: 20
+     * Version: 4
+     * Done
+     * @endcode
+     * @sa otThreadGetParentInfo
+     * @par
+     * Get the diagnostic information for a Thread Router as parent.
+     * @par
+     * When operating as a Thread Router when OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE is enabled, this command
+     * will return the cached information from when the device was previously attached as a Thread Child. Returning
+     * cached information is necessary to support the Thread Test Harness - Test Scenario 8.2.x requests the former
+     * parent (i.e. Joiner Router's) MAC address even if the device has already promoted to a router.
+     * @par
+     * Note: When OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is enabled, this command will return two extra lines with
+     * information relevant for CSL Receiver operation.
+     */
     if (aArgs[0].IsEmpty())
     {
         otRouterInfo parentInfo;
@@ -5744,6 +5828,23 @@ exit:
 }
 
 #if OPENTHREAD_FTD
+/**
+ * @cli parentpriority (get,set)
+ * @code
+ * parentpriority
+ * 1
+ * Done
+ * @endcode
+ * @code
+ * parentpriority 1
+ * Done
+ * @endcode
+ * @cparam parentpriority [@ca{parentpriority}]
+ * @par
+ * Gets or sets the assigned parent priority value: 1, 0, -1 or -2. -2 means not assigned.
+ * @sa otThreadGetParentPriority
+ * @sa otThreadSetParentPriority
+ */
 template <> otError Interpreter::Process<Cmd("parentpriority")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetParentPriority, otThreadSetParentPriority);
