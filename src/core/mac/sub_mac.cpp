@@ -1104,13 +1104,15 @@ void SubMac::HandleCslTimer(void)
      * When the radio supports receive-timing:
      *   The handler will be called once per CSL period. When the handler is called, it will set the timer to
      *   fire at the next CSL sample time and call `Radio::ReceiveAt` to start sampling for the current CSL period.
+     *   The timer fires some time before the actual sample time. After `Radio::ReceiveAt` is called, the radio will
+     *   remain sleep state util the actual sample time.
      *   Note that it never call `Radio::Sleep` explicitly. The radio will fall into sleep after `ReceiveAt` ends. This
      *   will be done by the platform as part of the `otPlatRadioReceiveAt` API.
      *
      *   Timer fires                                         Timer fires
      *       ^                                                    ^
-     *       |------------|---------------------------------------|------------|---------------------------------------|
-     *          sample                   sleep                        sample                    sleep
+     *       x-|------------|-------------------------------------x-|------------|---------------------------------------|
+     *            sample                   sleep                        sample                    sleep
      *
      * When the radio doesn't support receive-timing:
      *   The handler will be called twice per CSL period: at the begining of sample and sleep. When the handler is
