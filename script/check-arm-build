@@ -40,6 +40,7 @@ build_nrf52840()
     local options=(
         "-DOT_ANYCAST_LOCATOR=ON"
         "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_BDX_PERF=ON"
         "-DOT_BORDER_AGENT=ON"
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_CHANNEL_MANAGER=ON"

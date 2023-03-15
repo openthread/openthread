@@ -31,6 +31,7 @@
 ANYCAST_LOCATOR           ?= 0
 BACKBONE_ROUTER           ?= 0
 BIG_ENDIAN                ?= 0
+BDX_PERF                  ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
@@ -105,6 +106,10 @@ endif
 
 ifeq ($(BIG_ENDIAN),1)
 COMMONCFLAGS                   += -DBYTE_ORDER_BIG_ENDIAN=1
+endif
+
+ifeq ($(BDX_PERF),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BDX_PERF_ENABLE=1
 endif
 
 ifeq ($(BORDER_AGENT),1)

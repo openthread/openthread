@@ -33,6 +33,7 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     cli.cpp
+    cli_bdx_perf.cpp
     cli_br.cpp
     cli_coap.cpp
     cli_coap_secure.cpp

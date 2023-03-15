@@ -111,6 +111,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(aInstance, *this)
     , mNetworkData(aInstance, *this)
     , mUdp(aInstance, *this)
+#if OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+    , mBdxPerf(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mBr(aInstance, *this)
 #endif
@@ -7075,6 +7078,10 @@ template <> otError Interpreter::Process<Cmd("tcp")>(Arg aArgs[]) { return mTcp.
 
 template <> otError Interpreter::Process<Cmd("udp")>(Arg aArgs[]) { return mUdp.Process(aArgs); }
 
+#if OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+template <> otError Interpreter::Process<Cmd("bdxperf")>(Arg aArgs[]) { return mBdxPerf.Process(aArgs); }
+#endif
+
 template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7892,6 +7899,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         CmdEntry("bbr"),
+#endif
+#if OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+        CmdEntry("bdxperf"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         CmdEntry("br"),

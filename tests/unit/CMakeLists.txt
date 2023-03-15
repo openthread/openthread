@@ -70,6 +70,10 @@ set(COMMON_LIBS
     openthread-ftd
 )
 
+set(CLI_LIBS
+    openthread-cli-ftd
+)
+
 add_executable(ot-test-aes
     test_aes.cpp
 )
@@ -108,6 +112,28 @@ target_compile_options(ot-test-array
 target_link_libraries(ot-test-array
     PRIVATE
         ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-bdx-perf COMMAND ot-test-bdx-perf)
+
+add_executable(ot-test-bdx-perf
+    test_bdx_perf.cpp
+)
+
+target_include_directories(ot-test-bdx-perf
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-bdx-perf
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-bdx-perf
+    PRIVATE
+        ${COMMON_LIBS}
+        ${CLI_LIBS}
 )
 
 add_executable(ot-test-binary-search

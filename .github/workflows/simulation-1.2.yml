@@ -56,6 +56,7 @@ jobs:
       THREAD_VERSION: 1.3
       VIRTUAL_TIME: 1
       INTER_OP: 1
+      OT_OPTIONS: "-DOT_BDX_PERF=ON"
       CC: ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cxx }}
     strategy:

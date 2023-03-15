@@ -58,6 +58,9 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#if OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+#include "cli/cli_bdx_perf.hpp"
+#endif
 #include "cli/cli_br.hpp"
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
@@ -544,6 +547,9 @@ private:
     Dataset     mDataset;
     NetworkData mNetworkData;
     UdpExample  mUdp;
+#if OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+    CliBdxPerf mBdxPerf;
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Br mBr;

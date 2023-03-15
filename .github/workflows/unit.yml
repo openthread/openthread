@@ -65,6 +65,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
+      OT_OPTIONS: "-DOT_BDX_PERF=ON"
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@c8454efe5d0bdefd25384362fe217428ca277d57 # v2.2.0

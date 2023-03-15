@@ -164,4 +164,16 @@
 #define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+ *
+ * Enable CLI BDX Perf.
+ *
+ * Define as 1 to enable the BDX Perf feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BDX_PERF_ENABLE
+#define OPENTHREAD_CONFIG_BDX_PERF_ENABLE 0
+#endif
+
 #endif // CONFIG_CLI_H_

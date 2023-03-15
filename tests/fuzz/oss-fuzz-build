@@ -72,6 +72,7 @@ set -euxo pipefail
         -DOT_SRP_SERVER=ON \
         -DOT_THREAD_VERSION=1.3 \
         -DOT_UPTIME=ON \
+        -DOT_BDX_PERF=ON \
         ..
     ninja
 )
