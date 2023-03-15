@@ -642,6 +642,7 @@ protected:
     otError     HandlePendingEnergyScan(PendingCommandEntry *aEntry);
     static void HandlePendingCommands(Tasklet &aTasklet);
     void        HandlePendingCommands(void);
+    size_t      GetPendingCommandQueueSize(void) const;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 

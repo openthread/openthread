@@ -225,6 +225,8 @@ OT_TOOL_WEAK void otPlatReset(otInstance *) {}
 
 OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REASON_POWER_ON; }
 
+OT_TOOL_WEAK void otPlatWakeHost(void) {}
+
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}
 
 OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {}
@@ -622,5 +624,39 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
     otPlatDnsUpstreamQueryDone(aInstance, aTxn, nullptr);
 }
 #endif
+
+OT_TOOL_WEAK otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *, int8_t *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK otError otPlatRadioGetCoexMetrics(otInstance *, otRadioCoexMetrics *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK otError otPlatRadioGetTransmitPower(otInstance *, int8_t *) { return OT_ERROR_NONE; }
+
+OT_TOOL_WEAK bool otPlatRadioIsCoexEnabled(otInstance *) { return true; }
+
+OT_TOOL_WEAK otError otPlatRadioSetCoexEnabled(otInstance *, bool) { return OT_ERROR_NOT_IMPLEMENTED; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+OT_TOOL_WEAK otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel, int16_t aTargetPower)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatRadioAddCalibratedPower(otInstance    *aInstance,
+                                                   uint8_t        aChannel,
+                                                   int16_t        aActualPower,
+                                                   const uint8_t *aRawPowerSetting,
+                                                   uint16_t       aRawPowerSettingLength)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatRadioClearCalibratedPowers(otInstance *aInstance) { return OT_ERROR_NONE; }
+#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+
+#if OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
+OT_TOOL_WEAK otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance) { return OT_PLAT_MCU_POWER_STATE_ON; }
+
+OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState) { return OT_ERROR_NONE; }
+#endif // OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL
 
 } // extern "C"
