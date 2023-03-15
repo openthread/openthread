@@ -1098,6 +1098,30 @@ void SubMac::HandleCslTimer(void)
      *    |           |            |           |           |            |            |                        |
      * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
      * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
+     *
+     * The handler works in different ways when the radio supports receive-timing and doesn't.
+     *
+     * When the radio supports receive-timing:
+     *   The handler will be called once per CSL period. When the handler is called, it will set the timer to
+     *   fire at the next CSL sample time and call `Radio::ReceiveAt` to start sampling for the current CSL period.
+     *   Note that it never call `Radio::Sleep` explicitly. The radio will fall into sleep after `ReceiveAt` ends. This
+     *   will be done by the platform as part of the `otPlatRadioReceiveAt` API.
+     *
+     *   Timer fires                                         Timer fires
+     *       ^                                                    ^
+     *       |------------|---------------------------------------|------------|---------------------------------------|
+     *          sample                   sleep                        sample                    sleep
+     *
+     * When the radio doesn't support receive-timing:
+     *   The handler will be called twice per CSL period: at the begining of sample and sleep. When the handler is
+     *   called, it will explicitly change the radio state due to the current state by calling `Radio::Receive` or
+     *   `Radio::Sleep`.
+     *
+     *   Timer fires  Timer fires                            Timer fires  Timer fires
+     *       ^            ^                                       ^            ^
+     *       |------------|---------------------------------------|------------|---------------------------------------|
+     *          sample                   sleep                        sample                    sleep
+     *
      */
     uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
     uint32_t timeAhead, timeAfter;
