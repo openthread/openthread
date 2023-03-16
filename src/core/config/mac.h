@@ -521,4 +521,15 @@
 #define OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
+ *
+ * This setting specifies the timeout for receiving the Data Frame (in msec) - after an ACK with FP bit set was
+ * received.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
+#define OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT 100
+#endif
+
 #endif // CONFIG_MAC_H_
