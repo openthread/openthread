@@ -72,7 +72,7 @@ private:
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError Print(otOperationalDataset &aDataset);
+    otError Print(otOperationalDatasetTlvs &aDatasetTlvs);
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
     otError     ProcessUpdater(Arg aArgs[]);
@@ -83,7 +83,7 @@ private:
     void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
     otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs);
 
-    static otOperationalDataset sDataset;
+    static otOperationalDatasetTlvs sDatasetTlvs;
 };
 
 } // namespace Cli
