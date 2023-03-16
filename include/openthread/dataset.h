@@ -607,6 +607,21 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
 otError otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
+ * Updates a given Operational Dataset.
+ *
+ * @p aDataset contains the fields to be updated and their new value.
+ *
+ * @param[in]     aDataset      Specifies the set of types and values to update.
+ * @param[in,out] aDatasetTlvs  A pointer to dataset TLVs to update.
+ *
+ * @retval OT_ERROR_NONE          Successfully updated @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDataset contains invalid values.
+ * @retval OT_ERROR_NO_BUFS       Not enough space space in @p aDatasetTlvs to apply the update.
+ *
+ */
+otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
+
+/**
  * @}
  *
  */
