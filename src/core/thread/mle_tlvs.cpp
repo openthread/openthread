@@ -66,5 +66,23 @@ exit:
 
 #endif // #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
+void ConnectivityTlv::IncrementLinkQuality(LinkQuality aLinkQuality)
+{
+    switch (aLinkQuality)
+    {
+    case kLinkQuality0:
+        break;
+    case kLinkQuality1:
+        mLinkQuality1++;
+        break;
+    case kLinkQuality2:
+        mLinkQuality2++;
+        break;
+    case kLinkQuality3:
+        mLinkQuality3++;
+        break;
+    }
+}
+
 } // namespace Mle
 } // namespace ot
