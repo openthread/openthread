@@ -1082,16 +1082,19 @@ Server: [fd00:0:0:0:0:0:0:1]:1234
 ResponseTimeout: 5000 ms
 MaxTxAttempts: 2
 RecursionDesired: no
+TransportProtocol: udp
 Done
 >
 ```
 
-### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\] \[transport protocol\]
 
 Set the default query config.
 
+To set protocol effectively to tcp `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is required.
+
 ```bash
-> dns config fd00::1 1234 5000 2 0
+> dns config fd00::1 1234 5000 2 0 tcp
 Done
 
 > dns config
@@ -1099,6 +1102,7 @@ Server: [fd00:0:0:0:0:0:0:1]:1234
 ResponseTimeout: 5000 ms
 MaxTxAttempts: 2
 RecursionDesired: no
+TransportProtocol: tcp
 Done
 ```
 
@@ -1116,11 +1120,13 @@ RecursionDesired: yes
 Done
 ```
 
-### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\] \[transport protocol\]
 
 Send DNS Query to obtain IPv6 address for given hostname.
 
 The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+To use tcp, `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is required.
 
 ```bash
 > dns resolve ipv6.google.com

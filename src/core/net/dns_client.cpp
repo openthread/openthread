@@ -49,6 +49,11 @@
 namespace ot {
 namespace Dns {
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+using ot::Encoding::BigEndian::ReadUint16;
+using ot::Encoding::BigEndian::WriteUint16;
+#endif
+
 RegisterLogModule("DnsClient");
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -68,6 +73,7 @@ Client::QueryConfig::QueryConfig(InitMode aMode)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     SetNat64Mode(kDefaultNat64Allowed ? kNat64Allow : kNat64Disallow);
 #endif
+    SetTransportProto(kDnsTransportUdp);
 }
 
 void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig)
@@ -109,6 +115,10 @@ void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig 
         SetNat64Mode(aDefaultConfig.GetNat64Mode());
     }
 #endif
+    if (GetTransportProto() == kDnsTransportUnspecified)
+    {
+        SetTransportProto(aDefaultConfig.GetTransportProto());
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -540,6 +550,9 @@ const uint16_t *Client::kQuestionRecordTypes[] = {
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    , mTcpState(kTcpUninitialized)
+#endif
     , mTimer(aInstance)
     , mDefaultConfig(QueryConfig::kInitFromDefaults)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
@@ -580,7 +593,38 @@ void Client::Stop(void)
     }
 
     IgnoreError(mSocket.Close());
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    if (mTcpState != kTcpUninitialized)
+    {
+        IgnoreError(mEndpoint.Deinitialize());
+    }
+#endif
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+Error Client::InitTcpSocket(void)
+{
+    Error                       error;
+    otTcpEndpointInitializeArgs endpointArgs;
+
+    memset(&endpointArgs, 0x00, sizeof(endpointArgs));
+    endpointArgs.mSendDoneCallback         = HandleTcpSendDoneCallback;
+    endpointArgs.mEstablishedCallback      = HandleTcpEstablishedCallback;
+    endpointArgs.mReceiveAvailableCallback = HandleTcpReceiveAvailableCallback;
+    endpointArgs.mDisconnectedCallback     = HandleTcpDisconnectedCallback;
+    endpointArgs.mContext                  = this;
+    endpointArgs.mReceiveBuffer            = mReceiveBufferBytes;
+    endpointArgs.mReceiveBufferSize        = sizeof(mReceiveBufferBytes);
+
+    mSendLink.mNext   = nullptr;
+    mSendLink.mData   = mSendBufferBytes;
+    mSendLink.mLength = 0;
+
+    SuccessOrExit(error = mEndpoint.Initialize(Get<Instance>(), endpointArgs));
+exit:
+    return error;
+}
+#endif
 
 void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
 {
@@ -727,8 +771,10 @@ Error Client::StartQuery(QueryInfo         &aInfo,
 
     SuccessOrExit(error = AllocateQuery(aInfo, aLabel, aName, query));
     mQueries.Enqueue(*query);
-
-    SendQuery(*query, aInfo, /* aUpdateTimer */ true);
+    if ((error = SendQuery(*query, aInfo, /* aUpdateTimer */ true)) != kErrorNone)
+    {
+        FreeQuery(*query);
+    }
 
 exit:
     return error;
@@ -761,7 +807,7 @@ exit:
 
 void Client::FreeQuery(Query &aQuery) { mQueries.DequeueAndFree(aQuery); }
 
-void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
+Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
 {
     // This method prepares and sends a query message represented by
     // `aQuery` and `aInfo`. This method updates `aInfo` (e.g., sets
@@ -774,6 +820,7 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     Message         *message = nullptr;
     Header           header;
     Ip6::MessageInfo messageInfo;
+    uint16_t         length = 0;
 
     aInfo.mTransmissionCount++;
     aInfo.mRetransmissionTime = TimerMilli::GetNow() + aInfo.mConfig.GetResponseTimeout();
@@ -815,20 +862,76 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
         SuccessOrExit(error = message->Append(Question(kQuestionRecordTypes[aInfo.mQueryType][num])));
     }
 
-    messageInfo.SetPeerAddr(aInfo.mConfig.GetServerSockAddr().GetAddress());
-    messageInfo.SetPeerPort(aInfo.mConfig.GetServerSockAddr().GetPort());
+    length = message->GetLength() - message->GetOffset();
 
-    SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    if (aInfo.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    {
+        // Check if query will fit into tcp buffer if not return error.
+        VerifyOrExit(length + sizeof(uint16_t) + mSendLink.mLength <=
+                         OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE,
+                     error = kErrorNoBufs);
+
+        // In case of initialized connection check if connected peer and new query have the same address.
+        if (mTcpState != kTcpUninitialized)
+        {
+            VerifyOrExit(mEndpoint.GetPeerAddress() == AsCoreType(&aInfo.mConfig.mServerSockAddr),
+                         error = kErrorFailed);
+        }
+
+        switch (mTcpState)
+        {
+        case kTcpUninitialized:
+            SuccessOrExit(error = InitTcpSocket());
+            SuccessOrExit(
+                error = mEndpoint.Connect(AsCoreType(&aInfo.mConfig.mServerSockAddr), OT_TCP_CONNECT_NO_FAST_OPEN));
+            mTcpState = kTcpConecting;
+            PrepareTcpMessage(*message);
+            break;
+        case kTcpConnectedIdle:
+            PrepareTcpMessage(*message);
+            SuccessOrExit(error = mEndpoint.SendByReference(mSendLink, /* aFlags */ 0));
+            mTcpState = kTcpConnectedSending;
+            break;
+        case kTcpConecting:
+            PrepareTcpMessage(*message);
+            break;
+        case kTcpConnectedSending:
+            WriteUint16(length, mSendBufferBytes + mSendLink.mLength);
+            SuccessOrAssert(error = message->Read(message->GetOffset(),
+                                                  (mSendBufferBytes + sizeof(uint16_t) + mSendLink.mLength), length));
+            IgnoreError(mEndpoint.SendByExtension(length + sizeof(uint16_t), /* aFlags */ 0));
+            break;
+        }
+        message->Free();
+        message = nullptr;
+    }
+#else
+    {
+        error = kErrorInvalidArgs;
+        LogWarn("DNS query over TCP not supported.");
+        ExitNow();
+    }
+#endif
+    else
+    {
+        VerifyOrExit(length <= kUdpQueryMaxSize, error = kErrorInvalidArgs);
+        messageInfo.SetPeerAddr(aInfo.mConfig.GetServerSockAddr().GetAddress());
+        messageInfo.SetPeerPort(aInfo.mConfig.GetServerSockAddr().GetPort());
+        SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
+    }
 
 exit:
+
     FreeMessageOnError(message, error);
-
-    UpdateQuery(aQuery, aInfo);
-
     if (aUpdateTimer)
     {
         mTimer.FireAtIfEarlier(aInfo.mRetransmissionTime);
     }
+
+    UpdateQuery(aQuery, aInfo);
+
+    return error;
 }
 
 Error Client::AppendNameFromQuery(const Query &aQuery, Message &aMessage)
@@ -1043,7 +1146,7 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
         info.mMessageId         = 0;
         info.mTransmissionCount = 0;
 
-        SendQuery(*aResponse.mQuery, info, /* aUpdateTimer */ true);
+        IgnoreReturnValue(SendQuery(*aResponse.mQuery, info, /* aUpdateTimer */ true));
 
         error = kErrorPending;
     }
@@ -1064,6 +1167,9 @@ void Client::HandleTimer(void)
     TimeMilli now      = TimerMilli::GetNow();
     TimeMilli nextTime = now.GetDistantFuture();
     QueryInfo info;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    bool hasTcpQuery = false;
+#endif
 
     for (Query &query : mQueries)
     {
@@ -1077,17 +1183,222 @@ void Client::HandleTimer(void)
                 continue;
             }
 
-            SendQuery(query, info, /* aUpdateTimer */ false);
+            IgnoreReturnValue(SendQuery(query, info, /* aUpdateTimer */ false));
         }
 
         nextTime = Min(nextTime, info.mRetransmissionTime);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+        if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
+        {
+            hasTcpQuery = true;
+        }
+#endif
     }
 
     if (nextTime < now.GetDistantFuture())
     {
         mTimer.FireAt(nextTime);
     }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    if (!hasTcpQuery && mTcpState != kTcpUninitialized)
+    {
+        IgnoreError(mEndpoint.SendEndOfStream());
+    }
+#endif
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+void Client::PrepareTcpMessage(Message &aMessage)
+{
+    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+
+    // Prepending the DNS query with length of the packet according to RFC1035.
+    WriteUint16(length, mSendBufferBytes + mSendLink.mLength);
+    SuccessOrAssert(
+        aMessage.Read(aMessage.GetOffset(), (mSendBufferBytes + sizeof(uint16_t) + mSendLink.mLength), length));
+    mSendLink.mLength += length + sizeof(uint16_t);
+}
+
+void Client::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
+{
+    OT_UNUSED_VARIABLE(aEndpoint);
+    OT_UNUSED_VARIABLE(aData);
+    OT_ASSERT(mTcpState == kTcpConnectedSending);
+
+    mSendLink.mLength = 0;
+    mTcpState         = kTcpConnectedIdle;
+}
+
+void Client::HandleTcpSendDoneCallback(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
+{
+    static_cast<Client *>(otTcpEndpointGetContext(aEndpoint))->HandleTcpSendDone(aEndpoint, aData);
+}
+
+void Client::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
+{
+    OT_UNUSED_VARIABLE(aEndpoint);
+    IgnoreError(mEndpoint.SendByReference(mSendLink, /* aFlags */ 0));
+    mTcpState = kTcpConnectedSending;
+}
+
+void Client::HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint)
+{
+    static_cast<Client *>(otTcpEndpointGetContext(aEndpoint))->HandleTcpEstablished(aEndpoint);
+}
+
+Error Client::ReadFromLinkBuffer(const otLinkedBuffer *&aLinkedBuffer,
+                                 size_t                &aOffset,
+                                 Message               &aMessage,
+                                 uint16_t               aLength)
+{
+    // Read `aLength` bytes from `aLinkedBuffer` starting at `aOffset`
+    // and copy the content into `aMessage`. As we read we can move
+    // to the next `aLinkedBuffer` and update `aOffset`.
+    // Returns:
+    // - `kErrorNone` if `aLengh` bytes are successfully read and
+    //    `aOffset` and `aLinkedBuffer` are updated.
+    // - `kErrorNotFound` is not enough bytes available to read
+    //    from `aLinkedBuffer`.
+    // - `kErrorNotBufs` if cannot grow `aMessage` to append bytes.
+
+    Error error = kErrorNone;
+
+    while (aLength > 0)
+    {
+        uint16_t bytesToRead = aLength;
+
+        VerifyOrExit(aLinkedBuffer != nullptr, error = kErrorNotFound);
+
+        if (bytesToRead > aLinkedBuffer->mLength - aOffset)
+        {
+            bytesToRead = static_cast<uint16_t>(aLinkedBuffer->mLength - aOffset);
+        }
+
+        SuccessOrExit(error = aMessage.AppendBytes(&aLinkedBuffer->mData[aOffset], bytesToRead));
+
+        aLength -= bytesToRead;
+        aOffset += bytesToRead;
+
+        if (aOffset == aLinkedBuffer->mLength)
+        {
+            aLinkedBuffer = aLinkedBuffer->mNext;
+            aOffset       = 0;
+        }
+    }
+
+exit:
+    return error;
+}
+
+void Client::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
+                                       size_t         aBytesAvailable,
+                                       bool           aEndOfStream,
+                                       size_t         aBytesRemaining)
+{
+    OT_UNUSED_VARIABLE(aEndpoint);
+    OT_UNUSED_VARIABLE(aBytesRemaining);
+
+    Message              *message   = nullptr;
+    size_t                totalRead = 0;
+    size_t                offset    = 0;
+    const otLinkedBuffer *data;
+
+    if (aEndOfStream)
+    {
+        // Cleanup is done in disconnected callback.
+        IgnoreError(mEndpoint.SendEndOfStream());
+    }
+
+    SuccessOrExit(mEndpoint.ReceiveByReference(data));
+    VerifyOrExit(data != nullptr);
+
+    message = mSocket.NewMessage(0);
+    VerifyOrExit(message != nullptr);
+
+    while (aBytesAvailable > totalRead)
+    {
+        uint16_t length;
+
+        // Read the `length` field.
+        SuccessOrExit(ReadFromLinkBuffer(data, offset, *message, sizeof(uint16_t)));
+
+        IgnoreError(message->Read(/* aOffset */ 0, length));
+        length = HostSwap16(length);
+
+        // Try to read `length` bytes.
+        IgnoreError(message->SetLength(0));
+        SuccessOrExit(ReadFromLinkBuffer(data, offset, *message, length));
+
+        totalRead += length + sizeof(uint16_t);
+
+        // Now process the read message as query response.
+        {
+            Response  response;
+            QueryType type;
+            Error     responseError;
+
+            response.mInstance = &Get<Instance>();
+            response.mMessage  = message;
+
+            if (ParseResponse(response, type, responseError) == kErrorNone)
+            {
+                if (responseError == kErrorNone && length > OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE)
+                {
+                    LogWarn("Dns query over TCP wasn't received - message is too big.");
+                    responseError = kErrorNoBufs;
+                }
+                FinalizeQuery(response, type, responseError);
+            }
+        }
+
+        IgnoreError(message->SetLength(0));
+
+        // Loop again to see if we can read another response.
+    }
+
+exit:
+    // Inform `mEndPoint` about the total read and processed bytes
+    IgnoreError(mEndpoint.CommitReceive(totalRead, /* aFlags */ 0));
+    FreeMessage(message);
+}
+
+void Client::HandleTcpReceiveAvailableCallback(otTcpEndpoint *aEndpoint,
+                                               size_t         aBytesAvailable,
+                                               bool           aEndOfStream,
+                                               size_t         aBytesRemaining)
+{
+    static_cast<Client *>(otTcpEndpointGetContext(aEndpoint))
+        ->HandleTcpReceiveAvailable(aEndpoint, aBytesAvailable, aEndOfStream, aBytesRemaining);
+}
+
+void Client::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
+{
+    OT_UNUSED_VARIABLE(aEndpoint);
+    OT_UNUSED_VARIABLE(aReason);
+    QueryInfo info;
+
+    IgnoreError(mEndpoint.Deinitialize());
+    mTcpState = kTcpUninitialized;
+
+    // Abort queries in case of connection failures
+    for (Query &query : mQueries)
+    {
+        info.ReadFrom(query);
+        if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
+        {
+            FinalizeQuery(query, kErrorAbort);
+        }
+    }
+}
+
+void Client::HandleTcpDisconnectedCallback(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
+{
+    static_cast<Client *>(otTcpEndpointGetContext(aEndpoint))->HandleTcpDisconnected(aEndpoint, aReason);
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 
 } // namespace Dns
 } // namespace ot
