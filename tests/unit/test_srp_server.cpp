@@ -225,8 +225,10 @@ enum UpdateHandlerMode
     kIgnore  // Ignore all updates (do not call `otSrpServerHandleServiceUpdateResult()`).
 };
 
-static UpdateHandlerMode sUpdateHandlerMode       = kAccept;
-static bool              sProcessedUpdateCallback = false;
+static UpdateHandlerMode    sUpdateHandlerMode       = kAccept;
+static bool                 sProcessedUpdateCallback = false;
+static otSrpServerLeaseInfo sUpdateHostLeaseInfo;
+static uint32_t             sUpdateHostKeyLease;
 
 void HandleSrpServerUpdate(otSrpServerServiceUpdateId aId,
                            const otSrpServerHost     *aHost,
@@ -239,6 +241,8 @@ void HandleSrpServerUpdate(otSrpServerServiceUpdateId aId,
     VerifyOrQuit(aContext == sInstance);
 
     sProcessedUpdateCallback = true;
+
+    otSrpServerHostGetLeaseInfo(aHost, &sUpdateHostLeaseInfo);
 
     switch (sUpdateHandlerMode)
     {
@@ -699,6 +703,202 @@ void TestSrpServerIgnore(void)
     Log("End of TestSrpServerIgnore");
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void TestUpdateLeaseShortVariant(void)
+{
+    // Test behavior of SRP client and server when short variant of
+    // Update Lease Option is used (which only include lease interval).
+    // This test uses `SetUseShortLeaseOption()` method of `Srp::Client`
+    // which changes the default behavior and is available under the
+    // `REFERENCE_DEVICE` config.
+
+    Srp::Server                *srpServer;
+    Srp::Server::LeaseConfig    leaseConfig;
+    const Srp::Server::Service *service;
+    Srp::Client                *srpClient;
+    Srp::Client::Service        service1;
+    uint16_t                    heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestUpdateLeaseShortVariant");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    PrepareService1(service1);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Check the default Lease Config on SRP server.
+    // Server to accept lease in [30 sec, 27 hours] and
+    // key-lease in [30 sec, 189 hours].
+
+    srpServer->GetLeaseConfig(leaseConfig);
+
+    VerifyOrQuit(leaseConfig.mMinLease == 30);             // 30 seconds
+    VerifyOrQuit(leaseConfig.mMaxLease == 27u * 3600);     // 27 hours
+    VerifyOrQuit(leaseConfig.mMinKeyLease == 30);          // 30 seconds
+    VerifyOrQuit(leaseConfig.mMaxKeyLease == 189u * 3600); // 189 hours
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    SuccessOrQuit(srpClient->SetHostName(kHostName));
+    SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+    sUpdateHandlerMode = kAccept;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Change default lease intervals on SRP client and enable
+    // "use short Update Lease Option" mode.
+
+    srpClient->SetLeaseInterval(15u * 3600);
+    srpClient->SetKeyLeaseInterval(40u * 3600);
+
+    srpClient->SetUseShortLeaseOption(true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Register a service, validate that update handler is called
+    // and service is successfully registered.
+
+    SuccessOrQuit(srpClient->AddService(service1));
+
+    sProcessedUpdateCallback = false;
+    sProcessedClientCallback = false;
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+
+    ValidateHost(*srpServer, kHostName);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate the lease info for service on SRP server. The client
+    // is set up to use "short Update Lease Option format, so it only
+    // include the lease interval as 15 hours in its request
+    // message. Server should then see 15 hours for both lease and
+    // key lease
+
+    VerifyOrQuit(sUpdateHostLeaseInfo.mLease == 15u * 3600 * 1000);
+    VerifyOrQuit(sUpdateHostLeaseInfo.mKeyLease == 15u * 3600 * 1000);
+
+    // Check that SRP server granted 15 hours for both lease and
+    // key lease.
+
+    service = srpServer->GetNextHost(nullptr)->GetServices().GetHead();
+    VerifyOrQuit(service != nullptr);
+    VerifyOrQuit(service->GetLease() == 15u * 3600);
+    VerifyOrQuit(service->GetKeyLease() == 15u * 3600);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the service.
+
+    SuccessOrQuit(srpClient->RemoveService(service1));
+
+    sProcessedUpdateCallback = false;
+    sProcessedClientCallback = false;
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRemoved);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Register the service again, but this time change it to request
+    // a lease time that is larger than the `LeaseConfig.mMinLease` of
+    // 27 hours. This ensures that server needs to include the Lease
+    // Option in its response (since it need to grant a different
+    // lease interval).
+
+    service1.mLease    = 100u * 3600; // 100 hours >= 27 hours.
+    service1.mKeyLease = 110u * 3600;
+
+    SuccessOrQuit(srpClient->AddService(service1));
+
+    sProcessedUpdateCallback = false;
+    sProcessedClientCallback = false;
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+
+    ValidateHost(*srpServer, kHostName);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate the lease info for service on SRP server.
+
+    // We should see the 100 hours in request from client
+    VerifyOrQuit(sUpdateHostLeaseInfo.mLease == 100u * 3600 * 1000);
+    VerifyOrQuit(sUpdateHostLeaseInfo.mKeyLease == 100u * 3600 * 1000);
+
+    // Check that SRP server granted  27 hours for both lease and
+    // key lease.
+
+    service = srpServer->GetNextHost(nullptr)->GetServices().GetHead();
+    VerifyOrQuit(service != nullptr);
+    VerifyOrQuit(service->GetLease() == 27u * 3600);
+    VerifyOrQuit(service->GetKeyLease() == 27u * 3600);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server, verify that all heap allocations by SRP server
+    // are freed.
+
+    Log("Disabling SRP server");
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(100);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestUpdateLeaseShortVariant");
+}
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 #endif // ENABLE_SRP_TEST
 
 int main(void)
@@ -707,6 +907,9 @@ int main(void)
     TestSrpServerBase();
     TestSrpServerReject();
     TestSrpServerIgnore();
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    TestUpdateLeaseShortVariant();
+#endif
     printf("All tests passed\n");
 #else
     printf("SRP_SERVER or SRP_CLIENT feature is not enabled\n");

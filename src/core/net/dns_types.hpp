@@ -2492,22 +2492,39 @@ OT_TOOL_PACKED_BEGIN
 class LeaseOption : public Option
 {
 public:
-    static constexpr uint16_t kOptionLength = sizeof(uint32_t) + sizeof(uint32_t); ///< lease and key lease values
-
     /**
-     * This method initialize the Update Lease Option by setting the Option Code and Option Length.
+     * This method initializes the Update Lease Option using the short variant format which contains lease interval
+     * only.
      *
-     * The lease and key lease intervals remain unchanged/uninitialized.
+     * @param[in] aLeaseInterval     The lease interval in seconds.
      *
      */
-    void Init(void)
-    {
-        SetOptionCode(kUpdateLease);
-        SetOptionLength(kOptionLength);
-    }
+    void InitAsShortVariant(uint32_t aLeaseInterval);
+
+    /**
+     * This method initializes the Update Lease Option using the long variant format which contains both lease and
+     * key lease intervals.
+     *
+     * @param[in] aLeaseInterval     The lease interval in seconds.
+     * @param[in] aKeyLeaseInterval  The key lease interval in seconds.
+     *
+     */
+    void InitAsLongVariant(uint32_t aLeaseInterval, uint32_t aKeyLeaseInterval);
+
+    /**
+     * This method indicates whether or not the Update Lease Option follows the short variant format which contains
+     * only the lease interval.
+     *
+     * @retval TRUE   The Update Lease Option follows the short variant format.
+     * @retval FALSE  The Update Lease Option follows the long variant format.
+     *
+     */
+    bool IsShortVariant(void) const { return (GetOptionLength() == kShortLength); }
 
     /**
      * This method tells whether this is a valid Lease Option.
+     *
+     * This method validates that option follows either short or long variant format.
      *
      * @returns  TRUE if this is a valid Lease Option, FALSE if not a valid Lease Option.
      *
@@ -2523,30 +2540,42 @@ public:
     uint32_t GetLeaseInterval(void) const { return HostSwap32(mLeaseInterval); }
 
     /**
-     * This method sets the Update Lease OPT record's lease interval value.
-     *
-     * @param[in]  aLeaseInterval  The lease interval value.
-     *
-     */
-    void SetLeaseInterval(uint32_t aLeaseInterval) { mLeaseInterval = HostSwap32(aLeaseInterval); }
-
-    /**
      * This method returns the Update Lease OPT record's key lease interval value.
+     *
+     * If the Update Lease Option follows the short variant format the lease interval is returned as key lease interval.
      *
      * @returns The key lease interval value (in seconds).
      *
      */
-    uint32_t GetKeyLeaseInterval(void) const { return HostSwap32(mKeyLeaseInterval); }
+    uint32_t GetKeyLeaseInterval(void) const
+    {
+        return IsShortVariant() ? GetLeaseInterval() : HostSwap32(mKeyLeaseInterval);
+    }
 
     /**
-     * This method sets the Update Lease OPT record's key lease interval value.
+     * This method searches among the Options is a given message and reads and validates the Update Lease Option if
+     * found.
      *
-     * @param[in]  aKeyLeaseInterval  The key lease interval value (in seconds).
+     * This method reads the Update Lease Option whether it follows the short or long variant formats.
+     *
+     * @param[in] aMessage   The message to read the Option from.
+     * @param[in] aOffset    Offset in @p aMessage to the start of Options (start of OPT Record data).
+     * @param[in] aLength    Length of Option data in OPT record.
+     *
+     * @retval kErrorNone      Successfully read and validated the Update Lease Option from @p aMessage.
+     * @retval kErrorNotFound  Did not find any Update Lease Option.
+     * @retval kErrorParse     Failed to parse the Options.
      *
      */
-    void SetKeyLeaseInterval(uint32_t aKeyLeaseInterval) { mKeyLeaseInterval = HostSwap32(aKeyLeaseInterval); }
+    Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
 private:
+    static constexpr uint16_t kShortLength = sizeof(uint32_t);                    // lease only.
+    static constexpr uint16_t kLongLength  = sizeof(uint32_t) + sizeof(uint32_t); // lease and key lease values
+
+    void SetLeaseInterval(uint32_t aLeaseInterval) { mLeaseInterval = HostSwap32(aLeaseInterval); }
+    void SetKeyLeaseInterval(uint32_t aKeyLeaseInterval) { mKeyLeaseInterval = HostSwap32(aKeyLeaseInterval); }
+
     uint32_t mLeaseInterval;
     uint32_t mKeyLeaseInterval;
 } OT_TOOL_PACKED_END;

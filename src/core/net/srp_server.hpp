@@ -593,6 +593,8 @@ public:
         void  SetTtl(uint32_t aTtl) { mTtl = aTtl; }
         void  SetLease(uint32_t aLease) { mLease = aLease; }
         void  SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
+        void  SetUseShortLeaseOption(bool aUse) { mUseShortLeaseOption = aUse; }
+        bool  ShouldUseShortLeaseOption(void) const { return mUseShortLeaseOption; }
         Error ProcessTtl(uint32_t aTtl);
 
         LinkedList<Service> &GetServices(void) { return mServices; }
@@ -626,6 +628,7 @@ public:
         uint32_t               mKeyLease; // The KEY-LEASE time in seconds.
         TimeMilli              mUpdateTime;
         LinkedList<Service>    mServices;
+        bool                   mUseShortLeaseOption; // Use short lease option (lease only - 4 byte) when responding.
     };
 
     /**
@@ -1044,6 +1047,7 @@ private:
     void        SendResponse(const Dns::UpdateHeader &aHeader,
                              uint32_t                 aLease,
                              uint32_t                 aKeyLease,
+                             bool                     mUseShortLeaseOption,
                              const Ip6::MessageInfo  &aMessageInfo);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

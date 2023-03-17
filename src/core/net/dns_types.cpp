@@ -1100,7 +1100,69 @@ bool SigRecord::IsValid(void) const
     return GetType() == Dns::ResourceRecord::kTypeSig && GetLength() >= sizeof(*this) - sizeof(ResourceRecord);
 }
 
-bool LeaseOption::IsValid(void) const { return GetLeaseInterval() <= GetKeyLeaseInterval(); }
+void LeaseOption::InitAsShortVariant(uint32_t aLeaseInterval)
+{
+    SetOptionCode(kUpdateLease);
+    SetOptionLength(kShortLength);
+    SetLeaseInterval(aLeaseInterval);
+}
+
+void LeaseOption::InitAsLongVariant(uint32_t aLeaseInterval, uint32_t aKeyLeaseInterval)
+{
+    SetOptionCode(kUpdateLease);
+    SetOptionLength(kLongLength);
+    SetLeaseInterval(aLeaseInterval);
+    SetKeyLeaseInterval(aKeyLeaseInterval);
+}
+
+bool LeaseOption::IsValid(void) const
+{
+    bool isValid = false;
+
+    VerifyOrExit((GetOptionLength() == kShortLength) || (GetOptionLength() >= kLongLength));
+    isValid = (GetLeaseInterval() <= GetKeyLeaseInterval());
+
+exit:
+    return isValid;
+}
+
+Error LeaseOption::ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Error    error = kErrorNone;
+    uint16_t endOffset;
+
+    VerifyOrExit(static_cast<uint32_t>(aOffset) + aLength <= aMessage.GetLength(), error = kErrorParse);
+
+    endOffset = aOffset + aLength;
+
+    while (aOffset < endOffset)
+    {
+        uint16_t size;
+
+        SuccessOrExit(error = aMessage.Read(aOffset, this, sizeof(Option)));
+
+        VerifyOrExit(aOffset + GetSize() <= endOffset, error = kErrorParse);
+
+        size = static_cast<uint16_t>(GetSize());
+
+        if (GetOptionCode() == kUpdateLease)
+        {
+            VerifyOrExit(GetOptionLength() >= kShortLength, error = kErrorParse);
+
+            IgnoreError(aMessage.Read(aOffset, this, Min(size, static_cast<uint16_t>(sizeof(LeaseOption)))));
+            VerifyOrExit(IsValid(), error = kErrorParse);
+
+            ExitNow();
+        }
+
+        aOffset += size;
+    }
+
+    error = kErrorNotFound;
+
+exit:
+    return error;
+}
 
 Error PtrRecord::ReadPtrName(const Message &aMessage,
                              uint16_t      &aOffset,

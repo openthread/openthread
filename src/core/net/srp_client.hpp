@@ -766,6 +766,28 @@ public:
      *
      */
     bool IsServiceKeyRecordEnabled(void) const { return mServiceKeyRecordEnabled; }
+
+    /**
+     * This method enables/disables "use short Update Lease Option" behavior.
+     *
+     * When enabled, the SRP client will use the short variant format of Update Lease Option in its message. The short
+     * format only includes the lease interval.
+     *
+     * This method is added under `REFERENCE_DEVICE` config and is intended to override the default behavior for
+     * testing only.
+     *
+     * @param[in] aUseShort    TRUE to enable, FALSE to disable the "use short Update Lease Option" mode.
+     *
+     */
+    void SetUseShortLeaseOption(bool aUseShort) { mUseShortLeaseOption = aUseShort; }
+
+    /**
+     * This method gets the current "use short Update Lease Option" mode.
+     *
+     * @returns TRUE if "use short Update Lease Option" mode is enabled, FALSE otherwise.
+     *
+     */
+    bool GetUseShortLeaseOption(void) const { return mUseShortLeaseOption; }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
@@ -990,7 +1012,7 @@ private:
     Error        AppendDeleteAllRrsets(Message &aMessage) const;
     Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
     Error        AppendAaaaRecord(const Ip6::Address &aAddress, Message &aMessage, Info &aInfo) const;
-    Error        AppendUpdateLeaseOptRecord(Message &aMessage) const;
+    Error        AppendUpdateLeaseOptRecord(Message &aMessage);
     Error        AppendSignature(Message &aMessage, Info &aInfo);
     void         UpdateRecordLengthInMessage(Dns::ResourceRecord &aRecord, uint16_t aOffset, Message &aMessage) const;
     static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -1035,6 +1057,7 @@ private:
     bool    mSingleServiceMode : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
+    bool mUseShortLeaseOption : 1;
 #endif
 
     uint16_t mUpdateMessageId;
