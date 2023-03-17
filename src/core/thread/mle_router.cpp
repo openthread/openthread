@@ -3719,23 +3719,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     if (IsChild())
     {
-        switch (mParent.GetLinkQualityIn())
-        {
-        case kLinkQuality0:
-            break;
-
-        case kLinkQuality1:
-            aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
-            break;
-
-        case kLinkQuality2:
-            aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
-            break;
-
-        case kLinkQuality3:
-            aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
-            break;
-        }
+        aTlv.IncrementLinkQuality(mParent.GetLinkQualityIn());
     }
 
     for (const Router &router : Get<RouterTable>())
@@ -3752,23 +3736,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        switch (router.GetTwoWayLinkQuality())
-        {
-        case kLinkQuality0:
-            break;
-
-        case kLinkQuality1:
-            aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
-            break;
-
-        case kLinkQuality2:
-            aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
-            break;
-
-        case kLinkQuality3:
-            aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
-            break;
-        }
+        aTlv.IncrementLinkQuality(router.GetTwoWayLinkQuality());
     }
 
     aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());

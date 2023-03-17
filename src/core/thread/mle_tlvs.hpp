@@ -841,6 +841,17 @@ public:
     void SetLinkQuality1(uint8_t aLinkQuality) { mLinkQuality1 = aLinkQuality; }
 
     /**
+     * This method increments the Link Quality N field in TLV for a given Link Quality N (1,2,3).
+     *
+     * The Link Quality N field specifies the number of neighboring router devices with which the sender shares a link
+     * of quality N.
+     *
+     * @param[in] aLinkQuality  The Link Quality N (1,2,3) field to update.
+     *
+     */
+    void IncrementLinkQuality(LinkQuality aLinkQuality);
+
+    /**
      * This method sets the Active Routers value.
      *
      * @returns The Active Routers value.
