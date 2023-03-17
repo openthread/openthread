@@ -84,5 +84,42 @@ void ConnectivityTlv::IncrementLinkQuality(LinkQuality aLinkQuality)
     }
 }
 
+int8_t ConnectivityTlv::GetParentPriority(void) const
+{
+    int8_t priority = kParentPriorityUnspecified;
+
+    switch (mFlags & kFlagsParentPriorityMask)
+    {
+    case kFlagsPriorityHigh:
+        priority = kParentPriorityHigh;
+        break;
+    case kFlagsPriorityMedium:
+        priority = kParentPriorityMedium;
+        break;
+    case kFlagsPriorityLow:
+        priority = kParentPriorityLow;
+    default:
+        break;
+    }
+
+    return priority;
+}
+
+void ConnectivityTlv::SetParentPriority(int8_t aParentPriority)
+{
+    if (aParentPriority > 0)
+    {
+        mFlags = kFlagsPriorityHigh;
+    }
+    else if (aParentPriority < 0)
+    {
+        mFlags = kFlagsPriorityLow;
+    }
+    else
+    {
+        mFlags = kFlagsPriorityMedium;
+    }
+}
+
 } // namespace Mle
 } // namespace ot
