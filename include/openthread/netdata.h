@@ -72,6 +72,17 @@ typedef struct otBorderRouterConfig
 } otBorderRouterConfig;
 
 /**
+ * This structure represents 6LoWPAN Context ID information associated with a prefix in Network Data.
+ *
+ */
+typedef struct otLowpanContextInfo
+{
+    uint8_t     mContextId;    ///< The 6LoWPAN Context ID.
+    bool        mCompressFlag; ///< The compress flag.
+    otIp6Prefix mPrefix;       ///< The associated IPv6 prefix.
+} otLowpanContextInfo;
+
+/**
  * This structure represents an External Route configuration.
  *
  */
@@ -213,6 +224,22 @@ otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIte
  *
  */
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig);
+
+/**
+ * Get the next 6LoWPAN Context ID info in the partition's Network Data.
+ *
+ * @param[in]      aInstance     A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator     A pointer to the Network Data iterator. To get the first service entry
+                                 it should be set to OT_NETWORK_DATA_ITERATOR_INIT.
+ * @param[out]     aContextInfo  A pointer to where the retrieved 6LoWPAN Context ID information will be placed.
+ *
+ * @retval OT_ERROR_NONE       Successfully found the next 6LoWPAN Context ID info.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent 6LoWPAN Context info exists in the partition's Network Data.
+ *
+ */
+otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
+                                          otNetworkDataIterator *aIterator,
+                                          otLowpanContextInfo   *aContextInfo);
 
 /**
  * Get the Network Data Version.

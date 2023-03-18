@@ -268,5 +268,13 @@ void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aSer
     GetServerConfig().SetFrom(aServerTlv);
 }
 
+void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &aContextTlv)
+{
+    mContextId    = aContextTlv.GetContextId();
+    mCompressFlag = aContextTlv.IsCompress();
+    aPrefixTlv.CopyPrefixTo(GetPrefix());
+    GetPrefix().SetLength(aContextTlv.GetContextLength());
+}
+
 } // namespace NetworkData
 } // namespace ot

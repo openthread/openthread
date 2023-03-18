@@ -139,6 +139,7 @@ private:
     void    OutputPrefixes(bool aLocal);
     void    OutputRoutes(bool aLocal);
     void    OutputServices(bool aLocal);
+    void    OutputLowpanContexts(bool aLocal);
 };
 
 } // namespace Cli

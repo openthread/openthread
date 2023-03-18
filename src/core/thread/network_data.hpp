@@ -267,6 +267,18 @@ public:
     Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
+     * This method gets the next 6LoWPAN Context ID info in the Thread Network Data.
+     *
+     * @param[in,out]  aIterator     A reference to the Network Data iterator.
+     * @param[out]     aContextInfo  A reference to where the retrieved 6LoWPAN Context ID information will be placed.
+     *
+     * @retval kErrorNone      Successfully found the next 6LoWPAN Context ID info.
+     * @retval kErrorNotFound  No subsequent 6LoWPAN Context info exists in the partition's Network Data.
+     *
+     */
+    Error GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const;
+
+    /**
      * This method indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
      *
      * @param[in]  aPrefix   The on mesh prefix config to check.
@@ -557,6 +569,7 @@ private:
         OnMeshPrefixConfig  *mOnMeshPrefix;
         ExternalRouteConfig *mExternalRoute;
         ServiceConfig       *mService;
+        LowpanContextInfo   *mLowpanContext;
     };
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;

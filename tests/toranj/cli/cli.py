@@ -359,10 +359,13 @@ class Node(object):
         outputs = [line.strip() for line in outputs]
         routes_index = outputs.index('Routes:')
         services_index = outputs.index('Services:')
+        contexts_index = outputs.index('Contexts:')
         result = {}
         result['prefixes'] = outputs[1:routes_index]
         result['routes'] = outputs[routes_index + 1:services_index]
-        result['services'] = outputs[services_index + 1:]
+        result['services'] = outputs[services_index + 1:contexts_index]
+        result['contexts'] = outputs[contexts_index + 1:]
+
         return result
 
     def get_netdata_prefixes(self):
@@ -373,6 +376,9 @@ class Node(object):
 
     def get_netdata_services(self):
         return self.get_netdata()['services']
+
+    def get_netdata_contexts(self):
+        return self.get_netdata()['contexts']
 
     def get_netdata_versions(self):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
