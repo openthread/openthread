@@ -748,7 +748,7 @@ TxFrame *Mac::PrepareBeacon(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
+    Assert(!mTxBeaconRadioLinks.IsEmpty());
     frame = &mLinks.GetTxFrames().GetTxFrame(mTxBeaconRadioLinks);
     mTxBeaconRadioLinks.Clear();
 #else
@@ -897,7 +897,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     }
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1007,7 +1007,7 @@ void Mac::BeginTransmit(void)
 #endif // OPENTHREAD_FTD
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -1365,7 +1365,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         break;
 
     case kOperationTransmitPoll:
-        OT_ASSERT(aFrame.IsEmpty() || aFrame.GetAckRequest());
+        Assert(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
         if ((aError == kErrorNone) && (aAckFrame != nullptr))
         {
@@ -1442,7 +1442,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 #endif // OPENTHREAD_FTD
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     ExitNow(); // Added to suppress "unused label exit" warning (in TREL radio only).
@@ -1487,7 +1487,7 @@ void Mac::HandleTimer(void)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 }
 

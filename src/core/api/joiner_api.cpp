@@ -93,7 +93,7 @@ const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance)
 
 const char *otJoinerStateToString(otJoinerState aState)
 {
-    OT_ASSERT(aState <= OT_JOINER_STATE_JOINED);
+    Assert(aState <= OT_JOINER_STATE_JOINED);
 
     return MeshCoP::Joiner::StateToString(MapEnum(aState));
 }

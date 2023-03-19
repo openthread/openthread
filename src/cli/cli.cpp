@@ -155,7 +155,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 
 void Interpreter::OutputResult(otError aError)
 {
-    OT_ASSERT(mCommandIsPending);
+    Assert(mCommandIsPending);
 
     VerifyOrExit(aError != OT_ERROR_PENDING);
 
@@ -257,7 +257,7 @@ void Interpreter::ProcessLine(char *aBuf)
     Arg     args[kMaxArgs + 1];
     otError error = OT_ERROR_NONE;
 
-    OT_ASSERT(aBuf != nullptr);
+    Assert(aBuf != nullptr);
 
     // Ignore the command if another command is pending.
     VerifyOrExit(!mCommandIsPending, args[0].Clear());
@@ -7891,7 +7891,7 @@ void Interpreter::HandleTimer(void)
 
 void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)
 {
-    OT_ASSERT(mCommandIsPending);
+    Assert(mCommandIsPending);
     mTimer.Start(aTimeoutMilli);
 }
 

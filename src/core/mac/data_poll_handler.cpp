@@ -251,7 +251,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         break;
 
     case kErrorNoAck:
-        OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
+        Assert(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
         aChild.IncrementIndirectTxAttempts();
         LogInfo("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetIndirectTxAttempts(),
@@ -297,7 +297,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     mCallbacks.HandleSentFrameToChild(aFrame, mFrameContext, aError, aChild);

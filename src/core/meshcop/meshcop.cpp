@@ -114,7 +114,7 @@ bool JoinerDiscerner::Matches(const Mac::ExtAddress &aJoinerId) const
 {
     uint64_t mask;
 
-    OT_ASSERT(IsValid());
+    Assert(IsValid());
 
     mask = GetMask();
 
@@ -132,7 +132,7 @@ void JoinerDiscerner::CopyTo(Mac::ExtAddress &aExtAddress) const
     uint8_t  remaining = mLength;
     uint64_t value     = mValue;
 
-    OT_ASSERT(IsValid());
+    Assert(IsValid());
 
     // Write full bytes
     while (remaining >= CHAR_BIT)
@@ -188,7 +188,7 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 
 void SteeringData::Init(uint8_t aLength)
 {
-    OT_ASSERT(aLength <= kMaxLength);
+    Assert(aLength <= kMaxLength);
     mLength = aLength;
     memset(m8, 0, sizeof(m8));
 }
@@ -217,7 +217,7 @@ void SteeringData::UpdateBloomFilter(const JoinerDiscerner &aDiscerner)
 
 void SteeringData::UpdateBloomFilter(const HashBitIndexes &aIndexes)
 {
-    OT_ASSERT((mLength > 0) && (mLength <= kMaxLength));
+    Assert((mLength > 0) && (mLength <= kMaxLength));
 
     SetBit(aIndexes.mIndex[0] % GetNumBits());
     SetBit(aIndexes.mIndex[1] % GetNumBits());

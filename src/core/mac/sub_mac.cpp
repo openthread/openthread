@@ -574,7 +574,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(ExitNow());
     }
 
@@ -661,10 +661,10 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     allowError = Get<LinkRaw>().IsEnabled();
 #endif
 
-    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, OT_ASSERT(allowError));
+    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, Assert(allowError));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
-    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
+    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, Assert(allowError));
     SignalFrameCounterUsed(frameCounter);
 
 exit:
@@ -746,7 +746,7 @@ exit:
 
 void SubMac::SampleRssi(void)
 {
-    OT_ASSERT(!RadioSupportsEnergyScan());
+    Assert(!RadioSupportsEnergyScan());
 
     int8_t rssi = GetRssi();
 
@@ -948,7 +948,7 @@ void SubMac::SetMacKey(uint8_t            aKeyIdMode,
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
         break;
     }
 

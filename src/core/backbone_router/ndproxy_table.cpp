@@ -51,7 +51,7 @@ void NdProxyTable::NdProxy::Init(const Ip6::InterfaceIdentifier &aAddressIid,
                                  uint16_t                        aRloc16,
                                  uint32_t                        aTimeSinceLastTransaction)
 {
-    OT_ASSERT(!mValid);
+    Assert(!mValid);
 
     Clear();
 
@@ -65,7 +65,7 @@ void NdProxyTable::NdProxy::Init(const Ip6::InterfaceIdentifier &aAddressIid,
 
 void NdProxyTable::NdProxy::Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction)
 {
-    OT_ASSERT(mValid);
+    Assert(mValid);
 
     mRloc16                   = aRloc16;
     aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, Mle::kTimeSinceLastTransactionMax);
@@ -272,7 +272,7 @@ void NdProxyTable::TriggerCallback(NdProxy::Event aEvent, const Ip6::InterfaceId
 
     VerifyOrExit(mCallback.IsSet());
 
-    OT_ASSERT(prefix != nullptr);
+    Assert(prefix != nullptr);
 
     dua.SetPrefix(*prefix);
     dua.SetIid(aAddressIid);
@@ -300,7 +300,7 @@ Ip6::Address NdProxyTable::GetDua(NdProxy &aNdProxy)
     Ip6::Address       dua;
     const Ip6::Prefix *domainPrefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
 
-    OT_ASSERT(domainPrefix != nullptr);
+    Assert(domainPrefix != nullptr);
 
     dua.SetPrefix(*domainPrefix);
     dua.SetIid(aNdProxy.mAddressIid);

@@ -169,7 +169,7 @@ otError otSrpClientSetDomainName(otInstance *aInstance, const char *aDomainName)
 
 const char *otSrpClientItemStateToString(otSrpClientItemState aItemState)
 {
-    OT_ASSERT(aItemState <= OT_SRP_CLIENT_ITEM_STATE_REMOVED);
+    Assert(aItemState <= OT_SRP_CLIENT_ITEM_STATE_REMOVED);
 
     return Srp::Client::ItemStateToString(MapEnum(aItemState));
 }

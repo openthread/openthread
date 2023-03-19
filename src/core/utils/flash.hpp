@@ -202,7 +202,7 @@ private:
         const uint8_t *GetData(void) const { return mData; }
         void           SetData(const uint8_t *aData, uint16_t aDataLength)
         {
-            OT_ASSERT(aDataLength <= kMaxDataSize);
+            Assert(aDataLength <= kMaxDataSize);
             memcpy(mData, aData, aDataLength);
             SetLength(aDataLength);
         }

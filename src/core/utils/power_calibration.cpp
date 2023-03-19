@@ -54,7 +54,7 @@ void PowerCalibration::CalibratedPowerEntry::Init(int16_t        aActualPower,
                                                   uint16_t       aRawPowerSettingLength)
 {
     AssertPointerIsNotNull(aRawPowerSetting);
-    OT_ASSERT(aRawPowerSettingLength <= kMaxRawPowerSettingSize);
+    Assert(aRawPowerSettingLength <= kMaxRawPowerSettingSize);
 
     mActualPower = aActualPower;
     mLength      = aRawPowerSettingLength;

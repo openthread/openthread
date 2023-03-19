@@ -282,7 +282,7 @@ uint32_t InfraNetif::GetFlags(void) const
     int          sock;
     struct ifreq ifReq;
 
-    OT_ASSERT(mInfraIfIndex != 0);
+    Assert(mInfraIfIndex != 0);
 
     sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
@@ -404,7 +404,7 @@ exit:
 
 void InfraNetif::SetUp(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
     VerifyOrExit(mInfraIfIndex != 0);
 
     SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));

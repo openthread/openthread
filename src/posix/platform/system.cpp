@@ -207,13 +207,13 @@ exit:
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    OT_ASSERT(gInstance == nullptr);
+    Assert(gInstance == nullptr);
 
     platformInit(aPlatformConfig);
 
     gDryRun   = aPlatformConfig->mDryRun;
     gInstance = otInstanceInitSingle();
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
 
     platformSetUp();
 
@@ -282,7 +282,7 @@ exit:
 
 void otSysDeinit(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
 
     platformTearDown();
     otInstanceFinalize(gInstance);

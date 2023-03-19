@@ -155,7 +155,7 @@ exit:
 
 void DatasetUpdater::Finish(Error aError)
 {
-    OT_ASSERT(mDataset != nullptr);
+    Assert(mDataset != nullptr);
 
     FreeMessage(mDataset);
     mDataset = nullptr;

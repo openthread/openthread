@@ -233,7 +233,7 @@ StringWriter &StringWriter::AppendVarArgs(const char *aFormat, va_list aArgs)
     int len;
 
     len = vsnprintf(mBuffer + mLength, (mSize > mLength ? (mSize - mLength) : 0), aFormat, aArgs);
-    OT_ASSERT(len >= 0);
+    Assert(len >= 0);
 
     mLength += static_cast<uint16_t>(len);
 

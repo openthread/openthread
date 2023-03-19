@@ -76,7 +76,7 @@ void DataPollSender::StartPolling(void)
 {
     VerifyOrExit(!mEnabled);
 
-    OT_ASSERT(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
+    Assert(!Get<Mle::MleRouter>().IsRxOnWhenIdle());
 
     mEnabled = true;
     ScheduleNextPoll(kRecalculatePollPeriod);

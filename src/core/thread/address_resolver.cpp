@@ -930,7 +930,7 @@ void AddressResolver::HandleTimeTick(void)
 
         while ((entry = GetEntryAfter(prev, mQueryList)) != nullptr)
         {
-            OT_ASSERT(!entry->IsTimeoutZero());
+            Assert(!entry->IsTimeoutZero());
 
             continueRxingTicks = true;
             entry->DecrementTimeout();

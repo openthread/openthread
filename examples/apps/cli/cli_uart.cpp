@@ -349,7 +349,7 @@ static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments
                 }
             }
             rval = vsnprintf(sTxBuffer, kTxBufferSize, aFormat, retryArguments);
-            OT_ASSERT(rval > 0);
+            Assert(rval > 0);
             sTxLength   = static_cast<uint16_t>(rval);
             sTxHead     = 0;
             sSendLength = 0;

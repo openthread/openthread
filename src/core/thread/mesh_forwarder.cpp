@@ -189,7 +189,7 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
 {
     PriorityQueue *queue = aMessage.GetPriorityQueue();
 
-    OT_ASSERT(queue != nullptr);
+    Assert(queue != nullptr);
 
     if (queue == &mSendQueue)
     {
@@ -646,7 +646,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 #if OPENTHREAD_FTD
         error = UpdateIp6RouteFtd(ip6Header, aMessage);
 #else
-        OT_ASSERT(false);
+        Assert(false);
 #endif
     }
 
@@ -1128,8 +1128,8 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Error aError)
     Neighbor    *neighbor = nullptr;
     Mac::Address macDest;
 
-    OT_ASSERT((aError == kErrorNone) || (aError == kErrorChannelAccessFailure) || (aError == kErrorAbort) ||
-              (aError == kErrorNoAck));
+    Assert((aError == kErrorNone) || (aError == kErrorChannelAccessFailure) || (aError == kErrorAbort) ||
+           (aError == kErrorNoAck));
 
     mSendBusy = false;
 
@@ -1165,7 +1165,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 
     VerifyOrExit(mSendMessage != nullptr);
 
-    OT_ASSERT(mSendMessage->IsDirectTransmission());
+    Assert(mSendMessage->IsDirectTransmission());
 
     if (aFrameTxError != kErrorNone)
     {

@@ -176,7 +176,7 @@ void MulticastListenersTable::CheckInvariants(void) const
     {
         uint16_t parent = (child - 1) / 2;
 
-        OT_ASSERT(!(mListeners[child] < mListeners[parent]));
+        Assert(!(mListeners[child] < mListeners[parent]));
     }
 #endif
 }
@@ -186,7 +186,7 @@ bool MulticastListenersTable::SiftHeapElemDown(uint16_t aIndex)
     uint16_t index = aIndex;
     Listener saveElem;
 
-    OT_ASSERT(aIndex < mNumValidListeners);
+    Assert(aIndex < mNumValidListeners);
 
     saveElem = mListeners[aIndex];
 
@@ -227,7 +227,7 @@ void MulticastListenersTable::SiftHeapElemUp(uint16_t aIndex)
     uint16_t index = aIndex;
     Listener saveElem;
 
-    OT_ASSERT(aIndex < mNumValidListeners);
+    Assert(aIndex < mNumValidListeners);
 
     saveElem = mListeners[aIndex];
 

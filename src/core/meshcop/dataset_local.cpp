@@ -288,7 +288,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
         }
         else
         {
-            OT_ASSERT(keyLen == NetworkKey::kSize);
+            Assert(keyLen == NetworkKey::kSize);
             networkKeyTlv->SetNetworkKey(networkKey);
         }
     }
@@ -307,7 +307,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
         }
         else
         {
-            OT_ASSERT(keyLen == Pskc::kSize);
+            Assert(keyLen == Pskc::kSize);
             pskcTlv->SetPskc(pskc);
         }
     }

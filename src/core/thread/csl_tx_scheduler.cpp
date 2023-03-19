@@ -279,7 +279,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         break;
 
     case kErrorNoAck:
-        OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
+        Assert(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
         aChild.IncrementCslTxAttempts();
         LogInfo("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
@@ -321,7 +321,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         ExitNow();
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(break);
     }
 

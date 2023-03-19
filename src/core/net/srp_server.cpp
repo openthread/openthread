@@ -213,7 +213,7 @@ exit:
 
 uint32_t Server::TtlConfig::GrantTtl(uint32_t aLease, uint32_t aTtl) const
 {
-    OT_ASSERT(mMinTtl <= mMaxTtl);
+    Assert(mMinTtl <= mMaxTtl);
 
     return Clamp(Min(aTtl, aLease), mMinTtl, mMaxTtl);
 }
@@ -246,14 +246,14 @@ exit:
 
 uint32_t Server::LeaseConfig::GrantLease(uint32_t aLease) const
 {
-    OT_ASSERT(mMinLease <= mMaxLease);
+    Assert(mMinLease <= mMaxLease);
 
     return (aLease == 0) ? 0 : Clamp(aLease, mMinLease, mMaxLease);
 }
 
 uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
 {
-    OT_ASSERT(mMinKeyLease <= mMaxKeyLease);
+    Assert(mMinKeyLease <= mMaxKeyLease);
 
     return (aKeyLease == 0) ? 0 : Clamp(aKeyLease, mMinKeyLease, mMaxKeyLease);
 }
@@ -313,7 +313,7 @@ void Server::AddHost(Host &aHost)
 {
     LogInfo("Add new host %s", aHost.GetFullName());
 
-    OT_ASSERT(mHosts.FindMatching(aHost.GetFullName()) == nullptr);
+    Assert(mHosts.FindMatching(aHost.GetFullName()) == nullptr);
     IgnoreError(mHosts.Add(aHost));
 }
 void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler)
@@ -827,7 +827,7 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
     Error    error  = kErrorNone;
     uint16_t offset = aMetadata.mOffset;
 
-    OT_ASSERT(aHost.GetFullName() == nullptr);
+    Assert(aHost.GetFullName() == nullptr);
 
     for (uint16_t numRecords = aMetadata.mDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
@@ -1552,7 +1552,7 @@ void Server::HandleLeaseTimer(void)
             {
                 next = service->GetNext();
 
-                OT_ASSERT(service->mIsDeleted);
+                Assert(service->mIsDeleted);
 
                 if (service->GetKeyExpireTime() <= now)
                 {
@@ -1586,7 +1586,7 @@ void Server::HandleLeaseTimer(void)
 
             Service *next;
 
-            OT_ASSERT(!host->IsDeleted());
+            Assert(!host->IsDeleted());
 
             earliestExpireTime = Min(earliestExpireTime, host->GetExpireTime());
 
@@ -1622,7 +1622,7 @@ void Server::HandleLeaseTimer(void)
 
     if (earliestExpireTime != now.GetDistantFuture())
     {
-        OT_ASSERT(earliestExpireTime >= now);
+        Assert(earliestExpireTime >= now);
         if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
         {
             LogInfo("Lease timer is scheduled for %lu seconds", ToUlong(Time::MsecToSec(earliestExpireTime - now)));
@@ -1710,7 +1710,7 @@ Error Server::Service::GetServiceSubTypeLabel(char *aLabel, uint8_t aMaxSize) co
     VerifyOrExit(IsSubType(), error = kErrorInvalidArgs);
 
     subServiceName = StringFind(serviceName, kServiceSubTypeLabel, kStringCaseInsensitiveMatch);
-    OT_ASSERT(subServiceName != nullptr);
+    Assert(subServiceName != nullptr);
 
     if (subServiceName - serviceName < aMaxSize)
     {
@@ -1730,8 +1730,8 @@ exit:
 
 TimeMilli Server::Service::GetExpireTime(void) const
 {
-    OT_ASSERT(!mIsDeleted);
-    OT_ASSERT(!GetHost().IsDeleted());
+    Assert(!mIsDeleted);
+    Assert(!GetHost().IsDeleted());
 
     return mUpdateTime + Time::SecToMsec(mDescription->mLease);
 }
@@ -1942,14 +1942,14 @@ bool Server::Host::Matches(const char *aFullName) const
 
 void Server::Host::SetKeyRecord(Dns::Ecdsa256KeyRecord &aKeyRecord)
 {
-    OT_ASSERT(aKeyRecord.IsValid());
+    Assert(aKeyRecord.IsValid());
 
     mKeyRecord = aKeyRecord;
 }
 
 TimeMilli Server::Host::GetExpireTime(void) const
 {
-    OT_ASSERT(!IsDeleted());
+    Assert(!IsDeleted());
 
     return mUpdateTime + Time::SecToMsec(mLease);
 }

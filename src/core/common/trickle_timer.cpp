@@ -55,7 +55,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
 
 void TrickleTimer::Start(Mode aMode, uint32_t aIntervalMin, uint32_t aIntervalMax, uint16_t aRedundancyConstant)
 {
-    OT_ASSERT((aIntervalMax >= aIntervalMin) && (aIntervalMin > 0));
+    Assert((aIntervalMax >= aIntervalMin) && (aIntervalMin > 0));
 
     mIntervalMin        = aIntervalMin;
     mIntervalMax        = aIntervalMax;

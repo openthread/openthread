@@ -73,7 +73,7 @@ extern "C" void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSend
 
     if (ncpHdlc == nullptr || ncpHdlc != NcpBase::GetNcpInstance())
     {
-        OT_ASSERT(false);
+        Assert(false);
     }
 }
 
@@ -205,7 +205,7 @@ exit:
     {
         int rval = mSendCallback(mHdlcBuffer.GetFrame(), len);
         OT_UNUSED_VARIABLE(rval);
-        OT_ASSERT(rval == static_cast<int>(len));
+        Assert(rval == static_cast<int>(len));
     }
 }
 
@@ -318,7 +318,7 @@ otError NcpHdlc::BufferEncrypterReader::OutFrameBegin(void)
 
         if (mOutputDataLength > 0)
         {
-            OT_ASSERT(mOutputDataLength <= sizeof(mDataBuffer));
+            Assert(mOutputDataLength <= sizeof(mDataBuffer));
             mTxFrameBuffer.OutFrameRead(mOutputDataLength, mDataBuffer);
 
             if (!SpinelEncrypter::EncryptOutbound(mDataBuffer, sizeof(mDataBuffer), &mOutputDataLength))

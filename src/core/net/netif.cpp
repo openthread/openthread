@@ -168,7 +168,7 @@ void Netif::UnsubscribeAllNodesMulticast(void)
     //    LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAll
     //         -> RealmLocalAll -> RealmLocalAllMpl.
 
-    OT_ASSERT(prev != AsCoreTypePtr(AsNonConst(&kRealmLocalAllRoutersMulticastAddress)));
+    Assert(prev != AsCoreTypePtr(AsNonConst(&kRealmLocalAllRoutersMulticastAddress)));
 
     if (prev == nullptr)
     {

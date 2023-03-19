@@ -107,7 +107,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
     uint8_t ip6Index;
 
-    OT_ASSERT(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
+    Assert(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
 
     ip6Index = aPrefixLength / CHAR_BIT;
 

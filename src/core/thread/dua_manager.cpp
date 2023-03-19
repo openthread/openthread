@@ -114,7 +114,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     case BackboneRouter::Leader::kDomainPrefixAdded:
     {
         const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
-        OT_ASSERT(prefix != nullptr);
+        Assert(prefix != nullptr);
         mDomainUnicastAddress.mPrefixLength = prefix->GetLength();
         mDomainUnicastAddress.GetAddress().Clear();
         mDomainUnicastAddress.GetAddress().SetPrefix(*prefix);
@@ -467,7 +467,7 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child              *child  = nullptr;
 
-        OT_ASSERT(mChildIndexDuaRegistering == Mle::kMaxChildren);
+        Assert(mChildIndexDuaRegistering == Mle::kMaxChildren);
 
         for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
         {
@@ -483,7 +483,7 @@ void DuaManager::PerformNextRegistration(void)
         child  = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
         duaPtr = child->GetDomainUnicastAddress();
 
-        OT_ASSERT(duaPtr != nullptr);
+        Assert(duaPtr != nullptr);
 
         dua = *duaPtr;
         SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, dua));
@@ -561,7 +561,7 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageIn
     }
 
     VerifyOrExit(aResult == kErrorNone, error = kErrorParse);
-    OT_ASSERT(aMessage != nullptr);
+    Assert(aMessage != nullptr);
 
     VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged || aMessage->GetCode() >= Coap::kCodeBadRequest,
                  error = kErrorParse);

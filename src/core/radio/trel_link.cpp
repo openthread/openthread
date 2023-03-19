@@ -94,20 +94,20 @@ void Link::Disable(void)
 
 void Link::Sleep(void)
 {
-    OT_ASSERT(mState != kStateDisabled);
+    Assert(mState != kStateDisabled);
     SetState(kStateSleep);
 }
 
 void Link::Receive(uint8_t aChannel)
 {
-    OT_ASSERT(mState != kStateDisabled);
+    Assert(mState != kStateDisabled);
     mRxChannel = aChannel;
     SetState(kStateReceive);
 }
 
 void Link::Send(void)
 {
-    OT_ASSERT(mState != kStateDisabled);
+    Assert(mState != kStateDisabled);
 
     SetState(kStateTransmit);
     mTxTasklet.Post();
@@ -206,7 +206,7 @@ void Link::BeginTransmit(void)
 
     if (type == Header::kTypeUnicast)
     {
-        OT_ASSERT(destAddr.IsExtended());
+        Assert(destAddr.IsExtended());
         txPacket.GetHeader().SetDestination(destAddr.GetExtended());
     }
 

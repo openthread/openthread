@@ -656,7 +656,7 @@ void MutableNetworkData::Insert(void *aStart, uint8_t aLength)
 {
     uint8_t *start = reinterpret_cast<uint8_t *>(aStart);
 
-    OT_ASSERT(CanInsert(aLength) && mTlvs <= start && start <= mTlvs + mLength);
+    Assert(CanInsert(aLength) && mTlvs <= start && start <= mTlvs + mLength);
     memmove(start + aLength, start, mLength - static_cast<size_t>(start - mTlvs));
     mLength += aLength;
 }
@@ -667,7 +667,7 @@ void MutableNetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
     uint8_t *removeStart = reinterpret_cast<uint8_t *>(aRemoveStart);
     uint8_t *removeEnd   = removeStart + aRemoveLength;
 
-    OT_ASSERT((aRemoveLength <= mLength) && (GetBytes() <= removeStart) && (removeEnd <= end));
+    Assert((aRemoveLength <= mLength) && (GetBytes() <= removeStart) && (removeEnd <= end));
 
     memmove(removeStart, removeEnd, static_cast<uint8_t>(end - removeEnd));
     mLength -= aRemoveLength;
@@ -704,7 +704,7 @@ Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
     }
     else
     {
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 exit:

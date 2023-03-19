@@ -475,7 +475,7 @@ void RoutingManager::EvaluateOmrPrefix(void)
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
 
-    OT_ASSERT(mIsRunning);
+    Assert(mIsRunning);
 
     mFavoredOmrPrefix.Clear();
 
@@ -589,7 +589,7 @@ exit:
 // OMR and NAT64 prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
-    OT_ASSERT(mIsRunning);
+    Assert(mIsRunning);
 
     LogInfo("Evaluating routing policy");
 
@@ -989,7 +989,7 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
 {
     Ip6::Nd::RouterAdvertMessage routerAdvMessage(aPacket);
 
-    OT_ASSERT(mIsRunning);
+    Assert(mIsRunning);
 
     VerifyOrExit(routerAdvMessage.IsValid());
 
@@ -1184,7 +1184,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     TimeMilli now = TimerMilli::GetNow();
     TimeMilli nextStaleTime;
 
-    OT_ASSERT(mIsRunning);
+    Assert(mIsRunning);
 
     // The stale timer triggers sending RS to check the state of
     // discovered prefixes and host RA messages.
@@ -1856,7 +1856,7 @@ Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &a
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
     VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
-    OT_ASSERT(iterator.GetEntry() != nullptr);
+    Assert(iterator.GetEntry() != nullptr);
 
     aEntry.mRouterAddress       = iterator.GetRouter()->mAddress;
     aEntry.mPrefix              = iterator.GetEntry()->GetPrefix();
@@ -1946,7 +1946,7 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
 
 bool RoutingManager::DiscoveredPrefixTable::Entry::IsDeprecated(void) const
 {
-    OT_ASSERT(IsOnLinkPrefix());
+    Assert(IsOnLinkPrefix());
 
     return mLastUpdateTime + TimeMilli::SecToMsec(GetPreferredLifetime()) <= TimerMilli::GetNow();
 }
@@ -2029,7 +2029,7 @@ bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixCon
 
     bool isFavored = (mPreference > aOmrPrefixConfig.GetPreference());
 
-    OT_ASSERT(IsValidOmrPrefix(aOmrPrefixConfig));
+    Assert(IsValidOmrPrefix(aOmrPrefixConfig));
 
     if (mPreference == aOmrPrefixConfig.GetPreference())
     {
@@ -2891,7 +2891,7 @@ exit:
 
 void RoutingManager::Nat64PrefixManager::HandleTimer(void)
 {
-    OT_ASSERT(mEnabled);
+    Assert(mEnabled);
 
     Discover();
 

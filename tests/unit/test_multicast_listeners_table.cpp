@@ -135,8 +135,8 @@ void TestMulticastListenersTable(void)
 
         for (MulticastListenersTable::Listener &listener : table.Iterate())
         {
-            OT_ASSERT(listener.GetAddress().IsMulticastLargerThanRealmLocal());
-            OT_ASSERT(listener.GetExpireTime() > TimerMilli::GetNow());
+            Assert(listener.GetAddress().IsMulticastLargerThanRealmLocal());
+            Assert(listener.GetExpireTime() > TimerMilli::GetNow());
         }
 
         address = static_cast<const Ip6::Address &>(MA401);

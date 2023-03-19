@@ -93,7 +93,7 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
 {
     uint16_t childIndex;
 
-    OT_ASSERT(!aChild.IsRxOnWhenIdle());
+    Assert(!aChild.IsRxOnWhenIdle());
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
     VerifyOrExit(!aMessage.GetChildMask(childIndex));
@@ -350,7 +350,7 @@ Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &a
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 exit:
@@ -461,7 +461,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     if ((message != nullptr) && (nextOffset < message->GetLength()))

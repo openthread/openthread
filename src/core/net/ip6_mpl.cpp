@@ -68,7 +68,7 @@ void MplOption::Init(SeedIdLength aSeedIdLength)
         SetLength(sizeof(*this) - sizeof(Option));
         break;
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     mControl = aSeedIdLength;
@@ -229,7 +229,7 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
     if (evict->mLifetime != 0)
     {
         // no free entries available, look to evict an existing entry
-        OT_ASSERT(curCount != 0);
+        Assert(curCount != 0);
 
         if (aSeedId == group->mSeedId && insert == nullptr)
         {
@@ -262,12 +262,12 @@ Error Mpl::UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence)
 
     if (evict > insert)
     {
-        OT_ASSERT(insert >= mSeedSet);
+        Assert(insert >= mSeedSet);
         memmove(insert + 1, insert, static_cast<size_t>(evict - insert) * sizeof(SeedEntry));
     }
     else if (evict < insert)
     {
-        OT_ASSERT(evict >= mSeedSet);
+        Assert(evict >= mSeedSet);
         memmove(evict, evict + 1, static_cast<size_t>(insert - 1 - evict) * sizeof(SeedEntry));
         insert--;
     }
@@ -446,7 +446,7 @@ void Mpl::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    OT_ASSERT(length >= sizeof(*this));
+    Assert(length >= sizeof(*this));
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 

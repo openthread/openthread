@@ -247,7 +247,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     // restricted to 63 octets or less). The next 14-bits specify
     // an offset value relative to start of DNS header.
 
-    OT_ASSERT(aOffset < kPointerLabelTypeUint16);
+    Assert(aOffset < kPointerLabelTypeUint16);
 
     value = HostSwap16(aOffset | kPointerLabelTypeUint16);
 

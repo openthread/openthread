@@ -477,7 +477,7 @@ exit:
 
 void Joiner::SendJoinerFinalize(void)
 {
-    OT_ASSERT(mFinalizeMessage != nullptr);
+    Assert(mFinalizeMessage != nullptr);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=send | type=JOIN_FIN.req |", *mFinalizeMessage);
@@ -508,7 +508,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
     uint8_t state;
 
     VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
-    OT_ASSERT(aMessage != nullptr);
+    Assert(aMessage != nullptr);
 
     VerifyOrExit(aMessage->IsAck() && aMessage->GetCode() == Coap::kCodeChanged);
 
@@ -605,7 +605,7 @@ void Joiner::HandleTimer(void)
     case kStateIdle:
     case kStateDiscover:
     case kStateConnect:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     Finish(error);

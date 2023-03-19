@@ -167,7 +167,7 @@ void Local::UpdateRloc(PrefixTlv &aPrefixTlv)
             break;
 
         default:
-            OT_ASSERT(false);
+            Assert(false);
         }
     }
 }
@@ -241,7 +241,7 @@ void Local::UpdateRloc(ServiceTlv &aService)
             break;
 
         default:
-            OT_ASSERT(false);
+            Assert(false);
         }
     }
 }
@@ -268,7 +268,7 @@ void Local::UpdateRloc(void)
 #endif
 
         default:
-            OT_ASSERT(false);
+            Assert(false);
         }
     }
 }

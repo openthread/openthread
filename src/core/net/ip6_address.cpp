@@ -126,7 +126,7 @@ uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, ui
 {
     uint8_t matchedLength = 0;
 
-    OT_ASSERT(aMaxSize <= Address::kSize);
+    Assert(aMaxSize <= Address::kSize);
 
     for (uint8_t i = 0; i < aMaxSize; i++)
     {
@@ -472,7 +472,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
 
     uint8_t ip6Index;
 
-    OT_ASSERT(aPrefix.IsValidNat64());
+    Assert(aPrefix.IsValidNat64());
 
     Clear();
     SetPrefix(aPrefix);

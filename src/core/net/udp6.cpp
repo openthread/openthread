@@ -169,7 +169,7 @@ Error Udp::Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(!IsOpen(aSocket));
+    Assert(!IsOpen(aSocket));
 
     aSocket.GetSockName().Clear();
     aSocket.GetPeerName().Clear();
@@ -509,7 +509,7 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
     VerifyOrExit(socket != nullptr);
 
     aMessage.RemoveHeader(aMessage.GetOffset());
-    OT_ASSERT(aMessage.GetOffset() == 0);
+    Assert(aMessage.GetOffset() == 0);
     socket->HandleUdpReceive(aMessage, aMessageInfo);
 
 exit:

@@ -169,7 +169,7 @@ void TcpCircularSendBuffer::HandleForwardProgress(size_t aInSendBuffer)
     size_t bytesRemoved;
     size_t bytesUntilWrap;
 
-    OT_ASSERT(aInSendBuffer <= mCapacityUsed);
+    Assert(aInSendBuffer <= mCapacityUsed);
     LogDebg("Forward progress: %u bytes in send buffer\n", static_cast<unsigned>(aInSendBuffer));
     bytesRemoved   = mCapacityUsed - aInSendBuffer;
     bytesUntilWrap = mCapacity - mStartIndex;
@@ -205,7 +205,7 @@ size_t TcpCircularSendBuffer::GetIndex(size_t aStart, size_t aOffsetFromStart) c
     size_t bytesUntilWrap;
     size_t index;
 
-    OT_ASSERT(aStart < mCapacity);
+    Assert(aStart < mCapacity);
     bytesUntilWrap = mCapacity - aStart;
     if (aOffsetFromStart < bytesUntilWrap)
     {

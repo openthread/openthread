@@ -111,7 +111,7 @@ exit:
     case kErrorNotFound:
         break;
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 }
 
@@ -269,7 +269,7 @@ void Notifier::HandleCoapResponse(Error aResult)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 }
 

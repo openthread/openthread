@@ -44,7 +44,7 @@ Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
     Error  error;
     size_t readKeyLength;
 
-    OT_ASSERT(IsKeyRef());
+    Assert(IsKeyRef());
 
     SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength));
 

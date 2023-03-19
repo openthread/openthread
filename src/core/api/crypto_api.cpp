@@ -82,7 +82,7 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
 
     if (aHeaderLength != 0)
     {
-        OT_ASSERT(aHeader != nullptr);
+        Assert(aHeader != nullptr);
         aesCcm.Header(aHeader, aHeaderLength);
     }
 

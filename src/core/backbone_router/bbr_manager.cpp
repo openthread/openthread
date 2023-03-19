@@ -253,7 +253,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
                 }
                 break;
             default:
-                OT_ASSERT(false);
+                Assert(false);
             }
 
             if (failed)
@@ -326,7 +326,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     Ip6AddressesTlv   addressesTlv;
     BackboneTmfAgent &backboneTmf = Get<BackboneRouter::BackboneTmfAgent>();
 
-    OT_ASSERT(aAddressNum >= Ip6AddressesTlv::kMinAddresses && aAddressNum <= Ip6AddressesTlv::kMaxAddresses);
+    Assert(aAddressNum >= Ip6AddressesTlv::kMinAddresses && aAddressNum <= Ip6AddressesTlv::kMaxAddresses);
 
     message = backboneTmf.NewNonConfirmablePostMessage(kUriBackboneMlr);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

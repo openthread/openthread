@@ -260,7 +260,7 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDidInitialUpdates(false)
     , mLogTimestampBase(0)
 {
-    OT_ASSERT(mInstance != nullptr);
+    Assert(mInstance != nullptr);
 
     sNcpInstance = this;
 
@@ -1056,7 +1056,7 @@ otError NcpBase::HandleCommandPropertyInsertRemove(uint8_t aHeader, spinel_prop_
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     VerifyOrExit(handler != nullptr, error = PrepareLastStatusResponse(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
@@ -2349,10 +2349,10 @@ exit:
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(void)
 {
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    OT_ASSERT(false);
+    Assert(false);
 #endif
 
-    // We only get to this point if `OT_ASSERT(false)`
+    // We only get to this point if `Assert(false)`
     // does not cause an NCP reset on the platform.
     // In such a case we return `false` as the
     // property value to indicate this.

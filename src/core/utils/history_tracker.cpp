@@ -570,7 +570,7 @@ uint16_t HistoryTracker::List::MapEntryNumberToListIndex(uint16_t aEntryNumber, 
 
     uint32_t index;
 
-    OT_ASSERT(aEntryNumber < mSize);
+    Assert(aEntryNumber < mSize);
 
     index = static_cast<uint32_t>(aEntryNumber) + mStartIndex;
     index -= (index >= aMaxSize) ? aMaxSize : 0;

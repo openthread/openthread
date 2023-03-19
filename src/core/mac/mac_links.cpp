@@ -227,7 +227,7 @@ const KeyMaterial *Links::GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeyS
         }
         else
         {
-            OT_ASSERT(false);
+            Assert(false);
         }
     }
 #endif

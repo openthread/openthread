@@ -186,7 +186,7 @@ void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...)
 
     va_list args;
 
-    OT_ASSERT(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
+    Assert(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
     VerifyOrExit(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
 
     va_start(args, aFormat);

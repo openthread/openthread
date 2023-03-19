@@ -367,7 +367,7 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        OT_ASSERT(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
+        Assert(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
 
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 

@@ -331,8 +331,8 @@ Error Message::ParseHeader(void)
     Error            error = kErrorNone;
     Option::Iterator iterator;
 
-    OT_ASSERT(GetReserved() >=
-              sizeof(HelpData) + static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - GetFirstData())));
+    Assert(GetReserved() >=
+           sizeof(HelpData) + static_cast<size_t>((reinterpret_cast<uint8_t *>(&GetHelpData()) - GetFirstData())));
 
     GetHelpData().Clear();
 
@@ -357,7 +357,7 @@ exit:
 
 Error Message::SetToken(const uint8_t *aToken, uint8_t aTokenLength)
 {
-    OT_ASSERT(aTokenLength <= kMaxTokenLength);
+    Assert(aTokenLength <= kMaxTokenLength);
 
     SetTokenLength(aTokenLength);
     memcpy(GetToken(), aToken, aTokenLength);
@@ -370,7 +370,7 @@ Error Message::GenerateRandomToken(uint8_t aTokenLength)
 {
     uint8_t token[kMaxTokenLength];
 
-    OT_ASSERT(aTokenLength <= sizeof(token));
+    Assert(aTokenLength <= sizeof(token));
 
     IgnoreError(Random::Crypto::FillBuffer(token, aTokenLength));
 

@@ -133,7 +133,7 @@ inline uint8_t RoutePreferenceToValue(int8_t aPref)
     constexpr uint8_t kMedium = 0; // 00
     constexpr uint8_t kLow    = 3; // 11
 
-    OT_ASSERT(IsRoutePreferenceValid(aPref));
+    Assert(IsRoutePreferenceValid(aPref));
 
     return (aPref == 0) ? kMedium : ((aPref > 0) ? kHigh : kLow);
 }

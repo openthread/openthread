@@ -144,7 +144,7 @@ static_assert(38 == kUriMlr, "kUriMlr (`n/mr`) is invalid");
 
 const char *PathForUri(Uri aUri)
 {
-    OT_ASSERT(aUri != kUriUnknown);
+    Assert(aUri != kUriUnknown);
 
     return UriList::kEntries[aUri].mPath;
 }

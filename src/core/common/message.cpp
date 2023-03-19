@@ -100,7 +100,7 @@ exit:
 
 void MessagePool::Free(Message *aMessage)
 {
-    OT_ASSERT(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);
+    Assert(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);
 
     FreeBuffers(static_cast<Buffer *>(aMessage));
 }
@@ -312,14 +312,14 @@ uint8_t Message::GetBufferCount(void) const
 
 void Message::MoveOffset(int aDelta)
 {
-    OT_ASSERT(GetOffset() + aDelta <= GetLength());
+    Assert(GetOffset() + aDelta <= GetLength());
     GetMetadata().mOffset += static_cast<int16_t>(aDelta);
-    OT_ASSERT(GetMetadata().mOffset <= GetLength());
+    Assert(GetMetadata().mOffset <= GetLength());
 }
 
 void Message::SetOffset(uint16_t aOffset)
 {
-    OT_ASSERT(aOffset <= GetLength());
+    Assert(aOffset <= GetLength());
     GetMetadata().mOffset = aOffset;
 }
 
@@ -466,7 +466,7 @@ exit:
 
 void Message::RemoveHeader(uint16_t aLength)
 {
-    OT_ASSERT(aLength <= GetMetadata().mLength);
+    Assert(aLength <= GetMetadata().mLength);
 
     GetMetadata().mReserved += aLength;
     GetMetadata().mLength -= aLength;
@@ -578,7 +578,7 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
     {
         aChunk.SetBuffer(aChunk.GetBuffer()->GetNextBuffer());
 
-        OT_ASSERT(aChunk.GetBuffer() != nullptr);
+        Assert(aChunk.GetBuffer() != nullptr);
 
         if (aOffset < kBufferDataSize)
         {
@@ -610,7 +610,7 @@ void Message::GetNextChunk(uint16_t &aLength, Chunk &aChunk) const
 
     aChunk.SetBuffer(aChunk.GetBuffer()->GetNextBuffer());
 
-    OT_ASSERT(aChunk.GetBuffer() != nullptr);
+    Assert(aChunk.GetBuffer() != nullptr);
 
     aChunk.Init(aChunk.GetBuffer()->GetData(), kBufferDataSize);
 
@@ -695,7 +695,7 @@ void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
     MutableChunk   chunk;
 
-    OT_ASSERT(aOffset + aLength <= GetLength());
+    Assert(aOffset + aLength <= GetLength());
 
     GetFirstChunk(aOffset, aLength, chunk);
 
@@ -829,8 +829,8 @@ void Message::SetPriorityQueue(PriorityQueue *aPriorityQueue)
 
 void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 {
-    OT_ASSERT(!aMessage.IsInAQueue());
-    OT_ASSERT((aMessage.Next() == nullptr) && (aMessage.Prev() == nullptr));
+    Assert(!aMessage.IsInAQueue());
+    Assert((aMessage.Next() == nullptr) && (aMessage.Prev() == nullptr));
 
     aMessage.SetMessageQueue(this);
 
@@ -860,8 +860,8 @@ void MessageQueue::Enqueue(Message &aMessage, QueuePosition aPosition)
 
 void MessageQueue::Dequeue(Message &aMessage)
 {
-    OT_ASSERT(aMessage.GetMessageQueue() == this);
-    OT_ASSERT((aMessage.Next() != nullptr) && (aMessage.Prev() != nullptr));
+    Assert(aMessage.GetMessageQueue() == this);
+    Assert((aMessage.Next() != nullptr) && (aMessage.Prev() != nullptr));
 
     if (&aMessage == GetTail())
     {
@@ -954,7 +954,7 @@ const Message *PriorityQueue::GetHeadForPriority(Message::Priority aPriority) co
     {
         previousTail = FindFirstNonNullTail(static_cast<Message::Priority>(PrevPriority(aPriority)));
 
-        OT_ASSERT(previousTail != nullptr);
+        Assert(previousTail != nullptr);
 
         head = previousTail->Next();
     }
@@ -974,7 +974,7 @@ void PriorityQueue::Enqueue(Message &aMessage)
     Message          *tail;
     Message          *next;
 
-    OT_ASSERT(!aMessage.IsInAQueue());
+    Assert(!aMessage.IsInAQueue());
 
     aMessage.SetPriorityQueue(this);
 
@@ -1005,7 +1005,7 @@ void PriorityQueue::Dequeue(Message &aMessage)
     Message::Priority priority;
     Message          *tail;
 
-    OT_ASSERT(aMessage.GetPriorityQueue() == this);
+    Assert(aMessage.GetPriorityQueue() == this);
 
     priority = aMessage.GetPriority();
 

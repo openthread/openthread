@@ -71,7 +71,7 @@ void AesCcm::Init(uint32_t    aHeaderLength,
     uint8_t        i;
 
     // Tag length must be even and within [kMinTagLength, kMaxTagLength]
-    OT_ASSERT(((aTagLength & 0x1) == 0) && (kMinTagLength <= aTagLength) && (aTagLength <= kMaxTagLength));
+    Assert(((aTagLength & 0x1) == 0) && (kMinTagLength <= aTagLength) && (aTagLength <= kMaxTagLength));
 
     L = 0;
 
@@ -162,7 +162,7 @@ void AesCcm::Header(const void *aHeader, uint32_t aHeaderLength)
 {
     const uint8_t *headerBytes = reinterpret_cast<const uint8_t *>(aHeader);
 
-    OT_ASSERT(mHeaderCur + aHeaderLength <= mHeaderLength);
+    Assert(mHeaderCur + aHeaderLength <= mHeaderLength);
 
     // process header
     for (unsigned i = 0; i < aHeaderLength; i++)
@@ -196,7 +196,7 @@ void AesCcm::Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode
     uint8_t *ciphertextBytes = reinterpret_cast<uint8_t *>(aCipherText);
     uint8_t  byte;
 
-    OT_ASSERT(mPlainTextCur + aLength <= mPlainTextLength);
+    Assert(mPlainTextCur + aLength <= mPlainTextLength);
 
     for (unsigned i = 0; i < aLength; i++)
     {
@@ -267,7 +267,7 @@ void AesCcm::Finalize(void *aTag)
 {
     uint8_t *tagBytes = reinterpret_cast<uint8_t *>(aTag);
 
-    OT_ASSERT(mPlainTextCur == mPlainTextLength);
+    Assert(mPlainTextCur == mPlainTextLength);
 
     mEcb.Encrypt(mCtr, mCtrPad);
 

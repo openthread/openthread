@@ -73,7 +73,7 @@ public:
      */
     bool Get(uint16_t aIndex) const
     {
-        OT_ASSERT(aIndex < N);
+        Assert(aIndex < N);
         return (mMask[aIndex / 8] & (0x80 >> (aIndex % 8))) != 0;
     }
 
@@ -86,7 +86,7 @@ public:
      */
     void Set(uint16_t aIndex, bool aValue)
     {
-        OT_ASSERT(aIndex < N);
+        Assert(aIndex < N);
 
         if (aValue)
         {

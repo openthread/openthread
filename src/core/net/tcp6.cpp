@@ -315,7 +315,7 @@ bool Tcp::Endpoint::IsTimerActive(uint8_t aTimerIndex)
     bool          active = false;
     struct tcpcb *tp     = &GetTcb();
 
-    OT_ASSERT(aTimerIndex < kNumTimers);
+    Assert(aTimerIndex < kNumTimers);
     switch (aTimerIndex)
     {
     case kTimerDelack:
@@ -1096,7 +1096,7 @@ void tcplp_sys_panic(const char *aFormat, ...)
 
     LogCrit("%s", buffer);
 
-    OT_ASSERT(false);
+    Assert(false);
 }
 
 bool tcplp_sys_autobind(otInstance       *aInstance,

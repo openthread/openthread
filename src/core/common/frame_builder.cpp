@@ -133,7 +133,7 @@ Error FrameBuilder::InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t 
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aOffset <= mLength);
+    Assert(aOffset <= mLength);
 
     VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
 

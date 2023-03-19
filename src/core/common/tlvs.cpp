@@ -297,7 +297,7 @@ Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8
     Error error = kErrorNone;
     Tlv   tlv;
 
-    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
+    Assert(aLength <= Tlv::kBaseTlvMaxLength);
 
     tlv.SetType(aType);
     tlv.SetLength(aLength);

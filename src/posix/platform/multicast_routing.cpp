@@ -71,7 +71,7 @@ namespace Posix {
 
 void MulticastRoutingManager::SetUp(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
 
     otBackboneRouterSetMulticastListenerCallback(gInstance,
                                                  &MulticastRoutingManager::HandleBackboneMulticastListenerEvent, this);
@@ -80,7 +80,7 @@ void MulticastRoutingManager::SetUp(void)
 
 void MulticastRoutingManager::TearDown(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
 
     otBackboneRouterSetMulticastListenerCallback(gInstance, nullptr, nullptr);
     Mainloop::Manager::Get().Remove(*this);

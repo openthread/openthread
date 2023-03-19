@@ -475,7 +475,7 @@ OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
     mbedtls_ctr_drbg_init(&sCtrDrbgContext);
 
     int rval = mbedtls_ctr_drbg_seed(&sCtrDrbgContext, mbedtls_entropy_func, &sEntropyContext, nullptr, 0);
-    OT_ASSERT(rval == 0);
+    Assert(rval == 0);
     OT_UNUSED_VARIABLE(rval);
 }
 
@@ -598,7 +598,7 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaSign(const otPlatCryptoEcdsaKeyPair *aKeyP
 #endif
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    OT_ASSERT(mbedtls_mpi_size(&r) <= Ecdsa::P256::kMpiSize);
+    Assert(mbedtls_mpi_size(&r) <= Ecdsa::P256::kMpiSize);
 
     ret = mbedtls_mpi_write_binary(&r, aSignature->m8, Ecdsa::P256::kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
@@ -687,9 +687,9 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
     uint16_t     keyLen       = aKeyLen;
     uint16_t     useLen       = 0;
 
-    OT_ASSERT(aSaltLen <= sizeof(prfInput));
+    Assert(aSaltLen <= sizeof(prfInput));
     memcpy(prfInput, aSalt, aSaltLen);
-    OT_ASSERT(aIterationCounter % 2 == 0);
+    Assert(aIterationCounter % 2 == 0);
     aIterationCounter /= 2;
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION

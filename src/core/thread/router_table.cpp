@@ -164,7 +164,7 @@ Router *RouterTable::Allocate(void)
     VerifyOrExit(selectedRouterId != Mle::kInvalidRouterId);
 
     router = Allocate(selectedRouterId);
-    OT_ASSERT(router != nullptr);
+    Assert(router != nullptr);
 
 exit:
     return router;
@@ -196,7 +196,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     Error   error = kErrorNone;
     Router *router;
 
-    OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
+    Assert(aRouterId <= Mle::kMaxRouterId);
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
 
@@ -532,7 +532,7 @@ void RouterTable::UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::Router
         {
             Router *router = FindRouterById(routerId);
 
-            OT_ASSERT(router != nullptr);
+            Assert(router != nullptr);
             router->SetNextHopToInvalid();
             RemoveRouterLink(*router);
             RemoveRouter(*router);
@@ -787,7 +787,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
             const Router *router = FindRouterById(routerId);
             uint8_t       pathCost;
 
-            OT_ASSERT(router != nullptr);
+            Assert(router != nullptr);
 
             pathCost = GetPathCost(routerRloc16);
 

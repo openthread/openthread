@@ -222,7 +222,7 @@ void Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer) { aTrickleTimer.Get
 
 void Client::HandleTrickleTimer(void)
 {
-    OT_ASSERT(mSocket.IsBound());
+    Assert(mSocket.IsBound());
 
     VerifyOrExit(mIdentityAssociationCurrent != nullptr, mTrickleTimer.Stop());
 

@@ -339,7 +339,7 @@
 /**
  * @def OPENTHREAD_CONFIG_ASSERT_ENABLE
  *
- * Define as 1 to enable assert function `OT_ASSERT()` within OpenThread code and its libraries.
+ * Define as 1 to enable assert function `Assert()` within OpenThread code and its libraries.
  *
  */
 #ifndef OPENTHREAD_CONFIG_ASSERT_ENABLE

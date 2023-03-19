@@ -2777,7 +2777,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MLE_COUNTERS>(vo
     otError              error    = OT_ERROR_NONE;
     const otMleCounters *counters = otThreadGetMleCounters(mInstance);
 
-    OT_ASSERT(counters != nullptr);
+    Assert(counters != nullptr);
 
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDisabledRole));
     SuccessOrExit(error = mEncoder.WriteUint16(counters->mDetachedRole));
@@ -2805,7 +2805,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_ALL_IP_COUNTERS>
     otError             error    = OT_ERROR_NONE;
     const otIpCounters *counters = otThreadGetIp6Counters(mInstance);
 
-    OT_ASSERT(counters != nullptr);
+    Assert(counters != nullptr);
 
     // Encode Tx related counters
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -2835,8 +2835,8 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CNTR_MAC_RETRY_HISTOG
     histogramDirect   = otLinkGetTxDirectRetrySuccessHistogram(mInstance, &histogramDirectEntries);
     histogramIndirect = otLinkGetTxIndirectRetrySuccessHistogram(mInstance, &histogramIndirectEntries);
 
-    OT_ASSERT((histogramDirectEntries == 0) || (histogramDirect != nullptr));
-    OT_ASSERT((histogramIndirectEntries == 0) || (histogramIndirect != nullptr));
+    Assert((histogramDirectEntries == 0) || (histogramDirect != nullptr));
+    Assert((histogramIndirectEntries == 0) || (histogramIndirect != nullptr));
 
     // Encode direct message retries histogram
     SuccessOrExit(error = mEncoder.OpenStruct());
@@ -3777,7 +3777,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_HOST_ADDRE
     uint8_t       hostAddressArrayLength;
 
     hostAddressArray = otSrpClientBuffersGetHostAddressesArray(mInstance, &hostAddressArrayLength);
-    OT_ASSERT(hostAddressArrayLength <= kSrpClientMaxHostAddresses);
+    Assert(hostAddressArrayLength <= kSrpClientMaxHostAddresses);
 
     while (!mDecoder.IsAllReadInStruct())
     {

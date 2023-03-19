@@ -175,7 +175,7 @@ const char *SettingsBase::KeyToString(Key aKey)
 
     static_assert(kLastKey == kKeyBrOnLinkPrefixes, "kLastKey is not valid");
 
-    OT_ASSERT(aKey <= kLastKey);
+    Assert(aKey <= kLastKey);
 
     return kKeyStrings[aKey];
 }

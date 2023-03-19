@@ -271,7 +271,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         case kChildRemoved:
         case kChildModeChanged:
 #if OPENTHREAD_FTD
-            OT_ASSERT(Get<ChildTable>().Contains(aNeighbor));
+            Assert(Get<ChildTable>().Contains(aNeighbor));
             static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<const Child &>(aNeighbor));
 #endif
             break;

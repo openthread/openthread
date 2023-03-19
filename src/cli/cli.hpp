@@ -135,7 +135,7 @@ public:
      */
     static Interpreter &GetInterpreter(void)
     {
-        OT_ASSERT(sInterpreter != nullptr);
+        Assert(sInterpreter != nullptr);
 
         return *sInterpreter;
     }

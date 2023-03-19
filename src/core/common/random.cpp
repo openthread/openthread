@@ -48,7 +48,7 @@ Manager::Manager(void)
 {
     uint32_t seed;
 
-    OT_ASSERT(sInitCount < 0xffff);
+    Assert(sInitCount < 0xffff);
 
     VerifyOrExit(sInitCount == 0);
 
@@ -67,7 +67,7 @@ exit:
 
 Manager::~Manager(void)
 {
-    OT_ASSERT(sInitCount > 0);
+    Assert(sInitCount > 0);
 
     sInitCount--;
     VerifyOrExit(sInitCount == 0);
@@ -82,7 +82,7 @@ exit:
 
 uint32_t Manager::NonCryptoGetUint32(void)
 {
-    OT_ASSERT(sInitCount > 0);
+    Assert(sInitCount > 0);
 
     return sPrng.GetNext();
 }
@@ -131,20 +131,20 @@ namespace NonCrypto {
 
 uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax)
 {
-    OT_ASSERT(aMax > aMin);
+    Assert(aMax > aMin);
 
     return (aMin + (GetUint8() % (aMax - aMin)));
 }
 
 uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax)
 {
-    OT_ASSERT(aMax > aMin);
+    Assert(aMax > aMin);
     return (aMin + (GetUint16() % (aMax - aMin)));
 }
 
 uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax)
 {
-    OT_ASSERT(aMax > aMin);
+    Assert(aMax > aMin);
     return (aMin + (GetUint32() % (aMax - aMin)));
 }
 

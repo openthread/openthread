@@ -491,7 +491,7 @@ MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
+    Assert(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 
@@ -504,7 +504,7 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
+    Assert(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 

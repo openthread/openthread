@@ -785,7 +785,7 @@ Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags
     }
 
     server = NetworkDataTlv::Find<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
-    OT_ASSERT(server != nullptr);
+    Assert(server != nullptr);
 
     SuccessOrExit(error = AddServer(*server, *dstService, aChangedFlags));
 

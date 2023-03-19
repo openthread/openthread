@@ -82,7 +82,7 @@ void SecurityPolicy::SetToDefaultFlags(void)
 
 void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
 {
-    OT_ASSERT(aFlagsLength > 0);
+    Assert(aFlagsLength > 0);
 
     SetToDefaultFlags();
 
@@ -105,7 +105,7 @@ exit:
 
 void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
 {
-    OT_ASSERT(aFlagsLength > 0);
+    Assert(aFlagsLength > 0);
 
     memset(aFlags, 0, aFlagsLength);
 
@@ -521,7 +521,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
         size_t keyLen;
 
         SuccessOrAssert(Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
-        OT_ASSERT(keyLen == NetworkKey::kSize);
+        Assert(keyLen == NetworkKey::kSize);
     }
     else
     {
@@ -540,7 +540,7 @@ void KeyManager::GetPskc(Pskc &aPskc) const
         size_t keyLen;
 
         SuccessOrAssert(Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
-        OT_ASSERT(keyLen == Pskc::kSize);
+        Assert(keyLen == Pskc::kSize);
     }
     else
     {

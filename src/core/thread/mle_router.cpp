@@ -218,7 +218,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 exit:
@@ -259,7 +259,7 @@ Error MleRouter::BecomeLeader(void)
     SetLeaderData(partitionId, mLeaderWeight, leaderId);
 
     router = mRouterTable.Allocate(leaderId);
-    OT_ASSERT(router != nullptr);
+    Assert(router != nullptr);
 
     SetRouterId(leaderId);
     router->SetExtAddress(Get<Mac::Mac>().GetExtAddress());
@@ -491,7 +491,7 @@ void MleRouter::SendAdvertisement(void)
 
     case kRoleDisabled:
     case kRoleDetached:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     destination.SetToLinkLocalAllNodesMulticast();
@@ -548,7 +548,7 @@ Error MleRouter::SendLinkRequest(Neighbor *aNeighbor)
         break;
 
     case kRoleDisabled:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -945,7 +945,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             {
                 SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
                 router = mRouterTable.FindRouterById(routerId);
-                OT_ASSERT(router != nullptr);
+                Assert(router != nullptr);
             }
 
             mRouterTable.UpdateRoutes(routeTlv, routerId);
@@ -966,7 +966,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         break;
 
     case kRoleDisabled:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     // finish link synchronization
@@ -1577,7 +1577,7 @@ void MleRouter::HandleTimeTick(void)
         break;
 
     case kRoleDisabled:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     // update children state
@@ -1600,7 +1600,7 @@ void MleRouter::HandleTimeTick(void)
 
         case Neighbor::kStateParentResponse:
         case Neighbor::kStateLinkRequest:
-            OT_ASSERT(false);
+            Assert(false);
         }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -1809,7 +1809,7 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     // Retrieve registered multicast addresses of the Child
     if (aChild.HasAnyMlrRegisteredAddress())
     {
-        OT_ASSERT(aChild.IsStateValid());
+        Assert(aChild.IsStateValid());
 
         for (const Ip6::Address &childAddress :
              aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
@@ -2154,7 +2154,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     case kRoleDisabled:
     case kRoleDetached:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
 exit:
@@ -3135,7 +3135,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         case Tlv::kLinkMetricsReport:
-            OT_ASSERT(aRequestMessage != nullptr);
+            Assert(aRequestMessage != nullptr);
             neighbor = mNeighborTable.FindNeighbor(aDestination);
             VerifyOrExit(neighbor != nullptr, error = kErrorInvalidState);
             SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().AppendReport(*message, *aRequestMessage, *neighbor));
@@ -3220,7 +3220,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (!IsActiveRouter(aNeighbor.GetRloc16()))
     {
-        OT_ASSERT(mChildTable.Contains(aNeighbor));
+        Assert(mChildTable.Contains(aNeighbor));
 
         if (aNeighbor.IsStateValidOrRestoring())
         {
@@ -3239,7 +3239,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     }
     else if (aNeighbor.IsStateValid())
     {
-        OT_ASSERT(mRouterTable.Contains(aNeighbor));
+        Assert(mRouterTable.Contains(aNeighbor));
 
         mNeighborTable.Signal(NeighborTable::kRouterRemoved, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
@@ -3484,7 +3484,7 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
     {
         Router *leader = mRouterTable.GetLeader();
 
-        OT_ASSERT(leader != nullptr);
+        Assert(leader != nullptr);
         leader->SetNextHopAndCost(RouterIdFromRloc16(mParent.GetRloc16()), mParent.GetLeaderCost());
     }
 

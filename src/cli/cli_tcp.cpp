@@ -590,7 +590,7 @@ void TcpExample::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
 void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
 {
     OT_UNUSED_VARIABLE(aEndpoint);
-    OT_ASSERT(!mUseCircularSendBuffer); // this callback is not used when using the circular send buffer
+    Assert(!mUseCircularSendBuffer); // this callback is not used when using the circular send buffer
 
     if (mBenchmarkBytesTotal == 0)
     {
@@ -598,14 +598,14 @@ void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aDa
         // tolerate some benchmark links finishing in this case.
         if (aData == &mSendLink)
         {
-            OT_ASSERT(mSendBusy);
+            Assert(mSendBusy);
             mSendBusy = false;
         }
     }
     else
     {
-        OT_ASSERT(aData != &mSendLink);
-        OT_ASSERT(mBenchmarkBytesUnsent >= aData->mLength);
+        Assert(aData != &mSendLink);
+        Assert(mBenchmarkBytesUnsent >= aData->mLength);
         mBenchmarkBytesUnsent -= aData->mLength; // could be less than sizeof(mSendBufferBytes) for the first link
         if (mBenchmarkBytesUnsent >= OT_ARRAY_LENGTH(mBenchmarkLinks) * sizeof(mSendBufferBytes))
         {
@@ -627,7 +627,7 @@ void TcpExample::HandleTcpForwardProgress(otTcpEndpoint *aEndpoint, size_t aInSe
 {
     OT_UNUSED_VARIABLE(aEndpoint);
     OT_UNUSED_VARIABLE(aBacklog);
-    OT_ASSERT(mUseCircularSendBuffer); // this callback is only used when using the circular send buffer
+    Assert(mUseCircularSendBuffer); // this callback is only used when using the circular send buffer
 
     otTcpCircularSendBufferHandleForwardProgress(&mSendBuffer, aInSendBuffer);
 
@@ -660,7 +660,7 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
                                            size_t         aBytesRemaining)
 {
     OT_UNUSED_VARIABLE(aBytesRemaining);
-    OT_ASSERT(aEndpoint == &mEndpoint);
+    Assert(aEndpoint == &mEndpoint);
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls && ContinueTLSHandshake())
@@ -706,7 +706,7 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
                            static_cast<unsigned>(data->mLength), reinterpret_cast<const char *>(data->mData));
                 totalReceived += data->mLength;
             }
-            OT_ASSERT(aBytesAvailable == totalReceived);
+            Assert(aBytesAvailable == totalReceived);
             IgnoreReturnValue(otTcpCommitReceive(aEndpoint, totalReceived, 0));
         }
     }
@@ -832,7 +832,7 @@ otError TcpExample::ContinueBenchmarkCircularSend(void)
             if (rv > 0)
             {
                 written = static_cast<size_t>(rv);
-                OT_ASSERT(written <= mBenchmarkBytesUnsent);
+                Assert(written <= mBenchmarkBytesUnsent);
             }
             else if (rv != MBEDTLS_ERR_SSL_WANT_WRITE && rv != MBEDTLS_ERR_SSL_WANT_READ)
             {

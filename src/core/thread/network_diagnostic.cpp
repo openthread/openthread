@@ -111,7 +111,7 @@ Error NetworkDiagnostic::SendCommand(Uri                   aUri,
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

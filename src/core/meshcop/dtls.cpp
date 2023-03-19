@@ -285,7 +285,7 @@ Error Dtls::Setup(bool aClient)
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
 #endif
 
-    OT_ASSERT(mCipherSuites[1] == 0);
+    Assert(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
     if (mCipherSuites[0] == MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8)
     {
@@ -480,11 +480,11 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
                           const uint8_t *aPrivateKey,
                           uint32_t       aPrivateKeyLength)
 {
-    OT_ASSERT(aX509CertLength > 0);
-    OT_ASSERT(aX509Certificate != nullptr);
+    Assert(aX509CertLength > 0);
+    Assert(aX509Certificate != nullptr);
 
-    OT_ASSERT(aPrivateKeyLength > 0);
-    OT_ASSERT(aPrivateKey != nullptr);
+    Assert(aPrivateKeyLength > 0);
+    Assert(aPrivateKey != nullptr);
 
     mOwnCertSrc       = aX509Certificate;
     mOwnCertLength    = aX509CertLength;
@@ -497,8 +497,8 @@ void Dtls::SetCertificate(const uint8_t *aX509Certificate,
 
 void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength)
 {
-    OT_ASSERT(aX509CaCertChainLength > 0);
-    OT_ASSERT(aX509CaCertificateChain != nullptr);
+    Assert(aX509CaCertChainLength > 0);
+    Assert(aX509CaCertificateChain != nullptr);
 
     mCaChainSrc    = aX509CaCertificateChain;
     mCaChainLength = aX509CaCertChainLength;
@@ -509,10 +509,10 @@ void Dtls::SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength)
 {
-    OT_ASSERT(aPsk != nullptr);
-    OT_ASSERT(aPskIdentity != nullptr);
-    OT_ASSERT(aPskLength > 0);
-    OT_ASSERT(aPskIdLength > 0);
+    Assert(aPsk != nullptr);
+    Assert(aPskIdentity != nullptr);
+    Assert(aPskLength > 0);
+    Assert(aPskIdLength > 0);
 
     mPreSharedKey         = aPsk;
     mPreSharedKeyLength   = aPskLength;
@@ -847,7 +847,7 @@ void Dtls::HandleTimer(void)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(break);
     }
 }

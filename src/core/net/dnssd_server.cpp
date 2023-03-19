@@ -350,7 +350,7 @@ Error Server::AppendQuestion(const char       *aName,
         SuccessOrExit(error = AppendHostName(aMessage, aName, aCompressInfo));
         break;
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     error = aMessage.Append(aQuestion);
@@ -505,7 +505,7 @@ Error Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompr
         NameComponentsOffsetInfo nameComponentsInfo;
 
         IgnoreError(FindNameComponents(aName, aCompressInfo.GetDomainName(), nameComponentsInfo));
-        OT_ASSERT(nameComponentsInfo.IsServiceInstanceName());
+        Assert(nameComponentsInfo.IsServiceInstanceName());
 
         aCompressInfo.SetInstanceNameOffset(aMessage.GetLength());
 
@@ -1060,8 +1060,8 @@ void Server::AnswerQuery(QueryTransaction                 &aQuery,
             {
                 const Ip6::Address &address = AsCoreType(&aInstanceInfo.mAddresses[i]);
 
-                OT_ASSERT(!address.IsUnspecified() && !address.IsLinkLocal() && !address.IsMulticast() &&
-                          !address.IsLoopback());
+                Assert(!address.IsUnspecified() && !address.IsLinkLocal() && !address.IsMulticast() &&
+                       !address.IsLoopback());
 
                 SuccessOrExit(error = AppendAaaaRecord(responseMessage, aInstanceInfo.mHostName, address,
                                                        aInstanceInfo.mTtl, compressInfo));
@@ -1088,8 +1088,8 @@ void Server::AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, co
         {
             const Ip6::Address &address = AsCoreType(&aHostInfo.mAddresses[i]);
 
-            OT_ASSERT(!address.IsUnspecified() && !address.IsMulticast() && !address.IsLinkLocal() &&
-                      !address.IsLoopback());
+            Assert(!address.IsUnspecified() && !address.IsMulticast() && !address.IsLinkLocal() &&
+                   !address.IsLoopback());
 
             SuccessOrExit(error =
                               AppendAaaaRecord(responseMessage, aHostFullName, address, aHostInfo.mTtl, compressInfo));
@@ -1106,7 +1106,7 @@ void Server::SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
                                otDnssdQueryUnsubscribeCallback aUnsubscribe,
                                void                           *aContext)
 {
-    OT_ASSERT((aSubscribe == nullptr) == (aUnsubscribe == nullptr));
+    Assert((aSubscribe == nullptr) == (aUnsubscribe == nullptr));
 
     mQuerySubscribe       = aSubscribe;
     mQueryUnsubscribe     = aUnsubscribe;
@@ -1116,9 +1116,9 @@ void Server::SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
 void Server::HandleDiscoveredServiceInstance(const char                       *aServiceFullName,
                                              const otDnssdServiceInstanceInfo &aInstanceInfo)
 {
-    OT_ASSERT(StringEndsWith(aServiceFullName, Name::kLabelSeperatorChar));
-    OT_ASSERT(StringEndsWith(aInstanceInfo.mFullName, Name::kLabelSeperatorChar));
-    OT_ASSERT(StringEndsWith(aInstanceInfo.mHostName, Name::kLabelSeperatorChar));
+    Assert(StringEndsWith(aServiceFullName, Name::kLabelSeperatorChar));
+    Assert(StringEndsWith(aInstanceInfo.mFullName, Name::kLabelSeperatorChar));
+    Assert(StringEndsWith(aInstanceInfo.mHostName, Name::kLabelSeperatorChar));
 
     for (QueryTransaction &query : mQueryTransactions)
     {
@@ -1131,7 +1131,7 @@ void Server::HandleDiscoveredServiceInstance(const char                       *a
 
 void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo)
 {
-    OT_ASSERT(StringEndsWith(aHostFullName, Name::kLabelSeperatorChar));
+    Assert(StringEndsWith(aHostFullName, Name::kLabelSeperatorChar));
 
     for (QueryTransaction &query : mQueryTransactions)
     {
@@ -1169,7 +1169,7 @@ Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, cha
 {
     const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
 
-    OT_ASSERT(query->IsValid());
+    Assert(query->IsValid());
     return GetQueryTypeAndName(query->GetResponseHeader(), query->GetResponseMessage(), aName);
 }
 
@@ -1320,11 +1320,11 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
     char         name[Name::kMaxNameSize];
     DnsQueryType sdType;
 
-    OT_ASSERT(mQueryUnsubscribe != nullptr);
+    Assert(mQueryUnsubscribe != nullptr);
 
     sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
 
-    OT_ASSERT(sdType != kDnsQueryNone);
+    Assert(sdType != kDnsQueryNone);
     OT_UNUSED_VARIABLE(sdType);
 
     mQueryUnsubscribe(mQueryCallbackContext, name);
@@ -1337,7 +1337,7 @@ void Server::QueryTransaction::Init(const Header           &aResponseHeader,
                                     const Ip6::MessageInfo &aMessageInfo,
                                     Instance               &aInstance)
 {
-    OT_ASSERT(mResponseMessage == nullptr);
+    Assert(mResponseMessage == nullptr);
 
     InstanceLocatorInit::Init(aInstance);
     mResponseHeader  = aResponseHeader;
@@ -1349,7 +1349,7 @@ void Server::QueryTransaction::Init(const Header           &aResponseHeader,
 
 void Server::QueryTransaction::Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket)
 {
-    OT_ASSERT(mResponseMessage != nullptr);
+    Assert(mResponseMessage != nullptr);
 
     Get<Server>().SendResponse(mResponseHeader, aResponseMessage, *mResponseMessage, mMessageInfo, aSocket);
     mResponseMessage = nullptr;

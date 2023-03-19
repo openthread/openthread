@@ -96,7 +96,7 @@ void AnycastLocator::HandleResponse(Coap::Message *aMessage, const Ip6::MessageI
     Ip6::Address        meshLocalAddress;
 
     SuccessOrExit(aError);
-    OT_ASSERT(aMessage != nullptr);
+    Assert(aMessage != nullptr);
 
     meshLocalAddress.SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
     SuccessOrExit(Tlv::Find<ThreadMeshLocalEidTlv>(*aMessage, meshLocalAddress.GetIid()));

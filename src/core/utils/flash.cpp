@@ -185,7 +185,7 @@ Error Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aVa
     record.Init(aKey, aFirst);
     record.SetData(aValue, aValueLength);
 
-    OT_ASSERT((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
+    Assert((mSwapSize - record.GetSize()) >= kSwapMarkerSize);
 
     if ((mSwapSize - record.GetSize()) < mSwapUsed)
     {

@@ -262,7 +262,7 @@ void Frame::SetDstPanId(PanId aPanId)
 {
     uint8_t index = FindDstPanIdIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
     WriteUint16(aPanId, &mPsdu[index]);
 }
 
@@ -296,7 +296,7 @@ exit:
 
 void Frame::SetDstAddr(ShortAddress aShortAddress)
 {
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
+    Assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
     WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
 }
 
@@ -304,8 +304,8 @@ void Frame::SetDstAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindDstAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
-    OT_ASSERT(index != kInvalidIndex);
+    Assert((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrExt);
+    Assert(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
 }
@@ -323,7 +323,7 @@ void Frame::SetDstAddr(const Address &aAddress)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(break);
     }
 }
@@ -467,8 +467,8 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
-    OT_ASSERT(index != kInvalidIndex);
+    Assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
+    Assert(index != kInvalidIndex);
 
     WriteUint16(aShortAddress, &mPsdu[index]);
 }
@@ -477,8 +477,8 @@ void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
 {
     uint8_t index = FindSrcAddrIndex();
 
-    OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
-    OT_ASSERT(index != kInvalidIndex);
+    Assert((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt);
+    Assert(index != kInvalidIndex);
 
     aExtAddress.CopyTo(&mPsdu[index], ExtAddress::kReverseByteOrder);
 }
@@ -496,7 +496,7 @@ void Frame::SetSrcAddr(const Address &aAddress)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 }
 
@@ -517,7 +517,7 @@ void Frame::SetSecurityControlField(uint8_t aSecurityControlField)
 {
     uint8_t index = FindSecurityHeaderIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
 
     mPsdu[index] = aSecurityControlField;
 }
@@ -580,7 +580,7 @@ void Frame::SetFrameCounter(uint32_t aFrameCounter)
 {
     uint8_t index = FindSecurityHeaderIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
 
     // Security Control
     index += kSecurityControlSize;
@@ -594,7 +594,7 @@ const uint8_t *Frame::GetKeySource(void) const
 {
     uint8_t index = FindSecurityHeaderIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
 
     return &mPsdu[index + kSecurityControlSize + kFrameCounterSize];
 }
@@ -630,7 +630,7 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     uint8_t keySourceLength;
     uint8_t index = FindSecurityHeaderIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
 
     keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
 
@@ -658,7 +658,7 @@ void Frame::SetKeyId(uint8_t aKeyId)
     uint8_t keySourceLength;
     uint8_t index = FindSecurityHeaderIndex();
 
-    OT_ASSERT(index != kInvalidIndex);
+    Assert(index != kInvalidIndex);
 
     keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
 
@@ -1092,7 +1092,7 @@ void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 {
     uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
 
-    OT_ASSERT(cur != nullptr);
+    Assert(cur != nullptr);
 
     memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
 }
@@ -1369,13 +1369,13 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const
     // Set header IE
     if (aIeLength > 0)
     {
-        OT_ASSERT(aIeData != nullptr);
+        Assert(aIeData != nullptr);
         memcpy(&mPsdu[FindHeaderIeIndex()], aIeData, aIeLength);
     }
 
     // Set frame length
     footerLength = GetFooterLength();
-    OT_ASSERT(footerLength != kInvalidIndex);
+    Assert(footerLength != kInvalidIndex);
     mLength = SkipSecurityHeaderIndex() + aIeLength + footerLength;
 
 exit:

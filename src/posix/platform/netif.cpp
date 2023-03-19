@@ -1888,7 +1888,7 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 
 void platformNetifSetUp(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    Assert(gInstance != nullptr);
 
     otIp6SetReceiveFilterEnabled(gInstance, true);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE

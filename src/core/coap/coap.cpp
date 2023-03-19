@@ -233,7 +233,7 @@ Error CoapBase::SendMessage(Message                &aMessage,
         mResponsesQueue.EnqueueResponse(aMessage, aMessageInfo, aTxParameters);
         break;
     case kTypeReset:
-        OT_ASSERT(aMessage.GetCode() == kCodeEmpty);
+        Assert(aMessage.GetCode() == kCodeEmpty);
         break;
     default:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -1445,7 +1445,7 @@ void CoapBase::Metadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    OT_ASSERT(length >= sizeof(*this));
+    Assert(length >= sizeof(*this));
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
@@ -1596,7 +1596,7 @@ void ResponsesQueue::ResponseMetadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    OT_ASSERT(length >= sizeof(*this));
+    Assert(length >= sizeof(*this));
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 

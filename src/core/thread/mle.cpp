@@ -1339,7 +1339,7 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 
     Error error = kErrorNone;
 
-    OT_ASSERT(mAttachState == kAttachStateParentRequest);
+    Assert(mAttachState == kAttachStateParentRequest);
 
     aType = kToRoutersAndReeds;
 
@@ -2078,7 +2078,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     case kRoleDisabled:
     case kRoleRouter:
     case kRoleLeader:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     if (!IsFullThreadDevice())
@@ -2487,7 +2487,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
             if ((frameCounter + 1) == neighbor->GetMleFrameCounter())
             {
-                OT_ASSERT(aMessage.IsRadioTypeSet());
+                Assert(aMessage.IsRadioTypeSet());
                 Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ true);
 
                 // We intentionally exit without setting the error to
@@ -2515,7 +2515,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if (neighbor != nullptr)
     {
-        OT_ASSERT(aMessage.IsRadioTypeSet());
+        Assert(aMessage.IsRadioTypeSet());
         Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ false);
     }
 #endif
@@ -3547,7 +3547,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     // Status
@@ -3640,7 +3640,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         break;
 
     default:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
@@ -3796,7 +3796,7 @@ void Mle::ProcessAnnounce(void)
     uint8_t  newChannel = mAlternateChannel;
     uint16_t newPanId   = mAlternatePanId;
 
-    OT_ASSERT(mAttachState == kAttachStateProcessAnnounce);
+    Assert(mAttachState == kAttachStateProcessAnnounce);
 
     LogNote("Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
 
@@ -4310,7 +4310,7 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
 
     VerifyOrExit(!IsDetachingGracefully(), error = kErrorBusy);
 
-    OT_ASSERT(!mDetachGracefullyCallback.IsSet());
+    Assert(!mDetachGracefullyCallback.IsSet());
 
     mDetachGracefullyCallback.Set(aCallback, aContext);
 
@@ -4396,7 +4396,7 @@ void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
 {
     uint16_t length = aMessage.GetLength();
 
-    OT_ASSERT(length >= sizeof(*this));
+    Assert(length >= sizeof(*this));
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 

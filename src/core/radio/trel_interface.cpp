@@ -65,7 +65,7 @@ Interface::Interface(Instance &aInstance)
 
 void Interface::Init(void)
 {
-    OT_ASSERT(!mInitialized);
+    Assert(!mInitialized);
 
     mInitialized = true;
 

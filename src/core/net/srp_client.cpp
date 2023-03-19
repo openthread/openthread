@@ -948,13 +948,13 @@ Error Client::AppendServiceInstructions(Message &aMessage, Info &aInfo)
         {
         case kAdding:
         case kRefreshing:
-            OT_ASSERT((mLease == kUnspecifiedInterval) || (mLease == lease));
+            Assert((mLease == kUnspecifiedInterval) || (mLease == lease));
             mLease = lease;
 
             OT_FALL_THROUGH;
 
         case kRemoving:
-            OT_ASSERT((mKeyLease == kUnspecifiedInterval) || (mKeyLease == keyLease));
+            Assert((mKeyLease == kUnspecifiedInterval) || (mKeyLease == keyLease));
             mKeyLease = keyLease;
             break;
 

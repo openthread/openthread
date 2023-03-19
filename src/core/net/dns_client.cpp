@@ -1225,7 +1225,7 @@ void Client::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
 {
     OT_UNUSED_VARIABLE(aEndpoint);
     OT_UNUSED_VARIABLE(aData);
-    OT_ASSERT(mTcpState == kTcpConnectedSending);
+    Assert(mTcpState == kTcpConnectedSending);
 
     mSendLink.mLength = 0;
     mTcpState         = kTcpConnectedIdle;

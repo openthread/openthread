@@ -53,7 +53,7 @@
 #define FILE_NAME __FILE__
 #endif
 
-#define OT_ASSERT(cond)                            \
+#define Assert(cond)                               \
     do                                             \
     {                                              \
         if (!(cond))                               \
@@ -69,32 +69,32 @@
 
 #include <assert.h>
 
-#define OT_ASSERT(cond) assert(cond)
+#define Assert(cond) assert(cond)
 
 #else // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
-#define OT_ASSERT(cond) \
-    do                  \
-    {                   \
-        if (!(cond))    \
-        {               \
-            while (1)   \
-            {           \
-            }           \
-        }               \
+#define Assert(cond)  \
+    do                \
+    {                 \
+        if (!(cond))  \
+        {             \
+            while (1) \
+            {         \
+            }         \
+        }             \
     } while (0)
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_ASSERT_MANAGEMENT
 
 #else // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
-#define OT_ASSERT(cond)
+#define Assert(cond)
 
 #endif // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
 /**
  * This macro checks a given status (which is expected to be successful) against zero (0) which indicates success,
- * and `OT_ASSERT()` if it is not.
+ * and `Assert()` if it is not.
  *
  * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  *
@@ -104,7 +104,7 @@
     {                            \
         if ((aStatus) != 0)      \
         {                        \
-            OT_ASSERT(false);    \
+            Assert(false);       \
         }                        \
     } while (false)
 
@@ -118,7 +118,7 @@
  *
  */
 #if OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
-#define AssertPointerIsNotNull(aPointer) OT_ASSERT((aPointer) != nullptr)
+#define AssertPointerIsNotNull(aPointer) Assert((aPointer) != nullptr)
 #else
 #define AssertPointerIsNotNull(aPointer)
 #endif

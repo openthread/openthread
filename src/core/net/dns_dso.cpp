@@ -95,7 +95,7 @@ Dso::Connection::Connection(Instance            &aInstance,
     , mInactivity(aInactivityTimeout)
     , mKeepAlive(aKeepAliveInterval)
 {
-    OT_ASSERT(aKeepAliveInterval >= kMinKeepAliveInterval);
+    Assert(aKeepAliveInterval >= kMinKeepAliveInterval);
     Init(/* aIsServer */ false);
 }
 
@@ -160,7 +160,7 @@ Message *Dso::Connection::NewMessage(void)
 
 void Dso::Connection::Connect(void)
 {
-    OT_ASSERT(mState == kStateDisconnected);
+    Assert(mState == kStateDisconnected);
 
     Init(/* aIsServer */ false);
     Get<Dso>().mClientConnections.Push(*this);
@@ -170,7 +170,7 @@ void Dso::Connection::Connect(void)
 
 void Dso::Connection::Accept(void)
 {
-    OT_ASSERT(mState == kStateDisconnected);
+    Assert(mState == kStateDisconnected);
 
     Init(/* aIsServer */ true);
     Get<Dso>().mServerConnections.Push(*this);
@@ -194,7 +194,7 @@ void Dso::Connection::MarkAsConnecting(void)
 
 void Dso::Connection::HandleConnected(void)
 {
-    OT_ASSERT(mState == kStateConnecting);
+    Assert(mState == kStateConnecting);
 
     SetState(kStateConnectedButSessionless);
     ResetTimeouts(/* aIsKeepAliveMessage */ false);
@@ -271,7 +271,7 @@ void Dso::Connection::MarkSessionEstablished(void)
 
     case kStateDisconnected:
     case kStateConnecting:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     SetState(kStateSessionEstablished);
@@ -329,14 +329,14 @@ Error Dso::Connection::SendRetryDelayMessage(uint32_t aDelay, Dns::Header::Respo
     switch (mState)
     {
     case kStateSessionEstablished:
-        OT_ASSERT(IsServer());
+        Assert(IsServer());
         break;
 
     case kStateConnectedButSessionless:
     case kStateEstablishingSession:
     case kStateDisconnected:
     case kStateConnecting:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     message = NewMessage();
@@ -423,7 +423,7 @@ Error Dso::Connection::SendKeepAliveMessage(MessageType aMessageType, MessageId 
         {
             // While session is being established, server is only allowed
             // to send a Keep Alive response to a request from client.
-            OT_ASSERT(aMessageType == kResponseMessage);
+            Assert(aMessageType == kResponseMessage);
         }
         break;
 
@@ -432,7 +432,7 @@ Error Dso::Connection::SendKeepAliveMessage(MessageType aMessageType, MessageId 
 
     case kStateDisconnected:
     case kStateConnecting:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     // Server can send Keep Alive response (to a request from client)
@@ -443,16 +443,16 @@ Error Dso::Connection::SendKeepAliveMessage(MessageType aMessageType, MessageId 
     {
         if (aMessageType == kResponseMessage)
         {
-            OT_ASSERT(aResponseId != 0);
+            Assert(aResponseId != 0);
         }
         else
         {
-            OT_ASSERT(aMessageType == kUnidirectionalMessage);
+            Assert(aMessageType == kUnidirectionalMessage);
         }
     }
     else
     {
-        OT_ASSERT(aMessageType == kRequestMessage);
+        Assert(aMessageType == kRequestMessage);
     }
 
     message = NewMessage();
@@ -496,8 +496,8 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
         // To establish session, client MUST send a request message.
         // Server is not allowed to send any messages. Unidirectional
         // messages are not allowed before session is established.
-        OT_ASSERT(IsClient());
-        OT_ASSERT(aMessageType == kRequestMessage);
+        Assert(IsClient());
+        Assert(aMessageType == kRequestMessage);
         break;
 
     case kStateEstablishingSession:
@@ -506,11 +506,11 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
         // send response.
         if (IsClient())
         {
-            OT_ASSERT(aMessageType == kRequestMessage);
+            Assert(aMessageType == kRequestMessage);
         }
         else
         {
-            OT_ASSERT(aMessageType == kResponseMessage);
+            Assert(aMessageType == kResponseMessage);
         }
         break;
 
@@ -520,7 +520,7 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
 
     case kStateDisconnected:
     case kStateConnecting:
-        OT_ASSERT(false);
+        Assert(false);
     }
 
     // A DSO request or unidirectional message MUST contain at
@@ -539,7 +539,7 @@ Error Dso::Connection::SendMessage(Message              &aMessage,
         break;
     case kRequestMessage:
     case kUnidirectionalMessage:
-        OT_ASSERT(primaryTlvType != Tlv::kReservedType);
+        Assert(primaryTlvType != Tlv::kReservedType);
     }
 
     // `header` is cleared from its constructor call so all fields
@@ -1142,7 +1142,7 @@ uint32_t Dso::Connection::CalculateServerInactivityWaitTime(void) const
     // (`kMinServerInactivityWaitTime`) or twice the inactivity
     // timeout value, whichever is greater [RFC 8490 - 6.4.1].
 
-    OT_ASSERT(mInactivity.IsUsed());
+    Assert(mInactivity.IsUsed());
 
     return Max(mInactivity.GetInterval() * 2, kMinServerInactivityWaitTime);
 }

@@ -110,7 +110,7 @@ bool MlrManager::IsAddressMlrRegisteredByNetif(const Ip6::Address &aAddress) con
 {
     bool ret = false;
 
-    OT_ASSERT(aAddress.IsMulticastLargerThanRealmLocal());
+    Assert(aAddress.IsMulticastLargerThanRealmLocal());
 
     for (const Ip6::Netif::ExternalMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
     {
@@ -132,7 +132,7 @@ bool MlrManager::IsAddressMlrRegisteredByAnyChildExcept(const Ip6::Address &aAdd
 {
     bool ret = false;
 
-    OT_ASSERT(aAddress.IsMulticastLargerThanRealmLocal());
+    Assert(aAddress.IsMulticastLargerThanRealmLocal());
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
@@ -191,7 +191,7 @@ exit:
 
 void MlrManager::ScheduleSend(uint16_t aDelay)
 {
-    OT_ASSERT(!mMlrPending || mSendDelay == 0);
+    Assert(!mMlrPending || mSendDelay == 0);
 
     VerifyOrExit(!mMlrPending);
 
@@ -414,7 +414,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address   
         SuccessOrExit(error = Tlv::Append<ThreadTimeoutTlv>(*message, *aTimeout));
     }
 #else
-    OT_ASSERT(aTimeout == nullptr);
+    Assert(aTimeout == nullptr);
 #endif
 
     if (!mle.IsFullThreadDevice() && mle.GetParent().IsThreadVersion1p1())
@@ -556,7 +556,7 @@ void MlrManager::FinishMulticastListenerRegistration(bool                aSucces
                                                      const Ip6::Address *aFailedAddresses,
                                                      uint8_t             aFailedAddressNum)
 {
-    OT_ASSERT(mMlrPending);
+    Assert(mMlrPending);
 
     mMlrPending = false;
 
@@ -768,7 +768,7 @@ void MlrManager::CheckInvariants(void) const
 #if OPENTHREAD_EXAMPLES_SIMULATION && OPENTHREAD_CONFIG_ASSERT_ENABLE
     uint16_t registeringNum = 0;
 
-    OT_ASSERT(!mMlrPending || mSendDelay == 0);
+    Assert(!mMlrPending || mSendDelay == 0);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
     for (Ip6::Netif::ExternalMulticastAddress &addr :
@@ -787,7 +787,7 @@ void MlrManager::CheckInvariants(void) const
     }
 #endif
 
-    OT_ASSERT(registeringNum == 0 || mMlrPending);
+    Assert(registeringNum == 0 || mMlrPending);
 #endif // OPENTHREAD_EXAMPLES_SIMULATION
 }
 

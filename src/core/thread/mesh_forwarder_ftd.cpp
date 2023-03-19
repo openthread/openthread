@@ -125,7 +125,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
     case Message::kTypeSupervision:
     {
         Child *child = Get<ChildSupervisor>().GetDestination(aMessage);
-        OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
+        Assert((child != nullptr) && !child->IsRxOnWhenIdle());
         mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
@@ -356,7 +356,7 @@ void MeshForwarder::SendMesh(Message &aMessage, Mac::TxFrame &aFrame)
                       Mac::Frame::kKeyIdMode1, &aMessage);
 
     // write payload
-    OT_ASSERT(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
+    Assert(aMessage.GetLength() <= aFrame.GetMaxPayloadLength());
     aMessage.ReadBytes(0, aFrame.GetPayload(), aMessage.GetLength());
     aFrame.SetPayloadLength(aMessage.GetLength());
 
@@ -456,7 +456,7 @@ Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, u
                 }
                 break;
             default:
-                OT_ASSERT(false);
+                Assert(false);
                 break;
             }
 

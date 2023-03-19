@@ -152,7 +152,7 @@ uint8_t *Buffer::GetUpdatedBufPtr(uint8_t *aBufPtr, uint16_t aOffset, Direction 
         break;
 
     case kUnknown:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(break);
     }
 
@@ -195,7 +195,7 @@ uint16_t Buffer::GetDistance(const uint8_t *aStartPtr, const uint8_t *aEndPtr, D
         break;
 
     case kUnknown:
-        OT_ASSERT(false);
+        Assert(false);
         OT_UNREACHABLE_CODE(break);
     }
 
@@ -226,7 +226,7 @@ otError Buffer::InFrameAppend(uint8_t aByte)
     otError  error = OT_ERROR_NONE;
     uint8_t *newTail;
 
-    OT_ASSERT(mWriteDirection != kUnknown);
+    Assert(mWriteDirection != kUnknown);
 
     newTail = GetUpdatedBufPtr(mWriteSegmentTail, 1, mWriteDirection);
 
@@ -831,7 +831,7 @@ otError Buffer::OutFrameRemove(void)
 
         // If this assert fails, it is a likely indicator that the internal structure of the NCP buffer has been
         // corrupted.
-        OT_ASSERT(numSegments <= kMaxSegments);
+        Assert(numSegments <= kMaxSegments);
     }
 
     mReadFrameStart[mReadDirection] = bufPtr;
@@ -934,7 +934,7 @@ uint16_t Buffer::OutFrameGetLength(void)
 
         // If this assert fails, it is a likely indicator that the internal structure of the NCP buffer has been
         // corrupted.
-        OT_ASSERT(numSegments <= kMaxSegments);
+        Assert(numSegments <= kMaxSegments);
     }
 
     // Remember the calculated frame length for current active frame.
