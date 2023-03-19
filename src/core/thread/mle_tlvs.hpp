@@ -38,6 +38,7 @@
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/preference.hpp"
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
@@ -946,10 +947,6 @@ public:
 private:
     static constexpr uint8_t kFlagsParentPriorityOffset = 6;
     static constexpr uint8_t kFlagsParentPriorityMask   = (3 << kFlagsParentPriorityOffset);
-
-    static constexpr uint8_t kFlagsPriorityHigh   = 1 << kFlagsParentPriorityOffset; // (01)  1
-    static constexpr uint8_t kFlagsPriorityMedium = 0 << kFlagsParentPriorityOffset; // (00)  0
-    static constexpr uint8_t kFlagsPriorityLow    = 3 << kFlagsParentPriorityOffset; // (11) -1
 
     uint8_t  mFlags;
     uint8_t  mLinkQuality3;

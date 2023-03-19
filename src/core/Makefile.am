@@ -199,6 +199,7 @@ SOURCES_COMMON                                  = \
     common/log.cpp                                \
     common/message.cpp                            \
     common/notifier.cpp                           \
+    common/preference.cpp                         \
     common/random.cpp                             \
     common/settings.cpp                           \
     common/string.cpp                             \
@@ -472,6 +473,7 @@ HEADERS_COMMON                                  = \
     common/owned_ptr.hpp                          \
     common/owning_list.hpp                        \
     common/pool.hpp                               \
+    common/preference.hpp                         \
     common/ptr_wrapper.hpp                        \
     common/random.hpp                             \
     common/retain_ptr.hpp                         \
