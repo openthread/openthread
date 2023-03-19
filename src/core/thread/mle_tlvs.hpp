@@ -776,10 +776,7 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const
-    {
-        return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset;
-    }
+    int8_t GetParentPriority(void) const;
 
     /**
      * This method sets the Parent Priority value.
@@ -787,10 +784,7 @@ public:
      * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    void SetParentPriority(int8_t aParentPriority)
-    {
-        mParentPriority = (static_cast<uint8_t>(aParentPriority) << kParentPriorityOffset) & kParentPriorityMask;
-    }
+    void SetParentPriority(int8_t aParentPriority);
 
     /**
      * This method returns the Link Quality 3 value.
@@ -950,10 +944,14 @@ public:
     void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
 
 private:
-    static constexpr uint8_t kParentPriorityOffset = 6;
-    static constexpr uint8_t kParentPriorityMask   = 3 << kParentPriorityOffset;
+    static constexpr uint8_t kFlagsParentPriorityOffset = 6;
+    static constexpr uint8_t kFlagsParentPriorityMask   = (3 << kFlagsParentPriorityOffset);
 
-    uint8_t  mParentPriority;
+    static constexpr uint8_t kFlagsPriorityHigh   = 1 << kFlagsParentPriorityOffset; // (01)  1
+    static constexpr uint8_t kFlagsPriorityMedium = 0 << kFlagsParentPriorityOffset; // (00)  0
+    static constexpr uint8_t kFlagsPriorityLow    = 3 << kFlagsParentPriorityOffset; // (11) -1
+
+    uint8_t  mFlags;
     uint8_t  mLinkQuality3;
     uint8_t  mLinkQuality2;
     uint8_t  mLinkQuality1;
