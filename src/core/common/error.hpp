@@ -90,6 +90,7 @@ constexpr Error kErrorInvalidCommand             = OT_ERROR_INVALID_COMMAND;
 constexpr Error kErrorPending                    = OT_ERROR_PENDING;
 constexpr Error kErrorRejected                   = OT_ERROR_REJECTED;
 constexpr Error kErrorGeneric                    = OT_ERROR_GENERIC;
+constexpr Error kErrorCoexGrantTimeout           = OT_ERROR_COEX_GRANT_TIMEOUT;
 
 constexpr uint8_t kNumErrors = OT_NUM_ERRORS;
 

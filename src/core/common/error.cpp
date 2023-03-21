@@ -79,6 +79,7 @@ const char *ErrorToString(Error aError)
         "InvalidCommand",             // (35) kErrorInvalidCommand
         "Pending",                    // (36) kErrorPending
         "Rejected",                   // (37) kErrorRejected
+        "CoexGrantTimeout",           // (38) kErrorCoexGrantTimeout
     };
 
     return aError < GetArrayLength(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";

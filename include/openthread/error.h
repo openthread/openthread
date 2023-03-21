@@ -240,6 +240,11 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_REJECTED = 37,
 
     /**
+     * A transmission could not take place due to coex grant timeout.
+     */
+    OT_ERROR_COEX_GRANT_TIMEOUT = 38,
+
+    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,
