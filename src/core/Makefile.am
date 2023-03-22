@@ -520,6 +520,7 @@ HEADERS_COMMON                                  = \
     config/mle.h                                  \
     config/nat64.h                                \
     config/netdata_publisher.h                    \
+    config/network_diagnostic.h                   \
     config/openthread-core-config-check.h         \
     config/parent_search.h                        \
     config/ping_sender.h                          \

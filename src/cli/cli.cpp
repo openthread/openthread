@@ -1255,24 +1255,18 @@ exit:
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
+/**
+ * @cli domainname
+ * @code
+ * domainname
+ * Thread
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetDomainName
+ */
 template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli domainname
-     * @code
-     * domainname
-     * Thread
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otThreadGetDomainName
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputLine("%s", otThreadGetDomainName(GetInstancePtr()));
-    }
     /**
      * @cli domainname (set)
      * @code
@@ -1284,13 +1278,7 @@ template <> otError Interpreter::Process<Cmd("domainname")>(Arg aArgs[])
      * @par api_copy
      * #otThreadSetDomainName
      */
-    else
-    {
-        SuccessOrExit(error = otThreadSetDomainName(GetInstancePtr(), aArgs[0].GetCString()));
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgs, otThreadGetDomainName, otThreadSetDomainName);
 }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -5521,24 +5509,18 @@ exit:
 }
 #endif
 
+/**
+ * @cli networkname
+ * @code
+ * networkname
+ * OpenThread
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetNetworkName
+ */
 template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli networkname
-     * @code
-     * networkname
-     * OpenThread
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otThreadGetNetworkName
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputLine("%s", otThreadGetNetworkName(GetInstancePtr()));
-    }
     /**
      * @cli networkname (name)
      * @code
@@ -5551,13 +5533,7 @@ template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
      * @par
      * Note: The current commissioning credential becomes stale after changing this value. Use `pskc` to reset.
      */
-    else
-    {
-        SuccessOrExit(error = otThreadSetNetworkName(GetInstancePtr(), aArgs[0].GetCString()));
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgs, otThreadGetNetworkName, otThreadSetNetworkName);
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -7965,7 +7941,106 @@ exit:
 }
 #endif
 
+template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
+{
+    Error error = OT_ERROR_INVALID_ARGS;
+
+    /**
+     * @cli vendor name
+     * @code
+     * vendor name
+     * nest
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVendorName
+     */
+    if (aArgs[0] == "name")
+    {
+        aArgs++;
+
+#if !OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+        error = ProcessGet(aArgs, otThreadGetVendorName);
+#else
+        /**
+         * @cli vendor name (name)
+         * @code
+         * vendor name nest
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadSetVendorName
+         * @cparam vendor name @ca{name}
+         */
+        error = ProcessGetSet(aArgs, otThreadGetVendorName, otThreadSetVendorName);
+#endif
+    }
+    /**
+     * @cli vendor model
+     * @code
+     * vendor model
+     * Hub Max
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVendorModel
+     */
+    else if (aArgs[0] == "model")
+    {
+        aArgs++;
+
+#if !OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+        error = ProcessGet(aArgs, otThreadGetVendorModel);
+#else
+        /**
+         * @cli vendor model (name)
+         * @code
+         * vendor model Hub\ Max
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadSetVendorModel
+         * @cparam vendor model @ca{name}
+         */
+        error = ProcessGetSet(aArgs, otThreadGetVendorModel, otThreadSetVendorModel);
+#endif
+    }
+    /**
+     * @cli vendor swversion
+     * @code
+     * vendor swversion
+     * Marble3.5.1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVendorSwVersion
+     */
+    else if (aArgs[0] == "swversion")
+    {
+        aArgs++;
+
+#if !OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+        error = ProcessGet(aArgs, otThreadGetVendorSwVersion);
+#else
+        /**
+         * @cli vendor swversion (version)
+         * @code
+         * vendor swversion Marble3.5.1
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadSetVendorSwVersion
+         * @cparam vendor swversion @ca{version}
+         */
+        error = ProcessGetSet(aArgs, otThreadGetVendorSwVersion, otThreadSetVendorSwVersion);
+#endif
+    }
+
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
 template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
@@ -8110,6 +8185,20 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
             OutputLine("Max Child Timeout: %lu", ToUlong(diagTlv.mData.mMaxChildTimeout));
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME:
+            OutputLine("Vendor Name: %s", diagTlv.mData.mVendorName);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL:
+            OutputLine("Vendor Model: %s", diagTlv.mData.mVendorModel);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION:
+            OutputLine("Vendor SW Version: %s", diagTlv.mData.mVendorSwVersion);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION:
+            OutputLine("Thread Stack Version: %s", diagTlv.mData.mThreadStackVersion);
+            break;
+        default:
             break;
         }
     }
@@ -8502,6 +8591,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("unsecureport"),
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
         CmdEntry("uptime"),
+#endif
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+        CmdEntry("vendor"),
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),

@@ -566,6 +566,43 @@
  */
 #define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+ *
+ * Specifies the default Vendor Name string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "OpenThread by Google Nest"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+ *
+ * Specifies the default Vendor Model string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL "Toranj Simulation"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+ *
+ * Specifies the default Vendor SW Version string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "OT-simul-toranj"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+ *
+ * Define as 1 to add APIs to allow Vendor Name, Model, SW Version to change at run-time.
+ */
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE OPENTHREAD_FTD
+
 #if OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE

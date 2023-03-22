@@ -214,6 +214,9 @@ class Node(object):
     def get_state(self):
         return self._cli_single_output('state', expected_outputs=['detached', 'child', 'router', 'leader', 'disabled'])
 
+    def get_version(self):
+        return self._cli_single_output('version')
+
     def get_channel(self):
         return self._cli_single_output('channel')
 
@@ -356,6 +359,24 @@ class Node(object):
 
     def get_eidcache(self):
         return self.cli('eidcache')
+
+    def get_vendor_name(self):
+        return self._cli_single_output('vendor name')
+
+    def set_vendor_name(self, name):
+        self._cli_no_output('vendor name', name)
+
+    def get_vendor_model(self):
+        return self._cli_single_output('vendor model')
+
+    def set_vendor_model(self, model):
+        self._cli_no_output('vendor model', model)
+
+    def get_vendor_sw_version(self):
+        return self._cli_single_output('vendor swversion')
+
+    def set_vendor_sw_version(self, version):
+        return self._cli_no_output('vendor swversion', version)
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata

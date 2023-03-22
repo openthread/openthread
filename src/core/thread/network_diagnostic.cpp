@@ -56,13 +56,64 @@ RegisterLogModule("NetDiag");
 
 namespace NetworkDiagnostic {
 
+const char Server::kVendorName[]      = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
+const char Server::kVendorModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
+const char Server::kVendorSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
+
 //---------------------------------------------------------------------------------------------------------------------
 // Server
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
+    static_assert(sizeof(kVendorName) <= sizeof(VendorNameTlv::StringType), "VENDOR_NAME is too long");
+    static_assert(sizeof(kVendorModel) <= sizeof(VendorModelTlv::StringType), "VENDOR_MODEL is too long");
+    static_assert(sizeof(kVendorSwVersion) <= sizeof(VendorSwVersionTlv::StringType), "VENDOR_SW_VERSION is too long");
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+    memcpy(mVendorName, kVendorName, sizeof(kVendorName));
+    memcpy(mVendorModel, kVendorModel, sizeof(kVendorModel));
+    memcpy(mVendorSwVersion, kVendorSwVersion, sizeof(kVendorSwVersion));
+#endif
 }
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
+Error Server::SetVendorName(const char *aVendorName)
+{
+    return SetVendorString(mVendorName, sizeof(mVendorName), aVendorName);
+}
+
+Error Server::SetVendorModel(const char *aVendorModel)
+{
+    return SetVendorString(mVendorModel, sizeof(mVendorModel), aVendorModel);
+}
+
+Error Server::SetVendorSwVersion(const char *aVendorSwVersion)
+{
+    return SetVendorString(mVendorSwVersion, sizeof(mVendorSwVersion), aVendorSwVersion);
+}
+
+Error Server::SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString)
+{
+    Error    error = kErrorInvalidArgs;
+    uint16_t length;
+
+    VerifyOrExit(aSrcString != nullptr);
+
+    length = StringLength(aSrcString, kMaxSize);
+    VerifyOrExit(length < kMaxSize);
+
+    VerifyOrExit(IsValidUtf8String(aSrcString));
+
+    memcpy(aDestString, aSrcString, length + 1);
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
 {
@@ -265,6 +316,22 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kMacCounters:
         error = AppendMacCounters(aMessage);
+        break;
+
+    case Tlv::kVendorName:
+        error = Tlv::Append<VendorNameTlv>(aMessage, GetVendorName());
+        break;
+
+    case Tlv::kVendorModel:
+        error = Tlv::Append<VendorModelTlv>(aMessage, GetVendorModel());
+        break;
+
+    case Tlv::kVendorSwVersion:
+        error = Tlv::Append<VendorSwVersionTlv>(aMessage, GetVendorSwVersion());
+        break;
+
+    case Tlv::kThreadStackVersion:
+        error = Tlv::Append<ThreadStackVersionTlv>(aMessage, otGetVersionString());
         break;
 
     case Tlv::kChannelPages:
@@ -759,6 +826,23 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kVersion:
             SuccessOrExit(error = Tlv::Read<VersionTlv>(aMessage, offset, aTlvInfo.mData.mVersion));
+            break;
+
+        case Tlv::kVendorName:
+            SuccessOrExit(error = Tlv::Read<VendorNameTlv>(aMessage, offset, aTlvInfo.mData.mVendorName));
+            break;
+
+        case Tlv::kVendorModel:
+            SuccessOrExit(error = Tlv::Read<VendorModelTlv>(aMessage, offset, aTlvInfo.mData.mVendorModel));
+            break;
+
+        case Tlv::kVendorSwVersion:
+            SuccessOrExit(error = Tlv::Read<VendorSwVersionTlv>(aMessage, offset, aTlvInfo.mData.mVendorSwVersion));
+            break;
+
+        case Tlv::kThreadStackVersion:
+            SuccessOrExit(error =
+                              Tlv::Read<ThreadStackVersionTlv>(aMessage, offset, aTlvInfo.mData.mThreadStackVersion));
             break;
 
         default:
