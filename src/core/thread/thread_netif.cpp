@@ -118,24 +118,4 @@ exit:
     return;
 }
 
-Error ThreadNetif::SendMessage(Message &aMessage) { return Get<MeshForwarder>().SendMessage(aMessage); }
-
-Error ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination)
-{
-    Error    error;
-    uint16_t rloc;
-
-    SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, rloc));
-
-    if (rloc == Get<Mle::MleRouter>().GetRloc16())
-    {
-        error = kErrorNoRoute;
-    }
-
-exit:
-    return error;
-}
-
-bool ThreadNetif::IsOnMesh(const Ip6::Address &aAddress) const { return Get<NetworkData::Leader>().IsOnMesh(aAddress); }
-
 } // namespace ot

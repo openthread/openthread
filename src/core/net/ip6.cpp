@@ -1192,7 +1192,7 @@ start:
                 forwardThread = true;
 #endif
             }
-            else if (Get<ThreadNetif>().RouteLookup(header.GetSource(), header.GetDestination()) == kErrorNone)
+            else if (RouteLookup(header.GetSource(), header.GetDestination()) == kErrorNone)
             {
                 forwardThread = true;
             }
@@ -1310,7 +1310,7 @@ start:
 #endif
 
         // `SendMessage()` takes custody of message in the success case
-        SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
+        SuccessOrExit(error = Get<MeshForwarder>().SendMessage(aMessage));
         shouldFreeMessage = false;
     }
 
@@ -1442,23 +1442,39 @@ exit:
 
 bool Ip6::IsOnLink(const Address &aAddress) const
 {
-    bool rval = false;
+    bool isOnLink = false;
 
-    if (Get<ThreadNetif>().IsOnMesh(aAddress))
+    if (Get<NetworkData::Leader>().IsOnMesh(aAddress))
     {
-        ExitNow(rval = true);
+        ExitNow(isOnLink = true);
     }
 
-    for (const Netif::UnicastAddress &cur : Get<ThreadNetif>().GetUnicastAddresses())
+    for (const Netif::UnicastAddress &unicastAddr : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (cur.GetAddress().PrefixMatch(aAddress) >= cur.mPrefixLength)
+        if (unicastAddr.GetAddress().PrefixMatch(aAddress) >= unicastAddr.mPrefixLength)
         {
-            ExitNow(rval = true);
+            ExitNow(isOnLink = true);
         }
     }
 
 exit:
-    return rval;
+    return isOnLink;
+}
+
+Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) const
+{
+    Error    error;
+    uint16_t rloc;
+
+    SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, rloc));
+
+    if (rloc == Get<Mle::Mle>().GetRloc16())
+    {
+        error = kErrorNoRoute;
+    }
+
+exit:
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE

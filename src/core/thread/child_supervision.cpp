@@ -83,7 +83,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
     SuccessOrExit(message->Append(childIndex));
 
-    SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
+    SuccessOrExit(Get<MeshForwarder>().SendMessage(*message));
     message = nullptr;
 
     LogInfo("Sending supervision message to child 0x%04x", aChild.GetRloc16());
