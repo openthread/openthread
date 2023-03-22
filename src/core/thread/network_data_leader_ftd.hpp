@@ -234,7 +234,7 @@ private:
         void     HandleTimer(void);
 
     private:
-        static constexpr uint32_t kReuseDelay = 48 * 60 * 60; // in seconds
+        static constexpr uint32_t kReuseDelay = 5 * 60; // 5 minutes (in seconds).
 
         static constexpr uint8_t kMinId = 1;
         static constexpr uint8_t kMaxId = 15;

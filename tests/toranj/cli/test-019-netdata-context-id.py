@@ -74,10 +74,14 @@ verify(r3.get_state() == 'router')
 # -----------------------------------------------------------------------------------------------------------------------
 # Test Implementation
 
-# Change the reuse delay on `r1 (leader) to 5 seconds.
+# Check the default reuse delay on `r1` to be 5 minutes.
 
-r1.cli('contextreusedelay 5')
-verify(int(r1.cli('contextreusedelay')[0]) == 5)
+verify(int(r1.get_context_reuse_delay()) == 5 * 60)
+
+# Change the reuse delay on `r1` (leader) to 5 seconds.
+
+r1.set_context_reuse_delay(5)
+verify(int(r1.get_context_reuse_delay()) == 5)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Add an on-mesh prefix from each router `r1`, r2`, and `r3`.
