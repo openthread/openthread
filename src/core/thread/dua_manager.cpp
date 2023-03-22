@@ -345,7 +345,12 @@ void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State
 
     if (aState == BackboneRouter::Leader::kStateAdded || aState == BackboneRouter::Leader::kStateToTriggerRereg)
     {
-        UpdateReregistrationDelay();
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+        if (Get<Mle::Mle>().IsFullThreadDevice() || Get<Mle::Mle>().GetParent().IsThreadVersion1p1())
+#endif
+        {
+            UpdateReregistrationDelay();
+        }
     }
 }
 
