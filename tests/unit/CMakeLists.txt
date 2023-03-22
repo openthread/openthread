@@ -665,6 +665,27 @@ target_link_libraries(ot-test-message-queue
 
 add_test(NAME ot-test-message-queue COMMAND ot-test-message-queue)
 
+add_executable(ot-test-mle
+    test_mle.cpp
+)
+
+target_include_directories(ot-test-mle
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-mle
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-mle
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-mle COMMAND ot-test-mle)
+
 add_executable(ot-test-multicast-listeners-table
     test_multicast_listeners_table.cpp
 )

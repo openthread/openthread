@@ -78,6 +78,19 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY
+ *
+ * Specifies the default device power supply config. This config MUST use values from `otPowerSupply` enumeration.
+ *
+ * Device manufacturer can use this config to set the power supply config used by the device. This is then used as part
+ * of default `otDeviceProperties` to determine the Leader Weight used by the device.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY
+#define OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY OT_POWER_SUPPLY_EXTERNAL
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
  *
  * Define to 1 to enable ECDSA support.

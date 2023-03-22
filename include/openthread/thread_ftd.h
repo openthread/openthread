@@ -197,6 +197,59 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
+ * This enumeration represents the power supply property on a device.
+ *
+ * This is used as a property in `otDeviceProperties` to calculate the leader weight.
+ *
+ */
+typedef enum
+{
+    OT_POWER_SUPPLY_BATTERY           = 0, ///< Battery powered.
+    OT_POWER_SUPPLY_EXTERNAL          = 1, ///< Externally powered (mains-powered).
+    OT_POWER_SUPPLY_EXTERNAL_STABLE   = 2, ///< Stable external power with a battery backup or UPS.
+    OT_POWER_SUPPLY_EXTERNAL_UNSTABLE = 3, ///< Potentially unstable ext power (e.g. light bulb powered via a switch).
+} otPowerSupply;
+
+/**
+ * This structure represents the device properties which are used for calculating the local leader weight on a
+ * device.
+ *
+ * The parameters are set based on device's capability, whether acting as border router, its power supply config, etc.
+ *
+ * `mIsUnstable` indicates operational stability of device and is determined via a vendor specific mechanism. It can
+ * include the following cases:
+ *  - Device internally detects that it loses external power supply more often than usual. What is usual is
+ *    determined by the vendor.
+ *  - Device internally detects that it reboots more often than usual. What is usual is determined by the vendor.
+ *
+ */
+typedef struct otDeviceProperties
+{
+    otPowerSupply mPowerSupply;            ///< Power supply config.
+    bool          mIsBorderRouter : 1;     ///< Whether device is a border router.
+    bool          mSupportsCcm : 1;        ///< Whether device supports CCM (can act as a CCM border router).
+    bool          mIsUnstable : 1;         ///< Operational stability of device (vendor specific).
+    int8_t        mLeaderWeightAdjustment; ///< Weight adjustment. Should be -16 to +16 (clamped otherwise).
+} otDeviceProperties;
+
+/**
+ * Get the current device properties.
+ *
+ * @returns The device properties `otDeviceProperties`.
+ *
+ */
+const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance);
+
+/**
+ * Set the device properties which are then used to determine and set the Leader Weight.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDeviceProperties   The device properties.
+ *
+ */
+void otThreadSetDeviceProperties(otInstance *aInstance, const otDeviceProperties *aDeviceProperties);
+
+/**
  * Gets the Thread Leader Weight used when operating in the Leader role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -204,12 +257,16 @@ otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
  * @returns The Thread Leader Weight value.
  *
  * @sa otThreadSetLeaderWeight
+ * @sa otThreadSetDeviceProperties
  *
  */
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
 /**
  * Sets the Thread Leader Weight used when operating in the Leader role.
+ *
+ * This function directly sets the Leader Weight to the new value, replacing its previous value (which may have been
+ * determined from the current `otDeviceProperties`).
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aWeight   The Thread Leader Weight value.
