@@ -469,7 +469,7 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
     if (aEntryAge >= kMaxAge)
     {
-        writer.Append("more than %u days", kMaxAge / Time::kOneDayInMsec);
+        writer.Append("more than %u days", static_cast<uint16_t>(kMaxAge / Time::kOneDayInMsec));
     }
     else
     {
@@ -477,14 +477,14 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
         if (days > 0)
         {
-            writer.Append("%u day%s ", days, (days == 1) ? "" : "s");
+            writer.Append("%lu day%s ", ToUlong(days), (days == 1) ? "" : "s");
             aEntryAge -= days * Time::kOneDayInMsec;
         }
 
-        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / Time::kOneHourInMsec),
-                      (aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec,
-                      (aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec,
-                      (aEntryAge % Time::kOneSecondInMsec));
+        writer.Append("%02u:%02u:%02u.%03u", static_cast<uint16_t>(aEntryAge / Time::kOneHourInMsec),
+                      static_cast<uint16_t>((aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec),
+                      static_cast<uint16_t>((aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec),
+                      static_cast<uint16_t>(aEntryAge % Time::kOneSecondInMsec));
     }
 }
 
