@@ -1207,7 +1207,7 @@ public:
     /**
      * This method returns the timestamp when the frame was received.
      * If CSL or TIME_SYNC is enabled, the timestamp marks the frame detection time: the end of the last symbol of SFD.
-     * If CSL and TIME_SYNC are both not enabled, it may also mark the end of the last symbol of the frame.
+     * If neither CSL nor TIME_SYNC are enabled, it may also mark the end of the last symbol of the frame.
      *
      * @returns The timestamp when the frame was received, in microseconds.
      *
