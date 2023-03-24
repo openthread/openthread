@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,71 +28,30 @@
 
 /**
  * @file
- *   This file implements function for generating and processing MLE TLVs.
+ *   This file implements methods for a signed preference value and its 2-bit unsigned representation.
+ *
  */
 
-#include "mle_tlvs.hpp"
-
-#include "common/code_utils.hpp"
+#include "preference.hpp"
 
 namespace ot {
-namespace Mle {
 
-#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+uint8_t Preference::To2BitUint(int8_t aPrf) { return (aPrf == 0) ? k2BitMedium : ((aPrf > 0) ? k2BitHigh : k2BitLow); }
 
-void RouteTlv::Init(void)
+int8_t Preference::From2BitUint(uint8_t a2BitUint)
 {
-    SetType(kRoute);
-    SetLength(sizeof(*this) - sizeof(Tlv));
-    mRouterIdMask.Clear();
-    memset(mRouteData, 0, sizeof(mRouteData));
+    static const int8_t kPreferences[] = {
+        /* 0 (00)  -> */ kMedium,
+        /* 1 (01)  -> */ kHigh,
+        /* 2 (10)  -> */ kMedium, // Per RFC-4191, the reserved value (10) MUST be treated as (00)
+        /* 3 (11)  -> */ kLow,
+    };
+
+    return kPreferences[a2BitUint & k2BitMask];
 }
 
-bool RouteTlv::IsValid(void) const
-{
-    bool    isValid = false;
-    uint8_t numAllocatedIds;
+bool Preference::IsValid(int8_t aPrf) { return (aPrf == kHigh) || (aPrf == kMedium) || (aPrf == kLow); }
 
-    VerifyOrExit(GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask));
+const char *Preference::ToString(int8_t aPrf) { return (aPrf == 0) ? "medium" : ((aPrf > 0) ? "high" : "low"); }
 
-    numAllocatedIds = mRouterIdMask.GetNumberOfAllocatedIds();
-    VerifyOrExit(numAllocatedIds <= Mle::kMaxRouters);
-
-    isValid = (GetRouteDataLength() >= numAllocatedIds);
-
-exit:
-    return isValid;
-}
-
-#endif // #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-
-void ConnectivityTlv::IncrementLinkQuality(LinkQuality aLinkQuality)
-{
-    switch (aLinkQuality)
-    {
-    case kLinkQuality0:
-        break;
-    case kLinkQuality1:
-        mLinkQuality1++;
-        break;
-    case kLinkQuality2:
-        mLinkQuality2++;
-        break;
-    case kLinkQuality3:
-        mLinkQuality3++;
-        break;
-    }
-}
-
-int8_t ConnectivityTlv::GetParentPriority(void) const
-{
-    return Preference::From2BitUint(mFlags >> kFlagsParentPriorityOffset);
-}
-
-void ConnectivityTlv::SetParentPriority(int8_t aParentPriority)
-{
-    mFlags = static_cast<uint8_t>(Preference::To2BitUint(aParentPriority) << kFlagsParentPriorityOffset);
-}
-
-} // namespace Mle
 } // namespace ot

@@ -155,13 +155,16 @@ main()
     case "${platform}" in
         posix)
             local_options+=(
+                "-DOT_TCP=OFF"
                 "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
                 "-DOT_POSIX_MAX_POWER_TABLE=ON"
             )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         simulation)
-            local_options=("-DOT_LINK_RAW=ON")
+            local_options=("-DOT_LINK_RAW=ON"
+                "-DOT_DNS_CLIENT_OVER_TCP=ON"
+            )
             options+=("${OT_POSIX_SIM_COMMON_OPTIONS[@]}" "${local_options[@]}")
             ;;
         *)

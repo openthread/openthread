@@ -61,6 +61,10 @@
 
 #endif
 
+#if !OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+#error "OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE requires OPENTHREAD_CONFIG_TCP_ENABLE"
+#endif
+
 /**
  * This struct represents an opaque (and empty) type for a response to an address resolution DNS query.
  *
@@ -136,10 +140,21 @@ public:
         enum Nat64Mode : uint8_t
         {
             kNat64Unspecified = OT_DNS_NAT64_UNSPECIFIED, ///< NAT64 mode is not specified. Use default NAT64 mode.
-            kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation
+            kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation.
             kNat64Disallow    = OT_DNS_NAT64_DISALLOW,    ///< Disallow NAT64 address translation.
         };
 #endif
+
+        /**
+         * This enumeration type represents the DNS transport protocol selection.
+         *
+         */
+        enum TransportProto : uint8_t
+        {
+            kDnsTransportUnspecified = OT_DNS_TRANSPORT_UNSPECIFIED, /// Dns transport is unspecified.
+            kDnsTransportUdp         = OT_DNS_TRANSPORT_UDP,         /// Dns query should be sent via UDP.
+            kDnsTransportTcp         = OT_DNS_TRANSPORT_TCP,         /// Dns query should be sent via TCP.
+        };
 
         /**
          * This is the default constructor for `QueryConfig` object.
@@ -192,6 +207,14 @@ public:
         Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
 
+        /**
+         * This method gets the transport protocol.
+         *
+         * @returns The transport protocol.
+         *
+         */
+        TransportProto GetTransportProto(void) const { return static_cast<TransportProto>(mTransportProto); };
+
     private:
         static constexpr uint32_t kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT;
         static constexpr uint16_t kDefaultServerPort      = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT;
@@ -219,7 +242,10 @@ public:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
 #endif
-
+        void SetTransportProto(TransportProto aTransportProto)
+        {
+            mTransportProto = static_cast<otDnsTransportProto>(aTransportProto);
+        }
         void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
     };
 
@@ -699,6 +725,16 @@ private:
 #endif
     };
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    enum TcpState : uint8_t
+    {
+        kTcpUninitialized = 0,
+        kTcpConecting,
+        kTcpConnectedIdle,
+        kTcpConnectedSending,
+    };
+#endif
+
     union Callback
     {
         AddressCallback mAddressCallback;
@@ -734,7 +770,7 @@ private:
     Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
-    void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
+    Error       SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
     static void GetCallback(const Query &aQuery, Callback &aCallback, void *&aContext);
@@ -744,6 +780,31 @@ private:
     void        ProcessResponse(const Message &aMessage);
     Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);
     void        HandleTimer(void);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
+    static void HandleTcpSendDoneCallback(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    static void HandleTcpDisconnectedCallback(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+    static void HandleTcpReceiveAvailableCallback(otTcpEndpoint *aEndpoint,
+                                                  size_t         aBytesAvailable,
+                                                  bool           aEndOfStream,
+                                                  size_t         aBytesRemaining);
+
+    void  HandleTcpEstablished(otTcpEndpoint *aEndpoint);
+    void  HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    void  HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+    void  HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
+                                    size_t         aBytesAvailable,
+                                    bool           aEndOfStream,
+                                    size_t         aBytesRemaining);
+    Error InitTcpSocket(void);
+    Error ReadFromLinkBuffer(const otLinkedBuffer *&aLinkedBuffer,
+                             size_t                &aOffset,
+                             Message               &aMessage,
+                             uint16_t               aLength);
+    void  PrepareTcpMessage(Message &aMessage);
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
 #endif
@@ -763,12 +824,25 @@ private:
     static const uint16_t kServiceQueryRecordTypes[];
 #endif
 
+    static constexpr uint16_t kUdpQueryMaxSize = 512;
+
     using RetryTimer = TimerMilliIn<Client, &Client::HandleTimer>;
 
     Ip6::Udp::Socket mSocket;
-    QueryList        mQueries;
-    RetryTimer       mTimer;
-    QueryConfig      mDefaultConfig;
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    Ip6::Tcp::Endpoint mEndpoint;
+
+    otLinkedBuffer mSendLink;
+    uint8_t        mSendBufferBytes[OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE];
+    uint8_t        mReceiveBufferBytes[OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE];
+
+    TcpState mTcpState;
+#endif
+
+    QueryList   mQueries;
+    RetryTimer  mTimer;
+    QueryConfig mDefaultConfig;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     bool mUserDidSetDefaultAddress;
 #endif

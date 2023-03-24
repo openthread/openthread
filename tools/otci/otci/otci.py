@@ -1570,7 +1570,16 @@ class OTCI(object):
                 routes_output.append(line)
 
         netdata['routes'] = self.__parse_routes(routes_output)
-        netdata['services'] = self.__parse_services(output)
+
+        services_output = []
+        while True:
+            line = output.pop(0)
+            if line == 'Contexts:':
+                break
+            else:
+                services_output.append(line)
+
+        netdata['services'] = self.__parse_services(services_output)
 
         return netdata
 

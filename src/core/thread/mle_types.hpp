@@ -41,6 +41,9 @@
 #include <string.h>
 
 #include <openthread/thread.h>
+#if OPENTHREAD_FTD
+#include <openthread/thread_ftd.h>
+#endif
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
@@ -181,7 +184,6 @@ constexpr uint32_t kMaxLeaderToRouterTimeout = 90;  ///< (in sec)
 constexpr uint32_t kReedAdvertiseInterval    = 570; ///< (in sec)
 constexpr uint32_t kReedAdvertiseJitter      = 60;  ///< (in sec)
 
-constexpr uint8_t  kLeaderWeight             = 64;                                          ///< Default leader weight
 constexpr uint32_t kMleEndDeviceTimeout      = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT; ///< (in sec)
 constexpr uint8_t  kMeshLocalPrefixContextId = 0; ///< 0 is reserved for Mesh Local Prefix
 
@@ -434,6 +436,67 @@ public:
 private:
     uint8_t mMode;
 };
+
+#if OPENTHREAD_FTD
+/**
+ * This class represents device properties.
+ *
+ * The device properties are used for calculating the local leader weight on the device.
+ *
+ */
+class DeviceProperties : public otDeviceProperties, public Clearable<DeviceProperties>
+{
+public:
+    /**
+     * This enumeration represents the device's power supply property.
+     *
+     */
+    enum PowerSupply : uint8_t
+    {
+        kPowerSupplyBattery          = OT_POWER_SUPPLY_BATTERY,           ///< Battery powered.
+        kPowerSupplyExternal         = OT_POWER_SUPPLY_EXTERNAL,          ///< External powered.
+        kPowerSupplyExternalStable   = OT_POWER_SUPPLY_EXTERNAL_STABLE,   ///< Stable external power with backup.
+        kPowerSupplyExternalUnstable = OT_POWER_SUPPLY_EXTERNAL_UNSTABLE, ///< Unstable external power.
+    };
+
+    /**
+     * This constructor initializes `DeviceProperties` with default values.
+     *
+     */
+    DeviceProperties(void);
+
+    /**
+     * This method clamps the `mLeaderWeightAdjustment` value to the valid range.
+     *
+     */
+    void ClampWeightAdjustment(void);
+
+    /**
+     * This method calculates the leader weight based on the device properties.
+     *
+     * @returns The calculated leader weight.
+     *
+     */
+    uint8_t CalculateLeaderWeight(void) const;
+
+private:
+    static constexpr int8_t  kDefaultAdjustment        = OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT;
+    static constexpr uint8_t kBaseWeight               = 64;
+    static constexpr int8_t  kBorderRouterInc          = +1;
+    static constexpr int8_t  kCcmBorderRouterInc       = +8;
+    static constexpr int8_t  kIsUnstableInc            = -4;
+    static constexpr int8_t  kPowerBatteryInc          = -8;
+    static constexpr int8_t  kPowerExternalInc         = 0;
+    static constexpr int8_t  kPowerExternalStableInc   = +4;
+    static constexpr int8_t  kPowerExternalUnstableInc = -4;
+    static constexpr int8_t  kMinAdjustment            = -16;
+    static constexpr int8_t  kMaxAdjustment            = +16;
+
+    static_assert(kDefaultAdjustment >= kMinAdjustment, "Invalid default weight adjustment");
+    static_assert(kDefaultAdjustment <= kMaxAdjustment, "Invalid default weight adjustment");
+};
+
+#endif // OPENTHREAD_FTD
 
 /**
  * This class represents the Thread Leader Data.
@@ -693,6 +756,10 @@ const char *RoleToString(DeviceRole aRole);
 
 DefineCoreType(otLeaderData, Mle::LeaderData);
 DefineMapEnum(otDeviceRole, Mle::DeviceRole);
+#if OPENTHREAD_FTD
+DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
+DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
+#endif
 
 } // namespace ot
 

@@ -144,6 +144,22 @@ public:
     Error BecomeLeader(void);
 
     /**
+     * This method gets the device properties which are used to determine the Leader Weight.
+     *
+     * @returns The current device properties.
+     *
+     */
+    const DeviceProperties &GetDeviceProperties(void) const { return mDeviceProperties; }
+
+    /**
+     * This method sets the device properties which are then used to determine and set the Leader Weight.
+     *
+     * @param[in]  aDeviceProperties    The device properties.
+     *
+     */
+    void SetDeviceProperties(const DeviceProperties &aDeviceProperties);
+
+    /**
      * This method returns the Leader Weighting value for this Thread interface.
      *
      * @returns The Leader Weighting value for this Thread interface.
@@ -153,6 +169,9 @@ public:
 
     /**
      * This method sets the Leader Weighting value for this Thread interface.
+     *
+     * This method directly sets the Leader Weight to the new value replacing its previous value (which may have been
+     * determined from a previous call to `SetDeviceProperties()`).
      *
      * @param[in]  aWeight  The Leader Weighting value.
      *
@@ -635,6 +654,8 @@ private:
     void        HandleTimeTick(void);
 
     TrickleTimer mAdvertiseTrickleTimer;
+
+    DeviceProperties mDeviceProperties;
 
     ChildTable  mChildTable;
     RouterTable mRouterTable;

@@ -35,6 +35,7 @@
 #ifndef CONFIG_DNS_CLIENT_H_
 #define CONFIG_DNS_CLIENT_H_
 
+#include "config/ip6.h"
 #include "config/srp_client.h"
 
 /**
@@ -148,6 +149,26 @@
  */
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG
 #define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+ *
+ * Enables support for sending DNS Queries over TCP.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE
+ *
+ * Specifies size of receive and transmit buffers of TCP sockets for DNS query over TCP.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE 1024
 #endif
 
 #endif // CONFIG_DNS_CLIENT_H_

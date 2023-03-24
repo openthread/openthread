@@ -1,5 +1,6 @@
+#!/usr/bin/expect -f
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,35 +27,20 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Makefile Check
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
 
-on:
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-  pull_request:
-    branches:
-      - 'main'
+spawn_node 2 "cli"
+spawn_node 1
+setup_leader
+setup_node 2 "rnd" "router"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
-  cancel-in-progress: true
+switch_node 1
+set addr_1 [get_ipaddr mleid]
 
-permissions:  # added using https://github.com/step-security/secure-workflows
-  contents: read
+switch_node 2
+send "dns resolve ipv6.google.com $addr_1 2000 6000 4 1 tcp\n"
+expect "DNS response for ipv6.google.com"
+expect_line "Done"
 
-jobs:
-  makefile-check:
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-      with:
-        submodules: true
-    - name: Check
-      run: |
-        script/check-core-makefiles
+dispose_all

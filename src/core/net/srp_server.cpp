@@ -454,7 +454,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     hostLease       = aHost.GetLease();
     hostKeyLease    = aHost.GetKeyLease();
     grantedLease    = aLeaseConfig.GrantLease(hostLease);
-    grantedKeyLease = aLeaseConfig.GrantKeyLease(hostKeyLease);
+    grantedKeyLease = aHost.ShouldUseShortLeaseOption() ? grantedLease : aLeaseConfig.GrantKeyLease(hostKeyLease);
     grantedTtl      = aTtlConfig.GrantTtl(grantedLease, aHost.GetTtl());
 
     aHost.SetLease(grantedLease);
@@ -523,7 +523,7 @@ exit:
     {
         if (aError == kErrorNone && !(grantedLease == hostLease && grantedKeyLease == hostKeyLease))
         {
-            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, *aMessageInfo);
+            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, aHost.ShouldUseShortLeaseOption(), *aMessageInfo);
         }
         else
         {
@@ -1116,14 +1116,17 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
 
     SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
     SuccessOrExit(error = aMessage.Read(offset, optRecord));
-    SuccessOrExit(error = aMessage.Read(offset + sizeof(optRecord), leaseOption));
-    VerifyOrExit(leaseOption.IsValid(), error = kErrorFailed);
-    VerifyOrExit(optRecord.GetSize() == sizeof(optRecord) + sizeof(leaseOption), error = kErrorParse);
+
+    SuccessOrExit(error = leaseOption.ReadFrom(aMessage, offset + sizeof(optRecord), optRecord.GetLength()));
 
     offset += optRecord.GetSize();
 
     aHost->SetLease(leaseOption.GetLeaseInterval());
     aHost->SetKeyLease(leaseOption.GetKeyLeaseInterval());
+
+    // If the client included the short variant of Lease Option,
+    // server must also use the short variant in its response.
+    aHost->SetUseShortLeaseOption(leaseOption.IsShortVariant());
 
     if (aHost->GetLease() > 0)
     {
@@ -1429,6 +1432,7 @@ exit:
 void Server::SendResponse(const Dns::UpdateHeader &aHeader,
                           uint32_t                 aLease,
                           uint32_t                 aKeyLease,
+                          bool                     mUseShortLeaseOption,
                           const Ip6::MessageInfo  &aMessageInfo)
 {
     Error             error;
@@ -1436,6 +1440,7 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     Dns::UpdateHeader header;
     Dns::OptRecord    optRecord;
     Dns::LeaseOption  leaseOption;
+    uint16_t          optionSize;
 
     response = GetSocket().NewMessage(0);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
@@ -1453,13 +1458,21 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     optRecord.Init();
     optRecord.SetUdpPayloadSize(kUdpPayloadSize);
     optRecord.SetDnsSecurityFlag();
-    optRecord.SetLength(sizeof(Dns::LeaseOption));
-    SuccessOrExit(error = response->Append(optRecord));
 
-    leaseOption.Init();
-    leaseOption.SetLeaseInterval(aLease);
-    leaseOption.SetKeyLeaseInterval(aKeyLease);
-    SuccessOrExit(error = response->Append(leaseOption));
+    if (mUseShortLeaseOption)
+    {
+        leaseOption.InitAsShortVariant(aLease);
+    }
+    else
+    {
+        leaseOption.InitAsLongVariant(aLease, aKeyLease);
+    }
+
+    optionSize = static_cast<uint16_t>(leaseOption.GetSize());
+    optRecord.SetLength(optionSize);
+
+    SuccessOrExit(error = response->Append(optRecord));
+    SuccessOrExit(error = response->AppendBytes(&leaseOption, optionSize));
 
     SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 

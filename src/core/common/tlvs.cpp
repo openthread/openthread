@@ -193,7 +193,7 @@ Error Tlv::ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMax
     length = Min(info.mLength, static_cast<uint16_t>(aMaxStringLength));
 
     aMessage.ReadBytes(info.mValueOffset, aValue, length);
-    aValue[length + 1] = '\0';
+    aValue[length] = '\0';
 
 exit:
     return error;

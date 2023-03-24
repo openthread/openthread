@@ -39,25 +39,6 @@
 namespace ot {
 namespace NetworkData {
 
-const char *RoutePreferenceToString(RoutePreference aPreference)
-{
-    const char *str = "low";
-
-    switch (aPreference)
-    {
-    case kRoutePreferenceHigh:
-        str = "high";
-        break;
-    case kRoutePreferenceMedium:
-        str = "med";
-        break;
-    case kRoutePreferenceLow:
-        break;
-    }
-
-    return str;
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)
@@ -266,6 +247,14 @@ void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aSer
     mServiceDataLength = serviceData.GetLength();
     serviceData.CopyBytesTo(mServiceData);
     GetServerConfig().SetFrom(aServerTlv);
+}
+
+void LowpanContextInfo::SetFrom(const PrefixTlv &aPrefixTlv, const ContextTlv &aContextTlv)
+{
+    mContextId    = aContextTlv.GetContextId();
+    mCompressFlag = aContextTlv.IsCompress();
+    aPrefixTlv.CopyPrefixTo(GetPrefix());
+    GetPrefix().SetLength(aContextTlv.GetContextLength());
 }
 
 } // namespace NetworkData

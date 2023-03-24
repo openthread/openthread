@@ -70,7 +70,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mNetworkIdTimeout(kNetworkIdTimeout)
     , mRouterUpgradeThreshold(kRouterUpgradeThreshold)
     , mRouterDowngradeThreshold(kRouterDowngradeThreshold)
-    , mLeaderWeight(kLeaderWeight)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mPreferredLeaderPartitionId(0)
     , mCcmEnabled(false)
@@ -95,6 +94,7 @@ MleRouter::MleRouter(Instance &aInstance)
 #endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
+    mLeaderWeight = mDeviceProperties.CalculateLeaderWeight();
 
     SetRouterId(kInvalidRouterId);
 
@@ -181,6 +181,13 @@ Error MleRouter::SetRouterEligible(bool aEligible)
 
 exit:
     return error;
+}
+
+void MleRouter::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
+{
+    mDeviceProperties = aDeviceProperties;
+    mDeviceProperties.ClampWeightAdjustment();
+    SetLeaderWeight(mDeviceProperties.CalculateLeaderWeight());
 }
 
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
@@ -3719,23 +3726,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
 
     if (IsChild())
     {
-        switch (mParent.GetLinkQualityIn())
-        {
-        case kLinkQuality0:
-            break;
-
-        case kLinkQuality1:
-            aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
-            break;
-
-        case kLinkQuality2:
-            aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
-            break;
-
-        case kLinkQuality3:
-            aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
-            break;
-        }
+        aTlv.IncrementLinkQuality(mParent.GetLinkQualityIn());
     }
 
     for (const Router &router : Get<RouterTable>())
@@ -3752,23 +3743,7 @@ void MleRouter::FillConnectivityTlv(ConnectivityTlv &aTlv)
             continue;
         }
 
-        switch (router.GetTwoWayLinkQuality())
-        {
-        case kLinkQuality0:
-            break;
-
-        case kLinkQuality1:
-            aTlv.SetLinkQuality1(aTlv.GetLinkQuality1() + 1);
-            break;
-
-        case kLinkQuality2:
-            aTlv.SetLinkQuality2(aTlv.GetLinkQuality2() + 1);
-            break;
-
-        case kLinkQuality3:
-            aTlv.SetLinkQuality3(aTlv.GetLinkQuality3() + 1);
-            break;
-        }
+        aTlv.IncrementLinkQuality(router.GetTwoWayLinkQuality());
     }
 
     aTlv.SetActiveRouters(mRouterTable.GetActiveRouterCount());

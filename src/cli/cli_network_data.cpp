@@ -606,6 +606,25 @@ void NetworkData::OutputServices(bool aLocal)
     }
 }
 
+void NetworkData::OutputLowpanContexts(bool aLocal)
+{
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otLowpanContextInfo   info;
+
+    VerifyOrExit(!aLocal);
+
+    OutputLine("Contexts:");
+
+    while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &info) == OT_ERROR_NONE)
+    {
+        OutputIp6Prefix(info.mPrefix);
+        OutputLine(" %u %c", info.mContextId, info.mCompressFlag ? 'c' : '-');
+    }
+
+exit:
+    return;
+}
+
 otError NetworkData::OutputBinary(bool aLocal)
 {
     otError error;
@@ -643,6 +662,8 @@ exit:
  * Services:
  * 44970 5d c000 s 4000
  * 44970 01 9a04b000000e10 s 4000
+ * Contexts:
+ * fd00:dead:beef:cafe::/64 1 c
  * Done
  * @endcode
  * @code
@@ -655,7 +676,43 @@ exit:
  * @par
  * `netdata show` from OT CLI gets full Network Data received from the Leader. This command uses several
  * API functions to combine prefixes, routes, and services, including #otNetDataGetNextOnMeshPrefix,
- * #otNetDataGetNextRoute, and #otNetDataGetNextService.
+ * #otNetDataGetNextRoute, #otNetDataGetNextService and #otNetDataGetNextLowpanContextInfo.
+ * @par
+ * On-mesh prefixes are listed under `Prefixes` header:
+ * * The on-mesh prefix
+ * * Flags
+ *   * p: Preferred flag
+ *   * a: Stateless IPv6 Address Autoconfiguration flag
+ *   * d: DHCPv6 IPv6 Address Configuration flag
+ *   * c: DHCPv6 Other Configuration flag
+ *   * r: Default Route flag
+ *   * o: On Mesh flag
+ *   * s: Stable flag
+ *   * n: Nd Dns flag
+ *   * D: Domain Prefix flag (only available for Thread 1.2).
+ * * Preference `high`, `med`, or `low`
+ * * RLOC16 of device which added the on-mesh prefix
+ * @par
+ * External Routes are listed under `Routes` header:
+ * * The route prefix
+ * * Flags
+ *   * s: Stable flag
+ *   * n: NAT64 flag
+ * * Preference `high`, `med`, or `low`
+ * * RLOC16 of device which added the route prefix
+ * @par
+ * Service entries are listed under `Services` header:
+ * * Enterprise number
+ * * Service data (as hex bytes)
+ * * Server data (as hex bytes)
+ * * Flags
+ *   * s: Stable flag
+ * * RLOC16 of devices which added the service entry
+ * @par
+ * 6LoWPAN Context IDs are listed under `Contexts` header:
+ * * The prefix
+ * * Context ID
+ * * Compress flag (`c` if marked or `-` otherwise).
  * @par
  * @moreinfo{@netdata}.
  * @csa{br omrprefix}
@@ -714,6 +771,7 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
         OutputPrefixes(local);
         OutputRoutes(local);
         OutputServices(local);
+        OutputLowpanContexts(local);
         error = OT_ERROR_NONE;
     }
 

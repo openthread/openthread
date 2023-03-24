@@ -248,6 +248,7 @@ Client::Client(Instance &aInstance)
     , mSingleServiceMode(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
+    , mUseShortLeaseOption(false)
 #endif
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
@@ -1332,11 +1333,12 @@ exit:
     return error;
 }
 
-Error Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
+Error Client::AppendUpdateLeaseOptRecord(Message &aMessage)
 {
     Error            error;
     Dns::OptRecord   optRecord;
     Dns::LeaseOption leaseOption;
+    uint16_t         optionSize;
 
     // Append empty (root domain) as OPT RR name.
     SuccessOrExit(error = Dns::Name::AppendTerminator(aMessage));
@@ -1346,15 +1348,26 @@ Error Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
     optRecord.Init();
     optRecord.SetUdpPayloadSize(kUdpPayloadSize);
     optRecord.SetDnsSecurityFlag();
-    optRecord.SetLength(sizeof(Dns::LeaseOption));
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mUseShortLeaseOption)
+    {
+        LogInfo("Test mode - appending short variant of Lease Option");
+        mKeyLease = mLease;
+        leaseOption.InitAsShortVariant(mLease);
+    }
+    else
+#endif
+    {
+        leaseOption.InitAsLongVariant(mLease, mKeyLease);
+    }
+
+    optionSize = static_cast<uint16_t>(leaseOption.GetSize());
+
+    optRecord.SetLength(optionSize);
 
     SuccessOrExit(error = aMessage.Append(optRecord));
-
-    leaseOption.Init();
-    leaseOption.SetLeaseInterval(mLease);
-    leaseOption.SetKeyLeaseInterval(mKeyLease);
-
-    error = aMessage.Append(leaseOption);
+    error = aMessage.AppendBytes(&leaseOption, optionSize);
 
 exit:
     return error;
@@ -1651,36 +1664,27 @@ Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const 
     // Read and process all options (in an OPT RR) from a message.
     // The `aOffset` points to beginning of record in `aMessage`.
 
-    Error    error = kErrorNone;
-    uint16_t len;
+    Error            error = kErrorNone;
+    Dns::LeaseOption leaseOption;
 
     IgnoreError(Dns::Name::ParseName(aMessage, aOffset));
     aOffset += sizeof(Dns::OptRecord);
 
-    len = aOptRecord.GetLength();
-
-    while (len > 0)
+    switch (error = leaseOption.ReadFrom(aMessage, aOffset, aOptRecord.GetLength()))
     {
-        Dns::LeaseOption leaseOption;
-        Dns::Option     &option = leaseOption;
-        uint16_t         size;
+    case kErrorNone:
+        mLease    = Min(leaseOption.GetLeaseInterval(), kMaxLease);
+        mKeyLease = Min(leaseOption.GetKeyLeaseInterval(), kMaxLease);
+        break;
 
-        SuccessOrExit(error = aMessage.Read(aOffset, option));
+    case kErrorNotFound:
+        // If server does not include a lease option in its response, it
+        // indicates that it accepted what we requested.
+        error = kErrorNone;
+        break;
 
-        VerifyOrExit(aOffset + option.GetSize() <= aMessage.GetLength(), error = kErrorParse);
-
-        if ((option.GetOptionCode() == Dns::Option::kUpdateLease) &&
-            (option.GetOptionLength() >= Dns::LeaseOption::kOptionLength))
-        {
-            SuccessOrExit(error = aMessage.Read(aOffset, leaseOption));
-
-            mLease    = Min(leaseOption.GetLeaseInterval(), kMaxLease);
-            mKeyLease = Min(leaseOption.GetKeyLeaseInterval(), kMaxLease);
-        }
-
-        size = static_cast<uint16_t>(option.GetSize());
-        aOffset += size;
-        len -= size;
+    default:
+        ExitNow();
     }
 
 exit:

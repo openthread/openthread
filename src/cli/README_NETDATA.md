@@ -284,14 +284,61 @@ Done
 
 Usage: `netdata show [local] [-x]`
 
+Print entries in Network Data, on-mesh prefixes, external routes, services, and 6LoWPAN context information.
+
+On-mesh prefixes are listed under `Prefixes` header:
+
+- The on-mesh prefix
+- Flags
+  - p: Preferred flag
+  - a: Stateless IPv6 Address Autoconfiguration flag
+  - d: DHCPv6 IPv6 Address Configuration flag
+  - c: DHCPv6 Other Configuration flag
+  - r: Default Route flag
+  - o: On Mesh flag
+  - s: Stable flag
+  - n: Nd Dns flag
+  - D: Domain Prefix flag (only available for Thread 1.2).
+- Preference `high`, `med`, or `low`
+- RLOC16 of device which added the on-mesh prefix
+
+External Routes are listed under `Routes` header:
+
+- The route prefix
+- Flags
+  - s: Stable flag
+  - n: NAT64 flag
+- Preference `high`, `med`, or `low`
+- RLOC16 of device which added the route prefix
+
+Service entries are listed under `Services` header:
+
+- Enterprise number
+- Service data (as hex bytes)
+- Server data (as hex bytes)
+- Flags
+  - s: Stable flag
+- RLOC16 of devices which added the service entry
+
+6LoWPAN Context IDs are listed under `Contexts` header:
+
+- The prefix
+- Context ID
+- Compress flag (`c` if marked or `-` otherwise).
+
 Print Network Data received from the Leader.
 
 ```bash
 > netdata show
 Prefixes:
-fd00:dead:beef:cafe::/64 paros med dc00
+fd00:dead:beef:cafe::/64 paros med a000
 Routes:
+fd00:1234:0:0::/64 s med a000
+fd00:4567:0:0::/64 s med 8000
 Services:
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000
+Contexts:
+fd00:dead:beef:cafe::/64 1 c
 Done
 ```
 

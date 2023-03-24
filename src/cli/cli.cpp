@@ -3011,6 +3011,10 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
             OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
             OutputLine("RecursionDesired: %s",
                        (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+            OutputLine("TransportProtocol: %s",
+                       (defaultConfig->mTransportProto == OT_DNS_TRANSPORT_UDP) ? "udp" : "tcp");
+#endif
         }
         /* clang-format off */
         /**
@@ -3286,6 +3290,19 @@ otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
     aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
+    VerifyOrExit(!aArgs[5].IsEmpty());
+    if (aArgs[5] == "tcp")
+    {
+        aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
+    }
+    else if (aArgs[5] == "udp")
+    {
+        aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
 exit:
     return error;
 }
@@ -4301,6 +4318,106 @@ template <> otError Interpreter::Process<Cmd("leaderweight")>(Arg aArgs[])
      */
     return ProcessGetSet(aArgs, otThreadGetLocalLeaderWeight, otThreadSetLocalLeaderWeight);
 }
+
+template <> otError Interpreter::Process<Cmd("deviceprops")>(Arg aArgs[])
+{
+    static const char *const kPowerSupplyStrings[4] = {
+        "battery",           // (0) OT_POWER_SUPPLY_BATTERY
+        "external",          // (1) OT_POWER_SUPPLY_EXTERNAL
+        "external-stable",   // (2) OT_POWER_SUPPLY_EXTERNAL_STABLE
+        "external-unstable", // (3) OT_POWER_SUPPLY_EXTERNAL_UNSTABLE
+    };
+
+    static_assert(0 == OT_POWER_SUPPLY_BATTERY, "OT_POWER_SUPPLY_BATTERY value is incorrect");
+    static_assert(1 == OT_POWER_SUPPLY_EXTERNAL, "OT_POWER_SUPPLY_EXTERNAL value is incorrect");
+    static_assert(2 == OT_POWER_SUPPLY_EXTERNAL_STABLE, "OT_POWER_SUPPLY_EXTERNAL_STABLE value is incorrect");
+    static_assert(3 == OT_POWER_SUPPLY_EXTERNAL_UNSTABLE, "OT_POWER_SUPPLY_EXTERNAL_UNSTABLE value is incorrect");
+
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli deviceprops
+     * @code
+     * deviceprops
+     * PowerSupply      : external
+     * IsBorderRouter   : yes
+     * SupportsCcm      : no
+     * IsUnstable       : no
+     * WeightAdjustment : 0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetDeviceProperties
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        const otDeviceProperties *props = otThreadGetDeviceProperties(GetInstancePtr());
+
+        OutputLine("PowerSupply      : %s", Stringify(props->mPowerSupply, kPowerSupplyStrings));
+        OutputLine("IsBorderRouter   : %s", props->mIsBorderRouter ? "yes" : "no");
+        OutputLine("SupportsCcm      : %s", props->mSupportsCcm ? "yes" : "no");
+        OutputLine("IsUnstable       : %s", props->mIsUnstable ? "yes" : "no");
+        OutputLine("WeightAdjustment : %d", props->mLeaderWeightAdjustment);
+    }
+    /**
+     * @cli deviceprops (set)
+     * @code
+     * deviceprops battery 0 0 0 -5
+     * Done
+     * @endcode
+     * @code
+     * deviceprops
+     * PowerSupply      : battery
+     * IsBorderRouter   : no
+     * SupportsCcm      : no
+     * IsUnstable       : no
+     * WeightAdjustment : -5
+     * Done
+     * @endcode
+     * @cparam deviceprops @ca{powerSupply} @ca{isBr} @ca{supportsCcm} @ca{isUnstable} @ca{weightAdjustment}
+     * `powerSupply`: should be 'battery', 'external', 'external-stable', 'external-unstable'.
+     * @par
+     * Sets the device properties.
+     * @csa{leaderweight}
+     * @csa{leaderweight (set)}
+     * @sa #otThreadSetDeviceProperties
+     */
+    else
+    {
+        otDeviceProperties props;
+        bool               value;
+        uint8_t            index;
+
+        for (index = 0; index < OT_ARRAY_LENGTH(kPowerSupplyStrings); index++)
+        {
+            if (aArgs[0] == kPowerSupplyStrings[index])
+            {
+                props.mPowerSupply = static_cast<otPowerSupply>(index);
+                break;
+            }
+        }
+
+        VerifyOrExit(index < OT_ARRAY_LENGTH(kPowerSupplyStrings), error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = aArgs[1].ParseAsBool(value));
+        props.mIsBorderRouter = value;
+
+        SuccessOrExit(error = aArgs[2].ParseAsBool(value));
+        props.mSupportsCcm = value;
+
+        SuccessOrExit(error = aArgs[3].ParseAsBool(value));
+        props.mIsUnstable = value;
+
+        SuccessOrExit(error = aArgs[4].ParseAsInt8(props.mLeaderWeightAdjustment));
+
+        VerifyOrExit(aArgs[5].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        otThreadSetDeviceProperties(GetInstancePtr(), &props);
+    }
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -5258,6 +5375,16 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networkkey
+     * @code
+     * networkkey
+     * 00112233445566778899aabbccddeeff
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetNetworkKey
+     */
     if (aArgs[0].IsEmpty())
     {
         otNetworkKey networkKey;
@@ -5265,6 +5392,16 @@ template <> otError Interpreter::Process<Cmd("networkkey")>(Arg aArgs[])
         otThreadGetNetworkKey(GetInstancePtr(), &networkKey);
         OutputBytesLine(networkKey.m8);
     }
+    /**
+     * @cli networkkey (key)
+     * @code
+     * networkkey 00112233445566778899aabbccddeeff
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetNetworkKey
+     * @cparam networkkey @ca{key}
+     */
     else
     {
         otNetworkKey key;
@@ -5303,10 +5440,32 @@ template <> otError Interpreter::Process<Cmd("networkname")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli networkname
+     * @code
+     * networkname
+     * OpenThread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetNetworkName
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadGetNetworkName(GetInstancePtr()));
     }
+    /**
+     * @cli networkname (name)
+     * @code
+     * networkname OpenThread
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetNetworkName
+     * @cparam networkname @ca{name}
+     * @par
+     * Note: The current commissioning credential becomes stale after changing this value. Use `pskc` to reset.
+     */
     else
     {
         SuccessOrExit(error = otThreadSetNetworkName(GetInstancePtr(), aArgs[0].GetCString()));
@@ -5715,11 +5874,30 @@ exit:
 template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli panid
+     * @code
+     * panid
+     * 0xdead
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkGetPanId
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("0x%04x", otLinkGetPanId(GetInstancePtr()));
     }
+    /**
+     * @cli panid (panid)
+     * @code
+     * panid 0xdead
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkSetPanId
+     * @cparam panid @ca{panid}
+     */
     else
     {
         error = ProcessSet(aArgs, otLinkSetPanId);
@@ -5731,7 +5909,30 @@ template <> otError Interpreter::Process<Cmd("panid")>(Arg aArgs[])
 template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-
+    /**
+     * @cli parent
+     * @code
+     * parent
+     * Ext Addr: be1857c6c21dce55
+     * Rloc: 5c00
+     * Link Quality In: 3
+     * Link Quality Out: 3
+     * Age: 20
+     * Version: 4
+     * Done
+     * @endcode
+     * @sa otThreadGetParentInfo
+     * @par
+     * Get the diagnostic information for a Thread Router as parent.
+     * @par
+     * When operating as a Thread Router when OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE is enabled, this command
+     * will return the cached information from when the device was previously attached as a Thread Child. Returning
+     * cached information is necessary to support the Thread Test Harness - Test Scenario 8.2.x requests the former
+     * parent (i.e. Joiner Router's) MAC address even if the device has already promoted to a router.
+     * @par
+     * Note: When OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is enabled, this command will return two extra lines with
+     * information relevant for CSL Receiver operation.
+     */
     if (aArgs[0].IsEmpty())
     {
         otRouterInfo parentInfo;
@@ -5772,6 +5973,23 @@ exit:
 }
 
 #if OPENTHREAD_FTD
+/**
+ * @cli parentpriority (get,set)
+ * @code
+ * parentpriority
+ * 1
+ * Done
+ * @endcode
+ * @code
+ * parentpriority 1
+ * Done
+ * @endcode
+ * @cparam parentpriority [@ca{parentpriority}]
+ * @par
+ * Gets or sets the assigned parent priority value: 1, 0, -1 or -2. -2 means not assigned.
+ * @sa otThreadGetParentPriority
+ * @sa otThreadSetParentPriority
+ */
 template <> otError Interpreter::Process<Cmd("parentpriority")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetParentPriority, otThreadSetParentPriority);
@@ -8031,6 +8249,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("detach"),
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+#if OPENTHREAD_FTD
+        CmdEntry("deviceprops"),
+#endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         CmdEntry("diag"),
 #endif

@@ -1694,7 +1694,7 @@ class OpenThreadTHCI(object):
     @watched
     def getNetworkData(self):
         lines = self.__executeCommand('netdata show')
-        prefixes, routes, services = [], [], []
+        prefixes, routes, services, contexts = [], [], [], []
         classify = None
 
         for line in lines:
@@ -1704,6 +1704,8 @@ class OpenThreadTHCI(object):
                 classify = routes
             elif line == 'Services:':
                 classify = services
+            elif line == 'Contexts:':
+                classify = contexts
             elif line == 'Done':
                 classify = None
             else:
@@ -1713,6 +1715,7 @@ class OpenThreadTHCI(object):
             'Prefixes': prefixes,
             'Routes': routes,
             'Services': services,
+            'Contexts': contexts,
         }
 
     @API

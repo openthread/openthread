@@ -4599,10 +4599,9 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
     counter++;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()))
+    if (Get<ThreadNetif>().HasUnicastAddress(Get<DuaManager>().GetDomainUnicastAddress()) &&
+        (Get<NetworkData::Leader>().GetContext(Get<DuaManager>().GetDomainUnicastAddress(), context) == kErrorNone))
     {
-        SuccessOrAssert(Get<NetworkData::Leader>().GetContext(Get<DuaManager>().GetDomainUnicastAddress(), context));
-
         // Prioritize DUA, compressed entry
         entry.SetContextId(context.mContextId);
         entry.SetIid(Get<DuaManager>().GetDomainUnicastAddress().GetIid());

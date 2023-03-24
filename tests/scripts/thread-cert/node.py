@@ -2300,6 +2300,8 @@ class NodeImpl:
         for line in netdata:
             if line.startswith('Services:'):
                 services_section = True
+            elif line.startswith('Contexts'):
+                services_section = False
             elif services_section:
                 services.append(line.strip().split(' '))
         return services
@@ -2310,8 +2312,8 @@ class NodeImpl:
 
     def get_netdata(self):
         raw_netdata = self.netdata_show()
-        netdata = {'Prefixes': [], 'Routes': [], 'Services': []}
-        key_list = ['Prefixes', 'Routes', 'Services']
+        netdata = {'Prefixes': [], 'Routes': [], 'Services': [], 'Contexts': []}
+        key_list = ['Prefixes', 'Routes', 'Services', 'Contexts']
         key = None
 
         for i in range(0, len(raw_netdata)):

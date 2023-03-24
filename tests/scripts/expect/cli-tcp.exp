@@ -30,7 +30,10 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_two_nodes
+spawn_node 2 "cli"
+spawn_node 1 "cli"
+setup_leader
+setup_node 2 "rnd" "router"
 
 switch_node 1
 send "tcp init circular\n"
