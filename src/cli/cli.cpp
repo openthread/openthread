@@ -5928,7 +5928,7 @@ template <> otError Interpreter::Process<Cmd("parent")>(Arg aArgs[])
      * When operating as a Thread Router when OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE is enabled, this command
      * will return the cached information from when the device was previously attached as a Thread Child. Returning
      * cached information is necessary to support the Thread Test Harness - Test Scenario 8.2.x requests the former
-     * parent (i.e. Joiner Router's) MAC address even if the device has already promoted to a router.
+     * parent (i.e. %Joiner Router's) MAC address even if the device has already promoted to a router.
      * @par
      * Note: When OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is enabled, this command will return two extra lines with
      * information relevant for CSL Receiver operation.
