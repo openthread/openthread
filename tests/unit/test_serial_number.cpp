@@ -34,6 +34,7 @@
 #include "common/code_utils.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/preference.hpp"
 #include "common/serial_number.hpp"
 
 namespace ot {
@@ -152,6 +153,66 @@ void TestNumUtils(void)
     printf("TestNumUtils() passed\n");
 }
 
+void TestPreference(void)
+{
+    VerifyOrQuit(Preference::kHigh == 1);
+    VerifyOrQuit(Preference::kMedium == 0);
+    VerifyOrQuit(Preference::kLow == -1);
+
+    // To2BitUint()
+    VerifyOrQuit(Preference::To2BitUint(Preference::kHigh) == 0x1);
+    VerifyOrQuit(Preference::To2BitUint(Preference::kMedium) == 0x0);
+    VerifyOrQuit(Preference::To2BitUint(Preference::kLow) == 0x3);
+    VerifyOrQuit(Preference::To2BitUint(2) == 0x1);
+    VerifyOrQuit(Preference::To2BitUint(-2) == 0x3);
+    VerifyOrQuit(Preference::To2BitUint(127) == 0x1);
+    VerifyOrQuit(Preference::To2BitUint(-128) == 0x3);
+
+    // From2BitUint()
+    VerifyOrQuit(Preference::From2BitUint(0x1) == Preference::kHigh);
+    VerifyOrQuit(Preference::From2BitUint(0x0) == Preference::kMedium);
+    VerifyOrQuit(Preference::From2BitUint(0x3) == Preference::kLow);
+    VerifyOrQuit(Preference::From2BitUint(0x2) == Preference::kMedium);
+
+    VerifyOrQuit(Preference::From2BitUint(0x1 | 4) == Preference::kHigh);
+    VerifyOrQuit(Preference::From2BitUint(0x0 | 4) == Preference::kMedium);
+    VerifyOrQuit(Preference::From2BitUint(0x3 | 4) == Preference::kLow);
+    VerifyOrQuit(Preference::From2BitUint(0x2 | 4) == Preference::kMedium);
+
+    VerifyOrQuit(Preference::From2BitUint(0x1 | 0xfc) == Preference::kHigh);
+    VerifyOrQuit(Preference::From2BitUint(0x0 | 0xfc) == Preference::kMedium);
+    VerifyOrQuit(Preference::From2BitUint(0x3 | 0xfc) == Preference::kLow);
+    VerifyOrQuit(Preference::From2BitUint(0x2 | 0xfc) == Preference::kMedium);
+
+    // IsValid()
+    VerifyOrQuit(Preference::IsValid(Preference::kHigh));
+    VerifyOrQuit(Preference::IsValid(Preference::kMedium));
+    VerifyOrQuit(Preference::IsValid(Preference::kLow));
+
+    VerifyOrQuit(!Preference::IsValid(2));
+    VerifyOrQuit(!Preference::IsValid(-2));
+    VerifyOrQuit(!Preference::IsValid(127));
+    VerifyOrQuit(!Preference::IsValid(-128));
+
+    // Is2BitUintValid
+    VerifyOrQuit(Preference::Is2BitUintValid(0x1));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x0));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x3));
+    VerifyOrQuit(!Preference::Is2BitUintValid(0x2));
+
+    VerifyOrQuit(Preference::Is2BitUintValid(0x1 | 4));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x0 | 4));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x3 | 4));
+    VerifyOrQuit(!Preference::Is2BitUintValid(0x2 | 4));
+
+    VerifyOrQuit(Preference::Is2BitUintValid(0x1 | 0xfc));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x0 | 0xfc));
+    VerifyOrQuit(Preference::Is2BitUintValid(0x3 | 0xfc));
+    VerifyOrQuit(!Preference::Is2BitUintValid(0x2 | 0xfc));
+
+    printf("TestPreference() passed\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -161,6 +222,7 @@ int main(void)
     ot::TestSerialNumber<uint32_t>("uint32_t");
     ot::TestSerialNumber<uint64_t>("uint64_t");
     ot::TestNumUtils();
+    ot::TestPreference();
     printf("\nAll tests passed.\n");
     return 0;
 }

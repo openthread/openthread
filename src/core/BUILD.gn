@@ -427,6 +427,8 @@ openthread_core_files = [
   "common/owned_ptr.hpp",
   "common/owning_list.hpp",
   "common/pool.hpp",
+  "common/preference.cpp",
+  "common/preference.hpp",
   "common/ptr_wrapper.hpp",
   "common/random.cpp",
   "common/random.hpp",
