@@ -4251,12 +4251,40 @@ template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
+    /**
+     * @cli partitionid
+     * @code
+     * partitionid
+     * 4294967295
+     * Done
+     * @endcode
+     * @par
+     * Get the Thread Network Partition ID.
+     * @sa otThreadGetPartitionId
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%lu", ToUlong(otThreadGetPartitionId(GetInstancePtr())));
         error = OT_ERROR_NONE;
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * @cli partitionid preferred (get,set)
+     * @code
+     * partitionid preferred
+     * 4294967295
+     * Done
+     * @endcode
+     * @code
+     * partitionid preferred 0xffffffff
+     * Done
+     * @endcode
+     * @cparam partitionid preferred @ca{partitionid}
+     * @sa otThreadGetPreferredLeaderPartitionId
+     * @sa otThreadSetPreferredLeaderPartitionId
+     * @par
+     * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+     */
     else if (aArgs[0] == "preferred")
     {
         error = ProcessGetSet(aArgs + 1, otThreadGetPreferredLeaderPartitionId, otThreadSetPreferredLeaderPartitionId);
@@ -6043,6 +6071,38 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
     }
 }
 
+/* clang-format off */
+/**
+ * @cli ping
+ * @code
+ * ping fd00:db8:0:0:76b:6a05:3ae9:a61a
+ * 16 bytes from fd00:db8:0:0:76b:6a05:3ae9:a61a: icmp_seq=5 hlim=64 time=0ms
+ * 1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
+ * Done
+ * @endcode
+ * @code
+ * ping -I fd00:db8:0:0:76b:6a05:3ae9:a61a ff02::1 100 1 1 1
+ * 108 bytes from fd00:db8:0:0:f605:fb4b:d429:d59a: icmp_seq=4 hlim=64 time=7ms
+ * 1 packets transmitted, 1 packets received. Round-trip min/avg/max = 7/7.0/7 ms.
+ * Done
+ * @endcode
+ * @code
+ * ping 172.17.0.1
+ * Pinging synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+ * 16 bytes from fdde:ad00:beef:2:0:0:ac11:1: icmp_seq=5 hlim=64 time=0ms
+ * 1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
+ * Done
+ * @endcode
+ * @cparam ping [@ca{async}] [@ca{-I source}] @ca{ipaddrc} [@ca{size}] [@ca{count}] [@ca{interval}] [@ca{hoplimit}] [@ca{timeout}]
+ * @par
+ * Send an ICMPv6 Echo Request.
+ * @par
+ * The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+ * @par
+ * Note: The command will return InvalidState when the preferred NAT64 prefix is unavailable.
+ * @sa otPingSenderPing 
+ */
+/* clang-format on */
 template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
 {
     otError            error = OT_ERROR_NONE;
@@ -6050,6 +6110,16 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
     bool               async = false;
     bool               nat64SynthesizedAddress;
 
+    /**
+     * @cli ping stop
+     * @code
+     * ping stop
+     * Done
+     * @endcode
+     * @par
+     * Stop sending ICMPv6 Echo Requests.
+     * @sa otPingSenderStop
+     */
     if (aArgs[0] == "stop")
     {
         otPingSenderStop(GetInstancePtr());
@@ -6146,6 +6216,16 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
+/**
+ * @cli platform
+ * @code
+ * platform
+ * NRF52840
+ * Done
+ * @endcode
+ * @par
+ * Print the current platform
+ */
 template <> otError Interpreter::Process<Cmd("platform")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -6153,6 +6233,22 @@ template <> otError Interpreter::Process<Cmd("platform")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli pollperiod (get,set)
+ * @code
+ * pollperiod
+ * 0
+ * Done
+ * @endcode
+ * @code
+ * pollperiod 10
+ * Done
+ * @endcode
+ * @sa otLinkGetPollPeriod
+ * @sa otLinkSetPollPeriod
+ * @par
+ * Get or set the customized data poll period of sleepy end device (milliseconds). Only for certification test.
+ */
 template <> otError Interpreter::Process<Cmd("pollperiod")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otLinkGetPollPeriod, otLinkSetPollPeriod);
