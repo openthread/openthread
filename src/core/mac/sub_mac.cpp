@@ -302,8 +302,8 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
         LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %lu", StateToString(mState),
                 mIsCslSampling ? "CslSample" : "CslSleep",
                 ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
-        LogDebg("Target sample start time %lu, time drift %d", ToUlong(mCslSampleTime.GetValue()),
-                static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue());
+        LogDebg("Target sample start time %lu, time drift %lu", ToUlong(mCslSampleTime.GetValue()),
+                ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue()));
 #endif
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
