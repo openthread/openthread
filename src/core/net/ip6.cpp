@@ -1448,14 +1448,20 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
     Error    error;
     uint16_t rloc;
 
-    SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, rloc));
+    error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, rloc);
 
-    if (rloc == Get<Mle::Mle>().GetRloc16())
+    if (error == kErrorNone)
     {
-        error = kErrorNoRoute;
+        if (rloc == Get<Mle::MleRouter>().GetRloc16())
+        {
+            error = kErrorNoRoute;
+        }
+    }
+    else
+    {
+        LogNote("Failed to find the valid route for: %s", aDestination.ToString().AsCString());
     }
 
-exit:
     return error;
 }
 
