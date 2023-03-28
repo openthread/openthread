@@ -1201,56 +1201,38 @@ start:
         }
     }
 
-    // Never forward reassembled frames as they were already delivered
-    // as fragments.
-    if (aIsReassembled)
-    {
-        forwardHost = false;
-    }
-
     aMessage.SetOffset(sizeof(header));
 
     // Process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aOrigin, messageInfo, header, nextHeader, receive));
 
-    // Process IPv6 Payload
-    if (receive)
+    if (receive && (nextHeader == kProtoIp6))
     {
-        if (nextHeader == kProtoIp6)
-        {
-            // Remove encapsulating header and start over.
-            aMessage.RemoveHeader(aMessage.GetOffset());
-            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
-            goto start;
-        }
-
-        if (!aIsReassembled)
-        {
-            error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader,
-                               /* aApplyFilter */ !forwardHost, Message::kCopyToUse);
-
-            if ((error == kErrorNone || error == kErrorNoRoute) && forwardHost)
-            {
-                forwardHost = false;
-            }
-        }
-
-        error = HandlePayload(header, aMessage, messageInfo, nextHeader,
-                              (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
-
-        // Need to free the message if we did not pass its
-        // ownership in the call to `HandlePayload()`
-        shouldFreeMessage = forwardThread || forwardHost;
+        // Remove encapsulating header and start over.
+        aMessage.RemoveHeader(aMessage.GetOffset());
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
+        goto start;
     }
 
-    if (forwardHost)
+    if ((forwardHost || receive) && !aIsReassembled)
     {
-        error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader, /* aApplyFilter */ false,
-                           forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+        error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader,
+                           /* aApplyFilter */ !forwardHost,
+                           (receive || forwardThread) ? Message::kCopyToUse : Message::kTakeCustody);
 
         // Need to free the message if we did not pass its
         // ownership in the call to `PassToHost()`
+        shouldFreeMessage = (receive || forwardThread);
+    }
+
+    if (receive)
+    {
+        error = HandlePayload(header, aMessage, messageInfo, nextHeader,
+                              forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
+
+        // Need to free the message if we did not pass its
+        // ownership in the call to `HandlePayload()`
         shouldFreeMessage = forwardThread;
     }
 
