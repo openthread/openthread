@@ -2259,6 +2259,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(sp
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
+#elif OPENTHREAD_SPINEL_CONFIG_ABORT_ON_UNEXPECTED_RCP_RESET_ENABLE
+    abort();
 #else
     DieNow(OT_EXIT_RADIO_SPINEL_RESET);
 #endif
