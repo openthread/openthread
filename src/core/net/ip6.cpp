@@ -1459,7 +1459,7 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
     }
     else
     {
-        LogNote("Failed to find the valid route for: %s", aDestination.ToString().AsCString());
+        LogNote("Failed to find valid route for: %s", aDestination.ToString().AsCString());
     }
 
     return error;
