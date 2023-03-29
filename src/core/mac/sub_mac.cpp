@@ -1159,7 +1159,9 @@ void SubMac::HandleCslTimer(void)
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
 
-        if (RadioSupportsReceiveTiming() && (mState != kStateDisabled))
+        // Scedule reception window for any state except RX - so that CSL RX Window has lower priority
+        // than scanning or RX after the data poll.
+        if (RadioSupportsReceiveTiming() && (mState != kStateDisabled) && (mState != kStateReceive))
         {
             IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, mCslSampleTime.GetValue() - periodUs - timeAhead,
                                                timeAhead + timeAfter));
