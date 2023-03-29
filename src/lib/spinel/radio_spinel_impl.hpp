@@ -218,13 +218,19 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aRestoreDatasetFromNcp, bool aSkipRcpCompatibilityCheck)
+void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
+                                                          bool aRestoreDatasetFromNcp,
+                                                          bool aSkipRcpCompatibilityCheck)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
     bool    supportsRcpMinHostApiVersion;
 
-    ResetRcp();
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mResetRadioOnStartup = aResetRadio;
+#endif
+
+    ResetRcp(aResetRadio);
     SuccessOrExit(error = CheckSpinelVersion());
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
@@ -258,21 +264,30 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(void)
+void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(bool aResetRadio)
 {
-    mIsReady = false;
+    bool resetDone = false;
 
-    mSpinelInterface.ResetStates();
-    SuccessOrDie(SendReset(SPINEL_RESET_STACK));
-    SuccessOrDie(mSpinelInterface.ResetConnection());
+    mIsReady    = false;
+    mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
-    if (WaitResponse(false) != OT_ERROR_NONE)
+    if (aResetRadio && (mSpinelInterface.Reset(kResetStack) == OT_ERROR_NONE) && (WaitResponse(false) == OT_ERROR_NONE))
     {
-        mSpinelInterface.ResetStates();
-        SuccessOrDie(mSpinelInterface.HardwareReset());
-        SuccessOrDie(mSpinelInterface.ResetConnection());
-        otLogInfoPlat("Hardware reset RCP");
-        SuccessOrDie(WaitResponse(false));
+        resetDone = true;
+        otLogInfoPlat("Software reset RCP successfully");
+    }
+
+    if (!resetDone && (mSpinelInterface.Reset(kResetHardware) == OT_ERROR_NONE) &&
+        (WaitResponse(false) == OT_ERROR_NONE))
+    {
+        otLogInfoPlat("Hardware reset RCP successfully");
+        resetDone = true;
+    }
+
+    if (!resetDone)
+    {
+        otLogCritPlat("Failed to reset RCP!");
+        DieNow(OT_EXIT_FAILURE);
     }
 }
 
@@ -1752,27 +1767,6 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(uint8_t aResetType)
-{
-    otError        error = OT_ERROR_NONE;
-    uint8_t        buffer[kMaxSpinelFrame];
-    spinel_ssize_t packed;
-
-    // Pack the header, command and key
-    packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_UINT8_S,
-                                  SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET, aResetType);
-
-    VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
-
-    SuccessOrExit(error = mSpinelInterface.SendFrame(buffer, static_cast<uint16_t>(packed)));
-    mWaitingKey = SPINEL_PROP_LAST_STATUS;
-    LogSpinelFrame(buffer, static_cast<uint16_t>(packed), true);
-
-exit:
-    return error;
-}
-
-template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::SendCommand(uint32_t          aCommand,
                                                                     spinel_prop_key_t aKey,
                                                                     spinel_tid_t      tid,
@@ -2309,7 +2303,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     mError        = OT_ERROR_NONE;
     mIsTimeSynced = false;
 
-    ResetRcp();
+    ResetRcp(mResetRadioOnStartup);
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
     mState = kStateSleep;
 

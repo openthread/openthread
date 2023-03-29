@@ -114,13 +114,14 @@ public:
     /**
      * Initialize this radio transceiver.
      *
+     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
      *                                         (only used when attempts to upgrade from NCP to RCP mode),
      *                                         FALSE otherwise.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
@@ -871,17 +872,6 @@ public:
     otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
 
     /**
-     * This method tries to reset the co-processor.
-     *
-     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM or SPINEL_RESET_STACK.
-     *
-     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     *
-     */
-    otError SendReset(uint8_t aResetType);
-
-    /**
      * This method returns the radio Spinel metrics.
      *
      * @returns The radio Spinel metrics.
@@ -957,11 +947,17 @@ private:
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
+    enum
+    {
+        kResetStack    = 1, ///< Reset the RCP stack.
+        kResetHardware = 2, ///< Hardware reset the RCP chip.
+    };
+
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     static void HandleReceivedFrame(void *aContext);
 
-    void    ResetRcp(void);
+    void    ResetRcp(bool aResetRadio);
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsMinHostRcpApiVersion);
@@ -1093,8 +1089,8 @@ private:
     bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-
-    int16_t mRcpFailureCount; ///< Count of consecutive RCP failures.
+    bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
+    int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
 
     // Properties set by core.
     uint8_t      mKeyIdMode;

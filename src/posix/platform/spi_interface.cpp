@@ -97,10 +97,17 @@ void SpiInterface::ResetStates(void)
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
 }
 
-otError SpiInterface::HardwareReset(void)
+otError SpiInterface::Reset(uint8_t aResetType)
 {
+    static constexpr uint8_t kResetHardware = 2;
+    otError                  error;
+
+    VerifyOrExit(aResetType == kResetHardware, error = OT_ERROR_NOT_IMPLEMENTED);
+    ResetStates();
     TriggerReset();
-    return OT_ERROR_NONE;
+
+exit:
+    return error;
 }
 
 otError SpiInterface::Init(const Url::Url &aRadioUrl)

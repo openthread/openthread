@@ -147,26 +147,16 @@ public:
     uint32_t GetBusSpeed(void) const { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
 
     /**
-     * This method resets internal states of the interface.
+     * This method resets the RCP.
+     *
+     * @param[in] aResetType The reset type.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_FAILED          Failed to reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The specified reset type is not implemented.
      *
      */
-    void ResetStates(void);
-
-    /**
-     * This method is called when RCP is reset to recreate the connection with it.
-     * Intentionally empty.
-     *
-     */
-    otError ResetConnection(void) { return OT_ERROR_NONE; }
-
-    /**
-     * This method hardware resets the RCP.
-     *
-     * @retval OT_ERROR_NONE             Successfully hardware reseted the RCP.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
-     *
-     */
-    otError HardwareReset(void);
+    otError Reset(uint8_t aResetType);
 
     /**
      * This method returns the RCP interface metrics.
@@ -177,6 +167,7 @@ public:
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
 private:
+    void    ResetStates(void);
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
     int     SetupGpioEvent(int aFd, uint8_t aLine, uint32_t aHandleFlags, uint32_t aEventFlags, const char *aLabel);
     void    SetGpioValue(int aFd, uint8_t aValue);

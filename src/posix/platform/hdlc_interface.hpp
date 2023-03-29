@@ -158,25 +158,16 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method resets internal states of the interface.
+     * This method resets the RCP chip.
+     *
+     * @param[in] aResetType The reset type.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_FAILED          Failed to reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The specified reset type is not implemented.
      *
      */
-    void ResetStates(void);
-
-    /**
-     * This method is called when RCP is reset to recreate the connection with it.
-     *
-     */
-    otError ResetConnection(void);
-
-    /**
-     * This method hardware resets the RCP.
-     *
-     * @retval OT_ERROR_NONE             Successfully hardware reseted the RCP.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  This method is not implemented.
-     *
-     */
-    otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+    otError Reset(uint8_t aResetType);
 
     /**
      * This method returns the RCP interface metrics.
@@ -187,6 +178,12 @@ public:
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
 private:
+    /**
+     * This method is called when RCP is reset to recreate the connection with it.
+     *
+     */
+    otError ResetConnection(void);
+
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
