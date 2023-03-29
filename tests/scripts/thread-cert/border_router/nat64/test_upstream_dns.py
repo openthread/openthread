@@ -32,9 +32,10 @@ import config
 import thread_cert
 
 import ipaddress
+import shlex
 
 # Test description:
-#   This test verifies forwarding DNS queries sent by "Router" by using
+#   This test verifies forwarding DNS queries sent by 'Router' by using
 # a record resolved by BIND9 server.
 #
 # Topology:
@@ -53,7 +54,7 @@ TEST_DOMAIN = 'test.domain'
 TEST_DOMAIN_IP6_ADDRESSES = {'2001:db8::1'}
 
 
-class Nat64SingleBorderRouter(thread_cert.TestCase):
+class UpstreamDns(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
@@ -61,12 +62,12 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
             'name': 'BR',
             'allowlist': [ROUTER],
             'is_otbr': True,
-            'version': '1.2',
+            'version': '1.3',
         },
         ROUTER: {
             'name': 'Router',
             'allowlist': [BR],
-            'version': '1.2',
+            'version': '1.3',
         },
         HOST: {
             'name': 'Host',
@@ -91,21 +92,20 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.nat64_set_enabled(True)
         br.srp_server_set_enabled(True)
 
-        br.bash("service bind9 stop")
+        br.bash('service bind9 stop')
 
         br.bash(
-            "echo 'zone \"test.domain\" { type master; file \"/etc/bind/db.test.domain\"; };' >> /etc/bind/named.conf.local"
-        )
-        br.bash(f"echo '$TTL 24h' >> /etc/bind/db.test.domain")
+            shlex.join(['echo', f'zone "{TEST_DOMAIN}" {{ type master; file "/etc/bind/db.test.domain"; }};']) +
+            ' >> /etc/bind/named.conf.local')
+        br.bash(shlex.join(['echo', '$TTL 24h']) + ' >> /etc/bind/db.test.domain')
         br.bash(
-            f"echo '@ IN SOA {TEST_DOMAIN} test.{TEST_DOMAIN}. ( 20230317 86400 300 604800 3600 )' >> /etc/bind/db.test.domain"
-        )
-        br.bash(f"echo '@ IN NS {TEST_DOMAIN}.' >> /etc/bind/db.test.domain")
+            shlex.join(['echo', f'@ IN SOA {TEST_DOMAIN} test.{TEST_DOMAIN}. ( 20230317 86400 300 604800 3600 )']) +
+            ' >> /etc/bind/db.test.domain')
+        br.bash(shlex.join(['echo', f'@ IN NS {TEST_DOMAIN}.']) + ' >> /etc/bind/db.test.domain')
         for addr in TEST_DOMAIN_IP6_ADDRESSES:
-            br.bash(f"echo '@ IN AAAA {addr};' >> /etc/bind/db.test.domain")
-        br.bash("echo 'acl local { 127.0.0.11;  };'")
+            br.bash(shlex.join(['echo', f'@ IN AAAA {addr};']) + ' >> /etc/bind/db.test.domain')
 
-        br.bash("service bind9 start")
+        br.bash('service bind9 start')
 
         router.start()
         self.simulator.go(config.ROUTER_STARTUP_DELAY)

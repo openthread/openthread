@@ -63,9 +63,6 @@ SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
 # So the BR will remove the random-generated one.
 LARGE_NAT64_PREFIX = "ff00:00:00:01:00:00::/96"
 
-GOOGLE_DNS_DOMAIN = 'dns.google'
-GOOGLE_DNS_IP6_ADDRESSES = {'2001:4860:4860::8888', '2001:4860:4860::8844'}
-
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
