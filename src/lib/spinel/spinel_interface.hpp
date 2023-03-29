@@ -48,6 +48,12 @@ public:
         kMaxFrameSize = OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
     };
 
+    enum
+    {
+        kResetStack    = 1, ///< Reset the RCP stack.
+        kResetHardware = 2, ///< Hardware reset the RCP chip.
+    };
+
     /**
      * This type defines a receive frame buffer to store received spinel frame(s).
      *

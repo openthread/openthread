@@ -141,11 +141,10 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 
 otError HdlcInterface::Reset(uint8_t aResetType)
 {
-    static constexpr uint8_t kResetStack                = 1;
     static constexpr uint8_t kSpinelResetStackCommand[] = {0x81, 0x01, 0x02};
     otError                  error;
 
-    VerifyOrExit(aResetType == kResetStack, error = OT_ERROR_NOT_IMPLEMENTED);
+    VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetStack, error = OT_ERROR_NOT_IMPLEMENTED);
 
     mHdlcDecoder.Reset();
     VerifyOrExit(SendFrame(kSpinelResetStackCommand, sizeof(kSpinelResetStackCommand)) == OT_ERROR_NONE,

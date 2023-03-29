@@ -99,10 +99,9 @@ void SpiInterface::ResetStates(void)
 
 otError SpiInterface::Reset(uint8_t aResetType)
 {
-    static constexpr uint8_t kResetHardware = 2;
-    otError                  error;
+    otError error;
 
-    VerifyOrExit(aResetType == kResetHardware, error = OT_ERROR_NOT_IMPLEMENTED);
+    VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetHardware, error = OT_ERROR_NOT_IMPLEMENTED);
     ResetStates();
     TriggerReset();
 

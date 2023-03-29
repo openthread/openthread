@@ -158,7 +158,7 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method resets the RCP chip.
+     * This method resets the RCP.
      *
      * @param[in] aResetType The reset type.
      *

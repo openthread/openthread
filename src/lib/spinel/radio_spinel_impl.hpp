@@ -271,13 +271,14 @@ void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(bool aResetRadio)
     mIsReady    = false;
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
-    if (aResetRadio && (mSpinelInterface.Reset(kResetStack) == OT_ERROR_NONE) && (WaitResponse(false) == OT_ERROR_NONE))
+    if (aResetRadio && (mSpinelInterface.Reset(Spinel::SpinelInterface::kResetStack) == OT_ERROR_NONE) &&
+        (WaitResponse(false) == OT_ERROR_NONE))
     {
         resetDone = true;
         otLogInfoPlat("Software reset RCP successfully");
     }
 
-    if (!resetDone && (mSpinelInterface.Reset(kResetHardware) == OT_ERROR_NONE) &&
+    if (!resetDone && (mSpinelInterface.Reset(Spinel::SpinelInterface::kResetHardware) == OT_ERROR_NONE) &&
         (WaitResponse(false) == OT_ERROR_NONE))
     {
         otLogInfoPlat("Hardware reset RCP successfully");

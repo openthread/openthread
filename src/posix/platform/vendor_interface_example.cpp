@@ -101,12 +101,13 @@ void VendorInterface::Deinit(void)
 
 uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
-void VendorInterface::ResetStates(void)
+otError VendorInterface::Reset(uint8_t aResetType)
 {
+    OT_UNUSED_VARIABLE(aResetType);
     // TODO: Implement vendor code here.
-}
 
-otError VendorInterface::HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
 void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
@@ -139,13 +140,6 @@ otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aLength);
 
-    // TODO: Implement vendor code here.
-
-    return OT_ERROR_NONE;
-}
-
-otError VendorInterface::ResetConnection(void)
-{
     // TODO: Implement vendor code here.
 
     return OT_ERROR_NONE;

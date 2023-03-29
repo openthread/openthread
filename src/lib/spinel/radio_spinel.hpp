@@ -947,12 +947,6 @@ private:
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
-    enum
-    {
-        kResetStack    = 1, ///< Reset the RCP stack.
-        kResetHardware = 2, ///< Hardware reset the RCP chip.
-    };
-
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
     static void HandleReceivedFrame(void *aContext);
@@ -1089,6 +1083,7 @@ private:
     bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
     bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
     int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
 
