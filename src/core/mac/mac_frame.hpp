@@ -1206,10 +1206,9 @@ public:
 
     /**
      * This method returns the timestamp when the frame was received.
-     * If CSL or TIME_SYNC is enabled, the timestamp marks the frame detection time: the end of the last symbol of SFD.
-     * If neither CSL nor TIME_SYNC are enabled, it may also mark the end of the last symbol of the frame.
+     * The timestamp marks the frame detection time: the end of the last symbol of SFD.
      *
-     * @returns The timestamp when the frame was received, in microseconds.
+     * @returns The timestamp when the frame SFD was received, in microseconds.
      *
      */
     const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
