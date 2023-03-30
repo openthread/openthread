@@ -123,6 +123,7 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriEnergyScan, EnergyScanServer);
         Case(kUriActiveGet, MeshCoP::ActiveDatasetManager);
         Case(kUriPendingGet, MeshCoP::PendingDatasetManager);
+        Case(kUriPanIdQuery, PanIdQueryServer);
 
 #if OPENTHREAD_FTD
         Case(kUriAddressQuery, AddressResolver);
@@ -137,7 +138,6 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriCommissionerGet, NetworkData::Leader);
         Case(kUriCommissionerSet, NetworkData::Leader);
         Case(kUriAnnounceBegin, AnnounceBeginServer);
-        Case(kUriPanIdQuery, PanIdQueryServer);
         Case(kUriRelayTx, MeshCoP::JoinerRouter);
 #endif
 
