@@ -321,8 +321,8 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
+        "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
-        "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
     local args=(
         "BORDER_ROUTING=${BORDER_ROUTING}"
@@ -337,6 +337,11 @@ do_build_otbr_docker()
         "WEB_GUI=0"
         "MDNS=${OTBR_MDNS:-mDNSResponder}"
     )
+
+    if [[ ${NAT64} != 1 ]]; then
+        # We are testing upstream DNS forwarding in the NAT64 tests, and OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF will block OpenThread's DNSSD server since we already have bind9 running.
+        otbr_options+=("-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'")
+    fi
 
     if [[ ${TREL} == 1 ]]; then
         otbr_options+=("-DOTBR_TREL=ON")

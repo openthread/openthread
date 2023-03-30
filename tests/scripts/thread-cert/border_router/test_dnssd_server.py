@@ -97,6 +97,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         server.srp_server_set_enabled(True)
+        server.dns_upstream_query_state = False
 
         client1.start()
 
