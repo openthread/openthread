@@ -99,11 +99,17 @@ void SpiInterface::ResetStates(void)
 
 otError SpiInterface::Reset(uint8_t aResetType)
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetHardware, error = OT_ERROR_NOT_IMPLEMENTED);
     ResetStates();
     TriggerReset();
+
+    // If the `INT` pin is set to low during the restart of the RCP chip, which triggers continuous invalid SPI
+    // transactions by the host. It will cause the function `PushPullSpi()` to output lots of invalid warn log
+    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputing invalid
+    // log messages.
+    usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
 
 exit:
     return error;
@@ -117,6 +123,7 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint8_t     spiGpioResetLine   = 0;
     uint8_t     spiMode            = OT_PLATFORM_CONFIG_SPI_DEFAULT_MODE;
     uint32_t    spiSpeed           = SPI_IOC_WR_MAX_SPEED_HZ;
+    uint32_t    spiResetDelay      = OT_PLATFORM_CONFIG_SPI_DEFAULT_RESET_DELAY_MS;
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
@@ -153,6 +160,10 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     {
         spiSpeed = static_cast<uint32_t>(atoi(value));
     }
+    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
+    {
+        spiResetDelay = static_cast<uint32_t>(atoi(value));
+    }
     if ((value = aRadioUrl.GetValue("spi-cs-delay")))
     {
         spiCsDelay = static_cast<uint16_t>(atoi(value));
@@ -168,6 +179,7 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
 
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
 
+    mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
     mSpiSmallPacketSize = spiSmallPacketSize;
     mSpiAlignAllowance  = spiAlignAllowance;

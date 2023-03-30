@@ -57,6 +57,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    spi-mode[=mode]               Specify the SPI mode to use (0-3).\n"                                   \
     "    spi-speed[=hertz]             Specify the SPI speed in hertz.\n"                                      \
     "    spi-cs-delay[=usec]           Specify the delay after C̅S̅ assertion, in µsec.\n"                  \
+    "    spi-reset-delay[=ms]          Specify the delay after R̅E̅S̅E̅T̅ assertion, in milliseconds.\n"  \
     "    spi-align-allowance[=n]       Specify the maximum number of 0xFF bytes to clip from start of\n"       \
     "                                  MISO frame. Max value is 16.\n"                                         \
     "    spi-small-packet=[n]          Specify the smallest packet we can receive in a single transaction.\n"  \

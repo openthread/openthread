@@ -230,6 +230,7 @@ private:
 
     uint8_t  mSpiMode;
     uint8_t  mSpiAlignAllowance;
+    uint32_t mSpiResetDelay;
     uint16_t mSpiCsDelayUs;
     uint16_t mSpiSmallPacketSize;
     uint32_t mSpiSpeedHz;

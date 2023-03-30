@@ -60,6 +60,7 @@
 #include <openthread/logging.h>
 
 #include "common/code_utils.hpp"
+#include "lib/spinel/spinel.h"
 
 #ifdef __APPLE__
 
@@ -141,8 +142,9 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 
 otError HdlcInterface::Reset(uint8_t aResetType)
 {
-    static constexpr uint8_t kSpinelResetStackCommand[] = {0x81, 0x01, 0x02};
-    otError                  error;
+    static const uint8_t kSpinelResetStackCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET,
+                                                       SPINEL_RESET_STACK};
+    otError              error;
 
     VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetStack, error = OT_ERROR_NOT_IMPLEMENTED);
 

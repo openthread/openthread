@@ -266,6 +266,7 @@ exit:
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(bool aResetRadio)
 {
+    bool hardwareReset;
     bool resetDone = false;
 
     mIsReady    = false;
@@ -278,13 +279,22 @@ void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(bool aResetRadio)
         otLogInfoPlat("Software reset RCP successfully");
     }
 
-    if (!resetDone && (mSpinelInterface.Reset(Spinel::SpinelInterface::kResetHardware) == OT_ERROR_NONE) &&
-        (WaitResponse(false) == OT_ERROR_NONE))
+    VerifyOrExit(!resetDone);
+    hardwareReset = (mSpinelInterface.Reset(Spinel::SpinelInterface::kResetHardware) == OT_ERROR_NONE);
+    VerifyOrExit(WaitResponse(false) == OT_ERROR_NONE);
+
+    resetDone = true;
+
+    if (hardwareReset)
     {
         otLogInfoPlat("Hardware reset RCP successfully");
-        resetDone = true;
+    }
+    else
+    {
+        otLogInfoPlat("RCP self reset successfully");
     }
 
+exit:
     if (!resetDone)
     {
         otLogCritPlat("Failed to reset RCP!");

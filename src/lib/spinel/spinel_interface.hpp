@@ -48,7 +48,7 @@ public:
         kMaxFrameSize = OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
     };
 
-    enum
+    enum : uint8_t
     {
         kResetStack    = 1, ///< Reset the RCP stack.
         kResetHardware = 2, ///< Hardware reset the RCP chip.
