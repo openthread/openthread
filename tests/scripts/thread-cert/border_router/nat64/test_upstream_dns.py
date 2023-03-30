@@ -53,6 +53,16 @@ HOST = 3
 TEST_DOMAIN = 'test.domain'
 TEST_DOMAIN_IP6_ADDRESSES = {'2001:db8::1'}
 
+TEST_DOMAIN_BIND_CONF = f'''
+zone "{TEST_DOMAIN}" {{ type master; file "/etc/bind/db.test.domain"; }};
+'''
+
+TEST_DOMAIN_BIND_ZONE = f'''
+$TTL 24h
+@ IN SOA {TEST_DOMAIN} test.{TEST_DOMAIN}. ( 20230330 86400 300 604800 3600 )
+@ IN NS {TEST_DOMAIN}.
+''' + '\n'.join(f'@ IN AAAA {addr}' for addr in TEST_DOMAIN_IP6_ADDRESSES)
+
 
 class UpstreamDns(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -94,16 +104,8 @@ class UpstreamDns(thread_cert.TestCase):
 
         br.bash('service bind9 stop')
 
-        br.bash(
-            shlex.join(['echo', f'zone "{TEST_DOMAIN}" {{ type master; file "/etc/bind/db.test.domain"; }};']) +
-            ' >> /etc/bind/named.conf.local')
-        br.bash(shlex.join(['echo', '$TTL 24h']) + ' >> /etc/bind/db.test.domain')
-        br.bash(
-            shlex.join(['echo', f'@ IN SOA {TEST_DOMAIN} test.{TEST_DOMAIN}. ( 20230317 86400 300 604800 3600 )']) +
-            ' >> /etc/bind/db.test.domain')
-        br.bash(shlex.join(['echo', f'@ IN NS {TEST_DOMAIN}.']) + ' >> /etc/bind/db.test.domain')
-        for addr in TEST_DOMAIN_IP6_ADDRESSES:
-            br.bash(shlex.join(['echo', f'@ IN AAAA {addr};']) + ' >> /etc/bind/db.test.domain')
+        br.bash(shlex.join(['echo', TEST_DOMAIN_BIND_CONF]) + ' >> /etc/bind/named.conf.local')
+        br.bash(shlex.join(['echo', TEST_DOMAIN_BIND_ZONE]) + ' >> /etc/bind/db.test.domain')
 
         br.bash('service bind9 start')
 
