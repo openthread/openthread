@@ -1315,9 +1315,9 @@ public:
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
 
     /**
-     * This method returns the Clock Accuracy value.
+     * This method returns the Clock Uncertainty value.
      *
-     * @returns The Clock Accuracy value.
+     * @returns The Clock Uncertainty value.
      *
      */
     uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
