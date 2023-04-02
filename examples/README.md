@@ -51,11 +51,11 @@ This page lists the available common switches with description. Unless stated ot
 | MAC_FILTER | OT_MAC_FILTER | Enables support for the MAC filter. |
 | MLE_LONG_ROUTES | OT_MLE_LONG_ROUTES | Enables the MLE long routes extension. **Note: Enabling this feature breaks conformance to the Thread Specification.** |
 | MLR | OT_MLR | Enables Multicast Listener Registration feature for Thread 1.2. |
-| MTD_NETDIAG | OT_MTD_NETDIAG | Enables the TMF network diagnostics on MTDs. |
 | MULTIPLE_INSTANCE | OT_MULTIPLE_INSTANCE | Enables multiple OpenThread instances. |
 | NAT64_BORDER_ROUTING | OT_NAT64_BORDER_ROUTING | Enables NAT64 border routing support for Border Router. |
 | NAT64_TRANSLATOR | OT_NAT64_TRANSLATOR | Enables NAT64 translator for Border Router. |
 | NETDATA_PUBLISHER | OT_NETDATA_PUBLISHER | Enables support for Thread Network Data publisher. |
+| NETDIAG_CLIENT | OT_NETDIAG_CLIENT | Enables Network Diagnostics client functionality. |
 | PING_SENDER | OT_PING_SENDER | Enables support for ping sender. |
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |
@@ -73,3 +73,9 @@ This page lists the available common switches with description. Unless stated ot
 | TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |
 | UPTIME | OT_UPTIME | Enables support for tracking OpenThread instance's uptime. |
+
+Removed or replaced switches:
+
+| Makefile switch | CMake switch | Description |
+| --- | --- | --- |
+| MTD_NETDIAG | OT_MTD_NETDIAG | Use NEDIAG_CLIENT to enable client functionality. Server functionality is always supported. |

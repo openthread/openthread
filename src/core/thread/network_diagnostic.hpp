@@ -36,8 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-
 #include <openthread/netdiag.h>
 
 #include "common/callback.hpp"
@@ -61,11 +59,50 @@ namespace NetworkDiagnostic {
  * @{
  */
 
+class Client;
+
 /**
- * This class implements the Network Diagnostic processing.
+ * This class implements the Network Diagnostic server responding to requests.
  *
  */
-class NetworkDiagnostic : public InstanceLocator, private NonCopyable
+class Server : public InstanceLocator, private NonCopyable
+{
+    friend class Tmf::Agent;
+    friend class Client;
+
+public:
+    /**
+     * This constructor initializes the Server.
+     *
+     * @param[in] aInstance   The OpenThread instance.
+     *
+     */
+    explicit Server(Instance &aInstance);
+
+private:
+    static constexpr uint16_t kMaxChildEntries = 398;
+
+    Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
+    Error AppendIp6AddressList(Message &aMessage);
+    Error AppendMacCounters(Message &aMessage);
+    Error AppendChildTable(Message &aMessage);
+    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
+    void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
+
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+};
+
+DeclareTmfHandler(Server, kUriDiagnosticGetRequest);
+DeclareTmfHandler(Server, kUriDiagnosticGetQuery);
+DeclareTmfHandler(Server, kUriDiagnosticGetAnswer);
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+/**
+ * This class implements the Network Diagnostic client sending requests and queries.
+ *
+ */
+class Client : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
 
@@ -78,10 +115,12 @@ public:
     static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
 
     /**
-     * This constructor initializes the object.
+     * This constructor initializes the Client.
+     *
+     * @param[in] aInstance   The OpenThread instance.
      *
      */
-    explicit NetworkDiagnostic(Instance &aInstance);
+    explicit Client(Instance &aInstance);
 
     /**
      * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
@@ -127,25 +166,12 @@ public:
 private:
     static constexpr uint16_t kMaxChildEntries = 398;
 
-    enum Action : uint8_t
-    {
-        kMessageSend,
-        kMessageReceive,
-    };
-
     Error SendCommand(Uri                   aUri,
                       const Ip6::Address   &aDestination,
                       const uint8_t         aTlvTypes[],
                       uint8_t               aCount,
                       Coap::ResponseHandler aHandler = nullptr,
                       void                 *aContext = nullptr);
-
-    Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
-    Error AppendIp6AddressList(Message &aMessage);
-    Error AppendMacCounters(Message &aMessage);
-    Error AppendChildTable(Message &aMessage);
-    Error AppendRequestedTlvs(const Message &aRequest, Message &aResponse);
-    void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
     static void HandleGetResponse(void                *aContext,
                                   otMessage           *aMessage,
@@ -157,18 +183,14 @@ private:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *UriToString(Uri aUri);
-    void               Log(Action aAction, Uri aUri, const Ip6::Address &aIp6Address) const;
-#else
-    void Log(Action, Uri, const Ip6::Address &) const {}
 #endif
 
     Callback<GetCallback> mGetCallback;
 };
 
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetRequest);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetQuery);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticGetAnswer);
-DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticReset);
+DeclareTmfHandler(Client, kUriDiagnosticReset);
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
 /**
  * @}
@@ -176,7 +198,5 @@ DeclareTmfHandler(NetworkDiagnostic, kUriDiagnosticReset);
 } // namespace NetworkDiagnostic
 
 } // namespace ot
-
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #endif // NETWORK_DIAGNOSTIC_HPP_

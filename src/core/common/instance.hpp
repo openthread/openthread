@@ -495,8 +495,9 @@ private:
 
     NetworkData::Service::Manager mNetworkDataServiceManager;
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
+    NetworkDiagnostic::Server mNetworkDiagnosticServer;
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+    NetworkDiagnostic::Client mNetworkDiagnosticClient;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -824,8 +825,10 @@ template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void) { return m
 template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void) { return mNetworkDiagnostic; }
+template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+template <> inline NetworkDiagnostic::Client &Instance::Get(void) { return mNetworkDiagnosticClient; }
 #endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE

@@ -33,8 +33,6 @@
 
 #include "network_diagnostic.hpp"
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-
 #include "coap/coap_message.hpp"
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
@@ -58,82 +56,15 @@ RegisterLogModule("NetDiag");
 
 namespace NetworkDiagnostic {
 
-NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
+//---------------------------------------------------------------------------------------------------------------------
+// Server
+
+Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
-                                           const uint8_t       aTlvTypes[],
-                                           uint8_t             aCount,
-                                           GetCallback         aCallback,
-                                           void               *aContext)
-{
-    Error error;
-
-    if (aDestination.IsMulticast())
-    {
-        error = SendCommand(kUriDiagnosticGetQuery, aDestination, aTlvTypes, aCount);
-    }
-    else
-    {
-        error = SendCommand(kUriDiagnosticGetRequest, aDestination, aTlvTypes, aCount, &HandleGetResponse, this);
-    }
-
-    SuccessOrExit(error);
-
-    mGetCallback.Set(aCallback, aContext);
-
-exit:
-    return error;
-}
-
-Error NetworkDiagnostic::SendCommand(Uri                   aUri,
-                                     const Ip6::Address   &aDestination,
-                                     const uint8_t         aTlvTypes[],
-                                     uint8_t               aCount,
-                                     Coap::ResponseHandler aHandler,
-                                     void                 *aContext)
-{
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-
-    switch (aUri)
-    {
-    case kUriDiagnosticGetQuery:
-        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(aUri);
-        break;
-
-    case kUriDiagnosticGetRequest:
-    case kUriDiagnosticReset:
-        message = Get<Tmf::Agent>().NewConfirmablePostMessage(aUri);
-        break;
-
-    default:
-        OT_ASSERT(false);
-    }
-
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    if (aCount > 0)
-    {
-        SuccessOrExit(error = Tlv::Append<TypeListTlv>(*message, aTlvTypes, aCount));
-    }
-
-    PrepareMessageInfoForDest(aDestination, messageInfo);
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
-
-    Log(kMessageSend, aUri, aDestination);
-
-exit:
-    FreeMessageOnError(message, error);
-    return error;
-}
-
-void NetworkDiagnostic::PrepareMessageInfoForDest(const Ip6::Address &aDestination,
-                                                  Tmf::MessageInfo   &aMessageInfo) const
+void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
 {
     if (aDestination.IsMulticast())
     {
@@ -152,41 +83,7 @@ void NetworkDiagnostic::PrepareMessageInfoForDest(const Ip6::Address &aDestinati
     aMessageInfo.SetPeerAddr(aDestination);
 }
 
-void NetworkDiagnostic::HandleGetResponse(void                *aContext,
-                                          otMessage           *aMessage,
-                                          const otMessageInfo *aMessageInfo,
-                                          Error                aResult)
-{
-    static_cast<NetworkDiagnostic *>(aContext)->HandleGetResponse(AsCoapMessagePtr(aMessage),
-                                                                  AsCoreTypePtr(aMessageInfo), aResult);
-}
-
-void NetworkDiagnostic::HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
-{
-    SuccessOrExit(aResult);
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, aResult = kErrorFailed);
-
-exit:
-    mGetCallback.InvokeIfSet(aResult, aMessage, aMessageInfo);
-}
-
-template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message          &aMessage,
-                                                           const Ip6::MessageInfo &aMessageInfo)
-{
-    VerifyOrExit(aMessage.IsConfirmablePostRequest());
-
-    Log(kMessageReceive, kUriDiagnosticGetAnswer, aMessageInfo.GetPeerAddr());
-
-    mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
-
-    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
-
-exit:
-    return;
-}
-
-Error NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
+Error Server::AppendIp6AddressList(Message &aMessage)
 {
     Error    error = kErrorNone;
     uint16_t count = 0;
@@ -224,7 +121,7 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-Error NetworkDiagnostic::AppendChildTable(Message &aMessage)
+Error Server::AppendChildTable(Message &aMessage)
 {
     Error    error = kErrorNone;
     uint16_t count;
@@ -276,7 +173,7 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-Error NetworkDiagnostic::AppendMacCounters(Message &aMessage)
+Error Server::AppendMacCounters(Message &aMessage)
 {
     MacCountersTlv       tlv;
     const otMacCounters &counters = Get<Mac::Mac>().GetCounters();
@@ -298,7 +195,7 @@ Error NetworkDiagnostic::AppendMacCounters(Message &aMessage)
     return tlv.AppendTo(aMessage);
 }
 
-Error NetworkDiagnostic::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
+Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
     Error    error;
     uint16_t offset;
@@ -320,7 +217,7 @@ exit:
     return error;
 }
 
-Error NetworkDiagnostic::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
+Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 {
     Error error = kErrorNone;
 
@@ -437,14 +334,16 @@ exit:
 }
 
 template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Server::HandleTmf<kUriDiagnosticGetQuery>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error            error    = kErrorNone;
     Coap::Message   *response = nullptr;
     Tmf::MessageInfo responseInfo(GetInstance());
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
-    Log(kMessageReceive, kUriDiagnosticGetQuery, aMessageInfo.GetPeerAddr());
+
+    LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetQuery>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     // DIAG_GET.qry may be sent as a confirmable request.
     if (aMessage.IsConfirmable())
@@ -465,14 +364,15 @@ exit:
 }
 
 template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message          &aMessage,
-                                                            const Ip6::MessageInfo &aMessageInfo)
+void Server::HandleTmf<kUriDiagnosticGetRequest>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error          error    = kErrorNone;
     Coap::Message *response = nullptr;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
-    Log(kMessageReceive, kUriDiagnosticGetRequest, aMessageInfo.GetPeerAddr());
+
+    LogInfo("Received %s from %s", UriToString<kUriDiagnosticGetRequest>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     response = Get<Tmf::Agent>().NewResponseMessage(aMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
@@ -484,22 +384,16 @@ exit:
     FreeMessageOnError(response, error);
 }
 
-Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
-                                             const uint8_t       aTlvTypes[],
-                                             uint8_t             aCount)
-{
-    return SendCommand(kUriDiagnosticReset, aDestination, aTlvTypes, aCount);
-}
-
-template <>
-void NetworkDiagnostic::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint16_t offset = 0;
     uint8_t  type;
     Tlv      tlv;
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
-    Log(kMessageReceive, kUriDiagnosticReset, aMessageInfo.GetPeerAddr());
+
+    LogInfo("Received %s from %s", UriToString<kUriDiagnosticReset>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), tlv));
 
@@ -526,6 +420,121 @@ void NetworkDiagnostic::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage, 
 
 exit:
     return;
+}
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// Client
+
+Client::Client(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+Error Client::SendDiagnosticGet(const Ip6::Address &aDestination,
+                                const uint8_t       aTlvTypes[],
+                                uint8_t             aCount,
+                                GetCallback         aCallback,
+                                void               *aContext)
+{
+    Error error;
+
+    if (aDestination.IsMulticast())
+    {
+        error = SendCommand(kUriDiagnosticGetQuery, aDestination, aTlvTypes, aCount);
+    }
+    else
+    {
+        error = SendCommand(kUriDiagnosticGetRequest, aDestination, aTlvTypes, aCount, &HandleGetResponse, this);
+    }
+
+    SuccessOrExit(error);
+
+    mGetCallback.Set(aCallback, aContext);
+
+exit:
+    return error;
+}
+
+Error Client::SendCommand(Uri                   aUri,
+                          const Ip6::Address   &aDestination,
+                          const uint8_t         aTlvTypes[],
+                          uint8_t               aCount,
+                          Coap::ResponseHandler aHandler,
+                          void                 *aContext)
+{
+    Error            error;
+    Coap::Message   *message = nullptr;
+    Tmf::MessageInfo messageInfo(GetInstance());
+
+    switch (aUri)
+    {
+    case kUriDiagnosticGetQuery:
+        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(aUri);
+        break;
+
+    case kUriDiagnosticGetRequest:
+    case kUriDiagnosticReset:
+        message = Get<Tmf::Agent>().NewConfirmablePostMessage(aUri);
+        break;
+
+    default:
+        OT_ASSERT(false);
+    }
+
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    if (aCount > 0)
+    {
+        SuccessOrExit(error = Tlv::Append<TypeListTlv>(*message, aTlvTypes, aCount));
+    }
+
+    Get<Server>().PrepareMessageInfoForDest(aDestination, messageInfo);
+
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
+
+    LogInfo("Sent %s to %s", UriToString(aUri), aDestination.ToString().AsCString());
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
+}
+
+void Client::HandleGetResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
+{
+    static_cast<Client *>(aContext)->HandleGetResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
+                                                       aResult);
+}
+
+void Client::HandleGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+{
+    SuccessOrExit(aResult);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged, aResult = kErrorFailed);
+
+exit:
+    mGetCallback.InvokeIfSet(aResult, aMessage, aMessageInfo);
+}
+
+template <>
+void Client::HandleTmf<kUriDiagnosticGetAnswer>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
+
+    LogInfo("Received %s from %s", ot::UriToString<kUriDiagnosticGetAnswer>(),
+            aMessageInfo.GetPeerAddr().ToString().AsCString());
+
+    mGetCallback.InvokeIfSet(kErrorNone, &aMessage, &aMessageInfo);
+
+    IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
+
+exit:
+    return;
+}
+
+Error Client::SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount)
+{
+    return SendCommand(kUriDiagnosticReset, aDestination, aTlvTypes, aCount);
 }
 
 static void ParseRoute(const RouteTlv &aRouteTlv, otNetworkDiagRoute &aNetworkDiagRoute)
@@ -561,7 +570,7 @@ static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNet
     aMacCounters.mIfOutDiscards      = aMacCountersTlv.GetIfOutDiscards();
 }
 
-Error NetworkDiagnostic::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo)
+Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo)
 {
     Error    error  = kErrorNotFound;
     uint16_t offset = (aIterator == 0) ? aMessage.GetOffset() : aIterator;
@@ -775,7 +784,7 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-const char *NetworkDiagnostic::UriToString(Uri aUri)
+const char *Client::UriToString(Uri aUri)
 {
     const char *str = "";
 
@@ -790,9 +799,6 @@ const char *NetworkDiagnostic::UriToString(Uri aUri)
     case kUriDiagnosticReset:
         str = ot::UriToString<kUriDiagnosticReset>();
         break;
-    case kUriDiagnosticGetAnswer:
-        str = ot::UriToString<kUriDiagnosticGetAnswer>();
-        break;
     default:
         break;
     }
@@ -800,29 +806,10 @@ const char *NetworkDiagnostic::UriToString(Uri aUri)
     return str;
 }
 
-void NetworkDiagnostic::Log(Action aAction, Uri aUri, const Ip6::Address &aIp6Address) const
-{
-    static const char *const kActionStrings[] = {
-        "Sent",     // (0) kMessageSend
-        "Received", // (1) kMessageReceive
-    };
-
-    static const char *const kActionPrepositionStrings[] = {
-        "to",   // (0) kMessageSend
-        "from", // (1) kMessageReceive
-    };
-
-    static_assert(kMessageSend == 0, "kMessageSend value is incorrect");
-    static_assert(kMessageReceive == 1, "kMessageReceive value is incorrect");
-
-    LogInfo("%s %s %s %s", kActionStrings[aAction], UriToString(aUri), kActionPrepositionStrings[aAction],
-            aIp6Address.ToString().AsCString());
-}
-
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
 } // namespace NetworkDiagnostic
 
 } // namespace ot
-
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE

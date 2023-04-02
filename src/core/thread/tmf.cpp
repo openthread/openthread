@@ -164,11 +164,12 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriAnycastLocate, AnycastLocator);
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::NetworkDiagnostic);
-        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::NetworkDiagnostic);
-        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::NetworkDiagnostic);
-        Case(kUriDiagnosticReset, NetworkDiagnostic::NetworkDiagnostic);
+        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticReset, NetworkDiagnostic::Server);
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

@@ -122,12 +122,12 @@ ot_option(OT_MESH_DIAG OPENTHREAD_CONFIG_MESH_DIAG_ENABLE "mesh diag")
 ot_option(OT_MESSAGE_USE_HEAP OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE "heap allocator for message buffers")
 ot_option(OT_MLE_LONG_ROUTES OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE "MLE long routes extension (experimental)")
 ot_option(OT_MLR OPENTHREAD_CONFIG_MLR_ENABLE "Multicast Listener Registration (MLR)")
-ot_option(OT_MTD_NETDIAG OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE "TMF network diagnostics on MTDs")
 ot_option(OT_MULTIPLE_INSTANCE OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE "multiple instances")
 ot_option(OT_NAT64_BORDER_ROUTING OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE "border routing NAT64")
 ot_option(OT_NAT64_TRANSLATOR OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE "NAT64 translator support")
 ot_option(OT_NEIGHBOR_DISCOVERY_AGENT OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE "neighbor discovery agent")
 ot_option(OT_NETDATA_PUBLISHER OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE "Network Data publisher")
+ot_option(OT_NETDIAG_CLIENT OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE "Network Diagnostic client")
 ot_option(OT_OTNS OPENTHREAD_CONFIG_OTNS_ENABLE "OTNS")
 ot_option(OT_PING_SENDER OPENTHREAD_CONFIG_PING_SENDER_ENABLE "ping sender" ${OT_APP_CLI})
 ot_option(OT_PLATFORM_NETIF OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE "platform netif")
@@ -210,3 +210,17 @@ endif()
 if(OT_POSIX_SETTINGS_PATH)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH=${OT_POSIX_SETTINGS_PATH}")
 endif()
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Check removed/replaced options
+
+macro(ot_removed_option name error)
+    # This macro checks for a remove option and emits an error
+    # if the option is set.
+    get_property(is_set CACHE ${name} PROPERTY VALUE SET)
+    if (is_set)
+        message(FATAL_ERROR "Removed option ${name} is set - ${error}")
+    endif()
+endmacro()
+
+ot_removed_option(OT_MTD_NETDIAG "- Use OT_NETDIAG_CLIENT instead - note that server function is always supported")
