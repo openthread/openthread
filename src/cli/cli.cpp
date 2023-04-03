@@ -3016,7 +3016,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
                        (defaultConfig->mTransportProto == OT_DNS_TRANSPORT_UDP) ? "udp" : "tcp");
 #endif
         }
-        /* clang-format off */
         /**
          * @cli dns config (set)
          * @code
@@ -3045,7 +3044,9 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * @endcode
          * @par api_copy
          * #otDnsClientSetDefaultConfig
-         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}][@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
+         * -->                [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
+         * -->                [@ca{recursion-desired-boolean}]
          * @par
          * We can leave some of the fields as unspecified (or use value zero). The
          * unspecified fields are replaced by the corresponding OT config option
@@ -3053,14 +3054,12 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
          * query config.
          * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
          */
-        /* clang-format on */
         else
         {
             SuccessOrExit(error = GetDnsConfig(aArgs + 1, config));
             otDnsClientSetDefaultConfig(GetInstancePtr(), config);
         }
     }
-    /* clang-format off */
     /**
      * @cli dns resolve
      * @code
@@ -3073,7 +3072,9 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
      * Done
      * @endcode
-     * @cparam dns resolve @ca{hostname} [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @cparam dns resolve @ca{hostname} [@ca{dns-server-IP}] <!--
+     * -->                 [@ca{dns-server-port}] [@ca{response-timeout-ms}] <!--
+     * -->                 [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
      * @par api_copy
      * #otDnsClientResolveAddress
      * @par
@@ -3090,7 +3091,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * address but the preferred NAT64 prefix is unavailable.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
      */
-    /* clang-format on */
     else if (aArgs[0] == "resolve")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3110,7 +3110,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
     }
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* clang-format off */
     /**
      * @cli dns browse
      * @code
@@ -3137,7 +3136,9 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      *     HostAddress:fd97:739d:386a:1:1c2e:d83c:fcbe:9cf4 TTL:10
      * Done
      * @endcode
-     * @cparam dns browse @ca{service-name} [@ca{dns-server-IP}] [@ca{dns-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @cparam dns browse @ca{service-name} [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
+     * -->                [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
+     * -->                [@ca{recursion-desired-boolean}]
      * @sa otDnsClientBrowse
      * @par
      * Send a browse (service instance enumeration) DNS query to get the list of services for
@@ -3154,7 +3155,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * instead should be `default.service.arpa`.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
      */
-    /* clang-format on */
     else if (aArgs[0] == "browse")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -3163,10 +3163,12 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
                                                 &Interpreter::HandleDnsBrowseResponse, this, config));
         error = OT_ERROR_PENDING;
     }
-    /* clang-format off */
     /**
      * @cli dns service
-     * @cparam dns service @ca{service-instance-label} @ca{service-name} [@ca{DNS-server-IP}] [@ca{DNS-server-port}] [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
+     * @cparam dns service @ca{service-instance-label} @ca{service-name} <!--
+     * -->                 [@ca{DNS-server-IP}] [@ca{DNS-server-port}] <!--
+     * -->                 [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
+     * -->                 [@ca{recursion-desired-boolean}]
      * @par api_copy
      * #otDnsClientResolveService
      * @par
@@ -3184,7 +3186,6 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * address but the preferred NAT64 prefix is unavailable.
      * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
      */
-    /* clang-format on */
     else if (aArgs[0] == "service")
     {
         VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -6071,7 +6072,6 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
     }
 }
 
-/* clang-format off */
 /**
  * @cli ping
  * @code
@@ -6093,16 +6093,17 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
  * 1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
  * Done
  * @endcode
- * @cparam ping [@ca{async}] [@ca{-I source}] @ca{ipaddrc} [@ca{size}] [@ca{count}] [@ca{interval}] [@ca{hoplimit}] [@ca{timeout}]
+ * @cparam ping [@ca{async}] [@ca{-I source}] @ca{ipaddrc} [@ca{size}] [@ca{count}] <!--
+ * -->          [@ca{interval}] [@ca{hoplimit}] [@ca{timeout}]
  * @par
  * Send an ICMPv6 Echo Request.
  * @par
- * The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+ * The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix
+ * from the network data.
  * @par
  * Note: The command will return InvalidState when the preferred NAT64 prefix is unavailable.
- * @sa otPingSenderPing 
+ * @sa otPingSenderPing
  */
-/* clang-format on */
 template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
 {
     otError            error = OT_ERROR_NONE;
