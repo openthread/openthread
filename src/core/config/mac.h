@@ -467,6 +467,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD
+ *
+ * Transmission scheduling and ramp up time needed for the CSL transmitter to be ready, in units of microseconds.
+ * This time must include at least the radio's turnaround time between end of CCA and start of preamble transmission.
+ * To avoid early CSL transmission it also must not be configured higher than the actual scheduling and ramp up time.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD
+#define OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD 40
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
  *
  * Reception scheduling and ramp up time needed for the CSL receiver to be ready, in units of microseconds.

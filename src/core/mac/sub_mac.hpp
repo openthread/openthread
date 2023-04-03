@@ -571,6 +571,13 @@ private:
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    // CSL transmitter would schedule delayed transmission `kCslTransmitTimeAhead` earlier
+    // than expected delayed transmit time. The value is in usec.
+    // Only for radios not supporting OT_RADIO_CAPS_TRANSMIT_TIMING.
+    static constexpr uint32_t kCslTransmitTimeAhead = OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD;
+#endif
+
     /**
      * This method initializes the states of the sub-MAC layer.
      *

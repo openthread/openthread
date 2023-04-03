@@ -419,9 +419,10 @@ void SubMac::StartCsmaBackoff(void)
         {
             if (Time(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()))) <
                 Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) + mTransmitFrame.mInfo.mTxInfo.mTxDelay -
-                    kCcaSampleInterval)
+                    kCcaSampleInterval - kCslTransmitTimeAhead)
             {
-                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) - kCcaSampleInterval,
+                mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) - kCcaSampleInterval -
+                                   kCslTransmitTimeAhead,
                                mTransmitFrame.mInfo.mTxInfo.mTxDelay);
             }
             else // Transmit without delay
@@ -1187,10 +1188,10 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     semiWindow =
         static_cast<uint32_t>(static_cast<uint64_t>(elapsed) *
                               (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy.GetClockAccuracy()) / 1000000);
-    semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec();
+    semiWindow += mCslParentAccuracy.GetUncertaintyInMicrosec() + Get<Radio>().GetCslUncertainty() * 10;
 
-    aAhead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;
-    aAfter = (semiWindow + kMinCslWindow > semiPeriod) ? semiPeriod : semiWindow + kMinCslWindow;
+    aAhead = Min(semiPeriod, semiWindow + kCslReceiveTimeAhead);
+    aAfter = Min(semiPeriod, semiWindow + kMinCslWindow);
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
