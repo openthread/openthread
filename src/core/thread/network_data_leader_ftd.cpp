@@ -134,7 +134,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
-    LogInfo("Received network data registration");
+    LogInfo("Received %s", UriToString<kUriServerData>());
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
@@ -162,7 +162,7 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    LogInfo("Sent network data registration acknowledgment");
+    LogInfo("Sent %s ack", UriToString<kUriServerData>());
 
 exit:
     return;
@@ -332,7 +332,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message    &aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent commissioning dataset get response");
+    LogInfo("Sent %s response", UriToString<kUriCommissionerGet>());
 
 exit:
     FreeMessageOnError(message, error);
@@ -352,7 +352,7 @@ void Leader::SendCommissioningSetResponse(const Coap::Message     &aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent commissioning dataset set response");
+    LogInfo("sent %s response", UriToString<kUriCommissionerSet>());
 
 exit:
     FreeMessageOnError(message, error);

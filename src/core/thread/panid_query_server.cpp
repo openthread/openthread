@@ -76,7 +76,7 @@ void PanIdQueryServer::HandleTmf<kUriPanIdQuery>(Coap::Message &aMessage, const 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
-        LogInfo("sent panid query response");
+        LogInfo("Sent %s ack", UriToString<kUriPanIdQuery>());
     }
 
 exit:
@@ -123,7 +123,7 @@ void PanIdQueryServer::SendConflict(void)
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent panid conflict");
+    LogInfo("Sent %s", UriToString<kUriPanIdConflict>());
 
 exit:
     FreeMessageOnError(message, error);

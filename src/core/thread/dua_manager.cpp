@@ -541,7 +541,7 @@ void DuaManager::PerformNextRegistration(void)
         Get<DataPollSender>().SendFastPolls();
     }
 
-    LogInfo("Sent DUA.req for DUA %s", dua.ToString().AsCString());
+    LogInfo("Sent %s for DUA %s", UriToString<kUriDuaRegistrationRequest>(), dua.ToString().AsCString());
 
 exit:
     if (error == kErrorNoBufs)
@@ -592,7 +592,7 @@ exit:
         mRegistrationTask.Post();
     }
 
-    LogInfo("Received DUA.rsp: %s", ErrorToString(error));
+    LogInfo("Received %s response: %s", UriToString<kUriDuaRegistrationRequest>(), ErrorToString(error));
 }
 
 template <>
@@ -606,14 +606,14 @@ void DuaManager::HandleTmf<kUriDuaRegistrationNotify>(Coap::Message &aMessage, c
 
     if (aMessage.IsConfirmable() && Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
     {
-        LogInfo("Sent DUA.ntf acknowledgment");
+        LogInfo("Sent %s ack", UriToString<kUriDuaRegistrationNotify>());
     }
 
     error = ProcessDuaResponse(aMessage);
 
 exit:
     OT_UNUSED_VARIABLE(error);
-    LogInfo("Received DUA.ntf: %s", ErrorToString(error));
+    LogInfo("Received %s: %s", UriToString<kUriDuaRegistrationNotify>(), ErrorToString(error));
 }
 
 Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
@@ -743,7 +743,8 @@ void DuaManager::SendAddressNotification(Ip6::Address              &aAddress,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("Sent ADDR_NTF for child %04x DUA %s", aChild.GetRloc16(), aAddress.ToString().AsCString());
+    LogInfo("Sent %s for child %04x DUA %s", UriToString<kUriDuaRegistrationNotify>(), aChild.GetRloc16(),
+            aAddress.ToString().AsCString());
 
 exit:
 
@@ -752,8 +753,8 @@ exit:
         FreeMessage(message);
 
         // TODO: (DUA) (P4) may enhance to  guarantee the delivery of DUA.ntf
-        LogWarn("Sent ADDR_NTF for child %04x DUA %s Error %s", aChild.GetRloc16(), aAddress.ToString().AsCString(),
-                ErrorToString(error));
+        LogWarn("Sent %s for child %04x DUA %s Error %s", UriToString<kUriDuaRegistrationNotify>(), aChild.GetRloc16(),
+                aAddress.ToString().AsCString(), ErrorToString(error));
     }
 }
 

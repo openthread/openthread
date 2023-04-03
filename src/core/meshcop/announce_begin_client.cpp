@@ -85,7 +85,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent announce begin query");
+    LogInfo("Sent %s", UriToString<kUriAnnounceBegin>());
 
 exit:
     FreeMessageOnError(message, error);

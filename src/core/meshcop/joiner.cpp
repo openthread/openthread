@@ -486,7 +486,7 @@ void Joiner::SendJoinerFinalize(void)
     SuccessOrExit(Get<Tmf::SecureAgent>().SendMessage(*mFinalizeMessage, Joiner::HandleJoinerFinalizeResponse, this));
     mFinalizeMessage = nullptr;
 
-    LogInfo("Joiner sent finalize");
+    LogInfo("Sent %s", UriToString<kUriJoinerFinalize>());
 
 exit:
     return;
@@ -517,7 +517,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
     SetState(kStateEntrust);
     mTimer.Start(kReponseTimeout);
 
-    LogInfo("Joiner received finalize response %d", state);
+    LogInfo("Received %s %d", UriToString<kUriJoinerFinalize>(), state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", *aMessage);
@@ -535,7 +535,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, c
 
     VerifyOrExit(mState == kStateEntrust && aMessage.IsConfirmablePostRequest(), error = kErrorDrop);
 
-    LogInfo("Joiner received entrust");
+    LogInfo("Received %s", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=recv | type=JOIN_ENT.ntf");
 
     datasetInfo.Clear();
@@ -574,7 +574,7 @@ void Joiner::SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6:
 
     SetState(kStateJoined);
 
-    LogInfo("Joiner sent entrust response");
+    LogInfo("Sent %s response", UriToString<kUriJoinerEntrust>());
     LogCert("[THCI] direction=send | type=JOIN_ENT.rsp");
 
 exit:

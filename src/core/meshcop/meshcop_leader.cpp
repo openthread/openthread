@@ -71,7 +71,7 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
     CommissionerIdTlv commissionerId;
     StateTlv::State   state = StateTlv::kReject;
 
-    LogInfo("received petition");
+    LogInfo("Received %s", UriToString<kUriLeaderPetition>());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
@@ -136,7 +136,7 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent petition response");
+    LogInfo("Sent %s response", UriToString<kUriLeaderPetition>());
 
 exit:
     FreeMessageOnError(message, error);
@@ -150,7 +150,7 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
     BorderAgentLocatorTlv *borderAgentLocator;
     StateTlv::State        responseState;
 
-    LogInfo("received keep alive");
+    LogInfo("Received %s", UriToString<kUriLeaderKeepAlive>());
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
@@ -202,7 +202,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message    &aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent keep alive response");
+    LogInfo("Sent %s response", UriToString<kUriLeaderKeepAlive>());
 
 exit:
     FreeMessageOnError(message, error);
@@ -221,7 +221,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent dataset changed");
+    LogInfo("Sent %s", UriToString<kUriDatasetChanged>());
 
 exit:
     FreeMessageOnError(message, error);

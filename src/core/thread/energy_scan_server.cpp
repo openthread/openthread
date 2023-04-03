@@ -102,7 +102,7 @@ void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
-        LogInfo("sent energy scan query response");
+        LogInfo("Sent %s ack", UriToString<kUriEnergyScan>());
     }
 
 exit:
@@ -197,7 +197,7 @@ void EnergyScanServer::SendReport(void)
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*mReportMessage, messageInfo));
 
-    LogInfo("sent scan results");
+    LogInfo("Sent %s", UriToString<kUriEnergyReport>());
 
 exit:
     FreeMessageOnError(mReportMessage, error);
