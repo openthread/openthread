@@ -274,6 +274,12 @@ class Node(object):
     def set_router_eligible(self, enable):
         self._cli_no_output('routereligible', enable)
 
+    def get_context_reuse_delay(self):
+        return self._cli_single_output('contextreusedelay')
+
+    def set_context_reuse_delay(self, delay):
+        self._cli_no_output('contextreusedelay', delay)
+
     def interface_up(self):
         self._cli_no_output('ifconfig up')
 
