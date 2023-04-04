@@ -542,8 +542,10 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
-    uint32_t period    = Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout());
     uint32_t pollAhead = static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+    uint32_t period;
+
+    period = Time::SecToMsec(Min(Get<Mle::MleRouter>().GetTimeout(), Time::MsecToSec(TimerMilli::kMaxDelay)));
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
