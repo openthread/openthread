@@ -1706,9 +1706,28 @@ public:
      * @returns A pointer to the message or `nullptr` if no message buffers are available.
      *
      */
-    Message *Allocate(Message::Type            aType,
-                      uint16_t                 aReserveHeader = 0,
-                      const Message::Settings &aSettings      = Message::Settings::GetDefault());
+    Message *Allocate(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings);
+
+    /**
+     * This method allocates a new message of a given type using default settings.
+     *
+     * @param[in]  aType           The message type.
+     *
+     * @returns A pointer to the message or `nullptr` if no message buffers are available.
+     *
+     */
+    Message *Allocate(Message::Type aType);
+
+    /**
+     * This method allocates a new message with a given type and reserved length using default settings.
+     *
+     * @param[in]  aType           The message type.
+     * @param[in]  aReserveHeader  The number of header bytes to reserve.
+     *
+     * @returns A pointer to the message or `nullptr` if no message buffers are available.
+     *
+     */
+    Message *Allocate(Message::Type aType, uint16_t aReserveHeader);
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.
