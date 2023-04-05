@@ -459,6 +459,8 @@ private:
     otError     GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig);
     static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
     void        HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse);
+    const char *DnsConfigServiceModeToString(otDnsServiceMode aMode) const;
+    otError     ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     void        OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo);
     static void HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);

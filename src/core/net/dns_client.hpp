@@ -146,6 +146,20 @@ public:
 #endif
 
         /**
+         * This enumeration type represents the service resolution mode.
+         *
+         */
+        enum ServiceMode : uint8_t
+        {
+            kServiceModeUnspecified    = OT_DNS_SERVICE_MODE_UNSPECIFIED,      ///< Unspecified. Use default.
+            kServiceModeSrv            = OT_DNS_SERVICE_MODE_SRV,              ///< SRV record only.
+            kServiceModeTxt            = OT_DNS_SERVICE_MODE_TXT,              ///< TXT record only.
+            kServiceModeSrvTxt         = OT_DNS_SERVICE_MODE_SRV_TXT,          ///< SRV and TXT same msg.
+            kServiceModeSrvTxtSeparate = OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE, ///< SRV and TXT separate msgs.
+            kServiceModeSrvTxtOptimize = OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE, ///< Same msg first, if fail separate.
+        };
+
+        /**
          * This enumeration type represents the DNS transport protocol selection.
          *
          */
@@ -206,6 +220,13 @@ public:
          */
         Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
+        /**
+         * This method gets the service resolution mode.
+         *
+         * @returns The service resolution mode.
+         *
+         */
+        ServiceMode GetServiceMode(void) const { return static_cast<ServiceMode>(mServiceMode); }
 
         /**
          * This method gets the transport protocol.
@@ -220,6 +241,10 @@ public:
         static constexpr uint16_t kDefaultServerPort      = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT;
         static constexpr uint8_t  kDefaultMaxTxAttempts   = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS;
         static constexpr bool kDefaultRecursionDesired    = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG;
+        static constexpr ServiceMode kDefaultServiceMode =
+            static_cast<ServiceMode>(OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE);
+
+        static_assert(kDefaultServiceMode != kServiceModeUnspecified, "Invalid default service mode");
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         static constexpr bool kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED;
@@ -239,6 +264,7 @@ public:
         void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
         void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
         void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
+        void SetServiceMode(ServiceMode aMode) { mServiceMode = static_cast<otDnsServiceMode>(aMode); }
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
 #endif
@@ -246,7 +272,8 @@ public:
         {
             mTransportProto = static_cast<otDnsTransportProto>(aTransportProto);
         }
-        void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
+
+        void SetFrom(const QueryConfig *aConfig, const QueryConfig &aDefaultConfig);
     };
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -292,12 +319,16 @@ public:
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        Error FindServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
+        void  InitServiceInfo(ServiceInfo &aServiceInfo) const;
+        Error ReadServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
+        Error ReadTxtRecord(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
 #endif
+        void PopulateFrom(const Message &aMessage);
 
         Instance      *mInstance;              // The OpenThread instance.
         Query         *mQuery;                 // The associated query.
         const Message *mMessage;               // The response message.
+        Response      *mNext;                  // The next response when we have related queries.
         uint16_t       mAnswerOffset;          // Answer section offset in `mMessage`.
         uint16_t       mAnswerRecordCount;     // Number of records in answer section.
         uint16_t       mAdditionalOffset;      // Additional data section offset in `mMessage`.
@@ -720,9 +751,12 @@ private:
         kIp4AddressQuery, // IPv4 Address resolution
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        kBrowseQuery,  // Browse (service instance enumeration).
-        kServiceQuery, // Service instance resolution.
+        kBrowseQuery,        // Browse (service instance enumeration).
+        kServiceQuerySrvTxt, // Service instance resolution both SRV and TXT records.
+        kServiceQuerySrv,    // Service instance resolution SRV record only.
+        kServiceQueryTxt,    // Service instance resolution TXT record only.
 #endif
+        kNoQuery,
     };
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
@@ -757,29 +791,44 @@ private:
         TimeMilli   mRetransmissionTime;
         QueryConfig mConfig;
         uint8_t     mTransmissionCount;
+        Query      *mMainQuery;
+        Query      *mNextQuery;
+        Message    *mSavedResponse;
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
     static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
-    Error       StartQuery(QueryInfo         &aInfo,
-                           const QueryConfig *aConfig,
-                           const char        *aLabel,
-                           const char        *aName,
-                           void              *aContext);
+    Error       StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName, QueryType aSecondType = kNoQuery);
     Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
+    Query      &FindMainQuery(Query &aQuery);
     Error       SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
-    void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
-    static void GetCallback(const Query &aQuery, Callback &aCallback, void *&aContext);
+    void        FinalizeQuery(Response &Response, Error aError);
+    static void GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
     Query      *FindQueryById(uint16_t aMessageId);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
-    void        ProcessResponse(const Message &aMessage);
-    Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);
+    void        ProcessResponse(const Message &aResponseMessage);
+    Error       ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError);
+    bool        CanFinalizeQuery(Query &aQuery);
+    void        SaveQueryResponse(Query &aQuery, const Message &aResponseMessage);
+    Query      *PopulateResponse(Response &aResponse, Query &aQuery, const Message &aResponseMessage);
+    void        PrepareResponseAndFinalize(Query &aQuery, const Message &aResponseMessage, Response *aPrevResponse);
     void        HandleTimer(void);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    Error ReplaceWithIp4Query(Query &aQuery);
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    Error ReplaceWithSeparateSrvTxtQueries(Query &aQuery);
+#endif
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    void UpdateDefaultConfigAddress(void);
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
     static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
@@ -805,15 +854,8 @@ private:
     void  PrepareTcpMessage(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
-    void UpdateDefaultConfigAddress(void);
-#endif
-
-    static const uint8_t   kQuestionCount[];
-    static const uint16_t *kQuestionRecordTypes[];
+    static const uint8_t         kQuestionCount[];
+    static const uint16_t *const kQuestionRecordTypes[];
 
     static const uint16_t kIp6AddressQueryRecordTypes[];
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -840,7 +882,7 @@ private:
     TcpState mTcpState;
 #endif
 
-    QueryList   mQueries;
+    QueryList   mMainQueries;
     RetryTimer  mTimer;
     QueryConfig mDefaultConfig;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE

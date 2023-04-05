@@ -1113,7 +1113,20 @@ Done
 
 Get the default query config used by DNS client.
 
-The config includes the server IPv6 address and port, response timeout in msec (wait time to rx response), maximum tx attempts before reporting failure, boolean flag to indicate whether the server can resolve the query recursively or not.
+The config includes
+
+- Server IPv6 address and port
+- Response timeout in msec (wait time to rx response)
+- Maximum tx attempts before reporting failure
+- Boolean flag to indicate whether the server can resolve the query recursively or not.
+- Service resolution mode which specifies which records to query. Possible options are:
+  - `srv` : Query for SRV record only.
+  - `txt` : Query for TXT record only.
+  - `srv_txt` : Query for both SRV and TXT records in the same message.
+  - `srv_txt_sep`: Query in parallel for SRV and TXT using separate messages.
+  - `srv_txt_opt`: Query for TXT/SRV together first, if it fails then query separately.
+- Whether to allow/disallow NAT64 address translation during address resolution (requires `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE`)
+- Transport protocol UDP or TCP (requires `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE`)
 
 ```bash
 > dns config
@@ -1121,19 +1134,30 @@ Server: [fd00:0:0:0:0:0:0:1]:1234
 ResponseTimeout: 5000 ms
 MaxTxAttempts: 2
 RecursionDesired: no
+ServiceMode: srv_txt_opt
+Nat64Mode: allow
 TransportProtocol: udp
 Done
 >
 ```
 
-### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\] \[transport protocol\]
+### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\] \[service mode]
 
 Set the default query config.
+
+Service mode specifies which records to query. Possible options are:
+
+- `def` : Use default option.
+- `srv` : Query for SRV record only.
+- `txt` : Query for TXT record only.
+- `srv_txt` : Query for both SRV and TXT records in the same message.
+- `srv_txt_sep`: Query in parallel for SRV and TXT using separate messages.
+- `srv_txt_opt`: Query for TXT/SRV together first, if it fails then query separately.
 
 To set protocol effectively to tcp `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is required.
 
 ```bash
-> dns config fd00::1 1234 5000 2 0 tcp
+> dns config fd00::1 1234 5000 2 0 srv_txt_sep tcp
 Done
 
 > dns config
@@ -1141,6 +1165,8 @@ Server: [fd00:0:0:0:0:0:0:1]:1234
 ResponseTimeout: 5000 ms
 MaxTxAttempts: 2
 RecursionDesired: no
+ServiceMode: srv_txt_sep
+Nat64Mode: allow
 TransportProtocol: tcp
 Done
 ```
