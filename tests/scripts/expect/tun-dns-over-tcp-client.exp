@@ -39,7 +39,7 @@ switch_node 1
 set addr_1 [get_ipaddr mleid]
 
 switch_node 2
-send "dns resolve ipv6.google.com $addr_1 2000 6000 4 1 tcp\n"
+send "dns resolve ipv6.google.com $addr_1 2000 6000 4 1 def tcp\n"
 expect "DNS response for ipv6.google.com"
 expect_line "Done"
 

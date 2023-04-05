@@ -262,6 +262,27 @@ public:
      */
     const Counters &GetCounters(void) const { return mCounters; };
 
+    /**
+     * This enumeration represents different test modes.
+     *
+     * The test mode is intended for testing the client by having server behave in certain ways, e.g., reject messages
+     * with certain format (e.g., more than one question in query).
+     *
+     */
+    enum TestMode : uint8_t
+    {
+        kTestModeDisabled,           ///< Test mode is disabled.
+        kTestModeSingleQuestionOnly, ///< Allow single question in query message, send `FormatError` for two or more.
+    };
+
+    /**
+     * This method sets the test mode for `Server`.
+     *
+     * @param[in] aTestMode   The new test mode.
+     *
+     */
+    void SetTestMode(TestMode aTestMode) { mTestMode = aTestMode; }
+
 private:
     class NameCompressInfo : public Clearable<NameCompressInfo>
     {
@@ -531,8 +552,8 @@ private:
 #endif
 
     ServerTimer mTimer;
-
-    Counters mCounters;
+    Counters    mCounters;
+    TestMode    mTestMode;
 };
 
 } // namespace ServiceDiscovery

@@ -70,19 +70,27 @@ Client::QueryConfig::QueryConfig(InitMode aMode)
     SetResponseTimeout(kDefaultResponseTimeout);
     SetMaxTxAttempts(kDefaultMaxTxAttempts);
     SetRecursionFlag(kDefaultRecursionDesired ? kFlagRecursionDesired : kFlagNoRecursion);
+    SetServiceMode(kDefaultServiceMode);
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     SetNat64Mode(kDefaultNat64Allowed ? kNat64Allow : kNat64Disallow);
 #endif
     SetTransportProto(kDnsTransportUdp);
 }
 
-void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig)
+void Client::QueryConfig::SetFrom(const QueryConfig *aConfig, const QueryConfig &aDefaultConfig)
 {
     // This method sets the config from `aConfig` replacing any
     // unspecified fields (value zero) with the fields from
-    // `aDefaultConfig`.
+    // `aDefaultConfig`. If `aConfig` is `nullptr` then
+    // `aDefaultConfig` is used.
 
-    *this = aConfig;
+    if (aConfig == nullptr)
+    {
+        *this = aDefaultConfig;
+        ExitNow();
+    }
+
+    *this = *aConfig;
 
     if (GetServerSockAddr().GetAddress().IsUnspecified())
     {
@@ -115,10 +123,19 @@ void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig 
         SetNat64Mode(aDefaultConfig.GetNat64Mode());
     }
 #endif
+
+    if (GetServiceMode() == kServiceModeUnspecified)
+    {
+        SetServiceMode(aDefaultConfig.GetServiceMode());
+    }
+
     if (GetTransportProto() == kDnsTransportUnspecified)
     {
         SetTransportProto(aDefaultConfig.GetTransportProto());
     }
+
+exit:
+    return;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -230,22 +247,42 @@ exit:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-Error Client::Response::FindServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const
+void Client::Response::InitServiceInfo(ServiceInfo &aServiceInfo) const
 {
-    // This method searches for SRV and TXT records in the given
-    // section matching the record name against `aName`, and updates
-    // the `aServiceInfo` accordingly. It also searches for AAAA
-    // record for host name associated with the service (from SRV
-    // record). The search for AAAA record is always performed in
-    // Additional Data section (independent of the value given in
-    // `aSection`).
+    // This method initializes `aServiceInfo` setting all
+    // TTLs to zero and host name to empty string.
 
-    Error     error;
+    aServiceInfo.mTtl              = 0;
+    aServiceInfo.mHostAddressTtl   = 0;
+    aServiceInfo.mTxtDataTtl       = 0;
+    aServiceInfo.mTxtDataTruncated = false;
+
+    AsCoreType(&aServiceInfo.mHostAddress).Clear();
+
+    if ((aServiceInfo.mHostNameBuffer != nullptr) && (aServiceInfo.mHostNameBufferSize > 0))
+    {
+        aServiceInfo.mHostNameBuffer[0] = '\0';
+    }
+}
+
+Error Client::Response::ReadServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const
+{
+    // This method searches for SRV record in the given `aSection`
+    // matching the record name against `aName`, and updates the
+    // `aServiceInfo` accordingly. It also searches for AAAA record
+    // for host name associated with the service (from SRV record).
+    // The search for AAAA record is always performed in Additional
+    // Data section (independent of the value given in `aSection`).
+
+    Error     error = kErrorNone;
     uint16_t  offset;
     uint16_t  numRecords;
     Name      hostName;
     SrvRecord srvRecord;
-    TxtRecord txtRecord;
+
+    // A non-zero `mTtl` indicates that SRV record is already found
+    // and parsed from a previous response.
+    VerifyOrExit(aServiceInfo.mTtl == 0);
 
     VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
 
@@ -277,55 +314,96 @@ Error Client::Response::FindServiceInfo(Section aSection, const Name &aName, Ser
 
     if (error == kErrorNotFound)
     {
-        AsCoreType(&aServiceInfo.mHostAddress).Clear();
-        aServiceInfo.mHostAddressTtl = 0;
-        error                        = kErrorNone;
-    }
-
-    SuccessOrExit(error);
-
-    // A null `mTxtData` indicates that caller does not want to retrieve TXT data.
-    VerifyOrExit(aServiceInfo.mTxtData != nullptr);
-
-    // Search for a matching TXT record. If not found, indicate this by
-    // setting `aServiceInfo.mTxtDataSize` to zero.
-
-    SelectSection(aSection, offset, numRecords);
-
-    aServiceInfo.mTxtDataTruncated = false;
-
-    error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, /* aIndex */ 0, aName, txtRecord);
-
-    switch (error)
-    {
-    case kErrorNone:
-        error = txtRecord.ReadTxtData(*mMessage, offset, aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
-
-        if (error == kErrorNoBufs)
-        {
-            error                          = kErrorNone;
-            aServiceInfo.mTxtDataTruncated = true;
-        }
-
-        SuccessOrExit(error);
-        aServiceInfo.mTxtDataTtl = txtRecord.GetTtl();
-        break;
-
-    case kErrorNotFound:
-        aServiceInfo.mTxtDataSize = 0;
-        aServiceInfo.mTxtDataTtl  = 0;
-        error                     = kErrorNone;
-        break;
-
-    default:
-        ExitNow();
+        error = kErrorNone;
     }
 
 exit:
     return error;
 }
 
+Error Client::Response::ReadTxtRecord(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const
+{
+    // This method searches a TXT record in the given `aSection`
+    // matching the record name against `aName` and updates the TXT
+    // related properties in `aServicesInfo`.
+    //
+    // If no match is found `mTxtDataTtl` (which is initialized to zero)
+    // remains unchanged to indicate this. In this case this method still
+    // returns `kErrorNone`.
+
+    Error     error = kErrorNone;
+    uint16_t  offset;
+    uint16_t  numRecords;
+    TxtRecord txtRecord;
+
+    // A non-zero `mTxtDataTtl` indicates that TXT record is already
+    // found and parsed from a previous response.
+    VerifyOrExit(aServiceInfo.mTxtDataTtl == 0);
+
+    // A null `mTxtData` indicates that caller does not want to retrieve
+    // TXT data.
+    VerifyOrExit(aServiceInfo.mTxtData != nullptr);
+
+    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+
+    SelectSection(aSection, offset, numRecords);
+
+    aServiceInfo.mTxtDataTruncated = false;
+
+    SuccessOrExit(error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, /* aIndex */ 0, aName, txtRecord));
+
+    error = txtRecord.ReadTxtData(*mMessage, offset, aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+
+    if (error == kErrorNoBufs)
+    {
+        error = kErrorNone;
+
+        // Mark `mTxtDataTruncated` to indicate that we could not read
+        // the full TXT record into the given `mTxtData` buffer.
+        aServiceInfo.mTxtDataTruncated = true;
+    }
+
+    SuccessOrExit(error);
+    aServiceInfo.mTxtDataTtl = txtRecord.GetTtl();
+
+exit:
+    if (error == kErrorNotFound)
+    {
+        error = kErrorNone;
+    }
+
+    return error;
+}
+
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+void Client::Response::PopulateFrom(const Message &aMessage)
+{
+    // Populate `Response` with info from `aMessage`.
+
+    uint16_t offset = aMessage.GetOffset();
+    Header   header;
+
+    mMessage = &aMessage;
+
+    IgnoreError(aMessage.Read(offset, header));
+    offset += sizeof(Header);
+
+    for (uint16_t num = 0; num < header.GetQuestionCount(); num++)
+    {
+        IgnoreError(Name::ParseName(aMessage, offset));
+        offset += sizeof(Question);
+    }
+
+    mAnswerOffset = offset;
+    IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAnswerCount()));
+    IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAuthorityRecordCount()));
+    mAdditionalOffset = offset;
+    IgnoreError(ResourceRecord::ParseRecords(aMessage, offset, header.GetAdditionalRecordCount()));
+
+    mAnswerRecordCount     = header.GetAnswerCount();
+    mAdditionalRecordCount = header.GetAdditionalRecordCount();
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // Client::AddressResponse
@@ -400,12 +478,20 @@ Error Client::BrowseResponse::GetServiceInfo(const char *aInstanceLabel, Service
     Error error;
     Name  instanceName;
 
-    // Find a matching PTR record for the service instance label.
-    // Then search and read SRV, TXT and AAAA records in Additional Data section
-    // matching the same name to populate `aServiceInfo`.
+    // Find a matching PTR record for the service instance label. Then
+    // search and read SRV, TXT and AAAA records in Additional Data
+    // section matching the same name to populate `aServiceInfo`.
 
     SuccessOrExit(error = FindPtrRecord(aInstanceLabel, instanceName));
-    error = FindServiceInfo(kAdditionalDataSection, instanceName, aServiceInfo);
+
+    InitServiceInfo(aServiceInfo);
+    SuccessOrExit(error = ReadServiceInfo(kAdditionalDataSection, instanceName, aServiceInfo));
+    SuccessOrExit(error = ReadTxtRecord(kAdditionalDataSection, instanceName, aServiceInfo));
+
+    if (aServiceInfo.mTxtDataTtl == 0)
+    {
+        aServiceInfo.mTxtDataSize = 0;
+    }
 
 exit:
     return error;
@@ -497,10 +583,51 @@ exit:
 
 Error Client::ServiceResponse::GetServiceInfo(ServiceInfo &aServiceInfo) const
 {
-    // Search and read SRV, TXT records in Answer Section
-    // matching name from query.
+    // Search and read SRV, TXT records matching name from query.
 
-    return FindServiceInfo(kAnswerSection, Name(*mQuery, kNameOffsetInQuery), aServiceInfo);
+    Error error = kErrorNotFound;
+
+    InitServiceInfo(aServiceInfo);
+
+    for (const Response *response = this; response != nullptr; response = response->mNext)
+    {
+        Name      name(*response->mQuery, kNameOffsetInQuery);
+        QueryInfo info;
+        Section   srvSection;
+        Section   txtSection;
+
+        info.ReadFrom(*response->mQuery);
+
+        // Determine from which section we should try to read the SRV and
+        // TXT records based on the query type.
+        //
+        // In `kServiceQuerySrv` or `kServiceQueryTxt` we expect to see
+        // only one record (SRV or TXT) in the answer section, but we
+        // still try to read the other records from additional data
+        // section in case server provided them.
+
+        srvSection = (info.mQueryType != kServiceQueryTxt) ? kAnswerSection : kAdditionalDataSection;
+        txtSection = (info.mQueryType != kServiceQuerySrv) ? kAnswerSection : kAdditionalDataSection;
+
+        error = response->ReadServiceInfo(srvSection, name, aServiceInfo);
+
+        if ((srvSection == kAdditionalDataSection) && (error == kErrorNotFound))
+        {
+            error = kErrorNone;
+        }
+
+        SuccessOrExit(error);
+
+        SuccessOrExit(error = response->ReadTxtRecord(txtSection, name, aServiceInfo));
+    }
+
+    if (aServiceInfo.mTxtDataTtl == 0)
+    {
+        aServiceInfo.mTxtDataSize = 0;
+    }
+
+exit:
+    return error;
 }
 
 Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
@@ -508,7 +635,19 @@ Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
                                               Ip6::Address &aAddress,
                                               uint32_t     &aTtl) const
 {
-    return FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
+    Error error = kErrorNotFound;
+
+    for (const Response *response = this; response != nullptr; response = response->mNext)
+    {
+        error = FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
+
+        if (error == kErrorNone)
+        {
+            break;
+        }
+    }
+
+    return error;
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -526,24 +665,29 @@ const uint16_t Client::kServiceQueryRecordTypes[] = {ResourceRecord::kTypeSrv, R
 #endif
 
 const uint8_t Client::kQuestionCount[] = {
-    /* kIp6AddressQuery -> */ GetArrayLength(kIp6AddressQueryRecordTypes), // AAAA records
+    /* kIp6AddressQuery -> */ GetArrayLength(kIp6AddressQueryRecordTypes), // AAAA record
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    /* kIp4AddressQuery -> */ GetArrayLength(kIp4AddressQueryRecordTypes), // A records
+    /* kIp4AddressQuery -> */ GetArrayLength(kIp4AddressQueryRecordTypes), // A record
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* kBrowseQuery  -> */ GetArrayLength(kBrowseQueryRecordTypes),  // PTR records
-    /* kServiceQuery -> */ GetArrayLength(kServiceQueryRecordTypes), // SRV and TXT records
+    /* kBrowseQuery        -> */ GetArrayLength(kBrowseQueryRecordTypes),  // PTR record
+    /* kServiceQuerySrvTxt -> */ GetArrayLength(kServiceQueryRecordTypes), // SRV and TXT records
+    /* kServiceQuerySrv    -> */ 1,                                        // SRV record only
+    /* kServiceQueryTxt    -> */ 1,                                        // TXT record only
 #endif
 };
 
-const uint16_t *Client::kQuestionRecordTypes[] = {
+const uint16_t *const Client::kQuestionRecordTypes[] = {
     /* kIp6AddressQuery -> */ kIp6AddressQueryRecordTypes,
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     /* kIp4AddressQuery -> */ kIp4AddressQueryRecordTypes,
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     /* kBrowseQuery  -> */ kBrowseQueryRecordTypes,
-    /* kServiceQuery -> */ kServiceQueryRecordTypes,
+    /* kServiceQuerySrvTxt -> */ kServiceQueryRecordTypes,
+    /* kServiceQuerySrv    -> */ &kServiceQueryRecordTypes[0],
+    /* kServiceQueryTxt    -> */ &kServiceQueryRecordTypes[1],
+
 #endif
 };
 
@@ -564,11 +708,15 @@ Client::Client(Instance &aInstance)
     static_assert(kIp4AddressQuery == 1, "kIp4AddressQuery value is not correct");
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     static_assert(kBrowseQuery == 2, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuery == 3, "kServiceQuery value is not correct");
+    static_assert(kServiceQuerySrvTxt == 3, "kServiceQuerySrvTxt value is not correct");
+    static_assert(kServiceQuerySrv == 4, "kServiceQuerySrv value is not correct");
+    static_assert(kServiceQueryTxt == 5, "kServiceQueryTxt value is not correct");
 #endif
 #elif OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     static_assert(kBrowseQuery == 1, "kBrowseQuery value is not correct");
-    static_assert(kServiceQuery == 2, "kServiceQuery value is not correct");
+    static_assert(kServiceQuerySrvTxt == 2, "kServiceQuerySrvTxt value is not correct");
+    static_assert(kServiceQuerySrv == 3, "kServiceQuerySrv value is not correct");
+    static_assert(kServiceQueryTxt == 4, "kServiceQuerySrv value is not correct");
 #endif
 }
 
@@ -587,7 +735,7 @@ void Client::Stop(void)
 {
     Query *query;
 
-    while ((query = mQueries.GetHead()) != nullptr)
+    while ((query = mMainQueries.GetHead()) != nullptr)
     {
         FinalizeQuery(*query, kErrorAbort);
     }
@@ -630,7 +778,7 @@ void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
 {
     QueryConfig startingDefault(QueryConfig::kInitFromDefaults);
 
-    mDefaultConfig.SetFrom(aQueryConfig, startingDefault);
+    mDefaultConfig.SetFrom(&aQueryConfig, startingDefault);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     mUserDidSetDefaultAddress = !aQueryConfig.GetServerSockAddr().GetAddress().IsUnspecified();
@@ -669,10 +817,12 @@ Error Client::ResolveAddress(const char        *aHostName,
     QueryInfo info;
 
     info.Clear();
-    info.mQueryType                 = kIp6AddressQuery;
+    info.mQueryType = kIp6AddressQuery;
+    info.mConfig.SetFrom(aConfig, mDefaultConfig);
     info.mCallback.mAddressCallback = aCallback;
+    info.mCallbackContext           = aContext;
 
-    return StartQuery(info, aConfig, nullptr, aHostName, aContext);
+    return StartQuery(info, nullptr, aHostName);
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -684,10 +834,12 @@ Error Client::ResolveIp4Address(const char        *aHostName,
     QueryInfo info;
 
     info.Clear();
-    info.mQueryType                 = kIp4AddressQuery;
+    info.mQueryType = kIp4AddressQuery;
+    info.mConfig.SetFrom(aConfig, mDefaultConfig);
     info.mCallback.mAddressCallback = aCallback;
+    info.mCallbackContext           = aContext;
 
-    return StartQuery(info, aConfig, nullptr, aHostName, aContext);
+    return StartQuery(info, nullptr, aHostName);
 }
 #endif
 
@@ -698,10 +850,12 @@ Error Client::Browse(const char *aServiceName, BrowseCallback aCallback, void *a
     QueryInfo info;
 
     info.Clear();
-    info.mQueryType                = kBrowseQuery;
+    info.mQueryType = kBrowseQuery;
+    info.mConfig.SetFrom(aConfig, mDefaultConfig);
     info.mCallback.mBrowseCallback = aCallback;
+    info.mCallbackContext          = aContext;
 
-    return StartQuery(info, aConfig, nullptr, aServiceName, aContext);
+    return StartQuery(info, nullptr, aServiceName);
 }
 
 Error Client::ResolveService(const char        *aInstanceLabel,
@@ -712,14 +866,40 @@ Error Client::ResolveService(const char        *aInstanceLabel,
 {
     QueryInfo info;
     Error     error;
+    QueryType secondQueryType = kNoQuery;
 
     VerifyOrExit(aInstanceLabel != nullptr, error = kErrorInvalidArgs);
 
     info.Clear();
-    info.mQueryType                 = kServiceQuery;
-    info.mCallback.mServiceCallback = aCallback;
 
-    error = StartQuery(info, aConfig, aInstanceLabel, aServiceName, aContext);
+    info.mConfig.SetFrom(aConfig, mDefaultConfig);
+
+    switch (info.mConfig.GetServiceMode())
+    {
+    case QueryConfig::kServiceModeSrvTxtSeparate:
+        secondQueryType = kServiceQueryTxt;
+
+        OT_FALL_THROUGH;
+
+    case QueryConfig::kServiceModeSrv:
+        info.mQueryType = kServiceQuerySrv;
+        break;
+
+    case QueryConfig::kServiceModeTxt:
+        info.mQueryType = kServiceQueryTxt;
+        break;
+
+    case QueryConfig::kServiceModeSrvTxt:
+    case QueryConfig::kServiceModeSrvTxtOptimize:
+    default:
+        info.mQueryType = kServiceQuerySrvTxt;
+        break;
+    }
+
+    info.mCallback.mServiceCallback = aCallback;
+    info.mCallbackContext           = aContext;
+
+    error = StartQuery(info, aInstanceLabel, aServiceName, secondQueryType);
 
 exit:
     return error;
@@ -727,36 +907,16 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-Error Client::StartQuery(QueryInfo         &aInfo,
-                         const QueryConfig *aConfig,
-                         const char        *aLabel,
-                         const char        *aName,
-                         void              *aContext)
+Error Client::StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName, QueryType aSecondType)
 {
-    // This method assumes that `mQueryType` and `mCallback` to be
-    // already set by caller on `aInfo`. The `aLabel` can be `nullptr`
-    // and then `aName` provides the full name, otherwise the name is
-    // appended as `{aLabel}.{aName}`.
+    // The `aLabel` can be `nullptr` and then `aName` provides the
+    // full name, otherwise the name is appended as `{aLabel}.
+    // {aName}`.
 
     Error  error;
     Query *query;
 
     VerifyOrExit(mSocket.IsBound(), error = kErrorInvalidState);
-
-    if (aConfig == nullptr)
-    {
-        aInfo.mConfig = mDefaultConfig;
-    }
-    else
-    {
-        // To form the config for this query, replace any unspecified
-        // fields (zero value) in the given `aConfig` with the fields
-        // from `mDefaultConfig`.
-
-        aInfo.mConfig.SetFrom(*aConfig, mDefaultConfig);
-    }
-
-    aInfo.mCallbackContext = aContext;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     if (aInfo.mQueryType == kIp4AddressQuery)
@@ -770,10 +930,33 @@ Error Client::StartQuery(QueryInfo         &aInfo,
 #endif
 
     SuccessOrExit(error = AllocateQuery(aInfo, aLabel, aName, query));
-    mQueries.Enqueue(*query);
-    if ((error = SendQuery(*query, aInfo, /* aUpdateTimer */ true)) != kErrorNone)
+
+    mMainQueries.Enqueue(*query);
+
+    error = SendQuery(*query, aInfo, /* aUpdateTimer */ true);
+    VerifyOrExit(error == kErrorNone, FreeQuery(*query));
+
+    if (aSecondType != kNoQuery)
     {
-        FreeQuery(*query);
+        Query *secondQuery;
+
+        aInfo.mQueryType         = aSecondType;
+        aInfo.mMessageId         = 0;
+        aInfo.mTransmissionCount = 0;
+        aInfo.mMainQuery         = query;
+
+        // We intentionally do not use `error` here so in the unlikely
+        // case where we cannot allocate the second query we can proceed
+        // with the first one.
+        SuccessOrExit(AllocateQuery(aInfo, aLabel, aName, secondQuery));
+
+        IgnoreError(SendQuery(*secondQuery, aInfo, /* aUpdateTiemr */ true));
+
+        // Update first query to link to second one by updating
+        // its `mNextQuery`.
+        aInfo.ReadFrom(*query);
+        aInfo.mNextQuery = secondQuery;
+        UpdateQuery(*query, aInfo);
     }
 
 exit:
@@ -805,7 +988,29 @@ exit:
     return error;
 }
 
-void Client::FreeQuery(Query &aQuery) { mQueries.DequeueAndFree(aQuery); }
+Client::Query &Client::FindMainQuery(Query &aQuery)
+{
+    QueryInfo info;
+
+    info.ReadFrom(aQuery);
+
+    return (info.mMainQuery == nullptr) ? aQuery : *info.mMainQuery;
+}
+
+void Client::FreeQuery(Query &aQuery)
+{
+    Query    &mainQuery = FindMainQuery(aQuery);
+    QueryInfo info;
+
+    mMainQueries.Dequeue(mainQuery);
+
+    for (Query *query = &mainQuery; query != nullptr; query = info.mNextQuery)
+    {
+        info.ReadFrom(*query);
+        FreeMessage(info.mSavedResponse);
+        query->Free();
+    }
+}
 
 Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
 {
@@ -944,24 +1149,24 @@ Error Client::AppendNameFromQuery(const Query &aQuery, Message &aMessage)
 
 void Client::FinalizeQuery(Query &aQuery, Error aError)
 {
-    Response  response;
-    QueryInfo info;
+    Response response;
+    Query   &mainQuery = FindMainQuery(aQuery);
 
     response.mInstance = &Get<Instance>();
-    response.mQuery    = &aQuery;
-    info.ReadFrom(aQuery);
+    response.mQuery    = &mainQuery;
 
-    FinalizeQuery(response, info.mQueryType, aError);
+    FinalizeQuery(response, aError);
 }
 
-void Client::FinalizeQuery(Response &aResponse, QueryType aType, Error aError)
+void Client::FinalizeQuery(Response &aResponse, Error aError)
 {
-    Callback callback;
-    void    *context;
+    QueryType type;
+    Callback  callback;
+    void     *context;
 
-    GetCallback(*aResponse.mQuery, callback, context);
+    GetQueryTypeAndCallback(*aResponse.mQuery, type, callback, context);
 
-    switch (aType)
+    switch (type)
     {
     case kIp6AddressQuery:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -981,24 +1186,29 @@ void Client::FinalizeQuery(Response &aResponse, QueryType aType, Error aError)
         }
         break;
 
-    case kServiceQuery:
+    case kServiceQuerySrvTxt:
+    case kServiceQuerySrv:
+    case kServiceQueryTxt:
         if (callback.mServiceCallback != nullptr)
         {
             callback.mServiceCallback(aError, &aResponse, context);
         }
         break;
 #endif
+    case kNoQuery:
+        break;
     }
 
     FreeQuery(*aResponse.mQuery);
 }
 
-void Client::GetCallback(const Query &aQuery, Callback &aCallback, void *&aContext)
+void Client::GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext)
 {
     QueryInfo info;
 
     info.ReadFrom(aQuery);
 
+    aType     = info.mQueryType;
     aCallback = info.mCallback;
     aContext  = info.mCallbackContext;
 }
@@ -1008,17 +1218,21 @@ Client::Query *Client::FindQueryById(uint16_t aMessageId)
     Query    *matchedQuery = nullptr;
     QueryInfo info;
 
-    for (Query &query : mQueries)
+    for (Query &mainQuery : mMainQueries)
     {
-        info.ReadFrom(query);
-
-        if (info.mMessageId == aMessageId)
+        for (Query *query = &mainQuery; query != nullptr; query = info.mNextQuery)
         {
-            matchedQuery = &query;
-            break;
+            info.ReadFrom(*query);
+
+            if (info.mMessageId == aMessageId)
+            {
+                matchedQuery = query;
+                ExitNow();
+            }
         }
     }
 
+exit:
     return matchedQuery;
 }
 
@@ -1029,58 +1243,78 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
     static_cast<Client *>(aContext)->ProcessResponse(AsCoreType(aMessage));
 }
 
-void Client::ProcessResponse(const Message &aMessage)
+void Client::ProcessResponse(const Message &aResponseMessage)
 {
-    Response  response;
-    QueryType type;
-    Error     responseError;
+    Error  responseError;
+    Query *query;
 
-    response.mInstance = &Get<Instance>();
-    response.mMessage  = &aMessage;
+    SuccessOrExit(ParseResponse(aResponseMessage, query, responseError));
 
-    // We intentionally parse the response in a separate method
-    // `ParseResponse()` to free all the stack allocated variables
-    // (e.g., `QueryInfo`) used during parsing of the message before
-    // finalizing the query and invoking the user's callback.
+    if (responseError != kErrorNone)
+    {
+        // Received an error from server, check if we can replace
+        // the query.
 
-    SuccessOrExit(ParseResponse(response, type, responseError));
-    FinalizeQuery(response, type, responseError);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        if (ReplaceWithIp4Query(*query) == kErrorNone)
+        {
+            ExitNow();
+        }
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+        if (ReplaceWithSeparateSrvTxtQueries(*query) == kErrorNone)
+        {
+            ExitNow();
+        }
+#endif
+
+        FinalizeQuery(*query, responseError);
+        ExitNow();
+    }
+
+    // Received successful response from server.
+
+    if (!CanFinalizeQuery(*query))
+    {
+        SaveQueryResponse(*query, aResponseMessage);
+        ExitNow();
+    }
+
+    PrepareResponseAndFinalize(FindMainQuery(*query), aResponseMessage, nullptr);
 
 exit:
     return;
 }
 
-Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError)
+Error Client::ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError)
 {
-    Error          error   = kErrorNone;
-    const Message &message = *aResponse.mMessage;
-    uint16_t       offset  = message.GetOffset();
-    Header         header;
-    QueryInfo      info;
-    Name           queryName;
+    Error     error  = kErrorNone;
+    uint16_t  offset = aResponseMessage.GetOffset();
+    Header    header;
+    QueryInfo info;
+    Name      queryName;
 
-    SuccessOrExit(error = message.Read(offset, header));
+    SuccessOrExit(error = aResponseMessage.Read(offset, header));
     offset += sizeof(Header);
 
     VerifyOrExit((header.GetType() == Header::kTypeResponse) && (header.GetQueryType() == Header::kQueryTypeStandard) &&
                      !header.IsTruncationFlagSet(),
                  error = kErrorDrop);
 
-    aResponse.mQuery = FindQueryById(header.GetMessageId());
-    VerifyOrExit(aResponse.mQuery != nullptr, error = kErrorNotFound);
+    aQuery = FindQueryById(header.GetMessageId());
+    VerifyOrExit(aQuery != nullptr, error = kErrorNotFound);
 
-    info.ReadFrom(*aResponse.mQuery);
-    aType = info.mQueryType;
+    info.ReadFrom(*aQuery);
 
-    queryName.SetFromMessage(*aResponse.mQuery, kNameOffsetInQuery);
+    queryName.SetFromMessage(*aQuery, kNameOffsetInQuery);
 
     // Check the Question Section
 
-    if (header.GetQuestionCount() == kQuestionCount[aType])
+    if (header.GetQuestionCount() == kQuestionCount[info.mQueryType])
     {
-        for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
+        for (uint8_t num = 0; num < kQuestionCount[info.mQueryType]; num++)
         {
-            SuccessOrExit(error = Name::CompareName(message, offset, queryName));
+            SuccessOrExit(error = Name::CompareName(aResponseMessage, offset, queryName));
             offset += sizeof(Question);
         }
     }
@@ -1092,74 +1326,103 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
 
     // Check the answer, authority and additional record sections
 
-    aResponse.mAnswerOffset = offset;
-    SuccessOrExit(error = ResourceRecord::ParseRecords(message, offset, header.GetAnswerCount()));
-    SuccessOrExit(error = ResourceRecord::ParseRecords(message, offset, header.GetAuthorityRecordCount()));
-    aResponse.mAdditionalOffset = offset;
-    SuccessOrExit(error = ResourceRecord::ParseRecords(message, offset, header.GetAdditionalRecordCount()));
+    SuccessOrExit(error = ResourceRecord::ParseRecords(aResponseMessage, offset, header.GetAnswerCount()));
+    SuccessOrExit(error = ResourceRecord::ParseRecords(aResponseMessage, offset, header.GetAuthorityRecordCount()));
+    SuccessOrExit(error = ResourceRecord::ParseRecords(aResponseMessage, offset, header.GetAdditionalRecordCount()));
 
-    aResponse.mAnswerRecordCount     = header.GetAnswerCount();
-    aResponse.mAdditionalRecordCount = header.GetAdditionalRecordCount();
-
-    // Check the response code from server
+    // Read the response code
 
     aResponseError = Header::ResponseCodeToError(header.GetResponseCode());
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+exit:
+    return error;
+}
 
-    if (aType == kIp6AddressQuery)
+bool Client::CanFinalizeQuery(Query &aQuery)
+{
+    // Determines whether we can finalize a main query by checking if
+    // we have received and saved responses for all other related
+    // queries associated with `aQuery`. Note that this method is
+    // called when we receive a response for `aQeury`, so no need to
+    // check for a saved response for `aQuery` itself.
+
+    bool      canFinalize = true;
+    QueryInfo info;
+
+    for (Query *query = &FindMainQuery(aQuery); query != nullptr; query = info.mNextQuery)
     {
-        Ip6::Address ip6ddress;
-        uint32_t     ttl;
-        ARecord      aRecord;
+        info.ReadFrom(*query);
 
-        // If the response does not contain an answer for the IPv6 address
-        // resolution query and if NAT64 is allowed for this query, we can
-        // perform IPv4 to IPv6 address translation.
-
-        VerifyOrExit(aResponse.FindHostAddress(Response::kAnswerSection, queryName, /* aIndex */ 0, ip6ddress, ttl) !=
-                     kErrorNone);
-        VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
-
-        // First, we check if the response already contains an A record
-        // (IPv4 address) for the query name.
-
-        if (aResponse.FindARecord(Response::kAdditionalDataSection, queryName, /* aIndex */ 0, aRecord) == kErrorNone)
+        if (query == &aQuery)
         {
-            aResponse.mIp6QueryResponseRequiresNat64 = true;
-            aResponseError                           = kErrorNone;
-            ExitNow();
+            continue;
         }
 
-        // Otherwise, we send a new query for IPv4 address resolution
-        // for the same host name. We reuse the existing `query`
-        // instance and keep all the info but clear `mTransmissionCount`
-        // and `mMessageId` (so that a new random message ID is
-        // selected). The new `info` will be saved in the query in
-        // `SendQuery()`. Note that the current query is still in the
-        // `mQueries` list when `SendQuery()` selects a new random
-        // message ID, so the existing message ID for this query will
-        // not be reused. Since the query is not yet resolved, we
-        // return `kErrorPending`.
-
-        info.mQueryType         = kIp4AddressQuery;
-        info.mMessageId         = 0;
-        info.mTransmissionCount = 0;
-
-        IgnoreReturnValue(SendQuery(*aResponse.mQuery, info, /* aUpdateTimer */ true));
-
-        error = kErrorPending;
+        if (info.mSavedResponse == nullptr)
+        {
+            canFinalize = false;
+            ExitNow();
+        }
     }
-
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to parse response %s", ErrorToString(error));
-    }
+    return canFinalize;
+}
 
-    return error;
+void Client::SaveQueryResponse(Query &aQuery, const Message &aResponseMessage)
+{
+    QueryInfo info;
+
+    info.ReadFrom(aQuery);
+    VerifyOrExit(info.mSavedResponse == nullptr);
+
+    // If `Clone()` fails we let retry or timeout handle the error.
+    info.mSavedResponse = aResponseMessage.Clone();
+
+    UpdateQuery(aQuery, info);
+
+exit:
+    return;
+}
+
+Client::Query *Client::PopulateResponse(Response &aResponse, Query &aQuery, const Message &aResponseMessage)
+{
+    // Populate `aResponse` for `aQuery`. If there is a saved response
+    // message for `aQuery` we use it, otherwise, we use
+    // `aResponseMessage`.
+
+    QueryInfo info;
+
+    info.ReadFrom(aQuery);
+
+    aResponse.mInstance = &Get<Instance>();
+    aResponse.mQuery    = &aQuery;
+    aResponse.PopulateFrom((info.mSavedResponse == nullptr) ? aResponseMessage : *info.mSavedResponse);
+
+    return info.mNextQuery;
+}
+
+void Client::PrepareResponseAndFinalize(Query &aQuery, const Message &aResponseMessage, Response *aPrevResponse)
+{
+    // This method prepares a list of chained `Response` instances
+    // corresponding to all related (chained) queries. It uses
+    // recursion to go through the queries and construct the
+    // `Response` chain.
+
+    Response response;
+    Query   *nextQuery;
+
+    nextQuery      = PopulateResponse(response, aQuery, aResponseMessage);
+    response.mNext = aPrevResponse;
+
+    if (nextQuery != nullptr)
+    {
+        PrepareResponseAndFinalize(*nextQuery, aResponseMessage, &response);
+    }
+    else
+    {
+        FinalizeQuery(response, kErrorNone);
+    }
 }
 
 void Client::HandleTimer(void)
@@ -1171,29 +1434,40 @@ void Client::HandleTimer(void)
     bool hasTcpQuery = false;
 #endif
 
-    for (Query &query : mQueries)
+    for (Query &mainQuery : mMainQueries)
     {
-        info.ReadFrom(query);
-
-        if (now >= info.mRetransmissionTime)
+        for (Query *query = &mainQuery; query != nullptr; query = info.mNextQuery)
         {
-            if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
+            info.ReadFrom(*query);
+
+            if (info.mSavedResponse != nullptr)
             {
-                FinalizeQuery(query, kErrorResponseTimeout);
                 continue;
             }
 
-            IgnoreReturnValue(SendQuery(query, info, /* aUpdateTimer */ false));
-        }
+            if (now >= info.mRetransmissionTime)
+            {
+                if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
+                {
+                    FinalizeQuery(*query, kErrorResponseTimeout);
+                    continue;
+                }
 
-        nextTime = Min(nextTime, info.mRetransmissionTime);
+                IgnoreError(SendQuery(*query, info, /* aUpdateTimer */ false));
+            }
+
+            if (nextTime > info.mRetransmissionTime)
+            {
+                nextTime = info.mRetransmissionTime;
+            }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
-        if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
-        {
-            hasTcpQuery = true;
-        }
+            if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
+            {
+                hasTcpQuery = true;
+            }
 #endif
+        }
     }
 
     if (nextTime < now.GetDistantFuture())
@@ -1208,6 +1482,76 @@ void Client::HandleTimer(void)
     }
 #endif
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+Error Client::ReplaceWithIp4Query(Query &aQuery)
+{
+    Error     error = kErrorFailed;
+    QueryInfo info;
+
+    info.ReadFrom(aQuery);
+
+    VerifyOrExit(info.mQueryType == kIp4AddressQuery);
+    VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
+
+    // We send a new query for IPv4 address resolution
+    // for the same host name. We reuse the existing `aQuery`
+    // instance and keep all the info but clear `mTransmissionCount`
+    // and `mMessageId` (so that a new random message ID is
+    // selected). The new `info` will be saved in the query in
+    // `SendQuery()`. Note that the current query is still in the
+    // `mMainQueries` list when `SendQuery()` selects a new random
+    // message ID, so the existing message ID for this query will
+    // not be reused.
+
+    info.mQueryType         = kIp4AddressQuery;
+    info.mMessageId         = 0;
+    info.mTransmissionCount = 0;
+
+    IgnoreError(SendQuery(aQuery, info, /* aUpdateTimer */ true));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
+{
+    Error     error = kErrorFailed;
+    QueryInfo info;
+    Query    *secondQuery;
+
+    info.ReadFrom(aQuery);
+
+    VerifyOrExit(info.mQueryType == kServiceQuerySrvTxt);
+    VerifyOrExit(info.mConfig.GetServiceMode() == QueryConfig::kServiceModeSrvTxtOptimize);
+
+    secondQuery = aQuery.Clone();
+    VerifyOrExit(secondQuery != nullptr);
+
+    info.mQueryType         = kServiceQueryTxt;
+    info.mMessageId         = 0;
+    info.mTransmissionCount = 0;
+    info.mMainQuery         = &aQuery;
+    IgnoreError(SendQuery(*secondQuery, info, /* aUpdateTimer */ true));
+
+    info.mQueryType         = kServiceQuerySrv;
+    info.mMessageId         = 0;
+    info.mTransmissionCount = 0;
+    info.mNextQuery         = secondQuery;
+    IgnoreError(SendQuery(aQuery, info, /* aUpdateTimer */ true));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 void Client::PrepareTcpMessage(Message &aMessage)
@@ -1334,24 +1678,7 @@ void Client::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         totalRead += length + sizeof(uint16_t);
 
         // Now process the read message as query response.
-        {
-            Response  response;
-            QueryType type;
-            Error     responseError;
-
-            response.mInstance = &Get<Instance>();
-            response.mMessage  = message;
-
-            if (ParseResponse(response, type, responseError) == kErrorNone)
-            {
-                if (responseError == kErrorNone && length > OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE)
-                {
-                    LogWarn("Dns query over TCP wasn't received - message is too big.");
-                    responseError = kErrorNoBufs;
-                }
-                FinalizeQuery(response, type, responseError);
-            }
-        }
+        ProcessResponse(*message);
 
         IgnoreError(message->SetLength(0));
 
@@ -1383,12 +1710,13 @@ void Client::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedRe
     mTcpState = kTcpUninitialized;
 
     // Abort queries in case of connection failures
-    for (Query &query : mQueries)
+    for (Query &mainQuery : mMainQueries)
     {
-        info.ReadFrom(query);
+        info.ReadFrom(mainQuery);
+
         if (info.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
         {
-            FinalizeQuery(query, kErrorAbort);
+            FinalizeQuery(mainQuery, kErrorAbort);
         }
     }
 }
