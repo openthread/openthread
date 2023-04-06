@@ -60,7 +60,7 @@ static uint16_t   sRawPowerSettingLength = 0;
 
 void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
 
-bool otPlatDiagModeGet() { return sDiagMode; }
+bool otPlatDiagModeGet(void) { return sDiagMode; }
 
 void otPlatDiagChannelSet(uint8_t aChannel) { OT_UNUSED_VARIABLE(aChannel); }
 
