@@ -98,6 +98,13 @@ exit:
     return message;
 }
 
+Message *MessagePool::Allocate(Message::Type aType) { return Allocate(aType, 0, Message::Settings::GetDefault()); }
+
+Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader)
+{
+    return Allocate(aType, aReserveHeader, Message::Settings::GetDefault());
+}
+
 void MessagePool::Free(Message *aMessage)
 {
     OT_ASSERT(aMessage->Next() == nullptr && aMessage->Prev() == nullptr);

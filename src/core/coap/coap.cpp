@@ -115,6 +115,13 @@ exit:
     return message;
 }
 
+Message *CoapBase::NewMessage(void) { return NewMessage(Message::Settings::GetDefault()); }
+
+Message *CoapBase::NewPriorityMessage(void)
+{
+    return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
+}
+
 Message *CoapBase::NewPriorityConfirmablePostMessage(Uri aUri)
 {
     return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUri);
@@ -351,6 +358,11 @@ exit:
     return error;
 }
 
+Error CoapBase::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters)
+{
+    return SendMessage(aMessage, aMessageInfo, aTxParameters, nullptr, nullptr);
+}
+
 Error CoapBase::SendMessage(Message                &aMessage,
                             const Ip6::MessageInfo &aMessageInfo,
                             ResponseHandler         aHandler,
@@ -361,6 +373,11 @@ Error CoapBase::SendMessage(Message                &aMessage,
 #else
     return SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext);
 #endif
+}
+
+Error CoapBase::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    return SendMessage(aMessage, aMessageInfo, nullptr, nullptr);
 }
 
 Error CoapBase::SendReset(Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
@@ -376,6 +393,11 @@ Error CoapBase::SendAck(const Message &aRequest, const Ip6::MessageInfo &aMessag
 Error CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode)
 {
     return (aRequest.IsConfirmable() ? SendHeaderResponse(aCode, aRequest, aMessageInfo) : kErrorInvalidArgs);
+}
+
+Error CoapBase::SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)
+{
+    return SendEmptyAck(aRequest, aMessageInfo, kCodeChanged);
 }
 
 Error CoapBase::SendNotFound(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo)

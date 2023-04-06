@@ -449,7 +449,15 @@ public:
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      *
      */
-    Message *NewMessage(const Message::Settings &aSettings = Message::Settings::GetDefault());
+    Message *NewMessage(const Message::Settings &aSettings);
+
+    /**
+     * This method allocates a new message with a CoAP header with default settings.
+     *
+     * @returns A pointer to the message or `nullptr` if failed to allocate message.
+     *
+     */
+    Message *NewMessage(void);
 
     /**
      * This method allocates a new message with a CoAP header that has Network Control priority level.
@@ -457,10 +465,7 @@ public:
      * @returns A pointer to the message or `nullptr` if failed to allocate message.
      *
      */
-    Message *NewPriorityMessage(void)
-    {
-        return NewMessage(Message::Settings(Message::kWithLinkSecurity, Message::kPriorityNet));
-    }
+    Message *NewPriorityMessage(void);
 
     /**
      * This method allocates and initializes a new CoAP Confirmable Post message with Network Control priority level.
@@ -557,7 +562,7 @@ public:
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be NULL pointers.
-     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -585,7 +590,7 @@ public:
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be `nullptr` pointers.
-     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -600,16 +605,28 @@ public:
     Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
                       const TxParameters     &aTxParameters,
-                      ResponseHandler         aHandler = nullptr,
-                      void                   *aContext = nullptr);
+                      ResponseHandler         aHandler,
+                      void                   *aContext);
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
+     * This method sends a CoAP message with custom transmission parameters.
+     *
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aTxParameters A reference to transmission parameters for this message.
+     *
+     * @retval kErrorNone    Successfully sent CoAP message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP message.
+     *
+     */
+    Error SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const TxParameters &aTxParameters);
+    /**
      * This method sends a CoAP message with default transmission parameters.
      *
-     * If a response for a request is expected, respective function and context information should be provided.
-     * If no response is expected, these arguments should be `nullptr` pointers.
-     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
      *
      * @param[in]  aMessage      A reference to the message to send.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -622,8 +639,22 @@ public:
      */
     Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
-                      ResponseHandler         aHandler = nullptr,
-                      void                   *aContext = nullptr);
+                      ResponseHandler         aHandler,
+                      void                   *aContext);
+
+    /**
+     * This method sends a CoAP message with default transmission parameters.
+     *
+     * If Message ID was not set in the header (equal to 0), this method will assign unique Message ID to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     *
+     * @retval kErrorNone    Successfully sent CoAP message.
+     * @retval kErrorNoBufs  Insufficient buffers available to send the CoAP response.
+     *
+     */
+    Error SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a CoAP reset message.
@@ -677,7 +708,20 @@ public:
      * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
      *
      */
-    Error SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode = kCodeChanged);
+    Error SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo, Code aCode);
+
+    /**
+     * This method sends a CoAP ACK message on which a dummy CoAP response is piggybacked.
+     *
+     * @param[in]  aRequest        A reference to the CoAP Message that was used in CoAP request.
+     * @param[in]  aMessageInfo    The message info corresponding to the CoAP request.
+     *
+     * @retval kErrorNone          Successfully enqueued the CoAP response message.
+     * @retval kErrorNoBufs        Insufficient buffers available to send the CoAP response.
+     * @retval kErrorInvalidArgs   The @p aRequest header is not of confirmable type.
+     *
+     */
+    Error SendEmptyAck(const Message &aRequest, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method sends a header-only CoAP message to indicate no resource matched for the request.
