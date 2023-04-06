@@ -782,16 +782,16 @@ const char *NetworkDiagnostic::UriToString(Uri aUri)
     switch (aUri)
     {
     case kUriDiagnosticGetQuery:
-        str = "DiagGetQuery";
+        str = ot::UriToString<kUriDiagnosticGetQuery>();
         break;
     case kUriDiagnosticGetRequest:
-        str = "DiagGetRequest";
+        str = ot::UriToString<kUriDiagnosticGetRequest>();
         break;
     case kUriDiagnosticReset:
-        str = "DiagReset";
+        str = ot::UriToString<kUriDiagnosticReset>();
         break;
     case kUriDiagnosticGetAnswer:
-        str = "DiagGetAnswer";
+        str = ot::UriToString<kUriDiagnosticGetAnswer>();
         break;
     default:
         break;

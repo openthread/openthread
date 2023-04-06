@@ -161,4 +161,44 @@ exit:
     return uri;
 }
 
+template <> const char *UriToString<kUriAddressError>(void) { return "AddressError"; }
+template <> const char *UriToString<kUriAddressNotify>(void) { return "AddressNotify"; }
+template <> const char *UriToString<kUriAddressQuery>(void) { return "AddressQuery"; }
+template <> const char *UriToString<kUriAddressRelease>(void) { return "AddressRelease"; }
+template <> const char *UriToString<kUriAddressSolicit>(void) { return "AddressSolicit"; }
+template <> const char *UriToString<kUriServerData>(void) { return "ServerData"; }
+template <> const char *UriToString<kUriAnycastLocate>(void) { return "AnycastLocate"; }
+template <> const char *UriToString<kUriBackboneAnswer>(void) { return "BackboneAnswer"; }
+template <> const char *UriToString<kUriBackboneMlr>(void) { return "BackboneMlr"; }
+template <> const char *UriToString<kUriBackboneQuery>(void) { return "BackboneQuery"; }
+template <> const char *UriToString<kUriAnnounceBegin>(void) { return "AnnounceBegin"; }
+template <> const char *UriToString<kUriActiveGet>(void) { return "ActiveGet"; }
+template <> const char *UriToString<kUriActiveSet>(void) { return "ActiveSet"; }
+template <> const char *UriToString<kUriCommissionerKeepAlive>(void) { return "CommissionerKeepAlive"; }
+template <> const char *UriToString<kUriCommissionerGet>(void) { return "CommissionerGet"; }
+template <> const char *UriToString<kUriCommissionerPetition>(void) { return "CommissionerPetition"; }
+template <> const char *UriToString<kUriCommissionerSet>(void) { return "CommissionerSet"; }
+template <> const char *UriToString<kUriDatasetChanged>(void) { return "DatasetChanged"; }
+template <> const char *UriToString<kUriEnergyReport>(void) { return "EnergyReport"; }
+template <> const char *UriToString<kUriEnergyScan>(void) { return "EnergyScan"; }
+template <> const char *UriToString<kUriJoinerEntrust>(void) { return "JoinerEntrust"; }
+template <> const char *UriToString<kUriJoinerFinalize>(void) { return "JoinerFinalize"; }
+template <> const char *UriToString<kUriLeaderKeepAlive>(void) { return "LeaderKeepAlive"; }
+template <> const char *UriToString<kUriLeaderPetition>(void) { return "LeaderPetition"; }
+template <> const char *UriToString<kUriPanIdConflict>(void) { return "PanIdConflict"; }
+template <> const char *UriToString<kUriPendingGet>(void) { return "PendingGet"; }
+template <> const char *UriToString<kUriPanIdQuery>(void) { return "PanIdQuery"; }
+template <> const char *UriToString<kUriPendingSet>(void) { return "PendingSet"; }
+template <> const char *UriToString<kUriRelayRx>(void) { return "RelayRx"; }
+template <> const char *UriToString<kUriRelayTx>(void) { return "RelayTx"; }
+template <> const char *UriToString<kUriProxyRx>(void) { return "ProxyRx"; }
+template <> const char *UriToString<kUriProxyTx>(void) { return "ProxyTx"; }
+template <> const char *UriToString<kUriDiagnosticGetAnswer>(void) { return "DiagGetAnswer"; }
+template <> const char *UriToString<kUriDiagnosticGetRequest>(void) { return "DiagGetRequest"; }
+template <> const char *UriToString<kUriDiagnosticGetQuery>(void) { return "DiagGetQuery"; }
+template <> const char *UriToString<kUriDiagnosticReset>(void) { return "DiagReset"; }
+template <> const char *UriToString<kUriDuaRegistrationNotify>(void) { return "DuaRegNotify"; }
+template <> const char *UriToString<kUriDuaRegistrationRequest>(void) { return "DuaRegRequest"; }
+template <> const char *UriToString<kUriMlr>(void) { return "Mlr"; }
+
 } // namespace ot

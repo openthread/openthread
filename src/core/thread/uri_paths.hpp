@@ -108,6 +108,57 @@ const char *PathForUri(Uri aUri);
  */
 Uri UriFromPath(const char *aPath);
 
+/**
+ * This template function converts a given URI to a human-readable string.
+ *
+ * @tparam kUri   The URI to convert to string.
+ *
+ * @returns The string representation of @p kUri.
+ *
+ */
+template <Uri kUri> const char *UriToString(void);
+
+// Declaring specializations of `UriToString` for every `Uri`
+template <> const char *UriToString<kUriAddressError>(void);
+template <> const char *UriToString<kUriAddressNotify>(void);
+template <> const char *UriToString<kUriAddressQuery>(void);
+template <> const char *UriToString<kUriAddressRelease>(void);
+template <> const char *UriToString<kUriAddressSolicit>(void);
+template <> const char *UriToString<kUriServerData>(void);
+template <> const char *UriToString<kUriAnycastLocate>(void);
+template <> const char *UriToString<kUriBackboneAnswer>(void);
+template <> const char *UriToString<kUriBackboneMlr>(void);
+template <> const char *UriToString<kUriBackboneQuery>(void);
+template <> const char *UriToString<kUriAnnounceBegin>(void);
+template <> const char *UriToString<kUriActiveGet>(void);
+template <> const char *UriToString<kUriActiveSet>(void);
+template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
+template <> const char *UriToString<kUriCommissionerGet>(void);
+template <> const char *UriToString<kUriCommissionerPetition>(void);
+template <> const char *UriToString<kUriCommissionerSet>(void);
+template <> const char *UriToString<kUriDatasetChanged>(void);
+template <> const char *UriToString<kUriEnergyReport>(void);
+template <> const char *UriToString<kUriEnergyScan>(void);
+template <> const char *UriToString<kUriJoinerEntrust>(void);
+template <> const char *UriToString<kUriJoinerFinalize>(void);
+template <> const char *UriToString<kUriLeaderKeepAlive>(void);
+template <> const char *UriToString<kUriLeaderPetition>(void);
+template <> const char *UriToString<kUriPanIdConflict>(void);
+template <> const char *UriToString<kUriPendingGet>(void);
+template <> const char *UriToString<kUriPanIdQuery>(void);
+template <> const char *UriToString<kUriPendingSet>(void);
+template <> const char *UriToString<kUriRelayRx>(void);
+template <> const char *UriToString<kUriRelayTx>(void);
+template <> const char *UriToString<kUriProxyRx>(void);
+template <> const char *UriToString<kUriProxyTx>(void);
+template <> const char *UriToString<kUriDiagnosticGetAnswer>(void);
+template <> const char *UriToString<kUriDiagnosticGetRequest>(void);
+template <> const char *UriToString<kUriDiagnosticGetQuery>(void);
+template <> const char *UriToString<kUriDiagnosticReset>(void);
+template <> const char *UriToString<kUriDuaRegistrationNotify>(void);
+template <> const char *UriToString<kUriDuaRegistrationRequest>(void);
+template <> const char *UriToString<kUriMlr>(void);
+
 } // namespace ot
 
 #endif // URI_PATHS_HPP_

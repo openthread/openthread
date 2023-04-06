@@ -91,7 +91,7 @@ Error EnergyScanClient::SendQuery(uint32_t                           aChannelMas
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent query");
+    LogInfo("Sent %s", UriToString<kUriEnergyScan>());
 
     mCallback.Set(aCallback, aContext);
 
@@ -108,7 +108,7 @@ void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, cons
 
     VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
-    LogInfo("received report");
+    LogInfo("Received %s", UriToString<kUriEnergyReport>());
 
     VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
@@ -118,7 +118,7 @@ void EnergyScanClient::HandleTmf<kUriEnergyReport>(Coap::Message &aMessage, cons
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
-    LogInfo("sent report response");
+    LogInfo("Sent %s ack", UriToString<kUriEnergyReport>());
 
 exit:
     return;

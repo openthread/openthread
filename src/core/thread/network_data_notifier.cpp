@@ -211,7 +211,7 @@ Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkDat
     IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, this));
 
-    LogInfo("Sent server data notification");
+    LogInfo("Sent %s", UriToString<kUriServerData>());
 
 exit:
     FreeMessageOnError(message, error);
