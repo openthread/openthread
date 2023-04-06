@@ -238,20 +238,8 @@ uint8_t Joiner::CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny)
         aRssi = -127;
     }
 
-    // Limit the RSSI to range (-128, 0), i.e. -128 < aRssi < 0.
-
-    if (aRssi <= -128)
-    {
-        priority = -127;
-    }
-    else if (aRssi >= 0)
-    {
-        priority = -1;
-    }
-    else
-    {
-        priority = aRssi;
-    }
+    // Clamp the RSSI to range [-127, -1]
+    priority = Clamp<int8_t>(aRssi, -127, -1);
 
     // Assign higher priority to networks with an exact match of Joiner
     // ID in the Steering Data (128 < priority < 256) compared to ones
