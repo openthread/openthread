@@ -3040,6 +3040,10 @@ void MleRouter::SendChildUpdateResponse(Child                  *aChild,
         case Tlv::kLinkFrameCounter:
             SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
             break;
+
+        case Tlv::kRoute:
+            SuccessOrExit(error = message->AppendRouteTlv());
+            break;
         }
 
         // Make sure `child` is not null before adding TLV types

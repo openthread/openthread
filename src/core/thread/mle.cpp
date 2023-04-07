@@ -2027,14 +2027,14 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge) { return SendChildUpdateRequest(aAppendChallenge, mTimeout); }
+Error Mle::SendChildUpdateRequest(void) { return SendChildUpdateRequest(kNormalChildUpdateRequest); }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
+Error Mle::SendChildUpdateRequest(ChildUpdateRequestMode aMode)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
-    TxMessage              *message = nullptr;
-    AddressRegistrationMode mode    = kAppendAllAddresses;
+    TxMessage              *message     = nullptr;
+    AddressRegistrationMode addrRegMode = kAppendAllAddresses;
 
     if (!mParent.IsStateValidOrRestoring())
     {
@@ -2049,7 +2049,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
 
-    if (aAppendChallenge || IsDetached())
+    if ((aMode == kAppendChallengeTlv) || IsDetached())
     {
         mParentRequestChallenge.GenerateRandom();
         SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
@@ -2058,14 +2058,24 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     switch (mRole)
     {
     case kRoleDetached:
-        mode = kAppendMeshLocalOnly;
+        addrRegMode = kAppendMeshLocalOnly;
         break;
 
     case kRoleChild:
         SuccessOrExit(error = message->AppendSourceAddressTlv());
         SuccessOrExit(error = message->AppendLeaderDataTlv());
-        SuccessOrExit(error = message->AppendTimeoutTlv(aTimeout));
+        SuccessOrExit(error = message->AppendTimeoutTlv((aMode == kAppendZeroTimeout) ? 0 : mTimeout));
         SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
+
+#if OPENTHREAD_FTD
+        if (aMode == kAppendTlvRequestTlvForRoute)
+        {
+            static const uint8_t kTlvs[] = {Tlv::kRoute};
+
+            SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs, sizeof(kTlvs)));
+        }
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
@@ -2083,7 +2093,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 
     if (!IsFullThreadDevice())
     {
-        SuccessOrExit(error = message->AppendAddressRegistrationTlv(mode));
+        SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
@@ -2707,7 +2717,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 
     if (IsChild() && (&aNeighbor == &mParent))
     {
-        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ true));
+        IgnoreError(SendChildUpdateRequest(kAppendChallengeTlv));
         ExitNow();
     }
 
@@ -3522,6 +3532,9 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t  mleFrameCounter;
     uint16_t  sourceAddress;
     uint32_t  timeout;
+#if OPENTHREAD_FTD
+    bool requestRouteTlv = false;
+#endif
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3575,6 +3588,10 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 
         mRetrieveNewNetworkData = true;
 
+#if OPENTHREAD_FTD
+        requestRouteTlv = IsFullThreadDevice();
+#endif
+
         OT_FALL_THROUGH;
 
     case kRoleChild:
@@ -3608,6 +3625,10 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         default:
             ExitNow(error = kErrorParse);
         }
+
+#if OPENTHREAD_FTD
+        SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         {
@@ -3644,6 +3665,13 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     }
 
     aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+
+#if OPENTHREAD_FTD
+    if (requestRouteTlv)
+    {
+        IgnoreError(SendChildUpdateRequest(kAppendTlvRequestTlvForRoute));
+    }
+#endif
 
 exit:
 
@@ -4330,7 +4358,7 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
         break;
 
     case kRoleChild:
-        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ false, /* aTimeout */ 0));
+        IgnoreError(SendChildUpdateRequest(kAppendZeroTimeout));
         break;
 
     case kRoleDisabled:

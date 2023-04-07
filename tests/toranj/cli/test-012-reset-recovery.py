@@ -55,7 +55,7 @@ child2 = cli.Node()
 # Form topology
 
 leader.form('reset')
-child1.join(leader, cli.JOIN_TYPE_END_DEVICE)
+child1.join(leader, cli.JOIN_TYPE_REED)
 child2.join(leader, cli.JOIN_TYPE_END_DEVICE)
 
 verify(leader.get_state() == 'leader')
@@ -134,6 +134,24 @@ def check_leader_neighbor_table():
 
 
 verify_within(check_leader_neighbor_table, 10)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Reset `child` and make sure it re-attached successfully.
+
+del child1
+child1 = cli.Node(index=3)
+child1.set_router_eligible('disable')
+child1.interface_up()
+child1.thread_start()
+
+
+def check_child1_state():
+    verify(child1.get_state() == 'child')
+    table = child1.get_router_table()
+    verify(len(table) == 2)
+
+
+verify_within(check_child1_state, 10)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
