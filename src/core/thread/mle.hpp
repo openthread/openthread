@@ -1565,13 +1565,11 @@ protected:
     /**
      * This method generates an MLE Child Update Request message.
      *
-     * @param[in] aAppendChallenge   Indicates whether or not to include a Challenge TLV (even when already attached).
-     *
      * @retval kErrorNone    Successfully generated an MLE Child Update Request message.
      * @retval kErrorNoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
-    Error SendChildUpdateRequest(bool aAppendChallenge = false);
+    Error SendChildUpdateRequest(void);
 
     /**
      * This method generates an MLE Child Update Response message.
@@ -1846,6 +1844,13 @@ private:
         kChildUpdateRequestActive,  // Child Update Request has been sent and Child Update Response is expected.
     };
 
+    enum ChildUpdateRequestMode : uint8_t // Used in `SendChildUpdateRequest()`
+    {
+        kNormalChildUpdateRequest, // Normal Child Update Request.
+        kAppendChallengeTlv,       // Append Challenge TLV to Child Update Request even if currently attached.
+        kAppendZeroTimeout,        // Use zero timeout when appending Timeout TLV (used for graceful detach).
+    };
+
     enum DataRequestState : uint8_t
     {
         kDataRequestNone,   // Not waiting for a Data Response.
@@ -1978,7 +1983,7 @@ private:
     static void HandleDetachGracefullyTimer(Timer &aTimer);
     void        HandleDetachGracefullyTimer(void);
     bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
-    Error       SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout);
+    Error       SendChildUpdateRequest(ChildUpdateRequestMode aMode);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     Error SendDataRequest(const Ip6::Address                        &aDestination,
