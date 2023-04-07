@@ -428,10 +428,22 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 {
     Error    error = kErrorNone;
     Header   header;
+    uint8_t  dscp;
     uint16_t payloadLength = aMessage.GetLength();
 
+    if ((aIpProto == kProtoUdp) &&
+        Get<Tmf::Agent>().IsTmfMessage(aMessageInfo.GetSockAddr(), aMessageInfo.GetPeerAddr(),
+                                       aMessageInfo.GetPeerPort()))
+    {
+        dscp = Tmf::Agent::PriorityToDscp(aMessage.GetPriority());
+    }
+    else
+    {
+        dscp = PriorityToDscp(aMessage.GetPriority());
+    }
+
     header.InitVersionTrafficClassFlow();
-    header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
+    header.SetDscp(dscp);
     header.SetEcn(aMessageInfo.GetEcn());
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);

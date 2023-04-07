@@ -34,6 +34,7 @@
 #include "thread/tmf.hpp"
 
 #include "common/locator_getters.hpp"
+#include "net/ip6_types.hpp"
 
 namespace ot {
 namespace Tmf {
@@ -220,6 +221,53 @@ bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address 
 
 exit:
     return isTmf;
+}
+
+uint8_t Agent::PriorityToDscp(Message::Priority aPriority)
+{
+    uint8_t dscp = Ip6::kDscpTmfNormalPriority;
+
+    switch (aPriority)
+    {
+    case Message::kPriorityNet:
+        dscp = Ip6::kDscpTmfNetPriority;
+        break;
+
+    case Message::kPriorityHigh:
+    case Message::kPriorityNormal:
+        break;
+
+    case Message::kPriorityLow:
+        dscp = Ip6::kDscpTmfLowPriority;
+        break;
+    }
+
+    return dscp;
+}
+
+Message::Priority Agent::DscpToPriority(uint8_t aDscp)
+{
+    Message::Priority priority = Message::kPriorityNet;
+
+    // If the sender does not use TMF specific DSCP value, we use
+    // `kPriorityNet`. This ensures that senders that do not use the
+    // new value (older firmware) experience the same behavior as
+    // before where all TMF message were treated as `kPriorityNet`.
+
+    switch (aDscp)
+    {
+    case Ip6::kDscpTmfNetPriority:
+    default:
+        break;
+    case Ip6::kDscpTmfNormalPriority:
+        priority = Message::kPriorityNormal;
+        break;
+    case Ip6::kDscpTmfLowPriority:
+        priority = Message::kPriorityLow;
+        break;
+    }
+
+    return priority;
 }
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
