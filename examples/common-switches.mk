@@ -76,6 +76,7 @@ NAT64_BORDER_ROUTING      ?= 0
 NAT64_TRANSLATOR          ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
 NETDATA_PUBLISHER         ?= 0
+NETDIAG_CLIENT            ?= 0
 OTNS                      ?= 0
 PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
@@ -286,6 +287,9 @@ ifeq ($(MLR),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLR_ENABLE=1
 endif
 
+# This config is removed but we still check and add the
+# `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE` so to
+# get an error during build if `MTD_NETDIAG` is used.
 ifeq ($(MTD_NETDIAG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
 endif
@@ -300,6 +304,10 @@ endif
 
 ifeq ($(NETDATA_PUBLISHER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE=1
+endif
+
+ifeq ($(NETDIAG_CLIENT),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=1
 endif
 
 ifeq ($(PING_SENDER),1)

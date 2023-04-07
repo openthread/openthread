@@ -62,8 +62,8 @@ set -euxo pipefail
         -DOT_LINK_RAW=ON \
         -DOT_LOG_OUTPUT=APP \
         -DOT_MAC_FILTER=ON \
-        -DOT_MTD_NETDIAG=ON \
         -DOT_NETDATA_PUBLISHER=ON \
+        -DOT_NETDIAG_CLIENT=ON \
         -DOT_PING_SENDER=ON \
         -DOT_SERVICE=ON \
         -DOT_SLAAC=ON \

@@ -136,8 +136,9 @@ Instance::Instance(void)
     , mNetworkDataPublisher(*this)
 #endif
     , mNetworkDataServiceManager(*this)
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    , mNetworkDiagnostic(*this)
+    , mNetworkDiagnosticServer(*this)
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+    , mNetworkDiagnosticClient(*this)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     , mBorderAgent(*this)

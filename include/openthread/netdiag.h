@@ -47,6 +47,8 @@ extern "C" {
  *
  * @{
  *
+ *
+ * Network Dianostics APIs require OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE.
  */
 
 /**

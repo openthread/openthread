@@ -648,4 +648,10 @@
 #error "OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST is removed".
 #endif
 
+#ifdef OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#error "OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE is removed. "\
+        "Use OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE to enable client functionality."\
+        "Netdiag server functionality is always supported."
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

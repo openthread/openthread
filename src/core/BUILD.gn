@@ -196,17 +196,18 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE=1" ]
     }
 
-    if (openthread_config_tmf_network_diag_mtd_enable) {
-      defines += [ "OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1" ]
-    }
-
     if (openthread_config_multiple_instance_enable) {
       defines += [ "OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1" ]
+    }
+
+    if (openthread_config_tmf_netdiag_client_enable) {
+      defines += [ "OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=1" ]
     }
 
     if (openthread_config_platform_netif_enable) {
       defines += [ "OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1" ]
     }
+
 
     if (openthread_config_platform_udp_enable) {
       defines += [ "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1" ]
