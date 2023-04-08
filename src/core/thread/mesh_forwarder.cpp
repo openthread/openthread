@@ -1496,15 +1496,15 @@ void MeshForwarder::ClearReassemblyList(void)
 
 void MeshForwarder::HandleTimeTick(void)
 {
-    bool contineRxingTicks = false;
+    bool continueRxingTicks = false;
 
 #if OPENTHREAD_FTD
-    contineRxingTicks = mFragmentPriorityList.UpdateOnTimeTick();
+    continueRxingTicks = mFragmentPriorityList.UpdateOnTimeTick();
 #endif
 
-    contineRxingTicks = UpdateReassemblyList() || contineRxingTicks;
+    continueRxingTicks = UpdateReassemblyList() || continueRxingTicks;
 
-    if (!contineRxingTicks)
+    if (!continueRxingTicks)
     {
         Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     }

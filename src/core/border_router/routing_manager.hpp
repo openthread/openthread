@@ -292,7 +292,7 @@ public:
     Nat64::State GetNat64PrefixManagerState(void) const { return mNat64PrefixManager.GetState(); }
 
     /**
-     * Enable or disable NAT64 orefix publishing.
+     * Enable or disable NAT64 prefix publishing.
      *
      * @param[in]  aEnabled   A boolean to enable/disable NAT64 prefix publishing.
      *
@@ -358,7 +358,7 @@ public:
      * @param[in] aOnMeshPrefixConfig  The on-mesh prefix configuration to check.
      *
      * @retval   TRUE    The prefix is a valid OMR prefix.
-     * @retval   FALE    The prefix is not a valid OMR prefix.
+     * @retval   FALSE   The prefix is not a valid OMR prefix.
      *
      */
     static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
@@ -369,7 +369,7 @@ public:
      * @param[in]  aPrefix  The prefix to check.
      *
      * @retval   TRUE    The prefix is a valid OMR prefix.
-     * @retval   FALE    The prefix is not a valid OMR prefix.
+     * @retval   FALSE   The prefix is not a valid OMR prefix.
      *
      */
     static bool IsValidOmrPrefix(const Ip6::Prefix &aPrefix);
@@ -575,13 +575,13 @@ private:
             RoutePreference    GetPreference(void) const;
             bool               operator==(const Entry &aOther) const;
             bool               Matches(const Matcher &aMatcher) const;
-            bool               Matches(const ExpirationChecker &aCheker) const;
+            bool               Matches(const ExpirationChecker &aChecker) const;
 
             // Methods to use when `IsOnLinkPrefix()`
             uint32_t GetPreferredLifetime(void) const { return mShared.mPreferredLifetime; }
             void     ClearPreferredLifetime(void) { mShared.mPreferredLifetime = 0; }
             bool     IsDeprecated(void) const;
-            void     AdoptValidAndPreferredLiftimesFrom(const Entry &aEntry);
+            void     AdoptValidAndPreferredLifetimesFrom(const Entry &aEntry);
 
             // Method to use when `!IsOnlinkPrefix()`
             RoutePreference GetRoutePreference(void) const { return mShared.mRoutePreference; }
@@ -605,11 +605,11 @@ private:
         {
             // The timeout (in msec) for router staying in active state
             // before starting the Neighbor Solicitation (NS) probes.
-            static constexpr uint32_t kActiveTimout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
+            static constexpr uint32_t kActiveTimeout = OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT;
 
             static constexpr uint8_t  kMaxNsProbes          = 5;    // Max number of NS probe attempts.
             static constexpr uint32_t kNsProbeRetryInterval = 1000; // In msec. Time between NS probe attempts.
-            static constexpr uint32_t kNsProbeTimout        = 2000; // In msec. Max Wait time after last NS probe.
+            static constexpr uint32_t kNsProbeTimeout       = 2000; // In msec. Max Wait time after last NS probe.
             static constexpr uint32_t kJitter               = 2000; // In msec. Jitter to randomize probe starts.
 
             static_assert(kMaxNsProbes < 255, "kMaxNsProbes MUST not be 255");
@@ -788,7 +788,7 @@ private:
         // lifetime, and selection of the NAT64 prefix to publish in
         // Network Data.
         //
-        // Calling methods except GeneratrLocalPrefix and SetEnabled
+        // Calling methods except GenerateLocalPrefix and SetEnabled
         // when disabled becomes no-op.
 
         explicit Nat64PrefixManager(Instance &aInstance);

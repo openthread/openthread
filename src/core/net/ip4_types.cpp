@@ -39,7 +39,7 @@ namespace Ip4 {
 
 Error Address::FromString(const char *aString)
 {
-    constexpr char kSeperatorChar = '.';
+    constexpr char kSeparatorChar = '.';
     constexpr char kNullChar      = '\0';
 
     Error error = kErrorParse;
@@ -70,7 +70,7 @@ Error Address::FromString(const char *aString)
             break;
         }
 
-        VerifyOrExit(*aString == kSeperatorChar);
+        VerifyOrExit(*aString == kSeparatorChar);
         aString++;
     }
 

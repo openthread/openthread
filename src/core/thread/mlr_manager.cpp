@@ -289,7 +289,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
     mMlrPending = true;
 
-    // Generally Thread 1.2 Router would send MLR.req on bebelf for MA (scope >=4) subscribed by its MTD child.
+    // Generally Thread 1.2 Router would send MLR.req on behalf for MA (scope >=4) subscribed by its MTD child.
     // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send MLR.req to PBBR itself.
     // In this case, Thread 1.2 sleepy end device relies on fast data poll to fetch the response timely.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())

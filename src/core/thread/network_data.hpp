@@ -527,7 +527,7 @@ private:
                                                             GetSubTlvOffset());
         }
 
-        void AdvaceSubTlv(const NetworkDataTlv *aSubTlvs)
+        void AdvanceSubTlv(const NetworkDataTlv *aSubTlvs)
         {
             SaveSubTlvOffset(GetSubTlv(aSubTlvs)->GetNext(), aSubTlvs);
             SetEntryIndex(0);

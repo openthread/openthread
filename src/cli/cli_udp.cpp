@@ -169,7 +169,7 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
         // Binary hex data payload
 
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = PrepareHexStringPaylod(*message, aArgs[1].GetCString()));
+        SuccessOrExit(error = PrepareHexStringPayload(*message, aArgs[1].GetCString()));
     }
     else
     {
@@ -243,7 +243,7 @@ exit:
     return error;
 }
 
-otError UdpExample::PrepareHexStringPaylod(otMessage &aMessage, const char *aHexString)
+otError UdpExample::PrepareHexStringPayload(otMessage &aMessage, const char *aHexString)
 {
     enum : uint8_t
     {

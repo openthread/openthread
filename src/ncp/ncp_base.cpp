@@ -671,7 +671,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
 
-void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+void NcpBase::RegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                         otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
 {
     mAllowPeekDelegate = aAllowPeekDelegate;
@@ -2600,14 +2600,13 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CALIBRATED_POWER>
 // ----------------------------------------------------------------------------
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
-void otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
-                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
+void otNcpRegisterPeekPoke(otNcpDelegateAllowPeekPoke aAllowPeekDelegate, otNcpDelegateAllowPeekPoke aAllowPokeDelegate)
 {
     ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
 
     if (ncp != nullptr)
     {
-        ncp->RegisterPeekPokeDelagates(aAllowPeekDelegate, aAllowPokeDelegate);
+        ncp->RegisterPeekPoke(aAllowPeekDelegate, aAllowPokeDelegate);
     }
 }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE

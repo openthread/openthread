@@ -158,7 +158,7 @@ typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
  * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
  *
  */
-void otNcpRegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+void otNcpRegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                     otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 
 /**

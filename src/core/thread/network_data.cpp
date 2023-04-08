@@ -190,7 +190,7 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
 
         for (const NetworkDataTlv *subCur; subCur = iterator.GetSubTlv(subTlvs),
                                            (subCur + 1 <= cur->GetNext()) && (subCur->GetNext() <= cur->GetNext());
-             iterator.AdvaceSubTlv(subTlvs))
+             iterator.AdvanceSubTlv(subTlvs))
         {
             if (cur->GetType() == NetworkDataTlv::kTypePrefix)
             {

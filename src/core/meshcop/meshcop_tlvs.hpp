@@ -124,7 +124,7 @@ public:
      * Max length of Provisioning URL TLV.
      *
      */
-    static constexpr uint8_t kMaxkProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
+    static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
     static constexpr uint8_t kMaxVendorNameLength      = 32; ///< Max length of Vendor Name TLV.
     static constexpr uint8_t kMaxVendorModelLength     = 32; ///< Max length of Vendor Model TLV.
@@ -1559,7 +1559,7 @@ private:
  * This class defines Provisioning TLV constants and types.
  *
  */
-typedef StringTlvInfo<Tlv::kProvisioningUrl, Tlv::kMaxkProvisioningUrlLength> ProvisioningUrlTlv;
+typedef StringTlvInfo<Tlv::kProvisioningUrl, Tlv::kMaxProvisioningUrlLength> ProvisioningUrlTlv;
 
 /**
  * This class defines Vendor Name TLV constants and types.

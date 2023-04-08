@@ -228,7 +228,7 @@
 /**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
  *
- * This setting configures the Multicast Listener Registration parent proxing in Thread 1.2.
+ * This setting configures the Multicast Listener Registration parent proxying in Thread 1.2.
  *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE

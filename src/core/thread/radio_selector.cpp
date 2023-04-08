@@ -85,28 +85,28 @@ void RadioSelector::NeighborInfo::PopulateMultiRadioInfo(MultiRadioInfo &aInfo)
 LogLevel RadioSelector::UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference)
 {
     uint8_t old        = aNeighbor.GetRadioPreference(aRadioType);
-    int16_t preferecne = static_cast<int16_t>(old);
+    int16_t preference = static_cast<int16_t>(old);
 
-    preferecne += aDifference;
+    preference += aDifference;
 
-    if (preferecne > kMaxPreference)
+    if (preference > kMaxPreference)
     {
-        preferecne = kMaxPreference;
+        preference = kMaxPreference;
     }
 
-    if (preferecne < kMinPreference)
+    if (preference < kMinPreference)
     {
-        preferecne = kMinPreference;
+        preference = kMinPreference;
     }
 
-    aNeighbor.SetRadioPreference(aRadioType, static_cast<uint8_t>(preferecne));
+    aNeighbor.SetRadioPreference(aRadioType, static_cast<uint8_t>(preference));
 
     // We check whether the update to the preference value caused it
     // to cross the threshold `kHighPreference`. Based on this we
     // return a suggested log level. If there is cross, suggest info
     // log level, otherwise debug log level.
 
-    return ((old >= kHighPreference) != (preferecne >= kHighPreference)) ? kLogLevelInfo : kLogLevelDebg;
+    return ((old >= kHighPreference) != (preference >= kHighPreference)) ? kLogLevelInfo : kLogLevelDebg;
 }
 
 void RadioSelector::UpdateOnReceive(Neighbor &aNeighbor, Mac::RadioType aRadioType, bool aIsDuplicate)

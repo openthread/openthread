@@ -229,7 +229,7 @@ typedef struct otTimestamp
 /**
  * This structure represents an Active or Pending Operational Dataset.
  *
- * Components in Dataset are optional. `mComponets` structure specifies which components are present in the Dataset.
+ * Components in Dataset are optional. `mComponents` structure specifies which components are present in the Dataset.
  *
  */
 typedef struct otOperationalDataset

@@ -132,7 +132,7 @@ public:
      * @param[in]      aNetworkId          A pointer to a byte array of Network_ID to generate IID.
      * @param[in]      aNetworkIdLength    The size of array @p aNetworkId.
      * @param[in,out]  aDadCounter         A pointer to the DAD_Counter that is employed to resolve Duplicate
-     *                                     Address Detection connflicts.
+     *                                     Address Detection conflicts.
      *
      * @retval kErrorNone    If successfully generated the IID.
      * @retval kErrorFailed  If no valid IID was generated.

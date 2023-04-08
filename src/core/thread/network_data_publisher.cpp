@@ -64,8 +64,8 @@ Publisher::Publisher(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     // Since the `PrefixEntry` type is used in an array,
     // we cannot use a constructor with an argument (e.g.,
-    // we cannot use `InstacneLocator`) so we use
-    // `IntanceLocatorInit`  and `Init()` the entries one
+    // we cannot use `InstanceLocator`) so we use
+    // `InstanceLocatorInit`  and `Init()` the entries one
     // by one.
 
     for (PrefixEntry &entry : mPrefixEntries)
@@ -330,7 +330,7 @@ void Publisher::Entry::UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEnt
 
             if (aNumPreferredEntries < aDesiredNumEntries)
             {
-                mUpdateTime += kExtraDelayToRemovePeferred;
+                mUpdateTime += kExtraDelayToRemovePreferred;
             }
 
             SetState(kRemoving);

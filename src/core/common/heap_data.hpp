@@ -94,7 +94,7 @@ public:
     /**
      * This method returns the `Heap::Data` length.
      *
-     * @returns The data length (number of bytes) or zero if the `HeadpData` is null.
+     * @returns The data length (number of bytes) or zero if the `HeapData` is null.
      *
      */
     uint16_t GetLength(void) const { return mData.GetLength(); }

@@ -2149,7 +2149,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
         if (service.mIsDeleted)
         {
-            // `RemoveService()` does nothing if `exitsingService` is `nullptr`.
+            // `RemoveService()` does nothing if `existingService` is `nullptr`.
             RemoveService(existingService, kRetainName, kDoNotNotifyServiceHandler);
             continue;
         }

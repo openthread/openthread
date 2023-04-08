@@ -126,7 +126,7 @@ public:
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
      *
      */
-    void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+    void RegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 #endif
 

@@ -950,7 +950,7 @@ Error Client::StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName
         // with the first one.
         SuccessOrExit(AllocateQuery(aInfo, aLabel, aName, secondQuery));
 
-        IgnoreError(SendQuery(*secondQuery, aInfo, /* aUpdateTiemr */ true));
+        IgnoreError(SendQuery(*secondQuery, aInfo, /* aUpdateTimer */ true));
 
         // Update first query to link to second one by updating
         // its `mNextQuery`.
@@ -1090,7 +1090,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
             SuccessOrExit(error = InitTcpSocket());
             SuccessOrExit(
                 error = mEndpoint.Connect(AsCoreType(&aInfo.mConfig.mServerSockAddr), OT_TCP_CONNECT_NO_FAST_OPEN));
-            mTcpState = kTcpConecting;
+            mTcpState = kTcpConnecting;
             PrepareTcpMessage(*message);
             break;
         case kTcpConnectedIdle:
@@ -1098,7 +1098,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
             SuccessOrExit(error = mEndpoint.SendByReference(mSendLink, /* aFlags */ 0));
             mTcpState = kTcpConnectedSending;
             break;
-        case kTcpConecting:
+        case kTcpConnecting:
             PrepareTcpMessage(*message);
             break;
         case kTcpConnectedSending:
@@ -1343,7 +1343,7 @@ bool Client::CanFinalizeQuery(Query &aQuery)
     // Determines whether we can finalize a main query by checking if
     // we have received and saved responses for all other related
     // queries associated with `aQuery`. Note that this method is
-    // called when we receive a response for `aQeury`, so no need to
+    // called when we receive a response for `aQuery`, so no need to
     // check for a saved response for `aQuery` itself.
 
     bool      canFinalize = true;
@@ -1601,7 +1601,7 @@ Error Client::ReadFromLinkBuffer(const otLinkedBuffer *&aLinkedBuffer,
     // and copy the content into `aMessage`. As we read we can move
     // to the next `aLinkedBuffer` and update `aOffset`.
     // Returns:
-    // - `kErrorNone` if `aLengh` bytes are successfully read and
+    // - `kErrorNone` if `aLength` bytes are successfully read and
     //    `aOffset` and `aLinkedBuffer` are updated.
     // - `kErrorNotFound` is not enough bytes available to read
     //    from `aLinkedBuffer`.

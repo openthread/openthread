@@ -125,7 +125,7 @@ void Checksum::Calculate(const Ip4::Address &aSource,
     uint16_t       length = aMessage.GetLength() - aMessage.GetOffset();
 
     // Pseudo-header for checksum calculation (RFC-768/792/793).
-    // Note: ICMP checksum won't count the presudo header like TCP and UDP.
+    // Note: ICMP checksum won't count the pseudo header like TCP and UDP.
     if (aIpProto != Ip4::kProtoIcmp)
     {
         AddData(aSource.GetBytes(), sizeof(Ip4::Address));

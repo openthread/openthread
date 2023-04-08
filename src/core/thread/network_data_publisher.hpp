@@ -306,7 +306,7 @@ private:
         // All intervals are in milliseconds.
         static constexpr uint32_t kMaxDelayToAdd    = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_ADD;
         static constexpr uint32_t kMaxDelayToRemove = OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_DELAY_TO_REMOVE;
-        static constexpr uint32_t kExtraDelayToRemovePeferred =
+        static constexpr uint32_t kExtraDelayToRemovePreferred =
             OPENTHREAD_CONFIG_NETDATA_PUBLISHER_EXTRA_DELAY_TIME_TO_REMOVE_PREFERRED;
 
         static constexpr uint16_t kInfoStringSize = 60;

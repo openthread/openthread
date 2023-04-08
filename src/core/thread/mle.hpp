@@ -1256,7 +1256,7 @@ protected:
          * @retval kErrorNoBufs   Insufficient buffers available to append the Connectivity TLV.
          *
          */
-        Error AppendAddresseRegisterationTlv(Child &aChild);
+        Error AppendAddressRegistrationTlv(Child &aChild);
 #endif // OPENTHREAD_FTD
 
         /**
@@ -1956,7 +1956,7 @@ private:
         static constexpr uint32_t kCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
         static constexpr uint32_t kBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
         static constexpr uint32_t kJitterInterval  = (15 * 1000u);
-        static constexpr int8_t   kRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
+        static constexpr int8_t   kRssThreshold    = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
 
         using SearchTimer = TimerMilliIn<Mle, &Mle::HandleParentSearchTimer>;
 
@@ -2021,8 +2021,8 @@ private:
     uint32_t GetAttachStartDelay(void) const;
     void     SendParentRequest(ParentRequestType aType);
     Error    SendChildIdRequest(void);
-    Error    GetNextAnnouceChannel(uint8_t &aChannel) const;
-    bool     HasMoreChannelsToAnnouce(void) const;
+    Error    GetNextAnnounceChannel(uint8_t &aChannel) const;
+    bool     HasMoreChannelsToAnnounce(void) const;
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
     void     SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);

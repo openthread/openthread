@@ -3659,7 +3659,7 @@ exit:
     return error;
 }
 
-static spinel_srp_client_item_state_t SrpClientItemStatetoSpinel(otSrpClientItemState aItemState)
+static spinel_srp_client_item_state_t SrpClientItemStateToSpinel(otSrpClientItemState aItemState)
 {
     spinel_srp_client_item_state_t state = SPINEL_SRP_CLIENT_ITEM_STATE_REMOVED;
 
@@ -3699,7 +3699,7 @@ otError NcpBase::EncodeSrpClientHostInfo(const otSrpClientHostInfo &aHostInfo)
     otError error;
 
     SuccessOrExit(error = mEncoder.WriteUtf8(aHostInfo.mName != nullptr ? aHostInfo.mName : ""));
-    SuccessOrExit(error = mEncoder.WriteUint8(SrpClientItemStatetoSpinel(aHostInfo.mState)));
+    SuccessOrExit(error = mEncoder.WriteUint8(SrpClientItemStateToSpinel(aHostInfo.mState)));
 
     SuccessOrExit(error = mEncoder.OpenStruct());
 

@@ -215,7 +215,7 @@ public:
      * @param[in,out] aMessage the message to be processed.
      *
      * @retval kNotTranslated The message is already an IPv6 datagram. @p aMessage is not updated.
-     * @retval kForward       The caller should contiue forwarding the datagram.
+     * @retval kForward       The caller should continue forwarding the datagram.
      * @retval kDrop          The caller should drop the datagram silently.
      *
      */
@@ -229,7 +229,7 @@ public:
      * @param[in,out] aMessage the message to be processed.
      *
      * @retval kNotTranslated The datagram is not sending to the configured NAT64 prefix.
-     * @retval kForward       The caller should contiue forwarding the datagram.
+     * @retval kForward       The caller should continue forwarding the datagram.
      * @retval kDrop          The caller should drop the datagram silently.
      *
      */

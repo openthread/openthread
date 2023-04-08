@@ -173,7 +173,7 @@ public:
      * @param[in, out] aTypeId    A reference to a Type ID variable to update.
      *
      */
-    static void MarkAsReserverd(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
+    static void MarkAsReserved(uint8_t &aTypeId) { aTypeId = (aTypeId & ~kTypeMask) | kTypeReserved; }
 
     TypeId(void) = delete;
 };

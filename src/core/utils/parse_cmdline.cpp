@@ -146,8 +146,8 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
 
     enum : uint64_t
     {
-        kMaxHexBeforeOveflow = (0xffffffffffffffffULL / 16),
-        kMaxDecBeforeOverlow = (0xffffffffffffffffULL / 10),
+        kMaxHexBeforeOverflow = (0xffffffffffffffffULL / 16),
+        kMaxDecBeforeOverflow = (0xffffffffffffffffULL / 10),
     };
 
     VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
@@ -164,7 +164,7 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
         uint64_t newValue;
 
         SuccessOrExit(error = isHex ? ParseHexDigit(*cur, digit) : ParseDigit(*cur, digit));
-        VerifyOrExit(value <= (isHex ? kMaxHexBeforeOveflow : kMaxDecBeforeOverlow), error = kErrorInvalidArgs);
+        VerifyOrExit(value <= (isHex ? kMaxHexBeforeOverflow : kMaxDecBeforeOverflow), error = kErrorInvalidArgs);
         value    = isHex ? (value << 4) : (value * 10);
         newValue = value + digit;
         VerifyOrExit(newValue >= value, error = kErrorInvalidArgs);
@@ -201,14 +201,14 @@ Error ParseAsInt32(const char *aString, int32_t &aInt32)
 {
     Error    error;
     uint64_t value;
-    bool     isNegavtive = false;
+    bool     isNegative = false;
 
     VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
 
     if (*aString == '-')
     {
         aString++;
-        isNegavtive = true;
+        isNegative = true;
     }
     else if (*aString == '+')
     {
@@ -216,10 +216,10 @@ Error ParseAsInt32(const char *aString, int32_t &aInt32)
     }
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
-    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::kMin))
-                                       : static_cast<uint64_t>(NumericLimits<int32_t>::kMax)),
+    VerifyOrExit(value <= (isNegative ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::kMin))
+                                      : static_cast<uint64_t>(NumericLimits<int32_t>::kMax)),
                  error = kErrorInvalidArgs);
-    aInt32 = static_cast<int32_t>(isNegavtive ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
+    aInt32 = static_cast<int32_t>(isNegative ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
 
 exit:
     return error;
@@ -279,7 +279,7 @@ exit:
 
 enum HexStringParseMode
 {
-    kModeExtactSize,   // Parse hex string expecting an exact size (number of bytes when parsed).
+    kModeExactSize,    // Parse hex string expecting an exact size (number of bytes when parsed).
     kModeUpToSize,     // Parse hex string expecting less than or equal a given size.
     kModeAllowPartial, // Allow parsing of partial segments.
 };
@@ -299,7 +299,7 @@ static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuf
 
     switch (aMode)
     {
-    case kModeExtactSize:
+    case kModeExactSize:
         VerifyOrExit(expectedSize == aSize, error = kErrorInvalidArgs);
         break;
     case kModeUpToSize:
@@ -353,7 +353,7 @@ exit:
 
 Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
 {
-    return ParseHexString(aString, aSize, aBuffer, kModeExtactSize);
+    return ParseHexString(aString, aSize, aBuffer, kModeExactSize);
 }
 
 Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)

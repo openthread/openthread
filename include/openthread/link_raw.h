@@ -236,7 +236,7 @@ typedef void (*otLinkRawEnergyScanDone)(otInstance *aInstance, int8_t aEnergySca
  * @param[in]  aCallback        A pointer to a function called on completion of a scanned channel.
  *
  * @retval OT_ERROR_NONE             Successfully started scanning the channel.
- * @retval OT_ERROR_BUSY             The radio is performing enery scanning.
+ * @retval OT_ERROR_BUSY             The radio is performing energy scanning.
  * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
  * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
  *

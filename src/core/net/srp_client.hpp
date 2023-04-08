@@ -952,13 +952,13 @@ private:
         void    InvokeCallback(const Ip6::SockAddr *aServerSockAddr) const;
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-        uint8_t GetTimoutFailureCount(void) const { return mTimoutFailureCount; }
-        void    ResetTimoutFailureCount(void) { mTimoutFailureCount = 0; }
-        void    IncrementTimoutFailureCount(void)
+        uint8_t GetTimeoutFailureCount(void) const { return mTimeoutFailureCount; }
+        void    ResetTimeoutFailureCount(void) { mTimeoutFailureCount = 0; }
+        void    IncrementTimeoutFailureCount(void)
         {
-            if (mTimoutFailureCount < NumericLimits<uint8_t>::kMax)
+            if (mTimeoutFailureCount < NumericLimits<uint8_t>::kMax)
             {
-                mTimoutFailureCount++;
+                mTimeoutFailureCount++;
             }
         }
 #endif
@@ -972,7 +972,7 @@ private:
         State                       mState;
         uint8_t                     mAnycastSeqNum;
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-        uint8_t mTimoutFailureCount; // Number of no-response timeout failures with the currently selected server.
+        uint8_t mTimeoutFailureCount; // Number of no-response timeout failures with the currently selected server.
 #endif
     };
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE

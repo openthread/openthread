@@ -1305,11 +1305,11 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         RadioType  radio          = aFrame.GetRadioType();
-        RadioTypes requriedRadios = mLinks.GetTxFrames().GetRequiredRadioTypes();
+        RadioTypes requiredRadios = mLinks.GetTxFrames().GetRequiredRadioTypes();
 
         Get<RadioSelector>().UpdateOnSendDone(aFrame, aError);
 
-        if (requriedRadios.IsEmpty())
+        if (requiredRadios.IsEmpty())
         {
             // If the "required radio type set" is empty, successful
             // tx over any radio link is sufficient for overall tx to
@@ -1330,7 +1330,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             // `mTxError` starts as `kErrorNone` and we update it
             // if tx over any link in the set fails.
 
-            if (requriedRadios.Contains(radio) && (aError != kErrorNone))
+            if (requiredRadios.Contains(radio) && (aError != kErrorNone))
             {
                 LogDebg("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
                         ErrorToString(aError));

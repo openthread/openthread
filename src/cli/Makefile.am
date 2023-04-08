@@ -65,23 +65,23 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #
 #     Thus, the existing(previous) way *THIS* library was compiled is
 #     exactly the FTD path. Meaning the "cli" library always sees
-#     the FTD varients of various headers/classes.
+#     the FTD variants of various headers/classes.
 #
 #     The same is true of the "ncp" library.
 #
-# HOWEVER there are two varients of the CLI application, CLI-MTD
-# and CLI-FTD (and likewise, two varients of the ncp application)
+# HOWEVER there are two variants of the CLI application, CLI-MTD
+# and CLI-FTD (and likewise, two variants of the ncp application)
 # These applications link against two different OpenThread libraries.
 #
 # Which flavor, you get depends upon which library: "mtd" or "ftd" is linked.
 #
 # Which on the surface appear to link fine against the MTD/FTD library.
 #
-# In this description/example we focus on the  "nework_data_leader"
-# header file. The FTD varient has many private variables, functions
+# In this description/example we focus on the  "network_data_leader"
+# header file. The FTD variant has many private variables, functions
 # and other things of "FTD" (ie: full) implementation items.
 #
-# In contrast the MTD is generaly stubbed out with stub-functions
+# In contrast the MTD is generally stubbed out with stub-functions
 # inlined in the header that return "error not implemented" or similar.
 #
 # Thus it works... here ... With this file and this example.
@@ -92,20 +92,20 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 #    Is this true always? Is this robust?
 #    Or is there a hidden "got-ya" that will snag the next person?
 #
-# This also fails static analisys, checks.
+# This also fails static analysis, checks.
 #    Application - with MTD vrs FTD class.
 #    Library #1  (cli-lib) with FTD selected.
 #    Library #2  (openthread) with two different class flavors.
 #
-# The static analisys tools will say: "NOPE" different classes!
+# The static analysis tools will say: "NOPE" different classes!
 # Perhaps this will change if/when nothing is implemented in the 'mtd-header'
 #
 # Additionally, tools that perform "whole program optimization" will
-# throw errors becuase the data structures differ greatly.
+# throw errors because the data structures differ greatly.
 #
 # Hence, CLI library (and NCP) must exist in two flavors.
 #
-# Unless and until these libraries do not "accidently" suck in
+# Unless and until these libraries do not "accidentally" suck in
 # a "flavored" header file somewhere.
 
 lib_LIBRARIES                       = $(NULL)

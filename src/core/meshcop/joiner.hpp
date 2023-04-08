@@ -185,7 +185,7 @@ private:
     static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
 
     static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
-    static constexpr uint32_t kReponseTimeout        = 4000; ///< Max wait time to receive response (in msec).
+    static constexpr uint32_t kResponseTimeout       = 4000; ///< Max wait time to receive response (in msec).
 
     struct JoinerRouter
     {

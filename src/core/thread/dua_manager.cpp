@@ -105,7 +105,7 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     switch (aState)
     {
     case BackboneRouter::Leader::kDomainPrefixUnchanged:
-        // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcely
+        // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcefully
         VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
         OT_FALL_THROUGH;

@@ -46,7 +46,7 @@
 
 using namespace ot;
 
-// Note: We support the following scenrios:
+// Note: We support the following scenarios:
 // - Using OpenThread's routing manager, while using external NAT64 translator (like tayga).
 // - Using OpenThread's NAT64 translator, while using external routing manager.
 // So OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE translator and OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE are two

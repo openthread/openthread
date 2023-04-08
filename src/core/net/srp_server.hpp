@@ -832,7 +832,7 @@ public:
      * disabled by a call to `SetEnabled()` method. Disabling auto-enable mode using `SetAutoEnableMode(false` call
      * will not change the current state of SRP sever (e.g., if it is enabled it stays enabled).
      *
-     * @param[in] aEnbaled    A boolean to enable/disable the auto-enable mode.
+     * @param[in] aEnabled    A boolean to enable/disable the auto-enable mode.
      *
      */
     void SetAutoEnableMode(bool aEnabled);
@@ -929,11 +929,11 @@ private:
     static constexpr uint32_t kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT;
 
     static constexpr AddressMode kDefaultAddressMode =
-        static_cast<AddressMode>(OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE);
+        static_cast<AddressMode>(OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDRESS_MODE);
 
     static constexpr uint16_t kAnycastAddressModePort = 53;
 
-    // Metdata for a received SRP Update message.
+    // Metadata for a received SRP Update message.
     struct MessageMetadata
     {
         // Indicates whether the `Message` is received directly from a

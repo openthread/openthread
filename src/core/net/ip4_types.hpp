@@ -284,7 +284,7 @@ public:
     static constexpr uint8_t kVersionIhlOffset         = 0;
     static constexpr uint8_t kTrafficClassOffset       = 1;
     static constexpr uint8_t kTotalLengthOffset        = 2;
-    static constexpr uint8_t kIdenficationOffset       = 4;
+    static constexpr uint8_t kIdentificationOffset     = 4;
     static constexpr uint8_t kFlagsFragmentOffset      = 6;
     static constexpr uint8_t kTtlOffset                = 8;
     static constexpr uint8_t kProtocolOffset           = 9;
@@ -513,7 +513,7 @@ public:
      * @returns Whether don't fragment flag is set.
      *
      */
-    bool GetDf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsDf; }
+    bool GetDf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsDf; }
 
     /**
      * This method returns the Mf flag in the IPv4 header.
@@ -521,7 +521,7 @@ public:
      * @returns Whether more fragments flag is set.
      *
      */
-    bool GetMf(void) const { return HostSwap16(mFlagsFargmentOffset) & kFlagsMf; }
+    bool GetMf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsMf; }
 
     /**
      * This method returns the fragment offset in the IPv4 header.
@@ -529,7 +529,7 @@ public:
      * @returns The fragment offset of the IPv4 packet.
      *
      */
-    uint16_t GetFragmentOffset(void) const { return HostSwap16(mFlagsFargmentOffset) & kFragmentOffsetMask; }
+    uint16_t GetFragmentOffset(void) const { return HostSwap16(mFlagsFragmentOffset) & kFragmentOffsetMask; }
 
 private:
     // IPv4 header
@@ -561,7 +561,7 @@ private:
     uint8_t  mDscpEcn;
     uint16_t mTotalLength;
     uint16_t mIdentification;
-    uint16_t mFlagsFargmentOffset;
+    uint16_t mFlagsFragmentOffset;
     uint8_t  mTtl;
     uint8_t  mProtocol;
     uint16_t mHeaderChecksum;
@@ -571,7 +571,7 @@ private:
 
 /**
  * This class implements ICMP(v4).
- * Note: ICMP(v4) messages will only be generated / handled by NAT64. So only header defination is required.
+ * Note: ICMP(v4) messages will only be generated / handled by NAT64. So only header definition is required.
  *
  */
 class Icmp
@@ -670,9 +670,9 @@ public:
          * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
          *
          */
-        void SetRestOfHeader(const uint8_t *aRestOfheader)
+        void SetRestOfHeader(const uint8_t *aRestOfHeader)
         {
-            memcpy(mRestOfHeader, aRestOfheader, sizeof(mRestOfHeader));
+            memcpy(mRestOfHeader, aRestOfHeader, sizeof(mRestOfHeader));
         }
 
     private:

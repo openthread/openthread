@@ -266,7 +266,7 @@ Error Filter::ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, N
     {
         // Clear the previous RSS average to ensure the fixed RSS
         // value takes effect quickly.
-        aNeighbor->GetLinkInfo().CleaAverageRss();
+        aNeighbor->GetLinkInfo().ClearAverageRss();
     }
 
 exit:

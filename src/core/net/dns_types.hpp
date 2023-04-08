@@ -514,7 +514,7 @@ public:
      */
     static constexpr uint8_t kMaxLabelLength = kMaxLabelSize - 1;
 
-    static constexpr char kLabelSeperatorChar = '.';
+    static constexpr char kLabelSeparatorChar = '.';
 
     /**
      * This enumeration represents the name type.
@@ -1020,7 +1020,7 @@ private:
     static constexpr uint16_t kPointerLabelTypeUint16 = 0xc000; // Pointer label type mask (first 2 bits).
     static constexpr uint16_t kPointerLabelOffsetMask = 0x3fff; // Mask for offset in a pointer label (lower 14 bits).
 
-    static constexpr bool kIsSingleLabel = true; // Used in `LabelIterator::CompareLable()`.
+    static constexpr bool kIsSingleLabel = true; // Used in `LabelIterator::CompareLabel()`.
 
     struct LabelIterator
     {
@@ -2361,7 +2361,7 @@ public:
      * @param[in] aExtendedResponse The upper 8-bit of the extended 12-bit Response Code.
      *
      */
-    void SetExtnededResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
+    void SetExtendedResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
 
     /**
      * This method gets the Version field.

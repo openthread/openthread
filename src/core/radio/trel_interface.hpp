@@ -256,12 +256,12 @@ private:
     Peer *GetNewPeerEntry(void);
     void  RemovePeerEntry(Peer &aEntry);
 
-    using RegsiterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
+    using RegisterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
 
     bool                mInitialized : 1;
     bool                mEnabled : 1;
     bool                mFiltered : 1;
-    RegsiterServiceTask mRegisterServiceTask;
+    RegisterServiceTask mRegisterServiceTask;
     uint16_t            mUdpPort;
     Packet              mRxPacket;
     PeerTable           mPeerTable;

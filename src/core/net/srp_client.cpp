@@ -355,7 +355,7 @@ void Client::Stop(Requester aRequester, StopMode aMode)
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-    mAutoStart.ResetTimoutFailureCount();
+    mAutoStart.ResetTimeoutFailureCount();
 #endif
     if (aRequester == kRequesterAuto)
     {
@@ -1494,7 +1494,7 @@ void Client::ProcessResponse(Message &aMessage)
     LogInfo("Received response");
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-    mAutoStart.ResetTimoutFailureCount();
+    mAutoStart.ResetTimeoutFailureCount();
 #endif
 
     error = Dns::Header::ResponseCodeToError(header.GetResponseCode());
@@ -1888,9 +1888,9 @@ void Client::HandleTimer(void)
         // callback. It works correctly due to the guard check at the
         // top of `SelectNextServer()`.
 
-        mAutoStart.IncrementTimoutFailureCount();
+        mAutoStart.IncrementTimeoutFailureCount();
 
-        if (mAutoStart.GetTimoutFailureCount() >= kMaxTimeoutFailuresToSwitchServer)
+        if (mAutoStart.GetTimeoutFailureCount() >= kMaxTimeoutFailuresToSwitchServer)
         {
             SelectNextServer(kDisallowSwitchOnRegisteredHost);
         }
