@@ -97,6 +97,9 @@ private:
 #if OPENTHREAD_FTD
     Error AppendChildTable(Message &aMessage);
     Error AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, const Ip6::MessageInfo &aAnswerInfo);
+    Error AppendChildTableIp6AddressList(Coap::Message *&aAnswer, const Ip6::MessageInfo &aAnswerInfo);
+    Error AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild);
+
 #endif
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

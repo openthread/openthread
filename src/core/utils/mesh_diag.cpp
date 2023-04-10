@@ -164,10 +164,8 @@ exit:
     return;
 }
 
-Error MeshDiag::QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallback, void *aContext)
+Error MeshDiag::SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
 {
-    static const uint8_t kTlvTypes[] = {ChildTlv::kType};
-
     Error        error = kErrorNone;
     Ip6::Address destination;
 
@@ -180,12 +178,41 @@ Error MeshDiag::QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallb
     destination.GetIid().SetLocator(aRloc16);
 
     SuccessOrExit(error = Get<Client>().SendCommand(kUriDiagnosticGetQuery, Message::kPriorityNormal, destination,
-                                                    kTlvTypes, sizeof(kTlvTypes)));
+                                                    aTlvs, aTlvsLength));
+
+    mTimer.Start(kResponseTimeout);
+
+exit:
+    return error;
+}
+
+Error MeshDiag::QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallback, void *aContext)
+{
+    static const uint8_t kTlvTypes[] = {ChildTlv::kType};
+
+    Error error;
+
+    SuccessOrExit(error = SendQuery(aRloc16, kTlvTypes, sizeof(kTlvTypes)));
 
     mQueryChildTable.mCallback.Set(aCallback, aContext);
     mQueryChildTable.mRouterRloc16 = aRloc16;
-    mTimer.Start(kResponseTimeout);
-    mState = kStateQueryChildTable;
+    mState                         = kStateQueryChildTable;
+
+exit:
+    return error;
+}
+
+Error MeshDiag::QueryChildrenIp6Addrs(uint16_t aRloc16, ChildIp6AddrsCallback aCallback, void *aContext)
+{
+    static const uint8_t kTlvTypes[] = {ChildIp6AddressListTlv::kType};
+
+    Error error;
+
+    SuccessOrExit(error = SendQuery(aRloc16, kTlvTypes, sizeof(kTlvTypes)));
+
+    mQueryChildrenIp6Addrs.mCallback.Set(aCallback, aContext);
+    mQueryChildrenIp6Addrs.mParentRloc16 = aRloc16;
+    mState                               = kStateQueryChildrenIp6Addrs;
 
 exit:
     return error;
@@ -193,12 +220,32 @@ exit:
 
 bool MeshDiag::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
+    bool didPorcess = false;
+
+    switch (mState)
+    {
+    case kStateQueryChildTable:
+        didPorcess = ProcessChildTableAnswer(aMessage, aMessageInfo);
+        break;
+
+    case kStateQueryChildrenIp6Addrs:
+        didPorcess = ProcessChildrenIp6AddrsAnswer(aMessage, aMessageInfo);
+        break;
+
+    default:
+        break;
+    }
+
+    return didPorcess;
+}
+
+bool MeshDiag::ProcessChildTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
     bool       didPorcess = false;
     ChildTlv   childTlv;
     ChildEntry entry;
     uint16_t   offset;
 
-    VerifyOrExit(mState == kStateQueryChildTable);
     VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == mQueryChildTable.mRouterRloc16);
 
@@ -237,12 +284,86 @@ exit:
     return didPorcess;
 }
 
+bool MeshDiag::ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    bool                        didPorcess = false;
+    uint16_t                    offset;
+    uint16_t                    endOffset;
+    ChildIp6AddressListTlvValue tlvValue;
+    Ip6AddrIterator             ip6AddrIterator;
+    union
+    {
+        Tlv         tlv;
+        ExtendedTlv extTlv;
+    };
+
+    VerifyOrExit(Get<Mle::Mle>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+    VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().GetLocator() == mQueryChildrenIp6Addrs.mParentRloc16);
+
+    while (true)
+    {
+        SuccessOrExit(Tlv::FindTlvOffset(aMessage, ChildIp6AddressListTlv::kType, offset));
+
+        SuccessOrExit(aMessage.Read(offset, tlv));
+
+        if (tlv.IsExtended())
+        {
+            SuccessOrExit(aMessage.Read(offset, extTlv));
+            VerifyOrExit(offset + extTlv.GetSize() <= aMessage.GetLength());
+
+            offset += sizeof(extTlv);
+            endOffset = offset + extTlv.GetLength();
+        }
+        else
+        {
+            VerifyOrExit(offset + tlv.GetSize() <= aMessage.GetLength());
+
+            offset += sizeof(Tlv);
+            endOffset = offset + tlv.GetLength();
+        }
+
+        didPorcess = true;
+
+        if (offset == endOffset)
+        {
+            // We reached end of the list
+            mState = kStateIdle;
+            mTimer.Stop();
+            mQueryChildrenIp6Addrs.mCallback.InvokeIfSet(kErrorNone, Mle::kInvalidRloc16, nullptr);
+            ExitNow();
+        }
+
+        // Read the `ChildIp6AddressListTlvValue` (which contains the
+        // child RLOC16) and then prepare the `Ip6AddrIterator`.
+
+        VerifyOrExit(offset + sizeof(tlvValue) <= endOffset);
+        IgnoreError(aMessage.Read(offset, tlvValue));
+        offset += sizeof(tlvValue);
+
+        ip6AddrIterator.mMessage   = &aMessage;
+        ip6AddrIterator.mCurOffset = offset;
+        ip6AddrIterator.mEndOffset = endOffset;
+
+        mQueryChildrenIp6Addrs.mCallback.InvokeIfSet(kErrorPending, tlvValue.GetRloc16(), &ip6AddrIterator);
+
+        // Make sure query operation is not canceled from the
+        // callback.
+        VerifyOrExit(mState == kStateQueryChildrenIp6Addrs);
+
+        aMessage.SetOffset(endOffset);
+    }
+
+exit:
+    return didPorcess;
+}
+
 void MeshDiag::Cancel(void)
 {
     switch (mState)
     {
     case kStateIdle:
     case kStateQueryChildTable:
+    case kStateQueryChildrenIp6Addrs:
         break;
 
     case kStateDicoverTopology:
@@ -272,6 +393,10 @@ void MeshDiag::HandleTimer(void)
 
     case kStateQueryChildTable:
         mQueryChildTable.mCallback.InvokeIfSet(kErrorResponseTimeout, nullptr);
+        break;
+
+    case kStateQueryChildrenIp6Addrs:
+        mQueryChildrenIp6Addrs.mCallback.InvokeIfSet(kErrorResponseTimeout, Mle::kInvalidRloc16, nullptr);
         break;
     }
 }

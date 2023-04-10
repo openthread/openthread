@@ -405,6 +405,10 @@ void Server::SendAnswer(const Ip6::Address &aDestination, const Message &aReques
         {
             SuccessOrExit(AppendChildTableAsChildTlvs(answer, answerInfo));
         }
+        else if (tlvType == ChildIp6AddressListTlv::kType)
+        {
+            SuccessOrExit(AppendChildTableIp6AddressList(answer, answerInfo));
+        }
         else
         {
             SuccessOrExit(AppendDiagTlv(tlvType, *answer));
@@ -460,6 +464,84 @@ Error Server::AppendChildTableAsChildTlvs(Coap::Message *&aAnswer, const Ip6::Me
 
     childTlv.InitAsEmpty();
     error = childTlv.AppendTo(*aAnswer);
+
+exit:
+    return error;
+}
+
+Error Server::AppendChildTableIp6AddressList(Coap::Message *&aAnswer, const Ip6::MessageInfo &aAnswerInfo)
+{
+    Error    error = kErrorNone;
+    uint16_t length;
+    Tlv      tlv;
+
+    for (const Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
+    {
+        length = aAnswer->GetLength();
+
+        SuccessOrExit(error = AppendChildIp6AddressListTlv(*aAnswer, child));
+
+        if (aAnswer->GetLength() >= kMaxAnswerMessageLength)
+        {
+            IgnoreError(aAnswer->SetLength(length));
+            SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*aAnswer, aAnswerInfo));
+
+            aAnswer = Get<Tmf::Agent>().NewConfirmablePostMessage(kUriDiagnosticGetAnswer);
+            VerifyOrExit(aAnswer != nullptr, error = kErrorNoBufs);
+
+            SuccessOrExit(error = AppendChildIp6AddressListTlv(*aAnswer, child));
+        }
+    }
+
+    // Add empty TLV to indicate end of the list
+
+    tlv.SetType(Tlv::kChildIp6AddressList);
+    tlv.SetLength(0);
+    error = aAnswer->Append(tlv);
+
+exit:
+    return error;
+}
+
+Error Server::AppendChildIp6AddressListTlv(Coap::Message &aAnswer, const Child &aChild)
+{
+    Error                       error      = kErrorNone;
+    uint16_t                    numIp6Addr = 0;
+    ChildIp6AddressListTlvValue tlvValue;
+
+    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    {
+        OT_UNUSED_VARIABLE(address);
+        numIp6Addr++;
+    }
+
+    VerifyOrExit(numIp6Addr > 0);
+
+    if ((numIp6Addr * sizeof(Ip6::Address) + sizeof(ChildIp6AddressListTlvValue)) <= Tlv::kBaseTlvMaxLength)
+    {
+        Tlv tlv;
+
+        tlv.SetType(Tlv::kChildIp6AddressList);
+        tlv.SetLength(static_cast<uint8_t>(numIp6Addr * sizeof(Ip6::Address) + sizeof(ChildIp6AddressListTlvValue)));
+        SuccessOrExit(error = aAnswer.Append(tlv));
+    }
+    else
+    {
+        ExtendedTlv extTlv;
+
+        extTlv.SetType(Tlv::kChildIp6AddressList);
+        extTlv.SetLength(numIp6Addr * sizeof(Ip6::Address) + sizeof(ChildIp6AddressListTlvValue));
+        SuccessOrExit(error = aAnswer.Append(extTlv));
+    }
+
+    tlvValue.SetRloc16(aChild.GetRloc16());
+
+    SuccessOrExit(error = aAnswer.Append(tlvValue));
+
+    for (const Ip6::Address &address : aChild.IterateIp6Addresses())
+    {
+        SuccessOrExit(error = aAnswer.Append(address));
+    }
 
 exit:
     return error;

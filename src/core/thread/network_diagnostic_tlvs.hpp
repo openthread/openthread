@@ -70,24 +70,25 @@ public:
      */
     enum Type : uint8_t
     {
-        kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
-        kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
-        kMode            = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout         = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
-        kConnectivity    = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
-        kRoute           = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
-        kLeaderData      = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
-        kNetworkData     = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
-        kIp6AddressList  = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
-        kMacCounters     = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
-        kBatteryLevel    = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
-        kSupplyVoltage   = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
-        kChildTable      = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
-        kChannelPages    = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
-        kTypeList        = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
-        kMaxChildTimeout = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
-        kVersion         = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
-        kChild           = 25,
+        kExtMacAddress       = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16           = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
+        kMode                = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout             = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity        = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute               = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData          = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData         = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList      = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel        = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage       = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable          = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages        = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList            = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout     = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kVersion             = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kChild               = 25,
+        kChildIp6AddressList = 26,
     };
 
     /**
@@ -173,6 +174,12 @@ typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
+
+/**
+ * This class defines Child IPv6 Address List TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kChildIp6AddressList> ChildIp6AddressListTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 
@@ -784,6 +791,38 @@ private:
     uint16_t        mQueuedMessageCount;  // Number of queued message for indirect tx to child.
     uint16_t        mCslPeriod;           // CSL Period in unit of 10 symbols. Zero indicates disabled.
     uint32_t        mCslTimeout;          // CSL Timeout in seconds. Zero if not suppurated.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Child IPv6 Address List Value generation and parsing.
+ *
+ * This TLV can use  extended or normal format depending on the number of IPv6 addresses.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ChildIp6AddressListTlvValue
+{
+public:
+    /**
+     * This method returns the RLOC16 of the child.
+     *
+     * @returns The RLOC16 of the child.
+     *
+     */
+    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+
+    /**
+     * This method sets the RLOC16.
+     *
+     * @param[in] aRloc16   The RLOC16 value.
+     *
+     */
+    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
+
+private:
+    uint16_t mRloc16;
+    // Followed by zero or more IPv6 address(es).
+
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_FTD

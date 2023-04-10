@@ -5856,6 +5856,36 @@ template <> otError Interpreter::Process<Cmd("meshdiag")>(Arg aArgs[])
 
         error = OT_ERROR_PENDING;
     }
+    /**
+     * @cli meshdiag childrenip6addrs
+     * @code
+     * meshdiag childrenip6addr 0xdc00
+     * child-rloc16: 0xdc02
+     *     fdde:ad00:beef:0:ded8:cd58:b73:2c21
+     *     fd00:2:0:0:c24a:456:3b6b:c597
+     *     fd00:1:0:0:120b:95fe:3ecc:d238
+     * child-rloc16: 0xdc03
+     *     fdde:ad00:beef:0:3aa6:b8bf:e7d6:eefe
+     *     fd00:2:0:0:8ff8:a188:7436:6720
+     *     fd00:1:0:0:1fcf:5495:790a:370f
+     * @endcode
+     * @par
+     * Send a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+     * @cparam meshdiag childrenip6addrs @ca{parent-rloc16}
+     * @sa otMeshDiagQueryChildrenIp6Addrs
+     */
+    else if (aArgs[0] == "childrenip6addrs")
+    {
+        uint16_t parentRloc16;
+
+        SuccessOrExit(error = aArgs[1].ParseAsUint16(parentRloc16));
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        SuccessOrExit(error = otMeshDiagQueryChildrenIp6Addrs(GetInstancePtr(), parentRloc16,
+                                                              HandleMeshDiagQueryChildIp6Addrs, this));
+
+        error = OT_ERROR_PENDING;
+    }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -6020,6 +6050,35 @@ void Interpreter::HandleMeshDiagQueryChildTableResult(otError aError, const otMe
 
     OutputLine(kIndentSize, "csl - sync:%s period:%u timeout:%lu", aChildEntry->mCslSynchronized ? "yes" : "no",
                aChildEntry->mCslPeriod, ToUlong(aChildEntry->mCslTimeout));
+
+exit:
+    OutputResult(aError);
+}
+
+void Interpreter::HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                   uint16_t                   aChildRloc16,
+                                                   otMeshDiagIp6AddrIterator *aIp6AddrIterator,
+                                                   void                      *aContext)
+{
+    reinterpret_cast<Interpreter *>(aContext)->HandleMeshDiagQueryChildIp6Addrs(aError, aChildRloc16, aIp6AddrIterator);
+}
+
+void Interpreter::HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                   uint16_t                   aChildRloc16,
+                                                   otMeshDiagIp6AddrIterator *aIp6AddrIterator)
+{
+    otIp6Address ip6Address;
+
+    VerifyOrExit(aError == OT_ERROR_NONE || aError == OT_ERROR_PENDING);
+    VerifyOrExit(aIp6AddrIterator != nullptr);
+
+    OutputLine("child-rloc16: 0x%04x", aChildRloc16);
+
+    while (otMeshDiagGetNextIp6Address(aIp6AddrIterator, &ip6Address) == OT_ERROR_NONE)
+    {
+        OutputSpaces(kIndentSize);
+        OutputIp6AddressLine(ip6Address);
+    }
 
 exit:
     OutputResult(aError);

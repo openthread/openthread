@@ -411,6 +411,13 @@ private:
                                                     const otMeshDiagChildEntry *aChildEntry,
                                                     void                       *aContext);
     void        HandleMeshDiagQueryChildTableResult(otError aError, const otMeshDiagChildEntry *aChildEntry);
+    static void HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                 uint16_t                   aChildRloc16,
+                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator,
+                                                 void                      *aContext);
+    void        HandleMeshDiagQueryChildIp6Addrs(otError                    aError,
+                                                 uint16_t                   aChildRloc16,
+                                                 otMeshDiagIp6AddrIterator *aIp6AddrIterator);
 
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

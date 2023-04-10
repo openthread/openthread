@@ -198,10 +198,12 @@ otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
 void otMeshDiagCancel(otInstance *aInstance);
 
 /**
- * This function iterates through the discovered IPv6 address of a router.
+ * This function iterates through the discovered IPv6 address of a router or an MTD child.
  *
- * This function MUST be used from the callback `otMeshDiagDiscoverCallback()` and use the `mIp6AddrIterator` from the
- * `aRouterInfo` struct that is provided as input to the callback.
+ * This function MUST be used
+ * - from the callback `otMeshDiagDiscoverCallback()` and use the `mIp6AddrIterator` from the `aRouterInfo` struct that
+ *   is provided as input to the callback, or
+ * - from the callback `otMeshDiagChildIp6AddrsCallback()` along with provided `aIp6AddrIterator`.
  *
  * @param[in,out]  aIterator    The address iterator to use.
  * @param[out]     aIp6Address  A pointer to return the next IPv6 address (if any).
@@ -290,6 +292,47 @@ otError otMeshDiagQueryChildTable(otInstance                       *aInstance,
                                   uint16_t                          aRloc16,
                                   otMeshDiagQueryChildTableCallback aCallback,
                                   void                             *aContext);
+
+/**
+ * This function pointer type represents the callback used by `otMeshDiagQueryChildrenIp6Addrs()` to provide
+ * information about an MTD child and its list of IPv6 addresses.
+ *
+ * When @p aError is `OT_ERROR_PENDING`, it indicates that there are more children and the callback will be invoked
+ * again.
+ *
+ * @param[in] aError            OT_ERROR_PENDING            Indicates there are more children in the table.
+ *                              OT_ERROR_NONE               Indicates the table is finished.
+ *                              OT_ERROR_RESPONSE_TIMEOUT   Timed out waiting for response.
+ * @param[in] aChildRloc16      The RLOC16 of the child. `0xfffe` is used on `OT_ERROR_RESPONSE_TIMEOUT`.
+ * @param[in] aIp6AddrIterator  An iterator to go through the IPv6 addresses of the child with @p aRloc using
+ *                              `otMeshDiagGetNextIp6Address()`. Set to NULL on `OT_ERROR_RESPONSE_TIMEOUT`.
+ * @param[in] aContext          Application-specific context.
+ *
+ */
+typedef void (*otMeshDiagChildIp6AddrsCallback)(otError                    aError,
+                                                uint16_t                   aChildRloc16,
+                                                otMeshDiagIp6AddrIterator *aIp6AddrIterator,
+                                                void                      *aContext);
+
+/**
+ * This function sends a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+ *
+ * @param[in] aInstance        The OpenThread instance.
+ * @param[in] aRouter16        The RLOC16 of parent to query.
+ * @param[in] aCallback        The callback to report the queried child IPv6 address list.
+ * @param[in] aContext         A context to pass in @p aCallback.
+ *
+ * @retval OT_ERROR_NONE           The query started successfully.
+ * @retval OT_ERROR_BUSY           A previous discovery or query request is still ongoing.
+ * @retval OT_ERROR_INVALID_ARGS   The @p aRloc16 is not a valid  RLOC16.
+ * @retval OT_ERROR_INVALID_STATE  Device is not attached.
+ * @retval OT_ERROR_NO_BUFS        Could not allocate buffer to send query messages.
+ *
+ */
+otError otMeshDiagQueryChildrenIp6Addrs(otInstance                     *aInstance,
+                                        uint16_t                        aRloc16,
+                                        otMeshDiagChildIp6AddrsCallback aCallback,
+                                        void                           *aContext);
 
 /**
  * @}

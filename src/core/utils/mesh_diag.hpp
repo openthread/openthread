@@ -78,9 +78,9 @@ public:
     typedef otMeshDiagDiscoverConfig          DiscoverConfig;          ///< Discovery configuration.
     typedef otMeshDiagDiscoverCallback        DiscoverCallback;        ///< Discovery callback.
     typedef otMeshDiagQueryChildTableCallback QueryChildTableCallback; ///< Query Child Table callback.
-
+    typedef otMeshDiagChildIp6AddrsCallback   ChildIp6AddrsCallback;   ///< Child IPv6 addresses callback.
     /**
-     * This type represents an iterator to go over list of IPv6 addresses of a router.
+     * This type represents an iterator to go over list of IPv6 addresses of a router or an MTD child.
      *
      */
     class Ip6AddrIterator : public otMeshDiagIp6AddrIterator
@@ -204,6 +204,22 @@ public:
     Error QueryChildTable(uint16_t aRloc16, QueryChildTableCallback aCallback, void *aContext);
 
     /**
+     * This method sends a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+     *
+     * @param[in] aRouter16        The RLOC16 of parent to query.
+     * @param[in] aCallback        The callback to report the queried child IPv6 address list.
+     * @param[in] aContext         A context to pass in @p aCallback.
+     *
+     * @retval kErrorNone          The query started successfully.
+     * @retval kErrorBusy          A previous discovery or query request is still ongoing.
+     * @retval kErrorInvalidArgs   The @p aRloc16 is not a valid  RLOC16.
+     * @retval kErrorInvalidState  Device is not attached.
+     * @retval kErrorNoBufs        Could not allocate buffer to send query messages.
+     *
+     */
+    Error QueryChildrenIp6Addrs(uint16_t aRloc16, ChildIp6AddrsCallback aCallback, void *aContext);
+
+    /**
      * This method cancels an ongoing discovery or query operation if there one, otherwise no action.
      *
      * When ongoing discovery is cancelled, the callback from `DiscoverTopology()` or  `QueryChildTable()` will not be
@@ -222,6 +238,7 @@ private:
         kStateIdle,
         kStateDicoverTopology,
         kStateQueryChildTable,
+        kStateQueryChildrenIp6Addrs,
     };
 
     struct DiscoverInfo
@@ -236,8 +253,18 @@ private:
         uint16_t                          mRouterRloc16;
     };
 
-    void HandleTimer(void);
-    bool HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    struct QueryChildrenIp6AddrsInfo
+    {
+        Callback<ChildIp6AddrsCallback> mCallback;
+        uint16_t                        mParentRloc16;
+    };
+
+    Error SendQuery(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    void  HandleTimer(void);
+    bool  HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool  ProcessChildTableAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    bool  ProcessChildrenIp6AddrsAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
     void HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleDiagGetResponse(void                *aContext,
@@ -252,8 +279,9 @@ private:
 
     union
     {
-        DiscoverInfo        mDiscover;
-        QueryChildTableInfo mQueryChildTable;
+        DiscoverInfo              mDiscover;
+        QueryChildTableInfo       mQueryChildTable;
+        QueryChildrenIp6AddrsInfo mQueryChildrenIp6Addrs;
     };
 };
 

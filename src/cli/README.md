@@ -2076,6 +2076,23 @@ rloc16:0x6403 ext-addr:ee24e64ecf8c079a ver:4
 Done
 ```
 
+### meshdiag childrenip6addrs \<parent-rloc16>
+
+Send a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+
+```bash
+> meshdiag childrenip6addr 0xdc00
+child-rloc16: 0xdc02
+    fdde:ad00:beef:0:ded8:cd58:b73:2c21
+    fd00:2:0:0:c24a:456:3b6b:c597
+    fd00:1:0:0:120b:95fe:3ecc:d238
+child-rloc16: 0xdc03
+    fdde:ad00:beef:0:3aa6:b8bf:e7d6:eefe
+    fd00:2:0:0:8ff8:a188:7436:6720
+    fd00:1:0:0:1fcf:5495:790a:370f
+Done
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.

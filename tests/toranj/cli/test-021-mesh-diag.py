@@ -82,6 +82,11 @@ sed2.allowlist_node(r3)
 sed3.allowlist_node(r3)
 
 r1.form('mesh-diag')
+
+r1.add_prefix('fd00:1::/64', 'poas')
+r1.add_prefix('fd00:2::/64', 'poas')
+r1.register_netdata()
+
 r2.join(r1)
 r3.join(r1)
 fed1.join(r1, cli.JOIN_TYPE_REED)
@@ -137,6 +142,13 @@ verify(len([line for line in childtable if line.startswith('rloc16')]) == 3)
 
 childtable = r1.cli('meshdiag childtable', r2_rloc)
 verify(len([line for line in childtable if line.startswith('rloc16')]) == 0)
+
+childrenip6addrs = r2.cli('meshdiag childrenip6addrs', r1_rloc)
+verify(len([line for line in childrenip6addrs if line.startswith('child-rloc16')]) == 1)
+verify(len([line for line in childrenip6addrs if line.startswith('   ')]) == 3)
+
+childrenip6addrs = r1.cli('meshdiag childrenip6addrs', r3_rloc)
+verify(len([line for line in childrenip6addrs if line.startswith('child-rloc16')]) == 2)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
