@@ -101,9 +101,8 @@ void VendorInterface::Deinit(void)
 
 uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
-otError VendorInterface::Reset(uint8_t aResetType)
+otError VendorInterface::HardwareReset(void)
 {
-    OT_UNUSED_VARIABLE(aResetType);
     // TODO: Implement vendor code here.
 
     return OT_ERROR_NOT_IMPLEMENTED;

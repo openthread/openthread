@@ -36,6 +36,7 @@
 #define POSIX_APP_SPINEL_INTERFACE_HPP_
 
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/spinel.h"
 
 namespace ot {
 namespace Spinel {
@@ -47,9 +48,6 @@ public:
     {
         kMaxFrameSize = OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
     };
-
-    // The Spinel frame for the command SPINEL_CMD_RESET.
-    static const uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
 
     /**
      * This type defines a receive frame buffer to store received spinel frame(s).
@@ -73,7 +71,8 @@ public:
      */
     static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
     {
-        return (aLength == sizeof(kSpinelResetCommand)) && (memcmp(aBuffer, kSpinelResetCommand, aLength) == 0);
+        static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
+        return (aLength == sizeof(kSpinelResetCommand)) && (memcmp(aFrame, kSpinelResetCommand, aLength) == 0);
     }
 };
 } // namespace Spinel
