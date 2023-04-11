@@ -380,7 +380,7 @@ private:
 
     using MappingTimer = TimerMilliIn<Translator, &Translator::HandleMappingExpirerTimer>;
 
-    void UpdateState(void);
+    void UpdateState(bool aAlwaysNotify = false);
 
     bool  mEnabled;
     State mState;
