@@ -59,7 +59,7 @@ jobs:
       TORANJ_EVENT_NAME: ${{ github.event_name }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -88,7 +88,7 @@ jobs:
       TORANJ_CLI: 1
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
@@ -174,7 +174,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+      uses: step-security/harden-runner@03bee3930647ebbf994244c21ddbc0d4933aab4f # v2.3.0
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
