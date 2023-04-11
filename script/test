@@ -74,7 +74,7 @@ readonly NAT64
 NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
 readonly NAT64_SERVICE
 
-INTER_OP_BBR="${INTER_OP_BBR:-1}"
+INTER_OP_BBR="${INTER_OP_BBR:-0}"
 readonly INTER_OP_BBR
 
 OT_COREDUMP_DIR="${PWD}/ot-core-dump"
