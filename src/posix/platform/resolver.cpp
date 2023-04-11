@@ -108,7 +108,7 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
     uint16_t    length = otMessageGetLength(aQuery);
     sockaddr_in serverAddr;
 
-    Transaction *txn;
+    Transaction *txn = nullptr;
 
     VerifyOrExit(length <= kMaxDnsMessageSize, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(otMessageRead(aQuery, 0, &packet, sizeof(packet)) == length, error = OT_ERROR_NO_BUFS);
@@ -176,12 +176,14 @@ void Resolver::ForwardResponse(Transaction *aTxn)
 {
     char       response[kMaxDnsMessageSize];
     ssize_t    readSize;
-    otMessage *message;
+    otError    error   = OT_ERROR_NONE;
+    otMessage *message = nullptr;
 
     VerifyOrExit((readSize = read(aTxn->mUdpFd, response, sizeof(response))) > 0);
 
     message = otUdpNewMessage(gInstance, nullptr);
-    SuccessOrExit(otMessageAppend(message, response, readSize));
+    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = otMessageAppend(message, response, readSize));
 
     otPlatDnsUpstreamQueryDone(gInstance, aTxn->mThreadTxn, message);
     message = nullptr;
@@ -190,6 +192,10 @@ exit:
     if (readSize < 0)
     {
         otLogInfoPlat("Failed to read response from upstream resolver socket: %d", errno);
+    }
+    if (error != OT_ERROR_NONE)
+    {
+        otLogInfoPlat("Failed to forward upstream DNS response: %s", otThreadErrorToString(error));
     }
     if (message != nullptr)
     {
