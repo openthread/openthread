@@ -48,11 +48,8 @@ public:
         kMaxFrameSize = OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE, ///< Maximum buffer size.
     };
 
-    enum : uint8_t
-    {
-        kResetStack    = 1, ///< Reset the RCP stack.
-        kResetHardware = 2, ///< Hardware reset the RCP chip.
-    };
+    // The Spinel frame for the command SPINEL_CMD_RESET.
+    static const uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
 
     /**
      * This type defines a receive frame buffer to store received spinel frame(s).
@@ -64,6 +61,20 @@ public:
     typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
 
     typedef void (*ReceiveFrameCallback)(void *aContext);
+
+    /**
+     * This method indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
+     *
+     * @param[in] aFrame   A pointer to buffer containing the spinel frame.
+     * @param[in] aLength  The length (number of bytes) in the frame.
+     *
+     * @returns true if the frame is the Spinel SPINEL_CMD_RESET frame, false otherwise.
+     *
+     */
+    static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
+    {
+        return (aLength == sizeof(kSpinelResetCommand)) && (memcmp(aBuffer, kSpinelResetCommand, aLength) == 0);
+    }
 };
 } // namespace Spinel
 } // namespace ot

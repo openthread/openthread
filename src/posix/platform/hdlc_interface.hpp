@@ -158,16 +158,13 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method resets the RCP.
-     *
-     * @param[in] aResetType The reset type.
+     * This method hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
-     * @retval OT_ERROR_FAILED          Failed to reset the RCP.
-     * @retval OT_ERROR_NOT_IMPLEMENT   The specified reset type is not implemented.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      *
      */
-    otError Reset(uint8_t aResetType);
+    otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     /**
      * This method returns the RCP interface metrics.

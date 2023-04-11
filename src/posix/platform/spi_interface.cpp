@@ -97,11 +97,8 @@ void SpiInterface::ResetStates(void)
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
 }
 
-otError SpiInterface::Reset(uint8_t aResetType)
+otError SpiInterface::HardwareReset(void)
 {
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetHardware, error = OT_ERROR_NOT_IMPLEMENTED);
     ResetStates();
     TriggerReset();
 
@@ -111,8 +108,7 @@ otError SpiInterface::Reset(uint8_t aResetType)
     // log messages.
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
 
-exit:
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError SpiInterface::Init(const Url::Url &aRadioUrl)
@@ -809,6 +805,12 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
+
+    if (ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    {
+        ResetStates();
+    }
+
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
 
     memcpy(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], aFrame, aLength);

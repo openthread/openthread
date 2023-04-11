@@ -872,6 +872,17 @@ public:
     otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
 
     /**
+     * This method tries to reset the co-processor.
+     *
+     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM or SPINEL_RESET_STACK.
+     *
+     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     *
+     */
+    otError SendReset(uint8_t aResetType);
+
+    /**
      * This method returns the radio Spinel metrics.
      *
      * @returns The radio Spinel metrics.

@@ -140,23 +140,6 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
 }
 
-otError HdlcInterface::Reset(uint8_t aResetType)
-{
-    static const uint8_t kSpinelResetStackCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET,
-                                                       SPINEL_RESET_STACK};
-    otError              error;
-
-    VerifyOrExit(aResetType == Spinel::SpinelInterface::kResetStack, error = OT_ERROR_NOT_IMPLEMENTED);
-
-    mHdlcDecoder.Reset();
-    VerifyOrExit(SendFrame(kSpinelResetStackCommand, sizeof(kSpinelResetStackCommand)) == OT_ERROR_NONE,
-                 error = OT_ERROR_FAILED);
-    error = ResetConnection();
-
-exit:
-    return error;
-}
-
 otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
@@ -226,6 +209,12 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength());
 
 exit:
+    if ((error == OT_ERROR_NONE) && ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    {
+        mHdlcDecoder.Reset();
+        error = ResetConnection();
+    }
+
     return error;
 }
 
