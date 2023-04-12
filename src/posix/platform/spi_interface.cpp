@@ -85,7 +85,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-void SpiInterface::OnRcpReset(void)
+void SpiInterface::ResetStates(void)
 {
     mSpiTxIsReady         = false;
     mSpiTxRefusedCount    = 0;
@@ -95,9 +95,20 @@ void SpiInterface::OnRcpReset(void)
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
+}
 
+otError SpiInterface::HardwareReset(void)
+{
+    ResetStates();
     TriggerReset();
+
+    // If the `INT` pin is set to low during the restart of the RCP chip, which triggers continuous invalid SPI
+    // transactions by the host, it will cause the function `PushPullSpi()` to output lots of invalid warn log
+    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputing invalid
+    // log messages.
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
+
+    return OT_ERROR_NONE;
 }
 
 otError SpiInterface::Init(const Url::Url &aRadioUrl)
@@ -181,12 +192,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
 
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
     InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
-
-    // Reset RCP chip.
-    TriggerReset();
-
-    // Waiting for the RCP chip starts up.
-    usleep(static_cast<useconds_t>(spiResetDelay) * kUsecPerMsec);
 
     return OT_ERROR_NONE;
 }
@@ -800,6 +805,12 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
+
+    if (ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    {
+        ResetStates();
+    }
+
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
 
     memcpy(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], aFrame, aLength);

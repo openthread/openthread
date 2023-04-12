@@ -60,6 +60,7 @@
 #include <openthread/logging.h>
 
 #include "common/code_utils.hpp"
+#include "lib/spinel/spinel.h"
 
 #ifdef __APPLE__
 
@@ -139,8 +140,6 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
 }
 
-void HdlcInterface::OnRcpReset(void) { mHdlcDecoder.Reset(); }
-
 otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
@@ -210,6 +209,12 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength());
 
 exit:
+    if ((error == OT_ERROR_NONE) && ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    {
+        mHdlcDecoder.Reset();
+        error = ResetConnection();
+    }
+
     return error;
 }
 

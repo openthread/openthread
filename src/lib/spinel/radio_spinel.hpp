@@ -962,6 +962,7 @@ private:
 
     static void HandleReceivedFrame(void *aContext);
 
+    void    ResetRcp(bool aResetRadio);
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsMinHostRcpApiVersion);
@@ -998,7 +999,7 @@ private:
                                         spinel_prop_key_t aKey,
                                         const char       *aFormat,
                                         va_list           aArgs);
-    otError WaitResponse(void);
+    otError WaitResponse(bool aHandleRcpTimeout = true);
     otError SendCommand(uint32_t          aCommand,
                         spinel_prop_key_t aKey,
                         spinel_tid_t      aTid,
