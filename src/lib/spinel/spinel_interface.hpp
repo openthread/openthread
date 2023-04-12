@@ -72,7 +72,8 @@ public:
     static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
     {
         static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
-        return (aLength == sizeof(kSpinelResetCommand)) && (memcmp(aFrame, kSpinelResetCommand, aLength) == 0);
+        return (aLength >= sizeof(kSpinelResetCommand)) &&
+               (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
     }
 };
 } // namespace Spinel
