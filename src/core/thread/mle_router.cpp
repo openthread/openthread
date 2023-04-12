@@ -808,8 +808,6 @@ void MleRouter::HandleLinkAcceptAndRequest(RxInfo &aRxInfo)
 
 Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 {
-    static const uint8_t kDataRequestTlvs[] = {Tlv::kNetworkData};
-
     Error           error = kErrorNone;
     Router         *router;
     Neighbor::State neighborState;
@@ -916,7 +914,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
 
         mLinkRequestAttempts    = 0; // completed router sync after reset, no more link request to retransmit
         mRetrieveNewNetworkData = true;
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kDataRequestTlvs));
+        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr()));
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
@@ -939,7 +937,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             SerialNumber::IsGreater(leaderData.GetDataVersion(NetworkData::kFullSet),
                                     Get<NetworkData::Leader>().GetVersion(NetworkData::kFullSet)))
         {
-            IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kDataRequestTlvs));
+            IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr()));
         }
 
         // Route (optional)
@@ -1085,6 +1083,7 @@ Error MleRouter::ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId)
     case kErrorNone:
         SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
         mRouterTable.UpdateRoutesOnFed(routeTlv, aParentId);
+        mRequestRouteTlv = false;
         break;
     case kErrorNotFound:
         break;
@@ -3157,6 +3156,10 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
 
         case Tlv::kPendingDataset:
             SuccessOrExit(error = message->AppendPendingDatasetTlv());
+            break;
+
+        case Tlv::kRoute:
+            SuccessOrExit(error = message->AppendRouteTlv());
             break;
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

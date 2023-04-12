@@ -58,8 +58,6 @@ LinkMetrics::LinkMetrics(Instance &aInstance)
 
 Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics)
 {
-    static const uint8_t kTlvs[] = {Mle::Tlv::kLinkMetricsReport};
-
     Error     error;
     Neighbor *neighbor;
     QueryInfo info;
@@ -79,7 +77,7 @@ Error LinkMetrics::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, co
         VerifyOrExit(info.mTypeIdCount == 0, error = kErrorInvalidArgs);
     }
 
-    error = Get<Mle::MleRouter>().SendDataRequest(aDestination, kTlvs, sizeof(kTlvs), /* aDelay */ 0, info);
+    error = Get<Mle::MleRouter>().SendDataRequestForLinkMetricsReport(aDestination, info);
 
 exit:
     return error;
