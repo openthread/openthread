@@ -634,7 +634,7 @@ public:
     void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
 
     /**
-     * This method sets the More Blocks falg in the message HelpData.
+     * This method sets the More Blocks flag in the message HelpData.
      *
      * @param[in]   aMoreBlocks    TRUE or FALSE.
      *

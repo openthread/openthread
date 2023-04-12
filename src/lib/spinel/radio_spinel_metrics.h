@@ -46,7 +46,7 @@ extern "C" {
 typedef struct otRadioSpinelMetrics
 {
     uint32_t mRcpTimeoutCount;         ///< The number of RCP timeouts.
-    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexcepted resets.
+    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexpected resets.
     uint32_t mRcpRestorationCount;     ///< The number of RCP restorations.
     uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
 } otRadioSpinelMetrics;

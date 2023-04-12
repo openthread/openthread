@@ -505,7 +505,7 @@
 
 #ifdef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
 #error "OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER was removed. "\
-       "Service numbers are defined in `network_data_servcie.hpp` per spec"
+       "Service numbers are defined in `network_data_service.hpp` per spec"
 #endif
 
 #ifdef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
@@ -652,6 +652,16 @@
 #error "OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE is removed. "\
         "Use OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE to enable client functionality."\
         "Netdiag server functionality is always supported."
+#endif
+
+#ifdef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL
+#error "OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL was replaced by "\
+       "OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL."
+#endif
+
+#ifdef OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE
+#error "OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE was replaced by "\
+       "OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDRESS_MODE."
 #endif
 
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

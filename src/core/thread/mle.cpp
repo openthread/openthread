@@ -1387,7 +1387,7 @@ bool Mle::HasAcceptableParentCandidate(void) const
     switch (mAttachState)
     {
     case kAttachStateAnnounce:
-        VerifyOrExit(!HasMoreChannelsToAnnouce());
+        VerifyOrExit(!HasMoreChannelsToAnnounce());
         break;
 
     case kAttachStateParentRequest:
@@ -1495,7 +1495,7 @@ void Mle::HandleAttachTimer(void)
         OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
-        if (shouldAnnounce && (GetNextAnnouceChannel(mAnnounceChannel) == kErrorNone))
+        if (shouldAnnounce && (GetNextAnnounceChannel(mAnnounceChannel) == kErrorNone))
         {
             SendAnnounce(mAnnounceChannel, kOrphanAnnounce);
             delay = mAnnounceDelay;
@@ -2238,7 +2238,7 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-Error Mle::GetNextAnnouceChannel(uint8_t &aChannel) const
+Error Mle::GetNextAnnounceChannel(uint8_t &aChannel) const
 {
     // This method gets the next channel to send announce on after
     // `aChannel`. Returns `kErrorNotFound` if no more channel in the
@@ -2254,11 +2254,11 @@ Error Mle::GetNextAnnouceChannel(uint8_t &aChannel) const
     return channelMask.GetNextChannel(aChannel);
 }
 
-bool Mle::HasMoreChannelsToAnnouce(void) const
+bool Mle::HasMoreChannelsToAnnounce(void) const
 {
     uint8_t channel = mAnnounceChannel;
 
-    return GetNextAnnouceChannel(channel) == kErrorNone;
+    return GetNextAnnounceChannel(channel) == kErrorNone;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
@@ -3925,9 +3925,9 @@ void Mle::ParentSearch::HandleTimer(void)
     LogInfo("PeriodicParentSearch: Parent RSS %d", parentRss);
     VerifyOrExit(parentRss != Radio::kInvalidRssi);
 
-    if (parentRss < kRssThreadhold)
+    if (parentRss < kRssThreshold)
     {
-        LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kRssThreadhold);
+        LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kRssThreshold);
         mIsInBackoff = true;
         Get<Mle>().Attach(kBetterParent);
     }
@@ -4852,7 +4852,7 @@ Error Mle::TxMessage::AppendConnectivityTlv(void)
     return tlv.AppendTo(*this);
 }
 
-Error Mle::TxMessage::AppendAddresseRegisterationTlv(Child &aChild)
+Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
 {
     Error                    error;
     Tlv                      tlv;

@@ -326,7 +326,7 @@ public:
      * This method clears the average RSS value.
      *
      */
-    void CleaAverageRss(void) { mRssAverager.Clear(); }
+    void ClearAverageRss(void) { mRssAverager.Clear(); }
 
     /**
      * This method adds a new received signal strength (RSS) value to the average.

@@ -165,7 +165,7 @@ public:
      * @param[in]     aMacAddrs              The MAC source and destination addresses
      * @param[in,out] aFrameData             A frame data containing the LOWPAN_IPHC header.
      *
-     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Headre and @p aFrameData are updated.
+     * @retval kErrorNone    The header was decompressed successfully. @p aIp6Header and @p aFrameData are updated.
      * @retval kErrorParse   Failed to parse the lowpan header.
      *
      */
@@ -418,9 +418,9 @@ public:
     /**
      * This method appends the Mesh Header into a given frame.
      *
-     * @param[out]  aFrameBuilder  The `FrameBuidler` to append to.
+     * @param[out]  aFrameBuilder  The `FrameBuilder` to append to.
      *
-     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuildr.
+     * @retval kErrorNone    Successfully appended the MeshHeader to @p aFrameBuilder.
      * @retval kErrorNoBufs  Insufficient available buffers.
      *
      */

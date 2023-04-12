@@ -204,7 +204,7 @@ public:
      * This method sets the `Key` as a literal key from a given byte array and length.
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
-     * @param[in] aKeyLength  The key length (number of bytes in @p akeyBytes).
+     * @param[in] aKeyLength  The key length (number of bytes in @p aKeyBytes).
      *
      */
     void Set(const uint8_t *aKeyBytes, uint16_t aKeyLength)

@@ -99,7 +99,7 @@ public:
     static constexpr uint16_t kEntryAgeStringSize = OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE;
 
     /**
-     * This constants specifid no next hop.
+     * This constants specified no next hop.
      *
      * Used for `mNextHop` in `RouteInfo` struture.
      *

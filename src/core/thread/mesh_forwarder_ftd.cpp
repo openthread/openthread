@@ -769,7 +769,7 @@ exit:
 
 bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 {
-    bool contineRxingTicks = false;
+    bool continueRxingTicks = false;
 
     for (Entry &entry : mEntries)
     {
@@ -779,12 +779,12 @@ bool MeshForwarder::FragmentPriorityList::UpdateOnTimeTick(void)
 
             if (!entry.IsExpired())
             {
-                contineRxingTicks = true;
+                continueRxingTicks = true;
             }
         }
     }
 
-    return contineRxingTicks;
+    return continueRxingTicks;
 }
 
 void MeshForwarder::UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,

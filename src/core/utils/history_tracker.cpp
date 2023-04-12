@@ -82,7 +82,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddresss, MessageType aType)
+void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType)
 {
     MessageInfo *entry = nullptr;
     Ip6::Headers headers;
@@ -125,7 +125,7 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
     VerifyOrExit(entry != nullptr);
 
     entry->mPayloadLength        = headers.GetIp6Header().GetPayloadLength();
-    entry->mNeighborRloc16       = aMacAddresss.IsShort() ? aMacAddresss.GetShort() : kInvalidRloc16;
+    entry->mNeighborRloc16       = aMacAddress.IsShort() ? aMacAddress.GetShort() : kInvalidRloc16;
     entry->mSource.mAddress      = headers.GetSourceAddress();
     entry->mSource.mPort         = headers.GetSourcePort();
     entry->mDestination.mAddress = headers.GetDestinationAddress();
@@ -138,9 +138,9 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
     entry->mTxSuccess            = (aType == kTxMessage) ? aMessage.GetTxSuccess() : true;
     entry->mPriority             = aMessage.GetPriority();
 
-    if (aMacAddresss.IsExtended())
+    if (aMacAddress.IsExtended())
     {
-        Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddresss, Neighbor::kInStateAnyExceptInvalid);
+        Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddress, Neighbor::kInStateAnyExceptInvalid);
 
         if (neighbor != nullptr)
         {

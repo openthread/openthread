@@ -1625,14 +1625,14 @@ enum
      *
      * For GPIOs configured as inputs:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit describes the
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit describes the
      *     logic level read from the pin.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit is ignored
      *     for these pins.
      *
      * For GPIOs configured as outputs:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit is
      *     implementation specific.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit determines
      *     the new logic level of the output. If this pin is configured as an
@@ -1641,7 +1641,7 @@ enum
      *
      * For GPIOs which are not specified in `PROP_GPIO_CONFIG`:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit is
      *     implementation specific.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit MUST be
      *     ignored by the NCP.
@@ -1991,7 +1991,7 @@ enum
      * Channel energy result will be reported by emissions
      * of `PROP_MAC_ENERGY_SCAN_RESULT` (per channel).
      *
-     * Set to `SCAN_STATE_DISOVER` to start a Thread MLE discovery
+     * Set to `SCAN_STATE_DISCOVER` to start a Thread MLE discovery
      * scan operation. Discovery scan result will be emitted from
      * `PROP_MAC_SCAN_BEACON`.
      *
@@ -2472,7 +2472,7 @@ enum
      *  `6`: Route Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERNCE_* definitions)
+     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERENCE_* definitions)
      *  `b`: "Is defined locally" flag. Set if this route info was locally
      *       defined as part of local network data. Assumed to be true for set,
      *       insert and replace. Clear if the route is part of partition's network
@@ -2984,7 +2984,7 @@ enum
     /** Format: `A(t(iD))` - Write only
      *
      * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET. This
-     * property further allows the sender to not include a value associated with properties in formating of `t(iD)`,
+     * property further allows the sender to not include a value associated with properties in formatting of `t(iD)`,
      * i.e., it should accept either a `t(iD)` or a `t(i)` encoding (in both cases indicating that the associated
      * Dataset property should be requested as part of MGMT_GET command).
      *
@@ -3266,7 +3266,7 @@ enum
      * Write to this property initiates update of Multicast Listeners Table on the primary BBR.
      * If the write succeeded, the result of network operation will be notified later by the
      * SPINEL_PROP_THREAD_MLR_RESPONSE property. If the write fails, no MLR.req is issued and
-     * notifiaction through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
+     * notification through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
      *
      */
     SPINEL_PROP_THREAD_MLR_REQUEST = SPINEL_PROP_THREAD_EXT__BEGIN + 52,
@@ -3319,7 +3319,7 @@ enum
      *
      * The valid values are specified by SPINEL_THREAD_BACKBONE_ROUTER_STATE_<state> enumeration.
      * Backbone functionality will be disabled if SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED
-     * is writted to this property, enabled otherwise.
+     * is written to this property, enabled otherwise.
      *
      */
     SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE = SPINEL_PROP_THREAD_EXT__BEGIN + 56,

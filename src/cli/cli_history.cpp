@@ -43,7 +43,7 @@ namespace ot {
 namespace Cli {
 
 static const char *const kSimpleEventStrings[] = {
-    "Added",  // (0) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESSS_EVENT}_ADDED
+    "Added",  // (0) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESS_EVENT}_ADDED
     "Removed" // (1) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESS_EVENT}_REMOVED
 };
 

@@ -285,7 +285,7 @@ private:
     // Returns format string to output a `ValueType` (e.g., "%u" for `uint16_t`).
     template <typename ValueType> static constexpr const char *FormatStringFor(void);
 
-    // General temaplate implementaion.
+    // General template implementation.
     // Specializations for `uint32_t` and `int32_t` are added at the end.
     template <typename ValueType> otError ProcessGet(Arg aArgs[], GetHandler<ValueType> aGetHandler)
     {

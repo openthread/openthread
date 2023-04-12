@@ -158,7 +158,7 @@ void TrickleTimer::HandleTimer(void)
             }
 
             StartNewInterval();
-            ExitNow(); // Exit so to not call `mHanlder`
+            ExitNow(); // Exit so to not call `mHandler`
         }
 
         break;

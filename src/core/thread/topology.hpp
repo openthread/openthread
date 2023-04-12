@@ -542,7 +542,7 @@ public:
      * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
      *
      * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
-     * to `LastRxFragementTag > aTag`.
+     * to `LastRxFragmentTag > aTag`.
      *
      * @param[in] aTag   A tag value to compare against.
      *
@@ -1252,7 +1252,7 @@ public:
     /**
      * This method returns MLR state of an IPv6 multicast address.
      *
-     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
      * @param[in] aAddress  The IPv6 multicast address.
      *
@@ -1264,7 +1264,7 @@ public:
     /**
      * This method sets MLR state of an IPv6 multicast address.
      *
-     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
      * @param[in] aAddress  The IPv6 multicast address.
      * @param[in] aState    The target MLR state.

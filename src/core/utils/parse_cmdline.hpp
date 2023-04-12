@@ -291,7 +291,7 @@ otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
  * @param[out]    aBuffer    A pointer to a buffer to output the parsed byte sequence.
  *
  * @retval kErrorNone        The string was parsed successfully to the end of string.
- * @retval kErrorPedning     The string segment was parsed successfully, but there are additional bytes remaining
+ * @retval kErrorPending     The string segment was parsed successfully, but there are additional bytes remaining
  *                           to be parsed.
  * @retval kErrorInvalidArgs The string does not contain valid format hex digits.
  *

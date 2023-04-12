@@ -295,7 +295,7 @@ private:
     bool    mEnabled : 1;              // Indicates whether data polling is enabled/started.
     bool    mAttachMode : 1;           // Indicates whether in attach mode (to use attach poll period).
     bool    mRetxMode : 1;             // Indicates whether last poll tx failed at mac/radio layer (poll retx mode).
-    uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimout`).
+    uint8_t mPollTimeoutCounter : 4;   // Poll timeouts counter (0 to `kQuickPollsAfterTimeout`).
     uint8_t mPollTxFailureCounter : 4; // Poll tx failure counter (0 to `kMaxPollRetxAttempts`).
     uint8_t mRemainingFastPolls : 4;   // Number of remaining fast polls when in transient fast polling mode.
 };

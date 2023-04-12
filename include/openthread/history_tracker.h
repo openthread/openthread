@@ -43,7 +43,7 @@ extern "C" {
  *   Records the history of different events, for example RX and TX messages or network info changes. All tracked
  *   entries are timestamped.
  *
- * The functions in this module are available when `OPENTHREAD_CONFIG_HISTOR_TRACKER_ENABLE` is enabled.
+ * The functions in this module are available when `OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE` is enabled.
  *
  * @{
  *
@@ -152,7 +152,7 @@ typedef struct otHistoryTrackerMessageInfo
     uint16_t   mChecksum;            ///< Message checksum (valid only for UDP/TCP/ICMP6).
     uint8_t    mIpProto;             ///< IP Protocol number (`OT_IP6_PROTO_*` enumeration).
     uint8_t    mIcmp6Type;           ///< ICMP6 type if msg is ICMP6, zero otherwise (`OT_ICMP6_TYPE_*` enumeration).
-    int8_t     mAveRxRss;            ///< RSS of received message or OT_RADIO_INVALI_RSSI if not known.
+    int8_t     mAveRxRss;            ///< RSS of received message or OT_RADIO_INVALID_RSSI if not known.
     bool       mLinkSecurity : 1;    ///< Indicates whether msg used link security.
     bool       mTxSuccess : 1;       ///< Indicates TX success (e.g., ack received). Applicable for TX msg only.
     uint8_t    mPriority : 2;        ///< Message priority (`OT_HISTORY_TRACKER_MSG_PRIORITY_*` enumeration).

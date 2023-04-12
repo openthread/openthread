@@ -130,7 +130,7 @@ public:
     private:
         static constexpr uint16_t kDefaultSize     = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE;
         static constexpr uint16_t kDefaultCount    = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT;
-        static constexpr uint32_t kDefaultInterval = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL;
+        static constexpr uint32_t kDefaultInterval = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTERVAL;
         static constexpr uint32_t kDefaultTimeout  = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT;
 
         void SetUnspecifiedToDefault(void);

@@ -395,7 +395,7 @@ void Joiner::HandleSecureCoapClientConnect(bool aConnected)
     {
         SetState(kStateConnected);
         SendJoinerFinalize();
-        mTimer.Start(kReponseTimeout);
+        mTimer.Start(kResponseTimeout);
     }
     else
     {
@@ -503,7 +503,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::Me
     SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
 
     SetState(kStateEntrust);
-    mTimer.Start(kReponseTimeout);
+    mTimer.Start(kResponseTimeout);
 
     LogInfo("Received %s %d", UriToString<kUriJoinerFinalize>(), state);
 

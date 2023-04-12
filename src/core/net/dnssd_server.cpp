@@ -686,10 +686,10 @@ Error Server::FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aSt
     uint8_t end;
 
     VerifyOrExit(start > 0, error = kErrorNotFound);
-    VerifyOrExit(aName[--start] == Name::kLabelSeperatorChar, error = kErrorInvalidArgs);
+    VerifyOrExit(aName[--start] == Name::kLabelSeparatorChar, error = kErrorInvalidArgs);
 
     end = start;
-    while (start > 0 && aName[start - 1] != Name::kLabelSeperatorChar)
+    while (start > 0 && aName[start - 1] != Name::kLabelSeparatorChar)
     {
         start--;
     }
@@ -1126,9 +1126,9 @@ void Server::SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
 void Server::HandleDiscoveredServiceInstance(const char                       *aServiceFullName,
                                              const otDnssdServiceInstanceInfo &aInstanceInfo)
 {
-    OT_ASSERT(StringEndsWith(aServiceFullName, Name::kLabelSeperatorChar));
-    OT_ASSERT(StringEndsWith(aInstanceInfo.mFullName, Name::kLabelSeperatorChar));
-    OT_ASSERT(StringEndsWith(aInstanceInfo.mHostName, Name::kLabelSeperatorChar));
+    OT_ASSERT(StringEndsWith(aServiceFullName, Name::kLabelSeparatorChar));
+    OT_ASSERT(StringEndsWith(aInstanceInfo.mFullName, Name::kLabelSeparatorChar));
+    OT_ASSERT(StringEndsWith(aInstanceInfo.mHostName, Name::kLabelSeparatorChar));
 
     for (QueryTransaction &query : mQueryTransactions)
     {
@@ -1141,7 +1141,7 @@ void Server::HandleDiscoveredServiceInstance(const char                       *a
 
 void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo)
 {
-    OT_ASSERT(StringEndsWith(aHostFullName, Name::kLabelSeperatorChar));
+    OT_ASSERT(StringEndsWith(aHostFullName, Name::kLabelSeparatorChar));
 
     for (QueryTransaction &query : mQueryTransactions)
     {

@@ -1134,7 +1134,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     // only when device is attached (in child, router, or leader roles)
     // and `IsFullThreadDevice()`.
     //
-    // - `aSourceAdress` is the read value from `SourceAddressTlv`.
+    // - `aSourceAddress` is the read value from `SourceAddressTlv`.
     // - `aLeaderData` is the read value from `LeaderDataTlv`.
 
     Error    error      = kErrorNone;
@@ -2914,7 +2914,7 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
 
     if (!aChild.IsFullThreadDevice())
     {
-        SuccessOrExit(error = message->AppendAddresseRegisterationTlv(aChild));
+        SuccessOrExit(error = message->AppendAddressRegistrationTlv(aChild));
     }
 
     SetChildStateToValid(aChild);
@@ -3053,7 +3053,7 @@ void MleRouter::SendChildUpdateResponse(Child                  *aChild,
         switch (tlvType)
         {
         case Tlv::kAddressRegistration:
-            SuccessOrExit(error = message->AppendAddresseRegisterationTlv(*aChild));
+            SuccessOrExit(error = message->AppendAddressRegistrationTlv(*aChild));
             break;
 
         case Tlv::kMode:

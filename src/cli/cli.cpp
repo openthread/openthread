@@ -3501,7 +3501,7 @@ void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceRes
 
         if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
         {
-            OutputDnsServiceInfo(/* aIndetSize */ 0, serviceInfo);
+            OutputDnsServiceInfo(/* aIndentSize */ 0, serviceInfo);
             OutputNewLine();
         }
     }

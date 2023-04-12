@@ -447,7 +447,7 @@ public:
     void IncrementMleFrameCounter(void);
 
     /**
-     * This method returns the KEK as `KekKeyMaterail`
+     * This method returns the KEK as `KekKeyMaterial`
      *
      * @returns The KEK as `KekKeyMaterial`.
      *

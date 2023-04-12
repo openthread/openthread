@@ -1354,7 +1354,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
         Entry newEntry;
 
         newEntry.SetFrom(aPio);
-        entry->AdoptValidAndPreferredLiftimesFrom(newEntry);
+        entry->AdoptValidAndPreferredLifetimesFrom(newEntry);
     }
 
     mEntryTimer.FireAtIfEarlier(entry->GetExpireTime());
@@ -1764,7 +1764,7 @@ exit:
 void RoutingManager::DiscoveredPrefixTable::UpdateRouterOnRx(Router &aRouter)
 {
     aRouter.mNsProbeCount = 0;
-    aRouter.mTimeout      = TimerMilli::GetNow() + Random::NonCrypto::AddJitter(Router::kActiveTimout, Router::kJitter);
+    aRouter.mTimeout = TimerMilli::GetNow() + Random::NonCrypto::AddJitter(Router::kActiveTimeout, Router::kJitter);
 
     mRouterTimer.FireAtIfEarlier(aRouter.mTimeout);
 }
@@ -1805,7 +1805,7 @@ void RoutingManager::DiscoveredPrefixTable::HandleRouterTimer(void)
             }
 
             router.mTimeout = now + ((router.mNsProbeCount < Router::kMaxNsProbes) ? Router::kNsProbeRetryInterval
-                                                                                   : Router::kNsProbeTimout);
+                                                                                   : Router::kNsProbeTimeout);
 
             SendNeighborSolicitToRouter(router);
         }
@@ -1927,9 +1927,9 @@ bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const Matcher &aMatch
     return (mType == aMatcher.mType) && (mPrefix == aMatcher.mPrefix);
 }
 
-bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const ExpirationChecker &aCheker) const
+bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const ExpirationChecker &aChecker) const
 {
-    return GetExpireTime() <= aCheker.mNow;
+    return GetExpireTime() <= aChecker.mNow;
 }
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetExpireTime(void) const
@@ -1959,7 +1959,7 @@ RoutingManager::RoutePreference RoutingManager::DiscoveredPrefixTable::Entry::Ge
     return IsOnLinkPrefix() ? NetworkData::kRoutePreferenceMedium : GetRoutePreference();
 }
 
-void RoutingManager::DiscoveredPrefixTable::Entry::AdoptValidAndPreferredLiftimesFrom(const Entry &aEntry)
+void RoutingManager::DiscoveredPrefixTable::Entry::AdoptValidAndPreferredLifetimesFrom(const Entry &aEntry)
 {
     constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
 

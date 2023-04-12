@@ -183,7 +183,7 @@ Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &
     {
         ch = index < aLength ? aLabels[index] : static_cast<char>(kNullChar);
 
-        if ((ch == kNullChar) || (ch == kLabelSeperatorChar))
+        if ((ch == kNullChar) || (ch == kLabelSeparatorChar))
         {
             uint8_t labelLength = static_cast<uint8_t>(index - labelStartIndex);
 
@@ -328,7 +328,7 @@ Error Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuff
 
             if (!firstLabel)
             {
-                *aNameBuffer++ = kLabelSeperatorChar;
+                *aNameBuffer++ = kLabelSeparatorChar;
                 aNameBufferSize--;
 
                 // No need to check if we have reached end of the name buffer
@@ -345,7 +345,7 @@ Error Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuff
         case kErrorNotFound:
             // We reach the end of name successfully. Always add a terminating dot
             // at the end.
-            *aNameBuffer++ = kLabelSeperatorChar;
+            *aNameBuffer++ = kLabelSeparatorChar;
             aNameBufferSize--;
             VerifyOrExit(aNameBufferSize >= sizeof(uint8_t), error = kErrorNoBufs);
             *aNameBuffer = kNullChar;
@@ -382,7 +382,7 @@ Error Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char *
     LabelIterator iterator(aMessage, aOffset);
     bool          matches = true;
 
-    if (*aName == kLabelSeperatorChar)
+    if (*aName == kLabelSeparatorChar)
     {
         aName++;
         VerifyOrExit(*aName == kNullChar, error = kErrorInvalidArgs);
@@ -561,7 +561,7 @@ Error Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, 
 
     if (!aAllowDotCharInLabel)
     {
-        VerifyOrExit(StringFind(aLabelBuffer, kLabelSeperatorChar) == nullptr, error = kErrorParse);
+        VerifyOrExit(StringFind(aLabelBuffer, kLabelSeparatorChar) == nullptr, error = kErrorParse);
     }
 
 exit:
@@ -598,7 +598,7 @@ bool Name::LabelIterator::CompareLabel(const char *&aName, bool aIsSingleLabel) 
 
     matches = (*aName == kNullChar);
 
-    if (!aIsSingleLabel && (*aName == kLabelSeperatorChar))
+    if (!aIsSingleLabel && (*aName == kLabelSeparatorChar))
     {
         matches = true;
         aName++;
@@ -641,13 +641,13 @@ bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
     uint16_t nameLength        = StringLength(aName, kMaxNameLength);
     uint16_t domainLength      = StringLength(aDomain, kMaxNameLength);
 
-    if (nameLength > 0 && aName[nameLength - 1] == kLabelSeperatorChar)
+    if (nameLength > 0 && aName[nameLength - 1] == kLabelSeparatorChar)
     {
         nameEndsWithDot = true;
         --nameLength;
     }
 
-    if (domainLength > 0 && aDomain[domainLength - 1] == kLabelSeperatorChar)
+    if (domainLength > 0 && aDomain[domainLength - 1] == kLabelSeparatorChar)
     {
         domainEndsWithDot = true;
         --domainLength;
@@ -659,7 +659,7 @@ bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
 
     if (nameLength > domainLength)
     {
-        VerifyOrExit(aName[-1] == kLabelSeperatorChar);
+        VerifyOrExit(aName[-1] == kLabelSeparatorChar);
     }
 
     // This method allows either `aName` or `aDomain` to include or

@@ -62,7 +62,7 @@ public:
     explicit PowerCalibration(Instance &aInstance);
 
     /**
-     * Add a calibrated power of the specificed channel to the power calibration table.
+     * Add a calibrated power of the specified channel to the power calibration table.
      *
      * @param[in] aChannel                The radio channel.
      * @param[in] aActualPower            The actual power in 0.01dBm.

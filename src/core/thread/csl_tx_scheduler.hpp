@@ -97,8 +97,8 @@ public:
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
-        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimstamp; }
-        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimstamp = aLastRxTimestamp; }
+        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
+        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
         uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
@@ -108,7 +108,7 @@ public:
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
-        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
+        uint64_t  mLastRxTimestamp;     ///< Time when last frame containing CSL IE was received, in microseconds.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -187,7 +187,7 @@ public:
     void Clear(void);
 
 private:
-    // Guard time in usec to add when checking delay while preparaing the CSL frame for tx.
+    // Guard time in usec to add when checking delay while preparing the CSL frame for tx.
     static constexpr uint32_t kFramePreparationGuardInterval = 1500;
 
     void InitFrameRequestAhead(void);

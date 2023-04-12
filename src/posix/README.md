@@ -28,7 +28,7 @@ If built successfully, the binary should be found at: `build/posix/src/posix/ot-
 
 ### Simulation
 
-OpenThread provides an implemenation on the simulation platform which enables running a simulated transceiver on the host.
+OpenThread provides an implementation on the simulation platform which enables running a simulated transceiver on the host.
 
 #### Build
 

@@ -1081,8 +1081,8 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     bool responseObserve = false;
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    uint8_t  blockOptionType    = 0;
-    uint32_t totalTransfereSize = 0;
+    uint8_t  blockOptionType   = 0;
+    uint32_t totalTransferSize = 0;
 #endif
 
     request = FindRelatedRequest(aMessage, aMessageInfo, metadata);
@@ -1181,7 +1181,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
 
                         case kOptionSize2:
                             // ToDo: wait for method to read uint option values
-                            totalTransfereSize = 0;
+                            totalTransferSize = 0;
                             break;
 
                         default:
@@ -1212,8 +1212,8 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                 case 2: // Block2 option
                     if (aMessage.GetCode() < kCodeBadRequest && metadata.mBlockwiseReceiveHook != nullptr)
                     {
-                        error = SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransfereSize,
-                                                      false);
+                        error =
+                            SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransferSize, false);
                     }
 
                     if (aMessage.GetCode() >= kCodeBadRequest || metadata.mBlockwiseReceiveHook == nullptr ||
@@ -1226,7 +1226,7 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
                     if (aMessage.GetCode() < kCodeBadRequest && metadata.mBlockwiseReceiveHook != nullptr)
                     {
                         error =
-                            SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransfereSize, true);
+                            SendNextBlock2Request(*request, aMessage, aMessageInfo, metadata, totalTransferSize, true);
                     }
 
                     FinalizeCoapTransaction(*request, metadata, &aMessage, &aMessageInfo, error);
@@ -1295,9 +1295,9 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     Error    error          = kErrorNone;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     Option::Iterator iterator;
-    char            *curUriPath         = uriPath;
-    uint8_t          blockOptionType    = 0;
-    uint32_t         totalTransfereSize = 0;
+    char            *curUriPath        = uriPath;
+    uint8_t          blockOptionType   = 0;
+    uint32_t         totalTransferSize = 0;
 #endif
 
     if (mInterceptor.IsSet())
@@ -1350,7 +1350,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
         case kOptionSize1:
             // ToDo: wait for method to read uint option values
-            totalTransfereSize = 0;
+            totalTransferSize = 0;
             break;
 
         default:
@@ -1376,7 +1376,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
             case 1:
                 if (resource.mReceiveHook != nullptr)
                 {
-                    switch (ProcessBlock1Request(aMessage, aMessageInfo, resource, totalTransfereSize))
+                    switch (ProcessBlock1Request(aMessage, aMessageInfo, resource, totalTransferSize))
                     {
                     case kErrorNone:
                         resource.HandleRequest(aMessage, aMessageInfo);
@@ -1643,7 +1643,7 @@ bool TxParameters::IsValid(void) const
     if ((mAckRandomFactorDenominator > 0) && (mAckRandomFactorNumerator >= mAckRandomFactorDenominator) &&
         (mAckTimeout >= OT_COAP_MIN_ACK_TIMEOUT) && (mMaxRetransmit <= OT_COAP_MAX_RETRANSMIT))
     {
-        // Calulate exchange lifetime step by step and verify no overflow.
+        // Calculate exchange lifetime step by step and verify no overflow.
         uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
 
         tmp = Multiply(tmp, mAckRandomFactorNumerator);

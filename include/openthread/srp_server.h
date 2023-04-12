@@ -327,7 +327,7 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
  * it stays enabled).
  *
  * @param[in] aInstance   A pointer to an OpenThread instance.
- * @param[in] aEnbaled    A boolean to enable/disable the auto-enable mode.
+ * @param[in] aEnabled    A boolean to enable/disable the auto-enable mode.
  *
  */
 void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled);

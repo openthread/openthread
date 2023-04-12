@@ -381,7 +381,7 @@ public:
      * @param[in] aVerion        Frame version.
      * @param[in] aAddrs         Frame source and destination addresses (each can be none, short, or extended).
      * @param[in] aPanIds        Source and destination PAN IDs.
-     * @param[in] aSeucirtyLevel Frame security level.
+     * @param[in] aSecurityLevel Frame security level.
      * @param[in] aKeyIdMode     Frame security key ID mode.
      *
      */

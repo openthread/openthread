@@ -257,7 +257,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
  *
- * Define to 1 to generate ECDSA signatures determinsitically
+ * Define to 1 to generate ECDSA signatures deterministically
  * according to RFC 6979 instead of randomly.
  *
  */

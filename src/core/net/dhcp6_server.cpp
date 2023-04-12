@@ -470,7 +470,7 @@ Error Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, Clien
     option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
     option.GetAddress().GetIid().SetFromExtAddress(aClientId.GetDuidLinkLayerAddress());
     option.SetPreferredLifetime(IaAddress::kDefaultPreferredLifetime);
-    option.SetValidLifetime(IaAddress::kDefaultValidLiftetime);
+    option.SetValidLifetime(IaAddress::kDefaultValidLifetime);
     SuccessOrExit(error = aMessage.Append(option));
 
 exit:

@@ -1116,7 +1116,7 @@ void SubMac::HandleCslTimer(void)
      *            sample                   sleep                        sample                    sleep
      *
      * When the radio doesn't support receive-timing:
-     *   The handler will be called twice per CSL period: at the begining of sample and sleep. When the handler is
+     *   The handler will be called twice per CSL period: at the beginning of sample and sleep. When the handler is
      *   called, it will explicitly change the radio state due to the current state by calling `Radio::Receive` or
      *   `Radio::Sleep`.
      *
@@ -1160,7 +1160,7 @@ void SubMac::HandleCslTimer(void)
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
 
-        // Scedule reception window for any state except RX - so that CSL RX Window has lower priority
+        // Schedule reception window for any state except RX - so that CSL RX Window has lower priority
         // than scanning or RX after the data poll.
         if (RadioSupportsReceiveTiming() && (mState != kStateDisabled) && (mState != kStateReceive))
         {

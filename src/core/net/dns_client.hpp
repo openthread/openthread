@@ -763,7 +763,7 @@ private:
     enum TcpState : uint8_t
     {
         kTcpUninitialized = 0,
-        kTcpConecting,
+        kTcpConnecting,
         kTcpConnectedIdle,
         kTcpConnectedSending,
     };

@@ -87,7 +87,7 @@ public:
 
     /**
      * This static method indicates whether a given `int8_t` preference value is valid, i.e., whether it has of the
-     * three values `kHigh`, `kMediumm`, or `kLow`.
+     * three values `kHigh`, `kMedium`, or `kLow`.
      *
      * @param[in] aPrf  The signed preference value to check.
      *

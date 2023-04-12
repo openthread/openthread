@@ -121,9 +121,9 @@ void Link::BeginTransmit(void)
     Mac::PanId    destPanId;
     Header::Type  type;
     Packet        txPacket;
-    Neighbor     *neighbor   = nullptr;
-    Mac::RxFrame *ackFrame   = nullptr;
-    bool          isDisovery = false;
+    Neighbor     *neighbor    = nullptr;
+    Mac::RxFrame *ackFrame    = nullptr;
+    bool          isDiscovery = false;
 
     VerifyOrExit(mState == kStateTransmit);
 
@@ -170,14 +170,14 @@ void Link::BeginTransmit(void)
 
         if (!mTxFrame.GetSecurityEnabled())
         {
-            isDisovery = true;
+            isDiscovery = true;
         }
         else
         {
             uint8_t keyIdMode;
 
             IgnoreError(mTxFrame.GetKeyIdMode(keyIdMode));
-            isDisovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
+            isDiscovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
         }
     }
 
@@ -212,7 +212,7 @@ void Link::BeginTransmit(void)
 
     LogDebg("BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(), txPacket.GetPayloadLength());
 
-    VerifyOrExit(mInterface.Send(txPacket, isDisovery) == kErrorNone, InvokeSendDone(kErrorAbort));
+    VerifyOrExit(mInterface.Send(txPacket, isDiscovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
     if (mTxFrame.GetAckRequest())
     {

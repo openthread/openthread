@@ -423,7 +423,7 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a constant service data
+     * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format with a non-empty and potentially non-const server data format (provided as input parameter).
      *
      * The template type `ServiceType` has the following requirements:
@@ -450,7 +450,7 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
+     * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service data
      * format (provided as input parameter) with an empty server data.
      *
      * The template type `ServiceType` has the following requirements:
@@ -495,8 +495,8 @@ public:
     /**
      * This method removes a Thread Service entry from the local Thread Network Data.
      *
-     * This version of `Remove<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
-     * format (provided as input parameter).
+     * This version of `Remove<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service
+     * data format (provided as input parameter).
      *
      * The template type `ServiceType` has the following requirements:
      *   - It MUST define nested type `ServiceType::ServiceData` representing the service data (and its format).

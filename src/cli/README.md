@@ -254,7 +254,7 @@ Done
 
 ### bbr enable
 
-Enable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred for attached device if there is no Backbone Router Service in Thread Network Data.
+Enable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggered for attached device if there is no Backbone Router Service in Thread Network Data.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
@@ -265,7 +265,7 @@ Done
 
 ### bbr disable
 
-Disable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred if Backbone Router is Primary state. o `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
+Disable Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggered if Backbone Router is Primary state. o `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 
 ```bash
 > bbr disable
@@ -274,7 +274,7 @@ Done
 
 ### bbr register
 
-Register Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggerred for attached device.
+Register Backbone Router Service for Thread 1.2 FTD. `SRV_DATA.ntf` would be triggered for attached device.
 
 `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is required.
 

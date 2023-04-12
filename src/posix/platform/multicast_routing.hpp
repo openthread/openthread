@@ -69,7 +69,7 @@ private:
     {
         kMulticastForwardingCacheExpireTimeout    = 300, //< Expire timeout of Multicast Forwarding Cache (in seconds)
         kMulticastForwardingCacheExpiringInterval = 60,  //< Expire interval of Multicast Forwarding Cache (in seconds)
-        kMulitcastForwardingCacheTableSize =
+        kMulticastForwardingCacheTableSize =
             OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE, //< The max size of MFC table.
     };
 
@@ -132,7 +132,7 @@ private:
     void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
                                                             const Ip6::Address                    &aAddress);
 
-    MulticastForwardingCache mMulticastForwardingCacheTable[kMulitcastForwardingCacheTableSize];
+    MulticastForwardingCache mMulticastForwardingCacheTable[kMulticastForwardingCacheTableSize];
     uint64_t                 mLastExpireTime;
     int                      mMulticastRouterSock;
 };

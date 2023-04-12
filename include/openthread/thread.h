@@ -416,7 +416,7 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
  * Get the Thread Network Key.
  *
  * @param[in]   aInstance     A pointer to an OpenThread instance.
- * @param[out]  aNetworkKey   A pointer to an `otNetworkkey` to return the Thread Network Key.
+ * @param[out]  aNetworkKey   A pointer to an `otNetworkKey` to return the Thread Network Key.
  *
  * @sa otThreadSetNetworkKey
  *
