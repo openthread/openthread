@@ -66,7 +66,8 @@ public:
      * @param[in] aFrame   A pointer to buffer containing the spinel frame.
      * @param[in] aLength  The length (number of bytes) in the frame.
      *
-     * @returns true if the frame is the Spinel SPINEL_CMD_RESET frame, false otherwise.
+     * @retval true  If the frame is a Spinel SPINEL_CMD_RESET frame.
+     * @retval false If the frame is not a Spinel SPINEL_CMD_RESET frame.
      *
      */
     static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)

@@ -279,7 +279,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::ResetRcp(bool aResetRadio)
     }
 
     hardwareReset = (mSpinelInterface.HardwareReset() == OT_ERROR_NONE);
-    VerifyOrExit(WaitResponse(false) == OT_ERROR_NONE);
+    SuccessOrExit(WaitResponse(false));
 
     resetDone = true;
 
