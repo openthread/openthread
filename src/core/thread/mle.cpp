@@ -2027,14 +2027,14 @@ exit:
     return;
 }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge) { return SendChildUpdateRequest(aAppendChallenge, mTimeout); }
+Error Mle::SendChildUpdateRequest(void) { return SendChildUpdateRequest(kNormalChildUpdateRequest); }
 
-Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
+Error Mle::SendChildUpdateRequest(ChildUpdateRequestMode aMode)
 {
     Error                   error = kErrorNone;
     Ip6::Address            destination;
-    TxMessage              *message = nullptr;
-    AddressRegistrationMode mode    = kAppendAllAddresses;
+    TxMessage              *message     = nullptr;
+    AddressRegistrationMode addrRegMode = kAppendAllAddresses;
 
     if (!mParent.IsStateValidOrRestoring())
     {
@@ -2049,7 +2049,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
 
-    if (aAppendChallenge || IsDetached())
+    if ((aMode == kAppendChallengeTlv) || IsDetached())
     {
         mParentRequestChallenge.GenerateRandom();
         SuccessOrExit(error = message->AppendChallengeTlv(mParentRequestChallenge));
@@ -2058,13 +2058,13 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
     switch (mRole)
     {
     case kRoleDetached:
-        mode = kAppendMeshLocalOnly;
+        addrRegMode = kAppendMeshLocalOnly;
         break;
 
     case kRoleChild:
         SuccessOrExit(error = message->AppendSourceAddressTlv());
         SuccessOrExit(error = message->AppendLeaderDataTlv());
-        SuccessOrExit(error = message->AppendTimeoutTlv(aTimeout));
+        SuccessOrExit(error = message->AppendTimeoutTlv((aMode == kAppendZeroTimeout) ? 0 : mTimeout));
         SuccessOrExit(error = message->AppendSupervisionIntervalTlv(Get<SupervisionListener>().GetInterval()));
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
@@ -2083,7 +2083,7 @@ Error Mle::SendChildUpdateRequest(bool aAppendChallenge, uint32_t aTimeout)
 
     if (!IsFullThreadDevice())
     {
-        SuccessOrExit(error = message->AppendAddressRegistrationTlv(mode));
+        SuccessOrExit(error = message->AppendAddressRegistrationTlv(addrRegMode));
     }
 
     destination.SetToLinkLocalAddress(mParent.GetExtAddress());
@@ -2707,7 +2707,7 @@ void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
 
     if (IsChild() && (&aNeighbor == &mParent))
     {
-        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ true));
+        IgnoreError(SendChildUpdateRequest(kAppendChallengeTlv));
         ExitNow();
     }
 
@@ -4330,7 +4330,7 @@ Error Mle::DetachGracefully(otDetachGracefullyCallback aCallback, void *aContext
         break;
 
     case kRoleChild:
-        IgnoreError(SendChildUpdateRequest(/* aAppendChallenge */ false, /* aTimeout */ 0));
+        IgnoreError(SendChildUpdateRequest(kAppendZeroTimeout));
         break;
 
     case kRoleDisabled:
