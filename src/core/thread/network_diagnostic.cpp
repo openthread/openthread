@@ -572,7 +572,7 @@ static inline void ParseMacCounters(const MacCountersTlv &aMacCountersTlv, otNet
 
 Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo)
 {
-    Error    error  = kErrorNotFound;
+    Error    error;
     uint16_t offset = (aIterator == 0) ? aMessage.GetOffset() : aIterator;
 
     while (offset < aMessage.GetLength())
@@ -774,9 +774,12 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             // Exit if a TLV is recognized and parsed successfully.
             aTlvInfo.mType = tlv.GetType();
             aIterator      = offset;
+            error          = kErrorNone;
             ExitNow();
         }
     }
+
+    error = kErrorNotFound;
 
 exit:
     return error;
