@@ -600,7 +600,7 @@ otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize);
  * with the literal key.
  *
  * If OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE config is disabled, the
- * generated keypair is populated into mDerBytes in @p aKeyPair
+ * generated keypair is populated into mDerBytes in @p aKeyPair.
  *
  * @retval OT_ERROR_NONE         A new key pair was generated successfully.
  * @retval OT_ERROR_NO_BUFS      Failed to allocate buffer for key generation.
