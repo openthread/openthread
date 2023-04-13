@@ -149,9 +149,7 @@ void platformInit(otPlatformConfig *aPlatformConfig)
     gNetifName[0] = '\0';
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if ((sscanf(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, "%" SCNu8 ".%" SCNu8 ".%" SCNu8 ".%" SCNu8 "/%" SCNu8,
-                &gNat64Cidr.mAddress.mFields.m8[0], &gNat64Cidr.mAddress.mFields.m8[1],
-                &gNat64Cidr.mAddress.mFields.m8[2], &gNat64Cidr.mAddress.mFields.m8[3], &gNat64Cidr.mLength)) != 5)
+    if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &gNat64Cidr) != OT_ERROR_NONE)
     {
         gNat64Cidr.mLength = 0;
     }
