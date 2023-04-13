@@ -1281,6 +1281,10 @@ protected:
          *
          */
         Error SendAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
+
+    private:
+        Error AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress);
+        Error AppendAddressEntry(const Ip6::Address &aAddress);
     };
 
     /**
