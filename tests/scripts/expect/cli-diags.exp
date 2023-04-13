@@ -181,6 +181,12 @@ expect_line "Done"
 send "diag cw stop\n"
 expect_line "Done"
 
+send "diag stream start\n"
+expect_line "Done"
+
+send "diag stream stop\n"
+expect_line "Done"
+
 send "diag rawpowersetting 112233\n"
 expect_line "Done"
 

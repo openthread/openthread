@@ -261,6 +261,19 @@ otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable
 otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable);
 
 /**
+ * Start/stop the platform layer to transmit stream of characters.
+ *
+ * @param[in]  aInstance The OpenThread instance structure.
+ * @param[in]  aEnable   TRUE to enable or FALSE to disable the platform layer to transmit stream.
+ *
+ * @retval OT_ERROR_NONE             Successfully enabled/disabled.
+ * @retval OT_ERROR_INVALID_STATE    The radio was not in the Receive state.
+ * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented.
+ *
+ */
+otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable);
+
+/**
  * Get the power settings for the given channel.
  *
  * @param[in]      aInstance               The OpenThread instance structure.
