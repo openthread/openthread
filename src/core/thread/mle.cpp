@@ -4577,22 +4577,17 @@ Error Mle::TxMessage::AppendVersionTlv(void) { return Tlv::Append<VersionTlv>(*t
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode)
 {
-    Error                    error = kErrorNone;
-    Tlv                      tlv;
-    AddressRegistrationEntry entry;
-    Lowpan::Context          context;
-    uint8_t                  length      = 0;
-    uint8_t                  counter     = 0;
-    uint16_t                 startOffset = GetLength();
+    Error           error = kErrorNone;
+    Tlv             tlv;
+    Lowpan::Context context;
+    uint8_t         counter     = 0;
+    uint16_t        startOffset = GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = Append(tlv));
 
     // Prioritize ML-EID
-    entry.SetContextId(kMeshLocalPrefixContextId);
-    entry.SetIid(Get<Mle>().GetMeshLocal64().GetIid());
-    SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-    length += entry.GetLength();
+    SuccessOrExit(error = AppendCompressedAddressEntry(kMeshLocalPrefixContextId, Get<Mle>().GetMeshLocal64()));
 
     // Continue to append the other addresses if not `kAppendMeshLocalOnly` mode
     VerifyOrExit(aMode != kAppendMeshLocalOnly);
@@ -4603,10 +4598,8 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
         (Get<NetworkData::Leader>().GetContext(Get<DuaManager>().GetDomainUnicastAddress(), context) == kErrorNone))
     {
         // Prioritize DUA, compressed entry
-        entry.SetContextId(context.mContextId);
-        entry.SetIid(Get<DuaManager>().GetDomainUnicastAddress().GetIid());
-        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-        length += entry.GetLength();
+        SuccessOrExit(
+            error = AppendCompressedAddressEntry(context.mContextId, Get<DuaManager>().GetDomainUnicastAddress()));
         counter++;
     }
 #endif
@@ -4628,19 +4621,13 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 
         if (Get<NetworkData::Leader>().GetContext(addr.GetAddress(), context) == kErrorNone)
         {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(addr.GetAddress().GetIid());
+            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, addr.GetAddress()));
         }
         else
         {
-            // uncompressed entry
-            entry.SetUncompressed();
-            entry.SetIp6Address(addr.GetAddress());
+            SuccessOrExit(error = AppendAddressEntry(addr.GetAddress()));
         }
 
-        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-        length += entry.GetLength();
         counter++;
         // only continue to append if there is available entry.
         VerifyOrExit(counter < kMaxIpAddressesToRegister);
@@ -4668,11 +4655,7 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
             }
 #endif
 
-            entry.SetUncompressed();
-            entry.SetIp6Address(addr.GetAddress());
-            SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-            length += entry.GetLength();
-
+            SuccessOrExit(error = AppendAddressEntry(addr.GetAddress()));
             counter++;
             // only continue to append if there is available entry.
             VerifyOrExit(counter < kMaxIpAddressesToRegister);
@@ -4681,12 +4664,41 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(AddressRegistrationMode aMode
 
 exit:
 
-    if (error == kErrorNone && length > 0)
+    if (error == kErrorNone)
     {
-        tlv.SetLength(length);
+        tlv.SetLength(static_cast<uint8_t>(GetLength() - startOffset - sizeof(Tlv)));
         Write(startOffset, tlv);
     }
 
+    return error;
+}
+
+Error Mle::TxMessage::AppendCompressedAddressEntry(uint8_t aContextId, const Ip6::Address &aAddress)
+{
+    // Append an IPv6 address entry in an Address Registration TLV
+    // using compressed format (context ID with IID).
+
+    Error error;
+
+    SuccessOrExit(error = Append<uint8_t>(AddressRegistrationTlv::ControlByteFor(aContextId)));
+    error = Append(aAddress.GetIid());
+
+exit:
+    return error;
+}
+
+Error Mle::TxMessage::AppendAddressEntry(const Ip6::Address &aAddress)
+{
+    // Append an IPv6 address entry in an Address Registration TLV
+    // using uncompressed format
+
+    Error   error;
+    uint8_t controlByte = AddressRegistrationTlv::kControlByteUncompressed;
+
+    SuccessOrExit(error = Append(controlByte));
+    error = Append(aAddress);
+
+exit:
     return error;
 }
 
@@ -4854,12 +4866,10 @@ Error Mle::TxMessage::AppendConnectivityTlv(void)
 
 Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
 {
-    Error                    error;
-    Tlv                      tlv;
-    AddressRegistrationEntry entry;
-    Lowpan::Context          context;
-    uint8_t                  length      = 0;
-    uint16_t                 startOffset = GetLength();
+    Error           error;
+    Tlv             tlv;
+    Lowpan::Context context;
+    uint16_t        startOffset = GetLength();
 
     tlv.SetType(Tlv::kAddressRegistration);
     SuccessOrExit(error = Append(tlv));
@@ -4868,26 +4878,19 @@ Error Mle::TxMessage::AppendAddressRegistrationTlv(Child &aChild)
     {
         if (address.IsMulticast() || Get<NetworkData::Leader>().GetContext(address, context) != kErrorNone)
         {
-            // uncompressed entry
-            entry.SetUncompressed();
-            entry.SetIp6Address(address);
+            SuccessOrExit(error = AppendAddressEntry(address));
         }
         else if (context.mContextId != kMeshLocalPrefixContextId)
         {
-            // compressed entry
-            entry.SetContextId(context.mContextId);
-            entry.SetIid(address.GetIid());
+            SuccessOrExit(error = AppendCompressedAddressEntry(context.mContextId, address));
         }
         else
         {
             continue;
         }
-
-        SuccessOrExit(error = AppendBytes(&entry, entry.GetLength()));
-        length += entry.GetLength();
     }
 
-    tlv.SetLength(length);
+    tlv.SetLength(static_cast<uint8_t>(GetLength() - startOffset - sizeof(Tlv)));
     Write(startOffset, tlv);
 
 exit:

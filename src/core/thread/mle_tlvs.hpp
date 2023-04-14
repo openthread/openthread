@@ -975,7 +975,39 @@ struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
 };
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class provides constants and methods for generation and parsing of Address Registration TLV.
+ *
+ */
+class AddressRegistrationTlv : public TlvInfo<Tlv::kAddressRegistration>
+{
+public:
+    /**
+     * This constant defines the control byte to use in an uncompressed entry where the full IPv6 address is included in
+     * the TLV.
+     *
+     */
+    static constexpr uint8_t kControlByteUncompressed = 0;
+
+    /**
+     * This static method returns the control byte to use in a compressed entry where the 64-prefix is replaced with a
+     * 6LoWPAN context identifier.
+     *
+     * @param[in] aContextId   The 6LoWPAN context ID.
+     *
+     * @returns The control byte associated with compressed entry with @p aContextId.
+     *
+     */
+    static uint8_t ControlByteFor(uint8_t aContextId) { return kCompressed | (aContextId & kContextIdMask); }
+
+    AddressRegistrationTlv(void) = delete;
+
+private:
+    static constexpr uint8_t kCompressed    = 1 << 7;
+    static constexpr uint8_t kContextIdMask = 0xf;
+};
+
+/**
+ * This class implements Address Registration Entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
