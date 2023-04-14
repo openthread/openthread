@@ -630,6 +630,7 @@ private:
     void  SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
+    Error ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild);
     Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 

@@ -1785,25 +1785,27 @@ exit:
 }
 #endif
 
-Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild)
+Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
 {
-    Error                    error = kErrorNone;
-    AddressRegistrationEntry entry;
-    Ip6::Address             address;
-    Lowpan::Context          context;
-    uint8_t                  registeredCount = 0;
-    uint8_t                  storedCount     = 0;
-    uint16_t                 end             = aOffset + aLength;
+    Error    error;
+    uint16_t offset;
+    uint16_t length;
+    uint16_t endOffset;
+    uint8_t  count       = 0;
+    uint8_t  storedCount = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     Ip6::Address        oldDua;
     const Ip6::Address *oldDuaPtr = nullptr;
     bool                hasDua    = false;
 #endif
-
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Ip6::Address oldMlrRegisteredAddresses[kMaxChildIpAddresses - 1];
     uint16_t     oldMlrRegisteredAddressNum = 0;
 #endif
+
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, length));
+
+    endOffset = offset + length;
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
@@ -1831,36 +1833,47 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 
     aChild.ClearIp6Addresses();
 
-    while (aOffset < end)
+    while (offset < endOffset)
     {
-        uint8_t len;
+        uint8_t      controlByte;
+        Ip6::Address address;
 
-        // read out the control field
-        SuccessOrExit(error = aMessage.Read(aOffset, &entry, sizeof(uint8_t)));
+        // Read out the control byte (first byte in entry)
+        SuccessOrExit(error = aRxInfo.mMessage.Read(offset, controlByte));
+        offset++;
+        count++;
 
-        len = entry.GetLength();
+        address.Clear();
 
-        SuccessOrExit(error = aMessage.Read(aOffset, &entry, len));
-
-        aOffset += len;
-        registeredCount++;
-
-        if (entry.IsCompressed())
+        if (AddressRegistrationTlv::IsEntryCompressed(controlByte))
         {
-            if (Get<NetworkData::Leader>().GetContext(entry.GetContextId(), context) != kErrorNone)
+            // Compressed entry contains IID with the 64-bit prefix
+            // determined from 6LoWPAN context identifier (from
+            // the control byte).
+
+            uint8_t         contextId = AddressRegistrationTlv::GetContextId(controlByte);
+            Lowpan::Context context;
+
+            VerifyOrExit(offset + sizeof(Ip6::InterfaceIdentifier) <= endOffset, error = kErrorParse);
+            IgnoreError(aRxInfo.mMessage.Read(offset, address.GetIid()));
+            offset += sizeof(Ip6::InterfaceIdentifier);
+
+            if (Get<NetworkData::Leader>().GetContext(contextId, context) != kErrorNone)
             {
-                LogWarn("Failed to get context %u for compressed address from child 0x%04x", entry.GetContextId(),
+                LogWarn("Failed to get context %u for compressed address from child 0x%04x", contextId,
                         aChild.GetRloc16());
                 continue;
             }
 
-            address.Clear();
             address.SetPrefix(context.mPrefix);
-            address.SetIid(entry.GetIid());
         }
         else
         {
-            address = entry.GetIp6Address();
+            // Uncompressed entry contains the full IPv6 address.
+
+            VerifyOrExit(offset + sizeof(Ip6::Address) <= endOffset, error = kErrorParse);
+            IgnoreError(aRxInfo.mMessage.Read(offset, address));
+            offset += sizeof(Ip6::Address);
         }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1956,14 +1969,14 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, oldMlrRegisteredAddresses, oldMlrRegisteredAddressNum);
 #endif
 
-    if (registeredCount == 0)
+    if (count == 0)
     {
         LogInfo("Child 0x%04x has no registered IPv6 address", aChild.GetRloc16());
     }
     else
     {
-        LogInfo("Child 0x%04x has %u registered IPv6 address%s, %u address%s stored", aChild.GetRloc16(),
-                registeredCount, (registeredCount == 1) ? "" : "es", storedCount, (storedCount == 1) ? "" : "es");
+        LogInfo("Child 0x%04x has %u registered IPv6 address%s, %u address%s stored", aChild.GetRloc16(), count,
+                (count == 1) ? "" : "es", storedCount, (storedCount == 1) ? "" : "es");
     }
 
     error = kErrorNone;
@@ -2088,11 +2101,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 
     if (!mode.IsFullThreadDevice())
     {
-        uint16_t offset;
-        uint16_t length;
-
-        SuccessOrExit(error = Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, offset, length));
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, offset, length, *child));
+        SuccessOrExit(error = ProcessAddressRegistrationTlv(aRxInfo, *child));
     }
 
     // Remove from router table
@@ -2182,8 +2191,6 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     DeviceMode      oldMode;
     TlvList         requestedTlvList;
     TlvList         tlvList;
-    uint16_t        addrOffset;
-    uint16_t        addrLength;
     bool            childDidChange = false;
 
     Log(kMessageReceive, kTypeChildUpdateRequestOfChild, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2246,10 +2253,15 @@ void MleRouter::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 
     // IPv6 Address TLV
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addrOffset, addrLength) == kErrorNone)
+    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
     {
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addrOffset, addrLength, *child));
+    case kErrorNone:
         tlvList.Add(Tlv::kAddressRegistration);
+        break;
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     // Leader Data
@@ -2404,8 +2416,6 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     uint32_t   mleFrameCounter;
     LeaderData leaderData;
     Child     *child;
-    uint16_t   addrOffset;
-    uint16_t   addrLength;
 
     if ((aRxInfo.mNeighbor == nullptr) || IsActiveRouter(aRxInfo.mNeighbor->GetRloc16()) ||
         !Get<ChildTable>().Contains(*aRxInfo.mNeighbor))
@@ -2517,9 +2527,13 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     }
 
     // IPv6 Address
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kAddressRegistration, addrOffset, addrLength) == kErrorNone)
+    switch (ProcessAddressRegistrationTlv(aRxInfo, *child))
     {
-        SuccessOrExit(error = UpdateChildAddresses(aRxInfo.mMessage, addrOffset, addrLength, *child));
+    case kErrorNone:
+    case kErrorNotFound:
+        break;
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     // Leader Data
