@@ -56,6 +56,7 @@ jobs:
       THREAD_VERSION: 1.3
       VIRTUAL_TIME: 1
       INTER_OP: 1
+      INTER_OP_BBR: 1
       CC: ${{ matrix.compiler.c }}
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
@@ -186,6 +187,7 @@ jobs:
       VIRTUAL_TIME: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.3
+      INTER_OP_BBR: 1
       MULTIPLY: 3
     steps:
     - name: Harden Runner
