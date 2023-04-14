@@ -148,7 +148,7 @@ public:
     void SynthesizeFromCidrAndHost(const Cidr &aCidr, uint32_t aHost);
 
     /**
-     * This method parses an IPv4 address string terminated by `aTerminalChar`.
+     * This method parses an IPv4 address string terminated by `aTerminatorChar`.
      *
      * The string MUST follow the quad-dotted notation of four decimal values (ranging from 0 to 255 each). For
      * example, "127.0.0.1"
@@ -159,7 +159,7 @@ public:
      * @retval kErrorParse        Failed to parse the IPv4 address string.
      *
      */
-    Error FromString(const char *aString, char aTerminalChar = kNullChar);
+    Error FromString(const char *aString, char aTerminatorChar = kNullChar);
 
     /**
      * This method converts the address to a string.

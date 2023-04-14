@@ -37,7 +37,7 @@
 namespace ot {
 namespace Ip4 {
 
-Error Address::FromString(const char *aString, char aTerminalChar)
+Error Address::FromString(const char *aString, char aTerminatorChar)
 {
     constexpr char kSeparatorChar = '.';
 
