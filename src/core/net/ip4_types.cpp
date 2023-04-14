@@ -73,7 +73,7 @@ Error Address::FromString(const char *aString, char aTerminatorChar)
         aString++;
     }
 
-    VerifyOrExit(*aString == aTerminalChar);
+    VerifyOrExit(*aString == aTerminatorChar);
     error = kErrorNone;
 
 exit:
