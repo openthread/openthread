@@ -439,7 +439,7 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
  * This function converts a human-readable IPv4 CIDR string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.
- * @param[out]  aCidr  A pointer to an IPv4 CIDR.
+ * @param[out]  aCidr     A pointer to an IPv4 CIDR.
  *
  * @retval OT_ERROR_NONE          Successfully parsed the string.
  * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
