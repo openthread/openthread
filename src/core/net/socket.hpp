@@ -221,6 +221,22 @@ public:
     void SetEcn(Ecn aEcn) { mEcn = aEcn; }
 
     /**
+     * This method gets the DSCP value.
+     *
+     * @returns the DSCP value as represented in the IPv6 header.
+     *
+     */
+    uint8_t GetDscp(void) const { return mDscp; }
+
+    /**
+     * This method sets the DSCP value.
+     *
+     * @param[in] aDscp   The DSCP value.
+     *
+     */
+    void SetDscp(uint8_t aDscp) { mDscp = aDscp; }
+
+    /**
      * This method indicates whether peer is via the host interface.
      *
      * @retval TRUE if the peer is via the host interface.

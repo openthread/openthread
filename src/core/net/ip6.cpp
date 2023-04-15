@@ -1150,6 +1150,7 @@ start:
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetEcn(header.GetEcn());
+    messageInfo.SetDscp(header.GetDscp());
     messageInfo.SetLinkInfo(aLinkMessageInfo);
 
     // Determine `forwardThread`, `forwardHost` and `receive`

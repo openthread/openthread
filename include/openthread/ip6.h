@@ -237,6 +237,7 @@ typedef struct otMessageInfo
     bool    mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
     bool    mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
     bool    mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
+    uint8_t mDscp : 6;              ///< Diff Services Code Point in IPv6 header (provided for a rx msg, ignored on tx).
 } otMessageInfo;
 
 /**

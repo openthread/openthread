@@ -113,6 +113,8 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
     bool didHandle = true;
     Uri  uri       = UriFromPath(aUriPath);
 
+    IgnoreError(aMessage.SetPriority(DscpToPriority(aMessageInfo.GetDscp())));
+
 #define Case(kUri, Type)                                     \
     case kUri:                                               \
         Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
