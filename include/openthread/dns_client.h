@@ -434,9 +434,9 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  *
  * This function MUST only be used from `otDnsBrowseCallback`.
  *
- * A browse DNS response should include the SRV, TXT, and AAAA records for the service instances that are enumerated
- * (note that it is a SHOULD and not a MUST requirement). This function tries to retrieve this info for a given service
- * instance when available.
+ * A browse DNS response can include SRV, TXT, and AAAA records for the service instances that are enumerated. This is
+ * a SHOULD and not a MUST requirement, and servers/resolvers are not required to provide this. This function attempts
+ * to retrieve this info for a given service instance when available.
  *
  * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned. In this case, no additional
  *   records (no TXT and/or AAAA) are read.
@@ -523,6 +523,18 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
  * unspecified fields are then replaced by the values from the default config.
  *
+ * The function sends queries for SRV and/or TXT records for the given service instance. The `mServiceMode` field in
+ * `otDnsQueryConfig` determines which records to query (SRV only, TXT only, or both SRV and TXT) and how to perform
+ * the query (together in the same message, separately in parallel, or in optimized mode where client will try in the
+ * same message first and then separately if it fails to get a response).
+ *
+ * The SRV record provides information about service port, priority, and weight along with the host name associated
+ * with the service instance. This function DOES NOT perform address resolution for the host name discovered from SRV
+ * record. The server/resolver may provide AAAA/A record(s) for the host name in the Additional Data section of the
+ * response to SRV/TXT query and this information can be retrieved using `otDnsServiceResponseGetServiceInfo()` in
+ * `otDnsServiceCallback`. Users of this API MUST NOT assume that host address will always be available from
+ * `otDnsServiceResponseGetServiceInfo()`.
+ *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInstanceLabel     The service instance label.
  * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
@@ -568,6 +580,12 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
  * This function gets info for a service instance from a DNS service instance resolution response.
  *
  * This function MUST only be used from `otDnsServiceCallback`.
+ *
+ * A service resolution DNS response may include AAAA records in its Additional Data section for host name associated
+ * with the service instance that is resolved. This is a SHOULD and not a MUST requirement so servers/resolvers are
+ * not required to provide this. This function attempts to retrieve AAAA record(s) if included in the response. If it
+ * is not included `mHostAddress` is set to all zero (unspecified address). If the caller wants to resolve the host
+ * address it can call `otDnsClientResolveAddress()` with the host name to start an address resolution query.
  *
  * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated.
  * - If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned unless the query config for this query
