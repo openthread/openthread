@@ -999,104 +999,33 @@ public:
      */
     static uint8_t ControlByteFor(uint8_t aContextId) { return kCompressed | (aContextId & kContextIdMask); }
 
+    /**
+     * This static method indicates whether or not an address entry is using compressed format.
+     *
+     * @param[in] aControlByte  The control byte (the first byte in the entry).
+     *
+     * @retval TRUE   If the entry uses compressed format.
+     * @retval FALSE  If the entry uses uncompressed format.
+     *
+     */
+    static bool IsEntryCompressed(uint8_t aControlByte) { return (aControlByte & kCompressed); }
+
+    /**
+     * This static method gets the context ID in a compressed entry.
+     *
+     * @param[in] aControlByte  The control byte (the first byte in the entry).
+     *
+     * @returns The 6LoWPAN context ID.
+     *
+     */
+    static uint8_t GetContextId(uint8_t aControlByte) { return (aControlByte & kContextIdMask); }
+
     AddressRegistrationTlv(void) = delete;
 
 private:
     static constexpr uint8_t kCompressed    = 1 << 7;
     static constexpr uint8_t kContextIdMask = 0xf;
 };
-
-/**
- * This class implements Address Registration Entry generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class AddressRegistrationEntry
-{
-public:
-    /**
-     * This method returns the IPv6 address or IID length.
-     *
-     * @returns The IPv6 address length if the Compressed bit is clear, or the IID length if the Compressed bit is
-     *          set.
-     *
-     */
-    uint8_t GetLength(void) const { return sizeof(mControl) + (IsCompressed() ? sizeof(mIid) : sizeof(mIp6Address)); }
-
-    /**
-     * This method indicates whether or not the Compressed flag is set.
-     *
-     * @retval TRUE   If the Compressed flag is set.
-     * @retval FALSE  If the Compressed flag is not set.
-     *
-     */
-    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
-
-    /**
-     * This method sets the Uncompressed flag.
-     *
-     */
-    void SetUncompressed(void) { mControl = 0; }
-
-    /**
-     * This method returns the Context ID for the compressed form.
-     *
-     * @returns The Context ID value.
-     *
-     */
-    uint8_t GetContextId(void) const { return mControl & kCidMask; }
-
-    /**
-     * This method sets the Context ID value.
-     *
-     * @param[in]  aContextId  The Context ID value.
-     *
-     */
-    void SetContextId(uint8_t aContextId) { mControl = kCompressed | aContextId; }
-
-    /**
-     * This method returns the IID value.
-     *
-     * @returns The IID value.
-     *
-     */
-    const Ip6::InterfaceIdentifier &GetIid(void) const { return mIid; }
-
-    /**
-     * This method sets the IID value.
-     *
-     * @param[in]  aIid  The IID value.
-     *
-     */
-    void SetIid(const Ip6::InterfaceIdentifier &aIid) { mIid = aIid; }
-
-    /**
-     * This method returns the IPv6 Address value.
-     *
-     * @returns The IPv6 Address value.
-     *
-     */
-    const Ip6::Address &GetIp6Address(void) const { return mIp6Address; }
-
-    /**
-     * This method sets the IPv6 Address value.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 Address value.
-     *
-     */
-    void SetIp6Address(const Ip6::Address &aAddress) { mIp6Address = aAddress; }
-
-private:
-    static constexpr uint8_t kCompressed = 1 << 7;
-    static constexpr uint8_t kCidMask    = 0xf;
-
-    uint8_t mControl;
-    union
-    {
-        Ip6::InterfaceIdentifier mIid;
-        Ip6::Address             mIp6Address;
-    } OT_TOOL_PACKED_FIELD;
-} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Channel TLV generation and parsing.
