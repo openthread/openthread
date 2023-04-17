@@ -194,6 +194,77 @@ void TestIp4AddressFromString(void)
     }
 }
 
+struct CidrTestVector
+{
+    const char   *mString;
+    const uint8_t mAddr[sizeof(otIp4Address)];
+    const uint8_t mLength;
+    ot::Error     mError;
+};
+
+static void checkCidrFromString(CidrTestVector *aTestVector)
+{
+    ot::Error     error;
+    ot::Ip4::Cidr cidr;
+
+    cidr.Clear();
+
+    error = cidr.FromString(aTestVector->mString);
+
+    printf("%-42s -> %-42s\n", aTestVector->mString,
+           (error == ot::kErrorNone) ? cidr.ToString().AsCString() : "(parse error)");
+
+    VerifyOrQuit(error == aTestVector->mError, "Address::FromString returned unexpected error code");
+
+    if (error == ot::kErrorNone)
+    {
+        VerifyOrQuit(0 == memcmp(cidr.GetBytes(), aTestVector->mAddr, sizeof(aTestVector->mAddr)),
+                     "Cidr::FromString parsing failed");
+        VerifyOrQuit(cidr.mLength == aTestVector->mLength, "Cidr::FromString parsing failed");
+    }
+}
+
+void TestIp4CidrFromString(void)
+{
+    CidrTestVector testVectors[] = {
+        {"0.0.0.0/0", {0, 0, 0, 0}, 0, ot::kErrorNone},
+        {"255.255.255.255/32", {255, 255, 255, 255}, 32, ot::kErrorNone},
+        {"127.0.0.1/8", {127, 0, 0, 1}, 8, ot::kErrorNone},
+        {"1.2.3.4/24", {1, 2, 3, 4}, 24, ot::kErrorNone},
+        {"001.002.003.004/20", {1, 2, 3, 4}, 20, ot::kErrorNone},
+        {"00000127.000.000.000001/8", {127, 0, 0, 1}, 8, ot::kErrorNone},
+        // Valid suffix, invalid address
+        {"123.231.0.256/4", {0}, 0, ot::kErrorParse},    // Invalid byte value.
+        {"100123.231.0.256/4", {0}, 0, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33/4", {0}, 0, ot::kErrorParse},          // Too few bytes.
+        {"1.22.33.44.5/4", {0}, 0, ot::kErrorParse},     // Too many bytes.
+        {"a.b.c.d/4", {0}, 0, ot::kErrorParse},          // Wrong digit char.
+        {"123.23.45 .12/4", {0}, 0, ot::kErrorParse},    // Extra space.
+        {"./4", {0}, 0, ot::kErrorParse},                // Invalid.
+        // valid address, invalid suffix
+        {"1.2.3.4/33", {0}, 0, ot::kErrorParse},       // Prefix length too large
+        {"1.2.3.4/12345678", {0}, 0, ot::kErrorParse}, // Prefix length too large?
+        {"1.2.3.4/-1", {0}, 0, ot::kErrorParse},       // Not even a non-negative integer.
+        {"1.2.3.4/3.14", {0}, 0, ot::kErrorParse},     // Not even a integer.
+        {"1.2.3.4/abcd", {0}, 0, ot::kErrorParse},     // Not even a number.
+        {"1.2.3.4/", {0}, 0, ot::kErrorParse},         // Where is the suffix?
+        {"1.2.3.4", {0}, 0, ot::kErrorParse},          // Where is the suffix?
+        // invalid address and invalid suffix
+        {"123.231.0.256/41", {0}, 0, ot::kErrorParse},     // Invalid byte value.
+        {"100123.231.0.256/abc", {0}, 0, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33", {0}, 0, ot::kErrorParse},              // Too few bytes.
+        {"1.22.33.44.5/36", {0}, 0, ot::kErrorParse},      // Too many bytes.
+        {"a.b.c.d/99", {0}, 0, ot::kErrorParse},           // Wrong digit char.
+        {"123.23.45 .12", {0}, 0, ot::kErrorParse},        // Extra space.
+        {".", {0}, 0, ot::kErrorParse},                    // Invalid.
+    };
+
+    for (CidrTestVector &testVector : testVectors)
+    {
+        checkCidrFromString(&testVector);
+    }
+}
+
 bool CheckPrefix(const ot::Ip6::Address &aAddress, const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
     // Check the first aPrefixLength bits of aAddress to match the given aPrefix.
@@ -583,6 +654,7 @@ int main(void)
     TestIp6Prefix();
     TestIp4Ip6Translation();
     TestIp4Cidr();
+    TestIp4CidrFromString();
     printf("All tests passed\n");
     return 0;
 }

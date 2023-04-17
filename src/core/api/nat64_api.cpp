@@ -166,6 +166,8 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
     AsCoreType(aAddress).ToString(aBuffer, aSize);
 }
 
+otError otIp4CidrFromString(const char *aString, otIp4Cidr *aCidr) { return AsCoreType(aCidr).FromString(aString); }
+
 void otIp4CidrToString(const otIp4Cidr *aCidr, char *aBuffer, uint16_t aSize)
 {
     AssertPointerIsNotNull(aBuffer);

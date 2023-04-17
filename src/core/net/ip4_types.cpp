@@ -37,10 +37,9 @@
 namespace ot {
 namespace Ip4 {
 
-Error Address::FromString(const char *aString)
+Error Address::FromString(const char *aString, char aTerminatorChar)
 {
     constexpr char kSeparatorChar = '.';
-    constexpr char kNullChar      = '\0';
 
     Error error = kErrorParse;
 
@@ -74,7 +73,7 @@ Error Address::FromString(const char *aString)
         aString++;
     }
 
-    VerifyOrExit(*aString == kNullChar);
+    VerifyOrExit(*aString == aTerminatorChar);
     error = kErrorNone;
 
 exit:
@@ -146,6 +145,46 @@ Address::InfoString Address::ToString(void) const
     ToString(string);
 
     return string;
+}
+
+Error Cidr::FromString(const char *aString)
+{
+    constexpr char     kSlashChar     = '/';
+    constexpr uint16_t kMaxCidrLength = 32;
+
+    Error error = kErrorParse;
+
+    SuccessOrExit(AsCoreType(&mAddress).FromString(aString, kSlashChar));
+
+    aString = StringFind(aString, kSlashChar);
+    VerifyOrExit(aString != nullptr);
+    aString++;
+
+    {
+        uint8_t  hasFirstDigit = false;
+        uint16_t value         = 0;
+
+        for (char digitChar = *aString;; ++aString, digitChar = *aString)
+        {
+            if ((digitChar < '0') || (digitChar > '9'))
+            {
+                break;
+            }
+
+            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
+            VerifyOrExit(value <= kMaxCidrLength);
+            hasFirstDigit = true;
+        }
+
+        VerifyOrExit(*aString == kNullChar);
+        VerifyOrExit(hasFirstDigit);
+        mLength = static_cast<uint8_t>(value);
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
 }
 
 void Cidr::ToString(StringWriter &aWriter) const
