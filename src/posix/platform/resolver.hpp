@@ -90,6 +90,9 @@ public:
     void Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet);
 
 private:
+    static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
+    static constexpr uint64_t kDnsServerListCacheTimeoutMs     = 10 * 60 * 1000; // 10 minutes
+
     struct Transaction
     {
         otPlatDnsUpstreamQuery *mThreadTxn;
@@ -103,10 +106,12 @@ private:
     void ForwardResponse(Transaction *aTxn);
     void CloseTransaction(Transaction *aTxn);
     void FinishTransaction(int aFd);
+    void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
     int       mUpstreamDnsServerCount = 0;
     in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
+    uint64_t  mUpstreamDnsServerListFreshness = 0;
 
     Transaction mUpstreamTransaction[kMaxUpstreamTransactionCount];
 };
