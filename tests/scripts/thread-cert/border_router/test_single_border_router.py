@@ -177,8 +177,6 @@ class SingleBorderRouter(thread_cert.TestCase):
         # The same local OMR and on-link prefix should be re-register.
         self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
         self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
-        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -231,8 +229,6 @@ class SingleBorderRouter(thread_cert.TestCase):
         # The same local OMR and on-link prefix should be re-registered.
         self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
         self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
-        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -285,8 +281,6 @@ class SingleBorderRouter(thread_cert.TestCase):
         # The same local OMR and on-link prefix should be re-registered.
         self.assertEqual(br.get_netdata_omr_prefixes(), [omr_prefix])
         self.assertEqual(router.get_netdata_omr_prefixes(), [omr_prefix])
-        self.assertEqual(br.get_netdata_non_nat64_prefixes(), [on_link_prefix])
-        self.assertEqual(router.get_netdata_non_nat64_prefixes(), [on_link_prefix])
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -320,8 +314,8 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.start_radvd_service(prefix=config.ONLINK_GUA_PREFIX, slaac=True)
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_GUA)[0]))
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
