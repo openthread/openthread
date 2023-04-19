@@ -100,8 +100,6 @@ static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
     , Output(aInstance, *this)
-    , mUserCommands(nullptr)
-    , mUserCommandsLength(0)
     , mCommandIsPending(false)
     , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -295,15 +293,19 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    for (uint8_t i = 0; i < mUserCommandsLength; i++)
+    for (const otCliCommandList &cmdList : mUserCommands)
     {
-        if (aArgs[0] == mUserCommands[i].mName)
+        for (uint8_t i = 0; i < cmdList.mCommandsLength; i++)
         {
-            char *args[kMaxArgs];
+            const otCliCommand *cmd = cmdList.mCommands + i;
+            if (aArgs[0] == cmd->mName)
+            {
+                char *args[kMaxArgs];
 
-            Arg::CopyArgsToStringArray(aArgs, args);
-            error = mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            break;
+                Arg::CopyArgsToStringArray(aArgs, args);
+                error = cmd->mCommand(cmdList.mContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
+                break;
+            }
         }
     }
 
@@ -312,9 +314,20 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
 
 void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
 {
-    mUserCommands        = aCommands;
-    mUserCommandsLength  = aLength;
-    mUserCommandsContext = aContext;
+    otCliCommandList *cmdList = AllocateCommandList();
+    if (cmdList == nullptr)
+    {
+        OutputLine("Not enough entries configured to register user commands");
+        ExitNow();
+    }
+    else
+    {
+        cmdList->Set(aCommands, aLength, aContext);
+        mUserCommands.Push(*cmdList);
+    }
+
+exit:
+    return;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8507,9 +8520,13 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     {
         OutputCommandTable(kCommands);
 
-        for (uint8_t i = 0; i < mUserCommandsLength; i++)
+        for (const otCliCommandList &cmdList : mUserCommands)
         {
-            OutputLine("%s", mUserCommands[i].mName);
+            for (uint8_t i = 0; i < cmdList.mCommandsLength; i++)
+            {
+                const otCliCommand *cmd = cmdList.mCommands + i;
+                OutputLine("%s", cmd->mName);
+            }
         }
     }
     else

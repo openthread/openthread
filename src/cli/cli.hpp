@@ -79,6 +79,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/linked_list.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {
@@ -265,10 +266,11 @@ protected:
 private:
     enum
     {
-        kIndentSize       = 4,
-        kMaxArgs          = 32,
-        kMaxAutoAddresses = 8,
-        kMaxLineLength    = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kIndentSize            = 4,
+        kMaxArgs               = 32,
+        kMaxAutoAddresses      = 8,
+        kMaxLineLength         = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kMaxUserCommandEntries = OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES,
     };
 
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
@@ -531,10 +533,31 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    const otCliCommand *mUserCommands;
-    uint8_t             mUserCommandsLength;
-    void               *mUserCommandsContext;
-    bool                mCommandIsPending;
+    class otCliCommandList : public LinkedListEntry<otCliCommandList>
+    {
+        friend class LinkedListEntry<otCliCommandList>;
+
+    public:
+        void Set(const otCliCommand *aCmdList, uint8_t aLength, void *aContext)
+        {
+            mCommands       = aCmdList;
+            mCommandsLength = aLength;
+            mContext        = aContext;
+        }
+
+        const otCliCommand *mCommands;
+        uint8_t             mCommandsLength;
+        void               *mContext;
+
+    private:
+        otCliCommandList *mNext;
+    };
+
+    otCliCommandList *AllocateCommandList(void) { return mCommandListPool.Allocate(); }
+
+    LinkedList<otCliCommandList>                   mUserCommands;
+    Pool<otCliCommandList, kMaxUserCommandEntries> mCommandListPool;
+    bool                                           mCommandIsPending;
 
     TimerMilliContext mTimer;
 
