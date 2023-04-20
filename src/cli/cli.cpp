@@ -293,17 +293,16 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    for (const otCliCommandList &cmdList : mUserCommands)
+    for (const UserCommandsEntry &entry : mUserCommands)
     {
-        for (uint8_t i = 0; i < cmdList.mCommandsLength; i++)
+        for (uint8_t i = 0; i < entry.mLength; i++)
         {
-            const otCliCommand *cmd = cmdList.mCommands + i;
-            if (aArgs[0] == cmd->mName)
+            if (aArgs[0] == entry.mCommands[i].mName)
             {
                 char *args[kMaxArgs];
 
                 Arg::CopyArgsToStringArray(aArgs, args);
-                error = cmd->mCommand(cmdList.mContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
+                error = entry.mCommands[i].mCommand(entry.mContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
                 break;
             }
         }
@@ -312,22 +311,24 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
     return error;
 }
 
-void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
+otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
 {
-    otCliCommandList *cmdList = AllocateCommandList();
-    if (cmdList == nullptr)
+    otError error = OT_ERROR_FAILED;
+
+    for (UserCommandsEntry &entry : mUserCommands)
     {
-        OutputLine("Not enough entries configured to register user commands");
-        ExitNow();
-    }
-    else
-    {
-        cmdList->Set(aCommands, aLength, aContext);
-        mUserCommands.Push(*cmdList);
+        if (entry.mCommands == nullptr)
+        {
+            entry.mCommands = aCommands;
+            entry.mLength   = aLength;
+            entry.mContext  = aContext;
+
+            error = OT_ERROR_NONE;
+            break;
+        }
     }
 
-exit:
-    return;
+    return error;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8520,12 +8521,11 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     {
         OutputCommandTable(kCommands);
 
-        for (const otCliCommandList &cmdList : mUserCommands)
+        for (const UserCommandsEntry &entry : mUserCommands)
         {
-            for (uint8_t i = 0; i < cmdList.mCommandsLength; i++)
+            for (uint8_t i = 0; i < entry.mLength; i++)
             {
-                const otCliCommand *cmd = cmdList.mCommands + i;
-                OutputLine("%s", cmd->mName);
+                OutputLine("%s", entry.mCommands[i].mName);
             }
         }
     }
@@ -8544,9 +8544,9 @@ extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, 
 
 extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
 
-extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
+extern "C" otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
-    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
+    return Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)

@@ -76,10 +76,10 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/linked_list.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {
@@ -181,14 +181,16 @@ public:
     static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
 
     /**
-     * This method sets the user command table.
+     * This method adds commands to the user command table.
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
      * @param[in]  aContext   @p aUserCommands length.
      *
+     * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aCommands.
+     * @retval OT_ERROR_FAILED  No available UserCommandsEntry to register requested user commands.
      */
-    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
+    otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
     static constexpr uint8_t kLinkModeStringSize = sizeof("rdn"); ///< Size of string buffer for a MLE Link Mode.
 
@@ -533,31 +535,15 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    class otCliCommandList : public LinkedListEntry<otCliCommandList>
+    struct UserCommandsEntry
     {
-        friend class LinkedListEntry<otCliCommandList>;
-
-    public:
-        void Set(const otCliCommand *aCmdList, uint8_t aLength, void *aContext)
-        {
-            mCommands       = aCmdList;
-            mCommandsLength = aLength;
-            mContext        = aContext;
-        }
-
         const otCliCommand *mCommands;
-        uint8_t             mCommandsLength;
+        uint8_t             mLength;
         void               *mContext;
-
-    private:
-        otCliCommandList *mNext;
     };
 
-    otCliCommandList *AllocateCommandList(void) { return mCommandListPool.Allocate(); }
-
-    LinkedList<otCliCommandList>                   mUserCommands;
-    Pool<otCliCommandList, kMaxUserCommandEntries> mCommandListPool;
-    bool                                           mCommandIsPending;
+    UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
+    bool              mCommandIsPending;
 
     TimerMilliContext mTimer;
 

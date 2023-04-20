@@ -126,7 +126,7 @@ pseudo_reset:
     otAppCliInit(instance);
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
+    IgnoreError(otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance));
 #endif
 
     while (!otSysPseudoResetWasRequested())
