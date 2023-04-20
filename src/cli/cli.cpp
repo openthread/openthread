@@ -155,7 +155,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 
 void Interpreter::OutputResult(otError aError)
 {
-    OT_ASSERT(mCommandIsPending);
+    VerifyOrExit(mCommandIsPending);
 
     VerifyOrExit(aError != OT_ERROR_PENDING);
 
