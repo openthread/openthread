@@ -285,7 +285,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 
     if (!ShouldHandleTransmitSecurity() && aFrame != nullptr && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
     {
-        SignalFrameCounterUsed(aFrame->mInfo.mRxInfo.mAckFrameCounter);
+        SignalFrameCounterUsed(aFrame->mInfo.mRxInfo.mAckFrameCounter, aFrame->mInfo.mRxInfo.mAckKeyId);
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -390,7 +390,7 @@ void SubMac::ProcessTransmitSecurity(void)
         uint32_t frameCounter = GetFrameCounter();
 
         mTransmitFrame.SetFrameCounter(frameCounter);
-        SignalFrameCounterUsed(frameCounter);
+        SignalFrameCounterUsed(frameCounter, mKeyId);
     }
 
     extAddress = &GetExtAddress();
@@ -642,6 +642,7 @@ exit:
 void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 {
     uint8_t  keyIdMode;
+    uint8_t  keyId;
     uint32_t frameCounter;
     bool     allowError = false;
 
@@ -666,7 +667,9 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
     VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
-    SignalFrameCounterUsed(frameCounter);
+    VerifyOrExit(aFrame.GetKeyId(keyId) == kErrorNone, OT_ASSERT(allowError));
+
+    SignalFrameCounterUsed(frameCounter, keyId);
 
 exit:
     return;
@@ -961,8 +964,10 @@ exit:
     return;
 }
 
-void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter)
+void SubMac::SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId)
 {
+    VerifyOrExit(aKeyId == mKeyId);
+
     mCallbacks.FrameCounterUsed(aFrameCounter);
 
     // It not always guaranteed that this method is invoked in order
