@@ -604,7 +604,7 @@ private:
     bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
-    void SignalFrameCounterUsed(uint32_t aFrameCounter);
+    void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
     void StartCsmaBackoff(void);
     void StartTimerForBackoff(uint8_t aBackoffExponent);
     void BeginTransmit(void);
