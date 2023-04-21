@@ -1450,7 +1450,7 @@ void Client::HandleTimer(void)
                 if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
                 {
                     FinalizeQuery(*query, kErrorResponseTimeout);
-                    continue;
+                    break;
                 }
 
                 IgnoreError(SendQuery(*query, info, /* aUpdateTimer */ false));
