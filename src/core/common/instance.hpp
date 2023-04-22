@@ -563,8 +563,12 @@ private:
     TimeSync mTimeSync;
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    LinkMetrics::LinkMetrics mLinkMetrics;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    LinkMetrics::LinkMetricsInitiator mLinkMetricsInitiator;
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    LinkMetrics::LinkMetricsSubject mLinkMetricsSubject;
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -930,8 +934,12 @@ template <> inline MlrManager &Instance::Get(void) { return mMlrManager; }
 template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-template <> inline LinkMetrics::LinkMetrics &Instance::Get(void) { return mLinkMetrics; }
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+template <> inline LinkMetrics::LinkMetricsInitiator &Instance::Get(void) { return mLinkMetricsInitiator; }
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+template <> inline LinkMetrics::LinkMetricsSubject &Instance::Get(void) { return mLinkMetricsSubject; }
 #endif
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

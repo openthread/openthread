@@ -3167,7 +3167,8 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
             OT_ASSERT(aRequestMessage != nullptr);
             neighbor = mNeighborTable.FindNeighbor(aDestination);
             VerifyOrExit(neighbor != nullptr, error = kErrorInvalidState);
-            SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().AppendReport(*message, *aRequestMessage, *neighbor));
+            SuccessOrExit(
+                error = Get<LinkMetrics::LinkMetricsSubject>().AppendReport(*message, *aRequestMessage, *neighbor));
             break;
 #endif
         }
