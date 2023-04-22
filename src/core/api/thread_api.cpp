@@ -436,12 +436,14 @@ const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 
 void otThreadResetMleCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters(); }
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 void otThreadRegisterParentResponseCallback(otInstance                    *aInstance,
                                             otThreadParentResponseCallback aCallback,
                                             void                          *aContext)
 {
     AsCoreType(aInstance).Get<Mle::MleRouter>().RegisterParentResponseStatsCallback(aCallback, aContext);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 otError otThreadLocateAnycastDestination(otInstance                    *aInstance,

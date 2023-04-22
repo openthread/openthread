@@ -3153,7 +3153,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
     cslAccuracy.Init();
 #endif
 
-    // Share data with application, if requested.
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     if (mParentResponseCallback.IsSet())
     {
         otThreadParentResponseInfo parentinfo;
@@ -3169,6 +3169,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
         mParentResponseCallback.Invoke(&parentinfo);
     }
+#endif
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
 

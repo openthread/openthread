@@ -624,6 +624,7 @@ public:
      */
     void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     /**
      * This function registers the client callback that is called when processing an MLE Parent Response message.
      *
@@ -635,6 +636,7 @@ public:
     {
         mParentResponseCallback.Set(aCallback, aContext);
     }
+#endif
 
     /**
      * This method requests MLE layer to prepare and send a shorter version of Child ID Request message by only
@@ -2135,7 +2137,9 @@ private:
     DetachGracefullyTimer                mDetachGracefullyTimer;
     Callback<otDetachGracefullyCallback> mDetachGracefullyCallback;
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     Callback<otThreadParentResponseCallback> mParentResponseCallback;
+#endif
 };
 
 } // namespace Mle

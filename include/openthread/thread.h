@@ -922,6 +922,8 @@ void otThreadResetMleCounters(otInstance *aInstance);
 /**
  * This function pointer is called every time an MLE Parent Response message is received.
  *
+ * This is used in `otThreadRegisterParentResponseCallback()`.
+ *
  * @param[in]  aInfo     A pointer to a location on stack holding the stats data.
  * @param[in]  aContext  A pointer to callback client-specific context.
  *
@@ -930,6 +932,8 @@ typedef void (*otThreadParentResponseCallback)(otThreadParentResponseInfo *aInfo
 
 /**
  * This function registers a callback to receive MLE Parent Response data.
+ *
+ * This function requires `OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE`.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called upon receiving an MLE Parent Response message.
