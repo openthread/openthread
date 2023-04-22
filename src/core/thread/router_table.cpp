@@ -216,7 +216,7 @@ Error RouterTable::Release(uint8_t aRouterId)
     mRouterIdSequence++;
     mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
 
-    Get<AddressResolver>().Remove(aRouterId);
+    Get<AddressResolver>().RemoveEntriesForRouterId(aRouterId);
     Get<NetworkData::Leader>().RemoveBorderRouter(Mle::Rloc16FromRouterId(aRouterId),
                                                   NetworkData::Leader::kMatchModeRouterId);
     Get<Mle::MleRouter>().ResetAdvertiseInterval();
@@ -255,7 +255,7 @@ void RouterTable::RemoveRouterLink(Router &aRouter)
         Get<Mle::MleRouter>().ResetAdvertiseInterval();
 
         // Clear all EID-to-RLOC entries associated with the router.
-        Get<AddressResolver>().Remove(aRouter.GetRouterId());
+        Get<AddressResolver>().RemoveEntriesForRouterId(aRouter.GetRouterId());
     }
 }
 

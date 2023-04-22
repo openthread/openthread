@@ -163,12 +163,12 @@ exit:
     return error;
 }
 
-void AddressResolver::Remove(uint8_t aRouterId)
+void AddressResolver::RemoveEntriesForRouterId(uint8_t aRouterId)
 {
     Remove(Mle::Rloc16FromRouterId(aRouterId), /* aMatchRouterId */ true);
 }
 
-void AddressResolver::Remove(uint16_t aRloc16) { Remove(aRloc16, /* aMatchRouterId */ false); }
+void AddressResolver::RemoveEntriesForRloc16(uint16_t aRloc16) { Remove(aRloc16, /* aMatchRouterId */ false); }
 
 AddressResolver::CacheEntry *AddressResolver::GetEntryAfter(CacheEntry *aPrev, CacheEntryList &aList)
 {
@@ -221,7 +221,7 @@ exit:
     return entry;
 }
 
-void AddressResolver::Remove(const Ip6::Address &aEid) { Remove(aEid, kReasonRemovingEid); }
+void AddressResolver::RemoveEntryForAddress(const Ip6::Address &aEid) { Remove(aEid, kReasonRemovingEid); }
 
 void AddressResolver::Remove(const Ip6::Address &aEid, Reason aReason)
 {
@@ -237,6 +237,22 @@ void AddressResolver::Remove(const Ip6::Address &aEid, Reason aReason)
 
 exit:
     return;
+}
+
+void AddressResolver::ReplaceEntriesForRloc16(uint16_t aOldRloc16, uint16_t aNewRloc16)
+{
+    CacheEntryList *lists[] = {&mCachedList, &mSnoopedList};
+
+    for (CacheEntryList *list : lists)
+    {
+        for (CacheEntry &entry : *list)
+        {
+            if (entry.GetRloc16() == aOldRloc16)
+            {
+                entry.SetRloc16(aNewRloc16);
+            }
+        }
+    }
 }
 
 AddressResolver::CacheEntry *AddressResolver::NewCacheEntry(bool aSnoopedEntry)

@@ -1316,6 +1316,10 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
                                          DeviceMode::kModeFullNetworkData));
 
         mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
+
+        // Change the cache entries associated with the former child
+        // from using the old RLOC16 to its new RLOC16.
+        Get<AddressResolver>().ReplaceEntriesForRloc16(aRxInfo.mNeighbor->GetRloc16(), router->GetRloc16());
     }
 
     // Send unicast link request if no link to router and no unicast/multicast link request in progress
@@ -1955,7 +1959,7 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         }
 
         // Clear EID-to-RLOC cache for the unicast address registered by the child.
-        Get<AddressResolver>().Remove(address);
+        Get<AddressResolver>().RemoveEntryForAddress(address);
     }
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // Dua is removed
@@ -3254,7 +3258,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
         if (aNeighbor.IsFullThreadDevice())
         {
             // Clear all EID-to-RLOC entries associated with the child.
-            Get<AddressResolver>().Remove(aNeighbor.GetRloc16());
+            Get<AddressResolver>().RemoveEntriesForRloc16(aNeighbor.GetRloc16());
         }
 
         mChildTable.RemoveStoredChild(static_cast<Child &>(aNeighbor));
@@ -3674,6 +3678,21 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
     message = nullptr;
 
     Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
+
+    // If assigning a new RLOC16 (e.g., on promotion of a child to
+    // router role) we clear any address cache entries associated
+    // with the old RLOC16.
+
+    if ((aResponseStatus == ThreadStatusTlv::kSuccess) && (aRouter != nullptr))
+    {
+        uint16_t oldRloc16;
+
+        VerifyOrExit(IsRoutingLocator(aMessageInfo.GetPeerAddr()));
+        oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
+
+        VerifyOrExit(oldRloc16 != aRouter->GetRloc16());
+        Get<AddressResolver>().RemoveEntriesForRloc16(oldRloc16);
+    }
 
 exit:
     FreeMessage(message);
