@@ -558,7 +558,7 @@ public:
     void DestroyTemporaryKeys(void);
 
     /**
-     * This method deletes all the persistent keys stored in PSA ITS.
+     * This method destroys all the persistent keys stored in PSA ITS.
      *
      */
     void DestroyPersistentKeys(void);

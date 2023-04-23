@@ -633,9 +633,7 @@ void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 void KeyManager::DestroyTemporaryKeys(void)
 {
     mMleKey.Clear();
