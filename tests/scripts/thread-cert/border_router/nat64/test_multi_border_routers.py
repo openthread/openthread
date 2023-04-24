@@ -49,6 +49,8 @@ ROUTER = 2
 BR2 = 3
 HOST = 4
 
+OMR_PREFIX = "2000:0:1111:4444::/64"
+
 NAT64_PREFIX_REFRESH_DELAY = 305
 
 NAT64_STATE_DISABLED = 'disabled'
@@ -118,9 +120,15 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('router', br2.get_state())
 
+        br2.add_prefix(OMR_PREFIX)
+        br2.register_netdata()
+        self.simulator.go(10)
+
         self.simulator.go(10)
         self.assertNotEqual(br1.get_br_favored_nat64_prefix(), br2.get_br_favored_nat64_prefix())
         br1_local_nat64_prefix = br1.get_br_nat64_prefix()
+        br2_local_nat64_prefix = br2.get_br_nat64_prefix()
+        self.assertNotEqual(br2_local_nat64_prefix, br2.get_br_favored_nat64_prefix())
         br2_infra_nat64_prefix = br2.get_br_favored_nat64_prefix()
 
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
@@ -164,8 +172,7 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         br2.nat64_set_enabled(True)
 
         self.simulator.go(10)
-        self.assertNotEqual(br2_infra_nat64_prefix, br2.get_br_favored_nat64_prefix())
-        br2_local_nat64_prefix = br2.get_br_nat64_prefix()
+        self.assertEqual(br2_local_nat64_prefix, br2.get_br_favored_nat64_prefix())
 
         self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
         nat64_prefix = br1.get_netdata_nat64_prefix()[0]

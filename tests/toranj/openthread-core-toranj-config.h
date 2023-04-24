@@ -76,6 +76,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+ *
+ * Define to 1 to enable NAT64 support in Border Routing Manager.
+ *
+ */
+#define OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
  *
  * Define as 1 to enable IPv6 Border Routing counters.
