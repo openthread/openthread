@@ -31,7 +31,7 @@ import queue
 import re
 import threading
 import time
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Any, Callable, Optional, Union, List, Pattern
 
 from .connectors import OtCliHandler
@@ -39,7 +39,7 @@ from .errors import ExpectLineTimeoutError, CommandError
 from .utils import match_line
 
 
-class OTCommandHandler:
+class OTCommandHandler(ABC):
     """This abstract class defines interfaces of a OT Command Handler."""
 
     @abstractmethod
@@ -50,12 +50,10 @@ class OTCommandHandler:
         Note: each line SHOULD NOT contain '\r\n' at the end. The last line of output should be 'Done' or
         'Error <code>: <msg>' following OT CLI conventions.
         """
-        pass
 
     @abstractmethod
     def close(self):
         """Method close should close the OT Command Handler."""
-        pass
 
     @abstractmethod
     def wait(self, duration: float) -> List[str]:
@@ -64,7 +62,6 @@ class OTCommandHandler:
         Normally, OT CLI does not output when it's not executing any command. But OT CLI can also output
         asynchronously in some cases (e.g. `Join Success` when Joiner joins successfully).
         """
-        pass
 
     @abstractmethod
     def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
@@ -85,7 +82,7 @@ class OtCliCommandRunner(OTCommandHandler):
         r'(Done|Error|Error \d+:.*|.*: command not found)$')  # "Error" for spinel-cli.py
 
     __PATTERN_LOG_LINE = re.compile(r'((\[(NONE|CRIT|WARN|NOTE|INFO|DEBG)\])'
-                                    r'|(-.*-+: )'  # e.g. -CLI-----: 
+                                    r'|(-.*-+: )'  # e.g. -CLI-----:
                                     r'|(\[[DINWC\-]\] (?=[\w\-]{14}:)\w+-*:)'  # e.g. [I] Mac-----------:
                                     r')')
     """regex used to filter logs"""
@@ -240,7 +237,9 @@ class OtbrSshCommandRunner(OTCommandHandler):
                                look_for_keys=False)
         except paramiko.ssh_exception.AuthenticationException:
             if not password:
-                self.__ssh.get_transport().auth_none(username)
+                transport = self.__ssh.get_transport()
+                assert transport is not None
+                transport.auth_none(username)
             else:
                 raise
 

@@ -68,6 +68,10 @@ jobs:
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+        python3 -m pip install pytype adb-shell
+    - name: Style check
+      run: |
+        PYTHONPATH=./tests/scripts/thread-cert pytype tools/otci
     - name: Build
       run: |
         ./bootstrap
