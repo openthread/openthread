@@ -27,16 +27,19 @@
 #
 
 set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
-       CACHE STRING "vendor interface implementation")
+    CACHE STRING "vendor interface implementation")
 
-if(OT_POSIX_CONFIG_RCP_BUS MATCHES "VENDOR")
+set(OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE "" CACHE STRING
+    "name of optional external package to link to rcp vendor implementation")
+
+if(OT_POSIX_CONFIG_RCP_BUS STREQUAL "VENDOR")
     add_library(rcp-vendor-intf ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE})
 
     target_link_libraries(rcp-vendor-intf PUBLIC ot-posix-config)
 
     target_include_directories(rcp-vendor-intf
         PUBLIC
-	    ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}
         PRIVATE
             ${PROJECT_SOURCE_DIR}/include
             ${PROJECT_SOURCE_DIR}/src
@@ -46,11 +49,12 @@ if(OT_POSIX_CONFIG_RCP_BUS MATCHES "VENDOR")
 
     target_link_libraries(openthread-posix PUBLIC rcp-vendor-intf)
 
-    find_package(RcpVendorDeps)
-    if(RcpVendorDeps_FOUND)
-	    target_link_libraries(rcp-vendor-intf PUBLIC RcpVendorDeps::RcpVendorDeps)
-    else()
-        message(WARNING "Vendor RCP Bus specified but dependency package was not found... \n"
-                "Continuing build with ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE}")
+    if (OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE)
+        set(DEPS_TARGET ${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE}::${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
+        find_package(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
+
+        if(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE}_FOUND)
+            target_link_libraries(rcp-vendor-intf PUBLIC ${DEPS_TARGET})
+        endif()
     endif()
 endif()
