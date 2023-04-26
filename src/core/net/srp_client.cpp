@@ -835,7 +835,12 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
 
     info.Clear();
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    info.mKeyRef.SetKeyRef(kSrpEcdsaKeyRef);
+    SuccessOrExit(error = ReadOrGenerateKey(info.mKeyRef));
+#else
     SuccessOrExit(error = ReadOrGenerateKey(info.mKeyPair));
+#endif
 
     // Generate random Message ID and ensure it is different from last one
     do
@@ -885,6 +890,34 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef)
+{
+    Error                        error = kErrorNone;
+    Crypto::Ecdsa::P256::KeyPair keyPair;
+
+    VerifyOrExit(!Crypto::Storage::HasKey(aKeyRef.GetKeyRef()));
+    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(keyPair);
+
+    if (error == kErrorNone)
+    {
+        Crypto::Ecdsa::P256::PublicKey publicKey;
+
+        if (keyPair.GetPublicKey(publicKey) == kErrorNone)
+        {
+            SuccessOrExit(error = aKeyRef.ImportKeyPair(keyPair));
+            IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
+            ExitNow();
+        }
+        IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
+    }
+
+    error = aKeyRef.Generate();
+
+exit:
+    return error;
+}
+#else
 Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
     Error error;
@@ -907,6 +940,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 exit:
     return error;
 }
+#endif //  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 Error Client::AppendServiceInstructions(Message &aMessage, Info &aInfo)
 {
@@ -1281,7 +1315,11 @@ Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
     key.SetAlgorithm(Dns::KeyRecord::kAlgorithmEcdsaP256Sha256);
     key.SetLength(sizeof(Dns::KeyRecord) - sizeof(Dns::ResourceRecord) + sizeof(Crypto::Ecdsa::P256::PublicKey));
     SuccessOrExit(error = aMessage.Append(key));
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    SuccessOrExit(error = aInfo.mKeyRef.GetPublicKey(publicKey));
+#else
     SuccessOrExit(error = aInfo.mKeyPair.GetPublicKey(publicKey));
+#endif
     SuccessOrExit(error = aMessage.Append(publicKey));
     aInfo.mRecordCount++;
 
@@ -1418,7 +1456,11 @@ Error Client::AppendSignature(Message &aMessage, Info &aInfo)
     sha256.Update(aMessage, 0, offset);
 
     sha256.Finish(hash);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    SuccessOrExit(error = aInfo.mKeyRef.Sign(hash, signature));
+#else
     SuccessOrExit(error = aInfo.mKeyPair.Sign(hash, signature));
+#endif
 
     // Move back in message and append SIG RR now with compressed host
     // name (as signer's name) along with the calculated signature.

@@ -794,6 +794,10 @@ private:
     // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
     static constexpr uint8_t kFastPollsAfterUpdateTx = 11;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static constexpr uint32_t kSrpEcdsaKeyRef = Crypto::Storage::kEcdsaRef;
+#endif
+
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
     static constexpr uint8_t kMaxTimeoutFailuresToSwitchServer =
         OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER;
@@ -981,29 +985,37 @@ private:
     {
         static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
 
-        uint16_t                     mDomainNameOffset; // Offset of domain name serialization
-        uint16_t                     mHostNameOffset;   // Offset of host name serialization.
-        uint16_t                     mRecordCount;      // Number of resource records in Update section.
-        Crypto::Ecdsa::P256::KeyPair mKeyPair;          // The ECDSA key pair.
+        uint16_t mDomainNameOffset; // Offset of domain name serialization
+        uint16_t mHostNameOffset;   // Offset of host name serialization.
+        uint16_t mRecordCount;      // Number of resource records in Update section.
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        Crypto::Ecdsa::P256::KeyPairAsRef mKeyRef; // The ECDSA key ref for key-pair.
+#else
+        Crypto::Ecdsa::P256::KeyPair mKeyPair; // The ECDSA key pair.
+#endif
     };
 
-    Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void         Stop(Requester aRequester, StopMode aMode);
-    void         Resume(void);
-    void         Pause(void);
-    void         HandleNotifierEvents(Events aEvents);
-    void         HandleRoleChanged(void);
-    Error        UpdateHostInfoStateOnAddressChange(void);
-    void         UpdateServiceStateToRemove(Service &aService);
-    State        GetState(void) const { return mState; }
-    void         SetState(State aState);
-    void         ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
-    void         InvokeCallback(Error aError) const;
-    void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
-    void         HandleHostInfoOrServiceChange(void);
-    void         SendUpdate(void);
-    Error        PrepareUpdateMessage(Message &aMessage);
-    Error        ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
+    Error Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    void  Stop(Requester aRequester, StopMode aMode);
+    void  Resume(void);
+    void  Pause(void);
+    void  HandleNotifierEvents(Events aEvents);
+    void  HandleRoleChanged(void);
+    Error UpdateHostInfoStateOnAddressChange(void);
+    void  UpdateServiceStateToRemove(Service &aService);
+    State GetState(void) const { return mState; }
+    void  SetState(State aState);
+    void  ChangeHostAndServiceStates(const ItemState *aNewStates, ServiceStateChangeMode aMode);
+    void  InvokeCallback(Error aError) const;
+    void  InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
+    void  HandleHostInfoOrServiceChange(void);
+    void  SendUpdate(void);
+    Error PrepareUpdateMessage(Message &aMessage);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef);
+#else
+    Error ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
+#endif
     Error        AppendServiceInstructions(Message &aMessage, Info &aInfo);
     bool         CanAppendService(const Service &aService);
     Error        AppendServiceInstruction(Service &aService, Message &aMessage, Info &aInfo);

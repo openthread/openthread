@@ -587,6 +587,12 @@ public:
      */
     bool IsEnabled(void) const { return mEnabled; }
 
+    /**
+     * This method clears the Mode2Key stored in PSA ITS.
+     *
+     */
+    void ClearMode2Key(void) { mMode2KeyMaterial.Clear(); }
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method gets the CSL channel.

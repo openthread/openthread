@@ -345,6 +345,10 @@ void Instance::Finalize(void)
     IgnoreError(otIp6SetEnabled(this, false));
     IgnoreError(otLinkSetEnabled(this, false));
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Get<KeyManager>().DestroyTemporaryKeys();
+#endif
+
     Get<Settings>().Deinit();
 #endif
 
@@ -369,6 +373,10 @@ exit:
 void Instance::FactoryReset(void)
 {
     Get<Settings>().Wipe();
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Get<KeyManager>().DestroyTemporaryKeys();
+    Get<KeyManager>().DestroyPersistentKeys();
+#endif
     otPlatReset(this);
 }
 
@@ -378,6 +386,10 @@ Error Instance::ErasePersistentInfo(void)
 
     VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
     Get<Settings>().Wipe();
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    Get<KeyManager>().DestroyTemporaryKeys();
+    Get<KeyManager>().DestroyPersistentKeys();
+#endif
 
 exit:
     return error;
