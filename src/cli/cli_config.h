@@ -88,6 +88,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES
+ *
+ * The maximum number of user CLI command lists that can be registered by the interpreter.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES
+#define OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
  *
  * Define as 1 for CLI to emit its command input string and the resulting output to the logs.

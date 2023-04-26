@@ -76,6 +76,7 @@
 #include "cli/cli_coap_secure.hpp"
 #endif
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -180,14 +181,16 @@ public:
     static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
 
     /**
-     * This method sets the user command table.
+     * This method adds commands to the user command table.
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
      * @param[in]  aContext   @p aUserCommands length.
      *
+     * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aCommands.
+     * @retval OT_ERROR_FAILED  No available UserCommandsEntry to register requested user commands.
      */
-    void SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
+    otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
     static constexpr uint8_t kLinkModeStringSize = sizeof("rdn"); ///< Size of string buffer for a MLE Link Mode.
 
@@ -265,10 +268,11 @@ protected:
 private:
     enum
     {
-        kIndentSize       = 4,
-        kMaxArgs          = 32,
-        kMaxAutoAddresses = 8,
-        kMaxLineLength    = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kIndentSize            = 4,
+        kMaxArgs               = 32,
+        kMaxAutoAddresses      = 8,
+        kMaxLineLength         = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kMaxUserCommandEntries = OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES,
     };
 
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
@@ -531,10 +535,15 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    const otCliCommand *mUserCommands;
-    uint8_t             mUserCommandsLength;
-    void               *mUserCommandsContext;
-    bool                mCommandIsPending;
+    struct UserCommandsEntry
+    {
+        const otCliCommand *mCommands;
+        uint8_t             mLength;
+        void               *mContext;
+    };
+
+    UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
+    bool              mCommandIsPending;
 
     TimerMilliContext mTimer;
 

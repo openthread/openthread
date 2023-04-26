@@ -100,8 +100,6 @@ static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
     , Output(aInstance, *this)
-    , mUserCommands(nullptr)
-    , mUserCommandsLength(0)
     , mCommandIsPending(false)
     , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -149,6 +147,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
+    memset(&mUserCommands, 0, sizeof(mUserCommands));
 
     OutputPrompt();
 }
@@ -295,26 +294,42 @@ otError Interpreter::ProcessUserCommands(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
 
-    for (uint8_t i = 0; i < mUserCommandsLength; i++)
+    for (const UserCommandsEntry &entry : mUserCommands)
     {
-        if (aArgs[0] == mUserCommands[i].mName)
+        for (uint8_t i = 0; i < entry.mLength; i++)
         {
-            char *args[kMaxArgs];
+            if (aArgs[0] == entry.mCommands[i].mName)
+            {
+                char *args[kMaxArgs];
 
-            Arg::CopyArgsToStringArray(aArgs, args);
-            error = mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            break;
+                Arg::CopyArgsToStringArray(aArgs, args);
+                error = entry.mCommands[i].mCommand(entry.mContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
+                break;
+            }
         }
     }
 
     return error;
 }
 
-void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
+otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
 {
-    mUserCommands        = aCommands;
-    mUserCommandsLength  = aLength;
-    mUserCommandsContext = aContext;
+    otError error = OT_ERROR_FAILED;
+
+    for (UserCommandsEntry &entry : mUserCommands)
+    {
+        if (entry.mCommands == nullptr)
+        {
+            entry.mCommands = aCommands;
+            entry.mLength   = aLength;
+            entry.mContext  = aContext;
+
+            error = OT_ERROR_NONE;
+            break;
+        }
+    }
+
+    return error;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -8507,9 +8522,12 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
     {
         OutputCommandTable(kCommands);
 
-        for (uint8_t i = 0; i < mUserCommandsLength; i++)
+        for (const UserCommandsEntry &entry : mUserCommands)
         {
-            OutputLine("%s", mUserCommands[i].mName);
+            for (uint8_t i = 0; i < entry.mLength; i++)
+            {
+                OutputLine("%s", entry.mCommands[i].mName);
+            }
         }
     }
     else
@@ -8527,9 +8545,9 @@ extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, 
 
 extern "C" void otCliInputLine(char *aBuf) { Interpreter::GetInterpreter().ProcessLine(aBuf); }
 
-extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
+extern "C" otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
 {
-    Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
+    return Interpreter::GetInterpreter().SetUserCommands(aUserCommands, aLength, aContext);
 }
 
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength)
