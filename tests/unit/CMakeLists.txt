@@ -131,6 +131,27 @@ target_link_libraries(ot-test-binary-search
 
 add_test(NAME ot-test-binary-search COMMAND ot-test-binary-search)
 
+add_executable(ot-test-bitflags
+    test_bitflags.cpp
+)
+
+target_include_directories(ot-test-bitflags
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-bitflags
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-bitflags
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-bitflags COMMAND ot-test-bitflags)
+
 add_executable(ot-test-child
     test_child.cpp
 )

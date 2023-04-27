@@ -439,6 +439,7 @@ HEADERS_COMMON                                  = \
     common/as_core_type.hpp                       \
     common/binary_search.hpp                      \
     common/bit_vector.hpp                         \
+    common/bitflags.hpp                           \
     common/callback.hpp                           \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \

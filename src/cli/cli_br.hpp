@@ -39,6 +39,8 @@
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
 
+#include "common/bitflags.hpp"
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 namespace ot {
@@ -76,9 +78,17 @@ public:
 private:
     using Command = CommandEntry<Br>;
 
+    enum PrefixType : uint8_t
+    {
+        kLocal   = 0,
+        kFavored = 1,
+    };
+
+    using PrefixTypeFlags = BitFlags<PrefixType>;
+
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError ParsePrefixTypeArgs(Arg aArgs[], bool &aOutputLocal, bool &aOutputFavored);
+    otError ParsePrefixTypeArgs(Arg aArgs[], PrefixTypeFlags &aFlags);
 };
 
 } // namespace Cli

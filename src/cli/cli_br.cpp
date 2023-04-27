@@ -119,27 +119,25 @@ exit:
     return error;
 }
 
-otError Br::ParsePrefixTypeArgs(Arg aArgs[], bool &aOutputLocal, bool &aOutputFavored)
+otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixTypeFlags &aFlags)
 {
     otError error = OT_ERROR_NONE;
 
-    aOutputLocal   = false;
-    aOutputFavored = false;
+    aFlags.Clear();
 
     if (aArgs[0].IsEmpty())
     {
-        aOutputLocal   = true;
-        aOutputFavored = true;
+        aFlags.Set(PrefixType::kFavored, PrefixType::kLocal);
         ExitNow();
     }
 
     if (aArgs[0] == "local")
     {
-        aOutputLocal = true;
+        aFlags.Set(PrefixType::kLocal);
     }
     else if (aArgs[0] == "favored")
     {
-        aOutputFavored = true;
+        aFlags.Set(PrefixType::kFavored);
     }
     else
     {
@@ -167,11 +165,10 @@ exit:
  */
 template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    outputLocal;
-    bool    outputFavored;
+    otError         error = OT_ERROR_NONE;
+    PrefixTypeFlags outputPrefixTypes;
 
-    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputLocal, outputFavored));
+    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputPrefixTypes));
 
     /**
      * @cli br omrprefix local
@@ -183,13 +180,13 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetOmrPrefix
      */
-    if (outputLocal)
+    if (outputPrefixTypes.HasAll(PrefixType::kLocal))
     {
         otIp6Prefix local;
 
         SuccessOrExit(error = otBorderRoutingGetOmrPrefix(GetInstancePtr(), &local));
 
-        OutputFormat("%s", outputFavored ? "Local: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kLocal) ? "" : "Local: ");
         OutputIp6PrefixLine(local);
     }
 
@@ -203,14 +200,14 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetFavoredOmrPrefix
      */
-    if (outputFavored)
+    if (outputPrefixTypes.HasAll(PrefixType::kFavored))
     {
         otIp6Prefix       favored;
         otRoutePreference preference;
 
         SuccessOrExit(error = otBorderRoutingGetFavoredOmrPrefix(GetInstancePtr(), &favored, &preference));
 
-        OutputFormat("%s", outputLocal ? "Favored: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kFavored) ? "" : "Favored: ");
         OutputIp6Prefix(favored);
         OutputLine(" prf:%s", Interpreter::PreferenceToString(preference));
     }
@@ -234,11 +231,10 @@ exit:
  */
 template <> otError Br::Process<Cmd("onlinkprefix")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    outputLocal;
-    bool    outputFavored;
+    otError         error = OT_ERROR_NONE;
+    PrefixTypeFlags outputPrefixTypes;
 
-    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputLocal, outputFavored));
+    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputPrefixTypes));
 
     /**
      * @cli br onlinkprefix local
@@ -250,13 +246,13 @@ template <> otError Br::Process<Cmd("onlinkprefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetOnLinkPrefix
      */
-    if (outputLocal)
+    if (outputPrefixTypes.HasAll(PrefixType::kLocal))
     {
         otIp6Prefix local;
 
         SuccessOrExit(error = otBorderRoutingGetOnLinkPrefix(GetInstancePtr(), &local));
 
-        OutputFormat("%s", outputFavored ? "Local: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kLocal) ? "" : "Local: ");
         OutputIp6PrefixLine(local);
     }
 
@@ -270,13 +266,13 @@ template <> otError Br::Process<Cmd("onlinkprefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetFavoredOnLinkPrefix
      */
-    if (outputFavored)
+    if (outputPrefixTypes.HasAll(PrefixType::kFavored))
     {
         otIp6Prefix favored;
 
         SuccessOrExit(error = otBorderRoutingGetFavoredOnLinkPrefix(GetInstancePtr(), &favored));
 
-        OutputFormat("%s", outputLocal ? "Favored: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kFavored) ? "" : "Favored: ");
         OutputIp6PrefixLine(favored);
     }
 
@@ -301,11 +297,10 @@ exit:
  */
 template <> otError Br::Process<Cmd("nat64prefix")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    outputLocal;
-    bool    outputFavored;
+    otError         error = OT_ERROR_NONE;
+    PrefixTypeFlags outputPrefixTypes;
 
-    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputLocal, outputFavored));
+    SuccessOrExit(error = ParsePrefixTypeArgs(aArgs, outputPrefixTypes));
 
     /**
      * @cli br nat64prefix local
@@ -317,13 +312,13 @@ template <> otError Br::Process<Cmd("nat64prefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetNat64Prefix
      */
-    if (outputLocal)
+    if (outputPrefixTypes.HasAll(PrefixType::kLocal))
     {
         otIp6Prefix local;
 
         SuccessOrExit(error = otBorderRoutingGetNat64Prefix(GetInstancePtr(), &local));
 
-        OutputFormat("%s", outputFavored ? "Local: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kLocal) ? "" : "Local: ");
         OutputIp6PrefixLine(local);
     }
 
@@ -337,14 +332,14 @@ template <> otError Br::Process<Cmd("nat64prefix")>(Arg aArgs[])
      * @par api_copy
      * #otBorderRoutingGetFavoredNat64Prefix
      */
-    if (outputFavored)
+    if (outputPrefixTypes.HasAll(PrefixType::kFavored))
     {
         otIp6Prefix       favored;
         otRoutePreference preference;
 
         SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(GetInstancePtr(), &favored, &preference));
 
-        OutputFormat("%s", outputLocal ? "Favored: " : "");
+        OutputFormat("%s", outputPrefixTypes.HasExactly(PrefixType::kFavored) ? "" : "Favored: ");
         OutputIp6Prefix(favored);
         OutputLine(" prf:%s", Interpreter::PreferenceToString(preference));
     }
