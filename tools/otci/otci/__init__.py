@@ -29,6 +29,7 @@
 
 from . import errors
 from .constants import THREAD_VERSION_1_1, THREAD_VERSION_1_2
+from .command_handlers import OTCommandHandler
 from .otci import OTCI
 from .otci import \
     connect_cli_sim, \
@@ -49,5 +50,13 @@ _connectors = [
     'connect_cmd_handler',
 ]
 
-__all__ = ['OTCI', 'errors', 'Rloc16', 'ChildId', 'NetifIdentifer', 'THREAD_VERSION_1_1', 'THREAD_VERSION_1_2'
-          ] + _connectors
+__all__ = [
+    'OTCI',
+    'OTCommandHandler',
+    'errors',
+    'Rloc16',
+    'ChildId',
+    'NetifIdentifier',
+    'THREAD_VERSION_1_1',
+    'THREAD_VERSION_1_2',
+] + _connectors

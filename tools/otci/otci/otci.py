@@ -64,7 +64,7 @@ class OTCI(object):
         """Gets the string representation of the OTCI instance."""
         return repr(self.__otcmd)
 
-    def wait(self, duration: float, expect_line: Union[str, Pattern, Collection[Any]] = None):
+    def wait(self, duration: float, expect_line: Optional[Union[str, Pattern, Collection[Any]]] = None):
         """Wait for a given duration.
 
         :param duration: The duration (in seconds) wait for.
@@ -104,6 +104,7 @@ class OTCI(object):
                 self.wait(2)
                 if i == self.__exec_command_retry:
                     raise
+        assert False
 
     def __execute_command(self,
                           cmd: str,
@@ -219,7 +220,7 @@ class OTCI(object):
     )
 
     def ping(self,
-             ip: str,
+             ip: Union[str, Ip6Addr],
              size: int = 8,
              count: int = 1,
              interval: float = 1,
@@ -261,15 +262,15 @@ class OTCI(object):
         """Stop sending ICMPv6 Echo Requests."""
         self.execute_command('ping stop')
 
-    def discover(self, channel: int = None) -> List[Dict[str, Any]]:
+    def discover(self, channel: Optional[int] = None) -> List[Dict[str, Any]]:
         """Perform an MLE Discovery operation."""
         return self.__scan_networks('discover', channel)
 
-    def scan(self, channel: int = None) -> List[Dict[str, Any]]:
+    def scan(self, channel: Optional[int] = None) -> List[Dict[str, Any]]:
         """Perform an IEEE 802.15.4 Active Scan."""
         return self.__scan_networks('scan', channel)
 
-    def __scan_networks(self, cmd: str, channel: int = None) -> List[Dict[str, Any]]:
+    def __scan_networks(self, cmd: str, channel: Optional[int] = None) -> List[Dict[str, Any]]:
         if channel is not None:
             cmd += f' {channel}'
 
@@ -300,7 +301,7 @@ class OTCI(object):
 
         return networks
 
-    def scan_energy(self, duration: float = None, channel: int = None) -> Dict[int, int]:
+    def scan_energy(self, duration: Optional[float] = None, channel: Optional[int] = None) -> Dict[int, int]:
         """Perform an IEEE 802.15.4 Energy Scan."""
         cmd = 'scan energy'
         if duration is not None:
@@ -496,9 +497,9 @@ class OTCI(object):
         """Try to switch to state detached, child, router or leader."""
         self.execute_command(f'state {state}')
 
-    def get_rloc16(self) -> int:
+    def get_rloc16(self) -> Rloc16:
         """Get the Thread RLOC16 value."""
-        return self.__parse_int(self.execute_command('rloc16'), 16)
+        return Rloc16(self.__parse_int(self.execute_command('rloc16'), 16))
 
     def get_router_id(self) -> int:
         """Get the Thread Router ID value."""
@@ -784,7 +785,9 @@ class OTCI(object):
         for line in output:
             k, v = line.split(': ')
             if k == 'Server':
-                ip, port = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, v).groups()
+                matched = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, v)
+                assert matched is not None
+                ip, port = matched.groups()
                 config['server'] = (Ip6Addr(ip), int(port))
             elif k == 'ResponseTimeout':
                 config['response_timeout'] = int(v[:-3])
@@ -799,9 +802,9 @@ class OTCI(object):
 
     def dns_set_config(self,
                        server: Tuple[Union[str, ipaddress.IPv6Address], int],
-                       response_timeout: int = None,
-                       max_tx_attempts: int = None,
-                       recursion_desired: bool = None):
+                       response_timeout: Optional[int] = None,
+                       max_tx_attempts: Optional[int] = None,
+                       recursion_desired: Optional[bool] = None):
         """Set DNS client query config."""
         cmd = f'dns config {str(server[0])} {server[1]}'
         if response_timeout is not None:
@@ -936,6 +939,7 @@ class OTCI(object):
                 info = {'host': line}
                 result.append(info)
             else:
+                assert info is not None
                 k, v = line.strip().split(': ')
                 if k == 'deleted':
                     if v not in ('true', 'false'):
@@ -962,6 +966,7 @@ class OTCI(object):
                 info = {'instance': line}
                 result.append(info)
             else:
+                assert info is not None
                 k, v = line.strip().split(': ')
                 if k == 'deleted':
                     if v not in ('true', 'false'):
@@ -1130,7 +1135,7 @@ class OTCI(object):
                                port: int,
                                priority: int = 0,
                                weight: int = 0,
-                               txt: Dict[str, Union[str, bytes, bool]] = None):
+                               txt: Optional[Dict[str, Union[str, bytes, bool]]] = None):
         instance = self.__escape_escapable(instance)
         cmd = f'srp client service add {instance} {service} {port} {priority} {weight}'
         if txt:
@@ -1164,7 +1169,9 @@ class OTCI(object):
     def srp_client_get_server(self) -> Tuple[Ip6Addr, int]:
         """Get the SRP server (IP, port)."""
         result = self.__parse_str(self.execute_command('srp client server'))
-        ip, port = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, result).groups()
+        matched = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, result)
+        assert matched
+        ip, port = matched.groups()
         return Ip6Addr(ip), int(port)
 
     def srp_client_get_service_key(self) -> bool:
@@ -1375,15 +1382,19 @@ class OTCI(object):
             if k == 'Channel':
                 cfg['channel'] = int(v)
             elif k == 'Timeout':
-                cfg['timeout'] = int(OTCI._CSL_TIMEOUT_PATTERN.match(v).group(1))
+                matched = OTCI._CSL_TIMEOUT_PATTERN.match(v)
+                assert matched is not None
+                cfg['timeout'] = int(matched.group(1))
             elif k == 'Period':
-                cfg['period'] = int(OTCI._CSL_PERIOD_PATTERN.match(v).group(1))
+                matched = OTCI._CSL_PERIOD_PATTERN.match(v)
+                assert matched is not None
+                cfg['period'] = int(matched.group(1))
             else:
                 logging.warning("Ignore unknown CSL parameter: %s: %s", k, v)
 
         return cfg
 
-    def config_csl(self, channel: int = None, period: int = None, timeout: int = None):
+    def config_csl(self, channel: Optional[int] = None, period: Optional[int] = None, timeout: Optional[int] = None):
         """Configure CSL parameters.
 
         :param channel: Set CSL channel.
@@ -1487,7 +1498,7 @@ class OTCI(object):
     #
     # Joiner operations
     #
-    def joiner_start(self, psk: str, provisioning_url: str = None):
+    def joiner_start(self, psk: str, provisioning_url: Optional[str] = None):
         """Start the Joiner."""
         cmd = f'joiner start {psk}'
         if provisioning_url is not None:
@@ -1780,17 +1791,17 @@ class OTCI(object):
         self.execute_command(cmd)
 
     def dataset_set_buffer(self,
-                           active_timestamp: int = None,
-                           channel: int = None,
-                           channel_mask: int = None,
-                           extpanid: str = None,
-                           mesh_local_prefix: str = None,
-                           network_key: str = None,
-                           network_name: str = None,
-                           panid: int = None,
-                           pskc: str = None,
-                           security_policy: tuple = None,
-                           pending_timestamp: int = None):
+                           active_timestamp: Optional[int] = None,
+                           channel: Optional[int] = None,
+                           channel_mask: Optional[int] = None,
+                           extpanid: Optional[str] = None,
+                           mesh_local_prefix: Optional[str] = None,
+                           network_key: Optional[str] = None,
+                           network_name: Optional[str] = None,
+                           panid: Optional[int] = None,
+                           pskc: Optional[str] = None,
+                           security_policy: Optional[tuple] = None,
+                           pending_timestamp: Optional[int] = None):
         if active_timestamp is not None:
             self.execute_command(f'dataset activetimestamp {active_timestamp}')
 
@@ -1840,7 +1851,7 @@ class OTCI(object):
     def disable_allowlist(self):
         self.execute_command('macfilter addr disable')
 
-    def add_allowlist(self, addr: str, rssi: int = None):
+    def add_allowlist(self, addr: str, rssi: Optional[int] = None):
         cmd = f'macfilter addr add {addr}'
 
         if rssi is not None:
@@ -2053,7 +2064,10 @@ class OTCI(object):
 
         return config
 
-    def set_backbone_router_config(self, seqno: int = None, delay: int = None, timeout: int = None):
+    def set_backbone_router_config(self,
+                                   seqno: Optional[int] = None,
+                                   delay: Optional[int] = None,
+                                   timeout: Optional[int] = None):
         """Configure local Backbone Router configuration for Thread 1.2 FTD.
 
         Call register_backbone_router_dataset() to explicitly register Backbone Router service to Leader for Secondary Backbone Router.
@@ -2217,7 +2231,12 @@ class OTCI(object):
         """
         self.execute_command(f'udp connect {ip} {port}')
 
-    def udp_send(self, ip: str = None, port: int = None, text: str = None, random_bytes: int = None, hex: str = None):
+    def udp_send(self,
+                 ip: Optional[Union[str, Ip6Addr]] = None,
+                 port: Optional[int] = None,
+                 text: Optional[str] = None,
+                 random_bytes: Optional[int] = None,
+                 hex: Optional[str] = None):
         """Send a few bytes over UDP.
 
         ip: the IPv6 destination address.
@@ -2292,11 +2311,11 @@ class OTCI(object):
         """Stops the application coap service."""
         self.execute_command('coap stop')
 
-    def coap_get(self, addr: str, uri_path: str, type: str = "con"):
+    def coap_get(self, addr: Union[str, Ip6Addr], uri_path: str, type: str = "con"):
         cmd = f'coap get {addr} {uri_path} {type}'
         self.execute_command(cmd)
 
-    def coap_put(self, addr: str, uri_path: str, type: str = "con", payload: str = None):
+    def coap_put(self, addr: Union[str, Ip6Addr], uri_path: str, type: str = "con", payload: Optional[str] = None):
         cmd = f'coap put {addr} {uri_path} {type}'
 
         if payload is not None:
@@ -2304,7 +2323,7 @@ class OTCI(object):
 
         self.execute_command(cmd)
 
-    def coap_post(self, addr: str, uri_path: str, type: str = "con", payload: str = None):
+    def coap_post(self, addr: Union[str, Ip6Addr], uri_path: str, type: str = "con", payload: Optional[str] = None):
         cmd = f'coap post {addr} {uri_path} {type}'
 
         if payload is not None:
@@ -2312,7 +2331,7 @@ class OTCI(object):
 
         self.execute_command(cmd)
 
-    def coap_delete(self, addr: str, uri_path: str, type: str = "con", payload: str = None):
+    def coap_delete(self, addr: Union[str, Ip6Addr], uri_path: str, type: str = "con", payload: Optional[str] = None):
         cmd = f'coap delete {addr} {uri_path} {type}'
 
         if payload is not None:
