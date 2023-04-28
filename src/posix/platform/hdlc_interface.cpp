@@ -49,6 +49,7 @@
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -114,6 +115,10 @@
 
 #ifndef B4000000
 #define B4000000 4000000
+#endif
+
+#ifndef IOSSIOSPEED
+#define IOSSIOSPEED 0x80045402
 #endif
 
 #endif // __APPLE__
@@ -577,7 +582,21 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
-        VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
+        rval = tcsetattr(fd, TCSANOW, &tios);
+
+#ifdef __APPLE__
+        if (rval)
+        {
+            struct termios orig_tios;
+            VerifyOrExit((rval = tcgetattr(fd, &orig_tios)) == 0, perror("tcgetattr"));
+            VerifyOrExit((rval = cfsetispeed(&tios, cfgetispeed(&orig_tios))) == 0, perror("cfsetispeed"));
+            VerifyOrExit((rval = cfsetospeed(&tios, cfgetospeed(&orig_tios))) == 0, perror("cfsetospeed"));
+            VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
+            VerifyOrExit((rval = ioctl(fd, IOSSIOSPEED, &speed)) == 0, perror("ioctl IOSSIOSPEED"));
+        }
+#else  // __APPLE__
+        VerifyOrExit(rval == 0, perror("tcsetattr"));
+#endif // __APPLE__
         VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
     }
 
