@@ -10,6 +10,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag start](#diag-start)
 - [diag channel](#diag-channel)
 - [diag cw](#diag-cw-start)
+- [diag stream](#diag-stream-start)
 - [diag power](#diag-power)
 - [diag powersettings](#diag-powersettings)
 - [diag send](#diag-send-packets-length)
@@ -73,6 +74,24 @@ Stop transmitting continuous carrier wave.
 
 ```bash
 > diag cw stop
+Done
+```
+
+### diag stream start
+
+Start transmitting a stream of characters.
+
+```bash
+> diag stream start
+Done
+```
+
+### diag stream stop
+
+Stop transmitting a stream of characters.
+
+```bash
+> diag stream stop
 Done
 ```
 

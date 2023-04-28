@@ -168,4 +168,12 @@ otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
 
     return OT_ERROR_NONE;
 }
+
+otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NONE;
+}
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

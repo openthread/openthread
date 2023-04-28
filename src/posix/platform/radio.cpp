@@ -735,6 +735,16 @@ exit:
     return error;
 }
 
+otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    char cmd[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
+
+    snprintf(cmd, sizeof(cmd), "stream %s", aEnable ? "start" : "stop");
+    return sRadioSpinel.PlatDiagProcess(cmd, nullptr, 0);
+}
+
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     OT_UNUSED_VARIABLE(aInstance);
