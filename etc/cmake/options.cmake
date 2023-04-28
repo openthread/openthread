@@ -34,6 +34,8 @@ option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
 
+option(OT_LINKER_MAP "generate .map files for example apps" ON)
+
 message(STATUS OT_APP_CLI=${OT_APP_CLI})
 message(STATUS OT_APP_NCP=${OT_APP_NCP})
 message(STATUS OT_APP_RCP=${OT_APP_RCP})
