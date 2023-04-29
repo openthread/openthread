@@ -139,7 +139,7 @@ public:
      * @param[in]  aRloc16  The RLOC16 address.
      *
      */
-    void Remove(Mac::ShortAddress aRloc16);
+    void RemoveEntriesForRloc16(Mac::ShortAddress aRloc16);
 
     /**
      * This method removes all EID-to-RLOC cache entries associated with a Router ID.
@@ -147,7 +147,7 @@ public:
      * @param[in]  aRouterId  The Router ID.
      *
      */
-    void Remove(uint8_t aRouterId);
+    void RemoveEntriesForRouterId(uint8_t aRouterId);
 
     /**
      * This method removes the cache entry for the EID.
@@ -155,7 +155,16 @@ public:
      * @param[in]  aEid               A reference to the EID.
      *
      */
-    void Remove(const Ip6::Address &aEid);
+    void RemoveEntryForAddress(const Ip6::Address &aEid);
+
+    /**
+     * This method replaces all EID-to-RLOC cache entries corresponding to an old RLOC16 with a new RLOC16.
+     *
+     * @param[in] aOldRloc16    The old RLOC16.
+     * @param[in] aNewRloc16    The new RLOC16.
+     *
+     */
+    void ReplaceEntriesForRloc16(uint16_t aOldRloc16, uint16_t aNewRloc16);
 
     /**
      * This method updates an existing entry or adds a snooped cache entry for a given EID.
