@@ -273,6 +273,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+ *
+ * Define as 1 to support `otThreadRegisterParentResponseCallback()` API which registers a callback to notify user
+ * of received Parent Response message(s) during attach. This API is mainly intended for debugging and therefore is
+ * disabled by default.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+#define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
  *
  * Define as 1 to enable Link Metrics initiator feature.

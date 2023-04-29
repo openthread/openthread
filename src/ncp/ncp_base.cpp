@@ -285,7 +285,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     memset(&mSteeringDataAddress, 0, sizeof(mSteeringDataAddress));
 #endif
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
+#endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);

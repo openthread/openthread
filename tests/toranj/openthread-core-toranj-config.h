@@ -557,6 +557,15 @@
  */
 #define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 1
 
+/**
+ * @def OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+ *
+ * Define as 1 to support `otThreadRegisterParentResponseCallback()` API which registers a callback to notify user
+ * of received Parent Response message(s) during attach.
+ *
+ */
+#define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 1
+
 #if OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE

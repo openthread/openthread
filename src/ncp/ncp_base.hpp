@@ -272,8 +272,10 @@ protected:
     static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
     void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
     void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);
+#endif
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);

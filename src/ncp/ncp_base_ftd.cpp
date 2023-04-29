@@ -85,6 +85,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
 {
     VerifyOrExit(aInfo && aContext);
@@ -116,6 +117,7 @@ void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 exit:
     return;
 }
+#endif
 
 void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
