@@ -610,7 +610,7 @@ public:
      * @returns A reference to the MLE counters.
      *
      */
-    const otMleCounters &GetCounters(void)
+    const Counters &GetCounters(void)
     {
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
         UpdateRoleTimeCounters(mRole);
@@ -622,7 +622,7 @@ public:
      * This method resets the MLE counters.
      *
      */
-    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
+    void ResetCounters(void);
 
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     /**
@@ -2122,10 +2122,11 @@ private:
     ServiceAloc mServiceAlocs[kMaxServiceAlocs];
 #endif
 
-    otMleCounters mCounters;
+    Counters mCounters;
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     uint64_t mLastUpdatedTimestamp;
 #endif
+
     static const otMeshLocalPrefix sMeshLocalPrefixInit;
 
     Ip6::Netif::UnicastAddress   mLinkLocal64;

@@ -647,6 +647,12 @@ typedef Mac::KeyMaterial KeyMaterial;
 typedef Mac::Key Key;
 
 /**
+ * This structure represents the Thread MLE counters.
+ *
+ */
+typedef otMleCounters Counters;
+
+/**
  * This function derives the Child ID from a given RLOC16.
  *
  * @param[in]  aRloc16  The RLOC16 value.
