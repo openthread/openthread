@@ -296,6 +296,11 @@ int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
     // that the first entry is preferred over the second one.
 
     result = ThreeWayCompare(Get<RouterTable>().GetPathCost(aSecondRloc), Get<RouterTable>().GetPathCost(aFirstRloc));
+    VerifyOrExit(result == 0);
+
+    // If all the same, prefer the BR acting as a router over an
+    // end device.
+    result = ThreeWayCompare(Mle::IsActiveRouter(aFirstRloc), Mle::IsActiveRouter(aSecondRloc));
 #endif
 
 exit:
