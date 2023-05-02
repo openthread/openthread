@@ -96,13 +96,20 @@ exit:
 
 Error Publisher::PublishExternalRoute(const ExternalRouteConfig &aConfig, Requester aRequester)
 {
+    return ReplacePublishedExternalRoute(aConfig.GetPrefix(), aConfig, aRequester);
+}
+
+Error Publisher::ReplacePublishedExternalRoute(const Ip6::Prefix         &aPrefix,
+                                               const ExternalRouteConfig &aConfig,
+                                               Requester                  aRequester)
+{
     Error        error = kErrorNone;
     PrefixEntry *entry;
 
     VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
     VerifyOrExit(aConfig.mStable, error = kErrorInvalidArgs);
 
-    entry = FindOrAllocatePrefixEntry(aConfig.GetPrefix(), aRequester);
+    entry = FindOrAllocatePrefixEntry(aPrefix, aRequester);
     VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
     entry->Publish(aConfig, aRequester);
@@ -806,23 +813,24 @@ void Publisher::PrefixEntry::Publish(const Ip6::Prefix &aPrefix,
 
     if (GetState() != kNoEntry)
     {
-        // If this is an existing entry, first we check that there is
-        // a change in either type or flags. We remove the old entry
-        // from Network Data if it was added. If the only change is
-        // to flags (e.g., change to the preference level) and the
-        // entry was previously added in Network Data, we re-add it
-        // with the new flags. This ensures that changes to flags are
-        // immediately reflected in the Network Data.
+        // If this is an existing entry, check if there is a change in
+        // type, flags, or the prefix itself. If not, everything is
+        // as before. If something is different, first, remove the
+        // old entry from Network Data if it was added. Then, re-add
+        // the new prefix/flags (replacing the old entry). This
+        // ensures the changes are immediately reflected in the
+        // Network Data.
 
         State oldState = GetState();
 
-        VerifyOrExit((mType != aNewType) || (mFlags != aNewFlags));
+        VerifyOrExit((mType != aNewType) || (mFlags != aNewFlags) || (mPrefix != aPrefix));
 
         Remove(/* aNextState */ kNoEntry);
 
         if ((mType == aNewType) && ((oldState == kAdded) || (oldState == kRemoving)))
         {
-            mFlags = aNewFlags;
+            mPrefix = aPrefix;
+            mFlags  = aNewFlags;
             Add();
         }
     }
