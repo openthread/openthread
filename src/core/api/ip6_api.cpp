@@ -188,6 +188,11 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
     return AsCoreType(aAddress).FromString(aString);
 }
 
+otError otIp6PrefixFromString(const char *aString, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aPrefix).FromString(aString);
+}
+
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
 {
     AssertPointerIsNotNull(aBuffer);

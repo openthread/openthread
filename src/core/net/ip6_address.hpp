@@ -316,6 +316,17 @@ public:
     bool IsValidNat64(void) const { return IsValidNat64PrefixLength(mLength); }
 
     /**
+     * This method parses a given IPv6 prefix string and sets the prefix.
+     *
+     * @param[in]  aString         A null-terminated string, with format "<prefix>/<plen>"
+     *
+     * @retval kErrorNone          Successfully parsed the IPv6 prefix from @p aString.
+     * @retval kErrorParse         Failed to parse the IPv6 prefix from @p aString.
+     *
+     */
+    Error FromString(const char *aString);
+
+    /**
      * This method converts the prefix to a string.
      *
      * The IPv6 prefix string is formatted as "%x:%x:%x:...[::]/plen".
@@ -1027,6 +1038,8 @@ private:
     static const Address &GetRealmLocalAllMplForwarders(void);
 
     static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits);
+
+    Error ParseFrom(const char *aString, char aTerminatorChar);
 
 } OT_TOOL_PACKED_END;
 

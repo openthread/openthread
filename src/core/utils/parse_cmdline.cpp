@@ -250,30 +250,7 @@ Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
 
 Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
-    enum : uint8_t
-    {
-        kMaxIp6AddressStringSize = 45,
-    };
-
-    Error       error = kErrorInvalidArgs;
-    char        string[kMaxIp6AddressStringSize];
-    const char *prefixLengthStr;
-
-    VerifyOrExit(aString != nullptr);
-
-    prefixLengthStr = StringFind(aString, '/');
-    VerifyOrExit(prefixLengthStr != nullptr);
-
-    VerifyOrExit(prefixLengthStr - aString < static_cast<int32_t>(sizeof(string)));
-
-    memcpy(string, aString, static_cast<uint8_t>(prefixLengthStr - aString));
-    string[prefixLengthStr - aString] = '\0';
-
-    SuccessOrExit(static_cast<Ip6::Address &>(aPrefix.mPrefix).FromString(string));
-    error = ParseAsUint8(prefixLengthStr + 1, aPrefix.mLength);
-
-exit:
-    return error;
+    return (aString != nullptr) ? otIp6PrefixFromString(aString, &aPrefix) : kErrorInvalidArgs;
 }
 #endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 

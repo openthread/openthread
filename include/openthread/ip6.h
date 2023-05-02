@@ -610,11 +610,26 @@ bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aAddress  A pointer to an IPv6 address.
  *
- * @retval OT_ERROR_NONE          Successfully parsed the string.
- * @retval OT_ERROR_INVALID_ARGS  Failed to parse the string.
+ * @retval OT_ERROR_NONE   Successfully parsed @p aString and updated @p aAddress.
+ * @retval OT_ERROR_PARSE  Failed to parse @p aString as an IPv6 address.
  *
  */
 otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
+
+/**
+ * This function converts a human-readable IPv6 prefix string into a binary representation.
+ *
+ * The @p aString parameter should be a string in the format "<address>/<plen>", where `<address>` is an IPv6
+ * address and `<plen>` is a prefix length.
+ *
+ * @param[in]   aString  A pointer to a NULL-terminated string.
+ * @param[out]  aPrefix  A pointer to an IPv6 prefix.
+ *
+ * @retval OT_ERROR_NONE   Successfully parsed the string as an IPv6 prefix and updated @p aPrefix.
+ * @retval OT_ERROR_PARSE  Failed to parse @p aString as an IPv6 prefix.
+ *
+ */
+otError otIp6PrefixFromString(const char *aString, otIp6Prefix *aPrefix);
 
 #define OT_IP6_ADDRESS_STRING_SIZE 40 ///< Recommended size for string representation of an IPv6 address.
 
