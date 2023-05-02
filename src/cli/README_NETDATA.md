@@ -269,6 +269,21 @@ Publish an external route entry.
 Done
 ```
 
+### publish replace \<old prefix\> \<prefix\> [sn][prf]
+
+Replace a previously published external route entry.
+
+If there is no previously published external route matching old prefix, this command behaves similarly to `netdata publish route`. If there is a previously published route entry, it will be replaced with the new prefix. In particular, if the old prefix was already added in the Network Data, the change to the new prefix is immediately reflected in the Network Data (i.e., old prefix is removed and the new prefix is added in the same Network Data registration request to leader). This ensures that route entries in the Network Data are not abruptly removed.
+
+- s: Stable flag
+- n: NAT64 flag
+- prf: Preference, which may be: 'high', 'med', or 'low'.
+
+```bash
+> netdata publish replace ::/0 fd00:1234:5678::/64 s high
+Done
+```
+
 ### register
 
 Usage: `netdata register`

@@ -354,6 +354,29 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
         error = otNetDataPublishExternalRoute(GetInstancePtr(), &config);
         ExitNow();
     }
+
+    /**
+     * @cli netdata publish replace
+     * @code
+     * netdata publish replace ::/0 fd00:1234:5678::/64 s high
+     * Done
+     * @endcode
+     * @cparam netdata publish replace @ca{oldprefix} @ca{prefix} [@ca{sn}] [@ca{high}|@ca{med}|@ca{low}]
+     * OT CLI uses mapped arguments to configure #otExternalRouteConfig values. @moreinfo{the @overview}.
+     * @par
+     * Replaces a previously published external route entry. @moreinfo{@netdata}.
+     * @sa otNetDataReplacePublishedExternalRoute
+     */
+    if (aArgs[0] == "replace")
+    {
+        otIp6Prefix           prefix;
+        otExternalRouteConfig config;
+
+        SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
+        SuccessOrExit(error = Interpreter::ParseRoute(aArgs + 2, config));
+        error = otNetDataReplacePublishedExternalRoute(GetInstancePtr(), &prefix, &config);
+        ExitNow();
+    }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
     error = OT_ERROR_INVALID_ARGS;
