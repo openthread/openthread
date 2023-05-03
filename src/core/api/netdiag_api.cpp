@@ -33,14 +33,14 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-
 #include <openthread/netdiag.h>
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
 otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagIterator *aIterator,
@@ -73,3 +73,35 @@ otError otThreadSendDiagnosticReset(otInstance         *aInstance,
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+const char *otThreadGetVendorName(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorName();
+}
+
+const char *otThreadGetVendorModel(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorModel();
+}
+
+const char *otThreadGetVendorSwVersion(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorSwVersion();
+}
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorName(aVendorName);
+}
+
+otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorModel(aVendorModel);
+}
+
+otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);
+}
+#endif

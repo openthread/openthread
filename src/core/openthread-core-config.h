@@ -88,6 +88,7 @@
 #include "config/mle.h"
 #include "config/nat64.h"
 #include "config/netdata_publisher.h"
+#include "config/network_diagnostic.h"
 #include "config/parent_search.h"
 #include "config/ping_sender.h"
 #include "config/platform.h"

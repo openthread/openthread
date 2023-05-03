@@ -295,8 +295,9 @@ private:
     {
         static_assert(
             TypeTraits::IsSame<ValueType, uint8_t>::kValue || TypeTraits::IsSame<ValueType, uint16_t>::kValue ||
-                TypeTraits::IsSame<ValueType, int8_t>::kValue || TypeTraits::IsSame<ValueType, int16_t>::kValue,
-            "ValueType must be an  8, 16 `int` or `uint` type");
+                TypeTraits::IsSame<ValueType, int8_t>::kValue || TypeTraits::IsSame<ValueType, int16_t>::kValue ||
+                TypeTraits::IsSame<ValueType, const char *>::kValue,
+            "ValueType must be an  8, 16 `int` or `uint` type, or a `const char *`");
 
         otError error = OT_ERROR_NONE;
 
@@ -618,6 +619,8 @@ template <> inline constexpr const char *Interpreter::FormatStringFor<int8_t>(vo
 template <> inline constexpr const char *Interpreter::FormatStringFor<int16_t>(void) { return "%d"; }
 
 template <> inline constexpr const char *Interpreter::FormatStringFor<int32_t>(void) { return "%ld"; }
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<const char *>(void) { return "%s"; }
 
 // Specialization of ProcessGet<> for `uint32_t` and `int32_t`
 

@@ -673,6 +673,11 @@ template <> inline otError Arg::ParseAs(int16_t &aValue) const { return ParseAsI
 
 template <> inline otError Arg::ParseAs(int32_t &aValue) const { return ParseAsInt32(aValue); }
 
+template <> inline otError Arg::ParseAs(const char *&aValue) const
+{
+    return IsEmpty() ? OT_ERROR_INVALID_ARGS : (aValue = GetCString(), OT_ERROR_NONE);
+}
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 template <> inline otError Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }

@@ -69,24 +69,52 @@ public:
      */
     enum Type : uint8_t
     {
-        kExtMacAddress   = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
-        kAddress16       = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
-        kMode            = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
-        kTimeout         = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
-        kConnectivity    = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
-        kRoute           = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
-        kLeaderData      = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
-        kNetworkData     = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
-        kIp6AddressList  = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
-        kMacCounters     = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
-        kBatteryLevel    = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
-        kSupplyVoltage   = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
-        kChildTable      = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
-        kChannelPages    = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
-        kTypeList        = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
-        kMaxChildTimeout = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
-        kVersion         = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kExtMacAddress      = OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS,
+        kAddress16          = OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS,
+        kMode               = OT_NETWORK_DIAGNOSTIC_TLV_MODE,
+        kTimeout            = OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT,
+        kConnectivity       = OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY,
+        kRoute              = OT_NETWORK_DIAGNOSTIC_TLV_ROUTE,
+        kLeaderData         = OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA,
+        kNetworkData        = OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA,
+        kIp6AddressList     = OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST,
+        kMacCounters        = OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS,
+        kBatteryLevel       = OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL,
+        kSupplyVoltage      = OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE,
+        kChildTable         = OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE,
+        kChannelPages       = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
+        kTypeList           = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
+        kMaxChildTimeout    = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kVersion            = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
+        kVendorName         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
+        kVendorModel        = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
+        kVendorSwVersion    = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION,
+        kThreadStackVersion = OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION,
     };
+
+    /**
+     * Maximum length of Vendor Name TLV.
+     *
+     */
+    static constexpr uint8_t kMaxVendorNameLength = OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH;
+
+    /**
+     * Maximum length of Vendor Model TLV.
+     *
+     */
+    static constexpr uint8_t kMaxVendorModelLength = OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH;
+
+    /**
+     * Maximum length of Vendor SW Version TLV.
+     *
+     */
+    static constexpr uint8_t kMaxVendorSwVersionLength = OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH;
+
+    /**
+     * Maximum length of Vendor SW Version TLV.
+     *
+     */
+    static constexpr uint8_t kMaxThreadStackVersionLength = OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH;
 
     /**
      * This method returns the Type value.
@@ -171,6 +199,30 @@ typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
+
+/**
+ * This class defines Vendor Name TLV constants and types.
+ *
+ */
+typedef StringTlvInfo<Tlv::kVendorName, Tlv::kMaxVendorNameLength> VendorNameTlv;
+
+/**
+ * This class defines Vendor Model TLV constants and types.
+ *
+ */
+typedef StringTlvInfo<Tlv::kVendorModel, Tlv::kMaxVendorModelLength> VendorModelTlv;
+
+/**
+ * This class defines Vendor SW Version TLV constants and types.
+ *
+ */
+typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> VendorSwVersionTlv;
+
+/**
+ * This class defines Thread Stack Version TLV constants and types.
+ *
+ */
+typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLength> ThreadStackVersionTlv;
 
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 

@@ -79,8 +79,76 @@ public:
      */
     explicit Server(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+    /**
+     * This method returns the vendor name string.
+     *
+     * @returns The vendor name string.
+     *
+     */
+    const char *GetVendorName(void) const { return mVendorName; }
+
+    /**
+     * This method sets the vendor name string.
+     *
+     * @param[in] aVendorName     The vendor name string.
+     *
+     * @retval kErrorNone         Successfully set the vendor name.
+     * @retval kErrorInvalidArgs  @p aVendorName is not valid (too long or not UTF8).
+     *
+     */
+    Error SetVendorName(const char *aVendorName);
+
+    /**
+     * This method returns the vendor model string.
+     *
+     * @returns The vendor model string.
+     *
+     */
+    const char *GetVendorModel(void) const { return mVendorModel; }
+
+    /**
+     * This method sets the vendor model string.
+     *
+     * @param[in] aVendorModel     The vendor model string.
+     *
+     * @retval kErrorNone         Successfully set the vendor model.
+     * @retval kErrorInvalidArgs  @p aVendorModel is not valid (too long or not UTF8).
+     *
+     */
+    Error SetVendorModel(const char *aVendorModel);
+
+    /**
+     * This method returns the vendor software version string.
+     *
+     * @returns The vendor software version string.
+     *
+     */
+    const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
+
+    /**
+     * This method sets the vendor sw version string
+     *
+     * @param[in] aVendorSwVersion     The vendor sw version string.
+     *
+     * @retval kErrorNone         Successfully set the vendor sw version.
+     * @retval kErrorInvalidArgs  @p aVendorSwVersion is not valid (too long or not UTF8).
+     *
+     */
+    Error SetVendorSwVersion(const char *aVendorSwVersion);
+
+#else
+    const char *GetVendorName(void) const { return kVendorName; }
+    const char *GetVendorModel(void) const { return kVendorModel; }
+    const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
+#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+
 private:
     static constexpr uint16_t kMaxChildEntries = 398;
+
+    static const char kVendorName[];
+    static const char kVendorModel[];
+    static const char kVendorSwVersion[];
 
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
@@ -90,6 +158,14 @@ private:
     void  PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const;
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+    Error SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString);
+
+    VendorNameTlv::StringType      mVendorName;
+    VendorModelTlv::StringType     mVendorModel;
+    VendorSwVersionTlv::StringType mVendorSwVersion;
+#endif
 };
 
 DeclareTmfHandler(Server, kUriDiagnosticGetRequest);
@@ -164,8 +240,6 @@ public:
     static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, TlvInfo &aTlvInfo);
 
 private:
-    static constexpr uint16_t kMaxChildEntries = 398;
-
     Error SendCommand(Uri                   aUri,
                       const Ip6::Address   &aDestination,
                       const uint8_t         aTlvTypes[],

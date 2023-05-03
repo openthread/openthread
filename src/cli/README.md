@@ -121,6 +121,7 @@ Done
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
 - [uptime](#uptime)
+- [vendor](#vendor-name)
 - [version](#version)
 
 ## OpenThread Command Details
@@ -3358,6 +3359,63 @@ Print the OpenThread stack uptime in msec.
 426238
 Done
 >
+```
+
+### vendor name
+
+This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
+
+Get the vendor name.
+
+```bash
+> vendor name
+nest
+Done
+```
+
+Set the vendor name (requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`).
+
+```bash
+> vendor name nest
+Done
+```
+
+### vendor model
+
+This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
+
+Get the vendor model.
+
+```bash
+> vendor model
+Hub Max
+Done
+```
+
+Set the vendor model (requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`).
+
+```bash
+> vendor model Hub\ Max
+Done
+```
+
+### vendor swversion
+
+This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
+
+Get the vendor SW version.
+
+```bash
+> vendor swversion
+Marble3.5.1
+Done
+```
+
+Set the vendor SW version (requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`).
+
+```bash
+> vendor swversion Marble3.5.1
+Done
 ```
 
 ### version
