@@ -1525,48 +1525,31 @@ protected:
      */
     Mac::ShortAddress GetNextHop(uint16_t aDestination) const;
 
+    /**
+     * This method generates an MLE Data Request message.
+     *
+     * @param[in]  aDestination      The IPv6 destination address.
+     *
+     * @retval kErrorNone     Successfully generated an MLE Data Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
+     *
+     */
+    Error SendDataRequest(const Ip6::Address &aDestination);
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
-     * This method generates an MLE Data Request message which includes a Link Metrics Query TLV.
+     * This method generates an MLE Data Request message which request Link Metrics Report TLV.
      *
      * @param[in]  aDestination      A reference to the IPv6 address of the destination.
-     * @param[in]  aTlvs             A pointer to requested TLV types.
-     * @param[in]  aTlvsLength       The number of TLV types in @p aTlvs.
-     * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
      * @param[in]  aQueryInfo        A Link Metrics query info.
      *
      * @retval kErrorNone     Successfully generated an MLE Data Request message.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    Error SendDataRequest(const Ip6::Address                        &aDestination,
-                          const uint8_t                             *aTlvs,
-                          uint8_t                                    aTlvsLength,
-                          uint16_t                                   aDelay,
-                          const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo)
-    {
-        return SendDataRequest(aDestination, aTlvs, aTlvsLength, aDelay, &aQueryInfo);
-    }
+    Error SendDataRequestForLinkMetricsReport(const Ip6::Address                        &aDestination,
+                                              const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo);
 #endif
-
-    /**
-     * This method generates an MLE Data Request message.
-     *
-     * @tparam kArrayLength          The TLV array length.
-     *
-     * @param[in]  aDestination      A reference to the IPv6 address of the destination.
-     * @param[in]  aTlvs             An array of requested TLVs.
-     * @param[in]  aDelay            Delay in milliseconds before the Data Request message is sent.
-     *
-     * @retval kErrorNone     Successfully generated an MLE Data Request message.
-     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
-     *
-     */
-    template <uint8_t kArrayLength>
-    Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t (&aTlvs)[kArrayLength], uint16_t aDelay = 0)
-    {
-        return SendDataRequest(aDestination, aTlvs, kArrayLength, aDelay);
-    }
 
     /**
      * This method generates an MLE Child Update Request message.
@@ -1769,20 +1752,21 @@ protected:
 
     Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
-    LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
-    bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
-    DeviceRole    mRole;                     ///< Current Thread role.
-    Parent        mParent;                   ///< Parent information.
-    NeighborTable mNeighborTable;            ///< The neighbor table.
-    DeviceMode    mDeviceMode;               ///< Device mode setting.
-    AttachState   mAttachState;              ///< The attach state.
-    uint8_t       mParentRequestCounter;     ///< Number of parent requests while in `kAttachStateParentRequest`.
-    ReattachState mReattachState;            ///< Reattach state
-    uint16_t      mAttachCounter;            ///< Attach attempt counter.
-    uint16_t      mAnnounceDelay;            ///< Delay in between sending Announce messages during attach.
-    AttachTimer   mAttachTimer;              ///< The timer for driving the attach process.
-    DelayTimer    mDelayedResponseTimer;     ///< The timer to delay MLE responses.
-    MsgTxTimer    mMessageTransmissionTimer; ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
+    LeaderData    mLeaderData;                 ///< Last received Leader Data TLV.
+    bool          mRetrieveNewNetworkData : 1; ///< Indicating new Network Data is needed if set.
+    bool          mRequestRouteTlv : 1;        ///< Request Route TLV when sending Data Request.
+    DeviceRole    mRole;                       ///< Current Thread role.
+    Parent        mParent;                     ///< Parent information.
+    NeighborTable mNeighborTable;              ///< The neighbor table.
+    DeviceMode    mDeviceMode;                 ///< Device mode setting.
+    AttachState   mAttachState;                ///< The attach state.
+    uint8_t       mParentRequestCounter;       ///< Number of parent requests while in `kAttachStateParentRequest`.
+    ReattachState mReattachState;              ///< Reattach state
+    uint16_t      mAttachCounter;              ///< Attach attempt counter.
+    uint16_t      mAnnounceDelay;              ///< Delay in between sending Announce messages during attach.
+    AttachTimer   mAttachTimer;                ///< The timer for driving the attach process.
+    DelayTimer    mDelayedResponseTimer;       ///< The timer to delay MLE responses.
+    MsgTxTimer    mMessageTransmissionTimer;   ///< The timer for (re-)sending of MLE messages (e.g. Child Update).
 #if OPENTHREAD_FTD
     uint8_t mLinkRequestAttempts; ///< Number of remaining link requests to send after reset.
     bool    mWasLeader;           ///< Indicating if device was leader before reset.
@@ -1990,6 +1974,7 @@ private:
     void        HandleDetachGracefullyTimer(void);
     bool        IsDetachingGracefully(void) { return mDetachGracefullyTimer.IsRunning(); }
     Error       SendChildUpdateRequest(ChildUpdateRequestMode aMode);
+    Error       SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     Error SendDataRequest(const Ip6::Address                        &aDestination,

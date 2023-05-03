@@ -73,6 +73,7 @@ const otMeshLocalPrefix Mle::sMeshLocalPrefixInit = {
 Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRetrieveNewNetworkData(false)
+    , mRequestRouteTlv(false)
     , mRole(kRoleDisabled)
     , mNeighborTable(aInstance)
     , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
@@ -1841,7 +1842,30 @@ exit:
     return error;
 }
 
+Error Mle::SendDataRequest(const Ip6::Address &aDestination)
+{
+    return SendDataRequestAfterDelay(aDestination, /* aDelay */ 0);
+}
+
+Error Mle::SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay)
+{
+    static const uint8_t kTlvs[] = {Tlv::kNetworkData, Tlv::kRoute};
+
+    // Based on `mRequestRouteTlv` include both Network Data and Route
+    // TLVs or only Network Data TLV.
+
+    return SendDataRequest(aDestination, kTlvs, mRequestRouteTlv ? 2 : 1, aDelay);
+}
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+Error Mle::SendDataRequestForLinkMetricsReport(const Ip6::Address                        &aDestination,
+                                               const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo)
+{
+    static const uint8_t kTlvs[] = {Tlv::kLinkMetricsReport};
+
+    return SendDataRequest(aDestination, kTlvs, sizeof(kTlvs), /* aDelay */ 0, &aQueryInfo);
+}
+
 Error Mle::SendDataRequest(const Ip6::Address                        &aDestination,
                            const uint8_t                             *aTlvs,
                            uint8_t                                    aTlvsLength,
@@ -1987,15 +2011,13 @@ void Mle::HandleMessageTransmissionTimer(void)
     case kChildUpdateRequestNone:
         if (mDataRequestState == kDataRequestActive)
         {
-            static const uint8_t kTlvs[] = {Tlv::kNetworkData};
-
             Ip6::Address destination;
 
             VerifyOrExit(mDataRequestAttempts < kMaxChildKeepAliveAttempts, IgnoreError(BecomeDetached()));
 
             destination.SetToLinkLocalAddress(mParent.GetExtAddress());
 
-            if (SendDataRequest(destination, kTlvs) == kErrorNone)
+            if (SendDataRequest(destination) == kErrorNone)
             {
                 mDataRequestAttempts++;
             }
@@ -2741,8 +2763,6 @@ exit:
 
 void Mle::HandleAdvertisement(RxInfo &aRxInfo)
 {
-    static const uint8_t kTlvs[] = {Tlv::kNetworkData};
-
     Error      error = kErrorNone;
     uint16_t   sourceAddress;
     LeaderData leaderData;
@@ -2796,7 +2816,7 @@ void Mle::HandleAdvertisement(RxInfo &aRxInfo)
     if (mRetrieveNewNetworkData || IsNetworkDataNewer(leaderData))
     {
         delay = Random::NonCrypto::GetUint16InRange(0, kMleMaxResponseDelay);
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
+        IgnoreError(SendDataRequestAfterDelay(aRxInfo.mMessageInfo.GetPeerAddr(), delay));
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
@@ -2824,6 +2844,10 @@ void Mle::HandleDataResponse(RxInfo &aRxInfo)
                                                          aRxInfo.mMessageInfo.GetPeerAddr());
         }
     }
+#endif
+
+#if OPENTHREAD_FTD
+    SuccessOrExit(error = Get<MleRouter>().ReadAndProcessRouteTlvOnFed(aRxInfo, mParent.GetRouterId()));
 #endif
 
     error = HandleLeaderData(aRxInfo);
@@ -2989,8 +3013,6 @@ exit:
 
     if (dataRequest)
     {
-        static const uint8_t kTlvs[] = {Tlv::kNetworkData};
-
         uint16_t delay;
 
         if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
@@ -3005,7 +3027,7 @@ exit:
             delay = 10;
         }
 
-        IgnoreError(SendDataRequest(aRxInfo.mMessageInfo.GetPeerAddr(), kTlvs, delay));
+        IgnoreError(SendDataRequestAfterDelay(aRxInfo.mMessageInfo.GetPeerAddr(), delay));
     }
     else if (error == kErrorNone)
     {
@@ -3583,6 +3605,13 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         SetStateChild(GetRloc16());
 
         mRetrieveNewNetworkData = true;
+
+#if OPENTHREAD_FTD
+        if (IsFullThreadDevice())
+        {
+            mRequestRouteTlv = true;
+        }
+#endif
 
         OT_FALL_THROUGH;
 
