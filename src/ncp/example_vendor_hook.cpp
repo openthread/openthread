@@ -77,7 +77,7 @@ otError NcpBase::VendorGetPropertyHandler(spinel_prop_key_t aPropKey)
         // TODO: Implement your property get handlers here.
         //
         // Get handler should retrieve the property value and then encode and write the
-        // value into the NCP buffer. If the "get" operation itself fails, handler should
+        // value into the NCP buffer. If the "get" operation itself fails, `NcpBase` will
         // write a `LAST_STATUS` with the error status into the NCP buffer. `OT_ERROR_NO_BUFS`
         // should be returned if NCP buffer is full and response cannot be written.
 

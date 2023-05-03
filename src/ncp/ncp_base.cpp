@@ -1134,11 +1134,11 @@ otError NcpBase::WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aP
 
         error = VendorGetPropertyHandler(aPropKey);
 
-        // An `OT_ERROR_NOT_FOUND` status from vendor handler indicates that
-        // it did not support the given property key. In that case, we fall
-        // through to prepare a `LAST_STATUS` response.
+        // Fall through to prepare a `LAST_STATUS` response if
+        // handler does not support the given property key or
+        // if get operation is not successful
 
-        if (error != OT_ERROR_NOT_FOUND)
+        if (error == OT_ERROR_NONE)
         {
             SuccessOrExit(error);
             ExitNow(error = mEncoder.EndFrame());
@@ -1148,7 +1148,10 @@ otError NcpBase::WritePropertyValueIsFrame(uint8_t aHeader, spinel_prop_key_t aP
 
     if (aIsGetResponse)
     {
-        SuccessOrExit(error = WriteLastStatusFrame(aHeader, SPINEL_STATUS_PROP_NOT_FOUND));
+        // Write a `LAST_STATUS` into NCP buffer if get operation fails
+        // or if vendor handler does not support given property key.
+
+        SuccessOrExit(error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)));
     }
     else
     {
