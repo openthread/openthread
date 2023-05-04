@@ -1029,8 +1029,6 @@ tools/harness-thci/Makefile
 tools/spi-hdlc-adapter/Makefile
 tests/Makefile
 tests/fuzz/Makefile
-tests/scripts/Makefile
-tests/scripts/thread-cert/Makefile
 doc/Makefile
 ])
 

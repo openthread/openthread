@@ -144,20 +144,19 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
+        sudo apt-get --no-install-recommends install -y lcov ninja-build g++-multilib python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
+        ./script/test build
     - name: Run
       run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
         name: cli-ftd-thread-cert
-        path: build/simulation/tests/scripts/thread-cert
+        path: ot_testing
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -195,20 +194,19 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
+        sudo apt-get --no-install-recommends install -y lcov ninja-build g++-multilib python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
+        ./script/test build
     - name: Run
       run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
         name: cli-mtd-thread-cert
-        path: build/simulation/tests/scripts/thread-cert
+        path: ot_testing
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -226,7 +224,6 @@ jobs:
       COVERAGE: 1
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
-      TIME_SYNC: 1
       VIRTUAL_TIME: 1
     steps:
     - name: Harden Runner
@@ -240,20 +237,19 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
+        OT_OPTIONS="-DOT_TIME_SYNC=ON" ./script/test build
     - name: Run
       run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
         name: cli-time-sync-thread-cert
-        path: build/simulation/tests/scripts/thread-cert
+        path: ot_testing
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -355,8 +351,6 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
-      MULTIPLE_INSTANCE: 1
-      REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       CXXFLAGS: "-DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0"
@@ -371,19 +365,18 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel lcov
+        sudo apt-get --no-install-recommends install -y lcov ninja-build python3-setuptools python3-wheel
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
+        OT_OPTIONS="-DOT_MULTIPLE_INSTANCE=ON" ./script/test build
     - name: Run
       run: |
-        VERBOSE=1 make -f examples/Makefile-simulation check
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       if: ${{ failure() }}
       with:
-        name: multiple-instance-thread-cert
+        name: ot_testing
         path: build/simulation/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |

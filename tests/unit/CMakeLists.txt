@@ -30,7 +30,6 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/examples/platforms/simulation
 )
 
 set(COMMON_COMPILE_OPTIONS

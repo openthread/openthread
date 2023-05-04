@@ -26,7 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Disable OpenThread's own new implementation to avoid duplicate definition
+#define OT_CORE_COMMON_NEW_HPP_
 #include "test_platform.h"
+
+#include <map>
+#include <vector>
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -36,6 +41,8 @@ enum
     FLASH_SWAP_SIZE = 2048,
     FLASH_SWAP_NUM  = 2,
 };
+
+std::map<uint32_t, std::vector<std::vector<uint8_t>>> settings;
 
 ot::Instance *testInitInstance(void)
 {
@@ -224,18 +231,78 @@ OT_TOOL_WEAK void otPlatSettingsInit(otInstance *, const uint16_t *, uint16_t) {
 
 OT_TOOL_WEAK void otPlatSettingsDeinit(otInstance *) {}
 
-OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t, int, uint8_t *, uint16_t *)
+OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
 {
-    return OT_ERROR_NOT_FOUND;
+    auto setting = settings.find(aKey);
+
+    if (setting == settings.end())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aIndex > setting->second.size())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aValueLength == nullptr)
+    {
+        return OT_ERROR_NONE;
+    }
+
+    const auto &data = setting->second[aIndex];
+
+    if (aValue == nullptr)
+    {
+        *aValueLength = data.size();
+        return OT_ERROR_NONE;
+    }
+
+    if (*aValueLength >= data.size())
+    {
+        *aValueLength = data.size();
+    }
+
+    memcpy(aValue, &data[0], *aValueLength);
+
+    return OT_ERROR_NONE;
 }
 
-OT_TOOL_WEAK otError otPlatSettingsSet(otInstance *, uint16_t, const uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+OT_TOOL_WEAK otError otPlatSettingsSet(otInstance *, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    auto setting = std::vector<uint8_t>(aValue, aValue + aValueLength);
 
-OT_TOOL_WEAK otError otPlatSettingsAdd(otInstance *, uint16_t, const uint8_t *, uint16_t) { return OT_ERROR_NONE; }
+    settings[aKey].clear();
+    settings[aKey].push_back(setting);
 
-OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t, int) { return OT_ERROR_NONE; }
+    return OT_ERROR_NONE;
+}
 
-OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) {}
+OT_TOOL_WEAK otError otPlatSettingsAdd(otInstance *, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+{
+    auto setting = std::vector<uint8_t>(aValue, aValue + aValueLength);
+    settings[aKey].push_back(setting);
+
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t aKey, int aIndex)
+{
+    auto setting = settings.find(aKey);
+    if (setting == settings.end())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+
+    if (aIndex >= setting->second.size())
+    {
+        return OT_ERROR_NOT_FOUND;
+    }
+    setting->second.erase(setting->second.begin() + aIndex);
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *) { settings.clear(); }
 
 uint8_t *GetFlash(void)
 {
