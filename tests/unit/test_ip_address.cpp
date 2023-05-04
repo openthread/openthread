@@ -29,6 +29,7 @@
 #include <limits.h>
 
 #include "common/encoding.hpp"
+#include "common/string.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 
@@ -166,6 +167,56 @@ void TestIp6AddressFromString(void)
     {
         checkAddressFromString(&testVector);
     }
+
+    // Validate parsing all test vectors now as an IPv6 prefix.
+
+    for (Ip6AddressTestVector &testVector : testVectors)
+    {
+        constexpr uint16_t kMaxString = 80;
+
+        ot::Ip6::Prefix prefix;
+        char            string[kMaxString];
+        uint16_t        length;
+
+        length = ot::StringLength(testVector.mString, kMaxString);
+        memcpy(string, testVector.mString, length);
+        VerifyOrQuit(length + sizeof("/128") <= kMaxString);
+        strcpy(&string[length], "/128");
+
+        printf("%s\n", string);
+
+        VerifyOrQuit(prefix.FromString(string) == testVector.mError);
+
+        if (testVector.mError == ot::kErrorNone)
+        {
+            VerifyOrQuit(memcmp(prefix.GetBytes(), testVector.mAddr, sizeof(ot::Ip6::Address)) == 0);
+            VerifyOrQuit(prefix.GetLength() == 128);
+        }
+    }
+}
+
+void TestIp6PrefixFromString(void)
+{
+    ot::Ip6::Prefix prefix;
+
+    SuccessOrQuit(prefix.FromString("::/128"));
+    VerifyOrQuit(prefix.GetLength() == 128);
+
+    SuccessOrQuit(prefix.FromString("::/0128"));
+    VerifyOrQuit(prefix.GetLength() == 128);
+
+    SuccessOrQuit(prefix.FromString("::/5"));
+    VerifyOrQuit(prefix.GetLength() == 5);
+
+    SuccessOrQuit(prefix.FromString("::/0"));
+    VerifyOrQuit(prefix.GetLength() == 0);
+
+    VerifyOrQuit(prefix.FromString("::") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/129") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString(":: /12") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/a1") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/12 ") == ot::kErrorParse);
 }
 
 void TestIp4AddressFromString(void)
@@ -651,6 +702,7 @@ int main(void)
     TestIp6AddressSetPrefix();
     TestIp4AddressFromString();
     TestIp6AddressFromString();
+    TestIp6PrefixFromString();
     TestIp6Prefix();
     TestIp4Ip6Translation();
     TestIp4Cidr();

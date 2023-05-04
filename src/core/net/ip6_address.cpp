@@ -157,6 +157,39 @@ bool Prefix::IsValidNat64PrefixLength(uint8_t aLength)
            (aLength == 96);
 }
 
+Error Prefix::FromString(const char *aString)
+{
+    constexpr char kSlashChar = '/';
+    constexpr char kNullChar  = '\0';
+
+    Error       error = kErrorParse;
+    const char *slashPosition;
+    uint16_t    plen = 0;
+
+    VerifyOrExit(aString != nullptr);
+
+    slashPosition = StringFind(aString, kSlashChar);
+    VerifyOrExit(slashPosition != nullptr);
+
+    SuccessOrExit(AsCoreType(&mPrefix).ParseFrom(aString, kSlashChar));
+
+    VerifyOrExit(slashPosition[1] != kNullChar);
+
+    for (const char *cur = slashPosition + 1; *cur != kNullChar; cur++)
+    {
+        VerifyOrExit((*cur >= '0') && (*cur <= '9'));
+        plen *= 10;
+        plen += static_cast<uint8_t>(*cur - '0');
+        VerifyOrExit(plen <= kMaxLength);
+    }
+
+    SetLength(static_cast<uint8_t>(plen));
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
 Prefix::InfoString Prefix::ToString(void) const
 {
     InfoString string;
@@ -492,10 +525,16 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
 
 Error Address::FromString(const char *aString)
 {
+    constexpr char kNullChar = '\0';
+
+    return ParseFrom(aString, kNullChar);
+}
+
+Error Address::ParseFrom(const char *aString, char aTerminatorChar)
+{
     constexpr uint8_t kInvalidIndex = 0xff;
     constexpr char    kColonChar    = ':';
     constexpr char    kDotChar      = '.';
-    constexpr char    kNullChar     = '\0';
 
     Error   error      = kErrorParse;
     uint8_t index      = 0;
@@ -513,7 +552,7 @@ Error Address::FromString(const char *aString)
         colonIndex = index;
     }
 
-    while (*aString != kNullChar)
+    while (*aString != aTerminatorChar)
     {
         const char *start = aString;
         uint32_t    value = 0;
@@ -560,7 +599,7 @@ Error Address::FromString(const char *aString)
             break;
         }
 
-        VerifyOrExit((*aString == kColonChar) || (*aString == kNullChar));
+        VerifyOrExit((*aString == kColonChar) || (*aString == aTerminatorChar));
 
         VerifyOrExit(index < endIndex);
         mFields.m16[index++] = HostSwap16(static_cast<uint16_t>(value));
@@ -594,7 +633,7 @@ Error Address::FromString(const char *aString)
     {
         Ip4::Address ip4Addr;
 
-        SuccessOrExit(error = ip4Addr.FromString(aString));
+        SuccessOrExit(error = ip4Addr.FromString(aString, aTerminatorChar));
         memcpy(GetArrayEnd(mFields.m8) - Ip4::Address::kSize, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
 
