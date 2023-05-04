@@ -79,8 +79,8 @@ private:
     using PrefixType = uint8_t;
     enum : PrefixType
     {
-        kPrefixTypeLocal   = 0x01,
-        kPrefixTypeFavored = 0x02,
+        kPrefixTypeLocal   = 1u << 0,
+        kPrefixTypeFavored = 1u << 1,
     };
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
