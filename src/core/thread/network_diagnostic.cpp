@@ -830,6 +830,10 @@ template <> void Server::HandleTmf<kUriDiagnosticReset>(Coap::Message &aMessage,
             Get<Mac::Mac>().ResetCounters();
             break;
 
+        case Tlv::kMleCounters:
+            Get<Mle::Mle>().ResetCounters();
+            break;
+
         default:
             break;
         }
@@ -1136,6 +1140,16 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
             SuccessOrExit(error = aMessage.Read(offset, macCountersTlv));
             VerifyOrExit(macCountersTlv.IsValid(), error = kErrorParse);
             ParseMacCounters(macCountersTlv, aTlvInfo.mData.mMacCounters);
+            break;
+        }
+
+        case Tlv::kMleCounters:
+        {
+            MleCountersTlv mleCoutersTlv;
+
+            SuccessOrExit(error = aMessage.Read(offset, mleCoutersTlv));
+            VerifyOrExit(mleCoutersTlv.IsValid(), error = kErrorParse);
+            mleCoutersTlv.Read(aTlvInfo.mData.mMleCounters);
             break;
         }
 

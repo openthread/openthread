@@ -8384,6 +8384,10 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             OutputLine("MAC Counters:");
             OutputNetworkDiagMacCounters(kIndentSize, diagTlv.mData.mMacCounters);
             break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS:
+            OutputLine("MLE Counters:");
+            OutputNetworkDiagMleCounters(kIndentSize, diagTlv.mData.mMleCounters);
+            break;
         case OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL:
             OutputLine("Battery Level: %u%%", diagTlv.mData.mBatteryLevel);
             break;
@@ -8479,15 +8483,75 @@ void Interpreter::OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLea
 
 void Interpreter::OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters)
 {
-    OutputLine(aIndentSize, "IfInUnknownProtos: %lu", ToUlong(aMacCounters.mIfInUnknownProtos));
-    OutputLine(aIndentSize, "IfInErrors: %lu", ToUlong(aMacCounters.mIfInErrors));
-    OutputLine(aIndentSize, "IfOutErrors: %lu", ToUlong(aMacCounters.mIfOutErrors));
-    OutputLine(aIndentSize, "IfInUcastPkts: %lu", ToUlong(aMacCounters.mIfInUcastPkts));
-    OutputLine(aIndentSize, "IfInBroadcastPkts: %lu", ToUlong(aMacCounters.mIfInBroadcastPkts));
-    OutputLine(aIndentSize, "IfInDiscards: %lu", ToUlong(aMacCounters.mIfInDiscards));
-    OutputLine(aIndentSize, "IfOutUcastPkts: %lu", ToUlong(aMacCounters.mIfOutUcastPkts));
-    OutputLine(aIndentSize, "IfOutBroadcastPkts: %lu", ToUlong(aMacCounters.mIfOutBroadcastPkts));
-    OutputLine(aIndentSize, "IfOutDiscards: %lu", ToUlong(aMacCounters.mIfOutDiscards));
+    struct CounterName
+    {
+        const uint32_t otNetworkDiagMacCounters::*mValuePtr;
+        const char                               *mName;
+    };
+
+    static const CounterName kCounterNames[] = {
+        {&otNetworkDiagMacCounters::mIfInUnknownProtos, "IfInUnknownProtos"},
+        {&otNetworkDiagMacCounters::mIfInErrors, "IfInErrors"},
+        {&otNetworkDiagMacCounters::mIfOutErrors, "IfOutErrors"},
+        {&otNetworkDiagMacCounters::mIfInUcastPkts, "IfInUcastPkts"},
+        {&otNetworkDiagMacCounters::mIfInBroadcastPkts, "IfInBroadcastPkts"},
+        {&otNetworkDiagMacCounters::mIfInDiscards, "IfInDiscards"},
+        {&otNetworkDiagMacCounters::mIfOutUcastPkts, "IfOutUcastPkts"},
+        {&otNetworkDiagMacCounters::mIfOutBroadcastPkts, "IfOutBroadcastPkts"},
+        {&otNetworkDiagMacCounters::mIfOutDiscards, "IfOutDiscards"},
+    };
+
+    for (const CounterName &counter : kCounterNames)
+    {
+        OutputLine(aIndentSize, "%s: %lu", counter.mName, ToUlong(aMacCounters.*counter.mValuePtr));
+    }
+}
+
+void Interpreter::OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetworkDiagMleCounters &aMleCounters)
+{
+    struct CounterName
+    {
+        const uint16_t otNetworkDiagMleCounters::*mValuePtr;
+        const char                               *mName;
+    };
+
+    struct TimeCounterName
+    {
+        const uint64_t otNetworkDiagMleCounters::*mValuePtr;
+        const char                               *mName;
+    };
+
+    static const CounterName kCounterNames[] = {
+        {&otNetworkDiagMleCounters::mDisabledRole, "DisabledRole"},
+        {&otNetworkDiagMleCounters::mDetachedRole, "DetachedRole"},
+        {&otNetworkDiagMleCounters::mChildRole, "ChildRole"},
+        {&otNetworkDiagMleCounters::mRouterRole, "RouterRole"},
+        {&otNetworkDiagMleCounters::mLeaderRole, "LeaderRole"},
+        {&otNetworkDiagMleCounters::mAttachAttempts, "AttachAttempts"},
+        {&otNetworkDiagMleCounters::mPartitionIdChanges, "PartitionIdChanges"},
+        {&otNetworkDiagMleCounters::mBetterPartitionAttachAttempts, "BetterPartitionAttachAttempts"},
+        {&otNetworkDiagMleCounters::mParentChanges, "ParentChanges"},
+    };
+
+    static const TimeCounterName kTimeCounterNames[] = {
+        {&otNetworkDiagMleCounters::mTrackedTime, "TrackedTime"},
+        {&otNetworkDiagMleCounters::mDisabledTime, "DisabledTime"},
+        {&otNetworkDiagMleCounters::mDetachedTime, "DetachedTime"},
+        {&otNetworkDiagMleCounters::mChildTime, "ChildTime"},
+        {&otNetworkDiagMleCounters::mRouterTime, "RouterTime"},
+        {&otNetworkDiagMleCounters::mLeaderTime, "LeaderTime"},
+    };
+
+    for (const CounterName &counter : kCounterNames)
+    {
+        OutputLine(aIndentSize, "%s: %u", counter.mName, aMleCounters.*counter.mValuePtr);
+    }
+
+    for (const TimeCounterName &counter : kTimeCounterNames)
+    {
+        OutputFormat("%s: ", counter.mName);
+        OutputUint64Line(aMleCounters.*counter.mValuePtr);
+    }
 }
 
 void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry)

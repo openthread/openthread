@@ -473,6 +473,7 @@ private:
     void OutputRouteData(uint8_t aIndentSize, const otNetworkDiagRouteData &aRouteData);
     void OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLeaderData);
     void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
+    void OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetworkDiagMleCounters &aMleCounters);
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 

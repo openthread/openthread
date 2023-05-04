@@ -40,6 +40,7 @@ namespace NetworkDiagnostic {
 
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
+using ot::Encoding::BigEndian::HostSwap64;
 
 #if OPENTHREAD_FTD
 
@@ -106,6 +107,47 @@ void AnswerTlv::Init(uint16_t aIndex, bool aIsLast)
     SetLength(sizeof(*this) - sizeof(Tlv));
 
     SetFlagsIndex((aIndex & kIndexMask) | (aIsLast ? kIsLastFlag : 0));
+}
+
+void MleCountersTlv::Init(const Mle::Counters &aMleCounters)
+{
+    SetType(kMleCounters);
+    SetLength(sizeof(*this) - sizeof(Tlv));
+
+    mDisabledRole                  = HostSwap16(aMleCounters.mDisabledRole);
+    mDetachedRole                  = HostSwap16(aMleCounters.mDetachedRole);
+    mChildRole                     = HostSwap16(aMleCounters.mChildRole);
+    mRouterRole                    = HostSwap16(aMleCounters.mRouterRole);
+    mLeaderRole                    = HostSwap16(aMleCounters.mLeaderRole);
+    mAttachAttempts                = HostSwap16(aMleCounters.mAttachAttempts);
+    mPartitionIdChanges            = HostSwap16(aMleCounters.mPartitionIdChanges);
+    mBetterPartitionAttachAttempts = HostSwap16(aMleCounters.mBetterPartitionAttachAttempts);
+    mParentChanges                 = HostSwap16(aMleCounters.mParentChanges);
+    mTrackedTime                   = HostSwap64(aMleCounters.mTrackedTime);
+    mDisabledTime                  = HostSwap64(aMleCounters.mDisabledTime);
+    mDetachedTime                  = HostSwap64(aMleCounters.mDetachedTime);
+    mChildTime                     = HostSwap64(aMleCounters.mChildTime);
+    mRouterTime                    = HostSwap64(aMleCounters.mRouterTime);
+    mLeaderTime                    = HostSwap64(aMleCounters.mLeaderTime);
+}
+
+void MleCountersTlv::Read(MleCounters &aDiagMleCounters) const
+{
+    aDiagMleCounters.mDisabledRole                  = HostSwap16(mDisabledRole);
+    aDiagMleCounters.mDetachedRole                  = HostSwap16(mDetachedRole);
+    aDiagMleCounters.mChildRole                     = HostSwap16(mChildRole);
+    aDiagMleCounters.mRouterRole                    = HostSwap16(mRouterRole);
+    aDiagMleCounters.mLeaderRole                    = HostSwap16(mLeaderRole);
+    aDiagMleCounters.mAttachAttempts                = HostSwap16(mAttachAttempts);
+    aDiagMleCounters.mPartitionIdChanges            = HostSwap16(mPartitionIdChanges);
+    aDiagMleCounters.mBetterPartitionAttachAttempts = HostSwap16(mBetterPartitionAttachAttempts);
+    aDiagMleCounters.mParentChanges                 = HostSwap16(mParentChanges);
+    aDiagMleCounters.mTrackedTime                   = HostSwap64(mTrackedTime);
+    aDiagMleCounters.mDisabledTime                  = HostSwap64(mDisabledTime);
+    aDiagMleCounters.mDetachedTime                  = HostSwap64(mDetachedTime);
+    aDiagMleCounters.mChildTime                     = HostSwap64(mChildTime);
+    aDiagMleCounters.mRouterTime                    = HostSwap64(mRouterTime);
+    aDiagMleCounters.mLeaderTime                    = HostSwap64(mLeaderTime);
 }
 
 } // namespace NetworkDiagnostic

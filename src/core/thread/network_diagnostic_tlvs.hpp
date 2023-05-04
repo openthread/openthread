@@ -96,6 +96,7 @@ public:
         kNeighbor            = OT_NETWORK_DIAGNOSTIC_TLV_NEIGHBOR,
         kAnswer              = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
         kQueryId             = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
+        kMleCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
     };
 
     /**
@@ -1069,6 +1070,64 @@ private:
     void     SetFlagsIndex(uint16_t aFlagsIndex) { mFlagsIndex = HostSwap16(aFlagsIndex); }
 
     uint16_t mFlagsIndex;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents the MLE Counters.
+ *
+ */
+typedef otNetworkDiagMleCounters MleCounters;
+
+/**
+ * This class implements MLE Counters TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class MleCountersTlv : public Tlv, public TlvInfo<Tlv::kMleCounters>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     * @param[in] aMleCounter    The MLE counters to initialize the TLV with.
+     *
+     */
+    void Init(const Mle::Counters &aMleCounters);
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     *
+     * This method reads the counters from TLV.
+     *
+     * @param[out] aDiagMleCounters   A reference to `NetworkDiagnostic::MleCounters` to populate.
+     *
+     */
+    void Read(MleCounters &aDiagMleCounters) const;
+
+private:
+    uint16_t mDisabledRole;                  // Number of times device entered disabled role.
+    uint16_t mDetachedRole;                  // Number of times device entered detached role.
+    uint16_t mChildRole;                     // Number of times device entered child role.
+    uint16_t mRouterRole;                    // Number of times device entered router role.
+    uint16_t mLeaderRole;                    // Number of times device entered leader role.
+    uint16_t mAttachAttempts;                // Number of attach attempts while device was detached.
+    uint16_t mPartitionIdChanges;            // Number of changes to partition ID.
+    uint16_t mBetterPartitionAttachAttempts; // Number of attempts to attach to a better partition.
+    uint16_t mParentChanges;                 // Number of time device changed its parent.
+    uint64_t mTrackedTime;                   // Milliseconds tracked by next counters.
+    uint64_t mDisabledTime;                  // Milliseconds device has been in disabled role.
+    uint64_t mDetachedTime;                  // Milliseconds device has been in detached role.
+    uint64_t mChildTime;                     // Milliseconds device has been in child role.
+    uint64_t mRouterTime;                    // Milliseconds device has been in router role.
+    uint64_t mLeaderTime;                    // Milliseconds device has been in leader role.
 } OT_TOOL_PACKED_END;
 
 } // namespace NetworkDiagnostic
