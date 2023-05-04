@@ -76,9 +76,16 @@ public:
 private:
     using Command = CommandEntry<Br>;
 
+    using PrefixType = uint8_t;
+    enum : PrefixType
+    {
+        kPrefixTypeLocal   = 1u << 0,
+        kPrefixTypeFavored = 1u << 1,
+    };
+
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError ParsePrefixTypeArgs(Arg aArgs[], bool &aOutputLocal, bool &aOutputFavored);
+    otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
 };
 
 } // namespace Cli
