@@ -59,6 +59,10 @@ class BorderAgent : public InstanceLocator, private NonCopyable
     friend class Tmf::SecureAgent;
 
 public:
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    static constexpr uint8_t kIdLength = OT_BORDER_AGENT_ID_LENGTH;
+#endif
+
     /**
      * This enumeration defines the Border Agent state.
      *
@@ -77,6 +81,25 @@ public:
      *
      */
     explicit BorderAgent(Instance &aInstance);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    /**
+     * Gets the randomly generated Border Agent ID.
+     *
+     * The ID is saved in persistent storage and survives reboots. The typical use case of the ID is to
+     * be published in the MeshCoP mDNS service as the `id` TXT value for the client to identify this
+     * Border Router/Agent device.
+     *
+     * @param[out]   aId      A pointer to buffer to receive the ID.
+     * @param[inout] aLength  Specifies the length of `aId` when used as input and receives the length
+     *                        actual ID data copied to `aId` when used as output.
+     *
+     * @retval OT_ERROR_INVALID_ARGS  If value of `aLength` if smaller than `OT_BORDER_AGENT_ID_LENGTH`.
+     * @retval OT_ERROR_NONE          If successfully retrieved the Border Agent ID.
+     *
+     */
+    Error GetId(uint8_t *aId, uint16_t &aLength);
+#endif
 
     /**
      * This method gets the UDP port of this service.
@@ -178,6 +201,10 @@ private:
     TimeoutTimer mTimer;
     State        mState;
     uint16_t     mUdpProxyPort;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    Settings::BorderAgentId mId;
+    bool                    mIdInitialized;
+#endif
 };
 
 DeclareTmfHandler(BorderAgent, kUriRelayRx);
