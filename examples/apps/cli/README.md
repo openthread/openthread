@@ -6,8 +6,7 @@ This example application exposes OpenThread configuration and management APIs vi
 
 ```bash
 $ cd <path-to-openthread>
-$ ./bootstrap
-$ make -f examples/Makefile-simulation
+$ ./script/cmake-build simulation
 ```
 
 ## 2. Start node 1
@@ -15,7 +14,7 @@ $ make -f examples/Makefile-simulation
 Spawn the process:
 
 ```bash
-$ cd <path-to-openthread>/output/<platform>/bin
+$ cd <path-to-openthread>/build/simulation/examples/apps/cli
 $ ./ot-cli-ftd 1
 ```
 
@@ -78,7 +77,7 @@ Done
 Spawn the process:
 
 ```bash
-$ cd <path-to-openthread>/output/<platform>/bin
+$ cd <path-to-openthread>/build/simulation/examples/apps/cli
 $ ./ot-cli-ftd 2
 ```
 
