@@ -109,8 +109,6 @@ void Resolver::LoadDnsServerListFromConf(void)
     }
 
     mUpstreamDnsServerListFreshness = otPlatTimeGet();
-
-    return;
 }
 
 void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
