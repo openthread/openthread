@@ -103,8 +103,8 @@ class Mle : public InstanceLocator, private NonCopyable
     friend class DiscoverScanner;
     friend class ot::Notifier;
     friend class ot::SupervisionListener;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    friend class ot::LinkMetrics::LinkMetrics;
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    friend class ot::LinkMetrics::Initiator;
 #endif
 
 public:
@@ -1536,7 +1536,7 @@ protected:
      */
     Error SendDataRequest(const Ip6::Address &aDestination);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
      * This method generates an MLE Data Request message which request Link Metrics Report TLV.
      *
@@ -1547,8 +1547,8 @@ protected:
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    Error SendDataRequestForLinkMetricsReport(const Ip6::Address                        &aDestination,
-                                              const LinkMetrics::LinkMetrics::QueryInfo &aQueryInfo);
+    Error SendDataRequestForLinkMetricsReport(const Ip6::Address                      &aDestination,
+                                              const LinkMetrics::Initiator::QueryInfo &aQueryInfo);
 #endif
 
     /**
@@ -1976,12 +1976,12 @@ private:
     Error       SendChildUpdateRequest(ChildUpdateRequestMode aMode);
     Error       SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    Error SendDataRequest(const Ip6::Address                        &aDestination,
-                          const uint8_t                             *aTlvs,
-                          uint8_t                                    aTlvsLength,
-                          uint16_t                                   aDelay,
-                          const LinkMetrics::LinkMetrics::QueryInfo *aQueryInfo = nullptr);
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    Error SendDataRequest(const Ip6::Address                      &aDestination,
+                          const uint8_t                           *aTlvs,
+                          uint8_t                                  aTlvsLength,
+                          uint16_t                                 aDelay,
+                          const LinkMetrics::Initiator::QueryInfo *aQueryInfo = nullptr);
 #else
     Error SendDataRequest(const Ip6::Address &aDestination, const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aDelay);
 #endif
@@ -2003,12 +2003,10 @@ private:
     void HandleAnnounce(RxInfo &aRxInfo);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     void HandleLinkMetricsManagementRequest(RxInfo &aRxInfo);
+    void HandleLinkProbe(RxInfo &aRxInfo);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void HandleLinkMetricsManagementResponse(RxInfo &aRxInfo);
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    void HandleLinkProbe(RxInfo &aRxInfo);
 #endif
     Error HandleLeaderData(RxInfo &aRxInfo);
     void  ProcessAnnounce(void);
