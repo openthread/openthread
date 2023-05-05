@@ -48,10 +48,10 @@ otError otLinkMetricsQuery(otInstance                 *aInstance,
                            otLinkMetricsReportCallback aCallback,
                            void                       *aCallbackContext)
 {
-    AsCoreType(aInstance).Get<LinkMetrics::LinkMetricsInitiator>().SetReportCallback(aCallback, aCallbackContext);
+    AsCoreType(aInstance).Get<LinkMetrics::Initiator>().SetReportCallback(aCallback, aCallbackContext);
 
-    return AsCoreType(aInstance).Get<LinkMetrics::LinkMetricsInitiator>().Query(AsCoreType(aDestination), aSeriesId,
-                                                                                AsCoreTypePtr(aLinkMetricsFlags));
+    return AsCoreType(aInstance).Get<LinkMetrics::Initiator>().Query(AsCoreType(aDestination), aSeriesId,
+                                                                     AsCoreTypePtr(aLinkMetricsFlags));
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -63,7 +63,7 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance                     
                                                  otLinkMetricsMgmtResponseCallback aCallback,
                                                  void                             *aCallbackContext)
 {
-    LinkMetrics::LinkMetricsInitiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::LinkMetricsInitiator>();
+    LinkMetrics::Initiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::Initiator>();
 
     initiator.SetMgmtResponseCallback(aCallback, aCallbackContext);
 
@@ -80,7 +80,7 @@ otError otLinkMetricsConfigEnhAckProbing(otInstance                             
                                          otLinkMetricsEnhAckProbingIeReportCallback aEnhAckCallback,
                                          void                                      *aEnhAckCallbackContext)
 {
-    LinkMetrics::LinkMetricsInitiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::LinkMetricsInitiator>();
+    LinkMetrics::Initiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::Initiator>();
 
     initiator.SetMgmtResponseCallback(aCallback, aCallbackContext);
     initiator.SetEnhAckProbingCallback(aEnhAckCallback, aEnhAckCallbackContext);
@@ -94,7 +94,7 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
                                    uint8_t             aSeriesId,
                                    uint8_t             aLength)
 {
-    LinkMetrics::LinkMetricsInitiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::LinkMetricsInitiator>();
+    LinkMetrics::Initiator &initiator = AsCoreType(aInstance).Get<LinkMetrics::Initiator>();
 
     return initiator.SendLinkProbe(AsCoreType(aDestination), aSeriesId, aLength);
 }

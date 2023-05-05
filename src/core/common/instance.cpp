@@ -190,10 +190,10 @@ Instance::Instance(void)
     , mTimeSync(*this)
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    , mLinkMetricsInitiator(*this)
+    , mInitiator(*this)
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    , mLinkMetricsSubject(*this)
+    , mSubject(*this)
 #endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mApplicationCoap(*this)

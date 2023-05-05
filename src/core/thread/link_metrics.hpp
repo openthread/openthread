@@ -73,7 +73,13 @@ namespace LinkMetrics {
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
-class LinkMetricsInitiator : public InstanceLocator, private NonCopyable
+/**
+ * This class implements the Thread Link Metrics Initiator.
+ *
+ * The Initiator makes queries, configures Link Metrics probing at the Subject and generates reports of the results.
+ *
+ */
+class Initiator : public InstanceLocator, private NonCopyable
 {
 public:
     // Initiator callbacks
@@ -92,7 +98,13 @@ public:
         uint8_t mTypeIdCount;          ///< Number of entries in `mTypeIds[]`.
     };
 
-    explicit LinkMetricsInitiator(Instance &aInstance);
+    /**
+     * This constructor initializes an instance of the Initiator class.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread interface.
+     *
+     */
+    explicit Initiator(Instance &aInstance);
 
     /**
      * This method sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data.
@@ -256,12 +268,24 @@ private:
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
-class LinkMetricsSubject : public InstanceLocator, private NonCopyable
+/**
+ * This class implements the Thread Link Metrics Subject.
+ *
+ * The Subject reponds queries with reports, handles Link Metrics Management Requests and Link Probe Messages.
+ *
+ */
+class Subject : public InstanceLocator, private NonCopyable
 {
 public:
     typedef otLinkMetricsEnhAckProbingIeReportCallback EnhAckProbingIeReportCallback;
 
-    explicit LinkMetricsSubject(Instance &aInstance);
+    /**
+     * This constructor initializes an instance of the Subject class.
+     *
+     * @param[in]  aInstance  A reference to the OpenThread interface.
+     *
+     */
+    explicit Subject(Instance &aInstance);
 
     /**
      * This method appends a Link Metrics Report to a message according to the Link Metrics query.
@@ -303,7 +327,7 @@ public:
     Error HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId);
 
     /**
-     * This method frees a SeriesInfo entry that was allocated from the LinkMetricsSubject object.
+     * This method frees a SeriesInfo entry that was allocated from the Subject object.
      *
      * @param[in]  aSeries    A reference to the SeriesInfo to free.
      *

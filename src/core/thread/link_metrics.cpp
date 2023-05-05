@@ -61,12 +61,12 @@ static constexpr int32_t kMaxRssi       = 0;
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
-LinkMetricsInitiator::LinkMetricsInitiator(Instance &aInstance)
+Initiator::Initiator(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-Error LinkMetricsInitiator::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics)
+Error Initiator::Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics)
 {
     Error     error;
     Neighbor *neighbor;
@@ -93,7 +93,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsInitiator::AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &aInfo)
+Error Initiator::AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &aInfo)
 {
     Error error = kErrorNone;
     Tlv   tlv;
@@ -123,10 +123,7 @@ exit:
     return error;
 }
 
-void LinkMetricsInitiator::HandleReport(const Message      &aMessage,
-                                        uint16_t            aOffset,
-                                        uint16_t            aLength,
-                                        const Ip6::Address &aAddress)
+void Initiator::HandleReport(const Message &aMessage, uint16_t aOffset, uint16_t aLength, const Ip6::Address &aAddress)
 {
     Error         error     = kErrorNone;
     uint16_t      offset    = aOffset;
@@ -228,10 +225,10 @@ exit:
     LogDebg("HandleReport, error:%s", ErrorToString(error));
 }
 
-Error LinkMetricsInitiator::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
-                                                                 uint8_t             aSeriesId,
-                                                                 const SeriesFlags  &aSeriesFlags,
-                                                                 const Metrics      *aMetrics)
+Error Initiator::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &aDestination,
+                                                      uint8_t             aSeriesId,
+                                                      const SeriesFlags  &aSeriesFlags,
+                                                      const Metrics      *aMetrics)
 {
     Error               error;
     Neighbor           *neighbor;
@@ -260,9 +257,9 @@ exit:
     return error;
 }
 
-Error LinkMetricsInitiator::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination,
-                                                         EnhAckFlags         aEnhAckFlags,
-                                                         const Metrics      *aMetrics)
+Error Initiator::SendMgmtRequestEnhAckProbing(const Ip6::Address &aDestination,
+                                              EnhAckFlags         aEnhAckFlags,
+                                              const Metrics      *aMetrics)
 {
     Error              error;
     Neighbor          *neighbor;
@@ -304,7 +301,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsInitiator::HandleManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
+Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
 {
     Error    error = kErrorNone;
     uint16_t offset;
@@ -347,7 +344,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsInitiator::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength)
+Error Initiator::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength)
 {
     Error     error;
     uint8_t   buf[kLinkProbeMaxLen];
@@ -364,7 +361,7 @@ exit:
     return error;
 }
 
-void LinkMetricsInitiator::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor)
+void Initiator::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, const Neighbor &aNeighbor)
 {
     MetricsValues values;
     uint8_t       idx = 0;
@@ -392,7 +389,7 @@ exit:
     return;
 }
 
-Error LinkMetricsInitiator::FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeighbor)
+Error Initiator::FindNeighbor(const Ip6::Address &aDestination, Neighbor *&aNeighbor)
 {
     Error        error = kErrorUnknownNeighbor;
     Mac::Address macAddress;
@@ -415,12 +412,12 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-LinkMetricsSubject::LinkMetricsSubject(Instance &aInstance)
+Subject::Subject(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
 }
 
-Error LinkMetricsSubject::AppendReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
+Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
 {
     Error         error = kErrorNone;
     Tlv           tlv;
@@ -516,7 +513,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsSubject::HandleManagementRequest(const Message &aMessage, Neighbor &aNeighbor, Status &aStatus)
+Error Subject::HandleManagementRequest(const Message &aMessage, Neighbor &aNeighbor, Status &aStatus)
 {
     Error               error = kErrorNone;
     uint16_t            offset;
@@ -588,7 +585,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsSubject::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)
+Error Subject::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)
 {
     Error    error = kErrorNone;
     uint16_t offset;
@@ -602,7 +599,7 @@ exit:
     return error;
 }
 
-Error LinkMetricsSubject::AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues)
+Error Subject::AppendReportSubTlvToMessage(Message &aMessage, const MetricsValues &aValues)
 {
     Error        error = kErrorNone;
     ReportSubTlv reportTlv;
@@ -641,12 +638,12 @@ exit:
     return error;
 }
 
-void LinkMetricsSubject::Free(SeriesInfo &aSeriesInfo) { mSeriesInfoPool.Free(aSeriesInfo); }
+void Subject::Free(SeriesInfo &aSeriesInfo) { mSeriesInfoPool.Free(aSeriesInfo); }
 
-Error LinkMetricsSubject::ReadTypeIdsFromMessage(const Message &aMessage,
-                                                 uint16_t       aStartOffset,
-                                                 uint16_t       aEndOffset,
-                                                 Metrics       &aMetrics)
+Error Subject::ReadTypeIdsFromMessage(const Message &aMessage,
+                                      uint16_t       aStartOffset,
+                                      uint16_t       aEndOffset,
+                                      Metrics       &aMetrics)
 {
     Error error = kErrorNone;
 
@@ -697,10 +694,10 @@ exit:
     return error;
 }
 
-Status LinkMetricsSubject::ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
-                                                          uint8_t        aSeriesFlagsMask,
-                                                          const Metrics &aMetrics,
-                                                          Neighbor      &aNeighbor)
+Status Subject::ConfigureForwardTrackingSeries(uint8_t        aSeriesId,
+                                               uint8_t        aSeriesFlagsMask,
+                                               const Metrics &aMetrics,
+                                               Neighbor      &aNeighbor)
 {
     Status status = kStatusSuccess;
 
@@ -735,7 +732,7 @@ exit:
     return status;
 }
 
-Status LinkMetricsSubject::ConfigureEnhAckProbing(uint8_t aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor)
+Status Subject::ConfigureEnhAckProbing(uint8_t aEnhAckFlags, const Metrics &aMetrics, Neighbor &aNeighbor)
 {
     Status status = kStatusSuccess;
     Error  error  = kErrorNone;

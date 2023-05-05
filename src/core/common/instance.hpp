@@ -564,11 +564,11 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    LinkMetrics::LinkMetricsInitiator mLinkMetricsInitiator;
+    LinkMetrics::Initiator mInitiator;
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    LinkMetrics::LinkMetricsSubject mLinkMetricsSubject;
+    LinkMetrics::Subject mSubject;
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -935,11 +935,11 @@ template <> inline DuaManager &Instance::Get(void) { return mDuaManager; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-template <> inline LinkMetrics::LinkMetricsInitiator &Instance::Get(void) { return mLinkMetricsInitiator; }
+template <> inline LinkMetrics::Initiator &Instance::Get(void) { return mInitiator; }
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-template <> inline LinkMetrics::LinkMetricsSubject &Instance::Get(void) { return mLinkMetricsSubject; }
+template <> inline LinkMetrics::Subject &Instance::Get(void) { return mSubject; }
 #endif
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

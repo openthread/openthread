@@ -208,7 +208,7 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
     while (!mLinkMetricsSeriesInfoList.IsEmpty())
     {
         LinkMetrics::SeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
-        Get<LinkMetrics::LinkMetricsSubject>().Free(*seriesInfo);
+        Get<LinkMetrics::Subject>().Free(*seriesInfo);
     }
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
