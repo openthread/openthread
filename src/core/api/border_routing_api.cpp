@@ -152,19 +152,19 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
-otError otBorderRoutingAddPrefixByRouterAdvertisement(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+otError otBorderRoutingRecvIcmp6Nd(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ApplyPlatfromGeneratedRouterAdvert(aMessage, aLength);
     return kErrorNone;
 }
 
-void otBorderRoutingSetAcceptingRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled)
+void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetAcceptingRouterAdvertisementEnabled(aEnabled);
 }
 
-bool otBorderRoutingIsAcceptingRouterAdvertisementEnabled(otInstance *aInstance)
+otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsAcceptingRouterAdvertisementEnabled();
 }

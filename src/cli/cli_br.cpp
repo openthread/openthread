@@ -194,7 +194,7 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
         OutputIp6PrefixLine(local);
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     if (outputPrefixTypes & kPrefixTypePlatform)
     {
         otBorderRoutingPlatformOmrPrefixInfo platform;
@@ -372,40 +372,49 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 /**
- * @cli br platformra (enable|disable)
+ * @cli br dhcp6 (enable|disable)
  * @code
- * br platformra enable
+ * br dhcp6 enable
  * Done
- * br platformra
+ * br dhcp6
  * Enabled
  * Done
  * @endcode
  * @par
  * Outputs or set the state of accepting platform generated RA on host netif.
- * @sa otBorderRoutingSetAcceptingRouterAdvertisementEnabled
- * @sa otBorderRoutingIsAcceptingRouterAdvertisementEnabled
+ * @sa otBorderRoutingDhcp6PdSetEnabled
+ * @sa otBorderRoutingDhcp6PdGetState
  */
-template <> otError Br::Process<Cmd("acceptra")>(Arg aArgs[])
+template <> otError Br::Process<Cmd("dhcp6")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
     bool    enable;
 
     if (aArgs[0].IsEmpty())
     {
-        OutputEnabledDisabledStatus(otBorderRoutingIsAcceptingRouterAdvertisementEnabled(GetInstancePtr()));
+        static const char *const kStateStrings[] = {
+            "Disabled",      // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
+            "Stopped",       // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
+            "Running",       // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+        };
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED == 0, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED is not expected");
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED == 1, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED is not expected");
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING == 2, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING is not expected");
+        
+        OutputLine(kStateStrings[otBorderRoutingDhcp6PdGetState(GetInstancePtr())]);
         error = OT_ERROR_NONE;
     }
     else if (Interpreter::ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
-        otBorderRoutingSetAcceptingRouterAdvertisementEnabled(GetInstancePtr(), enable);
+        otBorderRoutingDhcp6PdSetEnabled(GetInstancePtr(), enable);
         error = OT_ERROR_NONE;
     }
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 
 /**
  * @cli br prefixtable
@@ -551,11 +560,11 @@ otError Br::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
-        CmdEntry("acceptra"),
-#endif
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
         CmdEntry("counters"),
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+        CmdEntry("dhcp6"),
 #endif
         CmdEntry("disable"),
         CmdEntry("enable"),

@@ -995,7 +995,7 @@ exit:
     }
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 static const uint8_t *getIcmpRaMessage(const uint8_t *data, ssize_t length)
 {
     const uint8_t *ret = nullptr;
@@ -1040,13 +1040,13 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
-    if (otBorderRoutingIsAcceptingRouterAdvertisementEnabled(aInstance))
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+    if (otBorderRoutingDhcp6PdGetState(aInstance))
     {
         const uint8_t *ra = getIcmpRaMessage(reinterpret_cast<const uint8_t *>(&packet[offset]), rval);
         if (ra != nullptr)
         {
-            otBorderRoutingAddPrefixByRouterAdvertisement(aInstance, ra, rval - 40);
+            otBorderRoutingRecvIcmp6Nd(aInstance, ra, rval - 40);
             ExitNow();
         }
     }

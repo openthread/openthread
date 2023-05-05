@@ -113,6 +113,17 @@ public:
     };
 
     /**
+     * This enumeration represents the states of `RoutingManager`.
+     *
+     */
+    enum Dhcp6PdState : uint8_t
+    {
+        kDhcp6PdStateDisabled      = OT_BORDER_ROUTING_STATE_DISABLED,      ///< Disabled.
+        kDhcp6PdStateStopped       = OT_BORDER_ROUTING_STATE_STOPPED,       ///< Enabled, but currently stopped.
+        kDhcp6PdStateRunning       = OT_BORDER_ROUTING_STATE_RUNNING,       ///< Enabled, and running.
+    };
+
+    /**
      * This constructor initializes the routing manager.
      *
      * @param[in]  aInstance  A OpenThread instance.
@@ -231,7 +242,7 @@ public:
      */
     Error GetOmrPrefix(Ip6::Prefix &aPrefix) const;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     /**
      * This method returns the platform provided off-mesh-routable (OMR) prefix.
      *
@@ -431,7 +442,7 @@ public:
     void HandleSrpServerAutoEnableMode(void);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     /**
      * This method parses a router advertisement message received on platform's Thread interface.
      *
@@ -463,8 +474,11 @@ public:
      * @retval FALSE Border routing manager dnes not accept platform generated RAs.
      *
      */
-    bool IsAcceptingRouterAdvertisementEnabled(void) const { return mHandlePlatformGeneratedRaEnabled; }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+    Dhcp6PdState GetDhcp6PdState(void) const {
+        // TODO: We need to stop and inform the platform when there is already a GUA prefix advertised in the network.
+        return mDhcp6PdEnabled ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateDisabled;
+    }
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 
 private:
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
@@ -1043,7 +1057,7 @@ private:
     bool  IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
     void  ResetDiscoveredPrefixStaleTimer(void);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     void HandlePlatformRouterAdvertMessageTimer(void);
     void WithdrawPlatformRouterAdvertPrefix(void);
     void DeprecatePlatformRouterAdvertPrefix(void);
@@ -1056,7 +1070,7 @@ private:
     using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
     using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     using PlatformOmrPrefixTimer =
         TimerMilliIn<RoutingManager, &RoutingManager::HandlePlatformRouterAdvertMessageTimer>;
 #endif
@@ -1100,8 +1114,8 @@ private:
     DiscoveredPrefixStaleTimer mDiscoveredPrefixStaleTimer;
     RoutingPolicyTimer         mRoutingPolicyTimer;
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
-    bool                   mHandlePlatformGeneratedRaEnabled;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+    bool                   mDhcp6PdEnabled;
     bool                   mPlatformOmrPrefixPreferred;
     TimeMilli              mRaPrefixPreferredTime;
     TimeMilli              mRaPrefixValidTime;

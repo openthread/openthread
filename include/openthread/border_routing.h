@@ -130,6 +130,17 @@ typedef enum
 } otBorderRoutingState;
 
 /**
+ * This enumeration represents the state of DHCPv6 Prefix Delegation State.
+ *
+ */
+typedef enum
+{
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,  ///< DHCPv6 PD is disabled on the border router.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,   ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,   ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
+} otBorderRoutingDhcp6PdState;
+
+/**
  * This method initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
@@ -233,10 +244,10 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  * Gets the platform provided off-mesh-routable (OMR) prefix.
  *
  * The prefix is extracted from the platform generated RA messages handled by
- * otBorderRoutingAddPrefixByRouterAdvertisement. When there are no valid platform provided OMR prefix, the returned
+ * otBorderRoutingRecvIcmp6Nd. When there are no valid platform provided OMR prefix, the returned
  * prefix length will be 0.
  *
- * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE` must be enabled.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
@@ -244,7 +255,7 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
  * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
  *
- * @sa otBorderRoutingAddPrefixByRouterAdvertisement
+ * @sa otBorderRoutingRecvIcmp6Nd
  *
  */
 otError otBorderRoutingGetPlatformOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo);
@@ -358,14 +369,11 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
                                                otBorderRoutingPrefixTableEntry    *aEntry);
 
 /**
- * Adds an on mesh prefix from an ICMPv6 RouterAdvertisement message.
+ * Handles ICMP6 ND messages received on platform network interface.
  *
- * Only the first PIO in the most recent RA message will be applied to the thread network data.
- *
- * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
- * assigned prefix to the thread interface via router advertisement messages.
- *
- * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ * Note: ND messages should not be handled by Thread networks, while for many platforms, ND messages is the way of distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
+ * 
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE` must be enabled.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aMessage  A pointer to an ICMPv6 RouterAdvertisement message.
@@ -375,19 +383,19 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
  * @retval OT_ERROR_INVALID_STATE Routing manager is configured to not handling RA.
  *
  */
-otError otBorderRoutingAddPrefixByRouterAdvertisement(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
+otError otBorderRoutingRecvIcmp6Nd(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
 
 /**
  * Enables / Disables accpeting RouterAdvertisement messages on platform interface.
  *
- * When this is disabled, calling `otBorderRoutingAddPrefixByRouterAdvertisement` will get `OT_ERROR_INVALID_STATE`.
+ * When this is disabled, calling `otBorderRoutingRecvIcmp6Nd` will get `OT_ERROR_INVALID_STATE`.
  * When setting this to false, the currently published prefix will be removed if it comes from platform generated RA
  * messages.
  *
  * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
  * assigned prefix to the thread interface via router advertisement messages.
  *
- * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE` must be enabled.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  Whether to accept platform generated RA messages.
@@ -395,20 +403,21 @@ otError otBorderRoutingAddPrefixByRouterAdvertisement(otInstance *aInstance, con
  * @retval OT_ERROR_NONE Successfully processed the prefix infomation in the message.
  *
  */
-void otBorderRoutingSetAcceptingRouterAdvertisementEnabled(otInstance *aInstance, bool aEnabled);
+void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * Returns the state of accpeting RouterAdvertisement messages on platform interface.
+ * Returns the state of DHCPv6 prefix delegation.
  *
- * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE` must be enabled.
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE` must be enabled.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
- * @retval TRUE  Border routing manager accpets platform generated RAs
- * @retval FALSE Border routing manager dnes not accept platform generated RAs.
+ * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED   DHCPv6 PD is disabled on the border router.
+ * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED    DHCPv6 PD in enabled but won't try to request and publish a prefix.
+ * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING    DHCPv6 PD is enabled and will try to request and publish a prefix.
  *
  */
-bool otBorderRoutingIsAcceptingRouterAdvertisementEnabled(otInstance *aInstance);
+otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance);
 
 /**
  * @}

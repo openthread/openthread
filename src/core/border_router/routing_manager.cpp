@@ -80,8 +80,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRsSender(aInstance)
     , mDiscoveredPrefixStaleTimer(aInstance)
     , mRoutingPolicyTimer(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
-    , mHandlePlatformGeneratedRaEnabled(false)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+    , mDhcp6PdEnabled(false)
     , mPlatformOmrPrefixTimer(aInstance)
 #endif
 {
@@ -487,7 +487,7 @@ void RoutingManager::EvaluateLocalOmrPrefix(void)
 {
     // This method should be called by EvaluateOmrPrefix, always withdraw current local OMR prefix if it is not expected
     // local OMR prefix.
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     if (IsValidOmrPrefix(mPlatformOmrPrefix))
     {
         if (mLocalOmrPrefix.GetPrefix() != mPlatformOmrPrefix)
@@ -3168,7 +3168,7 @@ exit:
     return;
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 void RoutingManager::WithdrawPlatformRouterAdvertPrefix(void)
 {
     Error error = kErrorNone;
@@ -3234,7 +3234,7 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
     Error                                     error = kErrorNone;
     Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
 
-    VerifyOrExit(mHandlePlatformGeneratedRaEnabled);
+    VerifyOrExit(mDhcp6PdEnabled);
 
     packet.Init(aRouterAdvert, aLength);
 
@@ -3371,9 +3371,9 @@ exit:
 
 void RoutingManager::SetAcceptingRouterAdvertisementEnabled(bool aEnabled)
 {
-    VerifyOrExit(mHandlePlatformGeneratedRaEnabled != aEnabled);
+    VerifyOrExit(mDhcp6PdEnabled != aEnabled);
 
-    mHandlePlatformGeneratedRaEnabled = aEnabled;
+    mDhcp6PdEnabled = aEnabled;
     if (!aEnabled)
     {
         WithdrawPlatformRouterAdvertPrefix();
@@ -3382,7 +3382,7 @@ void RoutingManager::SetAcceptingRouterAdvertisementEnabled(bool aEnabled)
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_RA_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 
 } // namespace BorderRouter
 
