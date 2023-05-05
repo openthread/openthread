@@ -163,27 +163,19 @@ Error Prefix::FromString(const char *aString)
     constexpr char kNullChar  = '\0';
 
     Error       error = kErrorParse;
-    const char *slashPosition;
-    uint16_t    plen = 0;
+    const char *cur;
 
     VerifyOrExit(aString != nullptr);
 
-    slashPosition = StringFind(aString, kSlashChar);
-    VerifyOrExit(slashPosition != nullptr);
+    cur = StringFind(aString, kSlashChar);
+    VerifyOrExit(cur != nullptr);
 
     SuccessOrExit(AsCoreType(&mPrefix).ParseFrom(aString, kSlashChar));
 
-    VerifyOrExit(slashPosition[1] != kNullChar);
+    cur++;
+    SuccessOrExit(StringParseUint8(cur, mLength, kMaxLength));
+    VerifyOrExit(*cur == kNullChar);
 
-    for (const char *cur = slashPosition + 1; *cur != kNullChar; cur++)
-    {
-        VerifyOrExit((*cur >= '0') && (*cur <= '9'));
-        plen *= 10;
-        plen += static_cast<uint8_t>(*cur - '0');
-        VerifyOrExit(plen <= kMaxLength);
-    }
-
-    SetLength(static_cast<uint8_t>(plen));
     error = kErrorNone;
 
 exit:
