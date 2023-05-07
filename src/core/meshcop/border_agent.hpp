@@ -44,6 +44,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/settings.hpp"
 #include "net/udp6.hpp"
 #include "thread/tmf.hpp"
 #include "thread/uri_paths.hpp"
@@ -59,10 +60,6 @@ class BorderAgent : public InstanceLocator, private NonCopyable
     friend class Tmf::SecureAgent;
 
 public:
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-    static constexpr uint8_t kIdLength = OT_BORDER_AGENT_ID_LENGTH;
-#endif
-
     /**
      * This enumeration defines the Border Agent state.
      *
