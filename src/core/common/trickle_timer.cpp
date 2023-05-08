@@ -77,7 +77,7 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
 
     mIntervalMax = aIntervalMax;
 
-    if (aIntervalMax < mInterval) 
+    if (aIntervalMax < mInterval)
     {
         // the new interval is smaller than the running interval, so re-configure the timer to
         // fire at the maximum value
@@ -92,11 +92,11 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
         // In trickle mode, fire at a sooner time, but we also
         // need to manipulate mInterval and mTimeInInterval.
         //
-        // From what I can tell, even if newFireTime is less 
+        // From what I can tell, even if newFireTime is less
         // than now, it will fire.
 
         mInterval = aIntervalMax;
-        if (mTimeInInterval > aIntervalMax) 
+        if (mTimeInInterval > aIntervalMax)
         {
             mTimeInInterval = aIntervalMax;
         }

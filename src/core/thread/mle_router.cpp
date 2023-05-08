@@ -467,16 +467,16 @@ void MleRouter::RecalculateAdvertiseInterval(void)
         }
 
         uint32_t advertiseIntervalMax = (neighbors + 1) * 4;
-        if (advertiseIntervalMax > kAdvertiseIntervalMax) 
+        if (advertiseIntervalMax > kAdvertiseIntervalMax)
         {
             advertiseIntervalMax = kAdvertiseIntervalMax;
         } 
-        else if (advertiseIntervalMax < 12) 
+        else if (advertiseIntervalMax < 12)
         {
             advertiseIntervalMax = 12;
         }
 
-        if (mAdvertiseTrickleTimer.IsRunning()) 
+        if (mAdvertiseTrickleTimer.IsRunning())
         {
             mAdvertiseTrickleTimer.SetIntervalMax(Time::SecToMsec(advertiseIntervalMax));
         }
@@ -501,7 +501,7 @@ void MleRouter::ResetAdvertiseInterval(void)
         RecalculateAdvertiseInterval();
 #else
         mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
-                                       Time::SecToMsec(kAdvertiseIntervalMax));
+                                        Time::SecToMsec(kAdvertiseIntervalMax));
 #endif
     }
 
