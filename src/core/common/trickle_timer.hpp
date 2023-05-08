@@ -127,7 +127,7 @@ public:
      * This method sets the interval max value of the trickle timer while it is running.
      *
      * @param[in]  aIntervalMax         The maximum interval for the timer in milliseconds.
-     * 
+     *
      */
     void SetIntervalMax(uint32_t aIntervalMax);
 
@@ -137,7 +137,7 @@ public:
      * @param[out] aStartTime the resultant start time of trickle timer
      *
      */
-    void GetLastTimerStart(TimeMilli &aStartTime);    
+    void GetLastTimerStart(TimeMilli &aStartTime);
 
     /**
      * This method starts the trickle timer.

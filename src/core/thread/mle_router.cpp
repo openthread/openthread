@@ -470,7 +470,7 @@ void MleRouter::RecalculateAdvertiseInterval(void)
         if (advertiseIntervalMax > kAdvertiseIntervalMax)
         {
             advertiseIntervalMax = kAdvertiseIntervalMax;
-        } 
+        }
         else if (advertiseIntervalMax < 12)
         {
             advertiseIntervalMax = 12;
@@ -486,7 +486,7 @@ void MleRouter::RecalculateAdvertiseInterval(void)
                                          Time::SecToMsec(advertiseIntervalMax));
         }
     }
-    
+
 exit:
     return;
 }
