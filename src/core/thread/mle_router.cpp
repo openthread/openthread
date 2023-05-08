@@ -455,26 +455,17 @@ void MleRouter::RecalculateAdvertiseInterval(void)
     {
         uint32_t neighbors = 0;
 
-        // Router
-        for (uint16_t index = 0; index <= kMaxRouterId; index++)
+        // Count the neighbor routers
+        for (const Router &router : Get<RouterTable>())
         {
-            Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
-
-            if (router != nullptr && router->IsStateValid())
+            if (router.IsStateValid())
             {
                 neighbors++;
             }
         }
 
-        uint32_t advertiseIntervalMax = (neighbors + 1) * 4;
-        if (advertiseIntervalMax > kAdvertiseIntervalMax)
-        {
-            advertiseIntervalMax = kAdvertiseIntervalMax;
-        }
-        else if (advertiseIntervalMax < 12)
-        {
-            advertiseIntervalMax = 12;
-        }
+        uint32_t advertiseIntervalMax = OT_MIN(kAdvertiseIntervalMax, (neighbors + 1) * 4);
+        advertiseIntervalMax = OT_MAX(12, advertiseIntervalMax);
 
         if (mAdvertiseTrickleTimer.IsRunning())
         {

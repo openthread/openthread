@@ -53,9 +53,9 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
 {
 }
 
-void TrickleTimer::GetLastTimerStart(TimeMilli &aStartTime)
+TimeMilli TrickleTimer::GetLastTimerStart(void)
 {
-    aStartTime = TimerMilli::GetFireTime();
+    TimeMilli aStartTime = TimerMilli::GetFireTime();
 
     switch (mPhase)
     {
@@ -67,6 +67,8 @@ void TrickleTimer::GetLastTimerStart(TimeMilli &aStartTime)
         aStartTime -= mInterval - mTimeInInterval;
         break;
     }
+
+    return aStartTime;
 }
 
 void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
@@ -82,8 +84,7 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
         // the new interval is smaller than the running interval, so re-configure the timer to
         // fire at the maximum value
 
-        TimeMilli newFireTime;
-        GetLastTimerStart(newFireTime);
+        TimeMilli newFireTime = GetLastTimerStart();
         newFireTime += aIntervalMax;
 
         // In plain mode, just fire at the sooner time and
