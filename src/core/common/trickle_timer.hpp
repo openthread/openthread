@@ -117,14 +117,6 @@ public:
     uint32_t GetIntervalMin(void) const { return mIntervalMin; }
 
     /**
-     * This method sets the interval min value of the trickle timer while it is running.
-     *
-     * @param[in]  aIntervalMin         The minimum interval for the timer in milliseconds.
-     * 
-     */
-    void SetIntervalMin(uint32_t aIntervalMin);
-
-    /**
      * This method gets the current interval max value of the trickle timer.
      *
      * @returns The current interval max value of the trickle timer.
