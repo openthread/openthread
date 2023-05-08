@@ -495,6 +495,11 @@ public:
     }
 
     /**
+     * This method recalculates the MLE Advertisement Trickle timer interval based on SPEC-1167 algorithm.
+     */
+    void RecalculateAdvertiseInterval(void);
+
+    /**
      * This method resets the MLE Advertisement Trickle timer interval.
      *
      */

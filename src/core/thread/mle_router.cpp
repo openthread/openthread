@@ -447,14 +447,56 @@ exit:
 
 void MleRouter::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop(); }
 
+#define SPEC_1167
+void MleRouter::RecalculateAdvertiseInterval(void)
+{
+    VerifyOrExit(IsRouterOrLeader());
+
+    {
+        uint32_t neighbors = 0;
+
+        // Router
+        for (uint16_t index = 0; index <= kMaxRouterId; index++)
+        {
+            Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
+
+            if (router != nullptr && router->IsStateValid())
+            {
+                neighbors++;
+            }
+        }
+
+        uint32_t advertiseIntervalMax = (neighbors + 1) * 4;
+        if (advertiseIntervalMax > kAdvertiseIntervalMax) {
+            advertiseIntervalMax = kAdvertiseIntervalMax;
+        } else if (advertiseIntervalMax < 12) {
+            advertiseIntervalMax = 12;
+        }
+
+        if (mAdvertiseTrickleTimer.IsRunning()) {
+            mAdvertiseTrickleTimer.SetIntervalMax(Time::SecToMsec(advertiseIntervalMax));
+        } else {
+            mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
+                                         Time::SecToMsec(advertiseIntervalMax));
+	    }
+    }
+    
+exit:
+    return;
+}
+
 void MleRouter::ResetAdvertiseInterval(void)
 {
     VerifyOrExit(IsRouterOrLeader());
 
     if (!mAdvertiseTrickleTimer.IsRunning())
     {
+#ifdef SPEC_1167
+        RecalculateAdvertiseInterval();
+#else
         mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
                                      Time::SecToMsec(kAdvertiseIntervalMax));
+#endif
     }
 
     mAdvertiseTrickleTimer.IndicateInconsistent();

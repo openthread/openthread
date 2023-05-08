@@ -881,6 +881,8 @@ void RouterTable::HandleTableChanged(void)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRouterTableChange();
 #endif
+
+    Get<Mle::MleRouter>().RecalculateAdvertiseInterval();
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

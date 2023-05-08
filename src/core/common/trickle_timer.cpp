@@ -53,6 +53,60 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
 {
 }
 
+void TrickleTimer::GetLastTimerStart(TimeMilli &aStartTime)
+{
+    aStartTime = TimerMilli::GetFireTime();
+
+    switch (mPhase)
+    {
+    case kBeforeRandomTime:
+        aStartTime -= mTimeInInterval;
+        break;
+
+    case kAfterRandomTime:
+        aStartTime -= mInterval - mTimeInInterval;
+        break;
+    }
+}
+
+void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
+{
+    OT_ASSERT(aIntervalMax >= mIntervalMin);
+
+    VerifyOrExit(aIntervalMax != mIntervalMax);
+    
+    mIntervalMax = aIntervalMax;
+
+    if (aIntervalMax < mInterval) 
+    {
+        // the new interval is smaller than the running interval, so re-configure the timer to
+        // fire at the maximum value
+        
+        TimeMilli newFireTime;
+        GetLastTimerStart(newFireTime);
+        newFireTime += aIntervalMax;
+
+        // In plain mode, just fire at the sooner time and
+        // the handler will take care of everything else.
+        //
+        // In trickle mode, fire at a sooner time, but we also
+        // need to manipulate mInterval and mTimeInInterval.
+        //
+        // From what I can tell, even if newFireTime is less 
+        // than now, it will fire.
+
+        mInterval = aIntervalMax;
+        if (mTimeInInterval > aIntervalMax) {
+            mTimeInInterval = aIntervalMax;
+        }
+
+        TimerMilli::FireAt(newFireTime);
+    }
+
+exit:
+    return;
+}
+
 void TrickleTimer::Start(Mode aMode, uint32_t aIntervalMin, uint32_t aIntervalMax, uint16_t aRedundancyConstant)
 {
     OT_ASSERT((aIntervalMax >= aIntervalMin) && (aIntervalMin > 0));

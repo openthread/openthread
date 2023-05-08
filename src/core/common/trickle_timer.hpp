@@ -110,6 +110,44 @@ public:
     Mode GetMode(void) const { return mMode; }
 
     /**
+     * This method gets the current interval min value of the trickle timer.
+     *
+     * @returns The current interval min value of the trickle timer.
+     */
+    uint32_t GetIntervalMin(void) const { return mIntervalMin; }
+
+    /**
+     * This method sets the interval min value of the trickle timer while it is running.
+     *
+     * @param[in]  aIntervalMin         The minimum interval for the timer in milliseconds.
+     * 
+     */
+    void SetIntervalMin(uint32_t aIntervalMin);
+
+    /**
+     * This method gets the current interval max value of the trickle timer.
+     *
+     * @returns The current interval max value of the trickle timer.
+     */
+    uint32_t GetIntervalMax(void) const { return mIntervalMax; }
+
+    /**
+     * This method sets the interval max value of the trickle timer while it is running.
+     *
+     * @param[in]  aIntervalMax         The maximum interval for the timer in milliseconds.
+     * 
+     */
+    void SetIntervalMax(uint32_t aIntervalMax);
+
+    /**
+     * This method determines the time when the trickle timer was last started.
+     *
+     * @param[out] aStartTime the resultant start time of trickle timer
+     *
+     */
+    void GetLastTimerStart(TimeMilli &aStartTime);    
+
+    /**
      * This method starts the trickle timer.
      *
      * @param[in]  aMode                The operation mode of timer (trickle or plain periodic mode).
