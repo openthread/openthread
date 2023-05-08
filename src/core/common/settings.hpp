@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/border_agent.h>
 #include <openthread/platform/settings.h>
 
 #include "common/clearable.hpp"
@@ -47,7 +48,6 @@
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
-#include "meshcop/border_agent.hpp"
 #include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/version.hpp"
@@ -779,7 +779,8 @@ public:
         friend class Clearable<BorderAgentId>;
 
     public:
-        static constexpr Key kKey = kKeyBorderAgentId; ///< The associated key.
+        static constexpr Key     kKey    = kKeyBorderAgentId; ///< The associated key.
+        static constexpr uint8_t kLength = OT_BORDER_AGENT_ID_LENGTH;
 
         /**
          * This method initializes the `BorderAgentId` object.
@@ -815,7 +816,7 @@ public:
     private:
         void Log(Action aAction) const;
 
-        uint8_t mId[MeshCoP::BorderAgent::kIdLength];
+        uint8_t mId[kLength];
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
