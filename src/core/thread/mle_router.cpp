@@ -447,7 +447,6 @@ exit:
 
 void MleRouter::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop(); }
 
-#define SPEC_1167
 void MleRouter::RecalculateAdvertiseInterval(void)
 {
     VerifyOrExit(IsRouterOrLeader());
@@ -488,12 +487,7 @@ void MleRouter::ResetAdvertiseInterval(void)
 
     if (!mAdvertiseTrickleTimer.IsRunning())
     {
-#ifdef SPEC_1167
         RecalculateAdvertiseInterval();
-#else
-        mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
-                                        Time::SecToMsec(kAdvertiseIntervalMax));
-#endif
     }
 
     mAdvertiseTrickleTimer.IndicateInconsistent();
