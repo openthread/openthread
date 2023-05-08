@@ -237,8 +237,6 @@ Error BorderAgent::GetId(uint8_t *aId, uint16_t &aLength)
 {
     Error error = kErrorNone;
 
-    static_assert(sizeof(mId) == kIdLength, "Invalid Border Agent ID size");
-
     VerifyOrExit(aLength >= sizeof(mId), error = kErrorInvalidArgs);
     VerifyOrExit(!mIdInitialized, error = kErrorNone);
 
