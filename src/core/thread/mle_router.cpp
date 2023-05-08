@@ -465,7 +465,7 @@ void MleRouter::RecalculateAdvertiseInterval(void)
         }
 
         uint32_t advertiseIntervalMax = OT_MIN(kAdvertiseIntervalMax, (neighbors + 1) * 4);
-        advertiseIntervalMax = OT_MAX(12, advertiseIntervalMax);
+        advertiseIntervalMax          = OT_MAX(12, advertiseIntervalMax);
 
         if (mAdvertiseTrickleTimer.IsRunning())
         {
