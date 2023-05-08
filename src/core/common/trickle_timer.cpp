@@ -74,14 +74,14 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
     OT_ASSERT(aIntervalMax >= mIntervalMin);
 
     VerifyOrExit(aIntervalMax != mIntervalMax);
-    
+
     mIntervalMax = aIntervalMax;
 
     if (aIntervalMax < mInterval) 
     {
         // the new interval is smaller than the running interval, so re-configure the timer to
         // fire at the maximum value
-        
+
         TimeMilli newFireTime;
         GetLastTimerStart(newFireTime);
         newFireTime += aIntervalMax;
@@ -96,7 +96,8 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
         // than now, it will fire.
 
         mInterval = aIntervalMax;
-        if (mTimeInInterval > aIntervalMax) {
+        if (mTimeInInterval > aIntervalMax) 
+        {
             mTimeInInterval = aIntervalMax;
         }
 
