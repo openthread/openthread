@@ -57,6 +57,8 @@ namespace ot {
  */
 class TrickleTimer : public TimerMilli
 {
+    friend class TrickleTimerTester;
+
 public:
     /**
      * Defines the modes of operation for the `TrickleTimer`.
@@ -110,7 +112,45 @@ public:
     Mode GetMode(void) const { return mMode; }
 
     /**
-     * Starts the trickle timer.
+     * Gets the interval min value of the trickle timer.
+     *
+     * @returns The interval min value in milliseconds.
+     *
+     */
+    uint32_t GetIntervalMin(void) const { return mIntervalMin; }
+
+    /**
+     * Sets the interval min value of the trickle timer while timer is running.
+     *
+     * If @p aIntervalMin is smaller than the current `GetIntervalMax()` the interval max value is also updated to
+     * the new @p aIntervalMin (as if `SetIntervalMax(aIntervalMin)` was called).
+     *
+     * @param[in]  aIntervalMin   The minimum interval in milliseconds.
+     *
+     */
+    void SetIntervalMin(uint32_t aIntervalMin);
+
+    /**
+     * Gets the interval max value of the trickle timer.
+     *
+     * @returns The interval max value in milliseconds.
+     *
+     */
+    uint32_t GetIntervalMax(void) const { return mIntervalMax; }
+
+    /**
+     * Sets the interval max value of the trickle timer while timer is running.
+     *
+     * If the given @p aIntervalMax is smaller than the current `GetIntervalMin()`, the interval min value will be
+     * used instead.
+     *
+     * @param[in]  aIntervalMax  The maximum interval in milliseconds.
+     *
+     */
+    void SetIntervalMax(uint32_t aIntervalMax);
+
+    /**
+     * This method starts the trickle timer.
      *
      * @param[in]  aMode                The operation mode of timer (trickle or plain periodic mode).
      * @param[in]  aIntervalMin         The minimum interval for the timer in milliseconds.
@@ -162,6 +202,7 @@ private:
     void        HandleTimer(void);
     void        HandleEndOfTimeInInterval(void);
     void        HandleEndOfInterval(void);
+    TimeMilli   GetStartTimeOfCurrentInterval(void) const;
 
     // Shadow base class `TimerMilli` methods to ensure they are hidden.
     void StartAt(void) {}

@@ -4135,6 +4135,23 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+/**
+ * @cli mleadvimax
+ * @code
+ * mleadvimax
+ * 12000
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadGetAdvertisementTrickleIntervalMax
+ */
+template <> otError Interpreter::Process<Cmd("mleadvimax")>(Arg aArgs[])
+{
+    return ProcessGet(aArgs, otThreadGetAdvertisementTrickleIntervalMax);
+}
+#endif
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 /**
  * @cli mliid
@@ -8045,6 +8062,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
         CmdEntry("meshdiag"),
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        CmdEntry("mleadvimax"),
 #endif
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("mliid"),

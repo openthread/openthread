@@ -458,6 +458,12 @@ class Node(object):
         return counter
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Misc
+
+    def get_mle_adv_imax(self):
+        return self._cli_single_output('mleadvimax')
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
 
     def udp_open(self):

@@ -188,6 +188,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-021-br-route-prf.py
     run cli/test-022-netdata-full.py
     run cli/test-023-mesh-diag.py
+    run cli/test-024-mle-adv-imax-change.py
     run cli/test-400-srp-client-server.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it

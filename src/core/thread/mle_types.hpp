@@ -81,7 +81,7 @@ constexpr uint8_t  kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_T
 // Extra one for core Backbone Router Service.
 constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
 #else
-constexpr uint8_t  kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
+constexpr uint8_t kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
 #endif
 
 constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
@@ -124,7 +124,7 @@ constexpr uint32_t kMinTimeout          = OT_MAX(kMinTimeoutKeepAlive, kMinTimeo
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 constexpr uint8_t kLinkAcceptMaxRouters = 3; ///< Max Route TLV entries in a Link Accept message
 #else
-constexpr uint8_t  kLinkAcceptMaxRouters = 20; ///< Max Route TLV entries in a Link Accept message
+constexpr uint8_t kLinkAcceptMaxRouters = 20; ///< Max Route TLV entries in a Link Accept message
 #endif
 constexpr uint8_t kLinkAcceptSequenceRollback = 64; ///< Route Sequence value rollback in a Link Accept message.
 
@@ -141,13 +141,6 @@ constexpr uint8_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
  * Routing Protocol Constants
  *
  */
-constexpr uint32_t kAdvertiseIntervalMin = 1; ///< Min Advertise interval (in sec)
-#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-constexpr uint32_t kAdvertiseIntervalMax = 5; ///< Max Advertise interval (in sec)
-#else
-constexpr uint32_t kAdvertiseIntervalMax = 32; ///< Max Advertise interval (in sec)
-#endif
-
 constexpr uint8_t kFailedRouterTransmissions = 4;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 constexpr uint8_t kFailedCslDataPollTransmissions = 15;
@@ -160,7 +153,7 @@ constexpr uint32_t kMaxNeighborAge         = 100; ///< (in sec)
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 constexpr uint8_t kMaxRouteCost = 127;
 #else
-constexpr uint8_t  kMaxRouteCost         = 16;
+constexpr uint8_t kMaxRouteCost         = 16;
 #endif
 
 constexpr uint8_t kMaxRouterId           = OT_NETWORK_MAX_ROUTER_ID; ///< Max Router ID

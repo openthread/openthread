@@ -329,12 +329,14 @@ public:
     bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
 
     /**
-     * Returns the number of neighbor links.
+     * Gets the number of router neighbors with `GetLinkQualityIn()` better than or equal to a given threshold.
      *
-     * @returns The number of neighbor links.
+     * @param[in] aLinkQuality  Link quality threshold.
+     *
+     * @returns Number of router neighbors with link quality of @o aLinkQuality or better.
      *
      */
-    uint8_t GetNeighborCount(void) const;
+    uint8_t GetNeighborCount(LinkQuality aLinkQuality) const;
 
     /**
      * Indicates whether or not a Router ID is allocated.

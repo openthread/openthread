@@ -502,6 +502,14 @@ public:
      */
     void ResetAdvertiseInterval(void);
 
+    /**
+     * Updates the MLE Advertisement Trickle timer max interval (if timer is running).
+     *
+     * This is called when there is change in router table.
+     *
+     */
+    void UpdateAdvertiseInterval(void);
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * Generates an MLE Time Synchronization message.
@@ -532,6 +540,7 @@ public:
     uint8_t GetMaxChildIpAddresses(void) const;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
     /**
      * Sets/restores the maximum number of IP addresses that each MTD child may register with this
      * device as parent.
@@ -560,9 +569,27 @@ public:
      *
      */
     void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
-#endif
+
+    /**
+     * Gets the current Interval Max value used by Advertisement trickle timer.
+     *
+     * @returns The Interval Max of Advertisement trickle timer in milliseconds.
+     *
+     */
+    uint32_t GetAdvertisementTrickleIntervalMax(void) const { return mAdvertiseTrickleTimer.GetIntervalMax(); }
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
+    // Advertisement trickle timer constants - all times are in milliseconds.
+    static constexpr uint32_t kAdvIntervalMin                = 1000;  // I_MIN
+    static constexpr uint32_t kAdvIntervalNeighborMultiplier = 4000;  // Multiplier for I_MAX per router neighbor
+    static constexpr uint32_t kAdvIntervalMaxLowerBound      = 12000; // Lower bound for I_MAX
+    static constexpr uint32_t kAdvIntervalMaxUpperBound      = 32000; // Upper bound for I_MAX
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
+#endif
+
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
     static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
@@ -606,7 +633,9 @@ private:
     Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
 
-    void  StopAdvertiseTrickleTimer(void);
+    void     StopAdvertiseTrickleTimer(void);
+    uint32_t DetermineAdvertiseIntervalMax(void) const;
+
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressSolicitResponse(const Coap::Message    &aRequest,
                                      ThreadStatusTlv::Status aResponseStatus,
