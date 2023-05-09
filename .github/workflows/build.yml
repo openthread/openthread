@@ -400,3 +400,33 @@ jobs:
         export PATH=$(brew --prefix m4)/bin:$PATH
         script/check-posix-build
         script/check-simulation-build
+
+  android-ndk:
+    name: android-ndk
+    runs-on: ubuntu-22.04
+    container:
+      image: openthread/environment
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      with:
+        submodules: true
+    - name: Install unzip
+      run: apt update && apt install -y unzip
+    - name: Setup NDK
+      id: setup-ndk
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r25c
+        local-cache: true
+
+    - name: Build
+      env:
+        NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+      run: |
+        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
+        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk
