@@ -5352,6 +5352,84 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
             OutputLine("| %5lu |", ToUlong(neighborInfo.mAge));
         }
     }
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    /**
+     * @cli neighbor conntime
+     * @code
+     * neighbor conntime
+     * | RLOC16 | Extended MAC     | Last Heard (Age) | Connection Time  |
+     * +--------+------------------+------------------+------------------+
+     * | 0x8401 | 1a28be396a14a318 |         00:00:13 |         00:07:59 |
+     * | 0x5c00 | 723ebf0d9eba3264 |         00:00:03 |         00:11:27 |
+     * | 0xe800 | ce53628a1e3f5b3c |         00:00:02 |         00:00:15 |
+     * Done
+     * @endcode
+     * @par
+     * Print the connection time and age of neighbors. Info per neighbor:
+     * - RLOC16
+     * - Extended MAC address
+     * - Last Heard (seconds since last heard from neighbor)
+     * - Connection time (seconds since link establishment with neighbor)
+     * Duration intervals are formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if the duration is less
+     * than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
+     */
+    else if (aArgs[0] == "conntime")
+    {
+        /**
+         * @cli neighbor conntime list
+         * @code
+         * neighbor conntime list
+         * 0x8401 1a28be396a14a318 age:63 conn-time:644
+         * 0x5c00 723ebf0d9eba3264 age:23 conn-time:852
+         * 0xe800 ce53628a1e3f5b3c age:23 conn-time:180
+         * Done
+         * @endcode
+         * @par
+         * Print connection time and age of neighbors.
+         * This command is similar to `neighbor conntime`, but it displays the information in a list format. The age
+         * and connection time are both displayed in seconds.
+         */
+        if (aArgs[1] == "list")
+        {
+            isTable = false;
+        }
+        else
+        {
+            static const char *const kConnTimeTableTitles[] = {
+                "RLOC16",
+                "Extended MAC",
+                "Last Heard (Age)",
+                "Connection Time",
+            };
+
+            static const uint8_t kConnTimeTableColumnWidths[] = {8, 18, 18, 18};
+
+            isTable = true;
+            OutputTableHeader(kConnTimeTableTitles, kConnTimeTableColumnWidths);
+        }
+
+        while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
+        {
+            if (isTable)
+            {
+                char string[OT_DURATION_STRING_SIZE];
+
+                OutputFormat("| 0x%04x | ", neighborInfo.mRloc16);
+                OutputExtAddress(neighborInfo.mExtAddress);
+                otConvertDurationInSecondsToString(neighborInfo.mAge, string, sizeof(string));
+                OutputFormat(" | %16s", string);
+                otConvertDurationInSecondsToString(neighborInfo.mConnectionTime, string, sizeof(string));
+                OutputLine(" | %16s |", string);
+            }
+            else
+            {
+                OutputFormat("0x%04x ", neighborInfo.mRloc16);
+                OutputExtAddress(neighborInfo.mExtAddress);
+                OutputLine(" age:%lu conn-time:%lu", ToUlong(neighborInfo.mAge), ToUlong(neighborInfo.mConnectionTime));
+            }
+        }
+    }
+#endif
     else
     {
         error = OT_ERROR_INVALID_ARGS;

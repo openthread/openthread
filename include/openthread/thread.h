@@ -90,7 +90,8 @@ typedef struct otLinkModeConfig
 typedef struct
 {
     otExtAddress mExtAddress;           ///< IEEE 802.15.4 Extended Address
-    uint32_t     mAge;                  ///< Time last heard
+    uint32_t     mAge;                  ///< Seconds since last heard
+    uint32_t     mConnectionTime;       ///< Seconds since link establishment (requires `CONFIG_UPTIME_ENABLE`)
     uint16_t     mRloc16;               ///< RLOC16
     uint32_t     mLinkFrameCounter;     ///< Link Frame Counter
     uint32_t     mMleFrameCounter;      ///< MLE Frame Counter
@@ -1077,6 +1078,28 @@ otError otThreadSendProactiveBackboneNotification(otInstance               *aIns
  *
  */
 otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallback aCallback, void *aContext);
+
+#define OT_DURATION_STRING_SIZE 21 ///< Recommended size for string representation of `uint32_t` duration in seconds.
+
+/**
+ * This function converts an `uint32_t` duration (in seconds) to a human-readable string.
+ *
+ * This function requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+ *
+ * The string follows the format "<hh>:<mm>:<ss>" for hours, minutes, seconds (if duration is shorter than one day) or
+ * "<dd>d.<hh>:<mm>:<ss>" (if longer than a day).
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * This function is intended for use with `mAge` or `mConnectionTime` in `otNeighborInfo` or `otChildInfo` structures.
+ *
+ * @param[in]  aDuration A duration interval in seconds.
+ * @param[out] aBuffer   A pointer to a char array to output the string.
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_DURATION_STRING_SIZE`.
+ *
+ */
+void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize);
 
 /**
  * @}
