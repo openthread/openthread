@@ -238,6 +238,42 @@ otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouter
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
 
 /**
+ * This function replaces a previously published external route in the Thread Network Data.
+ *
+ * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ *
+ * If there is no previously published external route matching @p aPrefix, this function behaves similarly to
+ * `otNetDataPublishExternalRoute()`, i.e., it will start the process of publishing @a aConfig as an external route in
+ * the Thread Network Data.
+ *
+ * If there is a previously published route entry matching @p aPrefix, it will be replaced with the new prefix from
+ * @p aConfig.
+ *
+ * - If the @p aPrefix was already added in the Network Data, the change to the new prefix in @p aConfig is immediately
+ *   reflected in the Network Data. This ensures that route entries in the Network Data are not abruptly removed and
+ *   the transition from aPrefix to the new prefix is smooth.
+ *
+ * - If the old published @p aPrefix was not added in the Network Data, it will be replaced with the new @p aConfig
+ *   prefix but it will not be immediately added. Instead, it will start the process of publishing it in the Network
+ *   Data (monitoring the Network Data to determine when/if to add the prefix, depending on the number of similar
+ *   prefixes present in the Network Data).
+ *
+ * @param[in] aPrefix         The previously published external route prefix to replace.
+ * @param[in] aConfig         The external route config to publish.
+ * @param[in] aRequester      The requester (`kFromUser` or `kFromRoutingManager` module).
+ *
+ * @retval OT_ERROR_NONE          The external route is published successfully.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).
+ * @retval OT_ERROR_NO_BUFS       Could not allocate an entry for the new request. Publisher supports a limited number
+ *                                of entries (shared between on-mesh prefix and external route) determined by config
+ *                                `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES`.
+ *
+ */
+otError otNetDataReplacePublishedExternalRoute(otInstance                  *aInstance,
+                                               const otIp6Prefix           *aPrefix,
+                                               const otExternalRouteConfig *aConfig);
+
+/**
  * This function indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
  * the Thread Network Data.
  *
