@@ -83,7 +83,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     SuccessOrExit(error = Random::Crypto::FillBuffer(mExtendedPanId.m8, sizeof(mExtendedPanId.m8)));
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
-    snprintf(mNetworkName.m8, sizeof(mNetworkName), "OpenThread-%04x", mPanId);
+    snprintf(mNetworkName.m8, sizeof(mNetworkName), "%s-%04x", NetworkName::kNetworkNameInit, mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
     mComponents.mIsNetworkKeyPresent      = true;
