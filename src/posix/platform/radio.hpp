@@ -55,6 +55,14 @@ public:
      */
     void Init(void);
 
+    /**
+     * This method acts as an accessor to the spinel instance used by the radio.
+     *
+     * @returns A pointer to the radio's spinel interface instance.
+     *
+     */
+    static void *GetSpinelInstance(void);
+
 private:
     RadioUrl mRadioUrl;
 };
