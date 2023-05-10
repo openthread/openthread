@@ -201,6 +201,8 @@ void Radio::Init(void)
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 }
 
+void *Radio::GetSpinelInstance(void) { return &sRadioSpinel; }
+
 } // namespace Posix
 } // namespace ot
 

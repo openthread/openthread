@@ -58,7 +58,8 @@ typedef struct
 {
     otExtAddress mExtAddress;           ///< IEEE 802.15.4 Extended Address
     uint32_t     mTimeout;              ///< Timeout
-    uint32_t     mAge;                  ///< Time last heard
+    uint32_t     mAge;                  ///< Seconds since last heard
+    uint64_t     mConnectionTime;       ///< Seconds since attach (requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`)
     uint16_t     mRloc16;               ///< RLOC16
     uint16_t     mChildId;              ///< Child ID
     uint8_t      mNetworkDataVersion;   ///< Network Data Version

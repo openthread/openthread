@@ -43,7 +43,7 @@
 
 #if !defined(OPENTHREAD_BUILD_DATETIME)
 #ifdef __ANDROID__
-#ifdef OPENTHREAD_ENABLE_ANDROID_NDK
+#ifdef OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
 #include <sys/system_properties.h>
 #else
 #include <cutils/properties.h>
@@ -135,7 +135,7 @@ const char *otGetVersionString(void)
 
 #if !defined(OPENTHREAD_BUILD_DATETIME) && defined(__ANDROID__)
 
-#ifdef OPENTHREAD_ENABLE_ANDROID_NDK
+#ifdef OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
     static char sVersion[100 + PROP_VALUE_MAX];
     char        dateTime[PROP_VALUE_MAX];
 

@@ -40,12 +40,6 @@
 namespace ot {
 namespace MeshCoP {
 
-const char NetworkNameManager::sNetworkNameInit[] = "OpenThread";
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-const char NetworkNameManager::sDomainNameInit[] = "DefaultDomain";
-#endif
-
 uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const
 {
     MutableData<kWithUint8Length> destData;
@@ -114,10 +108,10 @@ bool NetworkName::operator==(const NetworkName &aOther) const { return GetAsData
 NetworkNameManager::NetworkNameManager(Instance &aInstance)
     : InstanceLocator(aInstance)
 {
-    IgnoreError(SetNetworkName(sNetworkNameInit));
+    IgnoreError(SetNetworkName(NetworkName::kNetworkNameInit));
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    IgnoreError(SetDomainName(sDomainNameInit));
+    IgnoreError(SetDomainName(NetworkName::kDomainNameInit));
 #endif
 }
 

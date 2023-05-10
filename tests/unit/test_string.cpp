@@ -309,6 +309,63 @@ void TestStringToLowercase(void)
     printf(" -- PASS\n");
 }
 
+void TestStringParseUint8(void)
+{
+    struct TestCase
+    {
+        const char *mString;
+        Error       mError;
+        uint8_t     mExpectedValue;
+        uint16_t    mParsedLength;
+    };
+
+    static const TestCase kTestCases[] = {
+        {"0", kErrorNone, 0, 1},
+        {"1", kErrorNone, 1, 1},
+        {"12", kErrorNone, 12, 2},
+        {"91", kErrorNone, 91, 2},
+        {"200", kErrorNone, 200, 3},
+        {"00000", kErrorNone, 0, 5},
+        {"00000255", kErrorNone, 255, 8},
+        {"2 00", kErrorNone, 2, 1},
+        {"77a12", kErrorNone, 77, 2},
+        {"", kErrorParse},     // Does not start with digit char ['0'-'9']
+        {"a12", kErrorParse},  // Does not start with digit char ['0'-'9']
+        {" 12", kErrorParse},  // Does not start with digit char ['0'-'9']
+        {"256", kErrorParse},  // Larger than max `uint8_t`
+        {"1000", kErrorParse}, // Larger than max `uint8_t`
+        {"0256", kErrorParse}, // Larger than max `uint8_t`
+    };
+
+    printf("\nTest 11: TestStringParseUint8() function\n");
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        const char *string = testCase.mString;
+        Error       error;
+        uint8_t     u8;
+
+        error = StringParseUint8(string, u8);
+
+        VerifyOrQuit(error == testCase.mError);
+
+        if (testCase.mError == kErrorNone)
+        {
+            printf("\n%-10s -> %-3u (expect: %-3u), len:%u (expect:%u)", testCase.mString, u8, testCase.mExpectedValue,
+                   static_cast<uint8_t>(string - testCase.mString), testCase.mParsedLength);
+
+            VerifyOrQuit(u8 == testCase.mExpectedValue);
+            VerifyOrQuit(string - testCase.mString == testCase.mParsedLength);
+        }
+        else
+        {
+            printf("\n%-10s -> kErrorParse", testCase.mString);
+        }
+    }
+
+    printf("\n\n -- PASS\n");
+}
+
 // gcc-4 does not support constexpr function
 #if __GNUC__ > 4
 static_assert(ot::AreStringsInOrder("a", "b"), "AreStringsInOrder() failed");
@@ -331,6 +388,7 @@ int main(void)
     ot::TestStringEndsWith();
     ot::TestStringMatch();
     ot::TestStringToLowercase();
+    ot::TestStringParseUint8();
     printf("\nAll tests passed.\n");
     return 0;
 }

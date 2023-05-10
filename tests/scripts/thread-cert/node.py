@@ -2380,6 +2380,10 @@ class NodeImpl:
         self.send_command(f'netdata publish route {prefix} {flags} {prf}')
         self._expect_done()
 
+    def netdata_publish_replace(self, old_prefix, prefix, flags='s', prf='med'):
+        self.send_command(f'netdata publish replace {old_prefix} {prefix} {flags} {prf}')
+        self._expect_done()
+
     def netdata_unpublish_prefix(self, prefix):
         self.send_command(f'netdata unpublish {prefix}')
         self._expect_done()

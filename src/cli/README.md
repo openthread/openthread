@@ -2303,6 +2303,43 @@ Print table of neighbors.
 Done
 ```
 
+### neighbor conntime
+
+Print connection time and age of neighbors.
+
+The table provides the following info per neighbor:
+
+- RLOC16
+- Extended MAC address
+- Age (seconds since last heard from neighbor)
+- Connection time (seconds since link establishment with neighbor)
+
+Duration intervals are formatted as `<hh>:<mm>:<ss>` for hours, minutes, and seconds if the duration is less than one day. If the duration is longer than one day, the format is `<dd>d.<hh>:<mm>:<ss>`.
+
+```bash
+> neighbor conntime
+| RLOC16 | Extended MAC     | Last Heard (Age) | Connection Time  |
++--------+------------------+------------------+------------------+
+| 0x8401 | 1a28be396a14a318 |         00:00:13 |         00:07:59 |
+| 0x5c00 | 723ebf0d9eba3264 |         00:00:03 |         00:11:27 |
+| 0xe800 | ce53628a1e3f5b3c |         00:00:02 |         00:00:15 |
+Done
+```
+
+### neighbor conntime list
+
+Print connection time and age of neighbors.
+
+This command is similar to `neighbor conntime`, but it displays the information in a list format. The age and connection time are both displayed in seconds.
+
+```bash
+> neighbor conntime list
+0x8401 1a28be396a14a318 age:63 conn-time:644
+0x5c00 723ebf0d9eba3264 age:23 conn-time:852
+0xe800 ce53628a1e3f5b3c age:23 conn-time:180
+Done
+```
+
 ### netstat
 
 List all UDP sockets.

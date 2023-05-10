@@ -42,6 +42,29 @@
 
 namespace ot {
 
+void Neighbor::SetState(State aState)
+{
+    VerifyOrExit(mState != aState);
+    mState = static_cast<uint8_t>(aState);
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    if (mState == kStateValid)
+    {
+        mConnectionStart = Uptime::MsecToSec(Get<Uptime>().GetUptime());
+    }
+#endif
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+uint32_t Neighbor::GetConnectionTime(void) const
+{
+    return IsStateValid() ? Uptime::MsecToSec(Get<Uptime>().GetUptime()) - mConnectionStart : 0;
+}
+#endif
+
 bool Neighbor::AddressMatcher::Matches(const Neighbor &aNeighbor) const
 {
     bool matches = false;
@@ -83,6 +106,9 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mFullThreadDevice = aNeighbor.IsFullThreadDevice();
     mFullNetworkData  = (aNeighbor.GetNetworkDataType() == NetworkData::kFullSet);
     mVersion          = aNeighbor.GetVersion();
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    mConnectionTime = aNeighbor.GetConnectionTime();
+#endif
 }
 
 void Neighbor::Init(Instance &aInstance)
@@ -176,7 +202,7 @@ void Neighbor::GenerateChallenge(void)
         Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
     for (LinkMetrics::SeriesInfo &entry : mLinkMetricsSeriesInfoList)
@@ -211,7 +237,7 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
         Get<LinkMetrics::Subject>().Free(*seriesInfo);
     }
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 const char *Neighbor::StateToString(State aState)
 {
@@ -265,6 +291,9 @@ void Child::Info::SetFrom(const Child &aChild)
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
+#endif
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    mConnectionTime = aChild.GetConnectionTime();
 #endif
 }
 

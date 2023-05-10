@@ -107,6 +107,9 @@ public:
 class NetworkName : public otNetworkName, public Unequatable<NetworkName>
 {
 public:
+    static constexpr const char *kNetworkNameInit = "OpenThread";
+    static constexpr const char *kDomainNameInit  = "DefaultDomain";
+
     /**
      * This constant specified the maximum number of chars in Network Name (excludes null char).
      *
@@ -261,9 +264,6 @@ public:
 
 private:
     Error SignalNetworkNameChange(Error aError);
-
-    static const char sNetworkNameInit[];
-    static const char sDomainNameInit[];
 
     NetworkName mNetworkName;
 

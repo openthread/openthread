@@ -276,10 +276,16 @@ public:
      * Thread Network Data.
      *
      * If there is a previously published route entry matching @p aPrefix, it will be replaced with the new prefix from
-     * @p aConfig. In particular, if the @p aPrefix was already added in the Network Data, the change to the new prefix
-     * in @p aConfig is immediately reflected in the Network Data (i.e., @p aPrefix is removed and the new prefix is
-     * added in the same Network Data registration request to leader). This ensures that route entries in the Network
-     * Data are not abruptly removed and the transition from @p aPrefix to new prefix is smooth.
+     * @p aConfig.
+     *
+     * - If the @p aPrefix was already added in the Network Data, the change to the new prefix in @p aConfig is
+     *   immediately reflected in the Network Data. This ensures that route entries in the Network Data are not
+     *   abruptly removed and the transition from aPrefix to the new prefix is smooth.
+     *
+     * - If the old published @p aPrefix was not added in the Network Data, it will be replaced with the new @p aConfig
+     *   prefix but it will not be immediately added. Instead, it will start the process of publishing it in the
+     *   Network Data (monitoring the Network Data to determine when/if to add the prefix, depending on the number of
+     *   similar prefixes present in the Network Data).
      *
      * @param[in] aPrefix         The previously published external route prefix to replace.
      * @param[in] aConfig         The external route config to publish.
