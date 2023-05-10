@@ -1054,7 +1054,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
 
     header.SetQuestionCount(kQuestionCount[aInfo.mQueryType]);
 
-    message = mSocket.NewMessage(0);
+    message = mSocket.NewMessage();
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->Append(header));
@@ -1658,7 +1658,7 @@ void Client::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
     SuccessOrExit(mEndpoint.ReceiveByReference(data));
     VerifyOrExit(data != nullptr);
 
-    message = mSocket.NewMessage(0);
+    message = mSocket.NewMessage();
     VerifyOrExit(message != nullptr);
 
     while (aBytesAvailable > totalRead)

@@ -54,7 +54,7 @@ Icmp::Icmp(Instance &aInstance)
 {
 }
 
-Message *Icmp::NewMessage(uint16_t aReserved) { return Get<Ip6>().NewMessage(sizeof(Header) + aReserved); }
+Message *Icmp::NewMessage(void) { return Get<Ip6>().NewMessage(sizeof(Header)); }
 
 Error Icmp::RegisterHandler(Handler &aHandler) { return mHandlers.Add(aHandler); }
 

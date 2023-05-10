@@ -136,6 +136,26 @@ public:
     explicit Ip6(Instance &aInstance);
 
     /**
+     * This method allocates a new message buffer from the buffer pool with default settings (link security
+     * enabled and `kPriorityMedium`).
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     *
+     */
+    Message *NewMessage(void);
+
+    /**
+     * This method allocates a new message buffer from the buffer pool with default settings (link security
+     * enabled and `kPriorityMedium`).
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved);
+
+    /**
      * This method allocates a new message buffer from the buffer pool.
      *
      * @param[in]  aReserved  The number of header bytes to reserve following the IPv6 header.
@@ -144,7 +164,7 @@ public:
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * This method allocates a new message buffer from the buffer pool and writes the IPv6 datagram to the message.

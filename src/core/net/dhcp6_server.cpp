@@ -339,7 +339,7 @@ Error Server::SendReply(const Ip6::Address  &aDst,
     Ip6::MessageInfo messageInfo;
     Message         *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
     SuccessOrExit(error = AppendServerIdentifier(*message));
     SuccessOrExit(error = AppendClientIdentifier(*message, aClientId));

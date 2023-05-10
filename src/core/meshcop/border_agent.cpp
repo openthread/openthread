@@ -300,7 +300,7 @@ template <> void BorderAgent::HandleTmf<kUriProxyTx>(Coap::Message &aMessage, co
 
     VerifyOrExit(udpEncapHeader.GetSourcePort() > 0 && udpEncapHeader.GetDestinationPort() > 0, error = kErrorDrop);
 
-    VerifyOrExit((message = Get<Ip6::Udp>().NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Ip6::Udp>().NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendBytesFromMessage(aMessage, offset, length));
 
     messageInfo.SetSockPort(udpEncapHeader.GetSourcePort());

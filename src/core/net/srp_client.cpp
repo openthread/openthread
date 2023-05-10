@@ -744,7 +744,7 @@ void Client::SendUpdate(void)
     };
 
     Error    error   = kErrorNone;
-    Message *message = mSocket.NewMessage(0);
+    Message *message = mSocket.NewMessage();
     uint32_t length;
 
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

@@ -179,7 +179,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     }
 #endif
 
-    responseMessage = mSocket.NewMessage(0);
+    responseMessage = mSocket.NewMessage();
     VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
 
     // Allocate space for DNS header

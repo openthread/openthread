@@ -81,6 +81,10 @@ Ip6::Ip6(Instance &aInstance)
 #endif
 }
 
+Message *Ip6::NewMessage(void) { return NewMessage(0); }
+
+Message *Ip6::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
+
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<MessagePool>().Allocate(
@@ -611,7 +615,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         offset = fragmentCnt * FragmentHeader::BytesToFragmentOffset(maxPayloadFragment);
         fragmentHeader.SetOffset(offset);
 
-        VerifyOrExit((fragment = NewMessage(0)) != nullptr, error = kErrorNoBufs);
+        VerifyOrExit((fragment = NewMessage()) != nullptr, error = kErrorNoBufs);
         IgnoreError(fragment->SetPriority(aMessage.GetPriority()));
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
@@ -694,7 +698,7 @@ Error Ip6::HandleFragment(Message &aMessage, MessageOrigin aOrigin, MessageInfo 
     if (message == nullptr)
     {
         LogDebg("start reassembly");
-        VerifyOrExit((message = NewMessage(0)) != nullptr, error = kErrorNoBufs);
+        VerifyOrExit((message = NewMessage()) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
 
         message->SetTimestampToNow();
