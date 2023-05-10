@@ -177,12 +177,6 @@ private:
     void FireAtIfEarlier(void) {}
     void GetFireTime(void) {}
 
-    /**
-     * This method determines the time when the trickle timer was last started.
-     *
-     * @returns the start time of trickle timer
-     *
-     */
     TimeMilli GetLastTimerStart(void);
 
     uint32_t mIntervalMin;        // Minimum interval (aka `Imin`).

@@ -55,20 +55,27 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
 
 TimeMilli TrickleTimer::GetLastTimerStart(void)
 {
-    TimeMilli aStartTime = TimerMilli::GetFireTime();
+    TimeMilli startTime = TimerMilli::GetFireTime();
+
+    if (mMode == kModePlainTimer)
+    {
+    	startTime -= mInterval;
+        ExitNow();
+    }
 
     switch (mPhase)
     {
     case kBeforeRandomTime:
-        aStartTime -= mTimeInInterval;
+        startTime -= mTimeInInterval;
         break;
 
     case kAfterRandomTime:
-        aStartTime -= mInterval - mTimeInInterval;
+        startTime -= mInterval - mTimeInInterval;
         break;
     }
 
-    return aStartTime;
+exit:
+    return startTime;
 }
 
 void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
@@ -89,7 +96,12 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
 
         // In plain mode, just fire at the sooner time and
         // the handler will take care of everything else.
-        //
+        if (mMode == kModePlainTimer)
+        {
+            TimerMilli::FireAt(newFireTime);
+            ExitNow();
+        }
+
         // In trickle mode, fire at a sooner time, but we also
         // need to manipulate mInterval and mTimeInInterval.
         //

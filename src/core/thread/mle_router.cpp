@@ -449,32 +449,23 @@ void MleRouter::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop();
 
 void MleRouter::RecalculateAdvertiseInterval(void)
 {
+    uint32_t neighbors;
+    uint32_t advertiseIntervalMax;
+
     VerifyOrExit(IsRouterOrLeader());
 
+    neighbors            = Get<RouterTable>().GetNeighborCount();
+    advertiseIntervalMax = Min(kAdvertiseIntervalMax, (neighbors + 1) * kNeighborAdvertiseIntervalMultiplier);
+    advertiseIntervalMax = Max(kNeighborAdvertiseIntervalMaxLowerbound, advertiseIntervalMax);
+
+    if (mAdvertiseTrickleTimer.IsRunning())
     {
-        uint32_t neighbors = 0;
-
-        // Count the neighbor routers
-        for (const Router &router : Get<RouterTable>())
-        {
-            if (router.IsStateValid())
-            {
-                neighbors++;
-            }
-        }
-
-        uint32_t advertiseIntervalMax = OT_MIN(kAdvertiseIntervalMax, (neighbors + 1) * 4);
-        advertiseIntervalMax          = OT_MAX(12, advertiseIntervalMax);
-
-        if (mAdvertiseTrickleTimer.IsRunning())
-        {
-            mAdvertiseTrickleTimer.SetIntervalMax(Time::SecToMsec(advertiseIntervalMax));
-        }
-        else
-        {
-            mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
-                                         Time::SecToMsec(advertiseIntervalMax));
-        }
+        mAdvertiseTrickleTimer.SetIntervalMax(Time::SecToMsec(advertiseIntervalMax));
+    }
+    else
+    {
+        mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
+                                     Time::SecToMsec(advertiseIntervalMax));
     }
 
 exit:
