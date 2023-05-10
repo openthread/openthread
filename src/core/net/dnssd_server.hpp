@@ -263,25 +263,27 @@ public:
     const Counters &GetCounters(void) const { return mCounters; };
 
     /**
-     * This enumeration represents different test modes.
-     *
-     * The test mode is intended for testing the client by having server behave in certain ways, e.g., reject messages
-     * with certain format (e.g., more than one question in query).
+     * This enumeration represents different test mode flags for use in `SetTestMode()`.
      *
      */
-    enum TestMode : uint8_t
+    enum TestModeFlags : uint8_t
     {
-        kTestModeDisabled,           ///< Test mode is disabled.
-        kTestModeSingleQuestionOnly, ///< Allow single question in query message, send `FormatError` for two or more.
+        kTestModeSingleQuestionOnly     = 1 << 0, ///< Allow single question in query, send `FormatError` otherwise.
+        kTestModeEmptyAdditionalSection = 1 << 1, ///< Do not include any RR in additional section.
     };
+
+    static constexpr uint8_t kTestModeDisabled = 0; ///< Test mode is disabled (no flags).
 
     /**
      * This method sets the test mode for `Server`.
      *
-     * @param[in] aTestMode   The new test mode.
+     * The test mode flags are intended for testing the client by having server behave in certain ways, e.g., reject
+     * messages with certain format (e.g., more than one question in query).
+     *
+     * @param[in] aTestMode   The new test mode (combination of `TestModeFlags`).
      *
      */
-    void SetTestMode(TestMode aTestMode) { mTestMode = aTestMode; }
+    void SetTestMode(uint8_t aTestMode) { mTestMode = aTestMode; }
 
 private:
     class NameCompressInfo : public Clearable<NameCompressInfo>
@@ -553,7 +555,7 @@ private:
 
     ServerTimer mTimer;
     Counters    mCounters;
-    TestMode    mTestMode;
+    uint8_t     mTestMode;
 };
 
 } // namespace ServiceDiscovery

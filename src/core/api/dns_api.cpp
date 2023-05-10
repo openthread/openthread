@@ -188,6 +188,20 @@ otError otDnsClientResolveService(otInstance             *aInstance,
                                                                    AsCoreTypePtr(aConfig));
 }
 
+otError otDnsClientResolveServiceAndHostAddress(otInstance             *aInstance,
+                                                const char             *aInstanceLabel,
+                                                const char             *aServiceName,
+                                                otDnsServiceCallback    aCallback,
+                                                void                   *aContext,
+                                                const otDnsQueryConfig *aConfig)
+{
+    AssertPointerIsNotNull(aInstanceLabel);
+    AssertPointerIsNotNull(aServiceName);
+
+    return AsCoreType(aInstance).Get<Dns::Client>().ResolveServiceAndHostAddress(
+        aInstanceLabel, aServiceName, aCallback, aContext, AsCoreTypePtr(aConfig));
+}
+
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,
                                            char                       *aLabelBuffer,
                                            uint8_t                     aLabelBufferSize,

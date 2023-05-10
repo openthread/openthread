@@ -515,7 +515,7 @@ typedef struct otDnsServiceResponse otDnsServiceResponse;
 typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
 
 /**
- * This function sends a DNS service instance resolution query for a given service instance.
+ * This function starts a DNS service instance resolution for a given service instance.
  *
  * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
@@ -555,6 +555,43 @@ otError otDnsClientResolveService(otInstance             *aInstance,
                                   const otDnsQueryConfig *aConfig);
 
 /**
+ * This function starts a DNS service instance resolution for a given service instance, with a potential follow-up
+ * address resolution for the host name discovered for the service instance.
+ *
+ * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
+ *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config. This function cannot be used with
+ * `mServiceMode` in DNS config set to `OT_DNS_SERVICE_MODE_TXT` (i.e., querying for TXT record only) and will return
+ * `OT_ERROR_INVALID_ARGS`.
+ *
+ * This function behaves similarly to `otDnsClientResolveService()` sending queries for SRV and TXT records. However,
+ * if the server/resolver does not provide AAAA/A records for the host name in the response to SRV query (in the
+ * Additional Data section), it will perform host name resolution (sending an AAAA query) for the discovered host name
+ * from the SRV record. The callback @p aCallback is invoked when responses for all queries are received (i.e., both
+ * service and host address resolutions are finished).
+ *
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aInstanceLabel     The service instance label.
+ * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
+ * @param[in]  aCallback          A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext           A pointer to arbitrary context information.
+ * @param[in]  aConfig            A pointer to the config to use for this query.
+ *
+ * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_INVALID_ARGS  @p aInstanceLabel is NULL, or @p aConfig is invalid.
+ *
+ */
+otError otDnsClientResolveServiceAndHostAddress(otInstance             *aInstance,
+                                                const char             *aInstanceLabel,
+                                                const char             *aServiceName,
+                                                otDnsServiceCallback    aCallback,
+                                                void                   *aContext,
+                                                const otDnsQueryConfig *aConfig);
+
+/**
  * This function gets the service instance name associated with a DNS service instance resolution response.
  *
  * This function MUST only be used from `otDnsServiceCallback`.
@@ -579,13 +616,16 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
 /**
  * This function gets info for a service instance from a DNS service instance resolution response.
  *
- * This function MUST only be used from `otDnsServiceCallback`.
+ * This function MUST only be used from a `otDnsServiceCallback` triggered from `otDnsClientResolveService()` or
+ * `otDnsClientResolveServiceAndHostAddress()`.
  *
- * A service resolution DNS response may include AAAA records in its Additional Data section for host name associated
- * with the service instance that is resolved. This is a SHOULD and not a MUST requirement so servers/resolvers are
- * not required to provide this. This function attempts to retrieve AAAA record(s) if included in the response. If it
- * is not included `mHostAddress` is set to all zero (unspecified address). If the caller wants to resolve the host
- * address it can call `otDnsClientResolveAddress()` with the host name to start an address resolution query.
+ * When this is is used from a `otDnsClientResolveService()` callback, the DNS response from server/resolver may
+ * include AAAA records in its Additional Data section for the host name associated with the service instance that is
+ * resolved. This is a SHOULD and not a MUST requirement so servers/resolvers are not required to provide this. This
+ * function attempts to parse AAAA record(s) if included in the response. If it is not included `mHostAddress` is set
+ * to all zeros (unspecified address). To also resolve the host address, user can use the DNS client API function
+ * `otDnsClientResolveServiceAndHostAddress()` which will perform service resolution followed up by a host name
+ * address resolution query (when AAAA records are not provided by server/resolver in the SRV query response).
  *
  * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated.
  * - If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned unless the query config for this query

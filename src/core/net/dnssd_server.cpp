@@ -204,13 +204,9 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     VerifyOrExit(!aRequestHeader.IsTruncationFlagSet(), response = Header::kResponseFormatError);
     VerifyOrExit(aRequestHeader.GetQuestionCount() > 0, response = Header::kResponseFormatError);
 
-    switch (mTestMode)
+    if (mTestMode & kTestModeSingleQuestionOnly)
     {
-    case kTestModeDisabled:
-        break;
-    case kTestModeSingleQuestionOnly:
         VerifyOrExit(aRequestHeader.GetQuestionCount() == 1, response = Header::kResponseFormatError);
-        break;
     }
 
     response = AddQuestions(aRequestHeader, aRequestMessage, responseHeader, *responseMessage, compressInfo);
@@ -729,6 +725,8 @@ Header::Response Server::ResolveBySrp(Header                   &aResponseHeader,
     // Answer the questions with additional RRs if required
     if (aResponseHeader.GetAnswerCount() > 0)
     {
+        VerifyOrExit(!(mTestMode & kTestModeEmptyAdditionalSection));
+
         readOffset = sizeof(Header);
         for (uint16_t i = 0; i < aResponseHeader.GetQuestionCount(); i++)
         {
@@ -1046,6 +1044,11 @@ void Server::AnswerQuery(QueryTransaction                 &aQuery,
 
     for (uint8_t additional = 0; additional <= 1; additional++)
     {
+        if (additional == 1)
+        {
+            VerifyOrExit(!(mTestMode & kTestModeEmptyAdditionalSection));
+        }
+
         if (HasQuestion(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), aInstanceInfo.mFullName,
                         ResourceRecord::kTypeSrv) == !additional)
         {
