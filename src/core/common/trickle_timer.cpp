@@ -59,7 +59,7 @@ TimeMilli TrickleTimer::GetLastTimerStart(void)
 
     if (mMode == kModePlainTimer)
     {
-    	startTime -= mInterval;
+        startTime -= mInterval;
         ExitNow();
     }
 
