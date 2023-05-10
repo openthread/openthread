@@ -143,8 +143,8 @@ constexpr uint32_t kAdvertiseIntervalMax = 5; ///< Max Advertise interval (in se
 #else
 constexpr uint32_t kAdvertiseIntervalMax = 32; ///< Max Advertise interval (in sec)
 #endif
-constexpr uint32_t kNeighborAdvertiseIntervalMultiplier = 4; ///< Multiplier used for the neighbor aware advertise interval
-constexpr uint32_t kNeighborAdvertiseIntervalMaxLowerbound = 12; ///< Lowerbound value for the neighbor aware advertise interval calculated value (in sec)
+constexpr uint32_t kNeighborAdvertiseIntervalMultiplier = 4; ///< Multiplier for the neighbor aware advertise interval
+constexpr uint32_t kNeighborAdvertiseIntervalMaxLowerbound = 12; ///< Min for neighbor aware advertise interval (in sec)
 
 constexpr uint8_t kFailedRouterTransmissions = 4;
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
