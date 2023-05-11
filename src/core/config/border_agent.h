@@ -55,4 +55,14 @@
 #define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+ *
+ * Define ro 1 to enable Border Agent ID support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE 0
+#endif
+
 #endif // CONFIG_BORDER_AGENT_H_

@@ -90,13 +90,38 @@ public:
      * This method converts an uptime value (number of milliseconds) to a human-readable string.
      *
      * The string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if uptime is
-     * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day).
+     * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day). @p aIncludeMsec can be used
+     * to determine whether `.<mmm>` milliseconds is included or omitted in the resulting string.
      *
-     * @param[in]     aUptime  The uptime to convert.
-     * @param[in,out] aWriter  A `StringWriter` to append the converted string to.
+     * @param[in]     aUptime        The uptime to convert.
+     * @param[in,out] aWriter        A `StringWriter` to append the converted string to.
+     * @param[in]     aIncludeMsec   Whether to include `.<mmm>` milliseconds in the string.
      *
      */
-    static void UptimeToString(uint64_t aUptime, StringWriter &aWriter);
+    static void UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec);
+
+    /**
+     * This static method converts a given uptime as number of milliseconds to number of seconds.
+     *
+     * @param[in] aUptimeInMilliseconds    Uptime in milliseconds (as `uint64_t`).
+     *
+     * @returns The converted @p aUptimeInMilliseconds to seconds (as `uint32_t`).
+     *
+     */
+    static uint32_t MsecToSec(uint64_t aUptimeInMilliseconds)
+    {
+        return static_cast<uint32_t>(aUptimeInMilliseconds / 1000u);
+    }
+
+    /**
+     * This static method converts a given uptime as number of seconds to number of milliseconds.
+     *
+     * @param[in] aUptimeInSeconds    Uptime in seconds (as `uint32_t`).
+     *
+     * @returns The converted @p aUptimeInSeconds to milliseconds (as `uint64_t`).
+     *
+     */
+    static uint64_t SecToMsec(uint32_t aUptimeInSeconds) { return static_cast<uint64_t>(aUptimeInSeconds) * 1000u; }
 
 private:
     static constexpr uint32_t kTimerInterval = (1 << 30);

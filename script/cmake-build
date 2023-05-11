@@ -62,17 +62,18 @@
 
 set -euxo pipefail
 
-OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
+OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET-}
 
 OT_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
 readonly OT_SRCDIR
 
-OT_PLATFORMS=(simulation posix)
+OT_PLATFORMS=(simulation posix android-ndk)
 readonly OT_PLATFORMS
 
 OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_ANYCAST_LOCATOR=ON"
     "-DOT_BORDER_AGENT=ON"
+    "-DOT_BORDER_AGENT_ID=ON"
     "-DOT_BORDER_ROUTER=ON"
     "-DOT_CHANNEL_MANAGER=ON"
     "-DOT_CHANNEL_MONITOR=ON"
@@ -151,11 +152,62 @@ main()
     shift
     local local_options=()
     local options=(
-        "-DOT_PLATFORM=${platform}"
         "-DOT_SLAAC=ON"
     )
 
     case "${platform}" in
+        android-ndk)
+            if [ -z "${NDK-}" ]; then
+                echo "
+The 'NDK' environment variable needs to point to the Android NDK toolchain.
+Please ensure the NDK is downloaded and extracted then try to run this script again
+
+For example:
+    NDK=/opt/android-ndk-r25c ./script/cmake-build-android
+
+You can download the NDK at https://developer.android.com/ndk/downloads
+
+            "
+                exit 1
+            fi
+
+            NDK_CMAKE_TOOLCHAIN_FILE="${NDK?}/build/cmake/android.toolchain.cmake"
+            if [ ! -f "${NDK_CMAKE_TOOLCHAIN_FILE}" ]; then
+                echo "
+Could not fild the Android NDK CMake toolchain file
+- NDK=${NDK}
+- NDK_CMAKE_TOOLCHAIN_FILE=${NDK_CMAKE_TOOLCHAIN_FILE}
+
+            "
+                exit 2
+            fi
+            local_options+=(
+                "-DOT_LOG_OUTPUT=PLATFORM_DEFINED"
+
+                # Add Android NDK flags
+                "-DOT_ANDROID_NDK=1"
+                "-DCMAKE_TOOLCHAIN_FILE=${NDK?}/build/cmake/android.toolchain.cmake"
+
+                # Android API needs to be >= android-24 for `getifsaddrs()`
+                "-DANDROID_PLATFORM=android-24"
+
+                # Store thread settings in the CWD when executing ot-cli or ot-daemon
+                '-DOT_POSIX_SETTINGS_PATH="./thread"'
+            )
+
+            # Rewrite platform to posix
+            platform="posix"
+
+            # Check if OT_DAEMON or OT_APP_CLI flags are needed
+            if [[ ${OT_CMAKE_NINJA_TARGET[*]} =~ "ot-daemon" ]] || [[ ${OT_CMAKE_NINJA_TARGET[*]} =~ "ot-ctl" ]]; then
+                local_options+=("-DOT_DAEMON=ON")
+            elif [[ ${OT_CMAKE_NINJA_TARGET[*]} =~ "ot-cli" ]]; then
+                local_options+=("-DOT_APP_CLI=ON")
+            fi
+
+            options+=("${local_options[@]}")
+            ;;
+
         posix)
             local_options+=(
                 "-DOT_TCP=OFF"
@@ -178,6 +230,9 @@ main()
             ;;
     esac
 
+    options+=(
+        "-DOT_PLATFORM=${platform}"
+    )
     options+=("$@")
     build "${platform}" "${options[@]}"
 }

@@ -1052,10 +1052,17 @@ add_executable(ot-test-timer
 add_executable(ot-test-toolchain
     test_toolchain.cpp test_toolchain_c.c
 )
+
 target_include_directories(ot-test-toolchain
     PRIVATE
         ${COMMON_INCLUDES}
 )
+
+target_link_libraries(ot-test-toolchain
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
 add_test(NAME ot-test-toolchain COMMAND ot-test-toolchain)
 
 target_include_directories(ot-test-timer

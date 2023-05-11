@@ -92,6 +92,14 @@ otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRou
                                                                                     NetworkData::Publisher::kFromUser);
 }
 
+otError otNetDataReplacePublishedExternalRoute(otInstance                  *aInstance,
+                                               const otIp6Prefix           *aPrefix,
+                                               const otExternalRouteConfig *aConfig)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().ReplacePublishedExternalRoute(
+        AsCoreType(aPrefix), AsCoreType(aConfig), NetworkData::Publisher::kFromUser);
+}
+
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsPrefixAdded(AsCoreType(aPrefix));

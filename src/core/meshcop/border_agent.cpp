@@ -225,9 +225,38 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mTimer(aInstance)
     , mState(kStateStopped)
     , mUdpProxyPort(0)
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    , mIdInitialized(false)
+#endif
 {
     mCommissionerAloc.InitAsThreadOriginRealmLocalScope();
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+Error BorderAgent::GetId(uint8_t *aId, uint16_t &aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength >= sizeof(mId), error = kErrorInvalidArgs);
+    VerifyOrExit(!mIdInitialized, error = kErrorNone);
+
+    if (Get<Settings>().Read(mId) != kErrorNone)
+    {
+        Random::NonCrypto::FillBuffer(mId.GetId(), sizeof(mId));
+        SuccessOrExit(error = Get<Settings>().Save(mId));
+    }
+
+    mIdInitialized = true;
+
+exit:
+    if (error == kErrorNone)
+    {
+        memcpy(aId, mId.GetId(), sizeof(mId));
+        aLength = static_cast<uint16_t>(sizeof(mId));
+    }
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
 void BorderAgent::HandleNotifierEvents(Events aEvents)
 {

@@ -40,6 +40,7 @@
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
+#include "common/uptime.hpp"
 #include "thread/version.hpp"
 
 using namespace ot;
@@ -466,3 +467,12 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
 }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
+{
+    StringWriter writer(aBuffer, aSize);
+
+    Uptime::UptimeToString(Uptime::SecToMsec(aDuration), writer, /* aIncludeMsec */ false);
+}
+#endif

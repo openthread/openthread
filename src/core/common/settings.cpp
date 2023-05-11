@@ -106,6 +106,28 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+Error SettingsBase::BorderAgentId::SetId(const uint8_t *aId, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength == sizeof(mId), error = kErrorInvalidArgs);
+    memcpy(mId, aId, aLength);
+
+exit:
+    return error;
+}
+
+void SettingsBase::BorderAgentId::Log(Action aAction) const
+{
+    char         buffer[sizeof(BorderAgentId) * 2 + 1];
+    StringWriter sw(buffer, sizeof(buffer));
+
+    sw.AppendHexBytes(GetId(), sizeof(BorderAgentId));
+    LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), buffer);
+}
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -157,7 +179,8 @@ const char *SettingsBase::KeyToString(Key aKey)
         "SrpServerInfo",     // (13) kKeySrpServerInfo
         "",                  // (14) Removed (previously NAT64 prefix)
         "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
-        "BrOnLinkPrefixes"   // (16) kKeyBrOnLinkPrefixes
+        "BrOnLinkPrefixes",  // (16) kKeyBrOnLinkPrefixes
+        "BorderAgentId"      // (17) kKeyBorderAgentId
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -172,8 +195,9 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
     static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
     static_assert(16 == kKeyBrOnLinkPrefixes, "kKeyBrOnLinkPrefixes is incorrect");
+    static_assert(17 == kKeyBorderAgentId, "kKeyBorderAgentId is incorrect");
 
-    static_assert(kLastKey == kKeyBrOnLinkPrefixes, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyBorderAgentId, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -515,6 +539,12 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         case kKeySrpServerInfo:
             reinterpret_cast<const SrpServerInfo *>(aValue)->Log(aAction);
+            break;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+        case kKeyBorderAgentId:
+            reinterpret_cast<const BorderAgentId *>(aValue)->Log(aAction);
             break;
 #endif
 

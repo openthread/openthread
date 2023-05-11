@@ -175,6 +175,7 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(OT_PLATFORM STREQUAL "posix")
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=1)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
     # skip in this case

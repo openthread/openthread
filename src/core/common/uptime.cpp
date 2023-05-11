@@ -85,7 +85,7 @@ void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
 {
     StringWriter writer(aBuffer, aSize);
 
-    UptimeToString(GetUptime(), writer);
+    UptimeToString(GetUptime(), writer, /* aIncludeMsec */ true);
 }
 
 void Uptime::HandleTimer(void)
@@ -110,7 +110,7 @@ static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
     return static_cast<uint16_t>(quotient);
 }
 
-void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
+void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec)
 {
     uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;
@@ -129,7 +129,12 @@ void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
     minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
     seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
 
-    aWriter.Append("%02u:%02u:%02u.%03u", hours, minutes, seconds, static_cast<uint16_t>(remainder));
+    aWriter.Append("%02u:%02u:%02u", hours, minutes, seconds);
+
+    if (aIncludeMsec)
+    {
+        aWriter.Append(".%03u", static_cast<uint16_t>(remainder));
+    }
 }
 
 } // namespace ot

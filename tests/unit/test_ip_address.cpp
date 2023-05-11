@@ -295,6 +295,7 @@ void TestIp4CidrFromString(void)
         // valid address, invalid suffix
         {"1.2.3.4/33", {0}, 0, ot::kErrorParse},       // Prefix length too large
         {"1.2.3.4/12345678", {0}, 0, ot::kErrorParse}, // Prefix length too large?
+        {"1.2.3.4/12a", {0}, 0, ot::kErrorParse},      // Extra char after prefix length.
         {"1.2.3.4/-1", {0}, 0, ot::kErrorParse},       // Not even a non-negative integer.
         {"1.2.3.4/3.14", {0}, 0, ot::kErrorParse},     // Not even a integer.
         {"1.2.3.4/abcd", {0}, 0, ot::kErrorParse},     // Not even a number.

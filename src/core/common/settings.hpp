@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/border_agent.h>
 #include <openthread/platform/settings.h>
 
 #include "common/clearable.hpp"
@@ -120,9 +121,10 @@ public:
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
         kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
         kKeyBrOnLinkPrefixes  = OT_SETTINGS_KEY_BR_ON_LINK_PREFIXES,
+        kKeyBorderAgentId     = OT_SETTINGS_KEY_BORDER_AGENT_ID,
     };
 
-    static constexpr Key kLastKey = kKeyBrOnLinkPrefixes; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyBorderAgentId; ///< The last (numerically) enumerator value in `Key`.
 
     static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
                   "Core settings keys overlap with vendor reserved keys");
@@ -764,6 +766,59 @@ public:
         uint16_t mPort; // (in little-endian encoding)
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    /**
+     * This structure represents the Border Agent ID.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class BorderAgentId : private Clearable<BorderAgentId>
+    {
+        friend class Settings;
+        friend class Clearable<BorderAgentId>;
+
+    public:
+        static constexpr Key     kKey    = kKeyBorderAgentId; ///< The associated key.
+        static constexpr uint8_t kLength = OT_BORDER_AGENT_ID_LENGTH;
+
+        /**
+         * This method initializes the `BorderAgentId` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the Border Agent ID.
+         *
+         * @returns The Border Agent ID.
+         *
+         */
+        const uint8_t *GetId(void) const { return mId; }
+
+        /**
+         * This method returns the Border Agent ID.
+         *
+         * @returns The Border Agent ID.
+         *
+         */
+        uint8_t *GetId(void) { return mId; }
+
+        /**
+         * This method sets the Border Agent ID.
+         *
+         * @retval kErrorInvalidArgs If `aLength` doesn't equal to `OT_BORDER_AGENT_ID_LENGTH`.
+         * @retval kErrorNone        If success.
+         *
+         */
+        Error SetId(const uint8_t *aId, uint16_t aLength);
+
+    private:
+        void Log(Action aAction) const;
+
+        uint8_t mId[kLength];
+    } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
 protected:
     explicit SettingsBase(Instance &aInstance)
