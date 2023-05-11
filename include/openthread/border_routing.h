@@ -135,9 +135,9 @@ typedef enum
  */
 typedef enum
 {
-    OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,  ///< DHCPv6 PD is disabled on the border router.
-    OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,   ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
-    OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,   ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< DHCPv6 PD is disabled on the border router.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
 } otBorderRoutingDhcp6PdState;
 
 /**
@@ -241,7 +241,7 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * Gets the platform provided off-mesh-routable (OMR) prefix.
+ * Gets the PD provided off-mesh-routable (OMR) prefix.
  *
  * The prefix is extracted from the platform generated RA messages handled by
  * otBorderRoutingRecvIcmp6Nd. When there are no valid platform provided OMR prefix, the returned
@@ -258,7 +258,7 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  * @sa otBorderRoutingRecvIcmp6Nd
  *
  */
-otError otBorderRoutingGetPlatformOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo);
+otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo);
 
 /**
  * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
@@ -371,8 +371,10 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 /**
  * Handles ICMP6 ND messages received on platform network interface.
  *
- * Note: ND messages should not be handled by Thread networks, while for many platforms, ND messages is the way of distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
- * 
+ * Note: ND messages should not be handled by Thread networks, while for many platforms, ND messages is the way of
+ * distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to
+ * handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
+ *
  * `OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE` must be enabled.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
@@ -413,8 +415,10 @@ void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
  * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED   DHCPv6 PD is disabled on the border router.
- * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED    DHCPv6 PD in enabled but won't try to request and publish a prefix.
- * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING    DHCPv6 PD is enabled and will try to request and publish a prefix.
+ * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED    DHCPv6 PD in enabled but won't try to request and publish a
+ *                                                     prefix.
+ * @retval OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING    DHCPv6 PD is enabled and will try to request and publish a
+ *                                                     prefix.
  *
  */
 otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance);

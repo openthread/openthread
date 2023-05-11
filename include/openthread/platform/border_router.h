@@ -28,70 +28,47 @@
 
 /**
  * @file
- *   This file contains definitions for CLI to Border Router.
- */
-
-#ifndef CLI_BR_HPP_
-#define CLI_BR_HPP_
-
-#include "openthread-core-config.h"
-
-#include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-namespace ot {
-namespace Cli {
-
-/**
- * This class implements the Border Router CLI interpreter.
+ * @brief
+ *   This file defines the platform DNS interface.
  *
  */
-class Br : private Output
-{
-public:
-    typedef Utils::CmdLineParser::Arg Arg;
 
-    /**
-     * Constructor
-     *
-     * @param[in]  aInstance            The OpenThread Instance.
-     * @param[in]  aOutputImplementer   An `OutputImplementer`.
-     *
-     */
-    Br(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
-    {
-    }
+#ifndef OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
+#define OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
 
-    /**
-     * This method interprets a list of CLI arguments.
-     *
-     * @param[in]  aArgs        A pointer an array of command line arguments.
-     *
-     */
-    otError Process(Arg aArgs[]);
+#include <openthread/instance.h>
+#include <openthread/message.h>
 
-private:
-    using Command = CommandEntry<Br>;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    using PrefixType = uint8_t;
-    enum : PrefixType
-    {
-        kPrefixTypeLocal   = 1u << 0,
-        kPrefixTypeFavored = 1u << 1,
-        kPrefixTypePd      = 1u << 2,
-    };
+/**
+ * @addtogroup plat-border-router
+ *
+ * @brief
+ *   This module includes the platform abstraction for border router functions.
+ *
+ * @{
+ *
+ */
 
-    template <CommandId kCommandId> otError Process(Arg aArgs[]);
+/**
+ * Starts or stops DHCPv6 PD on the platform network interface.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ * @param[in] aEnable    Whether DHCPv6 PD should be enabled on the platform interface.
+ *
+ */
+void otPlatBorderRouterEnableDhcp6Pd(otInstance *aInstance, bool aEnable);
 
-    otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
-};
+/**
+ * @}
+ *
+ */
 
-} // namespace Cli
-} // namespace ot
+#ifdef __cplusplus
+}
+#endif
 
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-#endif // CLI_BR_HPP_
+#endif

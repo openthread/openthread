@@ -526,7 +526,6 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     }
 #endif
 
-    // Ignore error if
     if ((err != 0) && errno == EADDRINUSE)
     {
         otLogWarnPlat("[netif] Ignoring %s failure (EADDRINUSE): already in the group.",

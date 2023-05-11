@@ -99,7 +99,7 @@ bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
 void Prefix::Tidy(void)
 {
     uint8_t byteLength      = SizeForLength(mLength);
-    uint8_t lastByteBitMask = ~((1 << (byteLength * 8 - mLength)) - 1);
+    uint8_t lastByteBitMask = ~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1);
 
     if (mLength != 0)
     {

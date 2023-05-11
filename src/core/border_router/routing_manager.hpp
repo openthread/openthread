@@ -118,9 +118,9 @@ public:
      */
     enum Dhcp6PdState : uint8_t
     {
-        kDhcp6PdStateDisabled      = OT_BORDER_ROUTING_STATE_DISABLED,      ///< Disabled.
-        kDhcp6PdStateStopped       = OT_BORDER_ROUTING_STATE_STOPPED,       ///< Enabled, but currently stopped.
-        kDhcp6PdStateRunning       = OT_BORDER_ROUTING_STATE_RUNNING,       ///< Enabled, and running.
+        kDhcp6PdStateDisabled = OT_BORDER_ROUTING_STATE_DISABLED, ///< Disabled.
+        kDhcp6PdStateStopped  = OT_BORDER_ROUTING_STATE_STOPPED,  ///< Enabled, but currently stopped.
+        kDhcp6PdStateRunning  = OT_BORDER_ROUTING_STATE_RUNNING,  ///< Enabled, and running.
     };
 
     /**
@@ -256,7 +256,7 @@ public:
      * @retval kErrorNone           Successfully retrieved the OMR prefix.
      *
      */
-    Error GetPlatformOmrPrefix(otBorderRoutingPlatformOmrPrefixInfo &aPrefixInfo) const;
+    Error GetPdOmrPrefix(otBorderRoutingPlatformOmrPrefixInfo &aPrefixInfo) const;
 #endif
 
     /**
@@ -470,11 +470,12 @@ public:
     /**
      * Returns the state of accpeting RouterAdvertisement messages on platform interface.
      *
-     * @retval TRUE  Border routing manager accpets platform generated RAs
-     * @retval FALSE Border routing manager dnes not accept platform generated RAs.
+     * @retval kDhcp6PdStateRunning  DHCPv6 PD should be enabled and running on this border router.
+     * @retval kDhcp6PdStateDisabled DHCPv6 PD should be disabled on this border router..
      *
      */
-    Dhcp6PdState GetDhcp6PdState(void) const {
+    Dhcp6PdState GetDhcp6PdState(void) const
+    {
         // TODO: We need to stop and inform the platform when there is already a GUA prefix advertised in the network.
         return mDhcp6PdEnabled ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateDisabled;
     }
@@ -779,10 +780,10 @@ private:
     public:
         enum PrefixKind : uint8_t
         {
-            kInvalid                  = 0,
-            kLocalGeneratedPrefix     = 1,
-            kPreferredPlatformPrefix  = 2,
-            kDeprecatedPlatformPrefix = 3,
+            kInvalid              = 0,
+            kLocalGeneratedPrefix = 1,
+            kPreferredPdPrefix    = 2,
+            kDeprecatedPdPrefix   = 3,
         };
 
         explicit LocalOmrPrefix(Instance &aInstance);
@@ -791,8 +792,8 @@ private:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         RoutePreference    GetPreference(void) const
         {
-            return mKind == PrefixKind::kPreferredPlatformPrefix ? NetworkData::kRoutePreferenceMedium
-                                                                 : NetworkData::kRoutePreferenceLow;
+            return mKind == PrefixKind::kPreferredPdPrefix ? NetworkData::kRoutePreferenceMedium
+                                                           : NetworkData::kRoutePreferenceLow;
         }
         void       SetPrefixKind(PrefixKind aKind) { mKind = aKind; };
         PrefixKind GetKind(void) const { return mKind; }
@@ -1038,6 +1039,7 @@ private:
     void ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
     void DetermineFavoredOmrPrefix(void);
     void EvaluateLocalOmrPrefix(void);
+    void EvaluateOmrPrefix(void);
     void HandleRsSenderFinished(TimeMilli aStartTime);
     void SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
@@ -1051,7 +1053,7 @@ private:
     void  UpdateDiscoveredPrefixTableOnNetDataChange(void);
     Error NetworkDataPublishOmrPrefix(const NetworkData::OnMeshPrefixConfig &aPrefixConfig);
     bool  NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
-    bool NetworkDataContainsUlaRoute(void) const;
+    bool  NetworkDataContainsUlaRoute(void) const;
     bool  NetworkDataContainsExternalRoute(const Ip6::Prefix &aPrefix) const;
     void  UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     bool  IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
@@ -1116,11 +1118,11 @@ private:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     bool                   mDhcp6PdEnabled;
-    bool                   mPlatformOmrPrefixPreferred;
-    TimeMilli              mRaPrefixPreferredTime;
-    TimeMilli              mRaPrefixValidTime;
-    Ip6::Prefix            mPlatformOmrPrefix;
-    PlatformOmrPrefixTimer mPlatformOmrPrefixTimer;
+    bool                   mPdOmrPrefixPreferred;
+    TimeMilli              mPdPrefixPreferredTime;
+    TimeMilli              mPdPrefixValidTime;
+    Ip6::Prefix            mPdOmrPrefix;
+    PlatformOmrPrefixTimer mPdOmrPrefixTimer;
 #endif
 };
 

@@ -127,7 +127,7 @@ otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags)
 
     if (aArgs[0].IsEmpty())
     {
-        aFlags = kPrefixTypeFavored | kPrefixTypeLocal | kPrefixTypePlatform;
+        aFlags = kPrefixTypeFavored | kPrefixTypeLocal | kPrefixTypePd;
         ExitNow();
     }
 
@@ -141,7 +141,7 @@ otError Br::ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags)
     }
     else if (aArgs[0] == "platform")
     {
-        aFlags = kPrefixTypePlatform;
+        aFlags = kPrefixTypePd;
     }
     else
     {
@@ -195,18 +195,21 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
-    if (outputPrefixTypes & kPrefixTypePlatform)
+    if (outputPrefixTypes & kPrefixTypePd)
     {
         otBorderRoutingPlatformOmrPrefixInfo platform;
 
-        SuccessOrExit(error = otBorderRoutingGetPlatformOmrPrefix(GetInstancePtr(), &platform));
+        SuccessOrExit(error = otBorderRoutingGetPdOmrPrefix(GetInstancePtr(), &platform));
 
-        OutputFormat("%s", outputPrefixTypes == kPrefixTypePlatform ? "" : "Platform: ");
+        OutputFormat("%s", outputPrefixTypes == kPrefixTypePd ? "" : "PD: ");
         if (platform.mPrefix.mLength > 0)
         {
             OutputIp6Prefix(platform.mPrefix);
-            OutputLine(" Preferred: %us Valid: %us", platform.mPreferredRemainingMs / 1000, platform.mValidRemainingMs / 1000);
-        } else {
+            OutputLine(" Preferred: %us Valid: %us", platform.mPreferredRemainingMs / 1000,
+                       platform.mValidRemainingMs / 1000);
+        }
+        else
+        {
             OutputLine(" -");
         }
     }
@@ -387,7 +390,7 @@ exit:
  * @sa otBorderRoutingDhcp6PdSetEnabled
  * @sa otBorderRoutingDhcp6PdGetState
  */
-template <> otError Br::Process<Cmd("dhcp6")>(Arg aArgs[])
+template <> otError Br::Process<Cmd("dhcp6pd")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
     bool    enable;
@@ -395,14 +398,17 @@ template <> otError Br::Process<Cmd("dhcp6")>(Arg aArgs[])
     if (aArgs[0].IsEmpty())
     {
         static const char *const kStateStrings[] = {
-            "Disabled",      // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
-            "Stopped",       // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
-            "Running",       // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+            "Disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
+            "Stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
+            "Running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
         };
-        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED == 0, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED is not expected");
-        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED == 1, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED is not expected");
-        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING == 2, "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING is not expected");
-        
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED == 0,
+                      "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED is not expected");
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED == 1,
+                      "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED is not expected");
+        static_assert(OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING == 2,
+                      "Value of OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING is not expected");
+
         OutputLine(kStateStrings[otBorderRoutingDhcp6PdGetState(GetInstancePtr())]);
         error = OT_ERROR_NONE;
     }
@@ -564,7 +570,7 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("counters"),
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
-        CmdEntry("dhcp6"),
+        CmdEntry("dhcp6pd"),
 #endif
         CmdEntry("disable"),
         CmdEntry("enable"),

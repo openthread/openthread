@@ -79,12 +79,14 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));
 }
 
-otError otBorderRoutingGetPlatformOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPlatformOmrPrefixInfo *aPrefixInfo)
 {
     AssertPointerIsNotNull(aPrefixInfo);
 
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPlatformOmrPrefix(*aPrefixInfo);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdOmrPrefix(*aPrefixInfo);
 }
+#endif
 
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
 {
@@ -166,7 +168,8 @@ void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
 
 otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().IsAcceptingRouterAdvertisementEnabled();
+    return static_cast<otBorderRoutingDhcp6PdState>(
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetDhcp6PdState());
 }
 #endif
 

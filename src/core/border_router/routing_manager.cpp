@@ -82,7 +82,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRoutingPolicyTimer(aInstance)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
     , mDhcp6PdEnabled(false)
-    , mPlatformOmrPrefixTimer(aInstance)
+    , mPdOmrPrefixTimer(aInstance)
 #endif
 {
     mBrUlaPrefix.Clear();
@@ -192,24 +192,27 @@ exit:
     return error;
 }
 
-Error RoutingManager::GetPlatformOmrPrefix(otBorderRoutingPlatformOmrPrefixInfo &aPrefixInfo) const
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+Error RoutingManager::GetPdOmrPrefix(otBorderRoutingPlatformOmrPrefixInfo &aPrefixInfo) const
 {
-    Error error = kErrorNone;
-    TimeMilli now = TimerMilli::GetNow();
+    Error     error = kErrorNone;
+    TimeMilli now   = TimerMilli::GetNow();
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
 
     aPrefixInfo.mPrefix.mLength = 0;
-    VerifyOrExit(IsValidOmrPrefix(mPlatformOmrPrefix));
+    VerifyOrExit(IsValidOmrPrefix(mPdOmrPrefix));
 
-    aPrefixInfo.mPrefix = mPlatformOmrPrefix;
+    aPrefixInfo.mPrefix = mPdOmrPrefix;
     // Compare the time before subtraction in case of the timers have expired recently.
-    aPrefixInfo.mPreferredRemainingMs = (mPlatformOmrPrefixPreferred && mRaPrefixPreferredTime > now) ? mRaPrefixPreferredTime - now : 0;
-    aPrefixInfo.mValidRemainingMs = (mRaPrefixValidTime > now) ? mRaPrefixValidTime - now : 0;
+    aPrefixInfo.mPreferredRemainingMs =
+        (mPdOmrPrefixPreferred && mPdPrefixPreferredTime > now) ? mPdPrefixPreferredTime - now : 0;
+    aPrefixInfo.mValidRemainingMs = (mPdPrefixValidTime > now) ? mPdPrefixValidTime - now : 0;
 
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 
 Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference) const
 {
@@ -485,20 +488,20 @@ void RoutingManager::UpdateDiscoveredPrefixTableOnNetDataChange(void)
 
 void RoutingManager::EvaluateLocalOmrPrefix(void)
 {
-    // This method should be called by EvaluateOmrPrefix, always withdraw current local OMR prefix if it is not expected
-    // local OMR prefix.
+    // This method should be called by DetermineFavoredOmrPrefix, always withdraw current local OMR prefix if it is not
+    // expected local OMR prefix.
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
-    if (IsValidOmrPrefix(mPlatformOmrPrefix))
+    if (IsValidOmrPrefix(mPdOmrPrefix))
     {
-        if (mLocalOmrPrefix.GetPrefix() != mPlatformOmrPrefix)
+        if (mLocalOmrPrefix.GetPrefix() != mPdOmrPrefix)
         {
             mLocalOmrPrefix.RemoveFromNetData();
-            mLocalOmrPrefix.Set(mPlatformOmrPrefix);
+            mLocalOmrPrefix.Set(mPdOmrPrefix);
         }
-        mLocalOmrPrefix.SetPrefixKind(mPlatformOmrPrefixPreferred
-                                          ? LocalOmrPrefix::PrefixKind::kPreferredPlatformPrefix
-                                          : LocalOmrPrefix::PrefixKind::kDeprecatedPlatformPrefix);
-        LogInfo("EvaluateLocalOmrPrefix: Using platform prefix: %s", mLocalOmrPrefix.GetPrefix().ToString().AsCString());
+        mLocalOmrPrefix.SetPrefixKind(mPdOmrPrefixPreferred ? LocalOmrPrefix::PrefixKind::kPreferredPdPrefix
+                                                            : LocalOmrPrefix::PrefixKind::kDeprecatedPdPrefix);
+        LogInfo("EvaluateLocalOmrPrefix: Using platform prefix: %s",
+                mLocalOmrPrefix.GetPrefix().ToString().AsCString());
     }
     else
 #endif
@@ -528,7 +531,6 @@ void RoutingManager::DetermineFavoredOmrPrefix(void)
 
     OT_ASSERT(mIsRunning);
 
-    EvaluateLocalOmrPrefix();
     mFavoredOmrPrefix.Clear();
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
@@ -549,6 +551,7 @@ void RoutingManager::EvaluateOmrPrefix(void)
 {
     OT_ASSERT(mIsRunning);
 
+    EvaluateLocalOmrPrefix();
     DetermineFavoredOmrPrefix();
 
     // Decide if we need to add or remove our local OMR prefix.
@@ -3173,13 +3176,13 @@ void RoutingManager::WithdrawPlatformRouterAdvertPrefix(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsValidOmrPrefix(mPlatformOmrPrefix), error = kErrorInvalidState);
+    VerifyOrExit(IsValidOmrPrefix(mPdOmrPrefix), error = kErrorInvalidState);
 
-    mPlatformOmrPrefixTimer.Stop();
-    mPlatformOmrPrefix.SetLength(0);
+    mPdOmrPrefixTimer.Stop();
+    mPdOmrPrefix.SetLength(0);
 
     EvaluateRoutingPolicy();
-    LogInfo("Withdrawed platform provided outdated prefix: %s", mPlatformOmrPrefix.ToString().AsCString());
+    LogInfo("Withdrawed platform provided outdated prefix: %s", mPdOmrPrefix.ToString().AsCString());
 
 exit:
     if (error != kErrorNone)
@@ -3194,13 +3197,13 @@ void RoutingManager::DeprecatePlatformRouterAdvertPrefix(void)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsValidOmrPrefix(mPlatformOmrPrefix), error = kErrorInvalidState);
-    mPlatformOmrPrefixPreferred = false;
+    VerifyOrExit(IsValidOmrPrefix(mPdOmrPrefix), error = kErrorInvalidState);
+    mPdOmrPrefixPreferred = false;
 
     EvaluateRoutingPolicy();
 
     // Always setup the timer to remove the prefix from network data.
-    mPlatformOmrPrefixTimer.StartAt(mRaPrefixValidTime, 0);
+    mPdOmrPrefixTimer.StartAt(mPdPrefixValidTime, 0);
 
 exit:
     if (error != kErrorNone)
@@ -3209,7 +3212,7 @@ exit:
     }
     else
     {
-        LogInfo("Deprecated platform provided outdated prefix: %s", mPlatformOmrPrefix.ToString().AsCString());
+        LogInfo("Deprecated platform provided outdated prefix: %s", mPdOmrPrefix.ToString().AsCString());
     }
 
     return;
@@ -3219,11 +3222,11 @@ void RoutingManager::HandlePlatformRouterAdvertMessageTimer(void)
 {
     TimeMilli current = TimerMilli::GetNow();
 
-    if (current > mRaPrefixValidTime)
+    if (current > mPdPrefixValidTime)
     {
         WithdrawPlatformRouterAdvertPrefix();
     }
-    else if (current > mRaPrefixPreferredTime)
+    else if (current > mPdPrefixPreferredTime)
     {
         DeprecatePlatformRouterAdvertPrefix();
     }
@@ -3234,7 +3237,7 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
     Error                                     error = kErrorNone;
     Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
 
-    VerifyOrExit(mDhcp6PdEnabled);
+    VerifyOrExit(mDhcp6PdEnabled, LogWarn("Ignore platform generated RA since PD is disabled."));
 
     packet.Init(aRouterAdvert, aLength);
 
@@ -3252,7 +3255,7 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
         bool raHasValidPio        = false;
         bool currentPrefixUpdated = false;
 
-        if (!IsValidOmrPrefix(mPlatformOmrPrefix))
+        if (!IsValidOmrPrefix(mPdOmrPrefix))
         {
             currentPrefixPreferredRemaining = 0;
             currentPrefixValidRemaining     = 0;
@@ -3279,8 +3282,8 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
                 }
 
                 // In some cases, the platform may delegate us more than one prefixes, usually one GUA prefix with one
-                // or more ULA prefix, in this case, we only preserve the smallest one. Since currently GUA prefixes are
-                // allocated from the 2000::/3 block while the ULA prefixes are generated from the fc00::/7 block.
+                // or more ULA prefixes, in this case, we only preserve the smallest one. Since currently GUA prefixes
+                // are allocated from the 2000::/3 block while the ULA prefixes are generated from the fc00::/7 block.
                 // Replace the current selected platform OMR prefix if the one in RA is favored over the current one.
                 if (favoredPrefixFromRa.GetLength() == 0 ||
                     (raPrefixPreferredRemaining == 0 || pio.GetPreferredLifetime() > 0) ||
@@ -3305,7 +3308,7 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
 
                 // Note that the platform may send another RA message to announce that the current prefix we are using
                 // is no longer preferred or no longer valid.
-                if (pioPrefix == mPlatformOmrPrefix)
+                if (pioPrefix == mPdOmrPrefix)
                 {
                     raHasValidPio        = true;
                     currentPrefixUpdated = true;
@@ -3323,9 +3326,9 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
         {
             if (raPrefixPreferredRemaining > 0 || (currentPrefixValidRemaining == 0 && raPrefixValidRemaining > 0))
             {
-                mPlatformOmrPrefix = favoredPrefixFromRa;
-                mPlatformOmrPrefix.SetLength(kOmrPrefixLength);
-                mPlatformOmrPrefix.Tidy();
+                mPdOmrPrefix = favoredPrefixFromRa;
+                mPdOmrPrefix.SetLength(kOmrPrefixLength);
+                mPdOmrPrefix.Tidy();
 
                 currentPrefixUpdated            = true;
                 currentPrefixPreferredRemaining = raPrefixPreferredRemaining;
@@ -3335,27 +3338,26 @@ otError RoutingManager::ApplyPlatfromGeneratedRouterAdvert(const uint8_t *aRoute
 
         VerifyOrExit(currentPrefixUpdated);
 
-        mRaPrefixPreferredTime      = now + currentPrefixPreferredRemaining * Time::kOneSecondInMsec;
-        mRaPrefixValidTime          = now + currentPrefixValidRemaining * Time::kOneSecondInMsec;
-        mPlatformOmrPrefixPreferred = currentPrefixPreferredRemaining > 0;
+        mPdPrefixPreferredTime = now + currentPrefixPreferredRemaining * Time::kOneSecondInMsec;
+        mPdPrefixValidTime     = now + currentPrefixValidRemaining * Time::kOneSecondInMsec;
+        mPdOmrPrefixPreferred  = currentPrefixPreferredRemaining > 0;
 
-        mPlatformOmrPrefixTimer.Stop();
+        mPdOmrPrefixTimer.Stop();
         if (currentPrefixPreferredRemaining > 0)
         {
-            mPlatformOmrPrefixTimer.StartAt(mRaPrefixPreferredTime, 0);
+            mPdOmrPrefixTimer.StartAt(mPdPrefixPreferredTime, 0);
         }
         else if (currentPrefixValidRemaining > 0)
         {
-            mPlatformOmrPrefixTimer.StartAt(mRaPrefixValidTime, 0);
+            mPdOmrPrefixTimer.StartAt(mPdPrefixValidTime, 0);
         }
         else
         {
-            mPlatformOmrPrefix.Clear();
+            mPdOmrPrefix.Clear();
         }
 
         LogInfo("Got prefix %s via platform generated RA (Preferred: %u s / Valid: %u s)",
-                mPlatformOmrPrefix.ToString().AsCString(), currentPrefixPreferredRemaining,
-                currentPrefixValidRemaining);
+                mPdOmrPrefix.ToString().AsCString(), currentPrefixPreferredRemaining, currentPrefixValidRemaining);
 
         VerifyOrExit(mIsRunning);
         EvaluateRoutingPolicy();
