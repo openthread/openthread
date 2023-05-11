@@ -162,6 +162,24 @@ public:
         explicit Socket(Instance &aInstance);
 
         /**
+         * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+         *
+         * @returns A pointer to the message or `nullptr` if no buffers are available.
+         *
+         */
+        Message *NewMessage(void);
+
+        /**
+         * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+         *
+         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+         *
+         * @returns A pointer to the message or `nullptr` if no buffers are available.
+         *
+         */
+        Message *NewMessage(uint16_t aReserved);
+
+        /**
          * This method returns a new UDP message with sufficient header space reserved.
          *
          * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
@@ -170,7 +188,7 @@ public:
          * @returns A pointer to the message or `nullptr` if no buffers are available.
          *
          */
-        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
         /**
          * This method opens the UDP socket.
@@ -534,6 +552,24 @@ public:
     uint16_t GetEphemeralPort(void);
 
     /**
+     * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     *
+     */
+    Message *NewMessage(void);
+
+    /**
+     * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved);
+
+    /**
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
@@ -542,7 +578,7 @@ public:
      * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * This method sends an IPv6 datagram.
