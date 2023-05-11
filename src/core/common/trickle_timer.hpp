@@ -177,7 +177,7 @@ private:
     void FireAtIfEarlier(void) {}
     void GetFireTime(void) {}
 
-    TimeMilli GetLastTimerStart(void);
+    TimeMilli GetLastIntervalStart(void);
 
     uint32_t mIntervalMin;        // Minimum interval (aka `Imin`).
     uint32_t mIntervalMax;        // Maximum interval (aka `Imax`).

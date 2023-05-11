@@ -53,7 +53,7 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
 {
 }
 
-TimeMilli TrickleTimer::GetLastTimerStart(void)
+TimeMilli TrickleTimer::GetLastIntervalStart(void)
 {
     TimeMilli startTime = TimerMilli::GetFireTime();
 
@@ -70,7 +70,7 @@ TimeMilli TrickleTimer::GetLastTimerStart(void)
         break;
 
     case kAfterRandomTime:
-        startTime -= mInterval - mTimeInInterval;
+        startTime -= mInterval;
         break;
     }
 
@@ -91,7 +91,7 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
         // the new interval is smaller than the running interval, so re-configure the timer to
         // fire at the maximum value
 
-        TimeMilli newFireTime = GetLastTimerStart();
+        TimeMilli newFireTime = GetLastIntervalStart();
         newFireTime += aIntervalMax;
 
         // In plain mode, just fire at the sooner time and
@@ -102,11 +102,15 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
             ExitNow();
         }
 
-        // In trickle mode, fire at a sooner time, but we also
-        // need to manipulate mInterval and mTimeInInterval.
-        //
-        // From what I can tell, even if newFireTime is less
-        // than now, it will fire.
+        // In trickle mode, there are two different phases
+        // when in kBeforeRandomTime:
+        //   - aIntervalMax < mTimeInInterval - need to set mInterval = aIntervalMax, 
+        //     mTimeInInteval = aIntevalMax & re-schedule timer to fire at 
+        //     aIntervalMax (from start of interval). The HandleTimer function will 
+        //     take care of the transition through kAfterRandomTime
+        //   - aIntervalMax >= mTimeInInterval - need to set mInterval = aIntervalMax
+        // when in kAfterRandomTime, in both cases need to set mInteval = aInterMax & re-schedule 
+        //     timer to fire at aIntervalMax (from start of interval)
 
         mInterval = aIntervalMax;
         if (mTimeInInterval > aIntervalMax)
