@@ -1947,6 +1947,7 @@ bool RoutingManager::OmrPrefix::IsFavoredOver(const NetworkData::OnMeshPrefixCon
 RoutingManager::LocalOmrPrefix::LocalOmrPrefix(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsAddedInNetData(false)
+    , mDefaultRoute(false)
 {
 }
 
@@ -1961,10 +1962,23 @@ void RoutingManager::LocalOmrPrefix::GenerateFrom(const Ip6::Prefix &aBrUlaPrefi
 
 Error RoutingManager::LocalOmrPrefix::AddToNetData(void)
 {
-    Error                           error = kErrorNone;
-    NetworkData::OnMeshPrefixConfig config;
+    Error error = kErrorNone;
 
     VerifyOrExit(!mIsAddedInNetData);
+    SuccessOrExit(error = AddOrUpdate());
+    mIsAddedInNetData = true;
+
+exit:
+    return error;
+}
+
+Error RoutingManager::LocalOmrPrefix::AddOrUpdate(void)
+{
+    // Add the local OMR prefix in Thread Network Data or update it
+    // (e.g., change default route flag) if it is already added.
+
+    Error                           error;
+    NetworkData::OnMeshPrefixConfig config;
 
     config.Clear();
     config.mPrefix       = mPrefix;
@@ -1972,21 +1986,21 @@ Error RoutingManager::LocalOmrPrefix::AddToNetData(void)
     config.mSlaac        = true;
     config.mPreferred    = true;
     config.mOnMesh       = true;
-    config.mDefaultRoute = false;
+    config.mDefaultRoute = mDefaultRoute;
     config.mPreference   = GetPreference();
 
     error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
 
     if (error != kErrorNone)
     {
-        LogWarn("Failed to add local OMR prefix %s in Thread Network Data: %s", mPrefix.ToString().AsCString(),
-                ErrorToString(error));
+        LogWarn("Failed to %s %s in Thread Network Data: %s", !mIsAddedInNetData ? "add" : "update",
+                ToString().AsCString(), ErrorToString(error));
         ExitNow();
     }
 
-    mIsAddedInNetData = true;
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Added local OMR prefix %s in Thread Network Data", mPrefix.ToString().AsCString());
+
+    LogInfo("%s %s in Thread Network Data", !mIsAddedInNetData ? "Added" : "Updated", ToString().AsCString());
 
 exit:
     return error;
@@ -2002,17 +2016,37 @@ void RoutingManager::LocalOmrPrefix::RemoveFromNetData(void)
 
     if (error != kErrorNone)
     {
-        LogWarn("Failed to remove local OMR prefix %s from Thread Network Data: %s", mPrefix.ToString().AsCString(),
-                ErrorToString(error));
+        LogWarn("Failed to remove %s from Thread Network Data: %s", ToString().AsCString(), ErrorToString(error));
         ExitNow();
     }
 
     mIsAddedInNetData = false;
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Removed local OMR prefix %s from Thread Network Data", mPrefix.ToString().AsCString());
+    LogInfo("Removed %s from Thread Network Data", ToString().AsCString());
 
 exit:
     return;
+}
+
+void RoutingManager::LocalOmrPrefix::UpdateDefaultRouteFlag(bool aDefaultRoute)
+{
+    VerifyOrExit(aDefaultRoute != mDefaultRoute);
+
+    mDefaultRoute = aDefaultRoute;
+
+    VerifyOrExit(mIsAddedInNetData);
+    IgnoreError(AddOrUpdate());
+
+exit:
+    return;
+}
+
+RoutingManager::LocalOmrPrefix::InfoString RoutingManager::LocalOmrPrefix::ToString(void) const
+{
+    InfoString string;
+
+    string.Append("local OMR prefix %s (def-route:%s)", mPrefix.ToString().AsCString(), ToYesNo(mDefaultRoute));
+    return string;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -2618,6 +2652,7 @@ exit:
     {
         LogInfo("RoutePublisher state: %s -> %s", StateToString(mState), StateToString(newState));
         UpdatePublishedRoute(newState);
+        Get<RoutingManager>().mLocalOmrPrefix.UpdateDefaultRouteFlag(newState == kPublishDefault);
     }
 }
 

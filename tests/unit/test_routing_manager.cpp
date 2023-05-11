@@ -521,7 +521,7 @@ Ip6::Address AddressFromString(const char *aString)
     return address;
 }
 
-void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute = false)
+void VerifyOmrPrefixInNetData(const Ip6::Prefix &aOmrPrefix, bool aDefaultRoute)
 {
     otNetworkDataIterator           iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     NetworkData::OnMeshPrefixConfig prefixConfig;
@@ -906,7 +906,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -934,7 +934,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include new prefixes from router A.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -969,7 +969,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1038,7 +1038,7 @@ void TestOmrSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1076,7 +1076,7 @@ void TestOmrSelection(void)
     // Check Network Data. We should now see that the local OMR prefix
     // is removed.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1103,7 +1103,7 @@ void TestOmrSelection(void)
     // Check Network Data. We should see that the local OMR prefix is
     // added again.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1154,7 +1154,7 @@ void TestDefaultRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1175,7 +1175,7 @@ void TestDefaultRoute(void)
     // Network Data yet since there is no infrastructure-derived
     // OMR prefix (with preference medium or higher).
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1188,7 +1188,7 @@ void TestDefaultRoute(void)
     prefixConfig.mSlaac        = true;
     prefixConfig.mPreferred    = true;
     prefixConfig.mOnMesh       = true;
-    prefixConfig.mDefaultRoute = false;
+    prefixConfig.mDefaultRoute = true;
     prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
 
     SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
@@ -1200,7 +1200,7 @@ void TestDefaultRoute(void)
     // Check Network Data. Now that we have an infrastructure-derived
     // OMR prefix, the default route should be published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1216,7 +1216,7 @@ void TestDefaultRoute(void)
     // default route advertised by router A should be still present in
     // the discovered prefix table.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
@@ -1232,7 +1232,7 @@ void TestDefaultRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. Again the default route should be published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1248,7 +1248,7 @@ void TestDefaultRoute(void)
     // Check Network Data. Now that router A no longer advertised
     // a default-route, we should go back to publishing ULA route.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1263,7 +1263,7 @@ void TestDefaultRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should see default route published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1315,7 +1315,7 @@ void TestAdvNonUlaRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1336,7 +1336,7 @@ void TestAdvNonUlaRoute(void)
     // Network Data yet since there is no infrastructure-derived
     // OMR prefix (with preference medium or higher).
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1349,7 +1349,7 @@ void TestAdvNonUlaRoute(void)
     prefixConfig.mSlaac        = true;
     prefixConfig.mPreferred    = true;
     prefixConfig.mOnMesh       = true;
-    prefixConfig.mDefaultRoute = false;
+    prefixConfig.mDefaultRoute = true;
     prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
 
     SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
@@ -1361,7 +1361,7 @@ void TestAdvNonUlaRoute(void)
     // Check Network Data. Now that we have an infrastructure-derived
     // OMR prefix, the default route should be published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1377,7 +1377,7 @@ void TestAdvNonUlaRoute(void)
     // non-ULA route advertised by router A should be still present in
     // the discovered prefix table.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     VerifyPrefixTable({RoutePrefix(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium, routerAddressA)});
@@ -1393,7 +1393,7 @@ void TestAdvNonUlaRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. Again the default route should be published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1409,7 +1409,7 @@ void TestAdvNonUlaRoute(void)
     // Check Network Data. Now that router A no longer advertised
     // the route, we should go back to publishing the ULA route.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1424,7 +1424,7 @@ void TestAdvNonUlaRoute(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data. We should see default route published.
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1477,7 +1477,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1505,7 +1505,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // Check Network Data. We must see the new on-link prefix from router A
     // along with the deprecating local on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1520,7 +1520,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
         // Ensure Network Data entries remain as before. Mainly we still
         // see the deprecating local on-link prefix.
 
-        VerifyOmrPrefixInNetData(localOmr);
+        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
         VerifyExternalRouteInNetData(kUlaRoute);
 
         // Keep checking the emitted RAs and make sure on-link prefix
@@ -1558,7 +1558,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1609,7 +1609,7 @@ void TestDomainPrefixAsOmr(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1678,7 +1678,7 @@ void TestDomainPrefixAsOmr(void)
     // Check Network Data. We should now see that the local OMR prefix
     // is removed.
 
-    VerifyOmrPrefixInNetData(domainPrefix);
+    VerifyOmrPrefixInNetData(domainPrefix, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1705,7 +1705,7 @@ void TestDomainPrefixAsOmr(void)
     // Check Network Data. We should see that the local OMR prefix is
     // added again.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1804,7 +1804,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1883,7 +1883,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate the Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -1936,7 +1936,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate that Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1987,7 +1987,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate the Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2016,7 +2016,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Validate the Network Data.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2037,7 +2037,7 @@ void TestExtPanIdChange(void)
     // Validate that default route is unpublished from network data.
 
     AdvanceTime(2000 * 1000);
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -2411,7 +2411,7 @@ void TestConflictingPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and on-link prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2430,7 +2430,7 @@ void TestConflictingPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to still include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2475,7 +2475,7 @@ void TestConflictingPrefix(void)
     // Check Network Data to include the default route now due
     // the new on-link prefix from router B.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
     VerifyExternalRouteInNetData(kDefaultRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2623,7 +2623,7 @@ void TestSavedOnLinkPrefixes(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2648,7 +2648,7 @@ void TestSavedOnLinkPrefixes(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2684,7 +2684,7 @@ void TestSavedOnLinkPrefixes(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to include the local OMR and ULA prefix.
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyExternalRouteInNetData(kUlaRoute);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
