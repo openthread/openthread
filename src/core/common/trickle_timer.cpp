@@ -104,12 +104,12 @@ void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
 
         // In trickle mode, there are two different phases
         // when in kBeforeRandomTime:
-        //   - aIntervalMax < mTimeInInterval - need to set mInterval = aIntervalMax, 
-        //     mTimeInInteval = aIntevalMax & re-schedule timer to fire at 
-        //     aIntervalMax (from start of interval). The HandleTimer function will 
+        //   - aIntervalMax < mTimeInInterval - need to set mInterval = aIntervalMax,
+        //     mTimeInInteval = aIntevalMax & re-schedule timer to fire at
+        //     aIntervalMax (from start of interval). The HandleTimer function will
         //     take care of the transition through kAfterRandomTime
         //   - aIntervalMax >= mTimeInInterval - need to set mInterval = aIntervalMax
-        // when in kAfterRandomTime, in both cases need to set mInteval = aInterMax & re-schedule 
+        // when in kAfterRandomTime, in both cases need to set mInteval = aInterMax & re-schedule
         //     timer to fire at aIntervalMax (from start of interval)
 
         mInterval = aIntervalMax;
