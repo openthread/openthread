@@ -102,7 +102,8 @@ public:
     {
     }
 
-    static void HandleTimerFired(ot::TrickleTimer &aTimer) {
+    static void HandleTimerFired(ot::TrickleTimer &aTimer)
+    {
         static_cast<TestTrickleTimer &>(aTimer).HandleTimerFired();
     }
 
@@ -136,7 +137,6 @@ int TestOneTrickleTimerPlainMode(void)
     ot::Instance    *instance            = testInitInstance();
     TestTrickleTimer timer(*instance);
     uint32_t         lastPlatDt;
-    
 
     // Test one Timer plain mode operation.
 
@@ -190,7 +190,6 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
     uint32_t         interval     = 0;
     size_t           iteration    = 0;
     uint32_t         timeBase     = kTimeT0;
-
 
     // Test one Timer trickle mode operation.
 
@@ -259,8 +258,8 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
             VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "Handler CallCount Failed.");
         }
 
-        VerifyOrQuit(sPlatT0 == timeBase + beforeRandomPlatDt && (sPlatDt + beforeRandomPlatDt) >= kTimerMinInterval && 
-                         (sPlatDt + beforeRandomPlatDt) <= kTimerMaxInterval, 
+        VerifyOrQuit(sPlatT0 == timeBase + beforeRandomPlatDt && (sPlatDt + beforeRandomPlatDt) >= kTimerMinInterval &&
+                         (sPlatDt + beforeRandomPlatDt) <= kTimerMaxInterval,
                      "Start params Failed.");
         VerifyOrQuit(interval >= kTimerMinInterval && interval <= kTimerMaxInterval, "Interval Invalid.");
         VerifyOrQuit(timer.IsRunning() == true, "Timer running Failed.");
@@ -279,7 +278,7 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
 
         if (aConsistentCalls < aRedundancyConstant)
         {
-            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1, 
+            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1,
                          "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
         }
         else
@@ -294,7 +293,7 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
 
         timeBase += interval; // Increase the time base by the interval
         iteration++;
-    }   
+    }
 
     VerifyOrQuit(iteration < 10, "Too many iterations");
 
@@ -308,8 +307,8 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
 int main(void)
 {
     TestOneTrickleTimerPlainMode();
-    TestOneTrickleTimerTrickleMode(5, 3);   // validate with fewer consistency calls than needed to supress timer
-    TestOneTrickleTimerTrickleMode(3, 3);   // validate with sufficient consistency calls to suppress timer
+    TestOneTrickleTimerTrickleMode(5, 3); // validate with fewer consistency calls than needed to supress timer
+    TestOneTrickleTimerTrickleMode(3, 3); // validate with sufficient consistency calls to suppress timer
     printf("All tests passed\n");
     return 0;
 }
