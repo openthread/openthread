@@ -113,7 +113,7 @@ public:
         mFiredCounter++;
     }
 
-    uint32_t GetFiredCounter(void) { return mFiredCounter; }
+    uint32_t GetFiredCounter(void) const { return mFiredCounter; }
 
     void ResetFiredCounter(void) { mFiredCounter = 0; }
 
