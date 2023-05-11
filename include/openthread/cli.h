@@ -149,6 +149,15 @@ void otCliAppendResult(otError aError);
 void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
 
 /**
+ * Callback to allow vendor specific commands to be added to the user command table.
+ *
+ * Available when `OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE` is enabled and
+ * `OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES` is greater than 1.
+ *
+ */
+extern void otCliVendorSetUserCommands(void);
+
+/**
  * @}
  *
  */
