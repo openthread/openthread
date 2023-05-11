@@ -77,6 +77,10 @@ Udp::Socket::Socket(Instance &aInstance)
     Clear();
 }
 
+Message *Udp::Socket::NewMessage(void) { return NewMessage(0); }
+
+Message *Udp::Socket::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
+
 Message *Udp::Socket::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
     return Get<Udp>().NewMessage(aReserved, aSettings);
@@ -413,6 +417,10 @@ uint16_t Udp::GetEphemeralPort(void)
 
     return mEphemeralPort;
 }
+
+Message *Udp::NewMessage(void) { return NewMessage(0); }
+
+Message *Udp::NewMessage(uint16_t aReserved) { return NewMessage(aReserved, Message::Settings::GetDefault()); }
 
 Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {

@@ -55,6 +55,7 @@ Error BackboneTmfAgent::Start(void)
     Error error = kErrorNone;
 
     SuccessOrExit(error = Coap::Start(kBackboneUdpPort, Ip6::kNetifBackbone));
+    LogInfo("Start listening on port %u", kBackboneUdpPort);
     SubscribeMulticast(Get<Local>().GetAllNetworkBackboneRoutersAddress());
 
 exit:

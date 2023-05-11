@@ -975,7 +975,7 @@ Error Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubTy
     Error        error   = kErrorNone;
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     message->SetSubType(aMessageSubType);
     message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 

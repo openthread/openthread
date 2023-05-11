@@ -242,12 +242,10 @@ public:
     /**
      * This method returns a new ICMP message with sufficient header space reserved.
      *
-     * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
-     *
      * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved);
+    Message *NewMessage(void);
 
     /**
      * This method registers ICMPv6 handler.

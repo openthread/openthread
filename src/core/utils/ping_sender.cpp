@@ -135,7 +135,7 @@ void PingSender::SendPing(void)
     messageInfo.mHopLimit          = mConfig.mHopLimit;
     messageInfo.mAllowZeroHopLimit = mConfig.mAllowZeroHopLimit;
 
-    message = Get<Ip6::Icmp>().NewMessage(0);
+    message = Get<Ip6::Icmp>().NewMessage();
     VerifyOrExit(message != nullptr);
 
     SuccessOrExit(message->Append(HostSwap32(now.GetValue())));
