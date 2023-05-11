@@ -208,6 +208,17 @@ public:
 #endif
 
     /**
+     * Gets the instance identifier.
+     *
+     * The instance identifier is set to a random value when the instance is constructed, and then its value will not
+     * change after initialization.
+     *
+     * @returns The instance identifier.
+     *
+     */
+    uint32_t GetId(void) const { return mId; }
+
+    /**
      * This method indicates whether or not the instance is valid/initialized and not yet finalized.
      *
      * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
@@ -645,6 +656,8 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
     static bool sDnsNameCompressionEnabled;
 #endif
+
+    uint32_t mId;
 };
 
 DefineCoreType(otInstance, Instance);

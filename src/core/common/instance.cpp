@@ -245,6 +245,7 @@ Instance::Instance(void)
     , mPowerCalibration(*this)
 #endif
     , mIsInitialized(false)
+    , mId(Random::NonCrypto::GetUint32())
 {
 }
 
