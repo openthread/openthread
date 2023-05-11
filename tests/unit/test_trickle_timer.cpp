@@ -90,8 +90,8 @@ uint32_t otPlatAlarmMicroGetNow(void) { return sNow; }
 void InitCounters(void) { memset(sCallCount, 0, sizeof(sCallCount)); }
 
 /**
- * `TestTrickleTimer` sub-classes `ot::TrickleTimer` and provides a handler and a counter to keep track of number of times timer
- * gets fired.
+ * `TestTrickleTimer` sub-classes `ot::TrickleTimer` and provides a handler and a counter to keep track of number of
+ * times timer gets fired.
  */
 class TestTrickleTimer : public ot::TrickleTimer
 {
@@ -102,7 +102,9 @@ public:
     {
     }
 
-    static void HandleTimerFired(ot::TrickleTimer &aTimer) { static_cast<TestTrickleTimer &>(aTimer).HandleTimerFired(); }
+    static void HandleTimerFired(ot::TrickleTimer &aTimer) {
+        static_cast<TestTrickleTimer &>(aTimer).HandleTimerFired();
+    }
 
     void HandleTimerFired(void)
     {
@@ -127,13 +129,13 @@ void AlarmFired(otInstance *aInstance) { otPlatAlarmMilliFired(aInstance); }
  */
 int TestOneTrickleTimerPlainMode(void)
 {
-    const uint32_t       kTimeT0                = 1000;
-    const uint32_t       kTimerMinInterval      = 2000;
-    const uint32_t       kTimerMaxInterval      = 5000;
-    const uint32_t       kRedundancyConstant    = 0;
-    ot::Instance        *instance               = testInitInstance();
-    TestTrickleTimer     timer(*instance);
-    uint32_t lastPlatDt;
+    const uint32_t   kTimeT0             = 1000;
+    const uint32_t   kTimerMinInterval   = 2000;
+    const uint32_t   kTimerMaxInterval   = 5000;
+    const uint32_t   kRedundancyConstant = 0;
+    ot::Instance    *instance            = testInitInstance();
+    TestTrickleTimer timer(*instance);
+    uint32_t         lastPlatDt;
     
 
     // Test one Timer plain mode operation.
@@ -155,9 +157,9 @@ int TestOneTrickleTimerPlainMode(void)
     VerifyOrQuit(sPlatT0 == 1000 && sPlatDt >= 2000 && sPlatDt <= 5000, "Start params Failed");
     lastPlatDt = sPlatDt;
 
-    sNow += sPlatDt;    // advance to when the timer should fire
+    sNow += sPlatDt; // advance to when the timer should fire
 
-    AlarmFired(instance);   // trigger the timer fire event
+    AlarmFired(instance); // trigger the timer fire event
 
     // the plain mode trickle timer restarts with a new random value
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "Start CallCount Failed.");
@@ -179,15 +181,15 @@ int TestOneTrickleTimerPlainMode(void)
  */
 int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsistentCalls)
 {
-    const uint32_t       kTimeT0                = 1000;
-    const uint32_t       kTimerMinInterval      = 2000;
-    const uint32_t       kTimerMaxInterval      = 5000;
-    ot::Instance        *instance               = testInitInstance();
-    TestTrickleTimer     timer(*instance);
-    uint32_t             halfMinValue           = 0;
-    uint32_t             interval               = 0;
-    size_t               iteration              = 0;
-    uint32_t             timeBase               = kTimeT0;
+    const uint32_t   kTimeT0           = 1000;
+    const uint32_t   kTimerMinInterval = 2000;
+    const uint32_t   kTimerMaxInterval = 5000;
+    ot::Instance    *instance          = testInitInstance();
+    TestTrickleTimer timer(*instance);
+    uint32_t         halfMinValue = 0;
+    uint32_t         interval     = 0;
+    size_t           iteration    = 0;
+    uint32_t         timeBase     = kTimeT0;
 
 
     // Test one Timer trickle mode operation.
@@ -211,7 +213,8 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
 
         printf("Iteration %zu\n", iteration);
 
-        // picks a random value between min & max, then takes half of this and picks a random value between the half and max values
+        // picks a random value between min & max, then takes half of this and picks a random value between the half and
+        // max values
 
         // validate that the timer is started with a random value between halfMinValue and halfMaxValue milliseconds
         // timer is in kBeforeRandomTime phase
@@ -220,13 +223,17 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == counterBase, "Stop CallCount Failed.");
         if (aConsistentCalls < aRedundancyConstant)
         {
-            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration, "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
-        } else {
+            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration,
+                         "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
+        }
+        else
+        {
             VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "Handler CallCount Failed.");
         }
-        VerifyOrQuit(sPlatT0 == timeBase && sPlatDt >= halfMinValue && sPlatDt <= kTimerMaxInterval, "Start params Failed");
+        VerifyOrQuit(sPlatT0 == timeBase && sPlatDt >= halfMinValue && sPlatDt <= kTimerMaxInterval,
+                     "Start params Failed");
 
-        for (size_t idx = 0; idx < aConsistentCalls; idx++) 
+        for (size_t idx = 0; idx < aConsistentCalls; idx++)
         {
             timer.IndicateConsistent();
         }
@@ -237,45 +244,55 @@ int TestOneTrickleTimerTrickleMode(uint32_t aRedundancyConstant, uint32_t aConsi
 
         // the trickle timer restarts with the rest of the interval time
         afterRandomPlatDt = sPlatDt;
-        interval = beforeRandomPlatDt + afterRandomPlatDt;
+        interval          = beforeRandomPlatDt + afterRandomPlatDt;
 
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == counterBase + 2, "Start CallCount Failed.");
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == counterBase + 1, "Stop CallCount Failed.");
 
         if (aConsistentCalls < aRedundancyConstant)
         {
-            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1, "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
-        } else {
+            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1,
+                         "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
+        }
+        else
+        {
             VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "Handler CallCount Failed.");
         }
 
-        VerifyOrQuit(sPlatT0 == timeBase + beforeRandomPlatDt && (sPlatDt + beforeRandomPlatDt) >= kTimerMinInterval && (sPlatDt + beforeRandomPlatDt) <= kTimerMaxInterval, "Start params Failed.");
+        VerifyOrQuit(sPlatT0 == timeBase + beforeRandomPlatDt && (sPlatDt + beforeRandomPlatDt) >= kTimerMinInterval && 
+                         (sPlatDt + beforeRandomPlatDt) <= kTimerMaxInterval, 
+                     "Start params Failed.");
         VerifyOrQuit(interval >= kTimerMinInterval && interval <= kTimerMaxInterval, "Interval Invalid.");
         VerifyOrQuit(timer.IsRunning() == true, "Timer running Failed.");
         VerifyOrQuit(sTimerOn == true, "Platform Timer State Failed.");
 
-        // Now if we fire again, we're in kAfterRandomTime and when it fires it will re-start the interval again with a bigger mInterval value until mInteval = 5000
-        sNow += sPlatDt; // advance to when teh timer should fire
+        // Now if we fire again, we're in kAfterRandomTime and when it fires it will re-start the interval again with a
+        // bigger mInterval value until mInteval = 5000
+        sNow += sPlatDt; // advance to when the timer should fire
 
-        AlarmFired(instance);   // trigger the timer fire event
+        AlarmFired(instance); // trigger the timer fire event
 
-        // If the loop runs again, thise will be checked once more, but 
+        // If the loop runs again, thise will be checked once more, but this catches the last iteration
         halfMinValue = interval / 2;
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == counterBase + 3, "Start CallCount Failed.");
         VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == counterBase + 2, "Stop CallCount Failed.");
-                
+
         if (aConsistentCalls < aRedundancyConstant)
         {
-            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1, "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
-        } else {
+            VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == iteration + 1, 
+                         "Handler CallCount Failed (aConsistentCalls < aRedundancyConstant).");
+        }
+        else
+        {
             VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "Handler CallCount Failed.");
         }
 
-        VerifyOrQuit(sPlatT0 == timeBase + interval && sPlatDt >= halfMinValue && sPlatDt <= kTimerMaxInterval, "Start params Failed.");
+        VerifyOrQuit(sPlatT0 == timeBase + interval && sPlatDt >= halfMinValue && sPlatDt <= kTimerMaxInterval,
+                     "Start params Failed.");
         VerifyOrQuit(timer.IsRunning() == true, "Timer running Failed.");
         VerifyOrQuit(sTimerOn == true, "Platform Timer State Failed.");
 
-        timeBase += interval;    // Increase the time base by the interval
+        timeBase += interval; // Increase the time base by the interval
         iteration++;
     }   
 
