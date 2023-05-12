@@ -716,10 +716,19 @@ private:
         Error              AddToNetData(void);
         void               RemoveFromNetData(void);
         bool               IsAddedInNetData(void) const { return mIsAddedInNetData; }
+        void               UpdateDefaultRouteFlag(bool aDefaultRoute);
 
     private:
+        static constexpr uint16_t kInfoStringSize = 85;
+
+        typedef String<kInfoStringSize> InfoString;
+
+        Error      AddOrUpdate(void);
+        InfoString ToString(void) const;
+
         Ip6::Prefix mPrefix;
         bool        mIsAddedInNetData;
+        bool        mDefaultRoute;
     };
 
     void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
