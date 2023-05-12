@@ -639,7 +639,7 @@ Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
 
     for (const Response *response = this; response != nullptr; response = response->mNext)
     {
-        error = FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
+        error = response->FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
 
         if (error == kErrorNone)
         {
