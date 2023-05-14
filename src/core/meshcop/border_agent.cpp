@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/settings.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -233,27 +234,41 @@ BorderAgent::BorderAgent(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-Error BorderAgent::GetId(uint8_t *aId, uint16_t &aLength)
+Error BorderAgent::GetId(Id &aId)
 {
-    Error error = kErrorNone;
+    Error                   error = kErrorNone;
+    Settings::BorderAgentId id;
 
-    VerifyOrExit(aLength >= sizeof(mId), error = kErrorInvalidArgs);
     VerifyOrExit(!mIdInitialized, error = kErrorNone);
 
-    if (Get<Settings>().Read(mId) != kErrorNone)
+    if (Get<Settings>().Read(id) != kErrorNone)
     {
-        Random::NonCrypto::FillBuffer(mId.GetId(), sizeof(mId));
-        SuccessOrExit(error = Get<Settings>().Save(mId));
+        Random::NonCrypto::FillBuffer(id.GetId().mId, sizeof(id));
+        SuccessOrExit(error = Get<Settings>().Save(id));
     }
 
+    mId            = id.GetId();
     mIdInitialized = true;
 
 exit:
     if (error == kErrorNone)
     {
-        memcpy(aId, mId.GetId(), sizeof(mId));
-        aLength = static_cast<uint16_t>(sizeof(mId));
+        aId = mId;
     }
+    return error;
+}
+
+Error BorderAgent::SetId(const Id &aId)
+{
+    Error                   error = kErrorNone;
+    Settings::BorderAgentId id;
+
+    id.SetId(aId);
+    SuccessOrExit(error = Get<Settings>().Save(id));
+    mId            = aId;
+    mIdInitialized = true;
+
+exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE

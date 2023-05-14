@@ -107,23 +107,12 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-Error SettingsBase::BorderAgentId::SetId(const uint8_t *aId, uint16_t aLength)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aLength == sizeof(mId), error = kErrorInvalidArgs);
-    memcpy(mId, aId, aLength);
-
-exit:
-    return error;
-}
-
 void SettingsBase::BorderAgentId::Log(Action aAction) const
 {
     char         buffer[sizeof(BorderAgentId) * 2 + 1];
     StringWriter sw(buffer, sizeof(buffer));
 
-    sw.AppendHexBytes(GetId(), sizeof(BorderAgentId));
+    sw.AppendHexBytes(GetId().mId, sizeof(BorderAgentId));
     LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), buffer);
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
