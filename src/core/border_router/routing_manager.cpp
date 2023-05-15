@@ -2869,16 +2869,14 @@ void RoutingManager::Nat64PrefixManager::GenerateLocalPrefix(const Ip6::Prefix &
 
 const Ip6::Prefix &RoutingManager::Nat64PrefixManager::GetFavoredPrefix(RoutePreference &aPreference) const
 {
-    const Ip6::Prefix *favoredPrefix = &mInfraIfPrefix;
+    const Ip6::Prefix *favoredPrefix = &mLocalPrefix;
 
-    if (mInfraIfPrefix.IsValidNat64())
+    aPreference = NetworkData::kRoutePreferenceLow;
+
+    if (mInfraIfPrefix.IsValidNat64() && Get<RoutingManager>().mFavoredOmrPrefix.IsInfrastructureDerived())
     {
-        aPreference = NetworkData::kRoutePreferenceMedium;
-    }
-    else
-    {
-        favoredPrefix = &mLocalPrefix;
-        aPreference   = NetworkData::kRoutePreferenceLow;
+        favoredPrefix = &mInfraIfPrefix;
+        aPreference   = NetworkData::kRoutePreferenceMedium;
     }
 
     return *favoredPrefix;

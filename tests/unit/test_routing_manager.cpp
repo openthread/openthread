@@ -158,6 +158,7 @@ void        ValidateRouterAdvert(const Icmp6Packet &aPacket);
 const char *PreferenceToString(int8_t aPreference);
 void        SendRouterAdvert(const Ip6::Address &aAddress, const Icmp6Packet &aPacket);
 void        SendNeighborAdvert(const Ip6::Address &aAddress, const Ip6::Nd::NeighborAdvertMessage &aNaMessage);
+void        DiscoverNat64Prefix(const Ip6::Prefix &aPrefix);
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
@@ -502,6 +503,13 @@ void SendNeighborAdvert(const Ip6::Address &aAddress, const Ip6::Nd::NeighborAdv
                              sizeof(aNaMessage));
 }
 
+void DiscoverNat64Prefix(const Ip6::Prefix &aPrefix)
+{
+    Log("Discovered NAT64 prefix %s", aPrefix.ToString().AsCString());
+
+    otPlatInfraIfDiscoverNat64PrefixDone(sInstance, kInfraIfIndex, &aPrefix);
+}
+
 Ip6::Prefix PrefixFromString(const char *aString, uint8_t aPrefixLength)
 {
     Ip6::Prefix prefix;
@@ -587,6 +595,31 @@ void VerifyExternalRouteInNetData(ExternalRouteMode aMode)
         VerifyOrQuit(otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) != kErrorNone);
         break;
     }
+}
+
+void VerifyNat64PrefixInNetData(const Ip6::Prefix &aNat64Prefix)
+{
+    otNetworkDataIterator            iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    NetworkData::ExternalRouteConfig routeConfig;
+    bool                             didFind = false;
+
+    Log("VerifyNat64PrefixInNetData()");
+
+    while (otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) == kErrorNone)
+    {
+        if (!routeConfig.mNat64 || !routeConfig.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        Log("   nat64 prefix:%s, prf:%s", routeConfig.GetPrefix().ToString().AsCString(),
+            PreferenceToString(routeConfig.mPreference));
+
+        VerifyOrQuit(routeConfig.GetPrefix() == aNat64Prefix);
+        didFind = true;
+    }
+
+    VerifyOrQuit(didFind);
 }
 
 struct Pio
@@ -3003,6 +3036,88 @@ void TestAutoEnableOfSrpServer(void)
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+void TestNat64PrefixSelection(void)
+{
+    Ip6::Prefix                     localNat64;
+    Ip6::Prefix                     ailNat64 = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     localOmr;
+    Ip6::Prefix                     omrPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestNat64PrefixSelection");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check local NAT64 prefix generation.
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetNat64Prefix(localNat64));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local nat64 prefix is %s", localNat64.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Enable Nat64 Prefix Manager. Check local NAT64 prefix in Network Data.
+
+    sInstance->Get<BorderRouter::RoutingManager>().SetNat64PrefixManagerEnabled(true);
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(localOmr);
+    VerifyNat64PrefixInNetData(localNat64);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // AIL NAT64 prefix discovered. No infra-derived OMR prefix in Network Data.
+    // Check local NAT64 prefix in Network Data.
+
+    DiscoverNat64Prefix(ailNat64);
+
+    AdvanceTime(20000);
+
+    VerifyNat64PrefixInNetData(localNat64);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Add a medium preference OMR prefix into Network Data.
+    // Check AIL NAT64 prefix published in Network Data.
+
+    prefixConfig.Clear();
+    prefixConfig.mPrefix       = omrPrefix;
+    prefixConfig.mStable       = true;
+    prefixConfig.mSlaac        = true;
+    prefixConfig.mPreferred    = true;
+    prefixConfig.mOnMesh       = true;
+    prefixConfig.mDefaultRoute = false;
+    prefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
+
+    SuccessOrQuit(otBorderRouterAddOnMeshPrefix(sInstance, &prefixConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyNat64PrefixInNetData(ailNat64);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // AIL NAT64 prefix removed.
+    // Check local NAT64 prefix in Network Data.
+
+    ailNat64.Clear();
+    DiscoverNat64Prefix(ailNat64);
+
+    AdvanceTime(20000);
+
+    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyNat64PrefixInNetData(localNat64);
+
+    Log("End of TestNat64PrefixSelection");
+    FinalizeTest();
+}
+#endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 int main(void)
@@ -3024,6 +3139,9 @@ int main(void)
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     TestAutoEnableOfSrpServer();
+#endif
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+    TestNat64PrefixSelection();
 #endif
 
     printf("All tests passed\n");
