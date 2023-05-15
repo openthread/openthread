@@ -84,6 +84,14 @@
 #define OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+ *
+ * Define to 1 to enable ND handling on Thread interface on host.
+ *
+ */
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
  *
  * Define as 1 to enable IPv6 Border Routing counters.
