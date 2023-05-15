@@ -148,17 +148,13 @@ public:
     uint32_t GetBusSpeed(void) const;
 
     /**
-     * This method is called when RCP failure detected and resets internal states of the interface.
+     * This method hardware resets the RCP. It will be called after a software reset fails.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      *
      */
-    void OnRcpReset(void);
-
-    /**
-     * This method is called when RCP is reset to recreate the connection with it.
-     * Intentionally empty.
-     *
-     */
-    otError ResetConnection(void) { return OT_ERROR_NONE; }
+    otError HardwareReset(void);
 
 private:
     void        ReceiveFrameCallback(const std::vector<uint8_t> &aFrame);
