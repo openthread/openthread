@@ -3067,7 +3067,7 @@ void TestNat64PrefixSelection(void)
 
     AdvanceTime(20000);
 
-    VerifyOmrPrefixInNetData(localOmr);
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3098,7 +3098,7 @@ void TestNat64PrefixSelection(void)
 
     AdvanceTime(20000);
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
     VerifyNat64PrefixInNetData(ailNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3110,7 +3110,7 @@ void TestNat64PrefixSelection(void)
 
     AdvanceTime(20000);
 
-    VerifyOmrPrefixInNetData(omrPrefix);
+    VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
     VerifyNat64PrefixInNetData(localNat64);
 
     Log("End of TestNat64PrefixSelection");
