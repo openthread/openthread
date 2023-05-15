@@ -84,7 +84,7 @@ void otPlatAssertFail(const char *aFilename, int aLineNumber)
 #else
     otLogCritPlat("assert failed at %s:%d", aFilename, aLineNumber);
 #endif
-    // For debug build, use assert to genreate a core dump
+    // For debug build, use assert to generate a core dump
     assert(false);
     exit(1);
 }

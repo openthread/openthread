@@ -68,10 +68,13 @@ cd ../.. || die "cd failed"
 coverage=no
 tests=no
 
+ot_coverage=OFF
+
 while [ $# -ge 2 ]; do
     case $1 in
         -c | --enable-coverage)
             coverage=yes
+            ot_coverage=ON
             shift
             ;;
         -t | --enable-tests)
@@ -102,14 +105,6 @@ ncp_configure_options=(
     "--enable-coverage=$coverage"
     "--enable-ftd"
     "--enable-ncp"
-)
-
-cli_configure_options=(
-    "--disable-docs"
-    "--enable-tests=$tests"
-    "--enable-coverage=$coverage"
-    "--enable-ftd"
-    "--enable-cli"
 )
 
 posix_configure_options=(
@@ -198,30 +193,25 @@ case ${build_config} in
         echo "==================================================================================================="
         echo "Building OpenThread CLI FTD mode with simulation platform (radios determined by config)"
         echo "==================================================================================================="
-        ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
-        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
-        ${top_srcdir}/configure \
-            CPPFLAGS="$cppflags_config" \
-            --with-examples=simulation \
-            "${cli_configure_options[@]}" || die
-        make -j 8 || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
         ;;
 
     cli-15.4)
         echo "==================================================================================================="
         echo "Building OpenThread CLI FTD mode with simulation platform - 15.4 radio"
         echo "==================================================================================================="
-        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=0"
-        ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
-        ${top_srcdir}/configure \
-            CPPFLAGS="$cppflags_config" \
-            --with-examples=simulation \
-            "${cli_configure_options[@]}" || die
-        make -j 8 || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_15_4=ON -DOT_TREL=OFF \
+            -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
         cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4
         ;;
 
@@ -229,16 +219,13 @@ case ${build_config} in
         echo "==================================================================================================="
         echo "Building OpenThread CLI FTD mode with simulation platform - TREL radio"
         echo "==================================================================================================="
-        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=0"
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
-        ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
-        ${top_srcdir}/configure \
-            CPPFLAGS="$cppflags_config" \
-            --with-examples=simulation \
-            "${cli_configure_options[@]}" || die
-        make -j 8 || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_15_4=OFF -DOT_TREL=ON \
+            -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
         cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-trel
         ;;
 
@@ -246,16 +233,13 @@ case ${build_config} in
         echo "==================================================================================================="
         echo "Building OpenThread NCP FTD mode with simulation platform - multi radio (15.4 + TREL)"
         echo "==================================================================================================="
-        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
-        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
-        ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
-        ${top_srcdir}/configure \
-            CPPFLAGS="$cppflags_config" \
-            --with-examples=simulation \
-            "${cli_configure_options[@]}" || die
-        make -j 8 || die
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_15_4=ON -DOT_TREL=ON \
+            -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
         cp -p ${top_builddir}/examples/apps/cli/ot-cli-ftd ${top_builddir}/examples/apps/cli/ot-cli-ftd-15.4-trel
         ;;
 
@@ -344,7 +328,8 @@ case ${build_config} in
         echo "Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake"
         echo "===================================================================================================="
         cd "${top_builddir}" || die "cd failed"
-        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_APP_CLI=on \
+        cmake -GNinja -DOT_PLATFORM=simulation -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=ON \
             -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
             "${top_srcdir}" || die
         ninja || die
@@ -355,7 +340,7 @@ case ${build_config} in
         echo "Building OpenThread POSIX using cmake"
         echo "===================================================================================================="
         cd "${top_builddir}" || die "cd failed"
-        cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_APP_CLI=off \
+        cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_APP_CLI=OFF \
             -DOT_CONFIG=../tests/toranj/openthread-core-toranj-config-posix.h \
             "${top_srcdir}" || die
         ninja || die

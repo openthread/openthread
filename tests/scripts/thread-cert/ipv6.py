@@ -29,10 +29,10 @@
 
 import abc
 import io
+import ipaddress
 import struct
 
 from binascii import hexlify
-from ipaddress import ip_address
 
 import common
 
@@ -91,6 +91,25 @@ def calculate_checksum(data):
         return 0xffff
     else:
         return checksum
+
+
+def synthesize_ip6_address(ip6_network: ipaddress.IPv6Network,
+                           ip4_address: ipaddress.IPv4Address) -> ipaddress.IPv6Address:
+    """ Synthesize an IPv6 address from a prefix for NAT64 and an IPv4 address.
+
+    Only supports /96 network for now.
+
+    Args:
+        ip6_network: The network for NAT64.
+        ip4_address: The IPv4 address.
+
+    Returns:
+        ipaddress.IPv6Address: The synthesized IPv6 address.
+    """
+    if ip6_network.prefixlen != 96:
+        # We are only using /96 networks in openthread
+        raise NotImplementedError("synthesize_ip6_address only supports /96 networks")
+    return ipaddress.IPv6Address(int(ip6_network.network_address) | int(ip4_address))
 
 
 class PacketFactory(object):
@@ -209,7 +228,7 @@ class IPv6PseudoHeader(ConvertibleToBytes):
         if isinstance(value, bytearray):
             value = bytes(value)
 
-        return ip_address(value)
+        return ipaddress.ip_address(value)
 
     @property
     def source_address(self):
@@ -267,7 +286,7 @@ class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
         if isinstance(value, bytearray):
             value = bytes(value)
 
-        return ip_address(value)
+        return ipaddress.ip_address(value)
 
     @property
     def source_address(self):

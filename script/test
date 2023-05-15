@@ -32,27 +32,62 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
-readonly OT_SRCDIR="${PWD}"
+OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+readonly OT_BUILDDIR
 
-readonly OT_COLOR_PASS='\033[0;32m'
-readonly OT_COLOR_FAIL='\033[0;31m'
-readonly OT_COLOR_SKIP='\033[0;33m'
-readonly OT_COLOR_NONE='\033[0m'
+OT_SRCDIR="${PWD}"
+readonly OT_SRCDIR
 
-readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
-readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
-readonly THREAD_VERSION="${THREAD_VERSION:-1.3}"
-readonly INTER_OP="${INTER_OP:-0}"
-readonly VERBOSE="${VERBOSE:-0}"
-readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
-readonly NAT64="${NAT64:-0}"
-readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
+OT_COLOR_PASS='\033[0;32m'
+readonly OT_COLOR_PASS
 
-readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
-readonly FULL_LOGS=${FULL_LOGS:-0}
-readonly TREL=${TREL:-0}
-readonly LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
+OT_COLOR_FAIL='\033[0;31m'
+readonly OT_COLOR_FAIL
+
+OT_COLOR_SKIP='\033[0;33m'
+readonly OT_COLOR_SKIP
+
+OT_COLOR_NONE='\033[0m'
+readonly OT_COLOR_NONE
+
+OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
+readonly OT_NODE_TYPE
+
+OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
+readonly OT_NATIVE_IP
+
+THREAD_VERSION="${THREAD_VERSION:-1.3}"
+readonly THREAD_VERSION
+
+INTER_OP="${INTER_OP:-0}"
+readonly INTER_OP
+
+VERBOSE="${VERBOSE:-0}"
+readonly VERBOSE
+
+BORDER_ROUTING="${BORDER_ROUTING:-1}"
+readonly BORDER_ROUTING
+
+NAT64="${NAT64:-0}"
+readonly NAT64
+
+NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
+readonly NAT64_SERVICE
+
+INTER_OP_BBR="${INTER_OP_BBR:-0}"
+readonly INTER_OP_BBR
+
+OT_COREDUMP_DIR="${PWD}/ot-core-dump"
+readonly OT_COREDUMP_DIR
+
+FULL_LOGS=${FULL_LOGS:-0}
+readonly FULL_LOGS
+
+TREL=${TREL:-0}
+readonly TREL
+
+LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
+readonly LOCAL_OTBR_DIR
 
 build_simulation()
 {
@@ -237,6 +272,7 @@ do_cert()
 do_cert_suite()
 {
     export top_builddir="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}"
+    export top_srcdir="${OT_SRCDIR}"
 
     if [[ ${THREAD_VERSION} != "1.1" ]]; then
         export top_builddir_1_3_bbr="${OT_BUILDDIR}/openthread-simulation-1.3-bbr"
@@ -250,7 +286,8 @@ do_cert_suite()
 
     sudo modprobe ip6table_filter
 
-    python3 tests/scripts/thread-cert/run_cert_suite.py --multiply "${MULTIPLY:-1}" "$@"
+    mkdir -p ot_testing
+    ./tests/scripts/thread-cert/run_cert_suite.py --run-directory ot_testing --multiply "${MULTIPLY:-1}" "$@"
     exit 0
 }
 
@@ -286,9 +323,27 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
+        "-DOTBR_DNS_UPSTREAM_QUERY=ON"
         "-DOTBR_DUA_ROUTING=ON"
-        "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
+    local args=(
+        "BORDER_ROUTING=${BORDER_ROUTING}"
+        "INFRA_IF_NAME=eth0"
+        "BACKBONE_ROUTER=1"
+        "REFERENCE_DEVICE=1"
+        "OT_BACKBONE_CI=1"
+        "NAT64=${NAT64}"
+        "NAT64_SERVICE=${NAT64_SERVICE}"
+        "DNS64=${NAT64}"
+        "REST_API=0"
+        "WEB_GUI=0"
+        "MDNS=${OTBR_MDNS:-mDNSResponder}"
+    )
+
+    if [[ ${NAT64} != 1 ]]; then
+        # We are testing upstream DNS forwarding in the NAT64 tests, and OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF will block OpenThread's DNSSD server since we already have bind9 running.
+        otbr_options+=("-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'")
+    fi
 
     if [[ ${TREL} == 1 ]]; then
         otbr_options+=("-DOTBR_TREL=ON")
@@ -296,13 +351,12 @@ do_build_otbr_docker()
         otbr_options+=("-DOTBR_TREL=OFF")
     fi
 
-    if [[ ${NAT64} == 1 ]]; then
-        otbr_options+=("-DOTBR_BORDER_ROUTING_NAT64=ON")
-    else
-        otbr_options+=("-DOTBR_BORDER_ROUTING_NAT64=OFF")
-    fi
-
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
+    local docker_build_args=()
+
+    for arg in "${args[@]}"; do
+        docker_build_args+=("--build-arg" "$arg")
+    done
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
     otdir=$(pwd)
@@ -311,23 +365,24 @@ do_build_otbr_docker()
         if [[ -z ${LOCAL_OTBR_DIR} ]]; then
             ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
         else
-            cp -r "${LOCAL_OTBR_DIR}"/* "${otbrdir}"
-            rm -rf "${otbrdir}"/build
+            rsync -r \
+                --exclude=third_party/openthread/repo \
+                --exclude=.git \
+                --exclude=build \
+                "${LOCAL_OTBR_DIR}/." \
+                "${otbrdir}"
         fi
+
         cd "${otbrdir}"
         rm -rf third_party/openthread/repo
-        cp -r "${otdir}" third_party/openthread/repo
+        rsync -r \
+            --exclude=build \
+            "${otdir}/." \
+            third_party/openthread/repo
         rm -rf .git
+
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
-            --build-arg BORDER_ROUTING="${BORDER_ROUTING}" \
-            --build-arg INFRA_IF_NAME=eth0 \
-            --build-arg BACKBONE_ROUTER=1 \
-            --build-arg REFERENCE_DEVICE=1 \
-            --build-arg OT_BACKBONE_CI=1 \
-            --build-arg NAT64="${NAT64}" \
-            --build-arg REST_API=0 \
-            --build-arg WEB_GUI=0 \
-            --build-arg MDNS="${OTBR_MDNS:-mDNSResponder}" \
+            "${docker_build_args[@]}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 
@@ -336,7 +391,7 @@ do_build_otbr_docker()
 
 do_pktverify()
 {
-    python3 ./tests/scripts/thread-cert/pktverify/verify.py "$1"
+    ./tests/scripts/thread-cert/pktverify/verify.py "$1"
 }
 
 ot_exec_expect_script()

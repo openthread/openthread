@@ -66,7 +66,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpHdlc), uint64_t);
 
 extern "C" void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback)
 {
-    NcpHdlc * ncpHdlc  = nullptr;
+    NcpHdlc  *ncpHdlc  = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);
 
     ncpHdlc = new (&sNcpRaw) NcpHdlc(instance, aSendCallback);
@@ -95,10 +95,10 @@ NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 }
 
-void NcpHdlc::HandleFrameAddedToNcpBuffer(void *                   aContext,
+void NcpHdlc::HandleFrameAddedToNcpBuffer(void                    *aContext,
                                           Spinel::Buffer::FrameTag aTag,
                                           Spinel::Buffer::Priority aPriority,
-                                          Spinel::Buffer *         aBuffer)
+                                          Spinel::Buffer          *aBuffer)
 {
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aTag);
@@ -240,10 +240,7 @@ void NcpHdlc::HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength)
     mFrameDecoder.Decode(aBuf, aBufLength);
 }
 
-void NcpHdlc::HandleFrame(void *aContext, otError aError)
-{
-    static_cast<NcpHdlc *>(aContext)->HandleFrame(aError);
-}
+void NcpHdlc::HandleFrame(void *aContext, otError aError) { static_cast<NcpHdlc *>(aContext)->HandleFrame(aError); }
 
 void NcpHdlc::HandleFrame(otError aError)
 {
@@ -277,8 +274,6 @@ void NcpHdlc::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
 
     super_t::IncrementFrameErrorCounter();
 
-    // We can get away with sprintf because we know
-    // `hexbuf` is large enough.
     snprintf(hexbuf, sizeof(hexbuf), "Framing error %d: [", aError);
 
     // Write out the first part of our log message.
@@ -288,9 +283,6 @@ void NcpHdlc::HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength)
     // The second '3' comes from the length of two hex digits and a space.
     for (i = 0; (i < aBufLength) && (i < (sizeof(hexbuf) - 3) / 3); i++)
     {
-        // We can get away with sprintf because we know
-        // `hexbuf` is large enough, based on our calculations
-        // above.
         snprintf(&hexbuf[i * 3], sizeof(hexbuf) - i * 3, " %02X", static_cast<uint8_t>(aBuf[i]));
     }
 
@@ -312,10 +304,7 @@ NcpHdlc::BufferEncrypterReader::BufferEncrypterReader(Spinel::Buffer &aTxFrameBu
 {
 }
 
-bool NcpHdlc::BufferEncrypterReader::IsEmpty(void) const
-{
-    return mTxFrameBuffer.IsEmpty() && !mOutputDataLength;
-}
+bool NcpHdlc::BufferEncrypterReader::IsEmpty(void) const { return mTxFrameBuffer.IsEmpty() && !mOutputDataLength; }
 
 otError NcpHdlc::BufferEncrypterReader::OutFrameBegin(void)
 {
@@ -347,20 +336,11 @@ otError NcpHdlc::BufferEncrypterReader::OutFrameBegin(void)
     return status;
 }
 
-bool NcpHdlc::BufferEncrypterReader::OutFrameHasEnded(void)
-{
-    return (mDataBufferReadIndex >= mOutputDataLength);
-}
+bool NcpHdlc::BufferEncrypterReader::OutFrameHasEnded(void) { return (mDataBufferReadIndex >= mOutputDataLength); }
 
-uint8_t NcpHdlc::BufferEncrypterReader::OutFrameReadByte(void)
-{
-    return mDataBuffer[mDataBufferReadIndex++];
-}
+uint8_t NcpHdlc::BufferEncrypterReader::OutFrameReadByte(void) { return mDataBuffer[mDataBufferReadIndex++]; }
 
-otError NcpHdlc::BufferEncrypterReader::OutFrameRemove(void)
-{
-    return mTxFrameBuffer.OutFrameRemove();
-}
+otError NcpHdlc::BufferEncrypterReader::OutFrameRemove(void) { return mTxFrameBuffer.OutFrameRemove(); }
 
 void NcpHdlc::BufferEncrypterReader::Reset(void)
 {

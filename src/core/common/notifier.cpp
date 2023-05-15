@@ -46,12 +46,11 @@ RegisterLogModule("Notifier");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTask(aInstance, Notifier::EmitEvents)
+    , mTask(aInstance)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        callback.mHandler = nullptr;
-        callback.mContext = nullptr;
+        callback.Clear();
     }
 }
 
@@ -64,23 +63,17 @@ Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContex
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if (callback.mHandler == nullptr)
+        VerifyOrExit(!callback.Matches(aCallback, aContext), error = kErrorAlready);
+
+        if (!callback.IsSet() && (unusedCallback == nullptr))
         {
-            if (unusedCallback == nullptr)
-            {
-                unusedCallback = &callback;
-            }
-
-            continue;
+            unusedCallback = &callback;
         }
-
-        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = kErrorAlready);
     }
 
     VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
 
-    unusedCallback->mHandler = aCallback;
-    unusedCallback->mContext = aContext;
+    unusedCallback->Set(aCallback, aContext);
 
 exit:
     return error;
@@ -92,10 +85,9 @@ void Notifier::RemoveCallback(otStateChangedCallback aCallback, void *aContext)
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if ((callback.mHandler == aCallback) && (callback.mContext == aContext))
+        if (callback.Matches(aCallback, aContext))
         {
-            callback.mHandler = nullptr;
-            callback.mContext = nullptr;
+            callback.Clear();
         }
     }
 
@@ -116,11 +108,6 @@ void Notifier::SignalIfFirst(Event aEvent)
     {
         Signal(aEvent);
     }
-}
-
-void Notifier::EmitEvents(Tasklet &aTasklet)
-{
-    aTasklet.Get<Notifier>().EmitEvents();
 }
 
 void Notifier::EmitEvents(void)
@@ -146,9 +133,7 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<BackboneRouter::Manager>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
-#endif
+    Get<ChildSupervisor>().HandleNotifierEvents(events);
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
     Get<MeshCoP::DatasetUpdater>().HandleNotifierEvents(events);
 #endif
@@ -204,10 +189,7 @@ void Notifier::EmitEvents(void)
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
-        if (callback.mHandler != nullptr)
-        {
-            callback.mHandler(events.GetAsFlags(), callback.mContext);
-        }
+        callback.InvokeIfSet(events.GetAsFlags());
     }
 
 exit:
@@ -233,7 +215,7 @@ void Notifier::LogEvents(Events aEvents) const
         {
             if (string.GetLength() >= kFlagsStringLineLimit)
             {
-                LogInfo("StateChanged (0x%08x) %s%s ...", aEvents.GetAsFlags(), didLog ? "... " : "[",
+                LogInfo("StateChanged (0x%08lx) %s%s ...", ToUlong(aEvents.GetAsFlags()), didLog ? "... " : "[",
                         string.AsCString());
                 string.Clear();
                 didLog   = true;
@@ -248,7 +230,7 @@ void Notifier::LogEvents(Events aEvents) const
     }
 
 exit:
-    LogInfo("StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[", string.AsCString());
+    LogInfo("StateChanged (0x%08lx) %s%s]", ToUlong(aEvents.GetAsFlags()), didLog ? "... " : "[", string.AsCString());
 }
 
 const char *Notifier::EventToString(Event aEvent) const
@@ -305,14 +287,9 @@ const char *Notifier::EventToString(Event aEvent) const
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 
-void Notifier::LogEvents(Events) const
-{
-}
+void Notifier::LogEvents(Events) const {}
 
-const char *Notifier::EventToString(Event) const
-{
-    return "";
-}
+const char *Notifier::EventToString(Event) const { return ""; }
 
 #endif // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_INFO)
 

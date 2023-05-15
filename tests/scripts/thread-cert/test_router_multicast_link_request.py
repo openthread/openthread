@@ -31,7 +31,7 @@ import unittest
 
 import config
 import thread_cert
-from pktverify.consts import MLE_LINK_REQUEST, MLE_LINK_ACCEPT
+from pktverify.consts import MLE_LINK_REQUEST
 from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
@@ -110,30 +110,12 @@ class TestRouterMulticastLinkRequest(thread_cert.TestCase):
         self.assertEqual(self.nodes[REED].get_state(), 'router')
         self.simulator.go(LINK_ESTABLISH_DELAY_THRESHOLD + 3)
 
-    def verify(self, pv: PacketVerifier):
-        pkts = pv.pkts
-        print(pv.vars)
-        pv.summary.show()
-
-        REED = pv.vars['REED']
-        as_pkt = pkts.filter_wpan_src64(REED).filter_coap_request('/a/as', confirmable=True).must_next()
-        parent_rloc16 = as_pkt.wpan.dst16
-        as_ack_pkt = pkts.filter_wpan_src16(parent_rloc16).filter_coap_ack('/a/as').must_next()
-        become_router_timestamp = as_ack_pkt.sniff_timestamp
-
-        # REED has just received `/a/as` and become a Router
-        # REED should send Multicast Link Request after becoming Router
-        link_request_pkt = pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_LINK_REQUEST).must_next()
-        link_request_pkt.must_verify('ipv6.dst == "ff02::2"')
-
-        # REED should send Link Accept to the three Routers
-        for router in ('ROUTER1', 'ROUTER2', 'ROUTER3'):
-            with pkts.save_index():
-                pkt = pkts.filter_wpan_src64(REED).filter_wpan_dst64(
-                    pv.vars[router]).filter_mle_cmd(MLE_LINK_ACCEPT).must_next()
-                link_establish_delay = pkt.sniff_timestamp - become_router_timestamp
-                logging.info("Link to %s established in %.3f seconds", router, link_establish_delay)
-                self.assertLess(link_establish_delay, LINK_ESTABLISH_DELAY_THRESHOLD)
+        # Verify that REED has established link with all routers
+        reed_table = self.nodes[REED].router_table()
+        reed_id = self.nodes[REED].get_router_id()
+        for router in [self.nodes[ROUTER1], self.nodes[ROUTER2], self.nodes[ROUTER3]]:
+            self.assertEqual(reed_table[router.get_router_id()]['link'], 1)
+            self.assertEqual(router.router_table()[reed_id]['link'], 1)
 
 
 if __name__ == '__main__':

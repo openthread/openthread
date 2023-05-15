@@ -49,6 +49,7 @@
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -61,6 +62,8 @@ namespace BackboneRouter {
 class Manager : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Tmf::Agent;
+    friend class BackboneTmfAgent;
 
 public:
     /**
@@ -164,27 +167,22 @@ public:
      * @retval kErrorNoBufs        If insufficient message buffers available.
      *
      */
-    Error SendProactiveBackboneNotification(const Ip6::Address &            aDua,
+    Error SendProactiveBackboneNotification(const Ip6::Address             &aDua,
                                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                             uint32_t                        aTimeSinceLastTransaction);
 
 private:
     static constexpr uint32_t kTimerInterval = 1000;
 
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    static void HandleMulticastListenerRegistration(void *               aContext,
-                                                    otMessage *          aMessage,
-                                                    const otMessageInfo *aMessageInfo)
-    {
-        static_cast<Manager *>(aContext)->HandleMulticastListenerRegistration(
-            *static_cast<const Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-    }
     void HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void SendMulticastListenerRegistrationResponse(const Coap::Message &      aMessage,
-                                                   const Ip6::MessageInfo &   aMessageInfo,
+    void SendMulticastListenerRegistrationResponse(const Coap::Message       &aMessage,
+                                                   const Ip6::MessageInfo    &aMessageInfo,
                                                    ThreadStatusTlv::MlrStatus aStatus,
-                                                   Ip6::Address *             aFailedAddresses,
+                                                   Ip6::Address              *aFailedAddresses,
                                                    uint8_t                    aFailedAddressNum);
     void SendBackboneMulticastListenerRegistration(const Ip6::Address *aAddresses,
                                                    uint8_t             aAddressNum,
@@ -192,59 +190,45 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    static void HandleDuaRegistration(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-    {
-        static_cast<Manager *>(aContext)->HandleDuaRegistration(*static_cast<const Coap::Message *>(aMessage),
-                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
-    }
-    void        HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    Error       SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
-                                   const Ip6::Address &         aDua,
-                                   uint16_t                     aSrcRloc16,
-                                   const NdProxyTable::NdProxy &aNdProxy);
-    Error       SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                                   const Ip6::Address &            aDua,
-                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                   uint32_t                        aTimeSinceLastTransaction,
-                                   uint16_t                        aSrcRloc16);
-    void        HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
-    void        HandleExtendedBackboneAnswer(const Ip6::Address &            aDua,
-                                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                             uint32_t                        aTimeSinceLastTransaction,
-                                             uint16_t                        aSrcRloc16);
-    void        HandleProactiveBackboneNotification(const Ip6::Address &            aDua,
-                                                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                                    uint32_t                        aTimeSinceLastTransaction);
-    void        SendDuaRegistrationResponse(const Coap::Message &      aMessage,
-                                            const Ip6::MessageInfo &   aMessageInfo,
-                                            const Ip6::Address &       aTarget,
-                                            ThreadStatusTlv::DuaStatus aStatus);
+    void  HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error SendBackboneAnswer(const Ip6::MessageInfo      &aQueryMessageInfo,
+                             const Ip6::Address          &aDua,
+                             uint16_t                     aSrcRloc16,
+                             const NdProxyTable::NdProxy &aNdProxy);
+    Error SendBackboneAnswer(const Ip6::Address             &aDstAddr,
+                             const Ip6::Address             &aDua,
+                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                             uint32_t                        aTimeSinceLastTransaction,
+                             uint16_t                        aSrcRloc16);
+    void  HandleDadBackboneAnswer(const Ip6::Address &aDua, const Ip6::InterfaceIdentifier &aMeshLocalIid);
+    void  HandleExtendedBackboneAnswer(const Ip6::Address             &aDua,
+                                       const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                       uint32_t                        aTimeSinceLastTransaction,
+                                       uint16_t                        aSrcRloc16);
+    void  HandleProactiveBackboneNotification(const Ip6::Address             &aDua,
+                                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                              uint32_t                        aTimeSinceLastTransaction);
+    void  SendDuaRegistrationResponse(const Coap::Message       &aMessage,
+                                      const Ip6::MessageInfo    &aMessageInfo,
+                                      const Ip6::Address        &aTarget,
+                                      ThreadStatusTlv::DuaStatus aStatus);
 #endif
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void LogError(const char *aText, Error aError) const;
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    Coap::Resource mMulticastListenerRegistration;
-#endif
+    using BbrTimer = TimerMilliIn<Manager, &Manager::HandleTimer>;
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-    Coap::Resource mDuaRegistration;
-    Coap::Resource mBackboneQuery;
-    Coap::Resource mBackboneAnswer;
-    NdProxyTable   mNdProxyTable;
+    NdProxyTable mNdProxyTable;
 #endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     MulticastListenersTable mMulticastListenersTable;
 #endif
-    TimerMilli mTimer;
+    BbrTimer mTimer;
 
     BackboneTmfAgent mBackboneTmfAgent;
 
@@ -264,6 +248,15 @@ private:
 #endif
 #endif
 };
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+DeclareTmfHandler(Manager, kUriMlr);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+DeclareTmfHandler(Manager, kUriDuaRegistrationRequest);
+DeclareTmfHandler(Manager, kUriBackboneQuery);
+DeclareTmfHandler(Manager, kUriBackboneAnswer);
+#endif
 
 } // namespace BackboneRouter
 

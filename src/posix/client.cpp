@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
                     lineBuffer[lineBufferWritePos++] = c;
                     if (c == '\n' || lineBufferWritePos >= sizeof(lineBuffer) - 1)
                     {
-                        char * line = lineBuffer;
+                        char  *line = lineBuffer;
                         size_t len  = lineBufferWritePos;
 
                         // read one line successfully or line buffer is full

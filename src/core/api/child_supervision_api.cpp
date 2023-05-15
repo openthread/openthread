@@ -33,8 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
 #include <openthread/child_supervision.h>
 
 #include "common/as_core_type.hpp"
@@ -42,28 +40,32 @@
 
 using namespace ot;
 
-#if OPENTHREAD_FTD
-
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Utils::ChildSupervisor>().GetSupervisionInterval();
+    return AsCoreType(aInstance).Get<SupervisionListener>().GetInterval();
 }
 
 void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval)
 {
-    AsCoreType(aInstance).Get<Utils::ChildSupervisor>().SetSupervisionInterval(aInterval);
+    AsCoreType(aInstance).Get<SupervisionListener>().SetInterval(aInterval);
 }
-
-#endif
 
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Utils::SupervisionListener>().GetTimeout();
+    return AsCoreType(aInstance).Get<SupervisionListener>().GetTimeout();
 }
 
 void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
 {
-    AsCoreType(aInstance).Get<Utils::SupervisionListener>().SetTimeout(aTimeout);
+    AsCoreType(aInstance).Get<SupervisionListener>().SetTimeout(aTimeout);
 }
 
-#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+uint16_t otChildSupervisionGetCheckFailureCounter(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<SupervisionListener>().GetCounter();
+}
+
+void otChildSupervisionResetCheckFailureCounter(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<SupervisionListener>().ResetCounter();
+}

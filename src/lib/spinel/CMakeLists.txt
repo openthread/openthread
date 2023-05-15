@@ -31,13 +31,19 @@ add_library(openthread-spinel-rcp)
 
 target_compile_definitions(openthread-spinel-ncp PRIVATE
     OPENTHREAD_FTD=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
+if (OT_NCP_SPI)
+    target_compile_definitions(openthread-spinel-ncp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=0)
+    target_compile_definitions(openthread-spinel-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=0)
+else()
+    target_compile_definitions(openthread-spinel-ncp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
+    target_compile_definitions(openthread-spinel-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
+endif()
+
 target_compile_definitions(openthread-spinel-rcp PRIVATE
     OPENTHREAD_RADIO=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
 )
 
@@ -67,5 +73,24 @@ target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PR
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-spinel-ncp PRIVATE ot-config)
-target_link_libraries(openthread-spinel-rcp PRIVATE ot-config)
+target_link_libraries(openthread-spinel-ncp
+    PRIVATE
+        ot-config-ftd
+        ot-config
+)
+
+target_link_libraries(openthread-spinel-rcp
+    PRIVATE
+        ot-config-radio
+        ot-config
+)
+
+if(BUILD_TESTING)
+    add_executable(ot-test-spinel
+        spinel.c
+    )
+    target_compile_definitions(ot-test-spinel
+        PRIVATE -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
+    )
+    add_test(NAME ot-test-spinel COMMAND ot-test-spinel)
+endif()

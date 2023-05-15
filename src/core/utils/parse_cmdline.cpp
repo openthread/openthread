@@ -44,15 +44,9 @@ namespace ot {
 namespace Utils {
 namespace CmdLineParser {
 
-static bool IsSeparator(char aChar)
-{
-    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
-}
+static bool IsSeparator(char aChar) { return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n'); }
 
-static bool IsEscapable(char aChar)
-{
-    return IsSeparator(aChar) || (aChar == '\\');
-}
+static bool IsEscapable(char aChar) { return IsSeparator(aChar) || (aChar == '\\'); }
 
 static Error ParseDigit(char aDigitChar, uint8_t &aValue)
 {
@@ -89,7 +83,7 @@ Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
 {
     Error   error = kErrorNone;
     uint8_t index = 0;
-    char *  cmd;
+    char   *cmd;
 
     for (cmd = aCommandString; *cmd; cmd++)
     {
@@ -137,20 +131,11 @@ exit:
     return error;
 }
 
-Error ParseAsUint8(const char *aString, uint8_t &aUint8)
-{
-    return ParseUint<uint8_t>(aString, aUint8);
-}
+Error ParseAsUint8(const char *aString, uint8_t &aUint8) { return ParseUint<uint8_t>(aString, aUint8); }
 
-Error ParseAsUint16(const char *aString, uint16_t &aUint16)
-{
-    return ParseUint<uint16_t>(aString, aUint16);
-}
+Error ParseAsUint16(const char *aString, uint16_t &aUint16) { return ParseUint<uint16_t>(aString, aUint16); }
 
-Error ParseAsUint32(const char *aString, uint32_t &aUint32)
-{
-    return ParseUint<uint32_t>(aString, aUint32);
-}
+Error ParseAsUint32(const char *aString, uint32_t &aUint32) { return ParseUint<uint32_t>(aString, aUint32); }
 
 Error ParseAsUint64(const char *aString, uint64_t &aUint64)
 {
@@ -161,8 +146,8 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
 
     enum : uint64_t
     {
-        kMaxHexBeforeOveflow = (0xffffffffffffffffULL / 16),
-        kMaxDecBeforeOverlow = (0xffffffffffffffffULL / 10),
+        kMaxHexBeforeOverflow = (0xffffffffffffffffULL / 16),
+        kMaxDecBeforeOverflow = (0xffffffffffffffffULL / 10),
     };
 
     VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
@@ -179,7 +164,7 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
         uint64_t newValue;
 
         SuccessOrExit(error = isHex ? ParseHexDigit(*cur, digit) : ParseDigit(*cur, digit));
-        VerifyOrExit(value <= (isHex ? kMaxHexBeforeOveflow : kMaxDecBeforeOverlow), error = kErrorInvalidArgs);
+        VerifyOrExit(value <= (isHex ? kMaxHexBeforeOverflow : kMaxDecBeforeOverflow), error = kErrorInvalidArgs);
         value    = isHex ? (value << 4) : (value * 10);
         newValue = value + digit;
         VerifyOrExit(newValue >= value, error = kErrorInvalidArgs);
@@ -208,28 +193,22 @@ exit:
     return error;
 }
 
-Error ParseAsInt8(const char *aString, int8_t &aInt8)
-{
-    return ParseInt<int8_t>(aString, aInt8);
-}
+Error ParseAsInt8(const char *aString, int8_t &aInt8) { return ParseInt<int8_t>(aString, aInt8); }
 
-Error ParseAsInt16(const char *aString, int16_t &aInt16)
-{
-    return ParseInt<int16_t>(aString, aInt16);
-}
+Error ParseAsInt16(const char *aString, int16_t &aInt16) { return ParseInt<int16_t>(aString, aInt16); }
 
 Error ParseAsInt32(const char *aString, int32_t &aInt32)
 {
     Error    error;
     uint64_t value;
-    bool     isNegavtive = false;
+    bool     isNegative = false;
 
     VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
 
     if (*aString == '-')
     {
         aString++;
-        isNegavtive = true;
+        isNegative = true;
     }
     else if (*aString == '+')
     {
@@ -237,10 +216,10 @@ Error ParseAsInt32(const char *aString, int32_t &aInt32)
     }
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
-    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::kMin))
-                                       : static_cast<uint64_t>(NumericLimits<int32_t>::kMax)),
+    VerifyOrExit(value <= (isNegative ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::kMin))
+                                      : static_cast<uint64_t>(NumericLimits<int32_t>::kMax)),
                  error = kErrorInvalidArgs);
-    aInt32 = static_cast<int32_t>(isNegavtive ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
+    aInt32 = static_cast<int32_t>(isNegative ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
 
 exit:
     return error;
@@ -264,38 +243,20 @@ Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
     return (aString != nullptr) ? otIp6AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
 }
 
+Error ParseAsIp4Address(const char *aString, otIp4Address &aAddress)
+{
+    return (aString != nullptr) ? otIp4AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
+}
+
 Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
-    enum : uint8_t
-    {
-        kMaxIp6AddressStringSize = 45,
-    };
-
-    Error       error = kErrorInvalidArgs;
-    char        string[kMaxIp6AddressStringSize];
-    const char *prefixLengthStr;
-
-    VerifyOrExit(aString != nullptr);
-
-    prefixLengthStr = StringFind(aString, '/');
-    VerifyOrExit(prefixLengthStr != nullptr);
-
-    VerifyOrExit(prefixLengthStr - aString < static_cast<int32_t>(sizeof(string)));
-
-    memcpy(string, aString, static_cast<uint8_t>(prefixLengthStr - aString));
-    string[prefixLengthStr - aString] = '\0';
-
-    SuccessOrExit(static_cast<Ip6::Address &>(aPrefix.mPrefix).FromString(string));
-    error = ParseAsUint8(prefixLengthStr + 1, aPrefix.mLength);
-
-exit:
-    return error;
+    return (aString != nullptr) ? otIp6PrefixFromString(aString, &aPrefix) : kErrorInvalidArgs;
 }
 #endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 enum HexStringParseMode
 {
-    kModeExtactSize,   // Parse hex string expecting an exact size (number of bytes when parsed).
+    kModeExactSize,    // Parse hex string expecting an exact size (number of bytes when parsed).
     kModeUpToSize,     // Parse hex string expecting less than or equal a given size.
     kModeAllowPartial, // Allow parsing of partial segments.
 };
@@ -315,7 +276,7 @@ static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuf
 
     switch (aMode)
     {
-    case kModeExtactSize:
+    case kModeExactSize:
         VerifyOrExit(expectedSize == aSize, error = kErrorInvalidArgs);
         break;
     case kModeUpToSize:
@@ -369,7 +330,7 @@ exit:
 
 Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
 {
-    return ParseHexString(aString, aSize, aBuffer, kModeExtactSize);
+    return ParseHexString(aString, aSize, aBuffer, kModeExactSize);
 }
 
 Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
@@ -385,15 +346,9 @@ Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aB
 //---------------------------------------------------------------------------------------------------------------------
 // Arg class
 
-uint16_t Arg::GetLength(void) const
-{
-    return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString));
-}
+uint16_t Arg::GetLength(void) const { return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString)); }
 
-bool Arg::operator==(const char *aString) const
-{
-    return !IsEmpty() && (strcmp(mString, aString) == 0);
-}
+bool Arg::operator==(const char *aString) const { return !IsEmpty() && (strcmp(mString, aString) == 0); }
 
 void Arg::CopyArgsToStringArray(Arg aArgs[], char *aStrings[])
 {

@@ -254,4 +254,35 @@
 #define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES 20
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+ *
+ * Define to 1 to generate ECDSA signatures deterministically
+ * according to RFC 6979 instead of randomly.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+#define OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+ *
+ * Define as 1 to enable power calibration support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+ *
+ * Define as 1 to enable platform power calibration support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE 1
+#endif
+
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_

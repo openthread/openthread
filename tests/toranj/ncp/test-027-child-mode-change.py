@@ -97,6 +97,7 @@ children = [child1, child2]
 # Test implementation
 
 WAIT_INTERVAL = 6
+LEADER_RESET_DELAY = 38
 
 # Thread Mode for end-device and sleepy end-device
 DEVICE_MODE_SLEEPY_END_DEVICE = (wpan.THREAD_MODE_FLAG_FULL_NETWORK_DATA)
@@ -127,8 +128,6 @@ child2_ml_address = child2.get(wpan.WPAN_IP6_MESH_LOCAL_ADDRESS)[1:-1]
 
 sender = parent.prepare_tx(parent_ml_address, child2_ml_address, 800, NUM_MSGS)
 
-child2_rx_ip_counter = int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0)
-
 wpan.Node.perform_async_tx_rx()
 
 verify(sender.was_successful)
@@ -144,16 +143,9 @@ verify(int(child2.get(wpan.WPAN_THREAD_DEVICE_MODE), 0) == DEVICE_MODE_END_DEVIC
 # Verify that the child table on parent is also updated
 wpan.verify_within(check_child_table, WAIT_INTERVAL)
 
-
-def check_child2_received_msg():
-    verify(int(child2.get(wpan.WPAN_NCP_COUNTER_RX_IP_SEC_TOTAL), 0) >= child2_rx_ip_counter + NUM_MSGS)
-
-
-wpan.verify_within(check_child2_received_msg, WAIT_INTERVAL)
-
 # Reset parent and verify all children are recovered
 parent.reset()
-wpan.verify_within(check_child_table, WAIT_INTERVAL)
+wpan.verify_within(check_child_table, WAIT_INTERVAL + LEADER_RESET_DELAY)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

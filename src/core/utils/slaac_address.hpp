@@ -132,16 +132,16 @@ public:
      * @param[in]      aNetworkId          A pointer to a byte array of Network_ID to generate IID.
      * @param[in]      aNetworkIdLength    The size of array @p aNetworkId.
      * @param[in,out]  aDadCounter         A pointer to the DAD_Counter that is employed to resolve Duplicate
-     *                                     Address Detection connflicts.
+     *                                     Address Detection conflicts.
      *
      * @retval kErrorNone    If successfully generated the IID.
      * @retval kErrorFailed  If no valid IID was generated.
      *
      */
     Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
-                      uint8_t *                   aNetworkId       = nullptr,
+                      uint8_t                    *aNetworkId       = nullptr,
                       uint8_t                     aNetworkIdLength = 0,
-                      uint8_t *                   aDadCounter      = nullptr) const;
+                      uint8_t                    *aDadCounter      = nullptr) const;
 
 private:
     static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
@@ -163,7 +163,7 @@ private:
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     void        HandleNotifierEvents(Events aEvents);
     static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                         const Ip6::Netif::UnicastAddress &     aAddr);
+                                         const Ip6::Netif::UnicastAddress      &aAddr);
 
     bool                       mEnabled;
     otIp6SlaacPrefixFilter     mFilter;

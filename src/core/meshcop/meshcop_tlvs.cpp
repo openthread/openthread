@@ -35,6 +35,7 @@
 
 #include "common/const_cast.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "meshcop/meshcop.hpp"
 
@@ -135,10 +136,7 @@ void NetworkNameTlv::SetNetworkName(const NameData &aNameData)
     SetLength(len);
 }
 
-bool NetworkNameTlv::IsValid(void) const
-{
-    return GetLength() >= 1 && IsValidUtf8String(mNetworkName, GetLength());
-}
+bool NetworkNameTlv::IsValid(void) const { return IsValidUtf8String(mNetworkName, GetLength()); }
 
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
 {
@@ -154,7 +152,7 @@ bool SecurityPolicyTlv::IsValid(void) const
 SecurityPolicy SecurityPolicyTlv::GetSecurityPolicy(void) const
 {
     SecurityPolicy securityPolicy;
-    uint8_t        length = OT_MIN(static_cast<uint8_t>(sizeof(mFlags)), GetFlagsLength());
+    uint8_t        length = Min(static_cast<uint8_t>(sizeof(mFlags)), GetFlagsLength());
 
     securityPolicy.mRotationTime = GetRotationTime();
     securityPolicy.SetFlags(mFlags, length);
@@ -260,10 +258,7 @@ exit:
     return entry;
 }
 
-ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void)
-{
-    return AsNonConst(AsConst(this)->GetFirstEntry());
-}
+ChannelMaskEntryBase *ChannelMaskBaseTlv::GetFirstEntry(void) { return AsNonConst(AsConst(this)->GetFirstEntry()); }
 
 void ChannelMaskTlv::SetChannelMask(uint32_t aChannelMask)
 {

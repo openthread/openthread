@@ -45,19 +45,17 @@ extern "C" {
 /**
  * @addtogroup api-operational-dataset
  *
- * @brief
- *   This module includes functions for Dataset Updater.
- *
- *   The functions in this module are available when Dataset Updater feature is enabled (i.e.
- *   `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is set to 1). Further this feature is available only on an FTD build.
- *
  * @{
+ *
+ * For FTD builds only, Dataset Updater includes functions to manage dataset updates.
  *
  */
 
 /**
  * This callback function pointer is called when a Dataset update request finishes, reporting success or failure status
  * of the Dataset update request.
+ *
+ * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
  * @param[in] aError   The error status.
  *                     OT_ERROR_NONE            indicates successful Dataset update.
@@ -72,6 +70,8 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
 
 /**
  * This function requests an update to Operational Dataset.
+ *
+ * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
  * @p aDataset should contain the fields to be updated and their new value. It must not contain Active or Pending
  * Timestamp fields. The Delay field is optional, if not provided a default value (1000 ms) would be used.
@@ -88,13 +88,15 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
  * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
  *
  */
-otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
+otError otDatasetUpdaterRequestUpdate(otInstance                 *aInstance,
                                       const otOperationalDataset *aDataset,
                                       otDatasetUpdaterCallback    aCallback,
-                                      void *                      aContext);
+                                      void                       *aContext);
 
 /**
  * This function cancels an ongoing (if any) Operational Dataset update request.
+ *
+ * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
@@ -103,6 +105,8 @@ void otDatasetUpdaterCancelUpdate(otInstance *aInstance);
 
 /**
  * This function indicates whether there is an ongoing Operation Dataset update request.
+ *
+ * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *

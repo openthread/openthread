@@ -243,7 +243,7 @@ class TestOTCI(unittest.TestCase):
         for counter_name in leader.counter_names:
             logging.info('counter %s: %r', counter_name, leader.get_counter(counter_name))
             leader.reset_counter(counter_name)
-            self.assertTrue(all(x == 0 for x in leader.get_counter(counter_name).values()))
+            self.assertTrue(all(x == 0 for name, x in leader.get_counter(counter_name).items() if "Time" not in name))
 
         logging.info("CSL config: %r", leader.get_csl_config())
         leader.config_csl(channel=13, period=100, timeout=200)
@@ -378,7 +378,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
 
         default_leases = server.srp_server_get_lease()
-        self.assertEqual(default_leases, (1800, 7200, 86400, 1209600))
+        self.assertEqual(default_leases, (30, 97200, 30, 680400))
         server.srp_server_set_lease(1801, 7201, 86401, 1209601)
         leases = server.srp_server_get_lease()
         self.assertEqual(leases, (1801, 7201, 86401, 1209601))

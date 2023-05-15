@@ -33,6 +33,16 @@
 
 #include "frame_builder.hpp"
 
+#include <string.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/encoding.hpp"
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+#include "common/message.hpp"
+#endif
+
 namespace ot {
 
 void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
@@ -42,10 +52,7 @@ void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
     mMaxLength = aLength;
 }
 
-Error FrameBuilder::AppendUint8(uint8_t aUint8)
-{
-    return Append<uint8_t>(aUint8);
-}
+Error FrameBuilder::AppendUint8(uint8_t aUint8) { return Append<uint8_t>(aUint8); }
 
 Error FrameBuilder::AppendBigEndianUint16(uint16_t aUint16)
 {
@@ -79,6 +86,31 @@ exit:
     return error;
 }
 
+Error FrameBuilder::AppendMacAddress(const Mac::Address &aMacAddress)
+{
+    Error error = kErrorNone;
+
+    switch (aMacAddress.GetType())
+    {
+    case Mac::Address::kTypeNone:
+        break;
+
+    case Mac::Address::kTypeShort:
+        error = AppendLittleEndianUint16(aMacAddress.GetShort());
+        break;
+
+    case Mac::Address::kTypeExtended:
+        VerifyOrExit(CanAppend(sizeof(Mac::ExtAddress)), error = kErrorNoBufs);
+        aMacAddress.GetExtended().CopyTo(mBuffer + mLength, Mac::ExtAddress::kReverseByteOrder);
+        mLength += sizeof(Mac::ExtAddress);
+        break;
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error error = kErrorNone;
@@ -90,10 +122,33 @@ Error FrameBuilder::AppendBytesFromMessage(const Message &aMessage, uint16_t aOf
 exit:
     return error;
 }
+#endif
 
 void FrameBuilder::WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
 {
     memcpy(mBuffer + aOffset, aBuffer, aLength);
+}
+
+Error FrameBuilder::InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    OT_ASSERT(aOffset <= mLength);
+
+    VerifyOrExit(CanAppend(aLength), error = kErrorNoBufs);
+
+    memmove(mBuffer + aOffset + aLength, mBuffer + aOffset, mLength - aOffset);
+    memcpy(mBuffer + aOffset, aBuffer, aLength);
+    mLength += aLength;
+
+exit:
+    return error;
+}
+
+void FrameBuilder::RemoveBytes(uint16_t aOffset, uint16_t aLength)
+{
+    memmove(mBuffer + aOffset, mBuffer + aOffset + aLength, mLength - aOffset - aLength);
+    mLength -= aLength;
 }
 
 } // namespace ot

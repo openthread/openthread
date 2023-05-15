@@ -132,14 +132,14 @@ enum
 };
 
 /**
- * Represents the state of an SRP server
+ * This enumeration represents the state of the SRP server.
  *
  */
 typedef enum
 {
     OT_SRP_SERVER_STATE_DISABLED = 0, ///< The SRP server is disabled.
-    OT_SRP_SERVER_STATE_RUNNING  = 1, ///< The SRP server is running.
-    OT_SRP_SERVER_STATE_STOPPED  = 2, ///< The SRP server is stopped.
+    OT_SRP_SERVER_STATE_RUNNING  = 1, ///< The SRP server is enabled and running.
+    OT_SRP_SERVER_STATE_STOPPED  = 2, ///< The SRP server is enabled but stopped.
 } otSrpServerState;
 
 /**
@@ -302,11 +302,48 @@ otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t a
 /**
  * This function enables/disables the SRP server.
  *
+ * On a Border Router, it is recommended to use `otSrpServerSetAutoEnableMode()` instead.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the SRP server.
  *
  */
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function enables/disables the auto-enable mode on SRP server.
+ *
+ * This function requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
+ *
+ * When this mode is enabled, the Border Routing Manager controls if/when to enable or disable the SRP server.
+ * SRP sever is auto-enabled if/when Border Routing is started and it is done with the initial prefix and route
+ * configurations (when the OMR and on-link prefixes are determined, advertised in emitted Router Advertisement message
+ * on infrastructure side and published in the Thread Network Data). The SRP server is auto-disabled if/when BR is
+ * stopped (e.g., if the infrastructure network interface is brought down or if BR gets detached).
+ *
+ * This mode can be disabled by a `otSrpServerSetAutoEnableMode()` call with @p aEnabled set to `false` or if the SRP
+ * server is explicitly enabled or disabled by a call to `otSrpServerSetEnabled()` function. Disabling auto-enable mode
+ * using `otSrpServerSetAutoEnableMode(false)` will not change the current state of SRP sever (e.g., if it is enabled
+ * it stays enabled).
+ *
+ * @param[in] aInstance   A pointer to an OpenThread instance.
+ * @param[in] aEnabled    A boolean to enable/disable the auto-enable mode.
+ *
+ */
+void otSrpServerSetAutoEnableMode(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function indicates whether the auto-enable mode is enabled or disabled.
+ *
+ * This function requires `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` feature.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   The auto-enable mode is enabled.
+ * @retval FALSE  The auto-enable mode is disabled.
+ *
+ */
+bool otSrpServerIsAutoEnableMode(otInstance *aInstance);
 
 /**
  * This function returns SRP server TTL configuration.
@@ -392,9 +429,9 @@ otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseC
  *
  */
 typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
-                                                const otSrpServerHost *    aHost,
+                                                const otSrpServerHost     *aHost,
                                                 uint32_t                   aTimeout,
-                                                void *                     aContext);
+                                                void                      *aContext);
 
 /**
  * This function sets the SRP service updates handler on SRP server.
@@ -405,9 +442,9 @@ typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
  *                              May be NULL if not used.
  *
  */
-void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,
+void otSrpServerSetServiceUpdateHandler(otInstance                     *aInstance,
                                         otSrpServerServiceUpdateHandler aServiceHandler,
-                                        void *                          aContext);
+                                        void                           *aContext);
 
 /**
  * This function reports the result of processing a SRP update to the SRP server.
@@ -500,7 +537,7 @@ void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseI
  * @returns  A pointer to the next service or NULL if there is no more services.
  *
  */
-const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService);
 
 /**
@@ -535,11 +572,11 @@ const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost * 
  * @returns  A pointer to the next matching service or NULL if no matching service could be found.
  *
  */
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost *   aHost,
+const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
                                                          const otSrpServerService *aPrevService,
                                                          otSrpServerServiceFlags   aFlags,
-                                                         const char *              aServiceName,
-                                                         const char *              aInstanceName);
+                                                         const char               *aServiceName,
+                                                         const char               *aInstanceName);
 
 /**
  * This function indicates whether or not the SRP service has been deleted.

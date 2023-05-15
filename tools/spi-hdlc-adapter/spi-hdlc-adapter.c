@@ -314,9 +314,9 @@ static void signal_critical(int sig, siginfo_t *info, void *ucontext)
     // This is the last hurah for this process.
     // We dump the stack, because that's all we can do.
 
-    void *      stack_mem[AUTO_PRINT_BACKTRACE_STACK_DEPTH];
-    void **     stack = stack_mem;
-    char **     stack_symbols;
+    void       *stack_mem[AUTO_PRINT_BACKTRACE_STACK_DEPTH];
+    void      **stack = stack_mem;
+    char      **stack_symbols;
     int         stack_depth, i;
     ucontext_t *uc = (ucontext_t *)ucontext;
 
@@ -395,10 +395,7 @@ static void log_debug_buffer(const char *desc, const uint8_t *buffer_ptr, int bu
 /* ------------------------------------------------------------------------- */
 /* MARK: SPI Transfer Functions */
 
-static void spi_header_set_flag_byte(uint8_t *header, uint8_t value)
-{
-    header[0] = value;
-}
+static void spi_header_set_flag_byte(uint8_t *header, uint8_t value) { header[0] = value; }
 
 static void spi_header_set_accept_len(uint8_t *header, uint16_t len)
 {
@@ -412,20 +409,11 @@ static void spi_header_set_data_len(uint8_t *header, uint16_t len)
     header[4] = ((len >> 8) & 0xFF);
 }
 
-static uint8_t spi_header_get_flag_byte(const uint8_t *header)
-{
-    return header[0];
-}
+static uint8_t spi_header_get_flag_byte(const uint8_t *header) { return header[0]; }
 
-static uint16_t spi_header_get_accept_len(const uint8_t *header)
-{
-    return (header[1] + (uint16_t)(header[2] << 8));
-}
+static uint16_t spi_header_get_accept_len(const uint8_t *header) { return (header[1] + (uint16_t)(header[2] << 8)); }
 
-static uint16_t spi_header_get_data_len(const uint8_t *header)
-{
-    return (header[3] + (uint16_t)(header[4] << 8));
-}
+static uint16_t spi_header_get_data_len(const uint8_t *header) { return (header[3] + (uint16_t)(header[4] << 8)); }
 
 static uint8_t *get_real_rx_frame_start(void)
 {
@@ -813,7 +801,7 @@ static bool hdlc_byte_needs_escape(uint8_t byte)
 static int push_hdlc(void)
 {
     int             ret              = 0;
-    const uint8_t * spiRxFrameBuffer = get_real_rx_frame_start();
+    const uint8_t  *spiRxFrameBuffer = get_real_rx_frame_start();
     static uint8_t  escaped_frame_buffer[MAX_FRAME_SIZE * 2];
     static uint16_t unescaped_frame_len;
     static uint16_t escaped_frame_len;
@@ -1019,7 +1007,7 @@ static int pull_hdlc(void)
 static int push_raw(void)
 {
     int             ret              = 0;
-    const uint8_t * spiRxFrameBuffer = get_real_rx_frame_start();
+    const uint8_t  *spiRxFrameBuffer = get_real_rx_frame_start();
     static uint8_t  raw_frame_buffer[MAX_FRAME_SIZE];
     static uint16_t raw_frame_len;
     static uint16_t raw_frame_sent;
@@ -1291,9 +1279,9 @@ static void trigger_reset(void)
 
 static bool setup_int_gpio(const char *path)
 {
-    char *  edge_path  = NULL;
-    char *  dir_path   = NULL;
-    char *  value_path = NULL;
+    char   *edge_path  = NULL;
+    char   *dir_path   = NULL;
+    char   *value_path = NULL;
     ssize_t len;
     int     setup_fd = -1;
 

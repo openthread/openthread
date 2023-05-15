@@ -29,8 +29,11 @@
 
 set -euxo pipefail
 
-readonly OT_MERGED_PROFILES=merged_profiles
-readonly OT_GCOV_PREFIX_BASE=ot-run
+OT_MERGED_PROFILES=merged_profiles
+readonly OT_MERGED_PROFILES
+
+OT_GCOV_PREFIX_BASE=ot-run
+readonly OT_GCOV_PREFIX_BASE
 
 merge_profiles()
 {

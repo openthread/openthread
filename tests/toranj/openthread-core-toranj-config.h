@@ -76,6 +76,22 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+ *
+ * Define as 1 to enable IPv6 Border Routing counters.
+ *
+ */
+#define OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_MESH_DIAG_ENABLE
+ *
+ * Define as 1 to enable Mesh Diagnostics module.
+ *
+ */
+#define OPENTHREAD_CONFIG_MESH_DIAG_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.
@@ -138,14 +154,6 @@
  *
  */
 #define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 1
-
-/**
- * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
- *
- * Define to 1 to enable legacy network support.
- *
- */
-#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
@@ -436,14 +444,6 @@
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
 
 /**
- * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
- *
- * Define to 1 to enable Child Supervision support.
- *
- */
-#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
-
-/**
  * @def OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
@@ -537,6 +537,71 @@
  *
  */
 #define OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+ *
+ * Define to 1 to enable Backbone Router support.
+ *
+ */
+#define OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+ *
+ * Define as 1 to have CLI register an IPv6 receive callback using `otIp6SetReceiveCallback()`.
+ *
+ * This is intended for testing only. Receive callback should be registered for the `otIp6GetBorderRoutingCounters()`
+ * to count the messages being passed to the callback.
+ *
+ */
+#define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 1
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+ *
+ * Define as 1 to support `otThreadRegisterParentResponseCallback()` API which registers a callback to notify user
+ * of received Parent Response message(s) during attach.
+ *
+ */
+#define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+ *
+ * Specifies the default Vendor Name string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "OpenThread by Google Nest"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+ *
+ * Specifies the default Vendor Model string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL "Toranj Simulation"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+ *
+ * Specifies the default Vendor SW Version string.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "OT-simul-toranj"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+ *
+ * Define as 1 to add APIs to allow Vendor Name, Model, SW Version to change at run-time.
+ */
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE OPENTHREAD_FTD
 
 #if OPENTHREAD_RADIO
 /**

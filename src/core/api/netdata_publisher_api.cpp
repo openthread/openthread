@@ -64,9 +64,9 @@ bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance)
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsDnsSrpServiceAdded();
 }
 
-void otNetDataSetDnsSrpServicePublisherCallback(otInstance *                            aInstance,
+void otNetDataSetDnsSrpServicePublisherCallback(otInstance                             *aInstance,
                                                 otNetDataDnsSrpServicePublisherCallback aCallback,
-                                                void *                                  aContext)
+                                                void                                   *aContext)
 {
     AsCoreType(aInstance).Get<NetworkData::Publisher>().SetDnsSrpServiceCallback(aCallback, aContext);
 }
@@ -82,12 +82,22 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance)
 
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishOnMeshPrefix(AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishOnMeshPrefix(AsCoreType(aConfig),
+                                                                                   NetworkData::Publisher::kFromUser);
 }
 
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig)
 {
-    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishExternalRoute(AsCoreType(aConfig));
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().PublishExternalRoute(AsCoreType(aConfig),
+                                                                                    NetworkData::Publisher::kFromUser);
+}
+
+otError otNetDataReplacePublishedExternalRoute(otInstance                  *aInstance,
+                                               const otIp6Prefix           *aPrefix,
+                                               const otExternalRouteConfig *aConfig)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Publisher>().ReplacePublishedExternalRoute(
+        AsCoreType(aPrefix), AsCoreType(aConfig), NetworkData::Publisher::kFromUser);
 }
 
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)
@@ -95,9 +105,9 @@ bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix)
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().IsPrefixAdded(AsCoreType(aPrefix));
 }
 
-void otNetDataSetPrefixPublisherCallback(otInstance *                     aInstance,
+void otNetDataSetPrefixPublisherCallback(otInstance                      *aInstance,
                                          otNetDataPrefixPublisherCallback aCallback,
-                                         void *                           aContext)
+                                         void                            *aContext)
 {
     return AsCoreType(aInstance).Get<NetworkData::Publisher>().SetPrefixCallback(aCallback, aContext);
 }

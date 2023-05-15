@@ -37,10 +37,11 @@
 #include "openthread-core-config.h"
 
 #include "common/error.hpp"
-#include "common/message.hpp"
 #include "common/type_traits.hpp"
+#include "mac/mac_types.hpp"
 
 namespace ot {
+class Message;
 
 /**
  * The `FrameBuilder` can be used to construct frame content in a given data buffer.
@@ -77,12 +78,31 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the maximum length of frame.
+     * This method returns the maximum length of the frame.
      *
      * @returns The maximum frame length (max number of bytes in the frame buffer).
      *
      */
     uint16_t GetMaxLength(void) const { return mMaxLength; }
+
+    /**
+     * This method sets the maximum length of the frame.
+     *
+     * This method does not perform any checks on the new given length. The caller MUST ensure that the specified max
+     * length is valid for the frame buffer.
+     *
+     * @param[in] aLength  The maximum frame length.
+     *
+     */
+    void SetMaxLength(uint16_t aLength) { mMaxLength = aLength; }
+
+    /**
+     * This method returns the remaining length (number of bytes that can be appended) in the frame.
+     *
+     * @returns The remaining length.
+     *
+     */
+    uint16_t GetRemainingLength(void) const { return mMaxLength - mLength; }
 
     /**
      * This method indicates whether or not there are enough bytes remaining in the `FrameBuilder` buffer to append a
@@ -164,6 +184,18 @@ public:
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
     /**
+     * This method appends a given `Mac::Address` to the `FrameBuilder`.
+     *
+     * @param[in] aMacAddress  A `Mac::Address` to append.
+     *
+     * @retval kErrorNone    Successfully appended the address.
+     * @retval kErrorNoBufs  Insufficient available buffers.
+     *
+     */
+    Error AppendMacAddress(const Mac::Address &aMacAddress);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    /**
      * This method appends bytes read from a given message to the `FrameBuilder`.
      *
      * @param[in] aMessage   The message to read the bytes from.
@@ -176,6 +208,7 @@ public:
      *
      */
     Error AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+#endif
 
     /**
      * This method appends an object to the `FrameBuilder`.
@@ -226,6 +259,57 @@ public:
 
         WriteBytes(aOffset, &aObject, sizeof(ObjectType));
     }
+
+    /**
+     * This method inserts bytes in `FrameBuilder` at a given offset, moving previous content forward.
+     *
+     * The caller MUST ensure that @p aOffset is within the current frame length (from 0 up to and including
+     * `GetLength()`). Otherwise the behavior of this method is undefined.
+     *
+     * @param[in] aOffset   The offset to insert bytes.
+     * @param[in] aBuffer   A pointer to a data buffer to insert.
+     * @param[in] aLength   Number of bytes in @p aBuffer.
+     *
+     * @retval kErrorNone    Successfully inserted the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to insert the bytes.
+     *
+     */
+    Error InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength);
+
+    /**
+     * This method inserts an object in `FrameBuilder` at a given offset, moving previous content forward.
+     *
+     * The caller MUST ensure that @p aOffset is within the current frame length (from 0 up to and including
+     * `GetLength()`). Otherwise the behavior of this method is undefined.
+     *
+     * @tparam     ObjectType   The object type to insert.
+     *
+     * @param[in]  aOffset      The offset to insert bytes.
+     * @param[in]  aObject      A reference to the object to insert.
+     *
+     * @retval kErrorNone       Successfully inserted the bytes.
+     * @retval kErrorNoBufs     Insufficient available buffers to insert the bytes.
+     *
+     */
+    template <typename ObjectType> Error Insert(uint16_t aOffset, const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return InsertBytes(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method removes a given number of bytes in `FrameBuilder` at a given offset, moving existing content
+     * after removed bytes backward.
+     *
+     * This method does not perform any bound checks. The caller MUST ensure that the given length and offset fits
+     * within the previously appended content. Otherwise the behavior of this method is undefined.
+     *
+     * @param[in] aOffset   The offset to remove bytes from.
+     * @param[in] aLength   The number of bytes to remove.
+     *
+     */
+    void RemoveBytes(uint16_t aOffset, uint16_t aLength);
 
 private:
     uint8_t *mBuffer;

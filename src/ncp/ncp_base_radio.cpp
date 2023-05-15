@@ -53,6 +53,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_API_VERSION>(void
 {
     return mEncoder.WriteUintPacked(SPINEL_RCP_API_VERSION);
 }
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RCP_MIN_HOST_API_VERSION>(void)
+{
+    return mEncoder.WriteUintPacked(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION);
+}
 #endif
 
 // ----------------------------------------------------------------------------
@@ -403,14 +408,15 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(error = mDecoder.ReadUint8(aFrame.mChannel));
 
     // Set the default value for all optional parameters.
-    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs     = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
-    aFrame.mInfo.mTxInfo.mMaxFrameRetries     = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
-    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = false;
-    aFrame.mInfo.mTxInfo.mIsARetx             = false;
-    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
-    aFrame.mInfo.mTxInfo.mTxDelay             = 0;
-    aFrame.mInfo.mTxInfo.mTxDelayBaseTime     = 0;
+    aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone = aFrame.mChannel;
+    aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs      = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+    aFrame.mInfo.mTxInfo.mMaxFrameRetries      = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled        = true;
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated      = false;
+    aFrame.mInfo.mTxInfo.mIsARetx              = false;
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed  = false;
+    aFrame.mInfo.mTxInfo.mTxDelay              = 0;
+    aFrame.mInfo.mTxInfo.mTxDelayBaseTime      = 0;
 
     // All the next parameters are optional. Note that even if the
     // decoder fails to parse any of optional parameters we still want to
@@ -419,16 +425,22 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
 
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
+
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
+    aFrame.mInfo.mTxInfo.mCsmaCaEnabled = csmaEnable;
+
     SuccessOrExit(mDecoder.ReadBool(isHeaderUpdated));
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated = isHeaderUpdated;
+
     SuccessOrExit(mDecoder.ReadBool(isARetx));
+    aFrame.mInfo.mTxInfo.mIsARetx = isARetx;
+
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
+    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
+
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
-    aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
-    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = isHeaderUpdated;
-    aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
-    aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
+    SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mRxChannelAfterTxDone));
 
 exit:
     return error;
@@ -446,12 +458,12 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 
     SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
 
-    // Cache the transaction ID for async response
-    mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
-
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.
-    error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone);
+    SuccessOrExit(error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone));
+
+    // Cache the transaction ID for async response
+    mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
 
 exit:
 
@@ -503,10 +515,23 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_MAC_FRAME_COUNTER
 {
     otError  error = OT_ERROR_NONE;
     uint32_t frameCounter;
+    bool     setIfLarger = false;
 
     SuccessOrExit(error = mDecoder.ReadUint32(frameCounter));
 
-    error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadBool(setIfLarger));
+    }
+
+    if (setIfLarger)
+    {
+        error = otLinkRawSetMacFrameCounterIfLarger(mInstance, frameCounter);
+    }
+    else
+    {
+        error = otLinkRawSetMacFrameCounter(mInstance, frameCounter);
+    }
 
 exit:
     return error;

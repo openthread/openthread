@@ -31,6 +31,7 @@
 #include <openthread/config.h>
 
 #include <ctype.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -44,21 +45,82 @@
 #include "utils/code_utils.h"
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
-OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+
+static FILE *sLogFile = NULL;
+
+void platformLoggingSetFileName(const char *aName)
+{
+    if (sLogFile != NULL)
+    {
+        fclose(sLogFile);
+    }
+
+    sLogFile = fopen(aName, "wt");
+
+    if (sLogFile == NULL)
+    {
+        fprintf(stderr, "Failed to open log file '%s': %s\r\n", aName, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+}
+
+void platformLoggingInit(const char *aName)
+{
+    if (sLogFile == NULL)
+    {
+        openlog(aName, LOG_PID, LOG_USER);
+        setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+    }
+    else
+    {
+        fprintf(sLogFile, "OpenThread logs\r\n");
+        fprintf(sLogFile, "- Program:  %s\r\n", aName);
+        fprintf(sLogFile, "- Platform: simulation\r\n");
+        fprintf(sLogFile, "- Node ID:  %lu\r\n", (unsigned long)gNodeId);
+        fprintf(sLogFile, "\r\n");
+    }
+}
+
+void platformLoggingDeinit(void)
+{
+    if (sLogFile != NULL)
+    {
+        fclose(sLogFile);
+        sLogFile = NULL;
+    }
+}
+
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
     OT_UNUSED_VARIABLE(aLogRegion);
 
-    char    logString[512];
-    int     offset;
     va_list args;
 
-    offset = snprintf(logString, sizeof(logString), "[%d]", gNodeId);
-
     va_start(args, aFormat);
-    vsnprintf(&logString[offset], sizeof(logString) - (uint16_t)offset, aFormat, args);
-    va_end(args);
 
-    syslog(LOG_CRIT, "%s", logString);
+    if (sLogFile == NULL)
+    {
+        char logString[512];
+        int  offset;
+
+        offset = snprintf(logString, sizeof(logString), "[%lu]", (unsigned long)gNodeId);
+
+        vsnprintf(&logString[offset], sizeof(logString) - (uint16_t)offset, aFormat, args);
+        syslog(LOG_CRIT, "%s", logString);
+    }
+    else
+    {
+        vfprintf(sLogFile, aFormat, args);
+        fprintf(sLogFile, "\r\n");
+    }
+
+    va_end(args);
 }
-#endif
+
+#else
+
+void platformLoggingInit(const char *aName) { OT_UNUSED_VARIABLE(aName); }
+void platformLoggingDeinit(void) {}
+
+#endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)

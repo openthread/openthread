@@ -62,13 +62,13 @@ public:
     static constexpr uint8_t kBlockSize = 16; ///< AES-128 block size (bytes).
 
     /**
-     * Constructor to initialize the mbedtls_aes_context.
+     * Constructor to initialize the AES operation.
      *
      */
     AesEcb(void);
 
     /**
-     * Destructor to free the mbedtls_aes_context.
+     * Destructor to free the AES context.
      *
      */
     ~AesEcb(void);

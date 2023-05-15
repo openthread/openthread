@@ -58,7 +58,8 @@ typedef struct
 {
     otExtAddress mExtAddress;           ///< IEEE 802.15.4 Extended Address
     uint32_t     mTimeout;              ///< Timeout
-    uint32_t     mAge;                  ///< Time last heard
+    uint32_t     mAge;                  ///< Seconds since last heard
+    uint64_t     mConnectionTime;       ///< Seconds since attach (requires `OPENTHREAD_CONFIG_UPTIME_ENABLE`)
     uint16_t     mRloc16;               ///< RLOC16
     uint16_t     mChildId;              ///< Child ID
     uint8_t      mNetworkDataVersion;   ///< Network Data Version
@@ -68,6 +69,7 @@ typedef struct
     uint16_t     mFrameErrorRate;       ///< Frame error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mMessageErrorRate;     ///< (IPv6) msg error rate (0xffff->100%). Requires error tracking feature.
     uint16_t     mQueuedMessageCnt;     ///< Number of queued messages for the child.
+    uint16_t     mSupervisionInterval;  ///< Supervision interval (in seconds).
     uint8_t      mVersion;              ///< MLE version
     bool         mRxOnWhenIdle : 1;     ///< rx-on-when-idle
     bool         mFullThreadDevice : 1; ///< Full Thread Device
@@ -122,7 +124,7 @@ typedef struct otCacheEntryIterator
 } otCacheEntryIterator;
 
 /**
- * Get the maximum number of children currently allowed.
+ * Gets the maximum number of children currently allowed.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -134,7 +136,7 @@ typedef struct otCacheEntryIterator
 uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 
 /**
- * Set the maximum number of children currently allowed.
+ * Sets the maximum number of children currently allowed.
  *
  * This parameter can only be set when Thread protocol operation has been stopped.
  *
@@ -196,19 +198,76 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
- * Get the Thread Leader Weight used when operating in the Leader role.
+ * This enumeration represents the power supply property on a device.
+ *
+ * This is used as a property in `otDeviceProperties` to calculate the leader weight.
+ *
+ */
+typedef enum
+{
+    OT_POWER_SUPPLY_BATTERY           = 0, ///< Battery powered.
+    OT_POWER_SUPPLY_EXTERNAL          = 1, ///< Externally powered (mains-powered).
+    OT_POWER_SUPPLY_EXTERNAL_STABLE   = 2, ///< Stable external power with a battery backup or UPS.
+    OT_POWER_SUPPLY_EXTERNAL_UNSTABLE = 3, ///< Potentially unstable ext power (e.g. light bulb powered via a switch).
+} otPowerSupply;
+
+/**
+ * This structure represents the device properties which are used for calculating the local leader weight on a
+ * device.
+ *
+ * The parameters are set based on device's capability, whether acting as border router, its power supply config, etc.
+ *
+ * `mIsUnstable` indicates operational stability of device and is determined via a vendor specific mechanism. It can
+ * include the following cases:
+ *  - Device internally detects that it loses external power supply more often than usual. What is usual is
+ *    determined by the vendor.
+ *  - Device internally detects that it reboots more often than usual. What is usual is determined by the vendor.
+ *
+ */
+typedef struct otDeviceProperties
+{
+    otPowerSupply mPowerSupply;            ///< Power supply config.
+    bool          mIsBorderRouter : 1;     ///< Whether device is a border router.
+    bool          mSupportsCcm : 1;        ///< Whether device supports CCM (can act as a CCM border router).
+    bool          mIsUnstable : 1;         ///< Operational stability of device (vendor specific).
+    int8_t        mLeaderWeightAdjustment; ///< Weight adjustment. Should be -16 to +16 (clamped otherwise).
+} otDeviceProperties;
+
+/**
+ * Get the current device properties.
+ *
+ * @returns The device properties `otDeviceProperties`.
+ *
+ */
+const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance);
+
+/**
+ * Set the device properties which are then used to determine and set the Leader Weight.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aDeviceProperties   The device properties.
+ *
+ */
+void otThreadSetDeviceProperties(otInstance *aInstance, const otDeviceProperties *aDeviceProperties);
+
+/**
+ * Gets the Thread Leader Weight used when operating in the Leader role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns The Thread Leader Weight value.
  *
  * @sa otThreadSetLeaderWeight
+ * @sa otThreadSetDeviceProperties
  *
  */
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 
 /**
- * Set the Thread Leader Weight used when operating in the Leader role.
+ * Sets the Thread Leader Weight used when operating in the Leader role.
+ *
+ * This function directly sets the Leader Weight to the new value, replacing its previous value (which may have been
+ * determined from the current `otDeviceProperties`).
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aWeight   The Thread Leader Weight value.
@@ -238,7 +297,7 @@ uint32_t otThreadGetPreferredLeaderPartitionId(otInstance *aInstance);
 void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPartitionId);
 
 /**
- * Get the Joiner UDP Port.
+ * Gets the Joiner UDP Port.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -250,7 +309,7 @@ void otThreadSetPreferredLeaderPartitionId(otInstance *aInstance, uint32_t aPart
 uint16_t otThreadGetJoinerUdpPort(otInstance *aInstance);
 
 /**
- * Set the Joiner UDP Port.
+ * Sets the Joiner UDP Port.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
@@ -356,6 +415,35 @@ uint8_t otThreadGetRouterUpgradeThreshold(otInstance *aInstance);
 void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold);
 
 /**
+ * Get the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * This parameter specifies the max number of neighboring routers with which the device (as an FED)
+ *  will try to establish link.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @sa otThreadSetChildRouterLinks
+ *
+ */
+uint8_t otThreadGetChildRouterLinks(otInstance *aInstance);
+
+/**
+ * Set the MLE_CHILD_ROUTER_LINKS parameter used in the REED role.
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aChildRouterLinks The MLE_CHILD_ROUTER_LINKS value.
+ *
+ * @retval OT_ERROR_NONE           Successfully set the value.
+ * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ * @sa otThreadGetChildRouterLinks
+ *
+ */
+otError otThreadSetChildRouterLinks(otInstance *aInstance, uint8_t aChildRouterLinks);
+
+/**
  * Release a Router ID that has been allocated by the device in the Leader role.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
@@ -451,7 +539,7 @@ uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance);
 void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter);
 
 /**
- * The function retains diagnostic information for an attached Child by its Child ID or RLOC16.
+ * Gets diagnostic information for an attached Child by its Child ID or RLOC16.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aChildId    The Child ID or RLOC16 for the attached child.
@@ -498,10 +586,10 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
  * @sa otThreadGetChildInfoByIndex
  *
  */
-otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
+otError otThreadGetChildNextIp6Address(otInstance                *aInstance,
                                        uint16_t                   aChildIndex,
                                        otChildIp6AddressIterator *aIterator,
-                                       otIp6Address *             aAddress);
+                                       otIp6Address              *aAddress);
 
 /**
  * Get the current Router ID Sequence.
@@ -645,7 +733,7 @@ int8_t otThreadGetParentPriority(otInstance *aInstance);
 otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority);
 
 /**
- * This function gets the maximum number of IP addresses that each MTD child may register with this device as parent.
+ * Gets the maximum number of IP addresses that each MTD child may register with this device as parent.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
@@ -657,11 +745,15 @@ otError otThreadSetParentPriority(otInstance *aInstance, int8_t aParentPriority)
 uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
 
 /**
- * This function sets/restores the maximum number of IP addresses that each MTD child may register with this
+ * Sets or restores the maximum number of IP addresses that each MTD child may register with this
  * device as parent.
  *
- * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
- *       to limit the address registrations of the reference parent in order to test the MTD DUT reaction.
+ * Pass `0` to clear the setting and restore the default.
+ *
+ * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @note Only used by Thread Test Harness to limit the address registrations of the reference
+ * parent in order to test the MTD DUT reaction.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aMaxIpAddresses  The maximum number of IP addresses that each MTD child may register with this
@@ -783,6 +875,36 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
  *
  */
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
+
+/**
+ * This function indicates whether or not a Router ID is currently allocated.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aRouterId     The router ID to check.
+ *
+ * @retval TRUE  The @p aRouterId is allocated.
+ * @retval FALSE The @p aRouterId is not allocated.
+ *
+ */
+bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId);
+
+/**
+ * This function gets the next hop and path cost towards a given RLOC16 destination.
+ *
+ * This function can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
+ * to get the value.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ * @param[in]  aDesRloct16     The RLOC16 of destination.
+ * @param[out] aNextHopRloc16  A pointer to return RLOC16 of next hop, 0xfffe if no next hop.
+ * @param[out] aPathCost       A pointer to return path cost towards destination.
+ *
+ */
+void otThreadGetNextHopAndPathCost(otInstance *aInstance,
+                                   uint16_t    aDestRloc16,
+                                   uint16_t   *aNextHopRloc16,
+                                   uint8_t    *aPathCost);
+
 /**
  * @}
  *

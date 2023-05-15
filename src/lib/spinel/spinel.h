@@ -321,11 +321,54 @@
  *
  *   - SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION specifies the minimum spinel
  *     RCP API Version which is supported by the host-side implementation.
+ *     To reduce the backward compatibility issues, this number should be kept
+ *     as constant as possible.
  *
  *   - On start, host implementation queries the RCP API version and accepts
- *     any version number from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION up to
- *     and including SPINEL_RCP_API_VERSION.
+ *     any version starting from SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION.
  *
+ *   - Host implementation also queries the RCP about the minimum host RCP
+ *     API version it can work with, and then checks that its own version is
+ *     within the range.
+ *
+ *   Host and RCP compatibility guideline:
+ *
+ *   - New host spinel layer should work with an older RCP firmware, i.e., host
+ *     implementation should remain backward compatible.
+ *
+ *   - Existing fields in the format of an already implemented spinel
+ *     property or command must not change.
+ *
+ *   - New fields must be appended to the end of the existing spinel format.
+ *     *  New fields for new features:
+ *          Adding a new capability flag to the otRadioCaps to indicate the new
+ *          fields. The host parses the spinel format based on the pre-fetched
+ *          otRadioCaps. The host should be able to enable/disable the feature
+ *          in runtime based on the otRadioCaps. Refer to PR4919 and PR5139.
+ *     *  New fields for changing existing implementations:
+ *          This case should be avoided as much as possible. It will cause the
+ *          compatibility issue.
+ *
+ *   - Deprecated fields must not be removed from the spinel format and they
+ *     must be set to a suitable default value.
+ *
+ *   - Adding new spinel properties.
+ *     * If the old version RCP doesn't support the new spinel property, it
+ *       must return the spinel error SPINEL_STATUS_PROP_NOT_FOUND.
+ *
+ *     * If the host can handle the new spinel property by processing the error
+ *       SPINEL_STATUS_PROP_NOT_FOUND, the API of the new spinel property must
+ *       return OT_ERROR_NOT_IMPLEMENTED or default value.
+ *
+ *     * If the host can't handle the new spinel property by processing the
+ *       error SPINEL_STATUS_PROP_NOT_FOUND, a new capability flag must be
+ *       added to the otRadioCaps to indicate whether RCP supports the new
+ *       spinel property. The host must handle the new spinel property by
+ *       processing the new capability flag.
+ *
+ *   - If none of the above methods make the new functions work, increasing the
+ *     SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION. This case should be avoided
+ *     as much as possible.
  * ---------------------------------------------------------------------------
  */
 
@@ -377,7 +420,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 6
+#define SPINEL_RCP_API_VERSION 9
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -1238,9 +1281,10 @@ enum
     SPINEL_CAP_NET_THREAD_1_2 = (SPINEL_CAP_NET__BEGIN + 2),
     SPINEL_CAP_NET__END       = 64,
 
-    SPINEL_CAP_RCP__BEGIN      = 64,
-    SPINEL_CAP_RCP_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 0),
-    SPINEL_CAP_RCP__END        = 80,
+    SPINEL_CAP_RCP__BEGIN               = 64,
+    SPINEL_CAP_RCP_API_VERSION          = (SPINEL_CAP_RCP__BEGIN + 0),
+    SPINEL_CAP_RCP_MIN_HOST_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 1),
+    SPINEL_CAP_RCP__END                 = 80,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
     SPINEL_CAP_MAC_ALLOWLIST           = (SPINEL_CAP_OPENTHREAD__BEGIN + 0),
@@ -1275,8 +1319,8 @@ enum
     SPINEL_CAP_THREAD__END            = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
-    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
-    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1),
+    SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0), ///< deprecated
+    SPINEL_CAP_NEST_LEGACY_NET_WAKE  = (SPINEL_CAP_NEST__BEGIN + 1), ///< deprecated
     SPINEL_CAP_NEST_TRANSMIT_HOOK    = (SPINEL_CAP_NEST__BEGIN + 2),
     SPINEL_CAP_NEST__END             = 15360,
 
@@ -1581,14 +1625,14 @@ enum
      *
      * For GPIOs configured as inputs:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit describes the
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit describes the
      *     logic level read from the pin.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit is ignored
      *     for these pins.
      *
      * For GPIOs configured as outputs:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit is
      *     implementation specific.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit determines
      *     the new logic level of the output. If this pin is configured as an
@@ -1597,7 +1641,7 @@ enum
      *
      * For GPIOs which are not specified in `PROP_GPIO_CONFIG`:
      *
-     * *   `CMD_PROP_VAUE_GET`: The value of the associated bit is
+     * *   `CMD_PROP_VALUE_GET`: The value of the associated bit is
      *     implementation specific.
      * *   `CMD_PROP_VALUE_SET`: The value of the associated bit MUST be
      *     ignored by the NCP.
@@ -1702,6 +1746,28 @@ enum
      *
      */
     SPINEL_PROP_PHY_REGION_CODE = SPINEL_PROP_PHY__BEGIN + 12,
+
+    /// Calibrated Power Table
+    /** Format: `A(Csd)` - Insert/Set
+     *
+     *  The `Insert` command on the property inserts a calibration power entry to the calibrated power table.
+     *  The `Set` command on the property with empty payload clears the calibrated power table.
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Actual power in 0.01 dBm.
+     *  `d`: Raw power setting.
+     */
+    SPINEL_PROP_PHY_CALIBRATED_POWER = SPINEL_PROP_PHY__BEGIN + 13,
+
+    /// Target power for a channel
+    /** Format: `t(Cs)` - Write only
+     *
+     * Structure Parameters:
+     *  `C`: Channel.
+     *  `s`: Target power in 0.01 dBm.
+     */
+    SPINEL_PROP_PHY_CHAN_TARGET_POWER = SPINEL_PROP_PHY__BEGIN + 14,
 
     SPINEL_PROP_PHY__END = 0x30,
 
@@ -1925,7 +1991,7 @@ enum
      * Channel energy result will be reported by emissions
      * of `PROP_MAC_ENERGY_SCAN_RESULT` (per channel).
      *
-     * Set to `SCAN_STATE_DISOVER` to start a Thread MLE discovery
+     * Set to `SCAN_STATE_DISCOVER` to start a Thread MLE discovery
      * scan operation. Discovery scan result will be emitted from
      * `PROP_MAC_SCAN_BEACON`.
      *
@@ -2295,7 +2361,7 @@ enum
     SPINEL_PROP_THREAD_LEADER_ADDR = SPINEL_PROP_THREAD__BEGIN + 0,
 
     /// Thread Parent Info
-    /** Format: `ESLccCC` - Read only
+    /** Format: `ESLccCCCCC` - Read only
      *
      *  `E`: Extended address
      *  `S`: RLOC16
@@ -2304,6 +2370,9 @@ enum
      *  `c`: Last RSSI (in dBm)
      *  `C`: Link Quality In
      *  `C`: Link Quality Out
+     *  `C`: Version
+     *  `C`: CSL clock accuracy
+     *  `C`: CSL uncertainty
      *
      */
     SPINEL_PROP_THREAD_PARENT = SPINEL_PROP_THREAD__BEGIN + 1,
@@ -2403,7 +2472,7 @@ enum
      *  `6`: Route Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERNCE_* definitions)
+     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERENCE_* definitions)
      *  `b`: "Is defined locally" flag. Set if this route info was locally
      *       defined as part of local network data. Assumed to be true for set,
      *       insert and replace. Clear if the route is part of partition's network
@@ -2915,7 +2984,7 @@ enum
     /** Format: `A(t(iD))` - Write only
      *
      * The formatting of this property follows the same rules as in SPINEL_PROP_THREAD_MGMT_SET_ACTIVE_DATASET. This
-     * property further allows the sender to not include a value associated with properties in formating of `t(iD)`,
+     * property further allows the sender to not include a value associated with properties in formatting of `t(iD)`,
      * i.e., it should accept either a `t(iD)` or a `t(i)` encoding (in both cases indicating that the associated
      * Dataset property should be requested as part of MGMT_GET command).
      *
@@ -3197,7 +3266,7 @@ enum
      * Write to this property initiates update of Multicast Listeners Table on the primary BBR.
      * If the write succeeded, the result of network operation will be notified later by the
      * SPINEL_PROP_THREAD_MLR_RESPONSE property. If the write fails, no MLR.req is issued and
-     * notifiaction through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
+     * notification through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
      *
      */
     SPINEL_PROP_THREAD_MLR_REQUEST = SPINEL_PROP_THREAD_EXT__BEGIN + 52,
@@ -3250,7 +3319,7 @@ enum
      *
      * The valid values are specified by SPINEL_THREAD_BACKBONE_ROUTER_STATE_<state> enumeration.
      * Backbone functionality will be disabled if SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED
-     * is writted to this property, enabled otherwise.
+     * is written to this property, enabled otherwise.
      *
      */
     SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE = SPINEL_PROP_THREAD_EXT__BEGIN + 56,
@@ -3442,19 +3511,27 @@ enum
      * over the radio. This allows the caller to use the radio directly.
      *
      * The frame meta data for the `CMD_PROP_VALUE_SET` contains the following
-     * optional fields.  Default values are used for all unspecified fields.
+     * fields.  Default values are used for all unspecified fields.
      *
-     *  `C` : Channel (for frame tx)
+     *  `C` : Channel (for frame tx) - MUST be included.
      *  `C` : Maximum number of backoffs attempts before declaring CCA failure
      *        (use Thread stack default if not specified)
      *  `C` : Maximum number of retries allowed after a transmission failure
      *        (use Thread stack default if not specified)
      *  `b` : Set to true to enable CSMA-CA for this packet, false otherwise.
      *        (default true).
-     *  `b` : Set to true to indicate it is a retransmission packet, false otherwise.
-     *        (default false).
-     *  `b` : Set to true to indicate that SubMac should skip AES processing, false otherwise.
-     *        (default false).
+     *  `b` : Set to true to indicate if header is updated - related to
+     *        `mIsHeaderUpdated` in `otRadioFrame` (default false).
+     *  `b` : Set to true to indicate it is a retransmission - related to
+     *        `mIsARetx` in `otRadioFrame` (default false).
+     *  `b` : Set to true to indicate security was processed on tx frame
+     *        `mIsSecurityProcessed` in `otRadioFrame` (default false).
+     *  `L` : TX delay interval used for CSL - related to `mTxDelay` in
+     *        `otRadioFrame` (default zero).
+     *  `L` : TX delay based time used for CSL - related to `mTxDelayBaseTime`
+     *        in `otRadioFrame` (default zero).
+     *  `C` : RX channel after TX done (default assumed to be same as
+     *        channel in metadata)
      *
      */
     SPINEL_PROP_STREAM_RAW = SPINEL_PROP_STREAM__BEGIN + 1,
@@ -4284,6 +4361,18 @@ enum
      */
     SPINEL_PROP_RCP_API_VERSION = SPINEL_PROP_RCP__BEGIN + 0,
 
+    /// Min host RCP API Version number
+    /** Format: `i` (read-only)
+     *
+     * Required capability: SPINEL_CAP_RADIO and SPINEL_CAP_RCP_MIN_HOST_API_VERSION.
+     *
+     * This property gives the minimum host RCP API Version number.
+     *
+     * Please see "Spinel definition compatibility guideline" section.
+     *
+     */
+    SPINEL_PROP_RCP_MIN_HOST_API_VERSION = SPINEL_PROP_RCP__BEGIN + 1,
+
     SPINEL_PROP_RCP__END = 0xFF,
 
     SPINEL_PROP_INTERFACE__BEGIN = 0x100,
@@ -4691,9 +4780,12 @@ enum
     SPINEL_PROP_RCP_MAC_KEY = SPINEL_PROP_RCP_EXT__BEGIN + 0,
 
     /// MAC Frame Counter
-    /** Format: `L`.
+    /** Format: `L` for read and `Lb` or `L` for write
      *
      *  `L`: MAC frame counter
+     *  'b': Optional boolean used only during write. If not provided, `false` is assumed.
+     *       If `true` counter is set only if the new value is larger than current value.
+     *       If `false` the new value is set as frame counter independent of the current value.
      *
      * The Spinel property is used to set MAC frame counter to RCP.
      *
@@ -4755,12 +4847,20 @@ enum
 
     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
 
-    /// The legacy network ULA prefix (8 bytes)
-    /** Format: 'D' */
+    /// The legacy network ULA prefix (8 bytes).
+    /** Format: 'D'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_ULA_PREFIX = SPINEL_PROP_NEST__BEGIN + 1,
 
     /// The EUI64 of last node joined using legacy protocol (if none, all zero EUI64 is returned).
-    /** Format: 'E' */
+    /** Format: 'E'
+     *
+     * This property is deprecated.
+     *
+     */
     SPINEL_PROP_NEST_LEGACY_LAST_NODE_JOINED = SPINEL_PROP_NEST__BEGIN + 2,
 
     SPINEL_PROP_NEST__END = 0x3C00,
@@ -4828,6 +4928,9 @@ typedef uint32_t spinel_prop_key_t;
 // ----------------------------------------------------------------------------
 
 #define SPINEL_HEADER_FLAG 0x80
+#define SPINEL_HEADER_FLAGS_SHIFT 6
+#define SPINEL_HEADER_FLAGS_MASK (3 << SPINEL_HEADER_FLAGS_SHIFT)
+#define SPINEL_HEADER_GET_FLAG(x) (((x)&SPINEL_HEADER_FLAGS_MASK) >> SPINEL_HEADER_FLAGS_SHIFT)
 
 #define SPINEL_HEADER_TID_SHIFT 0
 #define SPINEL_HEADER_TID_MASK (15 << SPINEL_HEADER_TID_SHIFT)
@@ -4915,17 +5018,17 @@ typedef char spinel_datatype_t;
 
 #define SPINEL_MAX_UINT_PACKED 2097151
 
-SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t *     data_out,
+SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_pack(uint8_t      *data_out,
                                                       spinel_size_t data_len_max,
-                                                      const char *  pack_format,
+                                                      const char   *pack_format,
                                                       ...);
-SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vpack(uint8_t *     data_out,
+SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vpack(uint8_t      *data_out,
                                                        spinel_size_t data_len_max,
-                                                       const char *  pack_format,
+                                                       const char   *pack_format,
                                                        va_list       args);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
                                                         spinel_size_t  data_len,
-                                                        const char *   pack_format,
+                                                        const char    *pack_format,
                                                         ...);
 /**
  * This function parses spinel data similar to sscanf().
@@ -4953,11 +5056,11 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
  */
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack_in_place(const uint8_t *data_in,
                                                                  spinel_size_t  data_len,
-                                                                 const char *   pack_format,
+                                                                 const char    *pack_format,
                                                                  ...);
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack(const uint8_t *data_in,
                                                          spinel_size_t  data_len,
-                                                         const char *   pack_format,
+                                                         const char    *pack_format,
                                                          va_list        args);
 /**
  * This function parses spinel data similar to vsscanf().
@@ -4983,12 +5086,12 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack(const uint8_t *data_in,
  */
 SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack_in_place(const uint8_t *data_in,
                                                                   spinel_size_t  data_len,
-                                                                  const char *   pack_format,
+                                                                  const char    *pack_format,
                                                                   va_list        args);
 
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_decode(const uint8_t *bytes,
                                                            spinel_size_t  len,
-                                                           unsigned int * value_ptr);
+                                                           unsigned int  *value_ptr);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_encode(uint8_t *bytes, spinel_size_t len, unsigned int value);
 SPINEL_API_EXTERN spinel_ssize_t spinel_packed_uint_size(unsigned int value);
 

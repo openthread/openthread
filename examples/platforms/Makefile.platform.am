@@ -41,10 +41,6 @@ LDFLAGS_COMMON      = $(NULL)
 SOURCES_COMMON      = $(NULL)
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 
-if OPENTHREAD_EXAMPLES_CC2538
-include $(top_srcdir)/examples/platforms/cc2538/Makefile.platform.am
-endif
-
 if OPENTHREAD_EXAMPLES_SIMULATION
 include $(top_srcdir)/examples/platforms/simulation/Makefile.platform.am
 endif

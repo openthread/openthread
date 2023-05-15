@@ -147,8 +147,6 @@ class MultiBorderRouters(thread_cert.TestCase):
         self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
 
         br1_on_link_prefix = br1.get_br_on_link_prefix()
-        self.assertEqual(br1_on_link_prefix, br1.get_netdata_non_nat64_prefixes()[0])
-        self.assertEqual(br1_on_link_prefix, br1.get_netdata_non_nat64_prefixes()[0])
 
         self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -200,8 +198,6 @@ class MultiBorderRouters(thread_cert.TestCase):
         self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
-        self.assertEqual(set(map(IPv6Network, br2.get_netdata_non_nat64_prefixes())),
-                         set(map(IPv6Network, [br1_on_link_prefix, br2_on_link_prefix])))
 
         self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)

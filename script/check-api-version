@@ -29,8 +29,11 @@
 
 set -euo pipefail
 
-readonly OT_SHA_OLD="$(git cat-file -p HEAD | grep 'parent ' | head -n1 | cut -d' ' -f2)"
-readonly OT_VERSIONS_FILE=tmp/api_versions
+OT_SHA_OLD="$(git cat-file -p HEAD | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+readonly OT_SHA_OLD
+
+OT_VERSIONS_FILE=tmp/api_versions
+readonly OT_VERSIONS_FILE
 
 die()
 {

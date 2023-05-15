@@ -40,6 +40,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_headers.hpp"
@@ -52,17 +53,21 @@ namespace Utils {
 
 HistoryTracker::HistoryTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
     , mPreviousNetworkData(aInstance, mNetworkDataTlvBuffer, 0, sizeof(mNetworkDataTlvBuffer))
 #endif
 {
     mTimer.Start(kAgeCheckPeriod);
+
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0)
+    memset(mRouterEntries, 0, sizeof(mRouterEntries));
+#endif
 }
 
 void HistoryTracker::RecordNetworkInfo(void)
 {
-    NetworkInfo *   entry = mNetInfoHistory.AddNewEntry();
+    NetworkInfo    *entry = mNetInfoHistory.AddNewEntry();
     Mle::DeviceMode mode;
 
     VerifyOrExit(entry != nullptr);
@@ -77,7 +82,7 @@ exit:
     return;
 }
 
-void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddresss, MessageType aType)
+void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType)
 {
     MessageInfo *entry = nullptr;
     Ip6::Headers headers;
@@ -120,7 +125,7 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
     VerifyOrExit(entry != nullptr);
 
     entry->mPayloadLength        = headers.GetIp6Header().GetPayloadLength();
-    entry->mNeighborRloc16       = aMacAddresss.IsShort() ? aMacAddresss.GetShort() : kInvalidRloc16;
+    entry->mNeighborRloc16       = aMacAddress.IsShort() ? aMacAddress.GetShort() : kInvalidRloc16;
     entry->mSource.mAddress      = headers.GetSourceAddress();
     entry->mSource.mPort         = headers.GetSourcePort();
     entry->mDestination.mAddress = headers.GetDestinationAddress();
@@ -128,14 +133,14 @@ void HistoryTracker::RecordMessage(const Message &aMessage, const Mac::Address &
     entry->mChecksum             = headers.GetChecksum();
     entry->mIpProto              = headers.GetIpProto();
     entry->mIcmp6Type            = headers.IsIcmp6() ? headers.GetIcmpHeader().GetType() : 0;
-    entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : kInvalidRss;
+    entry->mAveRxRss             = (aType == kRxMessage) ? aMessage.GetRssAverager().GetAverage() : Radio::kInvalidRssi;
     entry->mLinkSecurity         = aMessage.IsLinkSecurityEnabled();
     entry->mTxSuccess            = (aType == kTxMessage) ? aMessage.GetTxSuccess() : true;
     entry->mPriority             = aMessage.GetPriority();
 
-    if (aMacAddresss.IsExtended())
+    if (aMacAddress.IsExtended())
     {
-        Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddresss, Neighbor::kInStateAnyExceptInvalid);
+        Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddress, Neighbor::kInStateAnyExceptInvalid);
 
         if (neighbor != nullptr)
         {
@@ -278,6 +283,76 @@ exit:
     return;
 }
 
+#if OPENTHREAD_FTD
+void HistoryTracker::RecordRouterTableChange(void)
+{
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0
+
+    for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
+    {
+        RouterInfo   entry;
+        RouterEntry &oldEntry = mRouterEntries[routerId];
+
+        entry.mRouterId = routerId;
+
+        if (Get<RouterTable>().IsAllocated(routerId))
+        {
+            uint16_t nextHopRloc;
+            uint8_t  pathCost;
+
+            Get<RouterTable>().GetNextHopAndPathCost(Mle::Rloc16FromRouterId(routerId), nextHopRloc, pathCost);
+
+            entry.mNextHop  = (nextHopRloc == Mle::kInvalidRloc16) ? kNoNextHop : Mle::RouterIdFromRloc16(nextHopRloc);
+            entry.mPathCost = (pathCost < Mle::kMaxRouteCost) ? pathCost : 0;
+
+            if (!oldEntry.mIsAllocated)
+            {
+                entry.mEvent       = kRouterAdded;
+                entry.mOldPathCost = 0;
+            }
+            else if (oldEntry.mNextHop != entry.mNextHop)
+            {
+                entry.mEvent       = kRouterNextHopChanged;
+                entry.mOldPathCost = oldEntry.mPathCost;
+            }
+            else if ((entry.mNextHop != kNoNextHop) && (oldEntry.mPathCost != entry.mPathCost))
+            {
+                entry.mEvent       = kRouterCostChanged;
+                entry.mOldPathCost = oldEntry.mPathCost;
+            }
+            else
+            {
+                continue;
+            }
+
+            mRouterHistory.AddNewEntry(entry);
+
+            oldEntry.mIsAllocated = true;
+            oldEntry.mNextHop     = entry.mNextHop;
+            oldEntry.mPathCost    = entry.mPathCost;
+        }
+        else
+        {
+            // `routerId` is not allocated.
+
+            if (oldEntry.mIsAllocated)
+            {
+                entry.mEvent       = kRouterRemoved;
+                entry.mNextHop     = Mle::kInvalidRouterId;
+                entry.mOldPathCost = 0;
+                entry.mPathCost    = 0;
+
+                mRouterHistory.AddNewEntry(entry);
+
+                oldEntry.mIsAllocated = false;
+            }
+        }
+    }
+
+#endif // (OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0)
+}
+#endif // OPENTHREAD_FTD
+
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_DATA
 void HistoryTracker::RecordNetworkDataChange(void)
 {
@@ -374,11 +449,6 @@ void HistoryTracker::HandleNotifierEvents(Events aEvents)
 #endif
 }
 
-void HistoryTracker::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<HistoryTracker>().HandleTimer();
-}
-
 void HistoryTracker::HandleTimer(void)
 {
     mNetInfoHistory.UpdateAgedEntries();
@@ -399,7 +469,7 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
     if (aEntryAge >= kMaxAge)
     {
-        writer.Append("more than %u days", kMaxAge / Time::kOneDayInMsec);
+        writer.Append("more than %u days", static_cast<uint16_t>(kMaxAge / Time::kOneDayInMsec));
     }
     else
     {
@@ -407,14 +477,14 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 
         if (days > 0)
         {
-            writer.Append("%u day%s ", days, (days == 1) ? "" : "s");
+            writer.Append("%lu day%s ", ToUlong(days), (days == 1) ? "" : "s");
             aEntryAge -= days * Time::kOneDayInMsec;
         }
 
-        writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / Time::kOneHourInMsec),
-                      (aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec,
-                      (aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec,
-                      (aEntryAge % Time::kOneSecondInMsec));
+        writer.Append("%02u:%02u:%02u.%03u", static_cast<uint16_t>(aEntryAge / Time::kOneHourInMsec),
+                      static_cast<uint16_t>((aEntryAge % Time::kOneHourInMsec) / Time::kOneMinuteInMsec),
+                      static_cast<uint16_t>((aEntryAge % Time::kOneMinuteInMsec) / Time::kOneSecondInMsec),
+                      static_cast<uint16_t>(aEntryAge % Time::kOneSecondInMsec));
     }
 }
 
@@ -436,7 +506,7 @@ void HistoryTracker::Timestamp::SetToNow(void)
 
 uint32_t HistoryTracker::Timestamp::GetDurationTill(TimeMilli aTime) const
 {
-    return IsDistantPast() ? kMaxAge : OT_MIN(aTime - mTime, kMaxAge);
+    return IsDistantPast() ? kMaxAge : Min(aTime - mTime, kMaxAge);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -473,9 +543,9 @@ uint16_t HistoryTracker::List::Add(uint16_t aMaxSize, Timestamp aTimestamps[])
 
 Error HistoryTracker::List::Iterate(uint16_t        aMaxSize,
                                     const Timestamp aTimestamps[],
-                                    Iterator &      aIterator,
-                                    uint16_t &      aListIndex,
-                                    uint32_t &      aEntryAge) const
+                                    Iterator       &aIterator,
+                                    uint16_t       &aListIndex,
+                                    uint32_t       &aEntryAge) const
 {
     Error error = kErrorNone;
 

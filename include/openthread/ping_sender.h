@@ -112,7 +112,7 @@ typedef struct otPingSenderConfig
     otPingSenderReplyCallback mReplyCallback; ///< Callback function to report replies (can be NULL if not needed).
     otPingSenderStatisticsCallback
              mStatisticsCallback; ///< Callback function to report statistics (can be NULL if not needed).
-    void *   mCallbackContext;    ///< A pointer to the callback application-specific context.
+    void    *mCallbackContext;    ///< A pointer to the callback application-specific context.
     uint16_t mSize;               ///< Data size (# of bytes) excludes IPv6/ICMPv6 header. Zero for default.
     uint16_t mCount;              ///< Number of ping messages to send. Zero to use default.
     uint32_t mInterval;           ///< Ping tx interval in milliseconds. Zero to use default.

@@ -33,32 +33,41 @@
 """
 
 import ipaddress
-import os
 import paramiko
 import socket
 import time
+import win32api
 
-from IThci import IThci
-from OpenThread import OpenThreadTHCI, watched
-from simulation.config import REMOTE_OT_PATH
+from simulation.config import load_config
+from THCI.IThci import IThci
+from THCI.OpenThread import OpenThreadTHCI, watched
+
+config = load_config()
+ot_subpath = {item['tag']: item['subpath'] for item in config['ot_build']['ot']}
 
 
 class SSHHandle(object):
+    KEEPALIVE_INTERVAL = 30
 
     def __init__(self, ip, port, username, password, device, node_id):
-        ipaddress.ip_address(ip)
         self.ip = ip
         self.port = int(port)
         self.username = username
         self.password = password
+        self.node_id = node_id
         self.__handle = None
         self.__stdin = None
         self.__stdout = None
-        self.__connect(device, node_id)
+
+        self.__connect(device)
+
+        # Close the SSH connection only when Harness exits
+        win32api.SetConsoleCtrlHandler(self.__disconnect, True)
 
     @watched
-    def __connect(self, device, node_id):
-        self.close()
+    def __connect(self, device):
+        if self.__handle is not None:
+            return
 
         self.__handle = paramiko.SSHClient()
         self.__handle.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -71,58 +80,66 @@ class SSHHandle(object):
             else:
                 raise Exception('Password error')
 
-        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(node_id), get_pty=True)
+        # Avoid SSH connection lost after inactivity for a while
+        self.__handle.get_transport().set_keepalive(self.KEEPALIVE_INTERVAL)
+
+        self.__stdin, self.__stdout, _ = self.__handle.exec_command(device + ' ' + str(self.node_id))
+
+        # Receive the output in non-blocking mode
         self.__stdout.channel.setblocking(0)
 
-        # Wait some time for initiation
-        time.sleep(0.1)
+        # Some commands such as `udp send <ip> -x <hex>` send binary data
+        # The UDP packet recevier will output the data in binary to stdout
+        self.__stdout._set_mode('rb')
 
-    @watched
-    def close(self):
+    def __disconnect(self, dwCtrlType):
         if self.__handle is None:
             return
-        self.__stdin.write('exit\n')
-        # Wait some time for termination
-        time.sleep(0.1)
+
+        # Exit ot-cli-ftd and close the SSH connection
+        self.send('exit\n')
+        self.__stdin.close()
+        self.__stdout.close()
         self.__handle.close()
-        self.__stdin = None
-        self.__stdout = None
-        self.__handle = None
+
+    def close(self):
+        # Do nothing, because disconnecting and then connecting will automatically factory reset all states
+        # compared to real devices, which is not the intended behavior
+        pass
 
     def send(self, cmd):
         self.__stdin.write(cmd)
+        self.__stdin.flush()
 
     def recv(self):
-        try:
-            return self.__stdout.readline().rstrip()
-        except socket.timeout:
-            return ''
+        outputs = []
+        while True:
+            try:
+                outputs.append(self.__stdout.read(1))
+            except socket.timeout:
+                break
+        return ''.join(outputs)
 
     def log(self, fmt, *args):
         try:
             msg = fmt % args
-            print('%s - %s - %s' % (self.port, time.strftime('%b %d %H:%M:%S'), msg))
+            print('%d@%s - %s - %s' % (self.node_id, self.ip, time.strftime('%b %d %H:%M:%S'), msg))
         except Exception:
             pass
 
 
 class OpenThread_Sim(OpenThreadTHCI, IThci):
-    DEFAULT_COMMAND_TIMEOUT = 20
-
     __handle = None
-
-    device = os.path.join(REMOTE_OT_PATH, 'build/simulation/examples/apps/cli/ot-cli-ftd')
 
     @watched
     def _connect(self):
+        self.__lines = []
+
         # Only actually connect once.
         if self.__handle is None:
-            assert self.connectType == 'ip'
-            assert '@' in self.telnetIp
             self.log('SSH connecting ...')
-            node_id, ssh_ip = self.telnetIp.split('@')
-            self.__handle = SSHHandle(ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword, self.device,
-                                      node_id)
+            self.__handle = SSHHandle(self.ssh_ip, self.telnetPort, self.telnetUsername, self.telnetPassword,
+                                      self.device, self.node_id)
 
         self.log('connected to %s successfully', self.telnetIp)
 
@@ -130,9 +147,45 @@ class OpenThread_Sim(OpenThreadTHCI, IThci):
     def _disconnect(self):
         pass
 
+    @watched
+    def _parseConnectionParams(self, params):
+        discovery_add = params.get('SerialPort')
+        if '@' not in discovery_add:
+            raise ValueError('%r in the field `add` is invalid' % discovery_add)
+
+        prefix, self.ssh_ip = discovery_add.split('@')
+        self.tag, self.node_id = prefix.split('_')
+        self.node_id = int(self.node_id)
+        # Let it crash if it is an invalid IP address
+        ipaddress.ip_address(self.ssh_ip)
+
+        # Do not use `os.path.join` as it uses backslash as the separator on Windows
+        global config
+        self.device = '/'.join([config['ot_path'], ot_subpath[self.tag], 'examples/apps/cli/ot-cli-ftd'])
+
+        self.connectType = 'ip'
+        self.telnetIp = self.port = discovery_add
+
+        ssh = config['ssh']
+        self.telnetPort = ssh['port']
+        self.telnetUsername = ssh['username']
+        self.telnetPassword = ssh['password']
+
     def _cliReadLine(self):
-        tail = self.__handle.recv()
-        return tail if tail else None
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        tail = ''
+        if len(self.__lines) != 0:
+            tail = self.__lines.pop()
+
+        tail += self.__handle.recv()
+
+        self.__lines += self._lineSepX.split(tail)
+        if len(self.__lines) > 1:
+            return self.__lines.pop(0)
+
+        return None
 
     def _cliWriteLine(self, line):
         self.__handle.send(line + '\n')

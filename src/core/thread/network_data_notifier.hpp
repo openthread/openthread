@@ -48,6 +48,8 @@
 namespace ot {
 namespace NetworkData {
 
+class NetworkData;
+
 /**
  * This class implements the SVR_DATA.ntf transmission logic.
  *
@@ -104,29 +106,36 @@ private:
     static constexpr uint32_t kDelaySynchronizeServerData  = 300000; // in msec
     static constexpr uint8_t  kRouterRoleUpgradeMaxTimeout = 10;     // in sec
 
-    void HandleNotifierEvents(Events aEvents);
+    void  SynchronizeServerData(void);
+    Error SendServerDataNotification(uint16_t aOldRloc16, const NetworkData *aNetworkData = nullptr);
+#if OPENTHREAD_FTD
+    Error RemoveStaleChildEntries(void);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    Error UpdateInconsistentData(void);
+#endif
 
-    static void HandleTimer(Timer &aTimer);
+    void        HandleNotifierEvents(Events aEvents);
     void        HandleTimer(void);
-
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
+    static void HandleCoapResponse(void                *aContext,
+                                   otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);
 
-    static void HandleSynchronizeDataTask(Tasklet &aTasklet);
-
-    void SynchronizeServerData(void);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     void ScheduleRouterRoleUpgradeIfEligible(void);
     void HandleTimeTick(void);
 #endif
 
-    TimerMilli mTimer;
-    Tasklet    mSynchronizeDataTask;
-    uint32_t   mNextDelay;
-    bool       mWaitingForResponse : 1;
+    using SynchronizeDataTask = TaskletIn<Notifier, &Notifier::SynchronizeServerData>;
+    using DelayTimer          = TimerMilliIn<Notifier, &Notifier::HandleTimer>;
+
+    DelayTimer          mTimer;
+    SynchronizeDataTask mSynchronizeDataTask;
+    uint32_t            mNextDelay;
+    uint16_t            mOldRloc;
+    bool                mWaitingForResponse : 1;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     bool    mDidRequestRouterRoleUpgrade : 1;

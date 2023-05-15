@@ -55,7 +55,7 @@ otError ExecuteCommand(const char *aFormat, ...)
     char    cmd[kSystemCommandMaxLength];
     char    buf[kOutputBufferSize];
     va_list args;
-    FILE *  file;
+    FILE   *file;
     int     exitCode;
     otError error = OT_ERROR_NONE;
 

@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,9 +38,11 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+#include "common/time.hpp"
 
 static int CliOutput(void *aContext, const char *aFormat, va_list aArguments)
 {
@@ -53,12 +53,27 @@ static int CliOutput(void *aContext, const char *aFormat, va_list aArguments)
     return vsnprintf(nullptr, 0, aFormat, aArguments);
 }
 
+void AdvanceTime(otInstance *aInstance, uint32_t aDuration)
+{
+    uint32_t time = otPlatAlarmMilliGetNow() + aDuration;
+
+    while (ot::TimeMilli(otPlatAlarmMilliGetNow()) <= ot::TimeMilli(time))
+    {
+        while (otTaskletsArePending(aInstance))
+        {
+            otTaskletsProcess(aInstance);
+        }
+
+        FuzzerPlatformProcess(aInstance);
+    }
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
     otInstance *instance = nullptr;
-    uint8_t *   buf      = nullptr;
+    uint8_t    *buf      = nullptr;
 
     VerifyOrExit(size <= 65536);
 
@@ -71,8 +86,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     IgnoreError(otThreadSetEnabled(instance, true));
     IgnoreError(otThreadBecomeLeader(instance));
 
-    buf = static_cast<uint8_t *>(malloc(size + 1));
+    AdvanceTime(instance, 10000);
 
+    buf = static_cast<uint8_t *>(malloc(size + 1));
     memcpy(buf, data, size);
     buf[size] = '\0';
 
@@ -80,15 +96,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
+    AdvanceTime(instance, 10000);
 
 exit:
 

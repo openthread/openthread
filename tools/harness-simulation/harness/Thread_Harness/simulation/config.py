@@ -27,12 +27,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-REMOTE_PORT = 22
-REMOTE_USERNAME = 'pi'
-REMOTE_PASSWORD = 'raspberry'
+import os
+import yaml
 
-REMOTE_SNIFFER_OUTPUT_PREFIX = '/tmp/'
+CONFIG_PATH = r'%s\GRL\Thread1.2\Thread_Harness\simulation\config.yml' % os.environ['systemdrive']
 
-REMOTE_OT_PATH = '/home/pi/work/src/openthread-pr/'
 
-EDITCAP_PATH = r'C:\Program Files (x86)\Wireshark_Thread\editcap.exe'
+def load_config():
+    with open(CONFIG_PATH, 'rt') as f:
+        config = yaml.safe_load(f)
+    return config

@@ -171,8 +171,8 @@ public:
         return *this;
     }
 
-    OwnedPtr(const OwnedPtr &) = delete;
-    OwnedPtr(OwnedPtr &)       = delete;
+    OwnedPtr(const OwnedPtr &)            = delete;
+    OwnedPtr(OwnedPtr &)                  = delete;
     OwnedPtr &operator=(const OwnedPtr &) = delete;
 
 private:

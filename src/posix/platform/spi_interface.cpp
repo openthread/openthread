@@ -65,8 +65,8 @@ namespace ot {
 namespace Posix {
 
 SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void *                                aCallbackContext,
-                           SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                           void                                 *aCallbackContext,
+                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
@@ -85,7 +85,7 @@ SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
 {
 }
 
-void SpiInterface::OnRcpReset(void)
+void SpiInterface::ResetStates(void)
 {
     mSpiTxIsReady         = false;
     mSpiTxRefusedCount    = 0;
@@ -95,9 +95,20 @@ void SpiInterface::OnRcpReset(void)
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
     mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
+}
 
+otError SpiInterface::HardwareReset(void)
+{
+    ResetStates();
     TriggerReset();
+
+    // If the `INT` pin is set to low during the restart of the RCP chip, which triggers continuous invalid SPI
+    // transactions by the host, it will cause the function `PushPullSpi()` to output lots of invalid warn log
+    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputing invalid
+    // log messages.
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
+
+    return OT_ERROR_NONE;
 }
 
 otError SpiInterface::Init(const Url::Url &aRadioUrl)
@@ -182,19 +193,10 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
     InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
 
-    // Reset RCP chip.
-    TriggerReset();
-
-    // Waiting for the RCP chip starts up.
-    usleep(static_cast<useconds_t>(spiResetDelay) * kUsecPerMsec);
-
     return OT_ERROR_NONE;
 }
 
-SpiInterface::~SpiInterface(void)
-{
-    Deinit();
-}
+SpiInterface::~SpiInterface(void) { Deinit(); }
 
 void SpiInterface::Deinit(void)
 {
@@ -343,7 +345,7 @@ void SpiInterface::TriggerReset(void)
 
 uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
 {
-    uint8_t *      start = aSpiRxFrameBuffer;
+    uint8_t       *start = aSpiRxFrameBuffer;
     const uint8_t *end   = aSpiRxFrameBuffer + aAlignAllowance;
 
     for (; start != end && start[0] == 0xff; start++)
@@ -408,8 +410,8 @@ otError SpiInterface::PushPullSpi(void)
     uint16_t      spiTransferBytes    = 0;
     uint8_t       successfulExchanges = 0;
     bool          discardRxFrame      = true;
-    uint8_t *     spiRxFrameBuffer;
-    uint8_t *     spiRxFrame;
+    uint8_t      *spiRxFrameBuffer;
+    uint8_t      *spiRxFrame;
     uint8_t       slaveHeader;
     uint16_t      slaveAcceptLen;
     Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);
@@ -725,10 +727,7 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
     }
 }
 
-void SpiInterface::Process(const RadioProcessContext &aContext)
-{
-    Process(aContext.mReadFdSet, aContext.mWriteFdSet);
-}
+void SpiInterface::Process(const RadioProcessContext &aContext) { Process(aContext.mReadFdSet, aContext.mWriteFdSet); }
 
 void SpiInterface::Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
@@ -806,6 +805,12 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
+
+    if (ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    {
+        ResetStates();
+    }
+
     VerifyOrExit(!mSpiTxIsReady, error = OT_ERROR_BUSY);
 
     memcpy(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], aFrame, aLength);

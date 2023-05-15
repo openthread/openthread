@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
+#include <openthread/cli.h>
 #include <openthread/dataset.h>
 #include <openthread/link.h>
 #include <openthread/random_noncrypto.h>
@@ -71,10 +72,12 @@ enum
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 extern int      sSockFd;
+extern uint16_t sPortBase;
 extern uint16_t sPortOffset;
 #else
 static int      sTxFd       = -1;
 static int      sRxFd       = -1;
+static uint16_t sPortBase   = 9000;
 static uint16_t sPortOffset = 0;
 static uint16_t sPort       = 0;
 #endif
@@ -166,10 +169,127 @@ static otRadioKeyType   sKeyType;
 
 static int8_t GetRssi(uint16_t aChannel);
 
-static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
+#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+
+static enum {
+    kFilterOff,
+    kFilterDenyList,
+    kFilterAllowList,
+} sFilterMode = kFilterOff;
+
+static uint8_t sFilterNodeIdsBitVector[(MAX_NETWORK_SIZE + 7) / 8];
+
+static bool FilterContainsId(uint16_t aNodeId)
 {
-    return (aTimeA - aTimeB) < (1U << 31);
+    uint16_t index = aNodeId - 1;
+
+    return (sFilterNodeIdsBitVector[index / 8] & (0x80 >> (index % 8))) != 0;
 }
+
+static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
+{
+    bool isConnectable = true;
+
+    switch (sFilterMode)
+    {
+    case kFilterOff:
+        break;
+    case kFilterDenyList:
+        isConnectable = !FilterContainsId(aNodeId);
+        break;
+    case kFilterAllowList:
+        isConnectable = FilterContainsId(aNodeId);
+        break;
+    }
+
+    return isConnectable;
+}
+
+static void AddNodeIdToFilter(uint16_t aNodeId)
+{
+    uint16_t index = aNodeId - 1;
+
+    sFilterNodeIdsBitVector[index / 8] |= 0x80 >> (index % 8);
+}
+
+OT_TOOL_WEAK void otCliOutputFormat(const char *aFmt, ...) { OT_UNUSED_VARIABLE(aFmt); }
+
+otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    otError error = OT_ERROR_NONE;
+    bool    deny  = false;
+
+    if (aArgsLength == 0)
+    {
+        switch (sFilterMode)
+        {
+        case kFilterOff:
+            otCliOutputFormat("off");
+            break;
+        case kFilterDenyList:
+            otCliOutputFormat("deny-list");
+            break;
+        case kFilterAllowList:
+            otCliOutputFormat("allow-list");
+            break;
+        }
+
+        for (uint16_t nodeId = 0; nodeId <= MAX_NETWORK_SIZE; nodeId++)
+        {
+            if (FilterContainsId(nodeId))
+            {
+                otCliOutputFormat(" %d", nodeId);
+            }
+        }
+
+        otCliOutputFormat("\r\n");
+    }
+    else if (!strcmp(aArgs[0], "clear"))
+    {
+        otEXPECT_ACTION(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+        memset(sFilterNodeIdsBitVector, 0, sizeof(sFilterNodeIdsBitVector));
+        sFilterMode = kFilterOff;
+    }
+    else if ((deny = !strcmp(aArgs[0], "deny")) || !strcmp(aArgs[0], "allow"))
+    {
+        uint16_t nodeId;
+        char    *endptr;
+
+        otEXPECT_ACTION(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        nodeId = (uint16_t)strtol(aArgs[1], &endptr, 0);
+
+        otEXPECT_ACTION(*endptr == '\0', error = OT_ERROR_INVALID_ARGS);
+        otEXPECT_ACTION(1 <= nodeId && nodeId <= MAX_NETWORK_SIZE, error = OT_ERROR_INVALID_ARGS);
+
+        otEXPECT_ACTION(sFilterMode != (deny ? kFilterAllowList : kFilterDenyList), error = OT_ERROR_INVALID_STATE);
+
+        AddNodeIdToFilter(nodeId);
+        sFilterMode = deny ? kFilterDenyList : kFilterAllowList;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+#else
+otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+
+static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB) { return (aTimeA - aTimeB) < (1U << 31); }
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -298,7 +418,7 @@ static void initFds(void)
 
     otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
 
-    sPort                    = (uint16_t)(9000 + sPortOffset + gNodeId);
+    sPort                    = (uint16_t)(sPortBase + sPortOffset + gNodeId);
     sockaddr.sin_family      = AF_INET;
     sockaddr.sin_port        = htons(sPort);
     sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -337,7 +457,7 @@ static void initFds(void)
     }
 
     sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(9000 + sPortOffset));
+    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset));
     sockaddr.sin_addr.s_addr = inet_addr(OT_RADIO_GROUP);
 
     otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
@@ -356,24 +476,10 @@ exit:
 void platformRadioInit(void)
 {
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    char *offset;
+    parseFromEnvAsUint16("PORT_BASE", &sPortBase);
 
-    offset = getenv("PORT_OFFSET");
-
-    if (offset)
-    {
-        char *endptr;
-
-        sPortOffset = (uint16_t)strtol(offset, &endptr, 0);
-
-        if (*endptr != '\0')
-        {
-            fprintf(stderr, "Invalid PORT_OFFSET: %s\n", offset);
-            exit(EXIT_FAILURE);
-        }
-
-        sPortOffset *= (MAX_NETWORK_SIZE + 1);
-    }
+    parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
+    sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
     initFds();
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
@@ -737,10 +843,7 @@ exit:
     return;
 }
 
-bool platformRadioIsTransmitPending(void)
-{
-    return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait;
-}
+bool platformRadioIsTransmitPending(void) { return sState == OT_RADIO_STATE_TRANSMIT && !sTxWait; }
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength)
@@ -829,7 +932,10 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
         if (rval > 0)
         {
-            if (sockaddr.sin_port != htons(sPort))
+            uint16_t srcPort   = ntohs(sockaddr.sin_port);
+            uint16_t srcNodeId = srcPort - sPortOffset - sPortBase;
+
+            if (NodeIdFilterIsConnectable(srcNodeId) && srcPort != sPort)
             {
                 sReceiveFrame.mLength = (uint16_t)(rval - 1);
 
@@ -847,7 +953,7 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
             exit(EXIT_FAILURE);
         }
     }
-#endif
+#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
@@ -870,7 +976,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, OT_RADIO_GROUP, &sockaddr.sin_addr);
 
-    sockaddr.sin_port = htons((uint16_t)(9000 + sPortOffset));
+    sockaddr.sin_port = htons((uint16_t)(sPortBase + sPortOffset));
     rval =
         sendto(sTxFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
@@ -1216,7 +1322,7 @@ static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetri
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError otPlatRadioEnableCsl(otInstance *        aInstance,
+otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              uint32_t            aCslPeriod,
                              otShortAddress      aShortAddr,
                              const otExtAddress *aExtAddr)
@@ -1247,7 +1353,7 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-void otPlatRadioSetMacKey(otInstance *            aInstance,
+void otPlatRadioSetMacKey(otInstance             *aInstance,
                           uint8_t                 aKeyIdMode,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
@@ -1291,10 +1397,10 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+otError otPlatRadioConfigureEnhAckProbing(otInstance          *aInstance,
                                           otLinkMetrics        aLinkMetrics,
                                           const otShortAddress aShortAddress,
-                                          const otExtAddress * aExtAddress)
+                                          const otExtAddress  *aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
@@ -1320,4 +1426,22 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     *aRegionCode = sRegionCode;
 exit:
     return error;
+}
+
+void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue)
+{
+    char *env = getenv(aEnvName);
+
+    if (env)
+    {
+        char *endptr;
+
+        *aValue = (uint16_t)strtol(env, &endptr, 0);
+
+        if (*endptr != '\0')
+        {
+            fprintf(stderr, "Invalid %s: %s\n", aEnvName, env);
+            exit(EXIT_FAILURE);
+        }
+    }
 }

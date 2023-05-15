@@ -33,6 +33,7 @@ file(READ .default-version OT_DEFAULT_VERSION)
 string(STRIP ${OT_DEFAULT_VERSION} OT_DEFAULT_VERSION)
 
 project(openthread VERSION ${OT_DEFAULT_VERSION})
+include(CTest)
 
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
@@ -40,6 +41,9 @@ set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
+add_library(ot-config-ftd INTERFACE)
+add_library(ot-config-mtd INTERFACE)
+add_library(ot-config-radio INTERFACE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 99)
@@ -103,13 +107,15 @@ endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
 set(OT_THREAD_VERSION "1.3" CACHE STRING "Thread version chosen by the user at configure time")
-set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2" "1.3")
+set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2" "1.3" "1.3.1")
 if(${OT_THREAD_VERSION} EQUAL "1.1")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")
 elseif(${OT_THREAD_VERSION} EQUAL "1.2")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2")
 elseif(${OT_THREAD_VERSION} EQUAL "1.3")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3")
+elseif(${OT_THREAD_VERSION} EQUAL "1.3.1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3_1")
 else()
     message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
 endif()
@@ -169,6 +175,7 @@ list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 if(OT_PLATFORM STREQUAL "posix")
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/src/posix/platform)
+    target_compile_definitions(ot-config INTERFACE OPENTHREAD_PLATFORM_POSIX=1)
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
     # skip in this case
@@ -201,11 +208,8 @@ endif()
 add_subdirectory(src)
 add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
-if(OT_PLATFORM STREQUAL "simulation")
-    enable_testing()
-endif()
-
 add_subdirectory(tests)
+add_subdirectory(tools)
 
 add_custom_target(print-ot-config ALL
                   COMMAND ${CMAKE_COMMAND}

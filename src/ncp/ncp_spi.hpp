@@ -278,7 +278,7 @@ private:
     typedef uint8_t LargeFrameBuffer[kSpiBufferSize];
     typedef uint8_t EmptyFrameBuffer[kSpiHeaderSize];
 
-    static bool SpiTransactionComplete(void *   aContext,
+    static bool SpiTransactionComplete(void    *aContext,
                                        uint8_t *aOutputBuf,
                                        uint16_t aOutputLen,
                                        uint8_t *aInputBuf,
@@ -293,10 +293,10 @@ private:
     static void SpiTransactionProcess(void *aContext);
     void        SpiTransactionProcess(void);
 
-    static void HandleFrameAddedToTxBuffer(void *                   aContext,
+    static void HandleFrameAddedToTxBuffer(void                    *aContext,
                                            Spinel::Buffer::FrameTag aFrameTag,
                                            Spinel::Buffer::Priority aPriority,
-                                           Spinel::Buffer *         aBuffer);
+                                           Spinel::Buffer          *aBuffer);
 
     static void PrepareTxFrame(Tasklet &aTasklet);
     void        PrepareTxFrame(void);

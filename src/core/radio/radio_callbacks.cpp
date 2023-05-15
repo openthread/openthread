@@ -43,20 +43,14 @@ void Radio::Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, Error aError)
     Get<Mac::SubMac>().HandleReceiveDone(aFrame, aError);
 }
 
-void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame)
-{
-    Get<Mac::SubMac>().HandleTransmitStarted(aFrame);
-}
+void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame) { Get<Mac::SubMac>().HandleTransmitStarted(aFrame); }
 
 void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError)
 {
     Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
 }
 
-void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
-{
-    Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
-}
+void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi) { Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi); }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)

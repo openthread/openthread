@@ -86,16 +86,16 @@ void MulticastRoutingManager::TearDown(void)
     Mainloop::Manager::Get().Remove(*this);
 }
 
-void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
+void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void                                  *aContext,
                                                                    otBackboneRouterMulticastListenerEvent aEvent,
-                                                                   const otIp6Address *                   aAddress)
+                                                                   const otIp6Address                    *aAddress)
 {
     static_cast<MulticastRoutingManager *>(aContext)->HandleBackboneMulticastListenerEvent(
         aEvent, static_cast<const Ip6::Address &>(*aAddress));
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
-                                                                   const Ip6::Address &                   aAddress)
+                                                                   const Ip6::Address                    &aAddress)
 {
     switch (aEvent)
     {
@@ -309,6 +309,8 @@ otError MulticastRoutingManager::AddMulticastForwardingCache(const Ip6::Address 
     }
     else
     {
+        VerifyOrExit(!aSrcAddr.IsLinkLocal(), error = OT_ERROR_NONE);
+        VerifyOrExit(aSrcAddr.GetPrefix() != AsCoreType(otThreadGetMeshLocalPrefix(gInstance)), error = OT_ERROR_NONE);
         // Forward multicast traffic from Thread to Backbone if multicast scope > kRealmLocalScope
         // TODO: (MLR) allow scope configuration of outbound multicast routing
         if (aGroupAddr.GetScope() > Ip6::Address::kRealmLocalScope)
@@ -451,7 +453,7 @@ bool MulticastRoutingManager::UpdateMulticastRouteInfo(MulticastForwardingCache 
     }
     else
     {
-        otLogWarnPlat("MulticastRoutingManager: %s: SIOCGETSGCNT_IN6 %s => %s failed: %s", __FUNCTION__,
+        otLogDebgPlat("MulticastRoutingManager: %s: SIOCGETSGCNT_IN6 %s => %s failed: %s", __FUNCTION__,
                       aMfc.mSrcAddr.ToString().AsCString(), aMfc.mGroupAddr.ToString().AsCString(), strerror(errno));
     }
 
@@ -541,8 +543,8 @@ void MulticastRoutingManager::MulticastForwardingCache::SetValidPktCnt(unsigned 
     mLastUseTime = otPlatTimeGet();
 }
 
-void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address &              aSrcAddr,
-                                                           const Ip6::Address &              aGroupAddr,
+void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address               &aSrcAddr,
+                                                           const Ip6::Address               &aGroupAddr,
                                                            MulticastRoutingManager::MifIndex aIif,
                                                            MulticastRoutingManager::MifIndex aOif)
 {

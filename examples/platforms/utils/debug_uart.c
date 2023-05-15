@@ -103,22 +103,13 @@ void otPlatDebugUart_putchar(int c)
 
 /* provide WEAK stubs for platforms that do not implement all functions */
 OT_TOOL_WEAK
-void otPlatDebugUart_putchar_raw(int c)
-{
-    OT_UNUSED_VARIABLE(c);
-}
+void otPlatDebugUart_putchar_raw(int c) { OT_UNUSED_VARIABLE(c); }
 
 OT_TOOL_WEAK
-int otPlatDebugUart_kbhit(void)
-{
-    return 0; /* nothing */
-}
+int otPlatDebugUart_kbhit(void) { return 0; /* nothing */ }
 
 OT_TOOL_WEAK
-int otPlatDebugUart_getc(void)
-{
-    return -1; /* nothing */
-}
+int otPlatDebugUart_getc(void) { return -1; /* nothing */ }
 
 OT_TOOL_WEAK
 otError otPlatDebugUart_logfile(const char *filename)

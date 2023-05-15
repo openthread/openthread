@@ -47,7 +47,7 @@ namespace Cli {
  * This class implements the Network Data CLI.
  *
  */
-class NetworkData : private OutputWrapper
+class NetworkData : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -67,11 +67,12 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit NetworkData(Output &aOutput)
-        : OutputWrapper(aOutput)
+    NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+        : Output(aInstance, aOutputImplementer)
     {
     }
 
@@ -138,6 +139,7 @@ private:
     void    OutputPrefixes(bool aLocal);
     void    OutputRoutes(bool aLocal);
     void    OutputServices(bool aLocal);
+    void    OutputLowpanContexts(bool aLocal);
 };
 
 } // namespace Cli

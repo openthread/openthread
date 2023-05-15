@@ -66,7 +66,11 @@ const mbedtls_ecp_group_id Dtls::sCurves[] = {MBEDTLS_ECP_DP_SECP256R1, MBEDTLS_
 #endif
 
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+const uint16_t Dtls::sSignatures[] = {MBEDTLS_TLS1_3_SIG_ECDSA_SECP256R1_SHA256, MBEDTLS_TLS1_3_SIG_NONE};
+#else
 const int Dtls::sHashes[] = {MBEDTLS_MD_SHA256, MBEDTLS_MD_NONE};
+#endif
 #endif
 
 Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
@@ -79,12 +83,7 @@ Dtls::Dtls(Instance &aInstance, bool aLayerTwoSecurity)
     , mTimerSet(false)
     , mLayerTwoSecurity(aLayerTwoSecurity)
     , mReceiveMessage(nullptr)
-    , mConnectedHandler(nullptr)
-    , mReceiveHandler(nullptr)
-    , mContext(nullptr)
     , mSocket(aInstance)
-    , mTransportCallback(nullptr)
-    , mTransportContext(nullptr)
     , mMessageSubType(Message::kSubTypeNone)
     , mMessageDefaultSubType(Message::kSubTypeNone)
 {
@@ -143,10 +142,9 @@ Error Dtls::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHand
 
     SuccessOrExit(error = mSocket.Open(&Dtls::HandleUdpReceive, this));
 
-    mReceiveHandler   = aReceiveHandler;
-    mConnectedHandler = aConnectedHandler;
-    mContext          = aContext;
-    mState            = kStateOpen;
+    mConnectedCallback.Set(aConnectedHandler, aContext);
+    mReceiveCallback.Set(aReceiveHandler, aContext);
+    mState = kStateOpen;
 
 exit:
     return error;
@@ -180,17 +178,11 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
         ExitNow();
 
     case Dtls::kStateOpen:
-        IgnoreError(mSocket.Connect(Ip6::SockAddr(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort())));
-
         mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
         mMessageInfo.SetIsHostInterface(aMessageInfo.IsHostInterface());
 
-        if (Get<ThreadNetif>().HasUnicastAddress(aMessageInfo.GetSockAddr()))
-        {
-            mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
-        }
-
+        mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
         mMessageInfo.SetSockPort(aMessageInfo.GetSockPort());
 
         SuccessOrExit(Setup(false));
@@ -216,19 +208,16 @@ exit:
     return;
 }
 
-uint16_t Dtls::GetUdpPort(void) const
-{
-    return mSocket.GetSockName().GetPort();
-}
+uint16_t Dtls::GetUdpPort(void) const { return mSocket.GetSockName().GetPort(); }
 
 Error Dtls::Bind(uint16_t aPort)
 {
     Error error;
 
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
-    VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Bind(aPort, OT_NETIF_UNSPECIFIED));
+    SuccessOrExit(error = mSocket.Bind(aPort, Ip6::kNetifUnspecified));
 
 exit:
     return error;
@@ -240,10 +229,9 @@ Error Dtls::Bind(TransportCallback aCallback, void *aContext)
 
     VerifyOrExit(mState == kStateOpen, error = kErrorInvalidState);
     VerifyOrExit(!mSocket.IsBound(), error = kErrorAlready);
-    VerifyOrExit(mTransportCallback == nullptr, error = kErrorAlready);
+    VerifyOrExit(!mTransportCallback.IsSet(), error = kErrorAlready);
 
-    mTransportCallback = aCallback;
-    mTransportContext  = aContext;
+    mTransportCallback.Set(aCallback, aContext);
 
 exit:
     return error;
@@ -289,8 +277,13 @@ Error Dtls::Setup(bool aClient)
 #endif
 
     mbedtls_ssl_conf_rng(&mConf, Crypto::MbedTls::CryptoSecurePrng, nullptr);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+    mbedtls_ssl_conf_min_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
+    mbedtls_ssl_conf_max_tls_version(&mConf, MBEDTLS_SSL_VERSION_TLS1_2);
+#else
     mbedtls_ssl_conf_min_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
     mbedtls_ssl_conf_max_version(&mConf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+#endif
 
     OT_ASSERT(mCipherSuites[1] == 0);
     mbedtls_ssl_conf_ciphersuites(&mConf, mCipherSuites);
@@ -302,7 +295,11 @@ Error Dtls::Setup(bool aClient)
         mbedtls_ssl_conf_curves(&mConf, sCurves);
 #endif
 #if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+#if (MBEDTLS_VERSION_NUMBER >= 0x03020000)
+        mbedtls_ssl_conf_sig_algs(&mConf, sSignatures);
+#else
         mbedtls_ssl_conf_sig_hashes(&mConf, sHashes);
+#endif
 #endif
     }
 
@@ -435,10 +432,9 @@ void Dtls::Close(void)
 {
     Disconnect();
 
-    mState             = kStateClosed;
-    mTransportCallback = nullptr;
-    mTransportContext  = nullptr;
-    mTimerSet          = false;
+    mState    = kStateClosed;
+    mTimerSet = false;
+    mTransportCallback.Clear();
 
     IgnoreError(mSocket.Close());
     mTimer.Stop();
@@ -676,10 +672,7 @@ exit:
     return rval;
 }
 
-int Dtls::HandleMbedtlsGetTimer(void *aContext)
-{
-    return static_cast<Dtls *>(aContext)->HandleMbedtlsGetTimer();
-}
+int Dtls::HandleMbedtlsGetTimer(void *aContext) { return static_cast<Dtls *>(aContext)->HandleMbedtlsGetTimer(); }
 
 int Dtls::HandleMbedtlsGetTimer(void)
 {
@@ -749,9 +742,9 @@ void Dtls::HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish)
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 
-void Dtls::HandleMbedtlsExportKeys(void *                      aContext,
+void Dtls::HandleMbedtlsExportKeys(void                       *aContext,
                                    mbedtls_ssl_key_export_type aType,
-                                   const unsigned char *       aMasterSecret,
+                                   const unsigned char        *aMasterSecret,
                                    size_t                      aMasterSecretLen,
                                    const unsigned char         aClientRandom[32],
                                    const unsigned char         aServerRandom[32],
@@ -762,7 +755,7 @@ void Dtls::HandleMbedtlsExportKeys(void *                      aContext,
 }
 
 void Dtls::HandleMbedtlsExportKeys(mbedtls_ssl_key_export_type aType,
-                                   const unsigned char *       aMasterSecret,
+                                   const unsigned char        *aMasterSecret,
                                    size_t                      aMasterSecretLen,
                                    const unsigned char         aClientRandom[32],
                                    const unsigned char         aServerRandom[32],
@@ -796,7 +789,7 @@ exit:
 
 #else
 
-int Dtls::HandleMbedtlsExportKeys(void *               aContext,
+int Dtls::HandleMbedtlsExportKeys(void                *aContext,
                                   const unsigned char *aMasterSecret,
                                   const unsigned char *aKeyBlock,
                                   size_t               aMacLength,
@@ -850,11 +843,7 @@ void Dtls::HandleTimer(void)
     case kStateCloseNotify:
         mState = kStateOpen;
         mTimer.Stop();
-
-        if (mConnectedHandler != nullptr)
-        {
-            mConnectedHandler(mContext, false);
-        }
+        mConnectedCallback.InvokeIfSet(false);
         break;
 
     default:
@@ -878,11 +867,7 @@ void Dtls::Process(void)
             if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 mState = kStateConnected;
-
-                if (mConnectedHandler != nullptr)
-                {
-                    mConnectedHandler(mContext, true);
-                }
+                mConnectedCallback.InvokeIfSet(true);
             }
         }
         else
@@ -892,10 +877,7 @@ void Dtls::Process(void)
 
         if (rval > 0)
         {
-            if (mReceiveHandler != nullptr)
-            {
-                mReceiveHandler(mContext, buf, static_cast<uint16_t>(rval));
-            }
+            mReceiveCallback.InvokeIfSet(buf, static_cast<uint16_t>(rval));
         }
         else if (rval == 0 || rval == MBEDTLS_ERR_SSL_WANT_READ || rval == MBEDTLS_ERR_SSL_WANT_WRITE)
         {
@@ -970,20 +952,20 @@ void Dtls::HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const ch
     switch (aLevel)
     {
     case 1:
-        LogCrit("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogCrit("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 2:
-        LogWarn("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogWarn("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 3:
-        LogInfo("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogInfo("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
 
     case 4:
     default:
-        LogDebg("[%hu] %s", mSocket.GetSockName().mPort, aStr);
+        LogDebg("[%u] %s", mSocket.GetSockName().mPort, aStr);
         break;
     }
 }
@@ -993,7 +975,7 @@ Error Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubTy
     Error        error   = kErrorNone;
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     message->SetSubType(aMessageSubType);
     message->SetLinkSecurityEnabled(mLayerTwoSecurity);
 
@@ -1005,9 +987,9 @@ Error Dtls::HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubTy
         message->SetSubType(aMessageSubType);
     }
 
-    if (mTransportCallback)
+    if (mTransportCallback.IsSet())
     {
-        SuccessOrExit(error = mTransportCallback(mTransportContext, *message, mMessageInfo));
+        SuccessOrExit(error = mTransportCallback.Invoke(*message, mMessageInfo));
     }
     else
     {

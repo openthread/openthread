@@ -161,10 +161,7 @@ AnnounceSender::AnnounceSender(Instance &aInstance)
     SetJitter(kMaxJitter);
 }
 
-void AnnounceSender::UpdateOnReceivedAnnounce(void)
-{
-    mTrickleTimer.IndicateConsistent();
-}
+void AnnounceSender::UpdateOnReceivedAnnounce(void) { mTrickleTimer.IndicateConsistent(); }
 
 void AnnounceSender::Stop(void)
 {
@@ -173,15 +170,9 @@ void AnnounceSender::Stop(void)
     LogInfo("Stopped");
 }
 
-void AnnounceSender::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer();
-}
+void AnnounceSender::HandleTimer(Timer &aTimer) { aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer(); }
 
-void AnnounceSender::HandleTrickleTimer(TrickleTimer &aTimer)
-{
-    aTimer.Get<AnnounceSender>().HandleTrickleTimer();
-}
+void AnnounceSender::HandleTrickleTimer(TrickleTimer &aTimer) { aTimer.Get<AnnounceSender>().HandleTrickleTimer(); }
 
 void AnnounceSender::HandleTrickleTimer(void)
 {
@@ -259,7 +250,7 @@ void AnnounceSender::HandleActiveDatasetChanged(void)
 
     SetChannelMask(channelMask);
     SetPeriod(kTxInterval / channelMask.GetNumberOfChannels());
-    LogInfo("ChannelMask:%s, period:%u", GetChannelMask().ToString().AsCString(), GetPeriod());
+    LogInfo("ChannelMask:%s, period:%lu", GetChannelMask().ToString().AsCString(), ToUlong(GetPeriod()));
 
     // When channel mask is changed, we also check and update the PAN
     // channel. This handles the case where `ThreadChannelChanged` event

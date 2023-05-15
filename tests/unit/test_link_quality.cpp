@@ -31,6 +31,7 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
+#include "thread/link_metrics.hpp"
 #include "thread/link_quality.hpp"
 
 namespace ot {
@@ -69,7 +70,7 @@ int8_t sNoiseFloor = -100; // dBm
 // Check and verify the raw average RSS value to match the value from GetAverage().
 void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
 {
-    if (aAverage != OT_RADIO_RSSI_INVALID)
+    if (aAverage != Radio::kInvalidRssi)
     {
         VerifyOrQuit(aAverage == -static_cast<int16_t>((aRawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
                      "Raw value does not match the average.");
@@ -81,10 +82,7 @@ void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
 }
 
 // This function prints the values in the passed in link info instance. It is invoked as the final step in test-case.
-void PrintOutcome(LinkQualityInfo &aLinkInfo)
-{
-    printf("%s -> PASS \n", aLinkInfo.ToInfoString().AsCString());
-}
+void PrintOutcome(LinkQualityInfo &aLinkInfo) { printf("%s -> PASS \n", aLinkInfo.ToInfoString().AsCString()); }
 
 void TestLinkQualityData(RssTestData aRssData)
 {
@@ -125,7 +123,7 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
     int8_t   average  = aRssAverager.GetAverage();
     uint16_t rawValue = aRssAverager.GetRaw();
 
-    if (average != OT_RADIO_RSSI_INVALID)
+    if (average != Radio::kInvalidRssi)
     {
         VerifyOrQuit(average == -static_cast<int16_t>((rawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
                      "Raw value does not match the average.");
@@ -137,10 +135,7 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
 }
 
 // This function prints the values in the passed link info instance. It is invoked as the final step in test-case.
-void PrintOutcome(RssAverager &aRssAverager)
-{
-    printf("%s -> PASS\n", aRssAverager.ToString().AsCString());
-}
+void PrintOutcome(RssAverager &aRssAverager) { printf("%s -> PASS\n", aRssAverager.ToString().AsCString()); }
 
 int8_t GetRandomRss(void)
 {
@@ -165,7 +160,7 @@ void TestRssAveraging(void)
     rssAverager.Clear();
 
     printf("\nAfter Clear: ");
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "Initial value from GetAverage() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == Radio::kInvalidRssi, "Initial value from GetAverage() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -183,7 +178,7 @@ void TestRssAveraging(void)
 
     printf("Clear(): ");
     rssAverager.Clear();
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "GetAverage() after Clear() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == Radio::kInvalidRssi, "GetAverage() after Clear() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -338,30 +333,30 @@ void TestLinkQualityCalculations(void)
 {
     const int8_t      rssList1[] = {-81, -80, -79, -78, -76, -80, -77, -75, -77, -76, -77, -74};
     const RssTestData rssData1   = {
-        rssList1,         // mRssList
-        sizeof(rssList1), // mRssListSize
-        3                 // mExpectedLinkQuality
+          rssList1,         // mRssList
+          sizeof(rssList1), // mRssListSize
+          3                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList2[] = {-90, -80, -85};
     const RssTestData rssData2   = {
-        rssList2,         // mRssList
-        sizeof(rssList2), // mRssListSize
-        2                 // mExpectedLinkQuality
+          rssList2,         // mRssList
+          sizeof(rssList2), // mRssListSize
+          2                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList3[] = {-95, -96, -98, -99, -100, -100, -98, -99, -100, -100, -100, -100, -100};
     const RssTestData rssData3   = {
-        rssList3,         // mRssList
-        sizeof(rssList3), // mRssListSize
-        0                 // mExpectedLinkQuality
+          rssList3,         // mRssList
+          sizeof(rssList3), // mRssListSize
+          0                 // mExpectedLinkQuality
     };
 
     const int8_t      rssList4[] = {-75, -100, -100, -100, -100, -100, -95, -92, -93, -94, -93, -93};
     const RssTestData rssData4   = {
-        rssList4,         // mRssList
-        sizeof(rssList4), // mRssListSize
-        1                 // mExpectedLinkQuality
+          rssList4,         // mRssList
+          sizeof(rssList4), // mRssListSize
+          1                 // mExpectedLinkQuality
     };
 
     TestLinkQualityData(rssData1);
@@ -481,6 +476,53 @@ void TestSuccessRateTracker(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+
+class UnitTester
+{
+public:
+    static void TestLinkMetricsScaling(void)
+    {
+        printf("\nTestLinkMetricsScaling\n");
+
+        // Test Link Margin scaling from [0,130] -> [0, 255]
+
+        for (uint8_t linkMargin = 0; linkMargin <= 130; linkMargin++)
+        {
+            double  scaled     = 255.0 / 130.0 * linkMargin;
+            uint8_t scaledAsU8 = static_cast<uint8_t>(scaled + 0.5);
+
+            printf("\nLinkMargin : %-3u -> Scaled : %.1f (rounded:%u)", linkMargin, scaled, scaledAsU8);
+
+            VerifyOrQuit(LinkMetrics::ScaleLinkMarginToRawValue(linkMargin) == scaledAsU8);
+            VerifyOrQuit(LinkMetrics::ScaleRawValueToLinkMargin(scaledAsU8) == linkMargin);
+        }
+
+        VerifyOrQuit(LinkMetrics::ScaleLinkMarginToRawValue(131) == 255);
+        VerifyOrQuit(LinkMetrics::ScaleLinkMarginToRawValue(150) == 255);
+        VerifyOrQuit(LinkMetrics::ScaleLinkMarginToRawValue(255) == 255);
+
+        // Test RSSI scaling from [-130, 0] -> [0, 255]
+
+        for (int8_t rssi = -128; rssi <= 0; rssi++)
+        {
+            double  scaled     = 255.0 / 130.0 * (rssi + 130.0);
+            uint8_t scaledAsU8 = static_cast<uint8_t>(scaled + 0.5);
+
+            printf("\nRSSI : %-3d -> Scaled :%.1f (rounded:%u)", rssi, scaled, scaledAsU8);
+
+            VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(rssi) == scaledAsU8);
+            VerifyOrQuit(LinkMetrics::ScaleRawValueToRssi(scaledAsU8) == rssi);
+        }
+
+        VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(1) == 255);
+        VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(10) == 255);
+        VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(127) == 255);
+    }
+};
+
+#endif
+
 } // namespace ot
 
 int main(void)
@@ -488,6 +530,10 @@ int main(void)
     ot::TestRssAveraging();
     ot::TestLinkQualityCalculations();
     ot::TestSuccessRateTracker();
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    ot::UnitTester::TestLinkMetricsScaling();
+#endif
+
     printf("\nAll tests passed\n");
     return 0;
 }

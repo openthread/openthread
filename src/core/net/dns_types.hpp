@@ -514,7 +514,7 @@ public:
      */
     static constexpr uint8_t kMaxLabelLength = kMaxLabelSize - 1;
 
-    static constexpr char kLabelSeperatorChar = '.';
+    static constexpr char kLabelSeparatorChar = '.';
 
     /**
      * This enumeration represents the name type.
@@ -990,6 +990,20 @@ public:
      */
     static bool IsSubDomainOf(const char *aName, const char *aDomain);
 
+    /**
+     * This static method tests if the two DNS name are the same domain.
+     *
+     * Both @p aDomain1 and @p aDomain2 can end without dot ('.').
+     *
+     * @param[in]  aDomain1  The dot-separated name.
+     * @param[in]  aDomain2  The dot-separated domain.
+     *
+     * @retval  TRUE   If the two DNS names are the same domain.
+     * @retval  FALSE  If the two DNS names are not the same domain.
+     *
+     */
+    static bool IsSameDomain(const char *aDomain1, const char *aDomain2);
+
 private:
     // The first 2 bits of the encoded label specifies label type.
     //
@@ -1006,7 +1020,7 @@ private:
     static constexpr uint16_t kPointerLabelTypeUint16 = 0xc000; // Pointer label type mask (first 2 bits).
     static constexpr uint16_t kPointerLabelOffsetMask = 0x3fff; // Mask for offset in a pointer label (lower 14 bits).
 
-    static constexpr bool kIsSingleLabel = true; // Used in `LabelIterator::CompareLable()`.
+    static constexpr bool kIsSingleLabel = true; // Used in `LabelIterator::CompareLabel()`.
 
     struct LabelIterator
     {
@@ -1042,7 +1056,7 @@ private:
     {
     }
 
-    const char *   mString;  // String containing the name or `nullptr` if name is not from string.
+    const char    *mString;  // String containing the name or `nullptr` if name is not from string.
     const Message *mMessage; // Message containing the encoded name, or `nullptr` if `Name` is not from message.
     uint16_t       mOffset;  // Offset in `mMessage` to the start of name (used when name is from `mMessage`).
 };
@@ -1119,7 +1133,7 @@ public:
         uint16_t    GetTxtDataPosition(void) const { return mData[kIndexTxtPosition]; }
         void        SetTxtDataPosition(uint16_t aValue) { mData[kIndexTxtPosition] = aValue; }
         void        IncreaseTxtDataPosition(uint16_t aIncrement) { mData[kIndexTxtPosition] += aIncrement; }
-        char *      GetKeyBuffer(void) { return mChar; }
+        char       *GetKeyBuffer(void) { return mChar; }
         const char *GetTxtDataEnd(void) const { return GetTxtData() + GetTxtDataLength(); }
     };
 
@@ -1255,7 +1269,7 @@ public:
      * @returns TRUE if the resources records matches @p aType and @p aClass, FALSE otherwise.
      *
      */
-    bool Matches(uint16_t aType, uint16_t aClass = kClassInternet)
+    bool Matches(uint16_t aType, uint16_t aClass = kClassInternet) const
     {
         return (mType == HostSwap16(aType)) && (mClass == HostSwap16(aClass));
     }
@@ -1405,11 +1419,11 @@ public:
      */
     template <class RecordType>
     static Error FindRecord(const Message &aMessage,
-                            uint16_t &     aOffset,
+                            uint16_t      &aOffset,
                             uint16_t       aNumRecords,
                             uint16_t       aIndex,
-                            const Name &   aName,
-                            RecordType &   aRecord)
+                            const Name    &aName,
+                            RecordType    &aRecord)
     {
         return FindRecord(aMessage, aOffset, aNumRecords, aIndex, aName, RecordType::kType, aRecord,
                           sizeof(RecordType));
@@ -1456,9 +1470,9 @@ public:
 
 protected:
     Error ReadName(const Message &aMessage,
-                   uint16_t &     aOffset,
+                   uint16_t      &aOffset,
                    uint16_t       aStartOffset,
-                   char *         aNameBuffer,
+                   char          *aNameBuffer,
                    uint16_t       aNameBufferSize,
                    bool           aSkipRecord) const;
     Error SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
@@ -1466,17 +1480,17 @@ protected:
 private:
     static constexpr uint16_t kType = kTypeAny; // This is intended for used by `ReadRecord<RecordType>()` only.
 
-    static Error FindRecord(const Message & aMessage,
-                            uint16_t &      aOffset,
+    static Error FindRecord(const Message  &aMessage,
+                            uint16_t       &aOffset,
                             uint16_t        aNumRecords,
                             uint16_t        aIndex,
-                            const Name &    aName,
+                            const Name     &aName,
                             uint16_t        aType,
                             ResourceRecord &aRecord,
                             uint16_t        aMinRecordSize);
 
-    static Error ReadRecord(const Message & aMessage,
-                            uint16_t &      aOffset,
+    static Error ReadRecord(const Message  &aMessage,
+                            uint16_t       &aOffset,
                             uint16_t        aType,
                             ResourceRecord &aRecord,
                             uint16_t        aMinRecordSize);
@@ -1574,8 +1588,8 @@ public:
      *
      */
     Error ReadCanonicalName(const Message &aMessage,
-                            uint16_t &     aOffset,
-                            char *         aNameBuffer,
+                            uint16_t      &aOffset,
+                            char          *aNameBuffer,
                             uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(CnameRecord),
@@ -1661,10 +1675,10 @@ public:
      *
      */
     Error ReadPtrName(const Message &aMessage,
-                      uint16_t &     aOffset,
-                      char *         aLabelBuffer,
+                      uint16_t      &aOffset,
+                      char          *aLabelBuffer,
                       uint8_t        aLabelBufferSize,
-                      char *         aNameBuffer,
+                      char          *aNameBuffer,
                       uint16_t       aNameBufferSize) const;
 
 } OT_TOOL_PACKED_END;
@@ -1692,7 +1706,8 @@ public:
     /**
      * This method parses and reads the TXT record data from a message.
      *
-     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()`.
+     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()` when it is successfully
+     * read.
      *
      * @param[in]      aMessage         The message to read from.
      * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of TXT record data.
@@ -1705,7 +1720,9 @@ public:
      * @retval kErrorNone           The TXT data was read successfully. @p aOffset, @p aTxtBuffer and @p aTxtBufferSize
      *                              are updated.
      * @retval kErrorParse          The TXT record in @p aMessage could not be parsed (invalid format).
-     * @retval kErrorNoBufs         TXT data could not fit in @p aTxtBufferSize bytes.
+     * @retval kErrorNoBufs         TXT data could not fit in @p aTxtBufferSize bytes. TXT data is still partially read
+     *                              into @p aTxtBuffer up to its size and @p aOffset is updated to skip over the full
+     *                              TXT record.
      *
      */
     Error ReadTxtData(const Message &aMessage, uint16_t &aOffset, uint8_t *aTxtBuffer, uint16_t &aTxtBufferSize) const;
@@ -1863,8 +1880,8 @@ public:
      *
      */
     Error ReadTargetHostName(const Message &aMessage,
-                             uint16_t &     aOffset,
-                             char *         aNameBuffer,
+                             uint16_t      &aOffset,
+                             char          *aNameBuffer,
                              uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SrvRecord), aNameBuffer,
@@ -2344,7 +2361,7 @@ public:
      * @param[in] aExtendedResponse The upper 8-bit of the extended 12-bit Response Code.
      *
      */
-    void SetExtnededResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
+    void SetExtendedResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
 
     /**
      * This method gets the Version field.
@@ -2475,22 +2492,39 @@ OT_TOOL_PACKED_BEGIN
 class LeaseOption : public Option
 {
 public:
-    static constexpr uint16_t kOptionLength = sizeof(uint32_t) + sizeof(uint32_t); ///< lease and key lease values
-
     /**
-     * This method initialize the Update Lease Option by setting the Option Code and Option Length.
+     * This method initializes the Update Lease Option using the short variant format which contains lease interval
+     * only.
      *
-     * The lease and key lease intervals remain unchanged/uninitialized.
+     * @param[in] aLeaseInterval     The lease interval in seconds.
      *
      */
-    void Init(void)
-    {
-        SetOptionCode(kUpdateLease);
-        SetOptionLength(kOptionLength);
-    }
+    void InitAsShortVariant(uint32_t aLeaseInterval);
+
+    /**
+     * This method initializes the Update Lease Option using the long variant format which contains both lease and
+     * key lease intervals.
+     *
+     * @param[in] aLeaseInterval     The lease interval in seconds.
+     * @param[in] aKeyLeaseInterval  The key lease interval in seconds.
+     *
+     */
+    void InitAsLongVariant(uint32_t aLeaseInterval, uint32_t aKeyLeaseInterval);
+
+    /**
+     * This method indicates whether or not the Update Lease Option follows the short variant format which contains
+     * only the lease interval.
+     *
+     * @retval TRUE   The Update Lease Option follows the short variant format.
+     * @retval FALSE  The Update Lease Option follows the long variant format.
+     *
+     */
+    bool IsShortVariant(void) const { return (GetOptionLength() == kShortLength); }
 
     /**
      * This method tells whether this is a valid Lease Option.
+     *
+     * This method validates that option follows either short or long variant format.
      *
      * @returns  TRUE if this is a valid Lease Option, FALSE if not a valid Lease Option.
      *
@@ -2506,30 +2540,42 @@ public:
     uint32_t GetLeaseInterval(void) const { return HostSwap32(mLeaseInterval); }
 
     /**
-     * This method sets the Update Lease OPT record's lease interval value.
-     *
-     * @param[in]  aLeaseInterval  The lease interval value.
-     *
-     */
-    void SetLeaseInterval(uint32_t aLeaseInterval) { mLeaseInterval = HostSwap32(aLeaseInterval); }
-
-    /**
      * This method returns the Update Lease OPT record's key lease interval value.
+     *
+     * If the Update Lease Option follows the short variant format the lease interval is returned as key lease interval.
      *
      * @returns The key lease interval value (in seconds).
      *
      */
-    uint32_t GetKeyLeaseInterval(void) const { return HostSwap32(mKeyLeaseInterval); }
+    uint32_t GetKeyLeaseInterval(void) const
+    {
+        return IsShortVariant() ? GetLeaseInterval() : HostSwap32(mKeyLeaseInterval);
+    }
 
     /**
-     * This method sets the Update Lease OPT record's key lease interval value.
+     * This method searches among the Options is a given message and reads and validates the Update Lease Option if
+     * found.
      *
-     * @param[in]  aKeyLeaseInterval  The key lease interval value (in seconds).
+     * This method reads the Update Lease Option whether it follows the short or long variant formats.
+     *
+     * @param[in] aMessage   The message to read the Option from.
+     * @param[in] aOffset    Offset in @p aMessage to the start of Options (start of OPT Record data).
+     * @param[in] aLength    Length of Option data in OPT record.
+     *
+     * @retval kErrorNone      Successfully read and validated the Update Lease Option from @p aMessage.
+     * @retval kErrorNotFound  Did not find any Update Lease Option.
+     * @retval kErrorParse     Failed to parse the Options.
      *
      */
-    void SetKeyLeaseInterval(uint32_t aKeyLeaseInterval) { mKeyLeaseInterval = HostSwap32(aKeyLeaseInterval); }
+    Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
 private:
+    static constexpr uint16_t kShortLength = sizeof(uint32_t);                    // lease only.
+    static constexpr uint16_t kLongLength  = sizeof(uint32_t) + sizeof(uint32_t); // lease and key lease values
+
+    void SetLeaseInterval(uint32_t aLeaseInterval) { mLeaseInterval = HostSwap32(aLeaseInterval); }
+    void SetKeyLeaseInterval(uint32_t aKeyLeaseInterval) { mKeyLeaseInterval = HostSwap32(aKeyLeaseInterval); }
+
     uint32_t mLeaseInterval;
     uint32_t mKeyLeaseInterval;
 } OT_TOOL_PACKED_END;

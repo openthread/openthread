@@ -584,7 +584,7 @@ private:
     State              mState;
     FrameWritePointer &mWritePointer;
     FrameHandler       mFrameHandler;
-    void *             mContext;
+    void              *mContext;
     uint16_t           mFcs;
     uint16_t           mDecodedLength;
 };

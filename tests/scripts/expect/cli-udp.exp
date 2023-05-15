@@ -68,7 +68,7 @@ expect "Error 6: Parse"
 send "udp send -x something_invalid\n"
 expect "Error 7: InvalidArgs"
 send "udp\n"
-expect "Error 7: InvalidArgs"
+expect "Error 35: InvalidCommand"
 
 send "udp linksecurity\n"
 expect "Enabled"

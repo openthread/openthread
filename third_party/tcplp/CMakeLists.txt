@@ -43,7 +43,6 @@ set(src_tcplp
     lib/lbuf.c
 )
 
-set(tcplp_static_target "tcplp")
 
 string(REPLACE "-Wsign-compare" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
@@ -51,40 +50,58 @@ string(REPLACE "-Wconversion" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 string(REPLACE "-Wunused-parameter" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
-add_library(${tcplp_static_target} STATIC ${src_tcplp})
-target_compile_options(${tcplp_static_target}
-    PRIVATE
-        "-Wno-sign-compare"
-        "-Wno-unused-parameter"
-)
-set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
-target_include_directories(${tcplp_static_target}
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/bsdtcp
-        ${CMAKE_CURRENT_SOURCE_DIR}/lib
-    PRIVATE
-        ${OT_PUBLIC_INCLUDES}
-)
-
-target_link_libraries(${tcplp_static_target}
-    PRIVATE
-        ot-config
-)
-
-# TCPlp calls functions that are defined by the core OpenThread (like
-# "otMessageWrite()"), so we need to add the core library (FTD or MTD, as
-# appropriate) as a link dependency.
-
 if(OT_FTD)
-    target_link_libraries(${tcplp_static_target}
+    add_library(tcplp-ftd STATIC ${src_tcplp})
+    target_compile_options(tcplp-ftd
+        PRIVATE
+            "-Wno-sign-compare"
+            "-Wno-unused-parameter"
+    )
+    set_target_properties(tcplp-ftd PROPERTIES OUTPUT_NAME tcplp-ftd)
+    target_include_directories(tcplp-ftd
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/bsdtcp
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib
+        PRIVATE
+            ${OT_PUBLIC_INCLUDES}
+    )
+
+    target_link_libraries(tcplp-ftd
+        PRIVATE
+            ot-config
+    )
+
+    target_link_libraries(tcplp-ftd
         PRIVATE
             openthread-ftd
     )
+
 endif()
 
 if(OT_MTD)
-    target_link_libraries(${tcplp_static_target}
+    add_library(tcplp-mtd STATIC ${src_tcplp})
+    target_compile_options(tcplp-mtd
+        PRIVATE
+            "-Wno-sign-compare"
+            "-Wno-unused-parameter"
+    )
+    set_target_properties(tcplp-mtd PROPERTIES OUTPUT_NAME tcplp-mtd)
+    target_include_directories(tcplp-mtd
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/bsdtcp
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib
+        PRIVATE
+            ${OT_PUBLIC_INCLUDES}
+    )
+
+    target_link_libraries(tcplp-mtd
+        PRIVATE
+            ot-config
+    )
+
+    target_link_libraries(tcplp-mtd
         PRIVATE
             openthread-mtd
     )
+
 endif()

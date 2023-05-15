@@ -67,11 +67,12 @@ public:
         kMeshForwarder,          ///< `MeshForwarder`
         kMleRouter,              ///< `Mle::MleRouter`
         kAddressResolver,        ///< `AddressResolver`
-        kChildSupervisor,        ///< `Utils::ChildSupervisor`
+        kChildSupervisor,        ///< `ChildSupervisor`
         kIp6FragmentReassembler, ///< `Ip6::Ip6` (handling of fragmented messages)
         kDuaManager,             ///< `DuaManager`
         kMlrManager,             ///< `MlrManager`
         kNetworkDataNotifier,    ///< `NetworkData::Notifier`
+        kIp6Mpl,                 ///< `Ip6::Mpl`
 
         kNumReceivers, ///< Number of receivers.
     };
@@ -115,11 +116,12 @@ private:
 
     constexpr static uint32_t Mask(Receiver aReceiver) { return static_cast<uint32_t>(1U) << aReceiver; }
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
-    uint32_t   mReceivers;
-    TimerMilli mTimer;
+    using TickerTimer = TimerMilliIn<TimeTicker, &TimeTicker::HandleTimer>;
+
+    uint32_t    mReceivers;
+    TickerTimer mTimer;
 
     static_assert(kNumReceivers < sizeof(mReceivers) * CHAR_BIT, "Too many `Receiver`s - does not fit in a bit mask");
 };

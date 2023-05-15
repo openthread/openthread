@@ -41,10 +41,14 @@
 #include <stdint.h>
 
 #include "common/as_core_type.hpp"
+#include "common/const_cast.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
+
+class Neighbor;
+
 namespace Mac {
 
 /**
@@ -208,7 +212,7 @@ public:
      * @retval kErrorNotFound  No subsequent entry exists.
      *
      */
-    Error GetNextRssIn(Iterator &aIterator, Entry &aEntry);
+    Error GetNextRssIn(Iterator &aIterator, Entry &aEntry) const;
 
     /**
      * This method applies the filter rules on a given Extended Address.
@@ -220,7 +224,24 @@ public:
      * @retval kErrorAddressFiltered  Address filter (allowlist or denylist) is enabled and @p aExtAddress is filtered.
      *
      */
-    Error Apply(const ExtAddress &aExtAddress, int8_t &aRss);
+    Error Apply(const ExtAddress &aExtAddress, int8_t &aRss) const;
+
+    /**
+     * This method applies the filter rules to a received frame from a given Extended Address.
+     *
+     * This method can potentially update the signal strength value on the received frame @p aRxFrame. If @p aNeighbor
+     * is not `nullptr` and filter applies a fixed RSS to the @p aRxFrame, this method will also clear the current RSS
+     * average on @p aNeighbor to ensure that the new fixed RSS takes effect quickly.
+     *
+     * @param[out] aRxFrame     The received frame.
+     * @param[in]  aExtAddress  The extended address from which @p aRxFrame was received.
+     * @param[in]  aNeighbor    A pointer to the neighbor (can be `nullptr` if not known).
+     *
+     * @retval kErrorNone             Successfully applied the filter, @p aRxFrame RSS may be updated.
+     * @retval kErrorAddressFiltered  Address filter (allowlist or denylist) is enabled and @p aExtAddress is filtered.
+     *
+     */
+    Error ApplyToRxFrame(RxFrame &aRxFrame, const ExtAddress &aExtAddress, Neighbor *aNeighbor = nullptr) const;
 
 private:
     static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE;
@@ -234,8 +255,9 @@ private:
         bool IsInUse(void) const { return mFiltered || (mRssIn != kFixedRssDisabled); }
     };
 
-    FilterEntry *FindAvailableEntry(void);
-    FilterEntry *FindEntry(const ExtAddress &aExtAddress);
+    FilterEntry       *FindAvailableEntry(void);
+    const FilterEntry *FindEntry(const ExtAddress &aExtAddress) const;
+    FilterEntry *FindEntry(const ExtAddress &aExtAddress) { return AsNonConst(AsConst(this)->FindEntry(aExtAddress)); }
 
     Mode        mMode;
     int8_t      mDefaultRssIn;

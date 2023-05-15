@@ -54,15 +54,9 @@ Icmp::Icmp(Instance &aInstance)
 {
 }
 
-Message *Icmp::NewMessage(uint16_t aReserved)
-{
-    return Get<Ip6>().NewMessage(sizeof(Header) + aReserved);
-}
+Message *Icmp::NewMessage(void) { return Get<Ip6>().NewMessage(sizeof(Header)); }
 
-Error Icmp::RegisterHandler(Handler &aHandler)
-{
-    return mHandlers.Add(aHandler);
-}
+Error Icmp::RegisterHandler(Handler &aHandler) { return mHandlers.Add(aHandler); }
 
 Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
 {
@@ -103,7 +97,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
 {
     Error             error = kErrorNone;
     MessageInfo       messageInfoLocal;
-    Message *         message = nullptr;
+    Message          *message = nullptr;
     Header            icmp6Header;
     Message::Settings settings(Message::kWithLinkSecurity, Message::kPriorityNet);
 
@@ -186,9 +180,9 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 {
     Error       error = kErrorNone;
     Header      icmp6Header;
-    Message *   replyMessage = nullptr;
+    Message    *replyMessage = nullptr;
     MessageInfo replyMessageInfo;
-    uint16_t    payloadLength;
+    uint16_t    dataOffset;
 
     // always handle Echo Request destined for RLOC or ALOC
     VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
@@ -204,12 +198,11 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
         ExitNow();
     }
 
-    payloadLength = aRequestMessage.GetLength() - aRequestMessage.GetOffset() - Header::kDataFieldOffset;
-    SuccessOrExit(error = replyMessage->SetLength(Header::kDataFieldOffset + payloadLength));
+    dataOffset = aRequestMessage.GetOffset() + Header::kDataFieldOffset;
 
-    replyMessage->WriteBytes(0, &icmp6Header, Header::kDataFieldOffset);
-    aRequestMessage.CopyTo(aRequestMessage.GetOffset() + Header::kDataFieldOffset, Header::kDataFieldOffset,
-                           payloadLength, *replyMessage);
+    SuccessOrExit(error = replyMessage->AppendBytes(&icmp6Header, Header::kDataFieldOffset));
+    SuccessOrExit(error = replyMessage->AppendBytesFromMessage(aRequestMessage, dataOffset,
+                                                               aRequestMessage.GetLength() - dataOffset));
 
     replyMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
 

@@ -55,8 +55,8 @@ otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
     return AsCoreType(aInstance).Get<Ip6::Icmp>().RegisterHandler(AsCoreType(aHandler));
 }
 
-otError otIcmp6SendEchoRequest(otInstance *         aInstance,
-                               otMessage *          aMessage,
+otError otIcmp6SendEchoRequest(otInstance          *aInstance,
+                               otMessage           *aMessage,
                                const otMessageInfo *aMessageInfo,
                                uint16_t             aIdentifier)
 {

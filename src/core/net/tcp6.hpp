@@ -55,7 +55,16 @@ extern "C" {
 struct tcpcb;
 struct tcpcb_listen;
 struct tcplp_signals;
+
+/*
+ * The next two declarations intentionally change argument names from the
+ * original declarations in TCPlp, in order to comply with OpenThread's format.
+ */
+
+// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
 void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+
+// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
 void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
 }
 
@@ -391,9 +400,9 @@ public:
         size_t GetInFlightBytes(void) const;
         size_t GetBacklogBytes(void) const;
 
-        Address &      GetLocalIp6Address(void);
+        Address       &GetLocalIp6Address(void);
         const Address &GetLocalIp6Address(void) const;
-        Address &      GetForeignIp6Address(void);
+        Address       &GetForeignIp6Address(void);
         const Address &GetForeignIp6Address(void) const;
         bool           Matches(const MessageInfo &aMessageInfo) const;
     };
@@ -520,7 +529,7 @@ public:
         bool IsClosed(void) const;
 
     private:
-        Address &      GetLocalIp6Address(void);
+        Address       &GetLocalIp6Address(void);
         const Address &GetLocalIp6Address(void) const;
         bool           Matches(const MessageInfo &aMessageInfo) const;
     };
@@ -669,22 +678,23 @@ private:
     static constexpr uint8_t kReceiveAvailableCallbackFlag = (1 << 3);
     static constexpr uint8_t kDisconnectedCallbackFlag     = (1 << 4);
 
-    void ProcessSignals(Endpoint &            aEndpoint,
-                        otLinkedBuffer *      aPriorHead,
+    void ProcessSignals(Endpoint             &aEndpoint,
+                        otLinkedBuffer       *aPriorHead,
                         size_t                aPriorBacklog,
-                        struct tcplp_signals &aSignals);
+                        struct tcplp_signals &aSignals) const;
 
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
 
-    static void HandleTimer(Timer &aTimer);
-    void        ProcessTimers(void);
+    void HandleTimer(void);
 
-    static void HandleTasklet(Tasklet &aTasklet);
-    void        ProcessCallbacks(void);
+    void ProcessCallbacks(void);
 
-    TimerMilli mTimer;
-    Tasklet    mTasklet;
+    using TcpTasklet = TaskletIn<Tcp, &Tcp::ProcessCallbacks>;
+    using TcpTimer   = TimerMilliIn<Tcp, &Tcp::HandleTimer>;
+
+    TcpTimer   mTimer;
+    TcpTasklet mTasklet;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;

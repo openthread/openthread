@@ -39,6 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/error.hpp"
+#include "common/locator.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
 
@@ -147,6 +148,24 @@ public:
     Array(const Array &aOtherArray) { *this = aOtherArray; }
 
     /**
+     * This constructor initializes the array as empty and initializes its elements by calling `Init(Instance &)`
+     * method on every element.
+     *
+     * This constructor uses method `Init(Instance &aInstance)` on `Type`.
+     *
+     * @param[in] aInstance  The OpenThread instance.
+     *
+     */
+    explicit Array(Instance &aInstance)
+        : mLength(0)
+    {
+        for (Type &element : mElements)
+        {
+            element.Init(aInstance);
+        }
+    }
+
+    /**
      * This method clears the array.
      *
      */
@@ -185,6 +204,30 @@ public:
      *
      */
     IndexType GetLength(void) const { return mLength; }
+
+    /**
+     * This methods sets the current length (number of elements) of the array.
+     *
+     * @param[in] aLength   The array length.
+     *
+     */
+    void SetLength(IndexType aLength) { mLength = aLength; }
+
+    /**
+     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     *
+     * @return The pointer to start of underlying C array buffer.
+     *
+     */
+    Type *GetArrayBuffer(void) { return mElements; }
+
+    /**
+     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     *
+     * @return The pointer to start of underlying C array buffer.
+     *
+     */
+    const Type *GetArrayBuffer(void) const { return mElements; }
 
     /**
      * This method overloads the `[]` operator to get the element at a given index.
@@ -534,12 +577,29 @@ public:
         return *this;
     }
 
+    /**
+     * This method indicates whether a given entry pointer is from the array buffer.
+     *
+     * This method does not check the current length of array and only checks that @p aEntry is pointing to an address
+     * contained within underlying C array buffer.
+     *
+     * @param[in] aEntry   A pointer to an entry to check.
+     *
+     * @retval TRUE  The @p aEntry is from the array.
+     * @retval FALSE The @p aEntry is not from the array.
+     *
+     */
+    bool IsInArrayBuffer(const Type *aEntry) const
+    {
+        return (&mElements[0] <= aEntry) && (aEntry < GetArrayEnd(mElements));
+    }
+
     // The following methods are intended to support range-based `for`
     // loop iteration over the array elements and should not be used
     // directly.
 
-    Type *      begin(void) { return &mElements[0]; }
-    Type *      end(void) { return &mElements[mLength]; }
+    Type       *begin(void) { return &mElements[0]; }
+    Type       *end(void) { return &mElements[mLength]; }
     const Type *begin(void) const { return &mElements[0]; }
     const Type *end(void) const { return &mElements[mLength]; }
 

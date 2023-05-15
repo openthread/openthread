@@ -40,15 +40,13 @@ print('Starting \'{}\''.format(test_name))
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `Nodes` instances
 
-speedup = 4
+speedup = 10
 cli.Node.set_time_speedup_factor(speedup)
 
 node = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
-
-WAIT_TIME = 5
 
 verify(node.get_state() == 'disabled')
 node.form('test')
