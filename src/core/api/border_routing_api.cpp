@@ -157,8 +157,8 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 otError otBorderRoutingRecvIcmp6Nd(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ApplyPlatfromGeneratedRouterAdvert(aMessage, aLength);
-    return kErrorNone;
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ApplyPlatfromGeneratedRouterAdvert(aMessage,
+                                                                                                        aLength);
 }
 
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)

@@ -465,6 +465,13 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
     }
 }
 
+void LogRouterAdvert(const uint8_t *aBuffer, size_t aLength)
+{
+    Icmp6Packet packet;
+    packet.Init(aBuffer, aLength);
+    LogRouterAdvert(packet);
+}
+
 const char *PreferenceToString(int8_t aPreference)
 {
     const char *str = "";
@@ -3003,6 +3010,234 @@ void TestAutoEnableOfSrpServer(void)
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+void VerifyPdOmrPrefix(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime)
+{
+    otBorderRoutingPlatformOmrPrefixInfo platformPrefixInfo;
+
+    VerifyOrQuit(otBorderRoutingGetPdOmrPrefix(sInstance, &platformPrefixInfo) == OT_ERROR_NONE);
+    VerifyOrQuit(AsCoreType(&platformPrefixInfo.mPrefix) == aPrefix);
+    VerifyOrQuit(platformPrefixInfo.mValidRemainingMs == aValidLifetime);
+    VerifyOrQuit(platformPrefixInfo.mPreferredRemainingMs == aPreferredLifetime);
+}
+
+void VerifyNoPdOmrPrefix()
+{
+    otBorderRoutingPlatformOmrPrefixInfo platformPrefixInfo;
+
+    VerifyOrQuit(otBorderRoutingGetPdOmrPrefix(sInstance, &platformPrefixInfo) == OT_ERROR_NONE);
+    VerifyOrQuit(platformPrefixInfo.mPrefix.mLength == 0);
+    VerifyOrQuit(platformPrefixInfo.mValidRemainingMs == 0);
+    VerifyOrQuit(platformPrefixInfo.mPreferredRemainingMs == 0);
+}
+
+void TestBorderRoutingApplyPlatfromGeneratedRouterAdvert(void)
+{
+    Ip6::Prefix localOmr;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("%s", __func__);
+
+    InitTest(/* aEnableBorderRouting */ true);
+
+    otBorderRoutingDhcp6PdSetEnabled(sInstance, true);
+
+    {
+        SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    }
+
+    // 0. Reject invalid RA.
+    Log("0. Invalid RA message.");
+    {
+        const uint8_t testInvalidRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testInvalidRaMessage, sizeof(testInvalidRaMessage)) ==
+                     OT_ERROR_PARSE);
+    }
+
+    // 1. Publish a prefix, and wait until it expired.
+    Log("1. Simple RA message.");
+    {
+        Ip6::Prefix raPrefix = PrefixFromString("2001:db8:dead:beef::", 64);
+        // A simple RA message
+        // PIO: 2001:db8:dead:beef::/64, Pref 1234s, Valid 4321s
+        // Note: Checksum is ignored.
+        const uint8_t testValidRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+
+        Log("RA:");
+        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testValidRaMessage, sizeof(testValidRaMessage)) ==
+                     OT_ERROR_NONE);
+        sExpectedRios.Add(raPrefix);
+        AdvanceTime(10000);
+
+        VerifyPdOmrPrefix(raPrefix, 4311000, 1224000);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(2000000);
+        VerifyPdOmrPrefix(raPrefix, 2311000, 0);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(2500000);
+        VerifyNoPdOmrPrefix();
+        sExpectedRios.Clear();
+        VerifyOmrPrefixInNetData(localOmr);
+    }
+
+    // 1.1. Publish a prefix, and wait until it expired.
+    //      Multiple prefixes are advertised, only the smallest one will be used.
+    Log("1.1. RA message with multiple prefixes.");
+    {
+        Ip6::Prefix raPrefix = PrefixFromString("2001:db8:dead:beef::", 64);
+        // A simple RA message
+        // PIO: 2001:db8:dead:beef::/64, Pref 1234s, Valid 4321s
+        // Note: Checksum is ignored.
+        const uint8_t testValidRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0xfd, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+
+        Log("RA:");
+        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testValidRaMessage, sizeof(testValidRaMessage)) ==
+                     OT_ERROR_NONE);
+        sExpectedRios.Add(raPrefix);
+        AdvanceTime(10000);
+
+        VerifyPdOmrPrefix(raPrefix, 4311000, 1224000);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(2000000);
+        VerifyPdOmrPrefix(raPrefix, 2311000, 0);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(2500000);
+        VerifyNoPdOmrPrefix();
+        sExpectedRios.Clear();
+        VerifyOmrPrefixInNetData(localOmr);
+    }
+
+    // 2. Publish a prefix, and renew it before it expired.
+    Log("2. Renew prefix lifetime.");
+    {
+        Ip6::Prefix raPrefix = PrefixFromString("2001:db8:1:2::", 64);
+        // A simple RA message
+        // PIO: 2001:db8:1:2::/64, Pref 1234s, Valid 4321s
+        // Note: Checksum is ignored.
+        const uint8_t testValidRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+
+        Log("RA:");
+        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testValidRaMessage, sizeof(testValidRaMessage)) ==
+                     OT_ERROR_NONE);
+        sExpectedRios.Add(raPrefix);
+        AdvanceTime(10000);
+
+        VerifyPdOmrPrefix(raPrefix, 4311000, 1224000);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(raPrefix, 3311000, 224000);
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testValidRaMessage, sizeof(testValidRaMessage)) ==
+                     OT_ERROR_NONE);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(raPrefix, 3321000, 234000);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(raPrefix, 2321000, 0);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(2500000);
+        VerifyNoPdOmrPrefix();
+
+        sExpectedRios.Clear();
+        VerifyOmrPrefixInNetData(localOmr);
+    }
+
+    // 3. Publish a prefix, and publish another prefix to replace it (with goodbye ra).
+    Log("3. Update prefix.");
+    {
+        Ip6::Prefix raPrefix    = PrefixFromString("2001:db8:1:2::", 64);
+        Ip6::Prefix newRaPrefix = PrefixFromString("2001:db8:3:4::", 64);
+
+        // A simple RA message
+        // PIO: 2001:db8:1:2::/64, Pref 1234s, Valid 4321s
+        // Note: Checksum is ignored.
+        const uint8_t testValidRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+        // PIO: 2001:db8:3:4::/64, Pref 1234s, Valid 4321s
+        // PIO: 2001:db8:1:2::/64, Pref 0s, Valid 0s
+        const uint8_t testNewRaMessage[] = {
+            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0x00, 0x03, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        };
+
+        Log("RA:");
+        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testValidRaMessage, sizeof(testValidRaMessage)) ==
+                     OT_ERROR_NONE);
+        sExpectedRios.Add(raPrefix);
+        AdvanceTime(10000);
+
+        VerifyPdOmrPrefix(raPrefix, 4311000, 1224000);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(raPrefix);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(raPrefix, 3311000, 224000);
+
+        Log("RA:");
+        LogRouterAdvert(testNewRaMessage, sizeof(testNewRaMessage));
+        VerifyOrQuit(otBorderRoutingRecvIcmp6Nd(sInstance, testNewRaMessage, sizeof(testNewRaMessage)) ==
+                     OT_ERROR_NONE);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(newRaPrefix, 3321000, 234000);
+
+        AdvanceTime(1000000);
+        VerifyPdOmrPrefix(newRaPrefix, 2321000, 0);
+        VerifyOrQuit(sExpectedRios.SawAll());
+        VerifyOmrPrefixInNetData(newRaPrefix);
+
+        AdvanceTime(2500000);
+        VerifyNoPdOmrPrefix();
+
+        sExpectedRios.Clear();
+        VerifyOmrPrefixInNetData(localOmr);
+    }
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 int main(void)
@@ -3025,6 +3260,9 @@ int main(void)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     TestAutoEnableOfSrpServer();
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
+    TestBorderRoutingApplyPlatfromGeneratedRouterAdvert();
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ACCEPT_PLATFORM_ND_ENABLE
 
     printf("All tests passed\n");
 #else
