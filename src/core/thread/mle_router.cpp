@@ -2003,6 +2003,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     MeshCoP::Timestamp timestamp;
     bool               needsActiveDatasetTlv;
     bool               needsPendingDatasetTlv;
+    bool               needsSupervisionTlv;
     Child             *child;
     Router            *router;
     uint8_t            numTlvs;
@@ -2046,9 +2047,11 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     SuccessOrExit(error = Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout));
 
     // Supervision interval
+    needsSupervisionTlv = false;
     switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
     {
     case kErrorNone:
+        needsSupervisionTlv = true;
         break;
     case kErrorNotFound:
         supervisionInterval = (version <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
@@ -2096,6 +2099,11 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     }
 
     if (needsPendingDatasetTlv)
+    {
+        numTlvs++;
+    }
+
+    if (needsSupervisionTlv)
     {
         numTlvs++;
     }
@@ -2155,6 +2163,11 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     if (needsPendingDatasetTlv)
     {
         child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
+    }
+
+    if (needsSupervisionTlv)
+    {
+        child->SetRequestTlv(numTlvs++, Tlv::kSupervisionInterval);
     }
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
@@ -2922,6 +2935,10 @@ Error MleRouter::SendChildIdResponse(Child &aChild)
 
         case Tlv::kPendingDataset:
             SuccessOrExit(error = message->AppendPendingDatasetTlv());
+            break;
+
+        case Tlv::kSupervisionInterval:
+            SuccessOrExit(error = message->AppendSupervisionIntervalTlv(aChild.GetSupervisionInterval()));
             break;
 
         default:

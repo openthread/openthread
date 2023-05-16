@@ -873,7 +873,7 @@ class Child : public Neighbor,
     class AddressIteratorBuilder;
 
 public:
-    static constexpr uint8_t kMaxRequestTlvs = 5;
+    static constexpr uint8_t kMaxRequestTlvs = 6;
 
     /**
      * This class represents diagnostic information for a Thread Child.
