@@ -684,51 +684,68 @@ private:
         SignalTask                 mSignalTask;
     };
 
-    class LocalOmrPrefix;
+    class OmrPrefixManager;
 
     class OmrPrefix : public Clearable<OmrPrefix>
     {
+        friend class OmrPrefixManager;
+
     public:
         OmrPrefix(void) { Clear(); }
 
         bool               IsEmpty(void) const { return (mPrefix.GetLength() == 0); }
-        bool               IsInfrastructureDerived(void) const;
-        void               SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
-        void               SetFrom(const LocalOmrPrefix &aLocalOmrPrefix);
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
         RoutePreference    GetPreference(void) const { return mPreference; }
-        bool               IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
         bool               IsDomainPrefix(void) const { return mIsDomainPrefix; }
 
-    private:
+    protected:
         Ip6::Prefix     mPrefix;
         RoutePreference mPreference;
         bool            mIsDomainPrefix;
     };
 
-    class LocalOmrPrefix : public InstanceLocator
+    class FavoredOmrPrefix : public OmrPrefix
+    {
+        friend class OmrPrefixManager;
+
+    public:
+        bool IsInfrastructureDerived(void) const;
+
+    private:
+        void SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+        void SetFrom(const OmrPrefix &aOmrPrefix);
+        bool IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
+    };
+
+    class OmrPrefixManager : public InstanceLocator
     {
     public:
-        explicit LocalOmrPrefix(Instance &aInstance);
-        void               GenerateFrom(const Ip6::Prefix &aBrUlaPrefix);
-        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
-        RoutePreference    GetPreference(void) const { return NetworkData::kRoutePreferenceLow; }
-        Error              AddToNetData(void);
-        void               RemoveFromNetData(void);
-        bool               IsAddedInNetData(void) const { return mIsAddedInNetData; }
-        void               UpdateDefaultRouteFlag(bool aDefaultRoute);
+        explicit OmrPrefixManager(Instance &aInstance);
+
+        void                    Init(const Ip6::Prefix &aBrUlaPrefix);
+        void                    Start(void);
+        void                    Stop(void);
+        void                    Evaluate(void);
+        void                    UpdateDefaultRouteFlag(bool aDefaultRoute);
+        bool                    IsLocalAddedInNetData(void) const { return mIsLocalAddedInNetData; }
+        const OmrPrefix        &GetLocalPrefix(void) const { return mLocalPrefix; }
+        const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
 
     private:
         static constexpr uint16_t kInfoStringSize = 85;
 
         typedef String<kInfoStringSize> InfoString;
 
-        Error      AddOrUpdate(void);
-        InfoString ToString(void) const;
+        void       DetermineFavoredPrefix(void);
+        Error      AddLocalToNetData(void);
+        Error      AddOrUpdateLocalInNetData(void);
+        void       RemoveLocalFromNetData(void);
+        InfoString LocalToString(void) const;
 
-        Ip6::Prefix mPrefix;
-        bool        mIsAddedInNetData;
-        bool        mDefaultRoute;
+        OmrPrefix        mLocalPrefix;
+        FavoredOmrPrefix mFavoredPrefix;
+        bool             mIsLocalAddedInNetData;
+        bool             mDefaultRoute;
     };
 
     void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
@@ -961,8 +978,6 @@ private:
     void EvaluateRoutingPolicy(void);
     bool IsInitalPolicyEvaluationDone(void) const;
     void ScheduleRoutingPolicyEvaluation(ScheduleMode aMode);
-    void DetermineFavoredOmrPrefix(void);
-    void EvaluateOmrPrefix(void);
     void HandleRsSenderFinished(TimeMilli aStartTime);
     void SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
@@ -1000,8 +1015,7 @@ private:
     // randomly generated if none is found in persistent storage.
     Ip6::Prefix mBrUlaPrefix;
 
-    LocalOmrPrefix mLocalOmrPrefix;
-    OmrPrefix      mFavoredOmrPrefix;
+    OmrPrefixManager mOmrPrefixManager;
 
     // List of on-mesh prefixes (discovered from Network Data) which
     // were advertised as RIO in the last sent RA message.
