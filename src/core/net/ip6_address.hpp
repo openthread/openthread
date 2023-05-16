@@ -173,6 +173,12 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
+     * This method sets the bits after the prefix length to 0.
+     *
+     */
+    void Tidy(void);
+
+    /**
      * This method indicates whether prefix length is valid (smaller or equal to max length).
      *
      * @retval TRUE   The prefix length is valid.
@@ -351,7 +357,8 @@ public:
     void ToString(char *aBuffer, uint16_t aSize) const;
 
 private:
-    void ToString(StringWriter &aWriter) const;
+    uint8_t ByteAfterTidy(uint8_t aIndex);
+    void    ToString(StringWriter &aWriter) const;
 } OT_TOOL_PACKED_END;
 
 /**
