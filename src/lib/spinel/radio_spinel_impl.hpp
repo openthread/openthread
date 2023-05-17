@@ -2298,6 +2298,14 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpTimeout(void)
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mRcpFailed = true;
 #else
+    if (!mIsReady)
+    {
+        otLogCritPlat("Failed to communicate with RCP - no response from RCP during initialization");
+        otLogCritPlat("This is not a bug and typically due a config error (wrong URL parameters) or bad RCP image:");
+        otLogCritPlat("- Make sure RCP is running the correct firmware");
+        otLogCritPlat("- Double check the config parameters passed as `RadioURL` input");
+    }
+
     DieNow(OT_EXIT_RADIO_SPINEL_NO_RESPONSE);
 #endif
 }
