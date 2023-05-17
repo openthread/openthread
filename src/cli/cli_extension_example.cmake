@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2023, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,39 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-cli-radio)
+# This file provides an example on how to implement a CLI vendor extension.
 
-target_compile_definitions(openthread-cli-radio
-    PRIVATE
-        OPENTHREAD_RADIO=1
-        OPENTHREAD_RADIO_CLI=1
-)
+target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES=2")
 
-target_compile_options(openthread-cli-radio PRIVATE
-    ${OT_CFLAGS}
-)
+add_library(cli-extension-example cli_extension_example.c)
 
-target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+target_link_libraries(cli-extension-example PRIVATE ot-config)
 
-target_sources(openthread-cli-radio
-    PRIVATE
-        cli.cpp
-        cli_output.cpp
-)
+target_include_directories(cli-extension-example PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-if(NOT DEFINED OT_MBEDTLS_RCP)
-    set(OT_MBEDTLS_RCP ${OT_MBEDTLS})
-endif()
-
-target_link_libraries(openthread-cli-radio
-    PUBLIC
-        openthread-radio
-    PRIVATE
-        ${OT_MBEDTLS_RCP}
-        ot-config-radio
-        ot-config
-)
-
-if(OT_CLI_VENDOR_TARGET)
-    target_link_libraries(openthread-cli-radio PRIVATE ${OT_CLI_VENDOR_TARGET})
-endif()
+set(OT_CLI_VENDOR_TARGET cli-extension-example)

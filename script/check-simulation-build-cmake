@@ -96,6 +96,11 @@ build_all_features()
     # Build with RAM settings
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_SETTINGS_RAM=ON
+
+    # Build with Vendor CLI commands
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation \
+        -DOT_CLI_VENDOR_EXTENSION=../../src/cli/cli_extension_example.cmake
 }
 
 build_toranj()
