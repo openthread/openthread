@@ -739,7 +739,7 @@ void TestIp6PrefixTidy(void)
         {
             ot::Ip6::Prefix prefix, answer;
 
-            VerifyOrQuit(answer.FromString(test.prefixStringAfterTidy[i]));
+            SuccessOrQuit(answer.FromString(test.prefixStringAfterTidy[i]));
             prefix.Set(test.originalPrefix, i);
             prefix.Tidy();
 
