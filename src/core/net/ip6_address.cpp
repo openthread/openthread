@@ -96,6 +96,22 @@ bool Prefix::ContainsPrefix(const NetworkPrefix &aSubPrefix) const
            (MatchLength(GetBytes(), aSubPrefix.m8, NetworkPrefix::kSize) >= NetworkPrefix::kLength);
 }
 
+void Prefix::Tidy(void)
+{
+    uint8_t byteLength      = GetBytesSize();
+    uint8_t lastByteBitMask = ~(static_cast<uint8_t>(1 << (byteLength * 8 - mLength)) - 1);
+
+    if (byteLength != 0)
+    {
+        mPrefix.mFields.m8[byteLength - 1] &= lastByteBitMask;
+    }
+
+    for (uint16_t i = byteLength; i < GetArrayLength(mPrefix.mFields.m8); i++)
+    {
+        mPrefix.mFields.m8[i] = 0;
+    }
+}
+
 bool Prefix::operator==(const Prefix &aOther) const
 {
     return (mLength == aOther.mLength) && (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
@@ -201,8 +217,10 @@ void Prefix::ToString(char *aBuffer, uint16_t aSize) const
 void Prefix::ToString(StringWriter &aWriter) const
 {
     uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+    Prefix  tidyPrefix   = *this;
 
-    AsCoreType(&mPrefix).AppendHexWords(aWriter, sizeInUint16);
+    tidyPrefix.Tidy();
+    AsCoreType(&tidyPrefix.mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
     if (GetBytesSize() < Address::kSize - 1)
     {
