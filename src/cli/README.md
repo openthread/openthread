@@ -95,6 +95,7 @@ Done
 - [promiscuous](#promiscuous)
 - [pskc](#pskc)
 - [pskcref](#pskcref)
+- [radio](#radio-stats)
 - [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
@@ -2783,6 +2784,34 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### radio stats
+
+`OPENTHREAD_CONFIG_RADIO_STATS_ENABLE` is required. This feature is only available on FTD and MTD.
+
+The radio statistics shows the time when the radio is in sleep/tx/rx state. The command will show the time of these states since last reset in unit of microseconds. It will also show the percentage of the time.
+
+```bash
+> radio stats
+Radio Statistics:
+Total Time: 67.756s
+Tx Time: 0.022944s (0.03%)
+Rx Time: 1.482353s (2.18%)
+Sleep Time: 66.251128s (97.77%)
+Disabled Time: 0.000080s (0.00%)
+Done
+```
+
+### radio stats clear
+
+`OPENTHREAD_CONFIG_RADIO_STATS_ENABLE` is required. This feature is only available on FTD and MTD.
+
+This command resets the radio statistics. It sets all the time to 0.
+
+```bash
+> radio stats clear
 Done
 ```
 
