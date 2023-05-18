@@ -56,6 +56,7 @@ Done
 - [fem](#fem)
 - [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
+- [instanceid](#instanceid)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [joiner](README_JOINER.md)
@@ -1488,6 +1489,16 @@ Bring down the IPv6 interface.
 
 ```bash
 > ifconfig down
+Done
+```
+
+### instanceid
+
+Show OpenThread instance identifier.
+
+```bash
+> instanceid
+468697314
 Done
 ```
 

@@ -4002,6 +4002,29 @@ exit:
     return error;
 }
 
+template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    /**
+     * @cli instanceid
+     * @code
+     * instanceid
+     * 468697314
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otInstanceGetId
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%lu", ToUlong(otInstanceGetId(GetInstancePtr())));
+        error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+
 const char *Interpreter::AddressOriginToString(uint8_t aOrigin)
 {
     static const char *const kOriginStrings[4] = {
@@ -8712,6 +8735,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("history"),
 #endif
         CmdEntry("ifconfig"),
+        CmdEntry("instanceid"),
         CmdEntry("ipaddr"),
         CmdEntry("ipmaddr"),
 #if OPENTHREAD_CONFIG_JOINER_ENABLE

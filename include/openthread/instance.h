@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (324)
+#define OPENTHREAD_API_VERSION (325)
 
 /**
  * @addtogroup api-instance
@@ -101,6 +101,17 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
  *
  */
 otInstance *otInstanceInitSingle(void);
+
+/**
+ * Gets the instance identifier.
+ *
+ * The instance identifier is set to a random value when the instance is constructed, and then its value will not
+ * change after initialization.
+ *
+ * @returns The instance identifier.
+ *
+ */
+uint32_t otInstanceGetId(otInstance *aInstance);
 
 /**
  * This function indicates whether or not the instance is valid/initialized.

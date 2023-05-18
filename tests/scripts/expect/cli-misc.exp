@@ -86,6 +86,10 @@ send "ifconfig\n"
 expect "up"
 expect_line "Done"
 
+send "instanceid\n"
+expect -re {\d+}
+expect_line "Done"
+
 send "ipaddr add ::\n"
 expect_line "Done"
 send "ipaddr del ::\n"
