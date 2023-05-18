@@ -5129,6 +5129,16 @@ exit:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+/**
+ * @cli mliid (iid)
+ * @code
+ * mliid 1122334455667788
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otIp6SetMeshLocalIid
+ * @cparam mliid @ca{iid}
+ */
 template <> otError Interpreter::Process<Cmd("mliid")>(Arg aArgs[])
 {
     otError                  error = OT_ERROR_NONE;
@@ -5145,7 +5155,33 @@ exit:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-
+/**
+ * @cli mlr reg (ipaddr)
+ * @code
+ * mlr reg ff04::1
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 ff02::1
+ * status 2, 1 failed
+ * ff02:0:0:0:0:0:0:1
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 1000
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 0
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otIp6RegisterMulticastListeners
+ * @cparam mlr reg @ca{ipaddr}
+ */
 template <> otError Interpreter::Process<Cmd("mlr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -5218,6 +5254,16 @@ void Interpreter::HandleMlrRegResult(otError             aError,
 
 #endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
+/**
+ * @cli mode
+ * @code
+ * mode
+ * rdn
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadSetLinkMode
+ */
 template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 {
     otError          error = OT_ERROR_NONE;
@@ -5232,7 +5278,25 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
         OutputLine("%s", LinkModeToString(otThreadGetLinkMode(GetInstancePtr()), linkModeString));
         ExitNow();
     }
-
+    
+    /**
+     * @cli mode
+     * @code
+     * mode rdn
+     * Done
+     * @endcode
+     * @code
+     * mode -
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetLinkMode
+     * @cparam mode [@ca{rdn}]
+     * - `-`: -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
+     * - `r`: rx-on-when-idle
+     * - `d`: Full Thread Device
+     * - `n`: Full Network Data
+     */
     if (aArgs[0] != "-")
     {
         for (const char *arg = aArgs[0].GetCString(); *arg != '\0'; arg++)
@@ -5262,7 +5326,17 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 exit:
     return error;
 }
-
+    
+/**
+ * @cli multiradio
+ * @code
+ * multiradio
+ * [15.4, TREL]
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otMultiRadioGetNeighborInfo
+ */
 template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -5290,6 +5364,17 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
     {
         otMultiRadioNeighborInfo multiRadioInfo;
 
+        /**
+         * @cli multiradio neighbor list
+         * @code
+         * multiradio neighbor list
+         * ExtAddr:3a65bc38dbe4a5be, RLOC16:0xcc00, Radios:[15.4(255), TREL(255)]
+         * ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otMultiRadioGetNeighborInfo
+         */
         if (aArgs[1] == "list")
         {
             otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
@@ -5311,6 +5396,18 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         }
         else
         {
+            
+            /**
+             * @cli multiradio neighbor <ext address>
+             * @code
+             * multiradio neighbor 3a65bc38dbe4a5be
+             * [15.4(255), TREL(255)]
+             * Done
+             * @endcode
+             * @par api_copy
+             * #otMultiRadioGetNeighborInfo
+             * @cparam multiradio neighbor @ca{ext address}
+             */
             otExtAddress extAddress;
 
             SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
