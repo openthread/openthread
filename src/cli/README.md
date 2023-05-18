@@ -3408,8 +3408,6 @@ Done
 
 ### vendor name
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor name.
 
 ```bash
@@ -3427,8 +3425,6 @@ Done
 
 ### vendor model
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor model.
 
 ```bash
@@ -3445,8 +3441,6 @@ Done
 ```
 
 ### vendor swversion
-
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
 
 Get the vendor SW version.
 
