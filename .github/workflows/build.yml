@@ -80,6 +80,25 @@ jobs:
         use-verbose-mode: 'yes'
         max-depth: 3
 
+  spell-check:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+          python -m pip install --upgrade pip
+          pip install codespell
+    - name: Check
+      run: |
+        script/code-spell check
+
   cmake-version:
     runs-on: ubuntu-20.04
     steps:

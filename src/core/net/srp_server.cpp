@@ -1994,7 +1994,7 @@ Error Server::Host::ProcessTtl(uint32_t aTtl)
 {
     // This method processes the TTL value received in a resource record.
     //
-    // If no TTL value is stored, this method wil set the stored value to @p aTtl and return `kErrorNone`.
+    // If no TTL value is stored, this method will set the stored value to @p aTtl and return `kErrorNone`.
     // If a TTL value is stored and @p aTtl equals the stored value, this method returns `kErrorNone`.
     // Otherwise, this method returns `kErrorRejected`.
 

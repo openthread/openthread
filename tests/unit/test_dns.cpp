@@ -1258,7 +1258,7 @@ void TestDnsTxtEntry(void)
     const uint8_t kInvalidEncodedTxt1[] = {4, 'a', '=', 'b'}; // Incorrect length
 
     // Special encoded txt data with zero strings and string starting
-    // with '=' (missing key) whcih should be skipped over silently.
+    // with '=' (missing key) which should be skipped over silently.
     const uint8_t kSpecialEncodedTxt[] = {0, 0, 3, 'A', '=', 'B', 2, '=', 'C', 3, 'D', '=', 'E', 3, '=', '1', '2'};
 
     const Dns::TxtEntry kTxtEntries[] = {

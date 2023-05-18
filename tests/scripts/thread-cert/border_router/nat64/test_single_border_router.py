@@ -99,7 +99,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         if ready[0]:
             return sock.recv(1024)
         else:
-            raise AssertionError("No data recevied")
+            raise AssertionError("No data received")
 
     def listen_udp(self, addr, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

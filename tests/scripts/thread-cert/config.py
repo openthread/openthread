@@ -330,7 +330,7 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.XTAL_ACCURACY:
             network_layer.XtalAccuracyFactory(),
         # Routing information are distributed in a Thread network by MLE Routing TLV
-        # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
+        # which is in fact MLE Route64 TLV. Thread specification v1.1. - Chapter 5.20
         network_layer.TlvType.MLE_ROUTING:
             create_default_mle_tlv_route64_factory(),
         network_layer.TlvType.IPv6_ADDRESSES:

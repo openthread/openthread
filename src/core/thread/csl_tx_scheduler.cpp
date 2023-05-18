@@ -227,7 +227,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     // in `RescheduleCslTx()` when determining the next CSL delay to
     // schedule CSL tx with `Mac` but here we calculate the delay with
     // zero `aAheadUs`. All the timings are in usec but when passing
-    // delay to `Mac` we divide by `1000` (to covert to msec) which
+    // delay to `Mac` we divide by `1000` (to convert to msec) which
     // can round the value down and cause `Mac` to start operation a
     // bit (some usec) earlier. This is covered by adding the guard
     // time `kFramePreparationGuardInterval`.

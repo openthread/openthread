@@ -1047,7 +1047,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NET
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6Prefix);
 
-    // If prefix was not on the list, "remove" command can be considred
+    // If prefix was not on the list, "remove" command can be considered
     // successful.
 
     if (error == OT_ERROR_NOT_FOUND)
