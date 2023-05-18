@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <openthread/border_agent.h>
 #include <openthread/platform/settings.h>
 
 #include "common/clearable.hpp"
@@ -48,6 +47,7 @@
 #include "common/settings_driver.hpp"
 #include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/border_agent.hpp"
 #include "meshcop/dataset.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/version.hpp"
@@ -773,20 +773,18 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class BorderAgentId : private Clearable<BorderAgentId>
+    class BorderAgentId
     {
         friend class Settings;
-        friend class Clearable<BorderAgentId>;
 
     public:
-        static constexpr Key     kKey    = kKeyBorderAgentId; ///< The associated key.
-        static constexpr uint8_t kLength = OT_BORDER_AGENT_ID_LENGTH;
+        static constexpr Key kKey = kKeyBorderAgentId; ///< The associated key.
 
         /**
          * This method initializes the `BorderAgentId` object.
          *
          */
-        void Init(void) { Clear(); }
+        void Init(void) { mId = {}; }
 
         /**
          * This method returns the Border Agent ID.
@@ -794,7 +792,7 @@ public:
          * @returns The Border Agent ID.
          *
          */
-        const uint8_t *GetId(void) const { return mId; }
+        const MeshCoP::BorderAgent::Id &GetId(void) const { return mId; }
 
         /**
          * This method returns the Border Agent ID.
@@ -802,21 +800,18 @@ public:
          * @returns The Border Agent ID.
          *
          */
-        uint8_t *GetId(void) { return mId; }
+        MeshCoP::BorderAgent::Id &GetId(void) { return mId; }
 
         /**
          * This method sets the Border Agent ID.
          *
-         * @retval kErrorInvalidArgs If `aLength` doesn't equal to `OT_BORDER_AGENT_ID_LENGTH`.
-         * @retval kErrorNone        If success.
-         *
          */
-        Error SetId(const uint8_t *aId, uint16_t aLength);
+        void SetId(const MeshCoP::BorderAgent::Id &aId) { mId = aId; }
 
     private:
         void Log(Action aAction) const;
 
-        uint8_t mId[kLength];
+        MeshCoP::BorderAgent::Id mId;
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 

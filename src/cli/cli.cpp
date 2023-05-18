@@ -545,11 +545,50 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBorderAgentGetState(GetInstancePtr()), kStateStrings));
     }
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+    /**
+     * @cli ba id (get,set)
+     * @code
+     * ba id
+     * cb6da1e0c0448aaec39fa90f3d58f45c
+     * Done
+     * @endcode
+     * @code
+     * ba id 00112233445566778899aabbccddeeff
+     * Done
+     * @endcode
+     * @cparam ba id [@ca{border-agent-id}]
+     * Use the optional `border-agent-id` argument to set the Border Agent ID.
+     * @par
+     * Gets or sets the 16 bytes Border Router ID which can uniquely identifies the device among multiple BRs.
+     * @sa otBorderAgentGetId
+     * @sa otBorderAgentSetId
+     */
+    else if (aArgs[0] == "id")
+    {
+        otBorderAgentId id;
+
+        if (aArgs[1].IsEmpty())
+        {
+            SuccessOrExit(error = otBorderAgentGetId(GetInstancePtr(), &id));
+            OutputBytesLine(id.mId);
+        }
+        else
+        {
+            uint16_t idLength = sizeof(id);
+
+            SuccessOrExit(error = aArgs[1].ParseAsHexString(idLength, id.mId));
+            VerifyOrExit(idLength == sizeof(id), error = OT_ERROR_INVALID_ARGS);
+            error = otBorderAgentSetId(GetInstancePtr(), &id);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     else
     {
-        error = OT_ERROR_INVALID_COMMAND;
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
+exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
