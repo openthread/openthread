@@ -56,7 +56,8 @@ extern "C" {
 /**
  * Set the alarm to fire at @p aDt milliseconds after @p aT0.
  *
- * For both @p aT0 and @p aDt, the platform MUST support all values in [0, 2^32-1].
+ * For @p aT0 the platform MUST support all values in [0, 2^32-1].
+ * For @p aDt, the platform MUST support all values in [0, 2^31-1].
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aT0        The reference time.
