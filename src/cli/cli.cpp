@@ -3162,7 +3162,7 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix
      * is unavailable. When testing DNS-SD discovery proxy, the zone is not `local` and
      * instead should be `default.service.arpa`.
-     * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
+     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
      */
     else if (aArgs[0] == "browse")
     {
@@ -3191,9 +3191,9 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
      * @par
      * Note: The DNS server IP can be an IPv4 address, which will be synthesized
      * to an IPv6 address using the preferred NAT64 prefix from the network data.
-     * The command will return `InvalidState` when the DNS * server IP is an IPv4
+     * The command will return `InvalidState` when the DNS server IP is an IPv4
      * address but the preferred NAT64 prefix is unavailable.
-     * 'OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE' is required.
+     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
      */
     else if (aArgs[0] == "service")
     {
@@ -3201,6 +3201,39 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
         SuccessOrExit(error = GetDnsConfig(aArgs + 3, config));
         SuccessOrExit(error = otDnsClientResolveService(GetInstancePtr(), aArgs[1].GetCString(), aArgs[2].GetCString(),
                                                         &Interpreter::HandleDnsServiceResponse, this, config));
+        error = OT_ERROR_PENDING;
+    }
+    /**
+     * @cli dns servicehost
+     * @cparam dns servicehost @ca{service-instance-label} @ca{service-name} <!--
+     * -->                 [@ca{DNS-server-IP}] [@ca{DNS-server-port}] <!--
+     * -->                 [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
+     * -->                 [@ca{recursion-desired-boolean}]
+     * @par api_copy
+     * #otDnsClientResolveServiceAndHostAddress
+     * @par
+     * Send a service instance resolution DNS query for a given service instance
+     * with potential follow-up host name resolution.
+     * Service instance label is provided first, followed by the service name
+     * (note that service instance label can contain dot '.' character).
+     * @par
+     * The parameters after `service-name` are optional. Any unspecified (or zero)
+     * value for these optional parameters is replaced by the value from the
+     * current default config (`dns config`).
+     * @par
+     * Note: The DNS server IP can be an IPv4 address, which will be synthesized
+     * to an IPv6 address using the preferred NAT64 prefix from the network data.
+     * The command will return `InvalidState` when the DNS server IP is an IPv4
+     * address but the preferred NAT64 prefix is unavailable.
+     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
+     */
+    else if (aArgs[0] == "servicehost")
+    {
+        VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = GetDnsConfig(aArgs + 3, config));
+        SuccessOrExit(error = otDnsClientResolveServiceAndHostAddress(
+                          GetInstancePtr(), aArgs[1].GetCString(), aArgs[2].GetCString(),
+                          &Interpreter::HandleDnsServiceResponse, this, config));
         error = OT_ERROR_PENDING;
     }
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE

@@ -392,6 +392,9 @@ exit:
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+static constexpr uint8_t  kMaxHostAddresses = 10;
+static constexpr uint16_t kMaxTxtBuffer     = 256;
+
 struct ResolveServiceInfo
 {
     void Reset(void)
@@ -407,7 +410,9 @@ struct ResolveServiceInfo
     Error                    mError;
     Dns::Client::ServiceInfo mInfo;
     char                     mNameBuffer[Dns::Name::kMaxNameSize];
-    uint8_t                  mTxtBuffer[256];
+    uint8_t                  mTxtBuffer[kMaxTxtBuffer];
+    Ip6::Address             mHostAddresses[kMaxHostAddresses];
+    uint8_t                  mNumHostAddresses;
 };
 
 static ResolveServiceInfo sResolveServiceInfo;
@@ -432,7 +437,31 @@ void ServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void
 
     SuccessOrExit(aError);
     SuccessOrQuit(response.GetServiceInfo(sResolveServiceInfo.mInfo));
+
+    for (uint8_t index = 0; index < kMaxHostAddresses; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        error = response.GetHostAddress(sResolveServiceInfo.mInfo.mHostNameBuffer, index,
+                                        sResolveServiceInfo.mHostAddresses[index], ttl);
+
+        if (error == kErrorNotFound)
+        {
+            sResolveServiceInfo.mNumHostAddresses = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+    }
+
     LogServiceInfo(sResolveServiceInfo.mInfo);
+    Log("   NumHostAddresses: %u", sResolveServiceInfo.mNumHostAddresses);
+
+    for (uint8_t index = 0; index < sResolveServiceInfo.mNumHostAddresses; index++)
+    {
+        Log("      %s", sResolveServiceInfo.mHostAddresses[index].ToString().AsCString());
+    }
 
 exit:
     return;
@@ -442,6 +471,10 @@ exit:
 
 void TestDnsClient(void)
 {
+    static constexpr uint8_t kNumAddresses = 2;
+
+    static const char *const kAddresses[kNumAddresses] = {"2001::beef:cafe", "fd00:1234:5678:9abc::1"};
+
     const Dns::Client::QueryConfig::ServiceMode kServiceModes[] = {
         Dns::Client::QueryConfig::kServiceModeSrv,
         Dns::Client::QueryConfig::kServiceModeTxt,
@@ -450,19 +483,35 @@ void TestDnsClient(void)
         Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize,
     };
 
-    Srp::Server                   *srpServer;
-    Srp::Client                   *srpClient;
-    Srp::Client::Service           service1;
-    Srp::Client::Service           service2;
-    Dns::Client                   *dnsClient;
-    Dns::Client::QueryConfig       queryConfig;
-    Dns::ServiceDiscovery::Server *dnsServer;
-    uint16_t                       heapAllocations;
+    Array<Ip6::Address, kNumAddresses> addresses;
+    Srp::Server                       *srpServer;
+    Srp::Client                       *srpClient;
+    Srp::Client::Service               service1;
+    Srp::Client::Service               service2;
+    Dns::Client                       *dnsClient;
+    Dns::Client::QueryConfig           queryConfig;
+    Dns::ServiceDiscovery::Server     *dnsServer;
+    uint16_t                           heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDnsClient");
 
     InitTest();
+
+    for (const char *addrString : kAddresses)
+    {
+        otNetifAddress netifAddr;
+
+        memset(&netifAddr, 0, sizeof(netifAddr));
+        SuccessOrQuit(AsCoreType(&netifAddr.mAddress).FromString(addrString));
+        netifAddr.mPrefixLength  = 64;
+        netifAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
+        netifAddr.mPreferred     = true;
+        netifAddr.mValid         = true;
+        SuccessOrQuit(otIp6AddUnicastAddress(sInstance, &netifAddr));
+
+        SuccessOrQuit(addresses.PushBack(AsCoreType(&netifAddr.mAddress)));
+    }
 
     srpServer = &sInstance->Get<Srp::Server>();
     srpClient = &sInstance->Get<Srp::Client>();
@@ -580,6 +629,14 @@ void TestDnsClient(void)
             VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
             VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
             VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+            VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+            VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) == sResolveServiceInfo.mHostAddresses[0]);
+
+            for (uint8_t index = 0; index < kNumAddresses; index++)
+            {
+                VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+            }
         }
 
         if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
@@ -624,16 +681,179 @@ void TestDnsClient(void)
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
     VerifyOrQuit(sResolveServiceInfo.mError != kErrorNone);
 
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveService()` using all service modes
+    // when sever does not provide any RR in the addition data section.
+
+    for (Dns::Client::QueryConfig::ServiceMode mode : kServiceModes)
+    {
+        Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+        Log("Set TestMode on server to not include any RR in additional section");
+        dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection);
+        Log("ResolveService(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+            ServiceModeToString(mode));
+
+        queryConfig.Clear();
+        queryConfig.mServiceMode = static_cast<otDnsServiceMode>(mode);
+
+        sResolveServiceInfo.Reset();
+        SuccessOrQuit(
+            dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+        AdvanceTime(100);
+
+        VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+        SuccessOrQuit(sResolveServiceInfo.mError);
+
+        if (mode != Dns::Client::QueryConfig::kServiceModeTxt)
+        {
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+            VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+        }
+
+        if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
+        {
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+        }
+
+        // Since server is using `kTestModeEmptyAdditionalSection`, there
+        // should be no AAAA records for host address.
+
+        VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress).IsUnspecified());
+        VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == 0);
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveServiceAndHostAddress()` using all service modes
+    // with different TestMode configs on server:
+    // - Normal behavior when server provides AAAA records for host in
+    //   additional section.
+    // - Server provides no records in additional section. We validate that
+    //   client will send separate query to resolve host address.
+
+    for (Dns::Client::QueryConfig::ServiceMode mode : kServiceModes)
+    {
+        for (uint8_t testIter = 0; testIter <= 1; testIter++)
+        {
+            Error error;
+
+            Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+            if (testIter == 1)
+            {
+                Log("Set TestMode on server to not include any RR in additional section");
+                dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection);
+            }
+            else
+            {
+                dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+            }
+
+            Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+                ServiceModeToString(mode));
+
+            queryConfig.Clear();
+            queryConfig.mServiceMode = static_cast<otDnsServiceMode>(mode);
+
+            sResolveServiceInfo.Reset();
+            error = dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
+                                                            sInstance, &queryConfig);
+
+            if (mode == Dns::Client::QueryConfig::kServiceModeTxt)
+            {
+                Log("ResolveServiceAndHostAddress() with ServiceMode: %s failed correctly", ServiceModeToString(mode));
+                VerifyOrQuit(error == kErrorInvalidArgs);
+                continue;
+            }
+
+            SuccessOrQuit(error);
+
+            AdvanceTime(100);
+
+            VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+            SuccessOrQuit(sResolveServiceInfo.mError);
+
+            if (mode != Dns::Client::QueryConfig::kServiceModeTxt)
+            {
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+                VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+                VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+                VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) ==
+                             sResolveServiceInfo.mHostAddresses[0]);
+
+                for (uint8_t index = 0; index < kNumAddresses; index++)
+                {
+                    VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+                }
+            }
+
+            if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
+            {
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+            }
+        }
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Set TestMode on server to not include any RR in additional section AND to only accept single question");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection +
+                           Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+
+    Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
+                                                          sInstance, &queryConfig));
+
+    AdvanceTime(100);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+    VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+    VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) == sResolveServiceInfo.mHostAddresses[0]);
+
+    for (uint8_t index = 0; index < kNumAddresses; index++)
+    {
+        VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
     Log("Stop DNS-SD server");
     dnsServer->Stop();
 
     Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
-        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrv));
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtSeparate));
 
     queryConfig.Clear();
-    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrv);
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtSeparate);
 
     sResolveServiceInfo.Reset();
     SuccessOrQuit(

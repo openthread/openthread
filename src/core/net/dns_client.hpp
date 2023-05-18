@@ -718,7 +718,7 @@ public:
                  const QueryConfig *aConfig = nullptr);
 
     /**
-     * This method sends a DNS service instance resolution query for a given service instance.
+     * This method starts a DNS service instance resolution for a given service instance.
      *
      * The @p aConfig can be `nullptr`. In this case the default config (from `GetDefaultConfig()`) will be used as
      * the config for this query. In a non-`nullptr` @p aConfig, some of the fields can be left unspecified (value
@@ -740,6 +740,32 @@ public:
                          otDnsServiceCallback aCallback,
                          void                *aContext,
                          const QueryConfig   *aConfig = nullptr);
+
+    /**
+     * This method starts a DNS service instance resolution for a given service instance, with a potential follow-up
+     * host name resolution (if the server/resolver does not provide AAAA/A records for the host name in the response
+     * to SRV query).
+     *
+     * The @p aConfig can be `nullptr`. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-`nullptr` @p aConfig, some of the fields can be left unspecified (value
+     * zero). The unspecified fields are then replaced by the values from the default config.
+     *
+     * @param[in]  aInstanceLabel     The service instance label.
+     * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
+     * @param[in]  aCallback          A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext           A pointer to arbitrary context information.
+     * @param[in]  aConfig            The config to use for this query.
+     *
+     * @retval kErrorNone         Query sent successfully. @p aCallback will be invoked to report the status.
+     * @retval kErrorNoBufs       Insufficient buffer to prepare and send query.
+     * @retval kErrorInvalidArgs  @p aInstanceLabel is `nullptr` or the @p aConfig is invalid.
+     *
+     */
+    Error ResolveServiceAndHostAddress(const char        *aInstanceLabel,
+                                       const char        *aServiceName,
+                                       ServiceCallback    aCallback,
+                                       void              *aContext,
+                                       const QueryConfig *aConfig = nullptr);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -791,6 +817,7 @@ private:
         TimeMilli   mRetransmissionTime;
         QueryConfig mConfig;
         uint8_t     mTransmissionCount;
+        bool        mShouldResolveHostAddr;
         Query      *mMainQuery;
         Query      *mNextQuery;
         Message    *mSavedResponse;
@@ -823,7 +850,14 @@ private:
     Error ReplaceWithIp4Query(Query &aQuery);
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    Error Resolve(const char        *aInstanceLabel,
+                  const char        *aServiceName,
+                  ServiceCallback    aCallback,
+                  void              *aContext,
+                  const QueryConfig *aConfig,
+                  bool               aShouldResolveHostAddr);
     Error ReplaceWithSeparateSrvTxtQueries(Query &aQuery);
+    void  ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseMessage);
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE

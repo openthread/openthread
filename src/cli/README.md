@@ -1269,6 +1269,14 @@ The parameters after `service-name` are optional. Any unspecified (or zero) valu
 
 > Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix is unavailable.
 
+### dns servicehost \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a service instance resolution DNS query for a given service instance with a potential follow-up address resolution for the host name discovered for the service instance (if the server/resolver does not provide AAAA/A records for the host name in the response to SRV query).
+
+Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
 ### dns compression \[enable|disable\]
 
 Enable/Disable the "DNS name compression" mode.

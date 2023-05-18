@@ -309,6 +309,8 @@ Error Client::Response::ReadServiceInfo(Section aSection, const Name &aName, Ser
 
     // Search in additional section for AAAA record for the host name.
 
+    VerifyOrExit(AsCoreType(&aServiceInfo.mHostAddress).IsUnspecified());
+
     error = FindHostAddress(kAdditionalDataSection, hostName, /* aIndex */ 0, AsCoreType(&aServiceInfo.mHostAddress),
                             aServiceInfo.mHostAddressTtl);
 
@@ -598,6 +600,27 @@ Error Client::ServiceResponse::GetServiceInfo(ServiceInfo &aServiceInfo) const
 
         info.ReadFrom(*response->mQuery);
 
+        switch (info.mQueryType)
+        {
+        case kIp6AddressQuery:
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        case kIp4AddressQuery:
+#endif
+            IgnoreError(response->FindHostAddress(kAnswerSection, name, /* aIndex */ 0,
+                                                  AsCoreType(&aServiceInfo.mHostAddress),
+                                                  aServiceInfo.mHostAddressTtl));
+
+            continue; // to `for()` loop
+
+        case kServiceQuerySrvTxt:
+        case kServiceQuerySrv:
+        case kServiceQueryTxt:
+            break;
+
+        default:
+            continue;
+        }
+
         // Determine from which section we should try to read the SRV and
         // TXT records based on the query type.
         //
@@ -639,7 +662,25 @@ Error Client::ServiceResponse::GetHostAddress(const char   *aHostName,
 
     for (const Response *response = this; response != nullptr; response = response->mNext)
     {
-        error = response->FindHostAddress(kAdditionalDataSection, Name(aHostName), aIndex, aAddress, aTtl);
+        Section   section = kAdditionalDataSection;
+        QueryInfo info;
+
+        info.ReadFrom(*response->mQuery);
+
+        switch (info.mQueryType)
+        {
+        case kIp6AddressQuery:
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        case kIp4AddressQuery:
+#endif
+            section = kAnswerSection;
+            break;
+
+        default:
+            break;
+        }
+
+        error = response->FindHostAddress(section, Name(aHostName), aIndex, aAddress, aTtl);
 
         if (error == kErrorNone)
         {
@@ -864,6 +905,25 @@ Error Client::ResolveService(const char        *aInstanceLabel,
                              void              *aContext,
                              const QueryConfig *aConfig)
 {
+    return Resolve(aInstanceLabel, aServiceName, aCallback, aContext, aConfig, false);
+}
+
+Error Client::ResolveServiceAndHostAddress(const char        *aInstanceLabel,
+                                           const char        *aServiceName,
+                                           ServiceCallback    aCallback,
+                                           void              *aContext,
+                                           const QueryConfig *aConfig)
+{
+    return Resolve(aInstanceLabel, aServiceName, aCallback, aContext, aConfig, true);
+}
+
+Error Client::Resolve(const char        *aInstanceLabel,
+                      const char        *aServiceName,
+                      ServiceCallback    aCallback,
+                      void              *aContext,
+                      const QueryConfig *aConfig,
+                      bool               aShouldResolveHostAddr)
+{
     QueryInfo info;
     Error     error;
     QueryType secondQueryType = kNoQuery;
@@ -873,6 +933,7 @@ Error Client::ResolveService(const char        *aInstanceLabel,
     info.Clear();
 
     info.mConfig.SetFrom(aConfig, mDefaultConfig);
+    info.mShouldResolveHostAddr = aShouldResolveHostAddr;
 
     switch (info.mConfig.GetServiceMode())
     {
@@ -887,6 +948,7 @@ Error Client::ResolveService(const char        *aInstanceLabel,
 
     case QueryConfig::kServiceModeTxt:
         info.mQueryType = kServiceQueryTxt;
+        VerifyOrExit(!info.mShouldResolveHostAddr, error = kErrorInvalidArgs);
         break;
 
     case QueryConfig::kServiceModeSrvTxt:
@@ -1274,6 +1336,10 @@ void Client::ProcessResponse(const Message &aResponseMessage)
 
     // Received successful response from server.
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    ResolveHostAddressIfNeeded(*query, aResponseMessage);
+#endif
+
     if (!CanFinalizeQuery(*query))
     {
         SaveQueryResponse(*query, aResponseMessage);
@@ -1549,6 +1615,51 @@ Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
 
 exit:
     return error;
+}
+
+void Client::ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseMessage)
+{
+    QueryInfo   info;
+    Response    response;
+    ServiceInfo serviceInfo;
+    char        hostName[Name::kMaxNameSize];
+
+    info.ReadFrom(aQuery);
+
+    VerifyOrExit(info.mQueryType == kServiceQuerySrvTxt || info.mQueryType == kServiceQuerySrv);
+    VerifyOrExit(info.mShouldResolveHostAddr);
+
+    PopulateResponse(response, aQuery, aResponseMessage);
+
+    memset(&serviceInfo, 0, sizeof(serviceInfo));
+    serviceInfo.mHostNameBuffer     = hostName;
+    serviceInfo.mHostNameBufferSize = sizeof(hostName);
+    SuccessOrExit(response.ReadServiceInfo(Response::kAnswerSection, Name(aQuery, kNameOffsetInQuery), serviceInfo));
+
+    // Check whether AAAA record for host address is provided in the SRV query response
+
+    if (AsCoreType(&serviceInfo.mHostAddress).IsUnspecified())
+    {
+        Query *newQuery;
+
+        info.mQueryType         = kIp6AddressQuery;
+        info.mMessageId         = 0;
+        info.mTransmissionCount = 0;
+        info.mMainQuery         = &FindMainQuery(aQuery);
+
+        SuccessOrExit(AllocateQuery(info, nullptr, hostName, newQuery));
+        IgnoreError(SendQuery(*newQuery, info, /* aUpdateTimer */ true));
+
+        // Update `aQuery` to be linked with new query (inserting
+        // the `newQuery` into the linked-list after `aQuery`).
+
+        info.ReadFrom(aQuery);
+        info.mNextQuery = newQuery;
+        UpdateQuery(aQuery, info);
+    }
+
+exit:
+    return;
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
