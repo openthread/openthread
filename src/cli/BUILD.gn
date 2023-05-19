@@ -41,6 +41,8 @@ openthread_cli_sources = [
   "cli_config.h",
   "cli_dataset.cpp",
   "cli_dataset.hpp",
+  "cli_dns.cpp",
+  "cli_dns.hpp",
   "cli_history.cpp",
   "cli_history.hpp",
   "cli_joiner.cpp",
