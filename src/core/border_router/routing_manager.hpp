@@ -246,17 +246,16 @@ public:
     /**
      * This method returns the platform provided off-mesh-routable (OMR) prefix.
      *
-     * The prefix is extracted from the platform generated RA messages handled by ProcessPlatfromGeneratedNd.
-     *
-     * When there are no valid platform provided OMR prefix, the returned prefix length will be 0.
+     * The prefix is extracted from the platform generated RA messages handled by `ProcessPlatfromGeneratedNd()`.
      *
      * @param[out] aPrefixInfo      A reference to where the prefix info will be output to.
      *
-     * @retval kErrorInvalidState   The Border Routing Manager is not initialized yet.
      * @retval kErrorNone           Successfully retrieved the OMR prefix.
+     * @retval kErrorNotFound       There are no valid PD prefix on this BR.
+     * @retval kErrorInvalidState   The Border Routing Manager is not initialized yet.
      *
      */
-    Error GetPdOmrPrefix(otBorderRoutingPrefixTableEntry &aPrefixInfo) const;
+    Error GetPdOmrPrefix(PrefixTableEntry &aPrefixInfo) const;
 #endif
 
     /**
@@ -453,23 +452,14 @@ public:
      * @param[in] aRouterAdvert A pointer to the buffer of the router advertisement message.
      * @param[in] aLength       The length of the router advertisement message.
      *
-     * @retval kErrorNone         Successfully parsed and applied the content of the router advert.
-     * @retval kErrorParse        Failed to parse the content.
-     * @retval kErrorInvalidState The DHCPv6 PD is not enabled.
-     *
-     *
      */
-    Error ProcessPlatfromGeneratedNd(const uint8_t *aRouterAdvert, uint16_t aLength)
+    void ProcessPlatfromGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength)
     {
-        return mPdPrefixManager.ProcessPlatformGeneratedNd(aRouterAdvert, aLength);
+        mPdPrefixManager.ProcessPlatformGeneratedRa(aRouterAdvert, aLength);
     }
 
     /**
      * Enables / Disables the functions for DHCPv6 PD.
-     *
-     * When this is disabled, calling `ProcessPlatfromGeneratedNd( will get kErrorInvalidState`. When
-     * setting this to false, the currently published prefix will be removed if it comes from platform generated RA
-     * messages.
      *
      * @param[in] aEnabled  Whether to accept platform generated RA messages.
      *
@@ -545,6 +535,10 @@ private:
     void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
     void HandleDiscoveredPrefixTableRouterTimer(void) { mDiscoveredPrefixTable.HandleRouterTimer(); }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    class PdPrefixManager; // For DiscoveredPrefixTable::Entry
+#endif
+
     class DiscoveredPrefixTable : public InstanceLocator
     {
         // This class maintains the discovered on-link and route prefixes
@@ -564,6 +558,10 @@ private:
         // used for signalling which ensures that if there are multiple
         // changes within the same flow of execution, the callback is
         // invoked after all the changes are processed.
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        friend class PdPrefixManager; // For DiscoveredPrefixTable::Entry
+#endif
 
     public:
         explicit DiscoveredPrefixTable(Instance &aInstance);
@@ -600,6 +598,9 @@ private:
         {
             friend class LinkedListEntry<Entry>;
             friend class Clearable<Entry>;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+            friend class PdPrefixManager;
+#endif
 
         public:
             enum Type : uint8_t
@@ -788,7 +789,6 @@ private:
         void SetFrom(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
         void SetFrom(const OmrPrefix &aOmrPrefix);
         bool IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
-        bool IsFavoredOver(const OmrPrefix &aOmrPrefix) const;
     };
 
     class OmrPrefixManager : public InstanceLocator
@@ -811,7 +811,6 @@ private:
 
         typedef String<kInfoStringSize> InfoString;
 
-        void       DetermineLocalPrefix(void);
         void       DetermineFavoredPrefix(void);
         Error      AddLocalToNetData(void);
         Error      AddOrUpdateLocalInNetData(void);
@@ -1057,7 +1056,9 @@ private:
 
         void               SetEnabled(bool aEnabled);
         bool               IsRunning(void) const { return GetState() == Dhcp6PdState::kDhcp6PdStateRunning; }
-        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
+        bool               HasPreferredPrefix(void) const { return HasPrefix() && !mPrefix.IsDeprecated(); }
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         Dhcp6PdState       GetState(void) const
         {
             // TODO: We need to stop and inform the platform when there is already a GUA prefix advertised in the
@@ -1065,23 +1066,20 @@ private:
             return mEnabled ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateDisabled;
         }
 
-        bool  IsPreferred(void) const { return mPreferred; }
-        Error ProcessPlatformGeneratedNd(const uint8_t *aRouterAdvert, uint16_t aLength);
-        Error GetPrefixInfo(otBorderRoutingPrefixTableEntry &aInfo) const;
-        void  HandleTimer();
+        bool  IsPreferred(void) const { return !mPrefix.IsDeprecated(); }
+        void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
+        Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
+        void  HandleTimer(void);
 
     private:
-        void WithdrawPlatformRouterAdvertPrefix(void);
-        void DeprecatePlatformRouterAdvertPrefix(void);
+        Error Process(const Ip6::Nd::RouterAdvertMessage &aMessage);
+        void  WithdrawPrefix(void);
 
         using PlatformOmrPrefixTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
 
-        Ip6::Prefix            mPrefix;
-        bool                   mEnabled;
-        bool                   mPreferred;
-        TimeMilli              mPreferredUntil;
-        TimeMilli              mValidUntil;
-        PlatformOmrPrefixTimer mTimer;
+        bool                         mEnabled;
+        PlatformOmrPrefixTimer       mTimer;
+        DiscoveredPrefixTable::Entry mPrefix;
     };
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 

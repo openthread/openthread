@@ -235,7 +235,7 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
- * Gets the PD provided off-mesh-routable (OMR) prefix.
+ * Gets the DHCPv6 Prefix Delegation (PD) provided off-mesh-routable (OMR) prefix.
  *
  * Only mPrefix, mValidLifetime and mPreferredLifetime fields are used in the returned prefix info.
  *
@@ -244,9 +244,9 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
  *
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
- * @retval  OT_ERROR_NOT_FOUND      There are not valid PD prefix on this BR.
  * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NOT_FOUND      There are no valid PD prefix on this BR.
  *
  * @sa otBorderRoutingGetOmrPrefix
  * @sa otPlatBorderRoutingProcessIcmp6Ra
@@ -363,14 +363,7 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
                                                otBorderRoutingPrefixTableEntry    *aEntry);
 
 /**
- * Enables / Disables accpeting RouterAdvertisement messages on platform interface.
- *
- * When this is disabled, calling `otPlatBorderRoutingProcessIcmp6Ra` will get `OT_ERROR_INVALID_STATE`.
- * When setting this to false, the currently published prefix will be removed if it comes from platform generated RA
- * messages.
- *
- * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
- * assigned prefix to the thread interface via router advertisement messages.
+ * Enables / Disables DHCPv6 Prefix Delegation.
  *
  * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
  *

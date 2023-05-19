@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,35 +29,44 @@
 /**
  * @file
  * @brief
- *   This file includes the platform abstraction for border routers.
+ *   This file includes the platform abstraction for border routing manager.
  */
 
 #ifndef OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
 #define OPENTHREAD_PLATFORM_BORDER_ROUTER_H_
 
-#include <inttypes.h>
+#include <stdint.h>
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Handles ICMP6 RA messages received on platform network interface.
  *
- * Note: ND messages should not be handled by Thread networks, while for many platforms, ND messages is the way of
+ * The `aMessage` should point to a buffer of a valid ICMPv6 message (without IP headers) with router advertisement as
+ * the value of type field of the message.
+ *
+ * When DHCPv6 PD is disabled, the message will be dropped silently.
+ *
+ * Note: RA messages should not be handled by Thread networks, while for many platforms, RA messages is the way of
  * distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to
  * handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
  *
- * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aMessage  A pointer to an ICMPv6 RouterAdvertisement message.
  * @param[in] aLength   The length of ICMPv6 RouterAdvertisement message.
  *
- * @retval OT_ERROR_NONE          Successfully processed the prefix infomation in the message.
- * @retval OT_ERROR_PARSE         The given message is not a valid ICMPv6 RA message.
- * @retval OT_ERROR_INVALID_STATE Routing manager is configured to not handling RA.
- *
  */
-otError otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
+extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // OPENTHREAD_PLATFORM_BORDER_ROUTER_H_

@@ -36,7 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/border_routing.h>
-#include <openthread/platform/border_router.h>
+#include <openthread/platform/border_routing.h>
 
 #include "border_router/routing_manager.hpp"
 #include "common/instance.hpp"
@@ -156,11 +156,6 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-otError otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
-{
-    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessPlatfromGeneratedNd(aMessage, aLength);
-}
-
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(aEnabled);

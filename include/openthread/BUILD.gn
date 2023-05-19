@@ -84,7 +84,7 @@ source_set("openthread") {
     "ping_sender.h",
     "platform/alarm-micro.h",
     "platform/alarm-milli.h",
-    "platform/border_router.h",
+    "platform/border_routing.h",
     "platform/crypto.h",
     "platform/debug_uart.h",
     "platform/diag.h",
