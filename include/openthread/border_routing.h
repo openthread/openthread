@@ -370,8 +370,6 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
  * @param[in] aInstance A pointer to an OpenThread instance.
  * @param[in] aEnabled  Whether to accept platform generated RA messages.
  *
- * @retval OT_ERROR_NONE Successfully processed the prefix infomation in the message.
- *
  */
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 
