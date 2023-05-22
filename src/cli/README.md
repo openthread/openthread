@@ -56,6 +56,7 @@ Done
 - [fem](#fem)
 - [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
+- [instanceid](#instanceid)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [joiner](README_JOINER.md)
@@ -1488,6 +1489,16 @@ Bring down the IPv6 interface.
 
 ```bash
 > ifconfig down
+Done
+```
+
+### instanceid
+
+Show OpenThread instance identifier.
+
+```bash
+> instanceid
+468697314
 Done
 ```
 
@@ -3408,8 +3419,6 @@ Done
 
 ### vendor name
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor name.
 
 ```bash
@@ -3427,8 +3436,6 @@ Done
 
 ### vendor model
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor model.
 
 ```bash
@@ -3445,8 +3452,6 @@ Done
 ```
 
 ### vendor swversion
-
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
 
 Get the vendor SW version.
 

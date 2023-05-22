@@ -61,6 +61,7 @@
 #include "cli/cli_br.hpp"
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
+#include "cli/cli_dns.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_network_data.hpp"
@@ -107,6 +108,7 @@ class Interpreter : public OutputImplementer, public Output
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Br;
     friend class Commissioner;
+    friend class Dns;
     friend class Joiner;
     friend class NetworkData;
     friend class SrpClient;
@@ -460,21 +462,6 @@ private:
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    otError     GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig);
-    static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
-    void        HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse);
-    const char *DnsConfigServiceModeToString(otDnsServiceMode aMode) const;
-    otError     ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const;
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    void        OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo);
-    static void HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
-    void        HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse);
-    static void HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
-    void        HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse);
-#endif
-#endif
-
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
@@ -556,6 +543,10 @@ private:
     Dataset     mDataset;
     NetworkData mNetworkData;
     UdpExample  mUdp;
+
+#if OPENTHREAD_CLI_DNS_ENABLE
+    Dns mDns;
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Br mBr;

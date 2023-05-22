@@ -58,6 +58,18 @@ extern "C" {
 #define OT_BORDER_AGENT_ID_LENGTH (16)
 
 /**
+ * @struct otBorderAgentId
+ *
+ * This structure represents a Border Agent ID.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otBorderAgentId
+{
+    uint8_t mId[OT_BORDER_AGENT_ID_LENGTH];
+} OT_TOOL_PACKED_END;
+
+/**
  * This enumeration defines the Border Agent state.
  *
  */
@@ -97,14 +109,32 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
  *
  * @param[in]    aInstance  A pointer to an OpenThread instance.
  * @param[out]   aId        A pointer to buffer to receive the ID.
- * @param[inout] aLength    Specifies the length of `aId` when used as input and receives the length
- *                          actual ID data copied to `aId` when used as output.
  *
- * @retval OT_ERROR_INVALID_ARGS  If value of `aLength` if smaller than `OT_BORDER_AGENT_ID_LENGTH`.
- * @retval OT_ERROR_NONE          If successfully retrieved the Border Agent ID.
+ * @retval OT_ERROR_NONE  If successfully retrieved the Border Agent ID.
+ * @retval ...            If failed to retrieve the Border Agent ID.
+ *
+ * @sa otBorderAgentSetId
  *
  */
-otError otBorderAgentGetId(otInstance *aInstance, uint8_t *aId, uint16_t *aLength);
+otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId);
+
+/**
+ * Sets the Border Agent ID.
+ *
+ * The Border Agent ID will be saved in persistent storage and survive reboots. It's required to
+ * set the ID only once after factory reset. If the ID has never been set by calling this function,
+ * a random ID will be generated and returned when `otBorderAgentGetId` is called.
+ *
+ * @param[in]    aInstance  A pointer to an OpenThread instance.
+ * @param[out]   aId        A pointer to the Border Agent ID.
+ *
+ * @retval OT_ERROR_NONE  If successfully set the Border Agent ID.
+ * @retval ...            If failed to set the Border Agent ID.
+ *
+ * @sa otBorderAgentGetId
+ *
+ */
+otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId);
 
 /**
  * @}

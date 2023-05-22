@@ -2608,7 +2608,7 @@ void otNcpRegisterPeekPoke(otNcpDelegateAllowPeekPoke aAllowPeekDelegate, otNcpD
 
     if (ncp != nullptr)
     {
-        ncp->RegisterPeekPoke(aAllowPeekDelegate, aAllowPokeDelegate);
+        ncp->RegisterPeekPokeDelegates(aAllowPeekDelegate, aAllowPokeDelegate);
     }
 }
 #endif // OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
