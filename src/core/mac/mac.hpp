@@ -773,6 +773,7 @@ private:
     bool     ShouldSendBeacon(void) const;
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
+    void     UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame);
     bool     HandleMacCommand(RxFrame &aFrame);
     void     HandleTimer(void);
 

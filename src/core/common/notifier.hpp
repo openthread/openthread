@@ -97,6 +97,7 @@ enum Event : uint32_t
     kEventActiveDatasetChanged             = OT_CHANGED_ACTIVE_DATASET,               ///< Active Dataset changed
     kEventPendingDatasetChanged            = OT_CHANGED_PENDING_DATASET,              ///< Pending Dataset changed
     kEventNat64TranslatorStateChanged      = OT_CHANGED_NAT64_TRANSLATOR_STATE,       ///< Nat64Translator state changed
+    kEventParentLinkQualityChanged         = OT_CHANGED_PARENT_LINK_QUALITY,          ///< Parent link quality changed
 };
 
 /**
