@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (336)
+#define OPENTHREAD_API_VERSION (337)
 
 /**
  * @addtogroup api-instance
@@ -171,44 +171,38 @@ uint64_t otInstanceGetUptime(otInstance *aInstance);
  */
 void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize);
 
-/**
- * Defines flags that are passed as part of `otStateChangedCallback`.
- *
- */
-enum
-{
-    OT_CHANGED_IP6_ADDRESS_ADDED            = 1 << 0,  ///< IPv6 address was added
-    OT_CHANGED_IP6_ADDRESS_REMOVED          = 1 << 1,  ///< IPv6 address was removed
-    OT_CHANGED_THREAD_ROLE                  = 1 << 2,  ///< Role (disabled, detached, child, router, leader) changed
-    OT_CHANGED_THREAD_LL_ADDR               = 1 << 3,  ///< The link-local address changed
-    OT_CHANGED_THREAD_ML_ADDR               = 1 << 4,  ///< The mesh-local address changed
-    OT_CHANGED_THREAD_RLOC_ADDED            = 1 << 5,  ///< RLOC was added
-    OT_CHANGED_THREAD_RLOC_REMOVED          = 1 << 6,  ///< RLOC was removed
-    OT_CHANGED_THREAD_PARTITION_ID          = 1 << 7,  ///< Partition ID changed
-    OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER  = 1 << 8,  ///< Thread Key Sequence changed
-    OT_CHANGED_THREAD_NETDATA               = 1 << 9,  ///< Thread Network Data changed
-    OT_CHANGED_THREAD_CHILD_ADDED           = 1 << 10, ///< Child was added
-    OT_CHANGED_THREAD_CHILD_REMOVED         = 1 << 11, ///< Child was removed
-    OT_CHANGED_IP6_MULTICAST_SUBSCRIBED     = 1 << 12, ///< Subscribed to a IPv6 multicast address
-    OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED   = 1 << 13, ///< Unsubscribed from a IPv6 multicast address
-    OT_CHANGED_THREAD_CHANNEL               = 1 << 14, ///< Thread network channel changed
-    OT_CHANGED_THREAD_PANID                 = 1 << 15, ///< Thread network PAN Id changed
-    OT_CHANGED_THREAD_NETWORK_NAME          = 1 << 16, ///< Thread network name changed
-    OT_CHANGED_THREAD_EXT_PANID             = 1 << 17, ///< Thread network extended PAN ID changed
-    OT_CHANGED_NETWORK_KEY                  = 1 << 18, ///< Network key changed
-    OT_CHANGED_PSKC                         = 1 << 19, ///< PSKc changed
-    OT_CHANGED_SECURITY_POLICY              = 1 << 20, ///< Security Policy changed
-    OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL  = 1 << 21, ///< Channel Manager new pending Thread channel changed
-    OT_CHANGED_SUPPORTED_CHANNEL_MASK       = 1 << 22, ///< Supported channel mask changed
-    OT_CHANGED_COMMISSIONER_STATE           = 1 << 23, ///< Commissioner state changed
-    OT_CHANGED_THREAD_NETIF_STATE           = 1 << 24, ///< Thread network interface state changed
-    OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE = 1 << 25, ///< Backbone Router state changed
-    OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL = 1 << 26, ///< Local Backbone Router configuration changed
-    OT_CHANGED_JOINER_STATE                 = 1 << 27, ///< Joiner state changed
-    OT_CHANGED_ACTIVE_DATASET               = 1 << 28, ///< Active Operational Dataset changed
-    OT_CHANGED_PENDING_DATASET              = 1 << 29, ///< Pending Operational Dataset changed
-    OT_CHANGED_NAT64_TRANSLATOR_STATE       = 1 << 30, ///< The state of NAT64 translator changed
-};
+#define OT_CHANGED_IP6_ADDRESS_ADDED (1U << 0)             ///< IPv6 address was added
+#define OT_CHANGED_IP6_ADDRESS_REMOVED (1U << 1)           ///< IPv6 address was removed
+#define OT_CHANGED_THREAD_ROLE (1U << 2)                   ///< Role (disabled, detached, child, router, leader) changed
+#define OT_CHANGED_THREAD_LL_ADDR (1U << 3)                ///< The link-local address changed
+#define OT_CHANGED_THREAD_ML_ADDR (1U << 4)                ///< The mesh-local address changed
+#define OT_CHANGED_THREAD_RLOC_ADDED (1U << 5)             ///< RLOC was added
+#define OT_CHANGED_THREAD_RLOC_REMOVED (1U << 6)           ///< RLOC was removed
+#define OT_CHANGED_THREAD_PARTITION_ID (1U << 7)           ///< Partition ID changed
+#define OT_CHANGED_THREAD_KEY_SEQUENCE_COUNTER (1U << 8)   ///< Thread Key Sequence changed
+#define OT_CHANGED_THREAD_NETDATA (1U << 9)                ///< Thread Network Data changed
+#define OT_CHANGED_THREAD_CHILD_ADDED (1U << 10)           ///< Child was added
+#define OT_CHANGED_THREAD_CHILD_REMOVED (1U << 11)         ///< Child was removed
+#define OT_CHANGED_IP6_MULTICAST_SUBSCRIBED (1U << 12)     ///< Subscribed to a IPv6 multicast address
+#define OT_CHANGED_IP6_MULTICAST_UNSUBSCRIBED (1U << 13)   ///< Unsubscribed from a IPv6 multicast address
+#define OT_CHANGED_THREAD_CHANNEL (1U << 14)               ///< Thread network channel changed
+#define OT_CHANGED_THREAD_PANID (1U << 15)                 ///< Thread network PAN Id changed
+#define OT_CHANGED_THREAD_NETWORK_NAME (1U << 16)          ///< Thread network name changed
+#define OT_CHANGED_THREAD_EXT_PANID (1U << 17)             ///< Thread network extended PAN ID changed
+#define OT_CHANGED_NETWORK_KEY (1U << 18)                  ///< Network key changed
+#define OT_CHANGED_PSKC (1U << 19)                         ///< PSKc changed
+#define OT_CHANGED_SECURITY_POLICY (1U << 20)              ///< Security Policy changed
+#define OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL (1U << 21)  ///< Channel Manager new pending Thread channel changed
+#define OT_CHANGED_SUPPORTED_CHANNEL_MASK (1U << 22)       ///< Supported channel mask changed
+#define OT_CHANGED_COMMISSIONER_STATE (1U << 23)           ///< Commissioner state changed
+#define OT_CHANGED_THREAD_NETIF_STATE (1U << 24)           ///< Thread network interface state changed
+#define OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE (1U << 25) ///< Backbone Router state changed
+#define OT_CHANGED_THREAD_BACKBONE_ROUTER_LOCAL (1U << 26) ///< Local Backbone Router configuration changed
+#define OT_CHANGED_JOINER_STATE (1U << 27)                 ///< Joiner state changed
+#define OT_CHANGED_ACTIVE_DATASET (1U << 28)               ///< Active Operational Dataset changed
+#define OT_CHANGED_PENDING_DATASET (1U << 29)              ///< Pending Operational Dataset changed
+#define OT_CHANGED_NAT64_TRANSLATOR_STATE (1U << 30)       ///< The state of NAT64 translator changed
+#define OT_CHANGED_PARENT_LINK_QUALITY (1U << 31)          ///< Parent link quality changed
 
 /**
  * Represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`

@@ -185,6 +185,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-018-next-hop-and-path-cost.py
     run cli/test-019-netdata-context-id.py
     run cli/test-020-net-diag-vendor-info.py
+    run cli/test-021-br-route-prf.py
     run cli/test-022-netdata-full.py
     run cli/test-400-srp-client-server.py
     run cli/test-601-channel-manager-channel-change.py

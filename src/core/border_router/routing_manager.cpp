@@ -433,8 +433,9 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
     if (aEvents.Contains(kEventThreadRoleChanged) && !mUserSetRioPreference)
     {
         SetRioPreferenceBasedOnRole();
-        mRoutePublisher.HandleRoleChanged();
     }
+
+    mRoutePublisher.HandleNotifierEvents(aEvents);
 
     VerifyOrExit(IsInitialized() && IsEnabled());
 
@@ -2725,6 +2726,7 @@ RoutingManager::RoutePublisher::RoutePublisher(Instance &aInstance)
     , mState(kDoNotPublish)
     , mPreference(NetworkData::kRoutePreferenceMedium)
     , mUserSetPreference(false)
+    , mTimer(aInstance)
 {
 }
 
@@ -2838,6 +2840,7 @@ void RoutingManager::RoutePublisher::SetPreference(RoutePreference aPreference)
 {
     LogInfo("User explicitly set published route preference to %s", RoutePreferenceToString(aPreference));
     mUserSetPreference = true;
+    mTimer.Stop();
     UpdatePreference(aPreference);
 }
 
@@ -2855,17 +2858,47 @@ exit:
 
 void RoutingManager::RoutePublisher::SetPreferenceBasedOnRole(void)
 {
-    UpdatePreference(Get<Mle::Mle>().IsRouterOrLeader() ? NetworkData::kRoutePreferenceMedium
-                                                        : NetworkData::kRoutePreferenceLow);
+    RoutePreference preference = NetworkData::kRoutePreferenceMedium;
+
+    if (Get<Mle::Mle>().IsChild() && (Get<Mle::Mle>().GetParent().GetTwoWayLinkQuality() != kLinkQuality3))
+    {
+        preference = NetworkData::kRoutePreferenceLow;
+    }
+
+    UpdatePreference(preference);
+    mTimer.Stop();
 }
 
-void RoutingManager::RoutePublisher::HandleRoleChanged(void)
+void RoutingManager::RoutePublisher::HandleNotifierEvents(Events aEvents)
 {
-    if (!mUserSetPreference)
+    VerifyOrExit(!mUserSetPreference);
+
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
         SetPreferenceBasedOnRole();
     }
+
+    if (aEvents.Contains(kEventParentLinkQualityChanged))
+    {
+        VerifyOrExit(Get<Mle::Mle>().IsChild());
+
+        if (Get<Mle::Mle>().GetParent().GetTwoWayLinkQuality() == kLinkQuality3)
+        {
+            VerifyOrExit(!mTimer.IsRunning());
+            mTimer.Start(kDelayBeforePrfUpdateOnLinkQuality3);
+        }
+        else
+        {
+            UpdatePreference(NetworkData::kRoutePreferenceLow);
+            mTimer.Stop();
+        }
+    }
+
+exit:
+    return;
 }
+
+void RoutingManager::RoutePublisher::HandleTimer(void) { SetPreferenceBasedOnRole(); }
 
 void RoutingManager::RoutePublisher::UpdatePreference(RoutePreference aPreference)
 {
