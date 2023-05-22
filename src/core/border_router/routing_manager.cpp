@@ -3213,7 +3213,7 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
 {
     Error                        error = kErrorNone;
     DiscoveredPrefixTable::Entry favoredEntry;
-    bool                         currentPrefixUpdated                  = false;
+    bool                         currentPrefixUpdated = false;
 
     VerifyOrExit(aMessage.IsValid(), error = kErrorParse);
     favoredEntry.Clear();

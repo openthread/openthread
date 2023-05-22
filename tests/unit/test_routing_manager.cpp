@@ -499,9 +499,14 @@ const char *PreferenceToString(int8_t aPreference)
     return str;
 }
 
+void SendRouterAdvert(const Ip6::Address &aAddress, const uint8_t *aBuffer, uint16_t aLength)
+{
+    otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &aAddress, aBuffer, aLength);
+}
+
 void SendRouterAdvert(const Ip6::Address &aAddress, const Icmp6Packet &aPacket)
 {
-    otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &aAddress, aPacket.GetBytes(), aPacket.GetLength());
+    SendRouterAdvert(aAddress, aPacket.GetBytes(), aPacket.GetLength());
 }
 
 void SendNeighborAdvert(const Ip6::Address &aAddress, const Ip6::Nd::NeighborAdvertMessage &aNaMessage)
@@ -670,21 +675,22 @@ struct DefaultRoute
     RoutePreference mPreference;
 };
 
-void SendRouterAdvert(const Ip6::Address &aRouterAddress,
-                      const Pio          *aPios,
-                      uint16_t            aNumPios,
-                      const Rio          *aRios,
-                      uint16_t            aNumRios,
-                      const DefaultRoute &aDefaultRoute)
+template <size_t N>
+uint16_t BuildRouterAdvert(uint8_t (&aBuffer)[N],
+                           const Pio          *aPios,
+                           uint16_t            aNumPios,
+                           const Rio          *aRios,
+                           uint16_t            aNumRios,
+                           const DefaultRoute &aDefaultRoute)
 {
     Ip6::Nd::RouterAdvertMessage::Header header;
-    uint8_t                              buffer[kMaxRaSize];
+    uint16_t                             length;
 
     header.SetRouterLifetime(aDefaultRoute.mLifetime);
     header.SetDefaultRouterPreference(aDefaultRoute.mPreference);
 
     {
-        Ip6::Nd::RouterAdvertMessage raMsg(header, buffer);
+        Ip6::Nd::RouterAdvertMessage raMsg(header, aBuffer);
 
         for (; aNumPios > 0; aPios++, aNumPios--)
         {
@@ -697,10 +703,25 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
             SuccessOrQuit(raMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
         }
 
-        SendRouterAdvert(aRouterAddress, raMsg.GetAsPacket());
-        Log("Sending RA from router %s", aRouterAddress.ToString().AsCString());
-        LogRouterAdvert(raMsg.GetAsPacket());
+        length = raMsg.GetAsPacket().GetLength();
     }
+
+    return length;
+}
+
+void SendRouterAdvert(const Ip6::Address &aRouterAddress,
+                      const Pio          *aPios,
+                      uint16_t            aNumPios,
+                      const Rio          *aRios,
+                      uint16_t            aNumRios,
+                      const DefaultRoute &aDefaultRoute)
+{
+    uint8_t  buffer[kMaxRaSize];
+    uint16_t length = BuildRouterAdvert(buffer, aPios, aNumPios, aRios, aNumRios, aDefaultRoute);
+
+    SendRouterAdvert(aRouterAddress, buffer, length);
+    Log("Sending RA from router %s", aRouterAddress.ToString().AsCString());
+    LogRouterAdvert(buffer, length);
 }
 
 template <uint16_t kNumPios, uint16_t kNumRios>
@@ -731,6 +752,17 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
 void SendRouterAdvert(const Ip6::Address &aRouterAddress, const DefaultRoute &aDefaultRoute)
 {
     SendRouterAdvert(aRouterAddress, nullptr, 0, nullptr, 0, aDefaultRoute);
+}
+
+template <uint16_t kNumPios> void SendRouterAdvertToBorderRoutingProcessIcmp6Ra(const Pio (&aPios)[kNumPios])
+{
+    uint8_t  buffer[kMaxRaSize];
+    uint16_t length = BuildRouterAdvert(buffer, aPios, kNumPios, nullptr, 0,
+                                        DefaultRoute(0, NetworkData::kRoutePreferenceMedium));
+
+    otPlatBorderRoutingProcessIcmp6Ra(sInstance, buffer, length);
+    Log("Passing RA to otPlatBorderRoutingProcessIcmp6Ra");
+    LogRouterAdvert(buffer, length);
 }
 
 struct OnLinkPrefix : public Pio
@@ -3195,19 +3227,9 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     Log("1. Simple RA message.");
     {
         Ip6::Prefix raPrefix = PrefixFromString("2001:db8:dead:beef::", 64);
-        // A simple RA message
-        // PIO: 2001:db8:dead:beef::/64, Pref 1234s, Valid 4321s
-        // Note: Checksum is ignored.
-        const uint8_t testValidRaMessage[] = {
-            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
-            0x20, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        };
 
-        Log("RA:");
-        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, kValidLitime, kPreferredLifetime)});
 
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
         sExpectedRios.Add(raPrefix);
         AdvanceTime(10000);
 
@@ -3215,13 +3237,13 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2000000);
+        AdvanceTime(1500000);
         sExpectedRios.Clear();
-        // Deprecated prefixes will be returned, but they will not be published.
         VerifyPdOmrPrefix(raPrefix);
-        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2500000);
+        AdvanceTime(400000);
+        // Deprecated prefixes will be removed.
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
@@ -3230,22 +3252,12 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     //      Multiple prefixes are advertised, only the smallest one will be used.
     Log("1.1. RA message with multiple prefixes.");
     {
-        Ip6::Prefix raPrefix = PrefixFromString("2001:db8:dead:beef::", 64);
-        // A simple RA message
-        // PIO: 2001:db8:dead:beef::/64, Pref 1234s, Valid 4321s
-        // Note: Checksum is ignored.
-        const uint8_t testValidRaMessage[] = {
-            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
-            0xfd, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
-            0x20, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        };
+        Ip6::Prefix raPrefix    = PrefixFromString("2001:db8:dead:beef::", 64);
+        Ip6::Prefix ulaRaPrefix = PrefixFromString("fd01:db8:deaf:beef::", 64);
 
-        Log("RA:");
-        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(ulaRaPrefix, kValidLitime * 2, kPreferredLifetime * 2),
+                                                       Pio(raPrefix, kValidLitime, kPreferredLifetime)});
 
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
         sExpectedRios.Add(raPrefix);
         AdvanceTime(10000);
 
@@ -3253,13 +3265,13 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2000000);
-        // Deprecated prefixes will be returned, but they will not be published.
-        VerifyPdOmrPrefix(raPrefix);
+        AdvanceTime(1500000);
         sExpectedRios.Clear();
-        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+        VerifyPdOmrPrefix(raPrefix);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2500000);
+        AdvanceTime(400000);
+        // Deprecated prefixes will be removed.
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
@@ -3268,19 +3280,9 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     Log("2. Renew prefix lifetime.");
     {
         Ip6::Prefix raPrefix = PrefixFromString("2001:db8:1:2::", 64);
-        // A simple RA message
-        // PIO: 2001:db8:1:2::/64, Pref 1234s, Valid 4321s
-        // Note: Checksum is ignored.
-        const uint8_t testValidRaMessage[] = {
-            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x03, 0x04, 0x40, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
-            0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        };
 
-        Log("RA:");
-        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, kValidLitime, kPreferredLifetime)});
 
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
         sExpectedRios.Add(raPrefix);
         AdvanceTime(10000);
 
@@ -3288,18 +3290,18 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(1000000);
+        AdvanceTime(1500000);
+        sExpectedRios.Clear();
         VerifyPdOmrPrefix(raPrefix);
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(1000000);
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, kValidLitime, kPreferredLifetime)});
+
+        AdvanceTime(400000);
         VerifyPdOmrPrefix(raPrefix);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(1000000);
-        VerifyPdOmrPrefix(raPrefix);
-        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-
-        AdvanceTime(2500000);
+        AdvanceTime(1500000);
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
@@ -3328,10 +3330,8 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
             0x20, 0x01, 0x0d, 0xb8, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         };
 
-        Log("RA:");
-        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(raPrefix, kValidLitime, kPreferredLifetime)});
 
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
         sExpectedRios.Add(raPrefix);
         sExpectedRios.Clear();
         AdvanceTime(10000);
@@ -3342,20 +3342,15 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         AdvanceTime(1000000);
         VerifyPdOmrPrefix(raPrefix);
 
-        Log("RA:");
-        LogRouterAdvert(testNewRaMessage, sizeof(testNewRaMessage));
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra(
+            {Pio(raPrefix, 0, 0), Pio(newRaPrefix, kValidLitime, kPreferredLifetime)});
         sExpectedRios.Add(newRaPrefix);
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testNewRaMessage, sizeof(testNewRaMessage));
 
         AdvanceTime(1000000);
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyPdOmrPrefix(newRaPrefix);
 
         AdvanceTime(1000000);
-        VerifyPdOmrPrefix(newRaPrefix);
-        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-
-        AdvanceTime(2500000);
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
@@ -3365,19 +3360,11 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     {
         // The prefix will be padded to a /64 prefix.
         Ip6::Prefix raPrefix = PrefixFromString("2001:db8:cafe:0::", 64);
-        // A simple RA message
-        // PIO: 2001:db8:cafe::/63, Pref 1234s, Valid 4321s
-        // Note: Checksum is ignored.
-        const uint8_t testValidRaMessage[] = {
-            0x86, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x03, 0x04, 0x3f, 0xc0, 0x00, 0x00, 0x10, 0xe1, 0x00, 0x00, 0x04, 0xd2, 0x00, 0x00, 0x00, 0x00,
-            0x20, 0x01, 0x0d, 0xb8, 0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        };
+        Ip6::Prefix realRaPrefix;
 
-        Log("RA:");
-        LogRouterAdvert(testValidRaMessage, sizeof(testValidRaMessage));
+        realRaPrefix.Set(raPrefix.GetBytes(), 48);
+        SendRouterAdvertToBorderRoutingProcessIcmp6Ra({Pio(realRaPrefix, kValidLitime, kPreferredLifetime)});
 
-        otPlatBorderRoutingProcessIcmp6Ra(sInstance, testValidRaMessage, sizeof(testValidRaMessage));
         sExpectedRios.Add(raPrefix);
         AdvanceTime(10000);
 
@@ -3385,13 +3372,13 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyOrQuit(sExpectedRios.SawAll());
         VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2000000);
+        AdvanceTime(1500000);
         sExpectedRios.Clear();
-        // Deprecated prefixes will be returned, but they will not be published.
         VerifyPdOmrPrefix(raPrefix);
-        VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+        VerifyOmrPrefixInNetData(raPrefix, /* aDefaultRoute */ false);
 
-        AdvanceTime(2500000);
+        AdvanceTime(400000);
+        // Deprecated prefixes will be removed.
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
