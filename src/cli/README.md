@@ -986,7 +986,7 @@ Get the CSL configuration.
 ```bash
 > csl
 Channel: 11
-Period: 1000 (in units of 10 symbols), 160ms
+Period: 160ms
 Timeout: 1000s
 Done
 ```
@@ -1002,7 +1002,7 @@ Done
 
 ### csl period \<period\>
 
-Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
+Set CSL period in msec. Disable CSL by setting this parameter to `0`.
 
 ```bash
 > csl period 3000

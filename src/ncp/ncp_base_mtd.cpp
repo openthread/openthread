@@ -266,7 +266,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_PERIOD>(vo
 
     SuccessOrExit(error = mDecoder.ReadUint16(cslPeriod));
 
-    error = otLinkCslSetPeriod(mInstance, cslPeriod);
+    error = otLinkSetCslPeriod(mInstance, cslPeriod);
 
 exit:
     return error;
@@ -274,7 +274,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
 {
-    return mEncoder.WriteUint16(otLinkCslGetPeriod(mInstance));
+    return mEncoder.WriteUint16(otLinkGetCslPeriod(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
@@ -284,7 +284,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(v
 
     SuccessOrExit(error = mDecoder.ReadUint32(cslTimeout));
 
-    error = otLinkCslSetTimeout(mInstance, cslTimeout);
+    error = otLinkSetCslTimeout(mInstance, cslTimeout);
 
 exit:
     return error;
@@ -292,7 +292,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
 {
-    return mEncoder.WriteUint32(otLinkCslGetTimeout(mInstance));
+    return mEncoder.WriteUint32(otLinkGetCslTimeout(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
@@ -302,7 +302,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_CHANNEL>(v
 
     SuccessOrExit(error = mDecoder.ReadUint8(cslChannel));
 
-    error = otLinkCslSetChannel(mInstance, cslChannel);
+    error = otLinkSetCslChannel(mInstance, cslChannel);
 
 exit:
     return error;
@@ -310,7 +310,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
 {
-    return mEncoder.WriteUint8(otLinkCslGetChannel(mInstance));
+    return mEncoder.WriteUint8(otLinkGetCslChannel(mInstance));
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

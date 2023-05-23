@@ -2327,23 +2327,22 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @code
      * csl
      * Channel: 11
-     * Period: 1000 (in units of 10 symbols), 160ms
+     * Period: 160ms
      * Timeout: 1000s
      * Done
      * @endcode
      * @par
      * Gets the CSL configuration.
-     * @sa otLinkCslGetChannel
-     * @sa otLinkCslGetPeriod
-     * @sa otLinkCslGetPeriod
-     * @sa otLinkCslGetTimeout
+     * @sa otLinkGetCslChannel
+     * @sa otLinkGetCslPeriod
+     * @sa otLinkGetCslPeriod
+     * @sa otLinkGetCslTimeout
      */
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("Channel: %u", otLinkCslGetChannel(GetInstancePtr()));
-        OutputLine("Period: %u(in units of 10 symbols), %lums", otLinkCslGetPeriod(GetInstancePtr()),
-                   ToUlong(otLinkCslGetPeriod(GetInstancePtr()) * kUsPerTenSymbols / 1000));
-        OutputLine("Timeout: %lus", ToUlong(otLinkCslGetTimeout(GetInstancePtr())));
+        OutputLine("Channel: %u", otLinkGetCslChannel(GetInstancePtr()));
+        OutputLine("Period: %ums", otLinkGetCslPeriod(GetInstancePtr()));
+        OutputLine("Timeout: %lus", ToUlong(otLinkGetCslTimeout(GetInstancePtr())));
     }
     /**
      * @cli csl channel
@@ -2353,11 +2352,11 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @endcode
      * @cparam csl channel @ca{channel}
      * @par api_copy
-     * #otLinkCslSetChannel
+     * #otLinkSetCslChannel
      */
     else if (aArgs[0] == "channel")
     {
-        error = ProcessSet(aArgs + 1, otLinkCslSetChannel);
+        error = ProcessSet(aArgs + 1, otLinkSetCslChannel);
     }
     /**
      * @cli csl period
@@ -2367,11 +2366,11 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @endcode
      * @cparam csl period @ca{period}
      * @par api_copy
-     * #otLinkCslSetPeriod
+     * #otLinkSetCslPeriod
      */
     else if (aArgs[0] == "period")
     {
-        error = ProcessSet(aArgs + 1, otLinkCslSetPeriod);
+        error = ProcessSet(aArgs + 1, otLinkSetCslPeriod);
     }
     /**
      * @cli csl timeout
@@ -2381,11 +2380,11 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      * @endcode
      * @cparam csl timeout @ca{timeout}
      * @par api_copy
-     * #otLinkCslSetTimeout
+     * #otLinkSetCslTimeout
      */
     else if (aArgs[0] == "timeout")
     {
-        error = ProcessSet(aArgs + 1, otLinkCslSetTimeout);
+        error = ProcessSet(aArgs + 1, otLinkSetCslTimeout);
     }
     else
     {

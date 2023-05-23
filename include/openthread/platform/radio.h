@@ -1059,7 +1059,7 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  * Enable or disable CSL receiver.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
- * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
+ * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL. CSL period is in unit of 10 symbols.
  * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
  * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
  *

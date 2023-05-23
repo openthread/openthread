@@ -721,6 +721,37 @@ void TestMacFrameAckGeneration(void)
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+void TestMacCslPeriod(void)
+{
+    static constexpr uint32_t kTenSymbolsInUs  = 160;
+    static constexpr uint16_t kMaxPeriodInMsec = 10485; // Mapping to `0xffff` in units of 10 symbols.
+    static constexpr uint32_t kUsInMs          = 1000;
+
+    printf("Testing Mac::CslPeriodTo/FromMsec\n");
+
+    for (uint16_t period = 0; period < 0xffff; period++)
+    {
+        uint16_t periodInMsec = Mac::Mac::CslPeriodToMsec(period);
+
+        VerifyOrQuit(periodInMsec == ((period * kTenSymbolsInUs) + kUsInMs / 2) / kUsInMs);
+    }
+
+    for (uint16_t periodInMsec = 0; periodInMsec <= kMaxPeriodInMsec; periodInMsec++)
+    {
+        uint16_t period   = Mac::Mac::CslPeriodFromMsec(periodInMsec);
+        uint32_t expected = ((periodInMsec * kUsInMs) + kTenSymbolsInUs / 2) / kTenSymbolsInUs;
+
+        VerifyOrQuit(period == expected);
+    }
+
+    for (uint16_t periodInMsec = kMaxPeriodInMsec + 1; periodInMsec <= 2 * kMaxPeriodInMsec; periodInMsec++)
+    {
+        VerifyOrQuit(Mac::Mac::CslPeriodFromMsec(periodInMsec) == 0xffff);
+    }
+}
+#endif
+
 } // namespace ot
 
 int main(void)
@@ -730,6 +761,9 @@ int main(void)
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();
     ot::TestMacFrameAckGeneration();
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    ot::TestMacCslPeriod();
+#endif
     printf("All tests passed\n");
     return 0;
 }

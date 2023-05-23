@@ -3058,7 +3058,7 @@ enum
     /** Format: `S`
      * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
      *
-     * The CSL period in units of 10 symbols. Value of 0 indicates that CSL should be disabled.
+     * The CSL period in msec. Value of 0 indicates that CSL should be disabled.
      */
     SPINEL_PROP_THREAD_CSL_PERIOD = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
 

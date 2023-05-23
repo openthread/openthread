@@ -252,7 +252,7 @@ class TestOTCI(unittest.TestCase):
             self.assertTrue(all(x == 0 for name, x in leader.get_counter(counter_name).items() if "Time" not in name))
 
         logging.info("CSL config: %r", leader.get_csl_config())
-        leader.config_csl(channel=13, period=100, timeout=200)
+        leader.config_csl(channel=13, period=16, timeout=200)
         logging.info("CSL config: %r", leader.get_csl_config())
 
         logging.info("EID-to-RLOC cache: %r", leader.get_eidcache())

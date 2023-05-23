@@ -1369,7 +1369,7 @@ class OTCI(object):
     # TODO: csl period <period>
     # TODO: csl timeout <timeout>
 
-    _CSL_PERIOD_PATTERN = re.compile(r'(\d+)\(in units of 10 symbols\), \d+ms')
+    _CSL_PERIOD_PATTERN = re.compile(r'(\d+)ms')
     _CSL_TIMEOUT_PATTERN = re.compile(r'(\d+)s')
 
     def get_csl_config(self) -> Dict[str, int]:
@@ -1398,7 +1398,7 @@ class OTCI(object):
         """Configure CSL parameters.
 
         :param channel: Set CSL channel.
-        :param period: Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to 0.
+        :param period: Set CSL period in msec. Disable CSL by setting this parameter to 0.
         :param timeout: Set the CSL timeout in seconds.
         """
 

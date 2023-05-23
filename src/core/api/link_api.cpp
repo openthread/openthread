@@ -395,9 +395,9 @@ bool otLinkIsCslEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Ge
 
 bool otLinkIsCslSupported(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsCslSupported(); }
 
-uint8_t otLinkCslGetChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
+uint8_t otLinkGetCslChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
 
-otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
+otError otLinkSetCslChannel(otInstance *aInstance, uint8_t aChannel)
 {
     Error error = kErrorNone;
 
@@ -409,25 +409,38 @@ exit:
     return error;
 }
 
-uint16_t otLinkCslGetPeriod(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod(); }
-
-otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
+uint16_t otLinkGetCslPeriod(otInstance *aInstance)
 {
-    Error error = kErrorNone;
+    return Mac::Mac::CslPeriodToMsec(AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod());
+}
 
-    VerifyOrExit((aPeriod == 0 || kMinCslPeriod <= aPeriod), error = kErrorInvalidArgs);
-    AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(aPeriod);
+otError otLinkSetCslPeriod(otInstance *aInstance, uint16_t aPeriod)
+{
+    Error    error = kErrorNone;
+    uint16_t periodInTenSymbolsUnit;
+
+    if (aPeriod == 0)
+    {
+        periodInTenSymbolsUnit = 0;
+    }
+    else
+    {
+        periodInTenSymbolsUnit = Mac::Mac::CslPeriodFromMsec(aPeriod);
+        VerifyOrExit(periodInTenSymbolsUnit >= kMinCslPeriod, error = kErrorInvalidArgs);
+    }
+
+    AsCoreType(aInstance).Get<Mac::Mac>().SetCslPeriod(periodInTenSymbolsUnit);
 
 exit:
     return error;
 }
 
-uint32_t otLinkCslGetTimeout(otInstance *aInstance)
+uint32_t otLinkGetCslTimeout(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetCslTimeout();
 }
 
-otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
+otError otLinkSetCslTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
     Error error = kErrorNone;
 

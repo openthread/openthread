@@ -101,7 +101,7 @@ for {set i 3} {$i <= 4} {incr i} {
 if {$::env(THREAD_VERSION) != "1.1" && $::env(OT_NODE_TYPE) == "cli"} {
     send "csl channel 12\n"
     expect_line "Done"
-    send "csl period 3125\n"
+    send "csl period 500\n"
     expect_line "Done"
 
     sleep 1
