@@ -1963,10 +1963,8 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 
     // Determine the local prefix and remove outdated prefix published by us.
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    if (Get<RoutingManager>().mPdPrefixManager.HasPreferredPrefix())
+    if (Get<RoutingManager>().mPdPrefixManager.HasPrefix())
     {
-        // Only preferred prefix will be published. Deprecated prefix will be ignored since they won't provide internet
-        // connectivity usually.
         if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
         {
             RemoveLocalFromNetData();
@@ -3172,15 +3170,14 @@ RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
 
 Error RoutingManager::PdPrefixManager::GetPrefixInfo(PrefixTableEntry &aInfo) const
 {
-    Error     error = kErrorNone;
-    TimeMilli now   = TimerMilli::GetNow();
+    Error error = kErrorNone;
 
     VerifyOrExit(IsRunning() && HasPrefix(), error = kErrorNotFound);
 
     aInfo.mPrefix              = mPrefix.GetPrefix();
     aInfo.mValidLifetime       = mPrefix.GetValidLifetime();
     aInfo.mPreferredLifetime   = mPrefix.GetPreferredLifetime();
-    aInfo.mMsecSinceLastUpdate = now - mPrefix.GetLastUpdateTime();
+    aInfo.mMsecSinceLastUpdate = TimerMilli::GetNow() - mPrefix.GetLastUpdateTime();
 
 exit:
     return error;
@@ -3201,11 +3198,19 @@ exit:
     return;
 }
 
-void RoutingManager::PdPrefixManager::HandleTimer(void)
+void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, const uint16_t aLength)
 {
-    if (mPrefix.IsDeprecated())
+    Error                                     error = kErrorNone;
+    Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
+
+    VerifyOrExit(mEnabled, LogWarn("Ignore platform generated RA since PD is disabled."));
+    packet.Init(aRouterAdvert, aLength);
+    error = Process(Ip6::Nd::RouterAdvertMessage(packet));
+
+exit:
+    if (error != kErrorNone)
     {
-        WithdrawPrefix();
+        LogCrit("Failed to process platform generated ND OnMeshPrefix: %s", ErrorToString(error));
     }
 }
 
@@ -3231,8 +3236,7 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
         entry.SetFrom(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
 
         // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
-        if (entry.GetPrefix().GetLength() > kOmrPrefixLength || entry.GetPrefix().GetLength() == 0 ||
-            entry.GetPrefix().IsLinkLocal() || entry.GetPrefix().IsMulticast())
+        if (!IsValidPdPrefix(entry.GetPrefix()))
         {
             LogWarn("PdPrefixManager: Ignore invalid PIO entry %s", entry.GetPrefix().ToString().AsCString());
             continue;
@@ -3287,22 +3291,6 @@ exit:
     }
 
     return error;
-}
-
-void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, const uint16_t aLength)
-{
-    Error                                     error = kErrorNone;
-    Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
-
-    VerifyOrExit(mEnabled, LogWarn("Ignore platform generated RA since PD is disabled."));
-    packet.Init(aRouterAdvert, aLength);
-    error = Process(Ip6::Nd::RouterAdvertMessage(packet));
-
-exit:
-    if (error != kErrorNone)
-    {
-        LogCrit("Failed to process platform generated ND OnMeshPrefix: %s", ErrorToString(error));
-    }
 }
 
 void RoutingManager::PdPrefixManager::SetEnabled(bool aEnabled)

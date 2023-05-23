@@ -1057,19 +1057,23 @@ private:
         void               SetEnabled(bool aEnabled);
         bool               IsRunning(void) const { return GetState() == Dhcp6PdState::kDhcp6PdStateRunning; }
         bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
-        bool               HasPreferredPrefix(void) const { return HasPrefix() && !mPrefix.IsDeprecated(); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         Dhcp6PdState       GetState(void) const
         {
             // TODO: We need to stop and inform the platform when there is already a GUA prefix advertised in the
             // network.
-            return mEnabled ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateDisabled;
+            return mEnabled ? kDhcp6PdStateRunning : kDhcp6PdStateDisabled;
         }
 
-        bool  IsPreferred(void) const { return !mPrefix.IsDeprecated(); }
         void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
-        void  HandleTimer(void);
+        void  HandleTimer(void) { WithdrawPrefix(); }
+
+        static bool IsValidPdPrefix(const Ip6::Prefix &aPrefix)
+        {
+            return aPrefix.GetLength() != 0 && aPrefix.GetLength() <= kOmrPrefixLength && !aPrefix.IsLinkLocal() &&
+                   !aPrefix.IsMulticast();
+        }
 
     private:
         Error Process(const Ip6::Nd::RouterAdvertMessage &aMessage);
@@ -1109,7 +1113,6 @@ private:
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool NetworkDataContainsUlaRoute(void) const;
-    bool NetworkDataContainsExternalRoute(const Ip6::Prefix &aPrefix) const;
     void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
     bool IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
     void ResetDiscoveredPrefixStaleTimer(void);
