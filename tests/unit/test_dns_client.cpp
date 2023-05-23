@@ -588,7 +588,7 @@ void TestDnsClient(void)
     VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
 
     sBrowseInfo.Reset();
-    Log("Browse() for unknwon service");
+    Log("Browse() for unknown service");
     SuccessOrQuit(dnsClient->Browse("_unknown._udp.default.service.arpa.", BrowseCallback, sInstance));
     AdvanceTime(100);
     VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);

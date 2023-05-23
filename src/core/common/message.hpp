@@ -393,7 +393,7 @@ public:
         /**
          * This static method converts a pointer to an `otMessageSettings` to a `Settings`.
          *
-         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from.
+         * @param[in] aSettings  A pointer to `otMessageSettings` to convert from.
          *                       If it is `nullptr`, then the default settings `GetDefault()` will be used.
          *
          * @returns A reference to the converted `Settings` or the default if @p aSettings is `nullptr`.

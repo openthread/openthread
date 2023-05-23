@@ -572,7 +572,7 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
     OutputLine("%s", ageString);
-    OutputFormat(kIndentSize, "type:%s len:%u cheksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
+    OutputFormat(kIndentSize, "type:%s len:%u checksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
                  aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
                  MessagePriorityToString(aInfo.mPriority));
     if (aIsRx)

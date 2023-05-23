@@ -101,7 +101,7 @@ public:
     /**
      * This constants specified no next hop.
      *
-     * Used for `mNextHop` in `RouteInfo` struture.
+     * Used for `mNextHop` in `RouteInfo` structure.
      *
      */
     static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;

@@ -507,7 +507,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
     }
 
     // given the order in which timers are started, the TimerScheduler should call otPlatAlarmMilliStartAt 2 times.
-    // one for timer[0] and one for timer[5] which will supercede timer[0].
+    // one for timer[0] and one for timer[5] which will supersede timer[0].
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTenTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTenTimer: Stop CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "TestTenTimer: Handler CallCount Failed.");

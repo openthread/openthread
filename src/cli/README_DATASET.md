@@ -392,7 +392,7 @@ Usage: `dataset networkname [name]`
 Get network name.
 
 ```bash
-> datset networkname
+> dataset networkname
 OpenThread
 Done
 ```

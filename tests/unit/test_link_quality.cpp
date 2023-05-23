@@ -57,7 +57,7 @@ enum
 #define MAX_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
 
-// This struct contains RSS values and test data for checking link quality info calss.
+// This struct contains RSS values and test data for checking link quality info class.
 struct RssTestData
 {
     const int8_t *mRssList;             // Array of RSS values.

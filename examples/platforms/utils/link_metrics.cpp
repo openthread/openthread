@@ -49,7 +49,7 @@ class LinkMetricsDataInfo : public LinkedListEntry<LinkMetricsDataInfo>, public 
 
 public:
     /**
-     * Construtor.
+     * Constructor.
      *
      */
     LinkMetricsDataInfo(void) { Clear(); };

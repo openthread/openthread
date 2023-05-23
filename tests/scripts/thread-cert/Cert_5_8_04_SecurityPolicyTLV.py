@@ -49,7 +49,7 @@ THREAD_NODE = 4
 # requires an External Commissioner which is currently not part of Thread
 # Certification.
 #
-# Notes: Due to the packet parsing compatiable issue for supporting Thread 1.2
+# Notes: Due to the packet parsing compatible issue for supporting Thread 1.2
 #        and 1.1, the security policy values can be fetched only in the unknown
 #        field.
 #
