@@ -620,12 +620,15 @@ public:
     uint16_t GetCslPeriod(void) const { return mCslPeriod; }
 
     /**
-     * Gets the CSL period.
+     * Gets the CSL period in milliseconds.
+     *
+     * If the CSL period cannot be represented exactly in milliseconds, return the rounded value to the nearest
+     * millisecond.
      *
      * @returns CSL period in milliseconds.
      *
      */
-    uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
+    uint32_t GetCslPeriodInMsec(void) const;
 
     /**
      * Sets the CSL period.
@@ -634,6 +637,16 @@ public:
      *
      */
     void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method converts a given CSL period in units of 10 symbols to microseconds.
+     *
+     * @param[in] aPeriodInTenSymbols   The CSL period in unit of 10 symbols.
+     *
+     * @returns The converted CSL period value in microseconds corresponding to @p aPeriodInTenSymbols.
+     *
+     */
+    static uint32_t CslPeriodToUsec(uint16_t aPeriodInTenSymbols);
 
     /**
      * Indicates whether CSL is started at the moment.
@@ -680,7 +693,6 @@ public:
     {
         mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
     }
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

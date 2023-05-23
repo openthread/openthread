@@ -3055,10 +3055,13 @@ enum
     SPINEL_PROP_THREAD_NEW_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 40,
 
     /// MAC CSL Period
-    /** Format: `S`
+    /** Format: `L`
      * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
      *
-     * The CSL period in units of 10 symbols. Value of 0 indicates that CSL should be disabled.
+     * The CSL period in microseconds. Value of 0 indicates that CSL should be disabled.
+     *
+     * The CSL period MUST be a multiple of 160 (which is 802.15 "ten symbols time").
+     *
      */
     SPINEL_PROP_THREAD_CSL_PERIOD = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
 

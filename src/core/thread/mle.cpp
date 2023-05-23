@@ -1948,7 +1948,7 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
-            ExitNow(interval = Get<Mac::Mac>().GetCslPeriodMs() + static_cast<uint32_t>(kUnicastRetransmissionDelay));
+            ExitNow(interval = Get<Mac::Mac>().GetCslPeriodInMsec() + kUnicastRetransmissionDelay);
         }
         else
 #endif
