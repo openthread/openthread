@@ -250,7 +250,7 @@ constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for 
 /**
  * This function converts link quality to route cost.
  *
- * @param[in]  aLinkQuality  The link quality to covert.
+ * @param[in]  aLinkQuality  The link quality to convert.
  *
  * @returns The route cost corresponding to @p aLinkQuality.
  *

@@ -858,7 +858,7 @@ private:
     // will retry after a short interval `kTxFailureRetryInterval`
     // up to `kMaxTxFailureRetries` attempts. After this, the retry
     // wait interval will be used (which keeps growing on each failure
-    // - please see bellow).
+    // - please see below).
     //
     // If the update message is sent successfully but there is no
     // response from server or if server rejects the update, the

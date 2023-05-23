@@ -239,7 +239,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
             must_next()
 
         # Step 4: Border Router sends an ICMPv6 Echo Request to MED using GUA 2003::
-        #         addresss
+        #         address
         #         The DUT MUST respond to the Address Query Request with a properly
         #         formatted Address Notification Message:
         #             CoAP URI-Path

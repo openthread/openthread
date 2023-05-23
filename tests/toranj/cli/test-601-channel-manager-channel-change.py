@@ -154,7 +154,7 @@ r1.cli('channel manager delay 20')
 r1.cli('channel manager change 17')
 time.sleep(5 / speedup)
 verify_within(check_channel_on_all_nodes, 10)
-channael = 18
+channel = 18
 r2.cli('channel manager change', channel)
 verify_within(check_channel_on_all_nodes, 10)
 

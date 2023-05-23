@@ -475,19 +475,19 @@ Print the latest 5 entries of the IPv6 message RX history as a list:
 ```bash
 > history rx list 4
 00:00:13.368
-    type:UDP len:50 cheksum:0xbd26 sec:no prio:net rss:-20 from:0x4800 radio:15.4
+    type:UDP len:50 checksum:0xbd26 sec:no prio:net rss:-20 from:0x4800 radio:15.4
     src:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
     dst:[ff02:0:0:0:0:0:0:1]:19788
 00:00:14.991
-    type:HopOpts len:44 cheksum:0x0000 sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+    type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
     src:[fdde:ad00:beef:0:0:ff:fe00:4800]:0
     dst:[ff03:0:0:0:0:0:0:2]:0
 00:00:15.030
-    type:UDP len:12 cheksum:0x3f7d sec:yes prio:net rss:-20 from:0x4800 radio:15.4
+    type:UDP len:12 checksum:0x3f7d sec:yes prio:net rss:-20 from:0x4800 radio:15.4
     src:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
     dst:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
 00:00:15.032
-    type:ICMP6(EchoReqst) len:16 cheksum:0x942c sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+    type:ICMP6(EchoReqst) len:16 checksum:0x942c sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
     src:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
     dst:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
 Done
@@ -577,23 +577,23 @@ Print the latest 5 entries of the IPv6 message RX history as a list:
 > history rxtx list 5
 
 00:00:02.100
-    type:UDP len:50 cheksum:0xd843 sec:no prio:net rss:-20 from:0x0800 radio:15.4
+    type:UDP len:50 checksum:0xd843 sec:no prio:net rss:-20 from:0x0800 radio:15.4
     src:[fe80:0:0:0:54d9:5153:ffc6:df26]:19788
     dst:[ff02:0:0:0:0:0:0:1]:19788
 00:00:15.331
-    type:HopOpts len:44 cheksum:0x0000 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
+    type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
     src:[fdde:ad00:beef:0:0:ff:fe00:800]:0
     dst:[ff03:0:0:0:0:0:0:2]:0
 00:00:15.354
-    type:UDP len:12 cheksum:0x6c6b sec:yes prio:net rss:-20 from:0x0800 radio:15.4
+    type:UDP len:12 checksum:0x6c6b sec:yes prio:net rss:-20 from:0x0800 radio:15.4
     src:[fdde:ad00:beef:0:0:ff:fe00:800]:61631
     dst:[fdde:ad00:beef:0:0:ff:fe00:801]:61631
 00:00:15.356
-    type:ICMP6(EchoReqst) len:16 cheksum:0xc6a2 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
+    type:ICMP6(EchoReqst) len:16 checksum:0xc6a2 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
     src:[fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0
     dst:[fdde:ad00:beef:0:af4c:3644:882a:3698]:0
 00:00:15.356
-    type:ICMP6(EchoReply) len:16 cheksum:0xc5a2 sec:yes prio:norm tx-success:yes to:0x0800 radio:15.4
+    type:ICMP6(EchoReply) len:16 checksum:0xc5a2 sec:yes prio:norm tx-success:yes to:0x0800 radio:15.4
     src:[fdde:ad00:beef:0:af4c:3644:882a:3698]:0
     dst:[fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0
 ```
@@ -633,19 +633,19 @@ Print the IPv6 message TX history as a list:
 ```bash
 history tx list
 00:00:23.957
-    type:ICMP6(EchoReply) len:16 cheksum:0x932c sec:yes prio:norm tx-success:yes to:0x4800 radio:15.4
+    type:ICMP6(EchoReply) len:16 checksum:0x932c sec:yes prio:norm tx-success:yes to:0x4800 radio:15.4
     src:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
     dst:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
 00:00:23.959
-    type:UDP len:50 cheksum:0xce87 sec:yes prio:net tx-success:yes to:0x4800 radio:15.4
+    type:UDP len:50 checksum:0xce87 sec:yes prio:net tx-success:yes to:0x4800 radio:15.4
     src:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
     dst:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
 00:00:44.658
-    type:UDP len:64 cheksum:0xf7ba sec:no prio:net tx-success:yes to:0x4800 radio:15.4
+    type:UDP len:64 checksum:0xf7ba sec:no prio:net tx-success:yes to:0x4800 radio:15.4
     src:[fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788
     dst:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
 00:00:45.415
-    type:UDP len:44 cheksum:0x26d4 sec:no prio:net tx-success:yes to:0xffff radio:15.4
+    type:UDP len:44 checksum:0x26d4 sec:no prio:net tx-success:yes to:0xffff radio:15.4
     src:[fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788
     dst:[ff02:0:0:0:0:0:0:2]:19788
 Done

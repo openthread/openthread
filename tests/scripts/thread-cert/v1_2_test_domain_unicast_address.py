@@ -137,7 +137,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
 
     def __check_dua_registration(self, node, iid, dp_cid):
         ''' Check whether or not the specified Domain Unicast Address is registered in Address
-        Registraion TLV.
+        Registration TLV.
 
         Args:
             node (int) : The device id
