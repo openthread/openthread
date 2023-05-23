@@ -66,7 +66,7 @@ void otLinkMetricsInit(int8_t aNoiseFloor);
  * @param[in]  aShortAddress    The short address of the Initiator.
  * @param[in]  aExtAddress      A pointer to the extended address of the Initiator.
  * @param[in]  aLinkMetrics     Flags specifying what metrics to query (Pdu Count would be omitted). When
- *                              @p aLinkMetrics is eqaul to `0`, this method clears the Initiator.
+ *                              @p aLinkMetrics is equal to `0`, this method clears the Initiator.
  *
  * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
  * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `nullptr`.

@@ -3173,7 +3173,7 @@ class NodeImpl:
     def _parse_linkmetrics_query_result(self, lines):
         """Parse link metrics query result"""
 
-        # Exmaple of command output:
+        # Example of command output:
         # ['Received Link Metrics Report from: fe80:0:0:0:146e:a00:0:1',
         #  '- PDU Counter: 1 (Count/Summation)',
         #  '- LQI: 0 (Exponential Moving Average)',

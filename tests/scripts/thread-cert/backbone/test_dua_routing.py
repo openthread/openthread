@@ -211,7 +211,7 @@ class TestNdProxy(thread_cert.TestCase):
         PBBR_ETH = pv.vars['PBBR_ETH']
         PBBR2_ETH = pv.vars['PBBR2_ETH']
 
-        # Verify that SBBR should not foward any Ping Request to the Thread network.
+        # Verify that SBBR should not forward any Ping Request to the Thread network.
         # Use `ipv6.hlim == 63` to avoid false fails because SBBR might still forward Ping Request from PBBR to ROUTER1
         pkts.filter_wpan_src64(SBBR).filter_ping_request().filter('ipv6.hlim == 63').must_not_next()
 

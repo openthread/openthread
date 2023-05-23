@@ -175,7 +175,7 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         #             TLV Type 8 – IPv6 address list
         #             TLV Type 17 – Channel Pagesi
         #
-        #         if DUT is Router, contianing the following as well:
+        #         if DUT is Router, containing the following as well:
         #             TLV Type 4 – Connectivity
         #             TLV Type 5 – Route64
         #             TLV Type 16 – Child Table

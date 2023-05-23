@@ -747,7 +747,7 @@ class Node(object):
             while asyncore.socket_map:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
-                    print('Performing aysnc tx/tx took too long ({}>{} sec)'.format(elapsed_time, timeout))
+                    print('Performing async tx/tx took too long ({}>{} sec)'.format(elapsed_time, timeout))
                     raise Node._NodeError('perform_tx_rx timed out ({}>{} sec)'.format(elapsed_time, timeout))
                 # perform a single asyncore loop
                 asyncore.loop(timeout=0.5, count=1)

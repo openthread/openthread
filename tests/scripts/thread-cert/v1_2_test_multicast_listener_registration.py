@@ -891,7 +891,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.simulator.go(WAIT_REDUNDANCE)
         self.__check_send_mlr_req(parent_id, MA1, should_send=True, expect_mlr_rsp=True)
 
-        # Parent should not register MA1 of Child 1 because it's already registerd
+        # Parent should not register MA1 of Child 1 because it's already registered
         self.flush_all()
         self.nodes[meds[0]].add_ipmaddr(MA1)
         self.simulator.go(PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE)

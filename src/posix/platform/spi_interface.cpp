@@ -104,7 +104,7 @@ otError SpiInterface::HardwareReset(void)
 
     // If the `INT` pin is set to low during the restart of the RCP chip, which triggers continuous invalid SPI
     // transactions by the host, it will cause the function `PushPullSpi()` to output lots of invalid warn log
-    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputing invalid
+    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputting invalid
     // log messages.
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
 

@@ -95,7 +95,7 @@ typedef struct otDnsTxtEntry
 } otDnsTxtEntry;
 
 /**
- * This structure represents an iterator for TXT record entires (key/value pairs).
+ * This structure represents an iterator for TXT record entries (key/value pairs).
  *
  * The data fields in this structure are intended for use by OpenThread core and caller should not read or change them.
  *

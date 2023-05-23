@@ -47,7 +47,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
    Done
    ```
 
-4. Observe IPv6 addresses assigned to the Thread inteface.
+4. Observe IPv6 addresses assigned to the Thread interface.
 
    ```bash
    > ipaddr
