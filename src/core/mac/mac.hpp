@@ -630,7 +630,7 @@ public:
      * @returns CSL period in milliseconds.
      *
      */
-    uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
+    uint32_t GetCslPeriodMs(void) const { return CslPeriodToMsec(mCslPeriod); }
 
     /**
      * This method sets the CSL period.
@@ -639,6 +639,34 @@ public:
      *
      */
     void SetCslPeriod(uint16_t aPeriod);
+
+    /**
+     * This method converts a given CSL period in units of 10 symbols to milliseconds.
+     *
+     * When converting from 10 symbols unit (which is 160 microseconds) to milliseconds, the method rounds to the
+     * nearest value. For example, if @p aPeriodInTenSymbols is 212 which maps to 212 x 0.160 = 33.92 msec, the return
+     * value will be 34 (msec).
+     *
+     * @param[in] aPeriodInTenSymbols   The CSL period in unit of 10 symbols.
+     *
+     * @returns The converted value in msec corresponding to @p aPeriodInTenSymbols.
+     *
+     */
+    static uint16_t CslPeriodToMsec(uint16_t aPeriodInTenSymbols);
+
+    /**
+     * This method converts a given CSL period in milliseconds to units of 10 symbols.
+     *
+     * When converting from milliseconds to 10 symbols unit (which is 160 microseconds), this function rounds to the
+     * nearest value. For example, if the target CSL period is 23 msec, the returned value will be 144 (in unit of 10
+     * symbols) which maps to 144 x 0.160 = 23.04 msec instead of 143 which maps to 22.88 msec.
+     *
+     * @param[in] aPeriodInMsec   The CSL period in msec.
+     *
+     * @returns The converted value in units of 10 symbols corresponding to @p aPeriodInMsec.
+     *
+     */
+    static uint16_t CslPeriodFromMsec(uint16_t aPeriodInMsec);
 
     /**
      * This method indicates whether CSL is started at the moment.
@@ -685,7 +713,6 @@ public:
     {
         mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
     }
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

@@ -418,6 +418,10 @@ exit:
     return error;
 }
 
+uint16_t otLinkCslPeriodToMsec(uint16_t aPeriodInTenSymbols) { return Mac::Mac::CslPeriodToMsec(aPeriodInTenSymbols); }
+
+uint16_t otLinkCslPeriodFromMsec(uint16_t aPeriodInMsec) { return Mac::Mac::CslPeriodFromMsec(aPeriodInMsec); }
+
 uint32_t otLinkCslGetTimeout(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetCslTimeout();

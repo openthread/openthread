@@ -2752,9 +2752,10 @@ template <> otError Interpreter::Process<Cmd("csl")>(Arg aArgs[])
      */
     if (aArgs[0].IsEmpty())
     {
+        uint16_t cslPeriod = otLinkCslGetPeriod(GetInstancePtr());
+
         OutputLine("Channel: %u", otLinkCslGetChannel(GetInstancePtr()));
-        OutputLine("Period: %u(in units of 10 symbols), %lums", otLinkCslGetPeriod(GetInstancePtr()),
-                   ToUlong(otLinkCslGetPeriod(GetInstancePtr()) * kUsPerTenSymbols / 1000));
+        OutputLine("Period: %u(in units of 10 symbols), %ums", cslPeriod, otLinkCslPeriodToMsec(cslPeriod));
         OutputLine("Timeout: %lus", ToUlong(otLinkCslGetTimeout(GetInstancePtr())));
     }
     /**

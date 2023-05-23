@@ -400,7 +400,7 @@ public:
     /**
      * This method configures CSL parameters in 'SubMac'.
      *
-     * @param[in]  aPeriod    The CSL period.
+     * @param[in]  aPeriod    The CSL period (in unit of 10 symbols).
      * @param[in]  aChannel   The CSL channel.
      * @param[in]  aShortAddr The short source address of CSL receiver's peer.
      * @param[in]  aExtAddr   The extended source address of CSL receiver's peer.

@@ -1069,6 +1069,34 @@ uint16_t otLinkCslGetPeriod(otInstance *aInstance);
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
 
 /**
+ * Converts a given CSL period in units of 10 symbols to milliseconds.
+ *
+ * When converting from 10 symbols unit (which is 160 microseconds) to milliseconds, the function rounds to the nearest
+ * value. For example, if @p aPeriodInTenSymbols is 212 which maps to 212 x 0.160 = 33.92 msec, the return value will
+ * be 34 msec.
+ *
+ * @param[in] aPeriodInTenSymbols   The CSL period in unit of 10 symbols to convert.
+ *
+ * @returns The converted value in msec corresponding to @p aPeriodInTenSymbols.
+ *
+ */
+uint16_t otLinkCslPeriodToMsec(uint16_t aPeriodInTenSymbols);
+
+/**
+ * Converts a given CSL period in milliseconds to units of 10 symbols.
+ *
+ * When converting from milliseconds to 10 symbols unit (which is 160 microseconds), this function rounds to the
+ * nearest value. For example, if the target CSL period is 23 msec, the returned value will be 144 (in unit of 10
+ * symbols) which maps to 144 x 0.160 = 23.04 msec instead of 143 which maps to 22.88 msec.
+ *
+ * @param[in] aPeriodInMsec   The CSL period in msec.
+ *
+ * @returns The converted value in units of 10 symbols corresponding to @p aPeriodInMsec.
+ *
+ */
+uint16_t otLinkCslPeriodFromMsec(uint16_t aPeriodInMsec);
+
+/**
  * This function gets the CSL timeout.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.

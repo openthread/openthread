@@ -2268,6 +2268,18 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     UpdateCsl();
 }
 
+uint16_t Mac::CslPeriodToMsec(uint16_t aPeriodInTenSymbols)
+{
+    return ClampToUint16(
+        DivideAndRoundToClosest(static_cast<uint32_t>(aPeriodInTenSymbols) * kUsPerTenSymbols, Time::kOneMsecInUsec));
+}
+
+uint16_t Mac::CslPeriodFromMsec(uint16_t aPeriodInMsec)
+{
+    return ClampToUint16(
+        DivideAndRoundToClosest(static_cast<uint32_t>(aPeriodInMsec) * Time::kOneMsecInUsec, kUsPerTenSymbols));
+}
+
 bool Mac::IsCslEnabled(void) const { return !Get<Mle::Mle>().IsRxOnWhenIdle() && IsCslCapable(); }
 
 bool Mac::IsCslCapable(void) const { return (GetCslPeriod() > 0) && IsCslSupported(); }
