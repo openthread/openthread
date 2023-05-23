@@ -109,7 +109,7 @@
  *
  * Specifies whether to support handling platform generated ND messages.
  *
- * The desired use case is the prefix will be allocated by other softwares on the interface, and they will advertise the
+ * The desired use case is the prefix will be allocated by other software on the interface, and they will advertise the
  * assigned prefix to the thread interface via router advertisement messages.
  *
  */
