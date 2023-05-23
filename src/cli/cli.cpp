@@ -5130,7 +5130,7 @@ exit:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 /**
- * @cli mliid (iid)
+ * @cli mliid
  * @code
  * mliid 1122334455667788
  * Done
@@ -5156,7 +5156,7 @@ exit:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 /**
- * @cli mlr reg (ipaddr)
+ * @cli mlr reg
  * @code
  * mlr reg ff04::1
  * status 0, 0 failed
@@ -5388,7 +5388,7 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         {
             
             /**
-             * @cli multiradio neighbor (ext address)
+             * @cli multiradio neighbor
              * @code
              * multiradio neighbor 3a65bc38dbe4a5be
              * [15.4(255), TREL(255)]
