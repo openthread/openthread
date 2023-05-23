@@ -5254,16 +5254,6 @@ void Interpreter::HandleMlrRegResult(otError             aError,
 
 #endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-/**
- * @cli mode
- * @code
- * mode
- * rdn
- * Done
- * @endcode
- * @par api_copy
- * #otThreadSetLinkMode
- */
 template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 {
     otError          error = OT_ERROR_NONE;
@@ -5280,7 +5270,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
     }
     
     /**
-     * @cli mode
+     * @cli mode (get,set)
      * @code
      * mode rdn
      * Done
@@ -5398,7 +5388,7 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         {
             
             /**
-             * @cli multiradio neighbor <ext address>
+             * @cli multiradio neighbor (ext address)
              * @code
              * multiradio neighbor 3a65bc38dbe4a5be
              * [15.4(255), TREL(255)]
