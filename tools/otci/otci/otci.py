@@ -1975,14 +1975,14 @@ class OTCI(object):
     def enable_backbone_router(self):
         """Enable Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred for attached device if there is no Backbone Router Service in Thread Network Data.
+        SRV_DATA.ntf would be triggered for attached device if there is no Backbone Router Service in Thread Network Data.
         """
         self.execute_command('bbr enable')
 
     def disable_backbone_router(self):
         """Disable Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred if Backbone Router is Primary state.
+        SRV_DATA.ntf would be triggered if Backbone Router is Primary state.
         """
         self.execute_command('bbr disable')
 
@@ -2036,7 +2036,7 @@ class OTCI(object):
     def register_backbone_router_dataset(self):
         """Register Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred for attached device.
+        SRV_DATA.ntf would be triggered for attached device.
         """
         self.execute_command('bbr register')
 

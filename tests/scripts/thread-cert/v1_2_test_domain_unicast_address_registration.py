@@ -165,13 +165,13 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         '''
         return ''.join(ipaddress.ip_address(address).exploded.split(':')[4:])
 
-    def __check_dua_registration_tmf(self, node, occurences=1, ml_eid=None):
+    def __check_dua_registration_tmf(self, node, occurrences=1, ml_eid=None):
 
         messages = self.simulator.get_messages_sent_by(node)
-        for i in range(occurences):
+        for i in range(occurrences):
             msg = messages.next_coap_message('0.02', '/n/dr', False)
             assert msg, 'Expected {}, but {}th not found\n node: {}(extaddr: {})'.format(
-                occurences, i + 1, node, self.nodes[node].get_addr64())
+                occurrences, i + 1, node, self.nodes[node].get_addr64())
             if ml_eid:
                 ml_eid_tlv = msg.get_coap_message_tlv(network_layer.MlEid)
                 self.assertEqual(ml_eid, ml_eid_tlv.ml_eid.hex())

@@ -43,7 +43,7 @@ class OT_Sniffer(ISniffer):
             self.is_active = False
 
         except Exception as e:
-            ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [intialize] --> ' + str(e))
+            ModuleHelper.WriteIntoDebugLogger('OT_Sniffer: [initialize] --> ' + str(e))
 
     def discoverSniffer(self):
         sniffers = []
@@ -148,7 +148,7 @@ class OT_Sniffer(ISniffer):
 
     def getSnifferAddress(self):
         """
-        Method to retrun the current sniffer's COM/IP address
+        Method to return the current sniffer's COM/IP address
         @return : string
         """
         return self.port

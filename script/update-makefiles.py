@@ -28,7 +28,7 @@
 #
 
 # This script updates different make/build files (CMakeLists.txt, BUILD.gn,
-# Andriod.mk, Andriod.bp, auto-make) in OpenThread repo based on the
+# Android.mk, Android.bp, auto-make) in OpenThread repo based on the
 # current files present in `./src/core/` & `./include/openthread/`
 # folders. This script MUST be called from openthread root folder.
 
