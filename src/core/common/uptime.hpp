@@ -36,6 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#if !OPENTHREAD_CONFIG_UPTIME_ENABLE && OPENTHREAD_FTD
+#error "OPENTHREAD_CONFIG_UPTIME_ENABLE is required for FTD"
+#endif
+
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 
 #include "common/locator.hpp"
