@@ -155,6 +155,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         def is_int(x):
             return isinstance(x, int)
 
+        # 1. Check hosts & services published by Advertising Proxy.
         # check if AAAA query works
         dig_result = host.dns_dig(br2_addr, host1_full_name, 'AAAA')
         self._assert_dig_result_matches(dig_result, {
@@ -219,7 +220,64 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             ],
         }])
 
-        # check some invalid queries
+        # 2. Check the host & service published by a WiFi host.
+        # check if AAAA query works
+        wifi_host_linklocal_address = 'fe80::1234'
+        wifi_host_routable_address = '2402::abcd'
+        wifi_host_full_name = f'wifi-host.{DOMAIN}'
+        wifi_service_instance_full_name = f'wifi-service._host._tcp.{DOMAIN}'
+        host.publish_mdns_host('wifi-host', [wifi_host_linklocal_address, wifi_host_routable_address])
+        host.publish_mdns_service('wifi-service', '_host._tcp', 12345, 'wifi-host', {'k1': 'v1', 'k2': 'v2'})
+        dig_result = host.dns_dig(br2_addr, wifi_host_full_name, 'AAAA')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_host_full_name, 'IN', 'AAAA')],
+                'ANSWER': [(wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),],
+            })
+
+        # check if SRV query works
+        dig_result = host.dns_dig(br2_addr, wifi_service_instance_full_name, 'SRV')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_service_instance_full_name, 'IN', 'SRV')],
+                'ANSWER': [(wifi_service_instance_full_name, 'IN', 'SRV', is_int, is_int, 12345, wifi_host_full_name),
+                          ],
+                'ADDITIONAL': [(wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),],
+            })
+
+        # check if TXT query works
+        dig_result = host.dns_dig(br2_addr, wifi_service_instance_full_name, 'TXT')
+        self._assert_dig_result_matches(
+            dig_result, {
+                'QUESTION': [(wifi_service_instance_full_name, 'IN', 'TXT')],
+                'ANSWER': [(wifi_service_instance_full_name, 'IN', 'TXT', {
+                    'k1': 'v1',
+                    'k2': 'v2'
+                })],
+            })
+
+        # check if PTR query works
+        dig_result = host.dns_dig(br2_addr, f'_host._tcp.{DOMAIN}', 'PTR')
+
+        self._assert_dig_result_matches_any(dig_result, [{
+            'QUESTION': [(f'_host._tcp.{DOMAIN}', 'IN', 'PTR')],
+            'ANSWER': [(f'_host._tcp.{DOMAIN}', 'IN', 'PTR', wifi_service_instance_full_name)],
+            'ADDITIONAL': [
+                (wifi_service_instance_full_name, 'IN', 'SRV', is_int, is_int, 12345, wifi_host_full_name),
+                (wifi_service_instance_full_name, 'IN', 'TXT', {
+                    'k1': 'v1',
+                    'k2': 'v2'
+                }),
+                (wifi_host_full_name, 'IN', 'AAAA', wifi_host_routable_address),
+            ],
+        }])
+
+        host.bash('pkill avahi-publish')
+
+        # 3. Verify Discovery Proxy works for _meshcop._udp published by BR.
+        self._verify_discovery_proxy_meshcop(br2_addr, br2.get_network_name(), host)
+
+        # 4. Check some invalid queries
         for qtype in ['A', 'CNAME']:
             dig_result = host.dns_dig(br2_addr, host1_full_name, qtype)
             self._assert_dig_result_matches(dig_result, {
@@ -231,9 +289,6 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NXDOMAIN',
             })
-
-        # verify Discovery Proxy works for _meshcop._udp
-        self._verify_discovery_proxy_meshcop(br2_addr, br2.get_network_name(), host)
 
     def _verify_discovery_proxy_meshcop(self, server_addr, network_name, digger):
         dp_service_name = '_meshcop._udp.default.service.arpa.'
@@ -300,7 +355,8 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         client.srp_client_set_host_address(*addrs)
         client.srp_client_add_service(instancename, SERVICE, port, priority, weight)
 
-        self.simulator.go(5)
+        self.simulator.go(10)
+
         self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
     def _assert_have_question(self, dig_result, question):
