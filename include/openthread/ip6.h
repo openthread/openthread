@@ -56,6 +56,8 @@ extern "C" {
 #define OT_IP6_PREFIX_BITSIZE (OT_IP6_PREFIX_SIZE * 8) ///< Size of an IPv6 prefix (bits)
 #define OT_IP6_IID_SIZE 8                              ///< Size of an IPv6 Interface Identifier (bytes)
 #define OT_IP6_ADDRESS_SIZE 16                         ///< Size of an IPv6 address (bytes)
+#define OT_IP6_HEADER_SIZE 40                          ///< Size of an IPv6 header (bytes)
+#define OT_IP6_HEADER_PROTO_OFFSET 6                   ///< Offset of the proto field in the IPv6 header (bytes)
 
 /**
  * @struct otIp6InterfaceIdentifier
