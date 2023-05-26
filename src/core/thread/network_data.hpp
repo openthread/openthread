@@ -119,7 +119,7 @@ public:
     static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
-     * This constructor initializes the `NetworkData` from a given pointer to a buffer and length.
+     * Initializes the `NetworkData` from a given pointer to a buffer and length.
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aTlvs         A pointer to the buffer containing the TLVs.
@@ -134,7 +134,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `NetworkData` from a range of TLVs (given as pair of start and end pointers).
+     * Initializes the `NetworkData` from a range of TLVs (given as pair of start and end pointers).
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aStartTlv     A pointer to the start of the TLVs buffer.
@@ -595,7 +595,7 @@ class MutableNetworkData : public NetworkData
 
 public:
     /**
-     * This constructor initializes the `MutableNetworkData`
+     * Initializes the `MutableNetworkData`
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aTlvs         A pointer to the buffer to store the TLVs.

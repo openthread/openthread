@@ -51,7 +51,7 @@ class Data
 {
 public:
     /**
-     * This constructor initializes the `Heap::Data` as empty.
+     * Initializes the `Heap::Data` as empty.
      *
      */
     Data(void) { mData.Init(nullptr, 0); }

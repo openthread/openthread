@@ -107,7 +107,7 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit AddressResolver(Instance &aInstance);

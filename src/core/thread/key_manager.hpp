@@ -81,7 +81,7 @@ public:
     static constexpr uint16_t kDefaultKeyRotationTime = 672; ///< Default Key Rotation Time (in unit of hours).
 
     /**
-     * This constructor initializes the object with default Key Rotation Time
+     * Initializes the object with default Key Rotation Time
      * and Security Policy Flags.
      *
      */
@@ -212,7 +212,7 @@ class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

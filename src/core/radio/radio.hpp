@@ -200,7 +200,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `Radio` object.
+     * Initializes the `Radio` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

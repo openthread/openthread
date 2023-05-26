@@ -314,7 +314,7 @@ public:
     };
 
     /**
-     * This constructor initializes the SRP `Client` object.
+     * Initializes the SRP `Client` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

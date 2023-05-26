@@ -84,7 +84,7 @@ public:
     typedef void (&Handler)(TrickleTimer &aTimer);
 
     /**
-     * This constructor initializes a `TrickleTimer` instance.
+     * Initializes a `TrickleTimer` instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A handler which is called when transmission should occur.

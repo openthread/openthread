@@ -66,7 +66,7 @@ class Local : public MutableNetworkData, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the local Network Data.
+     * Initializes the local Network Data.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

@@ -528,7 +528,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `Name` object as empty (not specified).
+     * Initializes the `Name` object as empty (not specified).
      *
      */
     Name(void)
@@ -537,7 +537,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `Name` object with a given string.
+     * Initializes the `Name` object with a given string.
      *
      * @param[in] aString   A C string specifying the name (dot '.' separated sequence of labels').
      *
@@ -548,7 +548,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `Name` object from a message at a given offset.
+     * Initializes the `Name` object from a message at a given offset.
      *
      * @param[in] aMessage   The message containing the encoded name. `aMessage.GetOffset()` MUST point to the start of
      *                       the DNS header in the message (used to parse compressed name).
@@ -1144,7 +1144,7 @@ public:
     TxtEntry(void) = default;
 
     /**
-     * This constructor initializes a `TxtEntry` object.
+     * Initializes a `TxtEntry` object.
      *
      * @param[in] aKey           A pointer to the key string.
      * @param[in] aValue         A pointer to a buffer containing the value.

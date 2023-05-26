@@ -48,7 +48,7 @@ class DatasetLocal : public InstanceLocator
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to an OpenThread instance.
      * @param[in]  aType      The type of the dataset, active or pending.

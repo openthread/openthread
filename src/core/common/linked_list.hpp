@@ -108,7 +108,7 @@ template <typename Type> class LinkedList
 
 public:
     /**
-     * This constructor initializes the linked list.
+     * Initializes the linked list.
      *
      */
     LinkedList(void)

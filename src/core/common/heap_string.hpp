@@ -55,7 +55,7 @@ class String : public Unequatable<String>
 {
 public:
     /**
-     * This constructor initializes the `String` as null (or empty).
+     * Initializes the `String` as null (or empty).
      *
      */
     String(void)

@@ -149,7 +149,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `MeshDiag` instance.
+     * Initializes the `MeshDiag` instance.
      *
      * @param[in] aInstance   The OpenThread instance.
      *

@@ -113,7 +113,7 @@ public:
     typedef otChangedFlags Flags;
 
     /**
-     * This constructor initializes the `Events` list (as empty).
+     * Initializes the `Events` list (as empty).
      *
      */
     Events(void)
@@ -200,7 +200,7 @@ class Notifier : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes a `Notifier` instance.
+     * Initializes a `Notifier` instance.
      *
      *  @param[in] aInstance     A reference to OpenThread instance.
      *

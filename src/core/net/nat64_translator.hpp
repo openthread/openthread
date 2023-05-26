@@ -153,7 +153,7 @@ public:
     };
 
     /**
-     * This constructor initializes the NAT64 translator.
+     * Initializes the NAT64 translator.
      *
      */
     explicit Translator(Instance &aInstance);

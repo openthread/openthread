@@ -53,7 +53,7 @@ class Encoder
 {
 public:
     /**
-     * This constructor initializes a `Encoder` object.
+     * Initializes a `Encoder` object.
      *
      * @param[in] aNcpBuffer   A reference to a `Spinel::Buffer` where the frames are written.
      *

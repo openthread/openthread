@@ -641,7 +641,7 @@ public:
 
     public:
         /**
-         * This constructor initializes to default TTL configuration.
+         * Initializes to default TTL configuration.
          *
          */
         TtlConfig(void);
@@ -661,7 +661,7 @@ public:
 
     public:
         /**
-         * This constructor initialize to default LEASE and KEY-LEASE configurations.
+         * Initialize to default LEASE and KEY-LEASE configurations.
          *
          */
         LeaseConfig(void);
@@ -703,7 +703,7 @@ public:
     static constexpr Service::Flags kFlagsAnyTypeDeletedService = OT_SRP_SERVER_FLAGS_ANY_TYPE_DELETED_SERVICE;
 
     /**
-     * This constructor initializes the SRP server object.
+     * Initializes the SRP server object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

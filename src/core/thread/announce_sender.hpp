@@ -61,7 +61,7 @@ protected:
     static constexpr uint8_t kChannelIteratorFirst = Mac::ChannelMask::kChannelIteratorFirst;
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A timer handler provided by sub-class.
@@ -209,7 +209,7 @@ class AnnounceSender : public AnnounceSenderBase
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *

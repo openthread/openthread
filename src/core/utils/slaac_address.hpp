@@ -77,7 +77,7 @@ public:
     };
 
     /**
-     * This constructor initializes the SLAAC manager object.
+     * Initializes the SLAAC manager object.
      *
      * Note that SLAAC module starts enabled.
      *

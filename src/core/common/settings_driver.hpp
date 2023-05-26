@@ -50,7 +50,7 @@ class SettingsDriver : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the `SettingsDriver`.
+     * Initializes the `SettingsDriver`.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

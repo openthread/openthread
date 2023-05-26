@@ -75,7 +75,7 @@ class MbedTls : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     MbedTls(void);

@@ -293,7 +293,7 @@ class Links : public InstanceLocator
 
 public:
     /**
-     * This constructor initializes the `Links` object.
+     * Initializes the `Links` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

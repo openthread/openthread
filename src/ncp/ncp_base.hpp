@@ -75,7 +75,7 @@ public:
     };
 
     /**
-     * This constructor creates and initializes an NcpBase instance.
+     * Creates and initializes an NcpBase instance.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      *

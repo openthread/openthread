@@ -1562,7 +1562,7 @@ class TlvIterator
 {
 public:
     /**
-     * This constructor initializes the `TlvIterator` to iterate over a given sequence of TLVs.
+     * Initializes the `TlvIterator` to iterate over a given sequence of TLVs.
      *
      * @param[in] aStart  A pointer to the start of the TLV sequence.
      * @param[in] aEnd    A pointer to the end of the TLV sequence.
@@ -1575,7 +1575,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `TlvIterator` to iterate over TLVs from a given buffer.
+     * Initializes the `TlvIterator` to iterate over TLVs from a given buffer.
      *
      * @param[in] aBuffer   A pointer to a buffer containing the TLVs.
      * @param[in] aLength   The length (number of bytes) of @p aBuffer.
@@ -1588,7 +1588,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `TlvIterator` to iterate over sub-TLVs of a given Prefix TLV.
+     * Initializes the `TlvIterator` to iterate over sub-TLVs of a given Prefix TLV.
      *
      * @param[in] aPrefixTlv   A Prefix TLV to iterate over its sub-TLVs.
      *
@@ -1599,7 +1599,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `TlvIterator` to iterate over sub-TLVs of a given Service TLV.
+     * Initializes the `TlvIterator` to iterate over sub-TLVs of a given Service TLV.
      *
      * @param[in] aServiceTlv   A Service TLV to iterate over its sub-TLVs.
      *

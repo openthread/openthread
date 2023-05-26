@@ -62,7 +62,7 @@ class DatasetUpdater : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes a `DatasetUpdater` object.
+     * Initializes a `DatasetUpdater` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
      *

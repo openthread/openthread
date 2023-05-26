@@ -399,7 +399,7 @@ public:
     QueryMetadata(void);
 
     /**
-     * This constructor initializes the object with specific values.
+     * Initializes the object with specific values.
      *
      * @param[in]  aHandler  Pointer to a handler function for the response.
      * @param[in]  aContext  Context for the handler function.
@@ -456,7 +456,7 @@ class Client : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

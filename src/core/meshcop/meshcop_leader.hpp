@@ -70,7 +70,7 @@ class Leader : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the Leader object.
+     * Initializes the Leader object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

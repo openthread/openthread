@@ -81,7 +81,7 @@ class OutputImplementer
 
 public:
     /**
-     * This constructor initializes the `OutputImplementer` object.
+     * Initializes the `OutputImplementer` object.
      *
      * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
      * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
@@ -183,7 +183,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `Output` object.
+     * Initializes the `Output` object.
      *
      * @param[in] aInstance           A pointer to OpenThread instance.
      * @param[in] aImplementer        An `OutputImplementer`.

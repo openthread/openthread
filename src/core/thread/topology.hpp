@@ -122,7 +122,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC short address (RCOC16) and state filter.
+         * Initializes the `AddressMatcher` with a given MAC short address (RCOC16) and state filter.
          *
          * @param[in]  aShortAddress   A MAC short address (RLOC16).
          * @param[in]  aStateFilter    A state filter.
@@ -134,7 +134,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC extended address and state filter.
+         * Initializes the `AddressMatcher` with a given MAC extended address and state filter.
          *
          * @param[in]  aExtAddress     A MAC extended address.
          * @param[in]  aStateFilter    A state filter.
@@ -146,7 +146,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC address and state filter.
+         * Initializes the `AddressMatcher` with a given MAC address and state filter.
          *
          * @param[in]  aMacAddress     A MAC address.
          * @param[in]  aStateFilter    A state filter.
@@ -161,7 +161,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given state filter (it accepts any address).
+         * Initializes the `AddressMatcher` with a given state filter (it accepts any address).
          *
          * @param[in]  aStateFilter    A state filter.
          *
@@ -907,7 +907,7 @@ public:
         typedef otChildIp6AddressIterator Index;
 
         /**
-         * This constructor initializes the iterator associated with a given `Child` starting from beginning of the
+         * Initializes the iterator associated with a given `Child` starting from beginning of the
          * IPv6 address list.
          *
          * @param[in] aChild    A reference to a child entry.
@@ -920,7 +920,7 @@ public:
         }
 
         /**
-         * This constructor initializes the iterator associated with a given `Child` starting from a given index
+         * Initializes the iterator associated with a given `Child` starting from a given index
          *
          * @param[in]  aChild   A reference to the child entry.
          * @param[in]  aIndex   An index (`Index`) with which to initialize the iterator.

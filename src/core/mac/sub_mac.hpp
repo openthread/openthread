@@ -117,7 +117,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `Callbacks` object.
+         * Initializes the `Callbacks` object.
          *
          * @param[in]  aInstance  A reference to the OpenThread instance.
          *
@@ -206,7 +206,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `SubMac` object.
+     * Initializes the `SubMac` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

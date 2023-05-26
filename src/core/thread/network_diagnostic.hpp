@@ -72,7 +72,7 @@ class Server : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the Server.
+     * Initializes the Server.
      *
      * @param[in] aInstance   The OpenThread instance.
      *
@@ -191,7 +191,7 @@ public:
     static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
 
     /**
-     * This constructor initializes the Client.
+     * Initializes the Client.
      *
      * @param[in] aInstance   The OpenThread instance.
      *

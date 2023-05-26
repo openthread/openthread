@@ -65,7 +65,7 @@ public:
     typedef otThreadAnycastLocatorCallback LocatorCallback;
 
     /**
-     * This constructor initializes the `AnycastLocator` object.
+     * Initializes the `AnycastLocator` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

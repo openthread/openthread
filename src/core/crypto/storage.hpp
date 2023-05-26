@@ -306,7 +306,7 @@ public:
     static constexpr uint16_t kMaxSize = 32; ///< Maximum size of the key.
 
     /**
-     * This constructor initializes the `LiteralKey` from a given `Key`.
+     * Initializes the `LiteralKey` from a given `Key`.
      *
      * If the @p aKey is itself represents a literal key the same key buffer pointers are used. If the @p aKey is
      * a `KeyRef` then the literal key is extracted. In this case, the extracted key MUST be smaller than `kMaxSize`.

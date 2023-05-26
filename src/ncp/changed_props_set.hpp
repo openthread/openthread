@@ -65,7 +65,7 @@ public:
     };
 
     /**
-     * This constructor initializes the set.
+     * Initializes the set.
      *
      */
     ChangedPropsSet(void)

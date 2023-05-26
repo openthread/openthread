@@ -71,7 +71,7 @@ class MessageInfo : public InstanceLocator, public Ip6::MessageInfo
 {
 public:
     /**
-     * This constructor initializes the `MessageInfo`.
+     * Initializes the `MessageInfo`.
      *
      * The peer port is set to `Tmf::kUdpPort` and all other properties are cleared (set to zero).
      *
@@ -147,7 +147,7 @@ class Agent : public Coap::Coap
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
@@ -224,7 +224,7 @@ class SecureAgent : public Coap::CoapSecure
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance      A reference to the OpenThread instance.
      *

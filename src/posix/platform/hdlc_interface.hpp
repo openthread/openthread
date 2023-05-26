@@ -53,7 +53,7 @@ class HdlcInterface
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aCallback         Callback on frame received
      * @param[in] aCallbackContext  Callback context

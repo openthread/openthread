@@ -93,7 +93,7 @@ public:
     static constexpr int8_t kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED; ///< Value when no fixed RSS is set.
 
     /**
-     * This constructor initializes the filter.
+     * Initializes the filter.
      *
      */
     Filter(void);

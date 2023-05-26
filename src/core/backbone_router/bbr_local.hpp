@@ -85,7 +85,7 @@ public:
     };
 
     /**
-     * This constructor initializes the local Backbone Router.
+     * Initializes the local Backbone Router.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *

@@ -80,7 +80,7 @@ public:
         };
 
         /**
-         * This constructor initializes the `Listener` object.
+         * Initializes the `Listener` object.
          *
          */
         Listener(void) { Clear(); }
@@ -112,7 +112,7 @@ public:
     };
 
     /**
-     * This constructor initializes the Multicast Listeners Table.
+     * Initializes the Multicast Listeners Table.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *

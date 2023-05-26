@@ -365,7 +365,7 @@ public:
                                                     Tlv::Type          aResponseTlvType,
                                                     Tlv::Type          aRequestTlvType);
             /**
-             * This constructor initializes a `Callbacks` object setting all the callback functions.
+             * Initializes a `Callbacks` object setting all the callback functions.
              *
              * @param[in] aHandleConnected               The `HandleConnected` callback.
              * @param[in] aHandleSessionEstablished      The `HandleSessionEstablished` callback.
@@ -400,7 +400,7 @@ public:
         };
 
         /**
-         * This constructor initializes a `Connection` instance.
+         * Initializes a `Connection` instance.
          *
          * The `kDefaultTimeout` will be used for @p aInactivityTimeout and @p aKeepAliveInterval. The
          * @p aKeepAliveInterval MUST NOT be less than `kMinKeepAliveInterval`.
@@ -856,7 +856,7 @@ public:
     typedef Connection *(*AcceptHandler)(Instance &aInstance, const Ip6::SockAddr &aPeerSockAddr);
 
     /**
-     * This constructor initializes the `Dso` module.
+     * Initializes the `Dso` module.
      *
      */
     explicit Dso(Instance &aInstance);

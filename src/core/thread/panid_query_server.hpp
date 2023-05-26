@@ -56,7 +56,7 @@ class PanIdQueryServer : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit PanIdQueryServer(Instance &aInstance);

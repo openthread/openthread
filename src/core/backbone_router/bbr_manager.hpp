@@ -67,7 +67,7 @@ class Manager : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the Backbone Router manager.
+     * Initializes the Backbone Router manager.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *

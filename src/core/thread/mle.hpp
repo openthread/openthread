@@ -109,7 +109,7 @@ class Mle : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the MLE object.
+     * Initializes the MLE object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -857,7 +857,7 @@ protected:
     {
     public:
         /**
-         * This constructor initializes the `TlvList` as empty.
+         * Initializes the `TlvList` as empty.
          *
          */
         TlvList(void) = default;
@@ -1413,7 +1413,7 @@ protected:
         };
 
         /**
-         * This constructor initializes the `RxInfo`.
+         * Initializes the `RxInfo`.
          *
          * @param[in] aMessage       The received MLE message.
          * @param[in] aMessageInfo   The `Ip6::MessageInfo` associated with message.

@@ -106,7 +106,7 @@ template <typename InterfaceType, typename ProcessContextType> class RadioSpinel
 {
 public:
     /**
-     * This constructor initializes the spinel based OpenThread transceiver.
+     * Initializes the spinel based OpenThread transceiver.
      *
      */
     RadioSpinel(void);

@@ -355,7 +355,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `Settings` object.
+         * Initializes the `Settings` object.
          *
          * @param[in]  aSecurityMode  A link security mode.
          * @param[in]  aPriority      A message priority.
@@ -364,7 +364,7 @@ public:
         Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
 
         /**
-         * This constructor initializes the `Settings` with a given message priority and link security enabled.
+         * Initializes the `Settings` with a given message priority and link security enabled.
          *
          * @param[in]  aPriority      A message priority.
          *
@@ -1442,7 +1442,7 @@ public:
     };
 
     /**
-     * This constructor initializes the message queue.
+     * Initializes the message queue.
      *
      */
     MessageQueue(void) { SetTail(nullptr); }
@@ -1547,7 +1547,7 @@ public:
     typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
 
     /**
-     * This constructor initializes the priority queue.
+     * Initializes the priority queue.
      *
      */
     PriorityQueue(void) { Clear(); }
@@ -1691,7 +1691,7 @@ class MessagePool : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit MessagePool(Instance &aInstance);

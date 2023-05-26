@@ -63,7 +63,7 @@ public:
     typedef Data<kWithUint16Length> Icmp6Packet; ///< An IMCPv6 packet (data containing the IP payload)
 
     /**
-     * This constructor initializes the `InfraIf`.
+     * Initializes the `InfraIf`.
      *
      * @param[in]  aInstance  A OpenThread instance.
      *

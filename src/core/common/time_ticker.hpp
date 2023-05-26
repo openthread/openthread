@@ -78,7 +78,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `TimeTicker` instance.
+     * Initializes the `TimeTicker` instance.
      *
      */
     explicit TimeTicker(Instance &aInstance);

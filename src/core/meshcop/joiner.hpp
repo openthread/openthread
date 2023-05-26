@@ -79,7 +79,7 @@ public:
     };
 
     /**
-     * This constructor initializes the Joiner object.
+     * Initializes the Joiner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

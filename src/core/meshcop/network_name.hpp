@@ -61,7 +61,7 @@ class NameData : private Data<kWithUint8Length>
 
 public:
     /**
-     * This constructor initializes the NameData object.
+     * Initializes the NameData object.
      *
      * @param[in] aBuffer   A pointer to a `char` buffer (does not need to be null terminated).
      * @param[in] aLength   The length (number of chars) in the buffer.
@@ -117,7 +117,7 @@ public:
     static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
 
     /**
-     * This constructor initializes the Network Name as an empty string.
+     * Initializes the Network Name as an empty string.
      *
      */
     NetworkName(void) { m8[0] = '\0'; }

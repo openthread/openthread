@@ -81,7 +81,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `NeighborTable` instance.
+     * Initializes the `NeighborTable` instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

@@ -54,7 +54,7 @@ class ThreadNetif : public Ip6::Netif
 {
 public:
     /**
-     * This constructor initializes the Thread network interface.
+     * Initializes the Thread network interface.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

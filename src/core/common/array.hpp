@@ -128,7 +128,7 @@ public:
     typedef SizeType IndexType;
 
     /**
-     * This constructor initializes the array as empty.
+     * Initializes the array as empty.
      *
      */
     Array(void)
@@ -137,7 +137,7 @@ public:
     }
 
     /**
-     * This constructor initializes the array by copying elements from another array.
+     * Initializes the array by copying elements from another array.
      *
      * The method uses assignment `=` operator on `Type` to copy each element from @p aOtherArray into the elements of
      * the array.
@@ -148,10 +148,10 @@ public:
     Array(const Array &aOtherArray) { *this = aOtherArray; }
 
     /**
-     * This constructor initializes the array as empty and initializes its elements by calling `Init(Instance &)`
+     * Initializes the array as empty and initializes its elements by calling `Init(Instance &)`
      * method on every element.
      *
-     * This constructor uses method `Init(Instance &aInstance)` on `Type`.
+     * Uses method `Init(Instance &aInstance)` on `Type`.
      *
      * @param[in] aInstance  The OpenThread instance.
      *

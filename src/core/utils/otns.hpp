@@ -65,7 +65,7 @@ class Otns : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

@@ -58,7 +58,7 @@ class Uptime : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes an `Uptime` instance.
+     * Initializes an `Uptime` instance.
      *
      * @param[in] aInstance   The OpenThread instance.
      *

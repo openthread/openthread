@@ -99,7 +99,7 @@ public:
     };
 
     /**
-     * This constructor initializes an instance of the Initiator class.
+     * Initializes an instance of the Initiator class.
      *
      * @param[in]  aInstance  A reference to the OpenThread interface.
      *
@@ -280,7 +280,7 @@ public:
     typedef otLinkMetricsEnhAckProbingIeReportCallback EnhAckProbingIeReportCallback;
 
     /**
-     * This constructor initializes an instance of the Subject class.
+     * Initializes an instance of the Subject class.
      *
      * @param[in]  aInstance  A reference to the OpenThread interface.
      *

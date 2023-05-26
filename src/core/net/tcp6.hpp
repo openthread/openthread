@@ -620,7 +620,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *

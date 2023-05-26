@@ -120,7 +120,7 @@ public:
 
 protected:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread Instance.
      *

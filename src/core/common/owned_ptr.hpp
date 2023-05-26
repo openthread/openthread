@@ -63,7 +63,7 @@ public:
     OwnedPtr(void) = default;
 
     /**
-     * This constructor initializes the `OwnedPtr` with a given pointer.
+     * Initializes the `OwnedPtr` with a given pointer.
      *
      * The `OwnedPtr` takes the ownership of the object at @p aPointer.
      *
@@ -76,7 +76,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `OwnedPtr` from another `OwnedPtr` using move semantics.
+     * Initializes the `OwnedPtr` from another `OwnedPtr` using move semantics.
      *
      * The `OwnedPtr` takes over the ownership of the object from @p aOther. After this call, @p aOther will be null.
      *

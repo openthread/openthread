@@ -154,7 +154,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the object.
+         * Initializes the object.
          *
          * @param[in]  aInstance  A reference to OpenThread instance.
          *
@@ -334,7 +334,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the UDP receiver.
+         * Initializes the UDP receiver.
          *
          * @param[in]   aHandler     A pointer to the function to handle UDP message.
          * @param[in]   aContext     A pointer to arbitrary context information.
@@ -440,7 +440,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to OpenThread instance.
      *

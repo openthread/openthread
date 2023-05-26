@@ -283,7 +283,7 @@ public:
 
         public:
             /**
-             * This constructor initializes an `Iterator` instance to start from the first external multicast address
+             * Initializes an `Iterator` instance to start from the first external multicast address
              * that matches a given IPv6 address type filter.
              *
              * @param[in] aNetif   A reference to the `Netif` instance.
@@ -354,7 +354,7 @@ public:
     };
 
     /**
-     * This constructor initializes the network interface.
+     * Initializes the network interface.
      *
      * @param[in]  aInstance        A reference to the OpenThread instance.
      *

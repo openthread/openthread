@@ -187,7 +187,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `ServiceData` object.
+         * Initializes the `ServiceData` object.
          *
          * @param[in] aSequenceNumber   The sequence number of "DNS/SRP server" service.
          *
@@ -270,7 +270,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `ServiceData` object.
+         * Initializes the `ServiceData` object.
          *
          * @param[in] aAddress   The IPv6 address of DNS/SRP server.
          * @param[in] aPort      The port number of DNS/SRP server.
@@ -323,7 +323,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `ServerData` object.
+         * Initializes the `ServerData` object.
          *
          * @param[in] aAddress   The IPv6 address of DNS/SRP server.
          * @param[in] aPort      The port number of DNS/SRP server.
@@ -384,7 +384,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the iterator (as empty/clear).
+         * Initializes the iterator (as empty/clear).
          *
          */
         Iterator(void)
@@ -409,7 +409,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `Manager` object.
+     * Initializes the `Manager` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

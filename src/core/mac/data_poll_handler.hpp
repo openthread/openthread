@@ -156,7 +156,7 @@ public:
         typedef IndirectSenderBase::FrameContext FrameContext;
 
         /**
-         * This constructor initializes the callbacks object.
+         * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
          *
@@ -206,7 +206,7 @@ public:
     };
 
     /**
-     * This constructor initializes the data poll handler object.
+     * Initializes the data poll handler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *

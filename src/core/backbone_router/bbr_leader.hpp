@@ -84,7 +84,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `Leader`.
+     * Initializes the `Leader`.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *

@@ -122,7 +122,7 @@ class Mac : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the MAC object.
+     * Initializes the MAC object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

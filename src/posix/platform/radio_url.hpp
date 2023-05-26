@@ -47,7 +47,7 @@ class RadioUrl : public ot::Url::Url
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]   aUrl    The null-terminated URL string.
      *

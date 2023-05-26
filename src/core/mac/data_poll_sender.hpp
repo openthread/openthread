@@ -68,7 +68,7 @@ public:
     static constexpr uint8_t kMaxFastPollsUsers = 63; ///< Maximum number of the users of fast poll tx allowed.
 
     /**
-     * This constructor initializes the data poll sender object.
+     * Initializes the data poll sender object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *

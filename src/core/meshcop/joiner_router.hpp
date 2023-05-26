@@ -61,7 +61,7 @@ class JoinerRouter : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the Joiner Router object.
+     * Initializes the Joiner Router object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

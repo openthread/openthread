@@ -62,7 +62,7 @@ class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the Filter object.
+     * Initializes the Filter object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

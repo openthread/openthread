@@ -58,7 +58,7 @@ class PanIdQueryClient : public InstanceLocator
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit PanIdQueryClient(Instance &aInstance);

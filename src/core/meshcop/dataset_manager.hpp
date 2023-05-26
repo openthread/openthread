@@ -207,7 +207,7 @@ protected:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance      A reference to the OpenThread instance.
      * @param[in]  aType          Dataset type, Active or Pending.
@@ -369,7 +369,7 @@ class ActiveDatasetManager : public DatasetManager, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the ActiveDatasetManager object.
+     * Initializes the ActiveDatasetManager object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -500,7 +500,7 @@ class PendingDatasetManager : public DatasetManager, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the PendingDatasetManager object.
+     * Initializes the PendingDatasetManager object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

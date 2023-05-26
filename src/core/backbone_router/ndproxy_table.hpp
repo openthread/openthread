@@ -143,7 +143,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `NdProxyTable` object.
+     * Initializes the `NdProxyTable` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

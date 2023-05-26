@@ -74,7 +74,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the object.
+         * Initializes the object.
          *
          */
         Scheduler(void)
@@ -112,7 +112,7 @@ public:
     typedef void (&Handler)(Tasklet &aTasklet);
 
     /**
-     * This constructor creates a tasklet instance.
+     * Creates a tasklet instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
@@ -162,7 +162,7 @@ template <typename Owner, void (Owner::*HandleTaskletPtr)(void)> class TaskletIn
 {
 public:
     /**
-     * This constructor initializes the tasklet.
+     * Initializes the tasklet.
      *
      * @param[in]  aInstance   The OpenThread instance.
      *
@@ -189,7 +189,7 @@ class TaskletContext : public Tasklet
 {
 public:
     /**
-     * This constructor creates a tasklet instance.
+     * Creates a tasklet instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.

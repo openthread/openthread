@@ -843,7 +843,7 @@ class Settings : public SettingsBase, private NonCopyable
 
 public:
     /**
-     * This constructor initializes a `Settings` object.
+     * Initializes a `Settings` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -1077,7 +1077,7 @@ public:
 
     public:
         /**
-         * This constructor initializes a `ChildInfoInterator` object.
+         * Initializes a `ChildInfoInterator` object.
          *
          * @param[in]  aInstance  A reference to the OpenThread instance.
          *

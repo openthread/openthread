@@ -168,7 +168,7 @@ public:
     static constexpr CallbackContextPosition kContextPosition = kContextAsLastArg; ///< Context position.
 
     /**
-     * This constructor initializes `Callback` as empty (`nullptr` handler function pointer).
+     * Initializes `Callback` as empty (`nullptr` handler function pointer).
      *
      */
     Callback(void) = default;

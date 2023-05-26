@@ -62,7 +62,7 @@ class MessageInfo : public otMessageInfo, public Clearable<MessageInfo>
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     MessageInfo(void) { Clear(); }
@@ -263,13 +263,13 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This constructor initializes the socket address (all fields are set to zero).
+     * Initializes the socket address (all fields are set to zero).
      *
      */
     SockAddr(void) { Clear(); }
 
     /**
-     * This constructor initializes the socket address with a given port number.
+     * Initializes the socket address with a given port number.
      *
      * @param[in] aPort   A port number.
      *
@@ -281,7 +281,7 @@ public:
     }
 
     /**
-     * This constructor initializes the socket address with a given address and port number.
+     * Initializes the socket address with a given address and port number.
      *
      * @param[in] aAddress  An IPv6 address.
      * @param[in] aPort     A port number.

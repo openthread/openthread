@@ -79,7 +79,7 @@ public:
     static constexpr uint8_t  kFcsSize = 0;                          ///< FCS size for TREL frame.
 
     /**
-     * This constructor initializes the `Link` object.
+     * Initializes the `Link` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

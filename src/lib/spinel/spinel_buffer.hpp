@@ -117,7 +117,7 @@ public:
     typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);
 
     /**
-     * This constructor initializes an NCP frame buffer.
+     * Initializes an NCP frame buffer.
      *
      * @param[in] aBuffer               A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in] aBufferLength         The buffer size (in bytes).

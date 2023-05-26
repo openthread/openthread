@@ -112,7 +112,7 @@ public:
     };
 
     /**
-     * This constructor initializes the routing manager.
+     * Initializes the routing manager.
      *
      * @param[in]  aInstance  A OpenThread instance.
      *

@@ -139,7 +139,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `PingSender` object.
+     * Initializes the `PingSender` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

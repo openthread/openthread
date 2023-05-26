@@ -125,7 +125,7 @@ public:
         typedef IndirectSenderBase::FrameContext FrameContext;
 
         /**
-         * This constructor initializes the callbacks object.
+         * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
          *
@@ -163,7 +163,7 @@ public:
                                     Child              &aChild);
     };
     /**
-     * This constructor initializes the CSL tx scheduler object.
+     * Initializes the CSL tx scheduler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *

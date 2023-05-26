@@ -255,7 +255,7 @@ public:
     };
 
     /**
-     * This constructor initializes an Address.
+     * Initializes an Address.
      *
      */
     Address(void)
@@ -465,7 +465,7 @@ class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
 public:
     /**
-     * This constructor initializes a `KeyMaterial`.
+     * Initializes a `KeyMaterial`.
      *
      */
     KeyMaterial(void)
@@ -617,7 +617,7 @@ public:
     static const RadioType kAllRadioTypes[kNumRadioTypes];
 
     /**
-     * This constructor initializes a `RadioTypes` object as empty set
+     * Initializes a `RadioTypes` object as empty set
      *
      */
     RadioTypes(void)
@@ -626,7 +626,7 @@ public:
     }
 
     /**
-     * This constructor initializes a `RadioTypes` object with a given bit-mask.
+     * Initializes a `RadioTypes` object with a given bit-mask.
      *
      * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
      *

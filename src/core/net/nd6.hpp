@@ -478,7 +478,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the Router Advertisement message with
+         * Initializes the Router Advertisement message with
          * zero router lifetime, reachable time and retransmission timer.
          *
          */
@@ -567,7 +567,7 @@ public:
     typedef Data<kWithUint16Length> Icmp6Packet; ///< A data buffer containing an ICMPv6 packet.
 
     /**
-     * This constructor initializes the RA message from a received packet data buffer.
+     * Initializes the RA message from a received packet data buffer.
      *
      * @param[in] aPacket   A received packet data.
      *
@@ -687,7 +687,7 @@ class RouterSolicitMessage
 {
 public:
     /**
-     * This constructor initializes the Router Solicitation message.
+     * Initializes the Router Solicitation message.
      *
      */
     RouterSolicitMessage(void);
@@ -707,7 +707,7 @@ class NeighborSolicitMessage : public Clearable<NeighborSolicitMessage>
 {
 public:
     /**
-     * This constructor initializes the Neighbor Solicitation message.
+     * Initializes the Neighbor Solicitation message.
      *
      */
     NeighborSolicitMessage(void);

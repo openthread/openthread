@@ -126,7 +126,7 @@ public:
         static constexpr uint8_t kMaxDerSize = OT_CRYPTO_ECDSA_MAX_DER_SIZE;
 
         /**
-         * This constructor initializes a `KeyPair` as empty (no key).
+         * Initializes a `KeyPair` as empty (no key).
          *
          */
         KeyPair(void) { mDerLength = 0; }
@@ -220,7 +220,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes a `KeyPairAsRef`.
+         * Initializes a `KeyPairAsRef`.
          *
          * @param[in] aKeyRef         PSA key reference to use while using the keypair.
          */

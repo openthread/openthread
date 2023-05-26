@@ -182,7 +182,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `SrpClientBuffers` object.
+     * Initializes the `SrpClientBuffers` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

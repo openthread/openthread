@@ -56,7 +56,7 @@ public:
     };
 
     /**
-     * This constructor initializes a `Decoder` object.
+     * Initializes a `Decoder` object.
      *
      */
     Decoder(void);

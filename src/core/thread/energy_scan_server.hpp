@@ -58,7 +58,7 @@ class EnergyScanServer : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit EnergyScanServer(Instance &aInstance);

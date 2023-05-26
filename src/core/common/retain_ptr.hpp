@@ -67,7 +67,7 @@ public:
     RetainPtr(void) = default;
 
     /**
-     * This constructor initializes the `RetainPtr` with a given pointer.
+     * Initializes the `RetainPtr` with a given pointer.
      *
      * Upon construction the `RetainPtr` will increment the retain count on @p aPointer (if not null).
      *
@@ -81,7 +81,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `RetainPtr` from another `RetainPtr`.
+     * Initializes the `RetainPtr` from another `RetainPtr`.
      *
      * @param[in] aOther   Another `RetainPtr`.
      *

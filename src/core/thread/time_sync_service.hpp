@@ -71,7 +71,7 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     TimeSync(Instance &aInstance);

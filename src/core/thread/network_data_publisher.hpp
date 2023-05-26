@@ -94,7 +94,7 @@ public:
     };
 
     /**
-     * This constructor initializes `Publisher` object.
+     * Initializes `Publisher` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

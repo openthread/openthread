@@ -142,7 +142,7 @@ public:
     typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
 
     /**
-     * This constructor initializes the `HistoryTracker`.
+     * Initializes the `HistoryTracker`.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

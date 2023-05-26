@@ -55,7 +55,7 @@ class Manager : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     Manager(void);

@@ -163,7 +163,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the object.
+         * Initializes the object.
          *
          * @param[in]  aInstance  A reference to the instance object.
          *
@@ -183,7 +183,7 @@ public:
     };
 
     /**
-     * This constructor creates a millisecond timer instance.
+     * Creates a millisecond timer instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
@@ -259,7 +259,7 @@ template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMilliI
 {
 public:
     /**
-     * This constructor initializes the timer.
+     * Initializes the timer.
      *
      * @param[in]  aInstance   The OpenThread instance.
      *
@@ -286,7 +286,7 @@ class TimerMilliContext : public TimerMilli
 {
 public:
     /**
-     * This constructor creates a millisecond timer that also maintains a user context pointer.
+     * Creates a millisecond timer that also maintains a user context pointer.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
@@ -333,7 +333,7 @@ public:
 
     public:
         /**
-         * This constructor initializes the object.
+         * Initializes the object.
          *
          * @param[in]  aInstance  A reference to the instance object.
          *
@@ -353,7 +353,7 @@ public:
     };
 
     /**
-     * This constructor creates a timer instance.
+     * Creates a timer instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A pointer to a function that is called when the timer expires.
@@ -420,7 +420,7 @@ template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMicroI
 {
 public:
     /**
-     * This constructor initializes the timer.
+     * Initializes the timer.
      *
      * @param[in]  aInstance   The OpenThread instance.
      *

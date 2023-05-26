@@ -225,7 +225,7 @@ public:
     };
 
     /**
-     * This constructor initializes the Commissioner object.
+     * Initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

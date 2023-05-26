@@ -135,7 +135,7 @@ public:
     };
 
     /**
-     * This constructor initializes an `SpiFrame` instance.
+     * Initializes an `SpiFrame` instance.
      *
      * @param[in] aBuffer     Pointer to buffer containing the frame.
      *
@@ -245,7 +245,7 @@ class NcpSpi : public NcpBase
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A pointer to the OpenThread instance structure.
      *

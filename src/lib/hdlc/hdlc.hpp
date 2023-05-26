@@ -136,7 +136,7 @@ template <uint16_t kSize> class FrameBuffer : public FrameWritePointer
 {
 public:
     /**
-     * This constructor initializes the `FrameBuffer` object.
+     * Initializes the `FrameBuffer` object.
      *
      */
     FrameBuffer(void)
@@ -197,7 +197,7 @@ template <uint16_t kSize> class MultiFrameBuffer : public FrameWritePointer
 {
 public:
     /**
-     * This constructor initializes the `MultiFrameBuffer` object.
+     * Initializes the `MultiFrameBuffer` object.
      *
      */
     MultiFrameBuffer(void)
@@ -463,7 +463,7 @@ class Encoder
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aWritePointer   The `FrameWritePointer` used by `Encoder` to write the encoded frames.
      *
@@ -544,7 +544,7 @@ public:
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
     /**
-     * This constructor initializes the decoder.
+     * Initializes the decoder.
      *
      * @param[in] aFrameWritePointer   The `FrameWritePointer` used by `Decoder` to write the decoded frames.
      * @param[in] aFrameHandler        The frame handler callback function pointer.

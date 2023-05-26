@@ -71,7 +71,7 @@ public:
     static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
 
     /**
-     * This constructor initializes the DTLS object.
+     * Initializes the DTLS object.
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.

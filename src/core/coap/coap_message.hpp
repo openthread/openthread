@@ -978,7 +978,7 @@ class MessageQueue : public ot::MessageQueue
 {
 public:
     /**
-     * This constructor initializes the message queue.
+     * Initializes the message queue.
      *
      */
     MessageQueue(void) = default;

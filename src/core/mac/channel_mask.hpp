@@ -80,7 +80,7 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This constructor initializes a `ChannelMask` instance.
+     * Initializes a `ChannelMask` instance.
      *
      */
     ChannelMask(void)
@@ -89,7 +89,7 @@ public:
     }
 
     /**
-     * This constructor initializes a `ChannelMask` instance with a given mask.
+     * Initializes a `ChannelMask` instance with a given mask.
      *
      * @param[in]  aMask   A channel mask (as a `uint32_t` bit-vector mask with bit 0 (lsb) -> channel 0, and so on).
      *

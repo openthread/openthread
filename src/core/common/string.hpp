@@ -298,7 +298,7 @@ class StringWriter
 {
 public:
     /**
-     * This constructor initializes the object as cleared on the provided buffer.
+     * Initializes the object as cleared on the provided buffer.
      *
      * @param[in] aBuffer  A pointer to the char buffer to write into.
      * @param[in] aSize    The size of @p aBuffer.
@@ -404,7 +404,7 @@ template <uint16_t kSize> class String : public StringWriter
 
 public:
     /**
-     * This constructor initializes the string as empty.
+     * Initializes the string as empty.
      *
      */
     String(void)

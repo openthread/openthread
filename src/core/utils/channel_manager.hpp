@@ -71,7 +71,7 @@ public:
     static constexpr uint16_t kMinimumDelay = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY;
 
     /**
-     * This constructor initializes a `ChanelManager` object.
+     * Initializes a `ChanelManager` object.
      *
      * @param[in]   aInstance  A reference to the OpenThread instance.
      *

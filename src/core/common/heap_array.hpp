@@ -69,7 +69,7 @@ public:
     using IndexType = uint16_t;
 
     /**
-     * This constructor initializes the `Array` as empty.
+     * Initializes the `Array` as empty.
      *
      */
     Array(void)

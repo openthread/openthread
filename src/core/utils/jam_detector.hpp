@@ -67,7 +67,7 @@ public:
     typedef void (*Handler)(bool aJamState, void *aContext);
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

@@ -110,7 +110,7 @@ public:
     };
 
     /**
-     * This constructor initializes the RadioSelector object.
+     * Initializes the RadioSelector object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

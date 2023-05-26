@@ -169,7 +169,7 @@ class Mpl : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the MPL object.
+     * Initializes the MPL object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *

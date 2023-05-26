@@ -54,7 +54,7 @@ class AnnounceBeginServer : public AnnounceSenderBase
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit AnnounceBeginServer(Instance &aInstance);

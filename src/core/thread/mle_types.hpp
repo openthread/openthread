@@ -325,7 +325,7 @@ public:
     DeviceMode(void) = default;
 
     /**
-     * This constructor initializes a `DeviceMode` object from a given mode TLV bitmask.
+     * Initializes a `DeviceMode` object from a given mode TLV bitmask.
      *
      * @param[in] aMode   A mode TLV bitmask to initialize the `DeviceMode` object.
      *
@@ -333,7 +333,7 @@ public:
     explicit DeviceMode(uint8_t aMode) { Set(aMode); }
 
     /**
-     * This constructor initializes a `DeviceMode` object from a given mode configuration structure.
+     * Initializes a `DeviceMode` object from a given mode configuration structure.
      *
      * @param[in] aModeConfig   A mode configuration to initialize the `DeviceMode` object.
      *
@@ -460,7 +460,7 @@ public:
     };
 
     /**
-     * This constructor initializes `DeviceProperties` with default values.
+     * Initializes `DeviceProperties` with default values.
      *
      */
     DeviceProperties(void);

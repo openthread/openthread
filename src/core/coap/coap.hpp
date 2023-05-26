@@ -147,7 +147,7 @@ class Resource : public otCoapResource, public LinkedListEntry<Resource>
 
 public:
     /**
-     * This constructor initializes the resource.
+     * Initializes the resource.
      *
      * @param[in]  aUriPath  A pointer to a null-terminated string for the URI path.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for @p aUriPath.
@@ -157,7 +157,7 @@ public:
     Resource(const char *aUriPath, RequestHandler aHandler, void *aContext);
 
     /**
-     * This constructor initializes the resource.
+     * Initializes the resource.
      *
      * @param[in]  aUri      A Thread URI.
      * @param[in]  aHandler  A function pointer that is called when receiving a CoAP message for the URI.
@@ -192,7 +192,7 @@ class ResourceBlockWise : public otCoapBlockwiseResource
 
 public:
     /**
-     * This constructor initializes the resource.
+     * Initializes the resource.
      *
      * @param[in]  aUriPath         A pointer to a NULL-terminated string for the Uri-Path.
      * @param[in]  aHandler         A function pointer that is called when receiving a CoAP message for @p aUriPath.
@@ -827,7 +827,7 @@ protected:
     typedef Error (*Sender)(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance        A reference to the OpenThread instance.
      * @param[in]  aSender          A function pointer to send CoAP message, which SHOULD be a static
@@ -968,7 +968,7 @@ class Coap : public CoapBase
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance      A reference to the OpenThread instance.
      *

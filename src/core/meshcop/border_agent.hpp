@@ -73,7 +73,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `BorderAgent` object.
+     * Initializes the `BorderAgent` object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

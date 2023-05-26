@@ -62,7 +62,7 @@ public:
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance           A reference to the OpenThread instance.
      * @param[in]  aLayerTwoSecurity   Specifies whether to use layer two security or not.

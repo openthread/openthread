@@ -67,7 +67,7 @@ public:
 
     public:
         /**
-         * This constructor initializes an `Iterator` instance.
+         * Initializes an `Iterator` instance.
          *
          * @param[in] aInstance  A reference to the OpenThread instance.
          * @param[in] aFilter    A child state filter.
@@ -102,7 +102,7 @@ public:
     };
 
     /**
-     * This constructor initializes a `ChildTable` instance.
+     * Initializes a `ChildTable` instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

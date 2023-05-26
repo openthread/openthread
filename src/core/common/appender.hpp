@@ -65,7 +65,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `Appender` to append to a `Message`.
+     * Initializes the `Appender` to append to a `Message`.
      *
      * New content is appended to the end of @p aMessage, growing its length.
      *
@@ -75,7 +75,7 @@ public:
     explicit Appender(Message &aMessage);
 
     /**
-     * This constructor initializes the `Appender` to append in a given a buffer
+     * Initializes the `Appender` to append in a given a buffer
      *
      * New content is append in the buffer starting from @p aBuffer up to is size @p aSize. `Appender` does not allow
      * content to be appended beyond the size of the buffer.

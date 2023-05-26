@@ -79,7 +79,7 @@ public:
     Time(void) = default;
 
     /**
-     * This constructor initializes a `Time` object with a given value.
+     * Initializes a `Time` object with a given value.
      *
      * @param[in] aValue   The numeric time value to initialize the `Time` object.
      *

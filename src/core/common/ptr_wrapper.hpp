@@ -62,7 +62,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `Ptr` with a given pointer.
+     * Initializes the `Ptr` with a given pointer.
      *
      * @param[in] aPointer  A pointer to initialize with.
      *

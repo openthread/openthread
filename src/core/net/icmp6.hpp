@@ -211,7 +211,7 @@ public:
 
     public:
         /**
-         * This constructor creates an ICMPv6 message handler.
+         * Creates an ICMPv6 message handler.
          *
          * @param[in]  aCallback  A pointer to the function that is called when receiving an ICMPv6 message.
          * @param[in]  aContext   A pointer to arbitrary context information.
@@ -232,7 +232,7 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance A reference to the OpenThread instance.
      *
