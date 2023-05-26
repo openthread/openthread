@@ -47,6 +47,8 @@ openthread_cli_sources = [
   "cli_history.hpp",
   "cli_joiner.cpp",
   "cli_joiner.hpp",
+  "cli_mac_filter.cpp",
+  "cli_mac_filter.hpp",
   "cli_network_data.cpp",
   "cli_network_data.hpp",
   "cli_output.cpp",

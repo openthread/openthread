@@ -64,6 +64,7 @@
 #include "cli/cli_dns.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
+#include "cli/cli_mac_filter.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
 #include "cli/cli_srp_client.hpp"
@@ -430,14 +431,6 @@ private:
     void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    void               PrintMacFilter(void);
-    otError            ProcessMacFilterAddress(Arg aArgs[]);
-    otError            ProcessMacFilterRss(Arg aArgs[]);
-    void               OutputMacFilterEntry(const otMacFilterEntry &aEntry);
-    static const char *MacFilterAddressModeToString(otMacFilterAddressMode aMode);
-#endif
-
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
     static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
@@ -547,6 +540,10 @@ private:
     Dataset     mDataset;
     NetworkData mNetworkData;
     UdpExample  mUdp;
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    MacFilter mMacFilter;
+#endif
 
 #if OPENTHREAD_CLI_DNS_ENABLE
     Dns mDns;
