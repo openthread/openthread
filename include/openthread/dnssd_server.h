@@ -136,7 +136,7 @@ typedef struct otDnssdHostInfo
 } otDnssdHostInfo;
 
 /**
- * This enumeration specifies a DNS-SD query type.
+ * Specifies a DNS-SD query type.
  *
  */
 typedef enum

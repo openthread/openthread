@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the keys of settings.
+ * Defines the keys of settings.
  *
  * Note: When adding a new settings key, if the settings corresponding to the key contains security sensitive
  *       information, the developer MUST add the key to the array `aSensitiveKeys` which is passed in

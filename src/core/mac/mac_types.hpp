@@ -101,7 +101,7 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This enumeration type specifies the copy byte order when Extended Address is being copied to/from a buffer.
+     * Type specifies the copy byte order when Extended Address is being copied to/from a buffer.
      *
      */
     enum CopyByteOrder : uint8_t
@@ -244,7 +244,7 @@ public:
     typedef ExtAddress::InfoString InfoString;
 
     /**
-     * This enumeration specifies the IEEE 802.15.4 Address type.
+     * Specifies the IEEE 802.15.4 Address type.
      *
      */
     enum Type : uint8_t
@@ -575,7 +575,7 @@ private:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 /**
- * This enumeration defines the radio link types.
+ * Defines the radio link types.
  *
  */
 enum RadioType : uint8_t

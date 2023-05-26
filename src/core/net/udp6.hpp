@@ -67,7 +67,7 @@ class Udp;
 #endif
 
 /**
- * This enumeration defines the network interface identifiers.
+ * Defines the network interface identifiers.
  *
  */
 enum NetifIdentifier : uint8_t

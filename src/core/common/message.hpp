@@ -272,7 +272,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
 
 public:
     /**
-     * This enumeration represents the message type.
+     * Represents the message type.
      *
      */
     enum Type : uint8_t
@@ -286,7 +286,7 @@ public:
     };
 
     /**
-     * This enumeration represents the message sub-type.
+     * Represents the message sub-type.
      *
      */
     enum SubType : uint8_t
@@ -316,7 +316,7 @@ public:
     static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
 
     /**
-     * This enumeration represents the link security mode (used by `Settings` constructor).
+     * Represents the link security mode (used by `Settings` constructor).
      *
      */
     enum LinkSecurityMode : bool
@@ -326,7 +326,7 @@ public:
     };
 
     /**
-     * This enumeration represents the message ownership model when a `Message` instance is passed to a method/function.
+     * Represents the message ownership model when a `Message` instance is passed to a method/function.
      *
      */
     enum Ownership : uint8_t
@@ -1431,7 +1431,7 @@ public:
     typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
 
     /**
-     * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
+     * Represents a position (head or tail) in the queue. This is used to specify where a new message
      * should be added in the queue.
      *
      */

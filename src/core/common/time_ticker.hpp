@@ -57,9 +57,9 @@ class TimeTicker : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This enumeration represents time tick receivers.
+     * Represents time tick receivers.
      *
-     * This enumeration contains the list of all OpenThread modules that can be registered as time tick receivers.
+     * Contains the list of all OpenThread modules that can be registered as time tick receivers.
      *
      */
     enum Receiver : uint8_t

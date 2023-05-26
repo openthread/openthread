@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * This enumeration specifies the IEEE 802.15.4 Address type.
+ * Specifies the IEEE 802.15.4 Address type.
  *
  */
 typedef enum

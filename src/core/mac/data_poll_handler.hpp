@@ -71,7 +71,7 @@ public:
     static constexpr uint8_t kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This enumeration defines frame change request types used as input to `RequestFrameChange()`.
+     * Defines frame change request types used as input to `RequestFrameChange()`.
      *
      */
     enum FrameChange : uint8_t

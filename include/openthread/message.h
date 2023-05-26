@@ -59,7 +59,7 @@ extern "C" {
 typedef struct otMessage otMessage;
 
 /**
- * This enumeration defines the OpenThread message priority levels.
+ * Defines the OpenThread message priority levels.
  *
  */
 typedef enum otMessagePriority

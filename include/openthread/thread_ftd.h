@@ -83,7 +83,7 @@ typedef struct
 typedef uint16_t otChildIp6AddressIterator; ///< Used to iterate through IPv6 addresses of a Thread Child entry.
 
 /**
- * This enumeration defines the EID cache entry state.
+ * Defines the EID cache entry state.
  *
  */
 typedef enum otCacheEntryState
@@ -198,7 +198,7 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
- * This enumeration represents the power supply property on a device.
+ * Represents the power supply property on a device.
  *
  * This is used as a property in `otDeviceProperties` to calculate the leader weight.
  *
@@ -768,7 +768,7 @@ uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
 otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses);
 
 /**
- * This enumeration defines the constants used in `otNeighborTableCallback` to indicate changes in neighbor table.
+ * Defines the constants used in `otNeighborTableCallback` to indicate changes in neighbor table.
  *
  */
 typedef enum

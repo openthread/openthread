@@ -390,7 +390,7 @@ const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
 otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName);
 
 /**
- * This enumeration defines flags passed to otTcpConnect().
+ * Defines flags passed to otTcpConnect().
  *
  */
 enum
@@ -418,7 +418,7 @@ enum
 otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags);
 
 /**
- * This enumeration defines flags passed to @p otTcpSendByReference.
+ * Defines flags passed to @p otTcpSendByReference.
  *
  */
 enum
@@ -582,7 +582,7 @@ struct otTcpListener;
 typedef struct otTcpListener otTcpListener;
 
 /**
- * This enumeration defines incoming connection actions.
+ * Defines incoming connection actions.
  *
  * This is used in otTcpAcceptReady() callback.
  *

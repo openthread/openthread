@@ -57,7 +57,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the gpio modes.
+ * Defines the gpio modes.
  *
  */
 typedef enum

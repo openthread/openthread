@@ -100,7 +100,7 @@ public:
     static constexpr uint16_t kMaxPublishedPrefixes = 3;
 
     /**
-     * This enumeration represents the states of `RoutingManager`.
+     * Represents the states of `RoutingManager`.
      *
      */
     enum State : uint8_t

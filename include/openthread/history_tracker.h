@@ -87,7 +87,7 @@ typedef struct otHistoryTrackerNetworkInfo
 } otHistoryTrackerNetworkInfo;
 
 /**
- * This enumeration defines the events for an IPv6 (unicast or multicast) address info (i.e., whether address is added
+ * Defines the events for an IPv6 (unicast or multicast) address info (i.e., whether address is added
  * or removed).
  *
  */
@@ -161,7 +161,7 @@ typedef struct otHistoryTrackerMessageInfo
 } otHistoryTrackerMessageInfo;
 
 /**
- * This enumeration defines the events in a neighbor info (i.e. whether neighbor is added, removed, or changed).
+ * Defines the events in a neighbor info (i.e. whether neighbor is added, removed, or changed).
  *
  * Event `OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING` is applicable to child neighbors only. It is triggered after
  * the device (re)starts and when the previous children list is retrieved from non-volatile settings and the device
@@ -193,7 +193,7 @@ typedef struct otHistoryTrackerNeighborInfo
 } otHistoryTrackerNeighborInfo;
 
 /**
- * This enumeration defines the events in a router info (i.e. whether router is added, removed, or changed).
+ * Defines the events in a router info (i.e. whether router is added, removed, or changed).
  *
  */
 typedef enum
@@ -222,7 +222,7 @@ typedef struct otHistoryTrackerRouterInfo
 } otHistoryTrackerRouterInfo;
 
 /**
- * This enumeration defines the events for a Network Data entry (i.e., whether an entry is added or removed).
+ * Defines the events for a Network Data entry (i.e., whether an entry is added or removed).
  *
  */
 typedef enum

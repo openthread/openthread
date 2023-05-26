@@ -80,7 +80,7 @@ public:
     typedef otMacFilterIterator Iterator;
 
     /**
-     * This enumeration type represents the MAC Filter mode.
+     * Type represents the MAC Filter mode.
      *
      */
     enum Mode : uint8_t

@@ -59,7 +59,7 @@ class TrickleTimer : public TimerMilli
 {
 public:
     /**
-     * This enumeration defines the modes of operation for the `TrickleTimer`.
+     * Defines the modes of operation for the `TrickleTimer`.
      *
      */
     enum Mode : uint8_t

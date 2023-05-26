@@ -160,7 +160,7 @@ void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage);
 extern void otPlatDsoHandleReceive(otPlatDsoConnection *aConnection, otMessage *aMessage);
 
 /**
- * This enumeration defines disconnect modes.
+ * Defines disconnect modes.
  *
  */
 typedef enum

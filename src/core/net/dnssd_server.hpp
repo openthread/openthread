@@ -136,7 +136,7 @@ public:
 #endif
 
     /**
-     * This enumeration specifies a DNS-SD query type.
+     * Specifies a DNS-SD query type.
      *
      */
     enum DnsQueryType : uint8_t
@@ -263,7 +263,7 @@ public:
     const Counters &GetCounters(void) const { return mCounters; };
 
     /**
-     * This enumeration represents different test mode flags for use in `SetTestMode()`.
+     * Represents different test mode flags for use in `SetTestMode()`.
      *
      */
     enum TestModeFlags : uint8_t

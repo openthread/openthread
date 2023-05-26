@@ -61,7 +61,7 @@ namespace ot {
 #define OT_SHOULD_LOG_AT(aLevel) (OT_SHOULD_LOG && (OPENTHREAD_CONFIG_LOG_LEVEL >= (aLevel)))
 
 /**
- * This enumeration represents the log level.
+ * Represents the log level.
  *
  */
 enum LogLevel : uint8_t

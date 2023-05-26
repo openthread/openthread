@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * This enumeration represents exit codes used when OpenThread exits.
+ * Represents exit codes used when OpenThread exits.
  *
  */
 enum

@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * This enumeration specifies an SRP client item (service or host info) state.
+ * Specifies an SRP client item (service or host info) state.
  *
  */
 typedef enum

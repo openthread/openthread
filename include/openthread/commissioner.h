@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the Commissioner State.
+ * Defines the Commissioner State.
  *
  */
 typedef enum otCommissionerState
@@ -67,7 +67,7 @@ typedef enum otCommissionerState
 } otCommissionerState;
 
 /**
- * This enumeration defines a Joiner Event on the Commissioner.
+ * Defines a Joiner Event on the Commissioner.
  *
  */
 typedef enum otCommissionerJoinerEvent
@@ -125,7 +125,7 @@ typedef struct otJoinerPskd
 } otJoinerPskd;
 
 /**
- * This enumeration defines a Joiner Info Type.
+ * Defines a Joiner Info Type.
  *
  */
 typedef enum otJoinerInfoType

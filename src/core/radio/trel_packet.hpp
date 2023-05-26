@@ -56,7 +56,7 @@ class Header
 {
 public:
     /**
-     * This enumeration defines packet types.
+     * Defines packet types.
      *
      */
     enum Type : uint8_t
@@ -67,7 +67,7 @@ public:
     };
 
     /**
-     * This enumeration represents Ack Mode field in TREL header.
+     * Represents Ack Mode field in TREL header.
      *
      */
     enum AckMode : uint8_t

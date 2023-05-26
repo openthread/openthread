@@ -202,7 +202,7 @@ public:
         typedef uint16_t MessageId; ///< This type represents a DSO Message Identifier.
 
         /**
-         * This enumeration defines the `Connection` states.
+         * Defines the `Connection` states.
          *
          */
         enum State : uint8_t
@@ -215,7 +215,7 @@ public:
         };
 
         /**
-         * This enumeration defines the disconnect modes.
+         * Defines the disconnect modes.
          *
          */
         enum DisconnectMode : uint8_t
@@ -225,7 +225,7 @@ public:
         };
 
         /**
-         * This enumeration defines the disconnect reason.
+         * Defines the disconnect reason.
          *
          */
         enum DisconnectReason : uint8_t

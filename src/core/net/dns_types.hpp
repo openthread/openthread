@@ -517,7 +517,7 @@ public:
     static constexpr char kLabelSeparatorChar = '.';
 
     /**
-     * This enumeration represents the name type.
+     * Represents the name type.
      *
      */
     enum Type : uint8_t
@@ -1918,7 +1918,7 @@ public:
     static constexpr uint8_t kAlgorithmEd448           = 16; ///< ED448 algorithm.
 
     /**
-     * This enumeration type represents the use (or key type) flags (RFC 2535 - section 3.1.2).
+     * Type represents the use (or key type) flags (RFC 2535 - section 3.1.2).
      *
      */
     enum UseFlags : uint8_t
@@ -1930,7 +1930,7 @@ public:
     };
 
     /**
-     * This enumeration type represents key owner (or name type) flags (RFC 2535 - section 3.1.2).
+     * Type represents key owner (or name type) flags (RFC 2535 - section 3.1.2).
      *
      */
     enum OwnerFlags : uint8_t

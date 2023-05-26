@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the Joiner State.
+ * Defines the Joiner State.
  *
  */
 typedef enum otJoinerState

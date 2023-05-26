@@ -74,7 +74,7 @@ class Publisher : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration represents the events reported from the Publisher callbacks.
+     * Represents the events reported from the Publisher callbacks.
      *
      */
     enum Event : uint8_t
@@ -84,7 +84,7 @@ public:
     };
 
     /**
-     * This enumeration represents the requester associated with a published prefix.
+     * Represents the requester associated with a published prefix.
      *
      */
     enum Requester : uint8_t

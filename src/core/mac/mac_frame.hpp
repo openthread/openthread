@@ -276,7 +276,7 @@ class Frame : public otRadioFrame
 {
 public:
     /**
-     * This enumeration represents the MAC frame type.
+     * Represents the MAC frame type.
      *
      * Values match the Frame Type field in Frame Control Field (FCF)  as an `uint16_t`.
      *
@@ -290,7 +290,7 @@ public:
     };
 
     /**
-     * This enumeration represents the MAC frame version.
+     * Represents the MAC frame version.
      *
      * Values match the Version field in Frame Control Field (FCF) as an `uint16_t`.
      *
@@ -303,7 +303,7 @@ public:
     };
 
     /**
-     * This enumeration represents the MAC frame security level.
+     * Represents the MAC frame security level.
      *
      * Values match the Security Level field in Security Control Field as an `uint8_t`.
      *
@@ -321,7 +321,7 @@ public:
     };
 
     /**
-     * This enumeration represents the MAC frame security key identifier mode.
+     * Represents the MAC frame security key identifier mode.
      *
      * Values match the Key Identifier Mode field in Security Control Field as an `uint8_t`.
      *
@@ -335,7 +335,7 @@ public:
     };
 
     /**
-     * This enumeration represents a subset of MAC Command Identifiers.
+     * Represents a subset of MAC Command Identifiers.
      *
      */
     enum CommandId : uint8_t

@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This enumeration represents Thread URIs.
+ * Represents Thread URIs.
  *
  */
 enum Uri : uint8_t

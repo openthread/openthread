@@ -268,7 +268,7 @@ typedef struct otOperationalDatasetTlvs
 } otOperationalDatasetTlvs;
 
 /**
- * This enumeration represents meshcop TLV types.
+ * Represents meshcop TLV types.
  *
  */
 typedef enum otMeshcopTlvType

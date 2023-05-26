@@ -131,7 +131,7 @@ typedef struct otUdpSocket
 } otUdpSocket;
 
 /**
- * This enumeration defines the OpenThread network interface identifiers.
+ * Defines the OpenThread network interface identifiers.
  *
  */
 typedef enum otNetifIdentifier

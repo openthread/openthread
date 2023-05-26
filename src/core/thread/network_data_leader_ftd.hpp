@@ -72,7 +72,7 @@ class Leader : public LeaderBase, private NonCopyable
 
 public:
     /**
-     * This enumeration defines the match mode constants to compare two RLOC16 values.
+     * Defines the match mode constants to compare two RLOC16 values.
      *
      */
     enum MatchMode : uint8_t

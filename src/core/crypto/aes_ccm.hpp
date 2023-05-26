@@ -68,7 +68,7 @@ public:
     static constexpr uint8_t kNonceSize    = 13;                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
 
     /**
-     * This enumeration type represent the encryption vs decryption mode.
+     * Type represent the encryption vs decryption mode.
      *
      */
     enum Mode : uint8_t

@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This enumeration represents the events reported from the Publisher callbacks.
+ * Represents the events reported from the Publisher callbacks.
  *
  */
 typedef enum otNetDataPublisherEvent

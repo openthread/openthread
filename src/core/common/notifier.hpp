@@ -61,7 +61,7 @@ namespace ot {
  */
 
 /**
- * This enumeration type represents events emitted from OpenThread Notifier.
+ * Type represents events emitted from OpenThread Notifier.
  *
  */
 enum Event : uint32_t

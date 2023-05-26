@@ -221,7 +221,7 @@ constexpr uint8_t kServiceMinId = 0x00; ///< Minimal Service ID.
 constexpr uint8_t kServiceMaxId = 0x0f; ///< Maximal Service ID.
 
 /**
- * This enumeration specifies the leader role start mode.
+ * Specifies the leader role start mode.
  *
  * The start mode indicates whether device is starting normally as leader or restoring its role after reset.
  *
@@ -448,7 +448,7 @@ class DeviceProperties : public otDeviceProperties, public Clearable<DevicePrope
 {
 public:
     /**
-     * This enumeration represents the device's power supply property.
+     * Represents the device's power supply property.
      *
      */
     enum PowerSupply : uint8_t

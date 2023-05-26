@@ -70,7 +70,7 @@ class Commissioner : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration type represents the Commissioner State.
+     * Type represents the Commissioner State.
      *
      */
     enum State : uint8_t
@@ -81,7 +81,7 @@ public:
     };
 
     /**
-     * This enumeration type represents Joiner Event.
+     * Type represents Joiner Event.
      *
      */
     enum JoinerEvent : uint8_t

@@ -172,7 +172,7 @@ uint64_t otInstanceGetUptime(otInstance *aInstance);
 void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize);
 
 /**
- * This enumeration defines flags that are passed as part of `otStateChangedCallback`.
+ * Defines flags that are passed as part of `otStateChangedCallback`.
  *
  */
 enum

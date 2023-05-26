@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This enumeration type represents the "Recursion Desired" (RD) flag in an `otDnsQueryConfig`.
+ * Type represents the "Recursion Desired" (RD) flag in an `otDnsQueryConfig`.
  *
  */
 typedef enum
@@ -67,7 +67,7 @@ typedef enum
 } otDnsRecursionFlag;
 
 /**
- * This enumeration type represents the NAT64 mode in an `otDnsQueryConfig`.
+ * Type represents the NAT64 mode in an `otDnsQueryConfig`.
  *
  * The NAT64 mode indicates whether to allow or disallow NAT64 address translation during DNS client address resolution.
  * This mode is only used when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
@@ -81,7 +81,7 @@ typedef enum
 } otDnsNat64Mode;
 
 /**
- * This enumeration type represents the service resolution mode in an `otDnsQueryConfig`.
+ * Type represents the service resolution mode in an `otDnsQueryConfig`.
  *
  * This is only used during DNS client service resolution `otDnsClientResolveService()`. It determines which
  * record types to query.
@@ -98,7 +98,7 @@ typedef enum
 } otDnsServiceMode;
 
 /**
- * This enumeration type represents the DNS transport protocol in an `otDnsQueryConfig`.
+ * Type represents the DNS transport protocol in an `otDnsQueryConfig`.
  *
  * This `OT_DNS_TRANSPORT_TCP` is only supported when `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is enabled.
  *

@@ -113,7 +113,7 @@ extern "C" {
 typedef int otLogLevel;
 
 /**
- * This enumeration represents log regions.
+ * Represents log regions.
  *
  * The support for log region is removed and instead each core module can define its own name to appended to the logs.
  * However, the `otLogRegion` enumeration is still defined as before to help with platforms which we may be using it

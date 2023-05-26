@@ -62,7 +62,7 @@ public:
     typedef otBorderAgentId Id; ///< Border Agent ID.
 
     /**
-     * This enumeration defines the Border Agent state.
+     * Defines the Border Agent state.
      *
      */
     enum State : uint8_t

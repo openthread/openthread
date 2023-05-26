@@ -122,7 +122,7 @@ public:
 
     public:
         /**
-         * This enumeration type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
+         * Type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
          *
          */
         enum RecursionFlag : uint8_t
@@ -134,7 +134,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         /**
-         * This enumeration type represents the NAT64 mode.
+         * Type represents the NAT64 mode.
          *
          */
         enum Nat64Mode : uint8_t
@@ -146,7 +146,7 @@ public:
 #endif
 
         /**
-         * This enumeration type represents the service resolution mode.
+         * Type represents the service resolution mode.
          *
          */
         enum ServiceMode : uint8_t
@@ -160,7 +160,7 @@ public:
         };
 
         /**
-         * This enumeration type represents the DNS transport protocol selection.
+         * Type represents the DNS transport protocol selection.
          *
          */
         enum TransportProto : uint8_t

@@ -107,7 +107,7 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
- * This enumeration represents the state of Border Routing Manager.
+ * Represents the state of Border Routing Manager.
  *
  */
 typedef enum

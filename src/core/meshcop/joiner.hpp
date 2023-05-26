@@ -65,7 +65,7 @@ class Joiner : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration type defines the Joiner State.
+     * Type defines the Joiner State.
      *
      */
     enum State : uint8_t

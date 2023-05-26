@@ -96,7 +96,7 @@ public:
     };
 
     /**
-     * This enumeration defines state filters used for finding a neighbor or iterating through the child/neighbor table.
+     * Defines state filters used for finding a neighbor or iterating through the child/neighbor table.
      *
      * Each filter definition accepts a subset of `State` values.
      *

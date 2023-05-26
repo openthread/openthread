@@ -52,7 +52,7 @@ extern "C" {
 #endif
 
 /**
- * This enumeration represents default parameters for the SPI interface.
+ * Represents default parameters for the SPI interface.
  *
  */
 enum

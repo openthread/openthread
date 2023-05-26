@@ -154,7 +154,7 @@ protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     /**
-     * This enumeration represents the `ResponseEntry` type.
+     * Represents the `ResponseEntry` type.
      *
      */
     enum ResponseType

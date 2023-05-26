@@ -78,7 +78,7 @@ class Netif : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration represent an address event (added or removed)
+     * Represent an address event (added or removed)
      *
      * The boolean values are used for `aIsAdded` parameter in the call of `otIp6AddressCallback`.
      *
@@ -90,7 +90,7 @@ public:
     };
 
     /**
-     * This enumeration represents the address origin.
+     * Represents the address origin.
      *
      */
     enum AddressOrigin : uint8_t

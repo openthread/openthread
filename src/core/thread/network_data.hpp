@@ -399,7 +399,7 @@ public:
 
 protected:
     /**
-     * This enumeration defines Service Data match mode.
+     * Defines Service Data match mode.
      *
      */
     enum ServiceMatchMode : uint8_t

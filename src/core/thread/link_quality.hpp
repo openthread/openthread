@@ -228,7 +228,7 @@ private:
 };
 
 /**
- * This enumeration represents the link quality constants.
+ * Represents the link quality constants.
  *
  * Link Quality is an integer in [0, 3]. A higher link quality indicates a more usable link, with 0 indicating that the
  * link is non-existent or unusable.

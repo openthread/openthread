@@ -245,7 +245,7 @@ private:
 };
 
 /**
- * This enumeration type represent Enhanced-ACK Flags.
+ * Type represent Enhanced-ACK Flags.
  *
  */
 enum EnhAckFlags : uint8_t
@@ -353,7 +353,7 @@ private:
 };
 
 /**
- * This enumeration type represents Link Metrics Status.
+ * Type represents Link Metrics Status.
  *
  */
 enum Status : uint8_t

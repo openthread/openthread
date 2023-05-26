@@ -52,7 +52,7 @@ namespace Crypto {
 namespace Storage {
 
 /**
- * This enumeration defines the key types.
+ * Defines the key types.
  *
  */
 enum KeyType : uint8_t
@@ -64,7 +64,7 @@ enum KeyType : uint8_t
 };
 
 /**
- * This enumeration defines the key algorithms.
+ * Defines the key algorithms.
  *
  */
 enum KeyAlgorithm : uint8_t
@@ -83,7 +83,7 @@ constexpr uint8_t kUsageSignHash   = OT_CRYPTO_KEY_USAGE_SIGN_HASH;   ///< Key U
 constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key Usage: Verify Hash.
 
 /**
- * This enumeration defines the key storage types.
+ * Defines the key storage types.
  *
  */
 enum StorageType : uint8_t

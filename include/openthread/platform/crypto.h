@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the key types.
+ * Defines the key types.
  *
  */
 typedef enum
@@ -67,7 +67,7 @@ typedef enum
 } otCryptoKeyType;
 
 /**
- * This enumeration defines the key algorithms.
+ * Defines the key algorithms.
  *
  */
 typedef enum
@@ -79,7 +79,7 @@ typedef enum
 } otCryptoKeyAlgorithm;
 
 /**
- * This enumeration defines the key usage flags.
+ * Defines the key usage flags.
  *
  */
 enum
@@ -93,7 +93,7 @@ enum
 };
 
 /**
- * This enumeration defines the key storage types.
+ * Defines the key storage types.
  *
  */
 typedef enum

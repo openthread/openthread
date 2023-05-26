@@ -131,7 +131,7 @@ typedef struct PosixConfig
 } PosixConfig;
 
 /**
- * This enumeration defines the argument return values.
+ * Defines the argument return values.
  *
  */
 enum

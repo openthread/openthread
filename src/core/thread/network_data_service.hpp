@@ -241,7 +241,7 @@ public:
     static const uint8_t kServiceData = kServiceNumber;
 
     /**
-     * This enumeration represents the origin a `DnsSrpUnicast` entry.
+     * Represents the origin a `DnsSrpUnicast` entry.
      *
      */
     enum Origin : uint8_t

@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * This enumeration represents OpenThread time synchronization status.
+ * Represents OpenThread time synchronization status.
  *
  */
 typedef enum otNetworkTimeStatus

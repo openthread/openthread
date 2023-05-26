@@ -43,7 +43,7 @@
 namespace ot {
 
 /**
- * This enumeration specifies the context argument position in a callback function pointer.
+ * Specifies the context argument position in a callback function pointer.
  *
  */
 enum CallbackContextPosition : uint8_t

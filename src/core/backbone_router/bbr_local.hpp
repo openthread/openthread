@@ -74,7 +74,7 @@ class Local : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This enumeration represents Backbone Router state.
+     * Represents Backbone Router state.
      *
      */
     enum State : uint8_t

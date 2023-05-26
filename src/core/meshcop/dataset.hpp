@@ -66,7 +66,7 @@ public:
     static constexpr uint8_t kMaxGetTypes  = 64;                                ///< Max number of types in MGMT_GET.req
 
     /**
-     * This enumeration represents the Dataset type (active or pending).
+     * Represents the Dataset type (active or pending).
      *
      */
     enum Type : uint8_t

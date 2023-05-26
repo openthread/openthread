@@ -77,7 +77,7 @@ class Client : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration types represents an SRP client item (service or host info) state.
+     * Types represents an SRP client item (service or host info) state.
      *
      */
     enum ItemState : uint8_t

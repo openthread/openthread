@@ -67,7 +67,7 @@ public:
     typedef otNeighborTableEntryInfo EntryInfo;
 
     /**
-     * This enumeration defines the constants used in `NeighborTable::Callback` to indicate whether a child or router
+     * Defines the constants used in `NeighborTable::Callback` to indicate whether a child or router
      * neighbor is being added or removed.
      *
      */

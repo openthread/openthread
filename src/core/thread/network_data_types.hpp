@@ -71,7 +71,7 @@ class ServerTlv;
 class ContextTlv;
 
 /**
- * This enumeration represents the Network Data type.
+ * Represents the Network Data type.
  *
  */
 enum Type : uint8_t
@@ -81,7 +81,7 @@ enum Type : uint8_t
 };
 
 /**
- * This enumeration type represents the route preference values as a signed integer (per RFC-4191).
+ * Type represents the route preference values as a signed integer (per RFC-4191).
  *
  */
 enum RoutePreference : int8_t
@@ -96,7 +96,7 @@ static_assert(kRoutePreferenceMedium == Preference::kMedium, "kRoutePreferenceMe
 static_assert(kRoutePreferenceLow == Preference::kLow, "kRoutePreferenceLow is not valid");
 
 /**
- * This enumeration represents the border router RLOC role filter used when searching for border routers in the Network
+ * Represents the border router RLOC role filter used when searching for border routers in the Network
  * Data.
  *
  */

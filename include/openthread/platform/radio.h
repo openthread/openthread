@@ -88,7 +88,7 @@ enum
 };
 
 /**
- * This enumeration defines the channel page.
+ * Defines the channel page.
  *
  */
 enum
@@ -100,7 +100,7 @@ enum
 };
 
 /**
- * This enumeration defines the frequency band channel range.
+ * Defines the frequency band channel range.
  *
  */
 enum
@@ -122,7 +122,7 @@ enum
 typedef uint8_t otRadioCaps;
 
 /**
- * This enumeration defines constants that are used to indicate different radio capabilities. See `otRadioCaps`.
+ * Defines constants that are used to indicate different radio capabilities. See `otRadioCaps`.
  *
  */
 enum
@@ -155,7 +155,7 @@ typedef uint16_t otShortAddress;
 #define OT_EXT_ADDRESS_SIZE 8 ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 
 /**
- * This enumeration defines constants about size of header IE in ACK.
+ * Defines constants about size of header IE in ACK.
  *
  */
 enum
@@ -229,7 +229,7 @@ typedef struct otMacKeyMaterial
 } otMacKeyMaterial;
 
 /**
- * This enumeration defines constants about key types.
+ * Defines constants about key types.
  *
  */
 typedef enum

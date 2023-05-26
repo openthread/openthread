@@ -55,7 +55,7 @@ class Appender
 {
 public:
     /**
-     * This enumeration represent the `Appender` Type (whether appending to a `Message` or data buffer).
+     * Represent the `Appender` Type (whether appending to a `Message` or data buffer).
      *
      */
     enum Type : uint8_t

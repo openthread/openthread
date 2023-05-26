@@ -595,7 +595,7 @@ public:
     static constexpr uint8_t kGlobalScope         = 14; ///< Global scope
 
     /**
-     * This enumeration defines IPv6 address type filter.
+     * Defines IPv6 address type filter.
      *
      */
     enum TypeFilter : uint8_t

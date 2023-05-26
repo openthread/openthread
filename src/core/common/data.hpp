@@ -50,7 +50,7 @@
 namespace ot {
 
 /**
- * This enumeration type is used as the template parameter in `Data` and `MutableData` to indicate the `uint` type to
+ * Type is used as the template parameter in `Data` and `MutableData` to indicate the `uint` type to
  * use for the data length.
  *
  */

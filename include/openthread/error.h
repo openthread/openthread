@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This enumeration represents error codes used throughout OpenThread.
+ * Represents error codes used throughout OpenThread.
  *
  */
 typedef enum OT_MUST_USE_RESULT otError

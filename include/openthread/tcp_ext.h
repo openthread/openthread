@@ -108,7 +108,7 @@ typedef struct otTcpCircularSendBuffer
 void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, void *aDataBuffer, size_t aCapacity);
 
 /**
- * This enumeration defines flags passed to @p otTcpCircularSendBufferWrite.
+ * Defines flags passed to @p otTcpCircularSendBufferWrite.
  *
  */
 enum

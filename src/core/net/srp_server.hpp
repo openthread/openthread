@@ -147,7 +147,7 @@ public:
     typedef otSrpServerLeaseInfo LeaseInfo;
 
     /**
-     * This enumeration represents the address mode used by the SRP server.
+     * Represents the address mode used by the SRP server.
      *
      * Address mode specifies how the address and port number are determined by the SRP server and how this info ins
      * published in the Thread Network Data.
@@ -162,7 +162,7 @@ public:
     class Host;
 
     /**
-     * This enumeration represents the state of SRP server.
+     * Represents the state of SRP server.
      *
      */
     enum State : uint8_t

@@ -779,7 +779,7 @@ protected:
     static constexpr uint16_t kMleMaxResponseDelay = 1000u; ///< Max delay before responding to a multicast request.
 
     /**
-     * This enumeration type is used in `AppendAddressRegistrationTlv()` to determine which addresses to include in the
+     * Type is used in `AppendAddressRegistrationTlv()` to determine which addresses to include in the
      * appended Address Registration TLV.
      *
      */
@@ -790,7 +790,7 @@ protected:
     };
 
     /**
-     * This enumeration represents the message actions used in `Log()` methods.
+     * Represents the message actions used in `Log()` methods.
      *
      */
     enum MessageAction : uint8_t
@@ -802,7 +802,7 @@ protected:
     };
 
     /**
-     * This enumeration represents message types used in `Log()` methods.
+     * Represents message types used in `Log()` methods.
      *
      */
     enum MessageType : uint8_t
@@ -1402,7 +1402,7 @@ protected:
     struct RxInfo
     {
         /**
-         * This enumeration represents a received MLE message class.
+         * Represents a received MLE message class.
          *
          */
         enum Class : uint8_t

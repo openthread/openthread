@@ -60,7 +60,7 @@ class TimeSync : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration represents Network Time Status
+     * Represents Network Time Status
      *
      */
     enum Status : int8_t

@@ -58,7 +58,7 @@ namespace ot {
  */
 
 /**
- * This enumeration represents comparison mode when matching strings.
+ * Represents comparison mode when matching strings.
  *
  */
 enum StringMatchMode : uint8_t

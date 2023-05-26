@@ -114,7 +114,7 @@ class Ip6 : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration represents an IPv6 message origin.
+     * Represents an IPv6 message origin.
      *
      * In case the message is originating from host, it also indicates whether or not it is allowed to passed back the
      * message to the host.

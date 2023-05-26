@@ -132,7 +132,7 @@ enum
 };
 
 /**
- * This enumeration represents the state of the SRP server.
+ * Represents the state of the SRP server.
  *
  */
 typedef enum
@@ -143,7 +143,7 @@ typedef enum
 } otSrpServerState;
 
 /**
- * This enumeration represents the address mode used by the SRP server.
+ * Represents the address mode used by the SRP server.
  *
  * Address mode specifies how the address and port number are determined by the SRP server and how this info is
  * published in the Thread Network Data.

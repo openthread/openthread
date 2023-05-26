@@ -104,7 +104,7 @@ public:
      */
 
     /**
-     * This enumeration defines the keys of settings.
+     * Defines the keys of settings.
      *
      */
     enum Key : uint16_t
