@@ -43,6 +43,7 @@
 #include "common/debug.hpp"
 #include "common/error.hpp"
 #include "common/non_copyable.hpp"
+#include "common/type_traits.hpp"
 
 namespace ot {
 namespace Random {
@@ -175,6 +176,21 @@ uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
 void FillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
+ * Fills a given object with random bytes.
+ *
+ * @tparam    ObjectType   The object type to fill.
+ *
+ * @param[in] aObject      A reference to the object to fill.
+ *
+ */
+template <typename ObjectType> void Fill(ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    FillBuffer(reinterpret_cast<uint8_t *>(&aObject), sizeof(ObjectType));
+}
+
+/**
  * Adds a random jitter within a given range to a given value.
  *
  * @param[in]  aValue     A value to which the random jitter is added.
@@ -201,6 +217,24 @@ namespace Crypto {
  *
  */
 inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize) { return Manager::CryptoFillBuffer(aBuffer, aSize); }
+
+/**
+ * Fills a given object with cryptographically secure random bytes.
+ *
+ * @tparam    ObjectType   The object type to fill.
+ *
+ * @param[in] aObject      A reference to the object to fill.
+ *
+ * @retval kErrorNone    Successfully filled @p aObject with random values.
+ * @retval kErrorFailed  Failed to generate secure random bytes to fill the object.
+ *
+ */
+template <typename ObjectType> Error Fill(ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    return FillBuffer(reinterpret_cast<uint8_t *>(&aObject), sizeof(ObjectType));
+}
 
 } // namespace Crypto
 

@@ -255,7 +255,7 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
             mFields.m8[7] >= 0x80);
 }
 
-void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::FillBuffer(mFields.m8, kSize)); }
+void InterfaceIdentifier::GenerateRandom(void) { SuccessOrAssert(Random::Crypto::Fill(*this)); }
 
 void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 

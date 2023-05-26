@@ -891,7 +891,7 @@ uint32_t GetRandom(uint32_t max)
 
     if (kUseTrueRandomNumberGenerator)
     {
-        SuccessOrQuit(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&value), sizeof(value)));
+        SuccessOrQuit(Random::Crypto::Fill(value));
     }
     else
     {
