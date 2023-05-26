@@ -332,7 +332,7 @@ public:
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
-     * This static method converts an IP protocol number to a string.
+     * Converts an IP protocol number to a string.
      *
      * @param[in] aIpProto  An IP protocol number.
      *
@@ -342,7 +342,7 @@ public:
     static const char *IpProtoToString(uint8_t aIpProto);
 
     /**
-     * This static method converts an IP header ECN value to a string.
+     * Converts an IP header ECN value to a string.
      *
      * @param[in] aEcn   The 2-bit ECN value.
      *

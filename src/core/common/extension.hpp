@@ -71,7 +71,7 @@ class ExtensionBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This static method initializes and gets a vendor extension instance.
+     * Initializes and gets a vendor extension instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

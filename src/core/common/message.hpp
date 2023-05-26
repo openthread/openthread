@@ -391,7 +391,7 @@ public:
         bool IsLinkSecurityEnabled(void) const { return mLinkSecurityEnabled; }
 
         /**
-         * This static method converts a pointer to an `otMessageSettings` to a `Settings`.
+         * Converts a pointer to an `otMessageSettings` to a `Settings`.
          *
          * @param[in] aSettings  A pointer to `otMessageSettings` to convert from.
          *                       If it is `nullptr`, then the default settings `GetDefault()` will be used.
@@ -402,7 +402,7 @@ public:
         static const Settings &From(const otMessageSettings *aSettings);
 
         /**
-         * This static method returns the default settings with link security enabled and `kPriorityNormal` priority.
+         * Returns the default settings with link security enabled and `kPriorityNormal` priority.
          *
          * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
          *
@@ -564,7 +564,7 @@ public:
     Error SetPriority(Priority aPriority);
 
     /**
-     * This static method convert a `Priority` to a string.
+     * Convert a `Priority` to a string.
      *
      * @param[in] aPriority  The priority level.
      *

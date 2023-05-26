@@ -171,7 +171,7 @@ public:
     void ProcessLine(char *aBuf);
 
     /**
-     * This static method checks a given argument string against "enable" or "disable" commands.
+     * Checks a given argument string against "enable" or "disable" commands.
      *
      * @param[in]  aArg     The argument string to parse.
      * @param[out] aEnable  Boolean variable to return outcome on success.
@@ -222,7 +222,7 @@ public:
     static const char *AddressOriginToString(uint8_t aOrigin);
 
     /**
-     * This static method parses a given argument string as a route preference comparing it against  "high", "med", or
+     * Parses a given argument string as a route preference comparing it against  "high", "med", or
      * "low".
      *
      * @param[in]  aArg          The argument string to parse.
@@ -235,7 +235,7 @@ public:
     static otError ParsePreference(const Arg &aArg, otRoutePreference &aPreference);
 
     /**
-     * This static method converts a route preference value to human-readable string.
+     * Converts a route preference value to human-readable string.
      *
      * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
      *

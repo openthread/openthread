@@ -172,7 +172,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
-      * This static method initializes the OpenThread instance.
+      * Initializes the OpenThread instance.
       *
       * This function must be called before any other calls on OpenThread instance.
       *
@@ -188,7 +188,7 @@ public:
 #else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
-     * This static method initializes the single OpenThread instance.
+     * Initializes the single OpenThread instance.
      *
      * Initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
      * called before any other calls to OpenThread.
@@ -199,7 +199,7 @@ public:
     static Instance &InitSingle(void);
 
     /**
-     * This static method returns a reference to the single OpenThread instance.
+     * Returns a reference to the single OpenThread instance.
      *
      * @returns A reference to the single OpenThread instance.
      *

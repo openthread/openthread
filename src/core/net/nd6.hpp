@@ -401,7 +401,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This static method calculates the minimum option length for a given prefix length.
+     * Calculates the minimum option length for a given prefix length.
      *
      * The option length (which is in unit of 8 octets) can be 1, 2, or 3 depending on the prefix length. It can be 1
      * for a zero prefix length, 2 if the prefix length is not greater than 64, and 3 otherwise.
@@ -414,7 +414,7 @@ public:
     static uint8_t OptionLengthForPrefix(uint8_t aPrefixLength);
 
     /**
-     * This static method calculates the minimum option size (in bytes) for a given prefix length.
+     * Calculates the minimum option size (in bytes) for a given prefix length.
      *
      * @param[in] aPrefixLength   The prefix length (in bits).
      *

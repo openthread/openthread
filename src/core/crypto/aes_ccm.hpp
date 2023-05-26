@@ -185,7 +185,7 @@ public:
     void Finalize(void *aTag);
 
     /**
-     * This static method generates IEEE 802.15.4 nonce byte sequence.
+     * Generates IEEE 802.15.4 nonce byte sequence.
      *
      * @param[in]  aAddress        An extended address.
      * @param[in]  aFrameCounter   A frame counter.

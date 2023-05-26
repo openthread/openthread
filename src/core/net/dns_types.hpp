@@ -668,7 +668,7 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
-     * This static method encodes and appends a single name label to a message.
+     * Encodes and appends a single name label to a message.
      *
      * The @p aLabel is assumed to contain a single name label as a C string (null-terminated). Unlike
      * `AppendMultipleLabels()` which parses the label string and treats it as sequence of multiple (dot-separated)
@@ -687,7 +687,7 @@ public:
     static Error AppendLabel(const char *aLabel, Message &aMessage);
 
     /**
-     * This static method encodes and appends a single name label of specified length to a message.
+     * Encodes and appends a single name label of specified length to a message.
      *
      * The @p aLabel is assumed to contain a single name label of given @p aLength.  @p aLabel must not contain
      * '\0' characters within the length @p aLength. Unlike `AppendMultipleLabels()` which parses the label string
@@ -707,7 +707,7 @@ public:
     static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
 
     /**
-     * This static method encodes and appends a sequence of name labels to a given message.
+     * Encodes and appends a sequence of name labels to a given message.
      *
      * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "_http._tcp", "_http._tcp." (same as previous one), "host-1.test".
@@ -729,7 +729,7 @@ public:
     static Error AppendMultipleLabels(const char *aLabels, Message &aMessage);
 
     /**
-     * This static method encodes and appends a sequence of name labels within the specified length to a given message.
+     * Encodes and appends a sequence of name labels within the specified length to a given message.
      * Stops appending labels if @p aLength characters are read or '\0' is found before @p aLength
      * characters.
      *
@@ -756,7 +756,7 @@ public:
     static Error AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage);
 
     /**
-     * This static method appends a name label terminator to a message.
+     * Appends a name label terminator to a message.
      *
      * An encoded name is terminated by an empty label (a zero byte).
      *
@@ -769,7 +769,7 @@ public:
     static Error AppendTerminator(Message &aMessage);
 
     /**
-     * This static method appends a pointer type name label to a message.
+     * Appends a pointer type name label to a message.
      *
      * Pointer label is used for name compression. It allows an entire name or a list of labels at the end of an
      * encoded name to be replaced with a pointer to a prior occurrence of the same name within the message.
@@ -784,7 +784,7 @@ public:
     static Error AppendPointerLabel(uint16_t aOffset, Message &aMessage);
 
     /**
-     * This static method encodes and appends a full name to a message.
+     * Encodes and appends a full name to a message.
      *
      * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
@@ -803,7 +803,7 @@ public:
     static Error AppendName(const char *aName, Message &aMessage);
 
     /**
-     * This static method parses and skips over a full name in a message.
+     * Parses and skips over a full name in a message.
      *
      * @param[in]     aMessage        The message to parse the name from. `aMessage.GetOffset()` MUST point to
      *                                the start of DNS header (this is used to handle compressed names).
@@ -818,7 +818,7 @@ public:
     static Error ParseName(const Message &aMessage, uint16_t &aOffset);
 
     /**
-     * This static method reads a name label from a message.
+     * Reads a name label from a message.
      *
      * Can be used to read labels one by one in a name. After a successful label read, @p aOffset is
      * updated to point to the start of the next label. When we reach the end of the name, kErrorNotFound is
@@ -848,7 +848,7 @@ public:
     static Error ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength);
 
     /**
-     * This static method reads a full name from a message.
+     * Reads a full name from a message.
      *
      * On successful read, the read name follows  "<label1>.<label2>.<label3>.", i.e., a sequence of labels separated by
      * dot '.' character. The read name will ALWAYS end with a dot.
@@ -872,7 +872,7 @@ public:
     static Error ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
 
     /**
-     * This static method compares a single name label from a message with a given label string.
+     * Compares a single name label from a message with a given label string.
      *
      * Can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
      * @p aLabel string (case-insensitive comparison).
@@ -896,7 +896,7 @@ public:
     static Error CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
 
     /**
-     * This static method parses and compares a full name from a message with a given name.
+     * Parses and compares a full name from a message with a given name.
      *
      * Checks whether the encoded name in a message matches a given name string (using case-insensitive
      * comparison). It checks the name in the message in place and handles compressed names. If the name read from the
@@ -924,7 +924,7 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName);
 
     /**
-     * This static method parses and compares a full name from a message with a name from another message.
+     * Parses and compares a full name from a message with a name from another message.
      *
      * Checks whether the encoded name in @p aMessage matches the name from @p aMessage2 (using
      * case-insensitive comparison). It compares the names in both messages in place and handles compressed names. Note
@@ -957,7 +957,7 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2);
 
     /**
-     * This static method parses and compares a full name from a message with a given name (using case-insensitive
+     * Parses and compares a full name from a message with a given name (using case-insensitive
      * comparison).
      *
      * If @p aName is empty (not specified), then any name in @p aMessage is considered a match to it.
@@ -978,7 +978,7 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
     /**
-     * This static method tests if a DNS name is a sub-domain of a given domain.
+     * Tests if a DNS name is a sub-domain of a given domain.
      *
      * Both @p aName and @p aDomain can end without dot ('.').
      *
@@ -991,7 +991,7 @@ public:
     static bool IsSubDomainOf(const char *aName, const char *aDomain);
 
     /**
-     * This static method tests if the two DNS name are the same domain.
+     * Tests if the two DNS name are the same domain.
      *
      * Both @p aDomain1 and @p aDomain2 can end without dot ('.').
      *
@@ -1181,7 +1181,7 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
-     * This static method appends an array of `TxtEntry` items to a message.
+     * Appends an array of `TxtEntry` items to a message.
      *
      * @param[in] aEntries     A pointer to array of `TxtEntry` items.
      * @param[in] aNumEntries  The number of entries in @p aEntries array.
@@ -1195,7 +1195,7 @@ public:
     static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
 
     /**
-     * This static method appends an array of `TxtEntry` items to a `MutableData` buffer.
+     * Appends an array of `TxtEntry` items to a `MutableData` buffer.
      *
      * @param[in] aEntries     A pointer to array of `TxtEntry` items.
      * @param[in] aNumEntries  The number of entries in @p aEntries array.
@@ -1348,7 +1348,7 @@ public:
     uint32_t GetSize(void) const { return sizeof(ResourceRecord) + GetLength(); }
 
     /**
-     * This static method parses and skips over a given number of resource records in a message from a given offset.
+     * Parses and skips over a given number of resource records in a message from a given offset.
      *
      * @param[in]     aMessage     The message from which to parse/read the resource records. `aMessage.GetOffset()`
      *                             MUST point to the start of DNS header.
@@ -1364,7 +1364,7 @@ public:
     static Error ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords);
 
     /**
-     * This static method searches in a given message to find the first resource record matching a given record name.
+     * Searches in a given message to find the first resource record matching a given record name.
      *
      * @param[in]     aMessage       The message in which to search for a matching resource record.
      *                               `aMessage.GetOffset()` MUST point to the start of DNS header.
@@ -1728,7 +1728,7 @@ public:
     Error ReadTxtData(const Message &aMessage, uint16_t &aOffset, uint8_t *aTxtBuffer, uint16_t &aTxtBufferSize) const;
 
     /**
-     * This static method tests if a buffer contains valid encoded TXT data.
+     * Tests if a buffer contains valid encoded TXT data.
      *
      * @param[in]  aTxtData     The TXT data buffer.
      * @param[in]  aTxtLength   The length of the TXT data buffer.

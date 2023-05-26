@@ -734,7 +734,7 @@ public:
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
 
     /**
-     * This static method converts a `ItemState` to a string.
+     * Converts a `ItemState` to a string.
      *
      * @param[in] aState   An `ItemState`.
      *

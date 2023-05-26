@@ -137,7 +137,7 @@ public:
     static constexpr uint8_t kRssi       = (kMetricRssi | kTypeAve);                ///< Type ID for RSSI.
 
     /**
-     * This static method indicates whether or not a given Type ID is extended.
+     * Indicates whether or not a given Type ID is extended.
      *
      * Extended Type IDs are reserved for future use. When set an additional second byte follows the current ID flags.
      *
@@ -150,7 +150,7 @@ public:
     static bool IsExtended(uint8_t aTypeId) { return (aTypeId & kExtendedFlag); }
 
     /**
-     * This static method determines the value length (number of bytes) associated with a given Type ID.
+     * Determines the value length (number of bytes) associated with a given Type ID.
      *
      * Type IDs can either have a short value as a `uint8_t` (e.g., `kLqi`, `kLinkMargin` or `kRssi`) or a long value as
      * a `uint32_t` (`kPdu`).
@@ -166,7 +166,7 @@ public:
     }
 
     /**
-     * This static method updates a Type ID to mark it as reversed.
+     * Updates a Type ID to mark it as reversed.
      *
      * This is used for testing only.
      *

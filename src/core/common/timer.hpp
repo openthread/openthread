@@ -235,7 +235,7 @@ public:
     void Stop(void);
 
     /**
-     * This static method returns the current time in milliseconds.
+     * Returns the current time in milliseconds.
      *
      * @returns The current time in milliseconds.
      *
@@ -396,7 +396,7 @@ public:
     void Stop(void);
 
     /**
-     * This static method returns the current time in microseconds.
+     * Returns the current time in microseconds.
      *
      * @returns The current time in microseconds.
      *

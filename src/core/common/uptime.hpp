@@ -105,7 +105,7 @@ public:
     static void UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec);
 
     /**
-     * This static method converts a given uptime as number of milliseconds to number of seconds.
+     * Converts a given uptime as number of milliseconds to number of seconds.
      *
      * @param[in] aUptimeInMilliseconds    Uptime in milliseconds (as `uint64_t`).
      *
@@ -118,7 +118,7 @@ public:
     }
 
     /**
-     * This static method converts a given uptime as number of seconds to number of milliseconds.
+     * Converts a given uptime as number of seconds to number of milliseconds.
      *
      * @param[in] aUptimeInSeconds    Uptime in seconds (as `uint32_t`).
      *

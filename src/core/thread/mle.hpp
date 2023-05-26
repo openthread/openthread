@@ -1604,7 +1604,7 @@ protected:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     /**
-     * This static method emits a log message with an IPv6 address.
+     * Emits a log message with an IPv6 address.
      *
      * @param[in]  aAction     The message action (send/receive/delay, etc).
      * @param[in]  aType       The message type.
@@ -1614,7 +1614,7 @@ protected:
     static void Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAddress);
 
     /**
-     * This static method emits a log message with an IPv6 address and RLOC16.
+     * Emits a log message with an IPv6 address and RLOC16.
      *
      * @param[in]  aAction     The message action (send/receive/delay, etc).
      * @param[in]  aType       The message type.
@@ -1630,7 +1630,7 @@ protected:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     /**
-     * This static method emits a log message indicating an error in processing of a message.
+     * Emits a log message indicating an error in processing of a message.
      *
      * Note that log message is emitted only if there is an error, i.e., @p aError is not `kErrorNone`. The log
      * message will have the format "Failed to process {aMessageString} : {ErrorString}".
@@ -1642,7 +1642,7 @@ protected:
     static void LogProcessError(MessageType aType, Error aError);
 
     /**
-     * This static method emits a log message indicating an error when sending a message.
+     * Emits a log message indicating an error when sending a message.
      *
      * Note that log message is emitted only if there is an error, i.e. @p aError is not `kErrorNone`. The log
      * message will have the format "Failed to send {Message Type} : {ErrorString}".

@@ -276,7 +276,7 @@ public:
     bool operator<(const Prefix &aOther) const;
 
     /**
-     * This static method converts a prefix length (in bits) to size (number of bytes).
+     * Converts a prefix length (in bits) to size (number of bytes).
      *
      * @param[in] aLength   A prefix length (in bits).
      *
@@ -286,7 +286,7 @@ public:
     static uint8_t SizeForLength(uint8_t aLength) { return BitVectorBytes(aLength); }
 
     /**
-     * This static method returns the number of IPv6 prefix bits that match.
+     * Returns the number of IPv6 prefix bits that match.
      *
      * @param[in]  aPrefixA     A pointer to a byte array containing a first prefix.
      * @param[in]  aPrefixB     A pointer to a byte array containing a second prefix.

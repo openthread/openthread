@@ -175,7 +175,7 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
-     * This static method reads a TLV's value in a message at a given offset expecting a minimum length for the value.
+     * Reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
      * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
      *
@@ -191,7 +191,7 @@ public:
     static Error ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
 
     /**
-     * This static method reads a simple TLV with a single non-integral value in a message at a given offset.
+     * Reads a simple TLV with a single non-integral value in a message at a given offset.
      *
      * @tparam      SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
      *
@@ -210,7 +210,7 @@ public:
     }
 
     /**
-     * This static method reads a simple TLV with a single integral value in a message at a given offset.
+     * Reads a simple TLV with a single integral value in a message at a given offset.
      *
      * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `UintTlvInfo`).
      *
@@ -229,7 +229,7 @@ public:
     }
 
     /**
-     * This static method reads a simple TLV with a UTF-8 string value in a message at a given offset.
+     * Reads a simple TLV with a UTF-8 string value in a message at a given offset.
      *
      * @tparam      StringTlvType   The simple TLV type to read (must be a sub-class of `StringTlvInfo`).
      *
@@ -248,7 +248,7 @@ public:
     }
 
     /**
-     * This static method searches for and reads a requested TLV out of a given message.
+     * Searches for and reads a requested TLV out of a given message.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -264,7 +264,7 @@ public:
     static Error FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
 
     /**
-     * This static method searches for and reads a requested TLV out of a given message.
+     * Searches for and reads a requested TLV out of a given message.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -283,7 +283,7 @@ public:
     }
 
     /**
-     * This static method obtains the offset of a TLV within @p aMessage.
+     * Obtains the offset of a TLV within @p aMessage.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -298,7 +298,7 @@ public:
     static Error FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
 
     /**
-     * This static method finds the offset and length of a given TLV type.
+     * Finds the offset and length of a given TLV type.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -314,7 +314,7 @@ public:
     static Error FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength);
 
     /**
-     * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
+     * Searches for a TLV with a given type in a message, ensures its length is same or larger than
      * an expected minimum value, and then reads its value into a given buffer.
      *
      * If the TLV length is smaller than the minimum length @p aLength, the TLV is considered invalid. In this case,
@@ -340,7 +340,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a single non-integral value in a message, ensures its length is
+     * Searches for a simple TLV with a single non-integral value in a message, ensures its length is
      * same or larger than the expected `ValueType` object size, and then reads its value into a value object reference.
      *
      * If the TLV length is smaller than the size of @p aValue, the TLV is considered invalid. In this case, this
@@ -366,7 +366,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a single integral value in a message, and then reads its value
+     * Searches for a simple TLV with a single integral value in a message, and then reads its value
      * into a given `uint` reference variable.
      *
      * If the TLV length is smaller than size of integral value, the TLV is considered invalid. In this case, this
@@ -389,7 +389,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a UTF-8 string value in a message, and then reads its value
+     * Searches for a simple TLV with a UTF-8 string value in a message, and then reads its value
      * into a given string buffer.
      *
      * If the TLV length is longer than maximum string length specified by `StringTlvType::kMaxStringLength` then
@@ -415,7 +415,7 @@ public:
     }
 
     /**
-     * This static method appends a TLV with a given type and value to a message.
+     * Appends a TLV with a given type and value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -435,7 +435,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single (non-integral) value to a message.
+     * Appends a simple TLV with a single (non-integral) value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -455,7 +455,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single integral value to a message.
+     * Appends a simple TLV with a single integral value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -474,7 +474,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single UTF-8 string value to a message.
+     * Appends a simple TLV with a single UTF-8 string value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *

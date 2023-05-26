@@ -67,7 +67,7 @@ public:
     ~Manager(void);
 
     /**
-     * This static method generates and returns a random value using a non-crypto Pseudo Random Number Generator.
+     * Generates and returns a random value using a non-crypto Pseudo Random Number Generator.
      *
      * @returns    A random `uint32_t` value.
      *
@@ -76,7 +76,7 @@ public:
 
 #if !OPENTHREAD_RADIO
     /**
-     * This static method fills a given buffer with cryptographically secure random bytes.
+     * Fills a given buffer with cryptographically secure random bytes.
      *
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
      * @param[in]  aSize    Size of buffer (number of bytes to fill).

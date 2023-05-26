@@ -91,7 +91,7 @@ class TxParameters : public otCoapTxParameters
 
 public:
     /**
-     * This static method coverts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
+     * Coverts a pointer to `otCoapTxParameters` to `Coap::TxParamters`
      *
      * If the pointer is `nullptr`, the default parameters are used instead.
      *
@@ -115,7 +115,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This static method returns default CoAP tx parameters.
+     * Returns default CoAP tx parameters.
      *
      * @returns The default tx parameters.
      *

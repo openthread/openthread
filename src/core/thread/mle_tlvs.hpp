@@ -989,7 +989,7 @@ public:
     static constexpr uint8_t kControlByteUncompressed = 0;
 
     /**
-     * This static method returns the control byte to use in a compressed entry where the 64-prefix is replaced with a
+     * Returns the control byte to use in a compressed entry where the 64-prefix is replaced with a
      * 6LoWPAN context identifier.
      *
      * @param[in] aContextId   The 6LoWPAN context ID.
@@ -1000,7 +1000,7 @@ public:
     static uint8_t ControlByteFor(uint8_t aContextId) { return kCompressed | (aContextId & kContextIdMask); }
 
     /**
-     * This static method indicates whether or not an address entry is using compressed format.
+     * Indicates whether or not an address entry is using compressed format.
      *
      * @param[in] aControlByte  The control byte (the first byte in the entry).
      *
@@ -1011,7 +1011,7 @@ public:
     static bool IsEntryCompressed(uint8_t aControlByte) { return (aControlByte & kCompressed); }
 
     /**
-     * This static method gets the context ID in a compressed entry.
+     * Gets the context ID in a compressed entry.
      *
      * @param[in] aControlByte  The control byte (the first byte in the entry).
      *

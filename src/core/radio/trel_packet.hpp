@@ -217,7 +217,7 @@ public:
     void SetDestination(const Mac::ExtAddress &aDest) { mDestination = aDest; }
 
     /**
-     * This static method gets the size (number of bytes) in header of given packet type.
+     * Gets the size (number of bytes) in header of given packet type.
      *
      * @param[in] aType   The packet type.
      *

@@ -215,7 +215,7 @@ public:
     };
 
     /**
-     * This static method converts a `uint64_t` value to a decimal format string.
+     * Converts a `uint64_t` value to a decimal format string.
      *
      * @param[in] aUint64  The `uint64_t` value to convert.
      * @param[in] aBuffer  A buffer to allocate the string from.
@@ -452,7 +452,7 @@ public:
     };
 
     /**
-     * This static method converts an encoded value to a percentage representation.
+     * Converts an encoded value to a percentage representation.
      *
      * The encoded @p aValue is assumed to be linearly scaled such that `0` maps to 0% and `0xffff` maps to 100%.
      *

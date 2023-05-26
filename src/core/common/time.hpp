@@ -239,7 +239,7 @@ public:
     Time GetDistantPast(void) const { return Time(mValue - kDistantFuture); }
 
     /**
-     * This static method converts a given number of seconds to milliseconds.
+     * Converts a given number of seconds to milliseconds.
      *
      * @param[in] aSeconds   The seconds value to convert to milliseconds.
      *
@@ -249,7 +249,7 @@ public:
     static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
 
     /**
-     * This static method converts a given number of milliseconds to seconds.
+     * Converts a given number of milliseconds to seconds.
      *
      * @param[in] aMilliseconds  The milliseconds value to convert to seconds.
      *

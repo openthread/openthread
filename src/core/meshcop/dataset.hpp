@@ -905,7 +905,7 @@ public:
     const Tlv *GetTlvsEnd(void) const { return reinterpret_cast<const Tlv *>(mTlvs + mLength); }
 
     /**
-     * This static method converts a Dataset Type to a string.
+     * Converts a Dataset Type to a string.
      *
      * @param[in]  aType   A Dataset type.
      *

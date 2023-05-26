@@ -308,7 +308,7 @@ public:
     void Init(uint16_t aSource, uint16_t aDestination, uint8_t aHopsLeft);
 
     /**
-     * This static method indicates whether or not the header (in a given frame) is a Mesh Header.
+     * Indicates whether or not the header (in a given frame) is a Mesh Header.
      *
      * @note This method checks whether the first byte in header/frame (dispatch byte) matches the Mesh Header dispatch
      * It does not fully parse and validate the Mesh Header. `ParseFrom()` method can be used to fully parse and
@@ -528,7 +528,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This static method indicates whether or not the header (in a given frame) is a Fragment Header.
+     * Indicates whether or not the header (in a given frame) is a Fragment Header.
      *
      * @note This method checks whether the frame has the minimum required length and that the first byte in
      * header (dispatch byte) matches the Fragment Header dispatch value. It does not fully parse and validate the

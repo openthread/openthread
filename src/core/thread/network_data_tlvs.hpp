@@ -261,7 +261,7 @@ public:
     void SetStable(void) { mType |= kStableMask; }
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given type.
+     * Searches in a given sequence of TLVs to find the first TLV with a given type.
      *
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
@@ -276,7 +276,7 @@ public:
     }
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given type.
+     * Searches in a given sequence of TLVs to find the first TLV with a given type.
      *
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
@@ -320,7 +320,7 @@ public:
     }
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV type and stable
+     * Searches in a given sequence of TLVs to find the first TLV with a given TLV type and stable
      * flag.
      *
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
@@ -337,7 +337,7 @@ public:
     }
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV type and stable
+     * Searches in a given sequence of TLVs to find the first TLV with a given TLV type and stable
      * flag.
      *
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
@@ -484,7 +484,7 @@ public:
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
 
     /**
-     * This static method returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
+     * Returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
      * given flags bitmask.
      *
      * @param[in] aFlags  The flags bitmask.
@@ -495,7 +495,7 @@ public:
     static uint8_t FlagsWithoutPreference(uint8_t aFlags) { return (aFlags & ~kPreferenceMask); }
 
     /**
-     * This static method gets the preference field from a flags bitmask.
+     * Gets the preference field from a flags bitmask.
      *
      * @param[in] aFlags  The flags.
      *
@@ -880,7 +880,7 @@ public:
     const NetworkDataTlv *FindSubTlv(Type aType, bool aStable) const;
 
     /**
-     * This static method calculates the total size (number of bytes) of a Prefix TLV with a given Prefix Length value.
+     * Calculates the total size (number of bytes) of a Prefix TLV with a given Prefix Length value.
      *
      * Note that the returned size does include the Type and Length fields in the TLV, but does not account for any
      * sub TLVs of the Prefix TLV.
@@ -1048,7 +1048,7 @@ public:
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
 
     /**
-     * This static method returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
+     * Returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
      * given flags bitmask.
      *
      * @param[in] aFlags  The flags bitmask.
@@ -1059,7 +1059,7 @@ public:
     static uint16_t FlagsWithoutPreference(uint16_t aFlags) { return (aFlags & ~kPreferenceMask); }
 
     /**
-     * This static method gets the preference field from a flags bitmask.
+     * Gets the preference field from a flags bitmask.
      *
      * @param[in] aFlags  The flags.
      *
@@ -1400,7 +1400,7 @@ public:
     }
 
     /**
-     * This static method calculates the total size (number of bytes) of a Service TLV with a given Enterprise Number
+     * Calculates the total size (number of bytes) of a Service TLV with a given Enterprise Number
      * and Service Data length.
      *
      * Note that the returned size does include the Type and Length fields in the TLV, but does not account for any
@@ -1536,7 +1536,7 @@ public:
     }
 
     /**
-     * This static method calculates the total size (number of bytes) of a Service TLV with a given Server Data length.
+     * Calculates the total size (number of bytes) of a Service TLV with a given Server Data length.
      *
      * Note that the returned size does include the Type and Length fields in the TLV.
      *

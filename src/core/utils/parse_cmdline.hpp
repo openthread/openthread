@@ -599,7 +599,7 @@ public:
     }
 
     /**
-     * This static method copies the argument string pointers from an `Arg` array to a C string array.
+     * Copies the argument string pointers from an `Arg` array to a C string array.
      *
      * @note this method only copies the string pointer value (i.e., `GetString()` pointer) from `aArgs` array to the
      * @p aStrings array (the content of strings are not copied).
@@ -612,7 +612,7 @@ public:
     static void CopyArgsToStringArray(Arg aArgs[], char *aStrings[]);
 
     /**
-     * This static method returns the length of argument array, i.e. number of consecutive non-empty arguments.
+     * Returns the length of argument array, i.e. number of consecutive non-empty arguments.
      *
      * @param[in] aArgs  An `Arg` array.
      *

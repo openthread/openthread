@@ -226,7 +226,7 @@ public:
     Error SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
 
     /**
-     * This static method gets the next Network Diagnostic TLV in a given message.
+     * Gets the next Network Diagnostic TLV in a given message.
      *
      * @param[in]      aMessage    Message to read TLVs from.
      * @param[in,out]  aIterator   The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.

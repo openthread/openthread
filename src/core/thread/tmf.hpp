@@ -183,7 +183,7 @@ public:
     bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
 
     /**
-     * This static method converts a TMF message priority to IPv6 header DSCP value.
+     * Converts a TMF message priority to IPv6 header DSCP value.
      *
      * @param[in] aPriority  The message priority to convert.
      *
@@ -193,7 +193,7 @@ public:
     static uint8_t PriorityToDscp(Message::Priority aPriority);
 
     /**
-     * This static method converts a IPv6 header DSCP value to message priority for TMF message.
+     * Converts a IPv6 header DSCP value to message priority for TMF message.
      *
      * @param[in] aDscp      The IPv6 header DSCP value in a TMF message.
      *

@@ -150,7 +150,7 @@ public:
     bool IsOrphanTimestamp(void) const { return GetSeconds() == 0 && GetTicks() == 0 && GetAuthoritative(); }
 
     /**
-     * This static method compares two timestamps.
+     * Compares two timestamps.
      *
      * Either one or both @p aFirst or @p aSecond can be `nullptr`. A non-null timestamp is considered greater than
      * a null one. If both are null, they are considered as equal.
@@ -166,7 +166,7 @@ public:
     static int Compare(const Timestamp *aFirst, const Timestamp *aSecond);
 
     /**
-     * This static method compares two timestamps.
+     * Compares two timestamps.
      *
      * @param[in]  aFirst   A reference to the first timestamp to compare.
      * @param[in]  aSecond  A reference to the second timestamp to compare.

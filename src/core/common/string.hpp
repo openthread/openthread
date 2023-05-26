@@ -454,7 +454,7 @@ public:
     };
 
     /**
-     * This static method looks up a key in a given sorted table array (using binary search) and return the associated
+     * Looks up a key in a given sorted table array (using binary search) and return the associated
      * strings with the key.
      *
      * @note This method requires the array to be sorted, otherwise its behavior is undefined.

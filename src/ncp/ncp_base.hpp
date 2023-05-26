@@ -83,7 +83,7 @@ public:
     explicit NcpBase(Instance *aInstance);
 
     /**
-     * This static method returns the pointer to the single NCP instance.
+     * Returns the pointer to the single NCP instance.
      *
      * @returns Pointer to the single NCP instance.
      *

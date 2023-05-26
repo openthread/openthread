@@ -164,7 +164,7 @@ public:
     const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
-     * This static method reads the requested TLV out of @p aMessage.
+     * Reads the requested TLV out of @p aMessage.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -181,7 +181,7 @@ public:
     }
 
     /**
-     * This static method reads the requested TLV out of @p aMessage.
+     * Reads the requested TLV out of @p aMessage.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -201,7 +201,7 @@ public:
     }
 
     /**
-     * This static method indicates whether a TLV appears to be well-formed.
+     * Indicates whether a TLV appears to be well-formed.
      *
      * @param[in]  aTlv  A reference to the TLV.
      *
@@ -211,7 +211,7 @@ public:
     static bool IsValid(const Tlv &aTlv);
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given template Type.
+     * Searches in a given sequence of TLVs to find the first TLV with a given template Type.
      *
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
@@ -226,7 +226,7 @@ public:
     }
 
     /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given template Type.
+     * Searches in a given sequence of TLVs to find the first TLV with a given template Type.
      *
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.

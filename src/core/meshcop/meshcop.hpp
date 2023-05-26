@@ -124,7 +124,7 @@ public:
     bool operator==(const JoinerPskd &aOther) const;
 
     /**
-     * This static method indicates whether a given PSKd string if well-formed and valid.
+     * Indicates whether a given PSKd string if well-formed and valid.
      *
      * @param[in] aPskdString  A pointer to a PSKd string array.
      *
@@ -369,7 +369,7 @@ public:
     bool Contains(const HashBitIndexes &aIndexes) const;
 
     /**
-     * This static method calculates the bloom filter hash bit indexes from a given Joiner ID.
+     * Calculates the bloom filter hash bit indexes from a given Joiner ID.
      *
      * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
      *
@@ -380,7 +380,7 @@ public:
     static void CalculateHashBitIndexes(const Mac::ExtAddress &aJoinerId, HashBitIndexes &aIndexes);
 
     /**
-     * This static method calculates the bloom filter hash bit indexes from a given Joiner Discerner.
+     * Calculates the bloom filter hash bit indexes from a given Joiner Discerner.
      *
      * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
      *
