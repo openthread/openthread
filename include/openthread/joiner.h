@@ -82,7 +82,7 @@ typedef struct otJoinerDiscerner
 } otJoinerDiscerner;
 
 /**
- * This function pointer is called to notify the completion of a join operation.
+ * Pointer is called to notify the completion of a join operation.
  *
  * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
  *                       OT_ERROR_SECURITY if the join process failed due to security credentials.
@@ -188,7 +188,7 @@ otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerne
 const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance);
 
 /**
- * This function converts a given joiner state enumeration value to a human-readable string.
+ * Converts a given joiner state enumeration value to a human-readable string.
  *
  * @param[in] aState   The joiner state.
  *

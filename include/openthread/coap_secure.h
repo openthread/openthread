@@ -68,7 +68,7 @@ extern "C" {
 #define OT_DEFAULT_COAP_SECURE_PORT 5684 ///< Default CoAP Secure port, as specified in RFC 7252
 
 /**
- * This function pointer is called when the DTLS connection state changes.
+ * Pointer is called when the DTLS connection state changes.
  *
  * @param[in]  aConnected  true, if a connection was established, false otherwise.
  * @param[in]  aContext    A pointer to arbitrary context information.
@@ -77,7 +77,7 @@ extern "C" {
 typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext);
 
 /**
- * This function starts the CoAP Secure service.
+ * Starts the CoAP Secure service.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aPort      The local UDP port to bind to.
@@ -88,7 +88,7 @@ typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext)
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
 
 /**
- * This function stops the CoAP Secure server.
+ * Stops the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -233,7 +233,7 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance);
 /**
  * Sends a CoAP request block-wise over secure DTLS connection.
  *
- * This function is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
+ * Is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
  * is enabled.
  *
  * If a response for a request is expected, respective function and context information should be provided.
@@ -282,7 +282,7 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
                                 void                 *aContext);
 
 /**
- * This function adds a resource to the CoAP Secure server.
+ * Adds a resource to the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
@@ -291,7 +291,7 @@ otError otCoapSecureSendRequest(otInstance           *aInstance,
 void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
- * This function removes a resource from the CoAP Secure server.
+ * Removes a resource from the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
@@ -300,7 +300,7 @@ void otCoapSecureAddResource(otInstance *aInstance, otCoapResource *aResource);
 void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource);
 
 /**
- * This function adds a block-wise resource to the CoAP Secure server.
+ * Adds a block-wise resource to the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
@@ -309,7 +309,7 @@ void otCoapSecureRemoveResource(otInstance *aInstance, otCoapResource *aResource
 void otCoapSecureAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource);
 
 /**
- * This function removes a block-wise resource from the CoAP Secure server.
+ * Removes a block-wise resource from the CoAP Secure server.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aResource  A pointer to the resource.
@@ -318,7 +318,7 @@ void otCoapSecureAddBlockWiseResource(otInstance *aInstance, otCoapBlockwiseReso
 void otCoapSecureRemoveBlockWiseResource(otInstance *aInstance, otCoapBlockwiseResource *aResource);
 
 /**
- * This function sets the default handler for unhandled CoAP Secure requests.
+ * Sets the default handler for unhandled CoAP Secure requests.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aHandler   A function pointer that shall be called when an unhandled request arrives.
@@ -341,9 +341,9 @@ void otCoapSecureSetClientConnectedCallback(otInstance                     *aIns
                                             void                           *aContext);
 
 /**
- * This function sends a CoAP response block-wise from the CoAP Secure server.
+ * Sends a CoAP response block-wise from the CoAP Secure server.
  *
- * This function is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
+ * Is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
  * is enabled.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
@@ -363,7 +363,7 @@ otError otCoapSecureSendResponseBlockWise(otInstance                 *aInstance,
                                           otCoapBlockwiseTransmitHook aTransmitHook);
 
 /**
- * This function sends a CoAP response from the CoAP Secure server.
+ * Sends a CoAP response from the CoAP Secure server.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMessage      A pointer to the CoAP response to send.

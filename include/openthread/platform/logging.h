@@ -148,7 +148,7 @@ typedef enum otLogRegion
 } otLogRegion;
 
 /**
- * This function outputs logs.
+ * Outputs logs.
  *
  * Note that the support for log region is removed. The OT core will always emit all logs with `OT_LOG_REGION_CORE`
  * as @p aLogRegion.
@@ -162,7 +162,7 @@ typedef enum otLogRegion
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
 /**
- * This function handles OpenThread log level changes.
+ * Handles OpenThread log level changes.
  *
  * This platform function is called whenever the OpenThread log level changes.
  * This platform function is optional since an empty weak implementation has been provided.

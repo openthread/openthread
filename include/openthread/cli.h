@@ -68,7 +68,7 @@ typedef struct otCliCommand
  */
 
 /**
- * This function pointer is called to notify about Console output.
+ * Pointer is called to notify about Console output.
  *
  * @param[out] aContext    A user context pointer.
  * @param[in]  aFormat     The format string.

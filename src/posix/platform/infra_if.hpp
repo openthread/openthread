@@ -168,7 +168,7 @@ public:
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
     /**
-     * This function gets the infrastructure network interface singleton.
+     * Gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.
      *

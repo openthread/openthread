@@ -248,7 +248,7 @@ constexpr uint8_t kCostForLinkQuality2 = 2;                  ///< Link Cost for 
 constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for Link Quality 3.
 
 /**
- * This function converts link quality to route cost.
+ * Converts link quality to route cost.
  *
  * @param[in]  aLinkQuality  The link quality to convert.
  *
@@ -258,7 +258,7 @@ constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for 
 uint8_t CostForLinkQuality(LinkQuality aLinkQuality);
 
 /**
- * This function computes the link margin from a given noise floor and received signal strength.
+ * Computes the link margin from a given noise floor and received signal strength.
  *
  * @param[in]  aNoiseFloor  The noise floor value (in dBm).
  * @param[in]  aRss         The received signal strength value (in dBm).
@@ -269,7 +269,7 @@ uint8_t CostForLinkQuality(LinkQuality aLinkQuality);
 uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss);
 
 /**
- * This function converts a link margin value to a link quality value.
+ * Converts a link margin value to a link quality value.
  *
  * @param[in]  aLinkMargin  The Link Margin in dB.
  *
@@ -279,7 +279,7 @@ uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss);
 LinkQuality LinkQualityForLinkMargin(uint8_t aLinkMargin);
 
 /**
- * This function gets the typical received signal strength value for a given link quality.
+ * Gets the typical received signal strength value for a given link quality.
  *
  * @param[in]  aNoiseFloor   The noise floor value (in dBm).
  * @param[in]  aLinkQuality  The link quality value in [0, 3].

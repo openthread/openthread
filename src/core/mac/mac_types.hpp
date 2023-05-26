@@ -77,7 +77,7 @@ constexpr ShortAddress kShortAddrBroadcast = 0xffff; ///< Broadcast Short Addres
 constexpr ShortAddress kShortAddrInvalid   = 0xfffe; ///< Invalid Short Address.
 
 /**
- * This function generates a random IEEE 802.15.4 PAN ID.
+ * Generates a random IEEE 802.15.4 PAN ID.
  *
  * @returns A randomly generated IEEE 802.15.4 PAN ID (excluding `kPanIdBroadcast`).
  *
@@ -734,7 +734,7 @@ private:
 };
 
 /**
- * This function converts a link type to a string
+ * Converts a link type to a string
  *
  * @param[in] aRadioType  A link type value.
  *

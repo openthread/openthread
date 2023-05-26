@@ -408,7 +408,7 @@ typedef struct otEnergyScanResult
 } otEnergyScanResult;
 
 /**
- * This function pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
+ * Pointer is called during an IEEE 802.15.4 Active Scan when an IEEE 802.15.4 Beacon is received or
  * the scan completes.
  *
  * @param[in]  aResult   A valid pointer to the beacon information or NULL when the active scan completes.
@@ -418,7 +418,7 @@ typedef struct otEnergyScanResult
 typedef void (*otHandleActiveScanResult)(otActiveScanResult *aResult, void *aContext);
 
 /**
- * This function starts an IEEE 802.15.4 Active Scan
+ * Starts an IEEE 802.15.4 Active Scan
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating which channels to scan (e.g. OT_CHANNEL_11_MASK).
@@ -437,7 +437,7 @@ otError otLinkActiveScan(otInstance              *aInstance,
                          void                    *aCallbackContext);
 
 /**
- * This function indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
+ * Indicates whether or not an IEEE 802.15.4 Active Scan is currently in progress.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -446,7 +446,7 @@ otError otLinkActiveScan(otInstance              *aInstance,
 bool otLinkIsActiveScanInProgress(otInstance *aInstance);
 
 /**
- * This function pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
+ * Pointer is called during an IEEE 802.15.4 Energy Scan when the result for a channel is ready or the
  * scan completes.
  *
  * @param[in]  aResult   A valid pointer to the energy scan result information or NULL when the energy scan completes.
@@ -456,7 +456,7 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance);
 typedef void (*otHandleEnergyScanResult)(otEnergyScanResult *aResult, void *aContext);
 
 /**
- * This function starts an IEEE 802.15.4 Energy Scan
+ * Starts an IEEE 802.15.4 Energy Scan
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aScanChannels     A bit vector indicating on which channels to perform energy scan.
@@ -475,7 +475,7 @@ otError otLinkEnergyScan(otInstance              *aInstance,
                          void                    *aCallbackContext);
 
 /**
- * This function indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
+ * Indicates whether or not an IEEE 802.15.4 Energy Scan is currently in progress.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
  *
@@ -485,7 +485,7 @@ otError otLinkEnergyScan(otInstance              *aInstance,
 bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
 
 /**
- * This function enqueues an IEEE 802.15.4 Data Request message for transmission.
+ * Enqueues an IEEE 802.15.4 Data Request message for transmission.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
@@ -497,7 +497,7 @@ bool otLinkIsEnergyScanInProgress(otInstance *aInstance);
 otError otLinkSendDataRequest(otInstance *aInstance);
 
 /**
- * This function indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
+ * Indicates whether or not an IEEE 802.15.4 MAC is in the transmit state.
  *
  * MAC module is in the transmit state during CSMA/CA procedure, CCA, Data, Beacon or Data Request frame transmission
  * and receiving an ACK of a transmitted frame. MAC module is not in the transmit state during transmission of an ACK
@@ -525,7 +525,7 @@ uint8_t otLinkGetChannel(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 channel
  *
- * This function succeeds only when Thread protocols are disabled.  A successful call to this function invalidates the
+ * Succeeds only when Thread protocols are disabled.  A successful call to this function invalidates the
  * Active and Pending Operational Datasets in non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
@@ -553,7 +553,7 @@ uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance);
 /**
  * Set the supported channel mask of MAC layer.
  *
- * This function succeeds only when Thread protocols are disabled.
+ * Succeeds only when Thread protocols are disabled.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aChannelMask  The supported channel mask (bit 0 or lsb mapping to channel 0, and so on).
@@ -613,7 +613,7 @@ otPanId otLinkGetPanId(otInstance *aInstance);
 /**
  * Set the IEEE 802.15.4 PAN ID.
  *
- * This function succeeds only when Thread protocols are disabled.  A successful call to this function also invalidates
+ * Succeeds only when Thread protocols are disabled.  A successful call to this function also invalidates
  * the Active and Pending Operational Datasets in non-volatile memory.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
@@ -712,9 +712,9 @@ uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance);
 void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRetriesIndirect);
 
 /**
- * This function gets the address mode of MAC filter.
+ * Gets the address mode of MAC filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -724,9 +724,9 @@ void otLinkSetMaxFrameRetriesIndirect(otInstance *aInstance, uint8_t aMaxFrameRe
 otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
 
 /**
- * This function sets the address mode of MAC filter.
+ * Sets the address mode of MAC filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aMode      The address mode to set.
@@ -737,7 +737,7 @@ void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aM
 /**
  * Adds an Extended Address to MAC filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the Extended Address (MUST NOT be NULL).
@@ -751,7 +751,7 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
 /**
  * Removes an Extended Address from MAC filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * No action is performed if there is no existing entry in Filter matching the given Extended Address.
  *
@@ -764,7 +764,7 @@ void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAd
 /**
  * Clears all the Extended Addresses from MAC filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -774,7 +774,7 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
 /**
  * Gets an in-use address filter entry.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the MAC filter iterator context. To get the first in-use address filter
@@ -791,7 +791,7 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
  * Adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
  * MAC Filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address. MUST NOT be NULL.
@@ -806,7 +806,7 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
 /**
  * Removes a MAC Filter entry for fixed received signal strength setting for a given Extended Address.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * No action is performed if there is no existing entry in Filter matching the given Extended Address.
  *
@@ -819,7 +819,7 @@ void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
 /**
  * Sets the default received signal strength (in dBm) on MAC Filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * The default RSS value is used for all received frames from addresses for which there is no explicit RSS-IN entry
  * in the Filter list (added using `otLinkFilterAddRssIn()`).
@@ -833,7 +833,7 @@ void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
 /**
  * Clears any previously set default received signal strength (in dBm) on MAC Filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
@@ -843,7 +843,7 @@ void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
 /**
  * Clears all the received signal strength entries (including default RSS-in) on MAC Filter.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -853,7 +853,7 @@ void otLinkFilterClearAllRssIn(otInstance *aInstance);
 /**
  * Gets an in-use RssIn filter entry.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the MAC filter iterator context. MUST NOT be NULL.
@@ -869,9 +869,9 @@ void otLinkFilterClearAllRssIn(otInstance *aInstance);
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * This function enables/disables IEEE 802.15.4 radio filter mode.
+ * Enables/disables IEEE 802.15.4 radio filter mode.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * The radio filter is mainly intended for testing. It can be used to temporarily block all tx/rx on the 802.15.4 radio.
  * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any frame
@@ -885,9 +885,9 @@ otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIt
 void otLinkSetRadioFilterEnabled(otInstance *aInstance, bool aFilterEnabled);
 
 /**
- * This function indicates whether the IEEE 802.15.4 radio filter is enabled or not.
+ * Indicates whether the IEEE 802.15.4 radio filter is enabled or not.
  *
- * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+ * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
  * @retval TRUE   If the radio filter is enabled.
  * @retval FALSE  If the radio filter is disabled.
@@ -920,7 +920,7 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 /**
  * Gets histogram of retries for a single direct packet until success.
  *
- * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
@@ -933,7 +933,7 @@ const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, ui
 /**
  * Gets histogram of retries for a single indirect packet until success.
  *
- * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  * @param[out]  aNumberOfEntries   A pointer to where the size of returned histogram array is placed.
@@ -947,7 +947,7 @@ const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, 
 /**
  * Clears histogram statistics for direct and indirect transmissions.
  *
- * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
+ * Is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *
  * @param[in]   aInstance          A pointer to an OpenThread instance.
  *
@@ -973,7 +973,7 @@ const otMacCounters *otLinkGetCounters(otInstance *aInstance);
 void otLinkResetCounters(otInstance *aInstance);
 
 /**
- * This function pointer is called when an IEEE 802.15.4 frame is received.
+ * Pointer is called when an IEEE 802.15.4 frame is received.
  *
  * @note This callback is called after FCS processing and @p aFrame may not contain the actual FCS that was received.
  *
@@ -987,7 +987,7 @@ void otLinkResetCounters(otInstance *aInstance);
 typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 /**
- * This function registers a callback to provide received raw IEEE 802.15.4 frames.
+ * Registers a callback to provide received raw IEEE 802.15.4 frames.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame or
@@ -998,7 +998,7 @@ typedef void (*otLinkPcapCallback)(const otRadioFrame *aFrame, bool aIsTx, void 
 void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallback, void *aCallbackContext);
 
 /**
- * This function indicates whether or not promiscuous mode is enabled at the link layer.
+ * Indicates whether or not promiscuous mode is enabled at the link layer.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -1009,7 +1009,7 @@ void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallba
 bool otLinkIsPromiscuous(otInstance *aInstance);
 
 /**
- * This function enables or disables the link layer promiscuous mode.
+ * Enables or disables the link layer promiscuous mode.
  *
  * @note Promiscuous mode may only be enabled when the Thread interface is disabled.
  *
@@ -1024,7 +1024,7 @@ bool otLinkIsPromiscuous(otInstance *aInstance);
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous);
 
 /**
- * This function gets the CSL channel.
+ * Gets the CSL channel.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
@@ -1047,7 +1047,7 @@ uint8_t otLinkCslGetChannel(otInstance *aInstance);
 otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * This function gets the CSL period.
+ * Gets the CSL period.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
@@ -1069,7 +1069,7 @@ uint16_t otLinkCslGetPeriod(otInstance *aInstance);
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod);
 
 /**
- * This function gets the CSL timeout.
+ * Gets the CSL timeout.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
@@ -1091,7 +1091,7 @@ uint32_t otLinkCslGetTimeout(otInstance *aInstance);
 otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);
 
 /**
- * This function returns the current CCA (Clear Channel Assessment) failure rate.
+ * Returns the current CCA (Clear Channel Assessment) failure rate.
  *
  * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`
  * frame transmissions.
@@ -1102,7 +1102,7 @@ otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout);
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
 
 /**
- * This function enables or disables the link layer.
+ * Enables or disables the link layer.
  *
  * @note The link layer may only be enabled / disabled when the Thread Interface is disabled.
  *
@@ -1117,7 +1117,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance);
 otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
 
 /**
- * This function indicates whether or not the link layer is enabled.
+ * Indicates whether or not the link layer is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -1128,9 +1128,9 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
 bool otLinkIsEnabled(otInstance *aInstance);
 
 /**
- * This function instructs the device to send an empty IEEE 802.15.4 data frame.
+ * Instructs the device to send an empty IEEE 802.15.4 data frame.
  *
- * This function is only supported on an Rx-Off-When-Idle device to send an empty data frame to its parent.
+ * Is only supported on an Rx-Off-When-Idle device to send an empty data frame to its parent.
  * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.

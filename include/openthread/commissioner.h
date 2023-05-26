@@ -152,7 +152,7 @@ typedef struct otJoinerInfo
 } otJoinerInfo;
 
 /**
- * This function pointer is called whenever the commissioner state changes.
+ * Pointer is called whenever the commissioner state changes.
  *
  * @param[in]  aState    The Commissioner state.
  * @param[in]  aContext  A pointer to application-specific context.
@@ -161,7 +161,7 @@ typedef struct otJoinerInfo
 typedef void (*otCommissionerStateCallback)(otCommissionerState aState, void *aContext);
 
 /**
- * This function pointer is called whenever the joiner state changes.
+ * Pointer is called whenever the joiner state changes.
  *
  * @param[in]  aEvent       The joiner event type.
  * @param[in]  aJoinerInfo  A pointer to the Joiner Info.
@@ -175,7 +175,7 @@ typedef void (*otCommissionerJoinerCallback)(otCommissionerJoinerEvent aEvent,
                                              void                     *aContext);
 
 /**
- * This function enables the Thread Commissioner role.
+ * Enables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
@@ -193,7 +193,7 @@ otError otCommissionerStart(otInstance                  *aInstance,
                             void                        *aCallbackContext);
 
 /**
- * This function disables the Thread Commissioner role.
+ * Disables the Thread Commissioner role.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
@@ -204,7 +204,7 @@ otError otCommissionerStart(otInstance                  *aInstance,
 otError otCommissionerStop(otInstance *aInstance);
 
 /**
- * This function returns the Commissioner Id.
+ * Returns the Commissioner Id.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  *
@@ -214,7 +214,7 @@ otError otCommissionerStop(otInstance *aInstance);
 const char *otCommissionerGetId(otInstance *aInstance);
 
 /**
- * This function sets the Commissioner Id.
+ * Sets the Commissioner Id.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aId           A pointer to a string character array. Must be null terminated.
@@ -227,7 +227,7 @@ const char *otCommissionerGetId(otInstance *aInstance);
 otError otCommissionerSetId(otInstance *aInstance, const char *aId);
 
 /**
- * This function adds a Joiner entry.
+ * Adds a Joiner entry.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
@@ -248,7 +248,7 @@ otError otCommissionerAddJoiner(otInstance         *aInstance,
                                 uint32_t            aTimeout);
 
 /**
- * This function adds a Joiner entry with a given Joiner Discerner value.
+ * Adds a Joiner entry with a given Joiner Discerner value.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
@@ -282,7 +282,7 @@ otError otCommissionerAddJoinerWithDiscerner(otInstance              *aInstance,
 otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterator, otJoinerInfo *aJoiner);
 
 /**
- * This function removes a Joiner entry.
+ * Removes a Joiner entry.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aEui64             A pointer to the Joiner's IEEE EUI-64 or NULL for any Joiner.
@@ -298,7 +298,7 @@ otError otCommissionerGetNextJoinerInfo(otInstance *aInstance, uint16_t *aIterat
 otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aEui64);
 
 /**
- * This function removes a Joiner entry.
+ * Removes a Joiner entry.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aDiscerner         A pointer to the Joiner Discerner.
@@ -314,7 +314,7 @@ otError otCommissionerRemoveJoiner(otInstance *aInstance, const otExtAddress *aE
 otError otCommissionerRemoveJoinerWithDiscerner(otInstance *aInstance, const otJoinerDiscerner *aDiscerner);
 
 /**
- * This function gets the Provisioning URL.
+ * Gets the Provisioning URL.
  *
  * @param[in]    aInstance       A pointer to an OpenThread instance.
  *
@@ -324,7 +324,7 @@ otError otCommissionerRemoveJoinerWithDiscerner(otInstance *aInstance, const otJ
 const char *otCommissionerGetProvisioningUrl(otInstance *aInstance);
 
 /**
- * This function sets the Provisioning URL.
+ * Sets the Provisioning URL.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aProvisioningUrl      A pointer to the Provisioning URL (may be NULL to set as empty string).
@@ -336,7 +336,7 @@ const char *otCommissionerGetProvisioningUrl(otInstance *aInstance);
 otError otCommissionerSetProvisioningUrl(otInstance *aInstance, const char *aProvisioningUrl);
 
 /**
- * This function sends an Announce Begin message.
+ * Sends an Announce Begin message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aChannelMask          The channel mask value.
@@ -358,7 +358,7 @@ otError otCommissionerAnnounceBegin(otInstance         *aInstance,
                                     const otIp6Address *aAddress);
 
 /**
- * This function pointer is called when the Commissioner receives an Energy Report.
+ * Pointer is called when the Commissioner receives an Energy Report.
  *
  * @param[in]  aChannelMask       The channel mask value.
  * @param[in]  aEnergyList        A pointer to the energy measurement list.
@@ -372,7 +372,7 @@ typedef void (*otCommissionerEnergyReportCallback)(uint32_t       aChannelMask,
                                                    void          *aContext);
 
 /**
- * This function sends an Energy Scan Query message.
+ * Sends an Energy Scan Query message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aChannelMask          The channel mask value.
@@ -400,7 +400,7 @@ otError otCommissionerEnergyScan(otInstance                        *aInstance,
                                  void                              *aContext);
 
 /**
- * This function pointer is called when the Commissioner receives a PAN ID Conflict message.
+ * Pointer is called when the Commissioner receives a PAN ID Conflict message.
  *
  * @param[in]  aPanId             The PAN ID value.
  * @param[in]  aChannelMask       The channel mask value.
@@ -410,7 +410,7 @@ otError otCommissionerEnergyScan(otInstance                        *aInstance,
 typedef void (*otCommissionerPanIdConflictCallback)(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
 
 /**
- * This function sends a PAN ID Query message.
+ * Sends a PAN ID Query message.
  *
  * @param[in]  aInstance             A pointer to an OpenThread instance.
  * @param[in]  aPanId                The PAN ID to query.
@@ -434,7 +434,7 @@ otError otCommissionerPanIdQuery(otInstance                         *aInstance,
                                  void                               *aContext);
 
 /**
- * This function sends MGMT_COMMISSIONER_GET.
+ * Sends MGMT_COMMISSIONER_GET.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aTlvs      A pointer to TLVs.
@@ -448,7 +448,7 @@ otError otCommissionerPanIdQuery(otInstance                         *aInstance,
 otError otCommissionerSendMgmtGet(otInstance *aInstance, const uint8_t *aTlvs, uint8_t aLength);
 
 /**
- * This function sends MGMT_COMMISSIONER_SET.
+ * Sends MGMT_COMMISSIONER_SET.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aDataset   A pointer to commissioning dataset.
@@ -466,7 +466,7 @@ otError otCommissionerSendMgmtSet(otInstance                   *aInstance,
                                   uint8_t                       aLength);
 
 /**
- * This function returns the Commissioner Session ID.
+ * Returns the Commissioner Session ID.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -476,7 +476,7 @@ otError otCommissionerSendMgmtSet(otInstance                   *aInstance,
 uint16_t otCommissionerGetSessionId(otInstance *aInstance);
 
 /**
- * This function returns the Commissioner State.
+ * Returns the Commissioner State.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *

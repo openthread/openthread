@@ -100,7 +100,7 @@ otError otServerRemoveService(otInstance    *aInstance,
                               uint8_t        aServiceDataLength);
 
 /**
- * This function gets the next service in the local Network Data.
+ * Gets the next service in the local Network Data.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first service entry

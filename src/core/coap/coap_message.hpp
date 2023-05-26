@@ -530,7 +530,7 @@ public:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
-     * This function reads the information contained in a Block1 or Block2 option and set it in
+     * Reads the information contained in a Block1 or Block2 option and set it in
      * the HelpData of the message.
      *
      * @param[in]   aBlockType  Block1 or Block2 option value.
@@ -576,7 +576,7 @@ public:
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
-     * This function reads and reassembles the URI path string and fills it into @p aUriPath.
+     * Reads and reassembles the URI path string and fills it into @p aUriPath.
      *
      * @retval  kErrorNone      URI path string has been reassembled.
      * @retval  kErrorNoBufs    URI path string is too long.

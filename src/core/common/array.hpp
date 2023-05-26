@@ -46,7 +46,7 @@
 namespace ot {
 
 /**
- * This function returns the length of a given array (number of elements in the array).
+ * Returns the length of a given array (number of elements in the array).
  *
  * This template function is `constexpr`. The template arguments are expected to be deduced by the compiler allowing
  * callers to simply use `GetArrayLength(aArray)`.
@@ -63,7 +63,7 @@ template <typename Type, uint16_t kArrayLength> constexpr inline uint16_t GetArr
 }
 
 /**
- * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ * Returns a pointer to end of a given array (pointing to the past-the-end element).
  *
  * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
  * not point to an actual element in array, and thus should not be dereferenced.
@@ -82,7 +82,7 @@ template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&
 }
 
 /**
- * This function returns a pointer to end of a given array (pointing to the past-the-end element).
+ * Returns a pointer to end of a given array (pointing to the past-the-end element).
  *
  * Note that the past-the-end element is a theoretical element that would follow the last element in the array. It does
  * not point to an actual element in array, and thus should not be dereferenced.

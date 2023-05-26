@@ -89,7 +89,7 @@ enum Uri : uint8_t
 };
 
 /**
- * This function returns URI path string for a given URI.
+ * Returns URI path string for a given URI.
  *
  * @param[in] aUri   A URI.
  *
@@ -99,7 +99,7 @@ enum Uri : uint8_t
 const char *PathForUri(Uri aUri);
 
 /**
- * This function looks up the URI from a given path string.
+ * Looks up the URI from a given path string.
  *
  * @param[in] aPath    A path string.
  *

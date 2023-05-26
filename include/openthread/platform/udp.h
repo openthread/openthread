@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 /**
- * This function initializes the UDP socket by platform.
+ * Initializes the UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
@@ -53,7 +53,7 @@ extern "C" {
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket);
 
 /**
- * This function closes the UDP socket by platform.
+ * Closes the UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
@@ -64,7 +64,7 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket);
 otError otPlatUdpClose(otUdpSocket *aUdpSocket);
 
 /**
- * This function binds the UDP socket by platform.
+ * Binds the UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
@@ -75,7 +75,7 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket);
 otError otPlatUdpBind(otUdpSocket *aUdpSocket);
 
 /**
- * This function binds the UDP socket to a platform network interface.
+ * Binds the UDP socket to a platform network interface.
  *
  * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
  *
@@ -89,7 +89,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket);
 otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifIdentifier);
 
 /**
- * This function connects UDP socket by platform.
+ * Connects UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
  *
@@ -100,7 +100,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 otError otPlatUdpConnect(otUdpSocket *aUdpSocket);
 
 /**
- * This function sends UDP payload by platform.
+ * Sends UDP payload by platform.
  *
  * @param[in]   aUdpSocket      A pointer to the UDP socket.
  * @param[in]   aMessage        A pointer to the message to send.
@@ -113,7 +113,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket);
 otError otPlatUdpSend(otUdpSocket *aUdpSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This function configures the UDP socket to join a UDP multicast group.
+ * Configures the UDP socket to join a UDP multicast group.
  *
  * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
  *
@@ -130,7 +130,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
                                     const otIp6Address *aAddress);
 
 /**
- * This function configures the UDP socket to leave a UDP multicast group.
+ * Configures the UDP socket to leave a UDP multicast group.
  *
  * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
  *

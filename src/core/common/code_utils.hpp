@@ -162,7 +162,7 @@
     } while (false)
 
 /**
- * This function ignores an error explicitly.
+ * Ignores an error explicitly.
  *
  * This is primarily used to indicate the intention of developer that
  * the error can be safely ignored or there is guaranteed to be no error.

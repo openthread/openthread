@@ -64,7 +64,7 @@ typedef enum otNetworkTimeStatus
 } otNetworkTimeStatus;
 
 /**
- * This function pointer is called when a network time sync or status change occurs.
+ * Pointer is called when a network time sync or status change occurs.
  *
  */
 typedef void (*otNetworkTimeSyncCallbackFn)(void *aCallbackContext);
@@ -89,7 +89,7 @@ otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTi
 /**
  * Set the time synchronization period.
  *
- * This function can only be called while Thread protocols are disabled.
+ * Can only be called while Thread protocols are disabled.
  *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aTimeSyncPeriod   The time synchronization period, in seconds.
@@ -113,7 +113,7 @@ uint16_t otNetworkTimeGetSyncPeriod(otInstance *aInstance);
 /**
  * Set the time synchronization XTAL accuracy threshold for Router-Capable device.
  *
- * This function can only be called while Thread protocols are disabled.
+ * Can only be called while Thread protocols are disabled.
  *
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aXTALThreshold   The XTAL accuracy threshold for Router, in PPM.

@@ -610,7 +610,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 /**
  * Update MAC keys and key index
  *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ * Is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
@@ -632,7 +632,7 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 /**
  * Sets the current MAC frame counter value.
  *
- * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
@@ -643,7 +643,7 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 /**
  * Sets the current MAC frame counter value only if the new given value is larger than the current value.
  *
- * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
@@ -693,7 +693,7 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
 /**
  * Get current state of the radio.
  *
- * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+ * Is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
  *
  * @note This function may be not implemented. It does not affect OpenThread.
  *
@@ -787,7 +787,7 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
  *
- * This function is used when diagnostics is enabled.
+ * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
@@ -864,7 +864,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
  *
- * This function is used when diagnostics is enabled.
+ * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aFrame         A pointer to the frame that was transmitted.
@@ -888,7 +888,7 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
 /**
  * Begin the energy scan sequence on the radio.
  *
- * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+ * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aScanChannel   The channel to perform the energy scan on.
@@ -904,7 +904,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 /**
  * The radio driver calls this method to notify OpenThread that the energy scan is complete.
  *
- * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+ * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
  * @param[in]  aInstance           The OpenThread instance structure.
  * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
@@ -1019,7 +1019,7 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 /**
  * Enable the radio coex.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
@@ -1033,7 +1033,7 @@ otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
 /**
  * Check whether radio coex is enabled or not.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -1045,7 +1045,7 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 /**
  * Get the radio coexistence metrics.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.

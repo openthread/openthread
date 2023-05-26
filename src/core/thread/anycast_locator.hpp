@@ -59,7 +59,7 @@ class AnycastLocator : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This function pointer type defines the callback to notify the outcome of a request.
+     * Pointer type defines the callback to notify the outcome of a request.
      *
      */
     typedef otThreadAnycastLocatorCallback LocatorCallback;

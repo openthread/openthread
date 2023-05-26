@@ -38,7 +38,7 @@
 
 #include "lib/platform/reset_util.h"
 /**
- * This function initializes the NCP app.
+ * Initializes the NCP app.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *

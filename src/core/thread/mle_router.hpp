@@ -483,7 +483,7 @@ public:
     Error GetMaxChildTimeout(uint32_t &aTimeout) const;
 
     /**
-     * This function sets the callback that is called when processing an MLE Discovery Request message.
+     * Sets the callback that is called when processing an MLE Discovery Request message.
      *
      * @param[in]  aCallback A pointer to a function that is called to deliver MLE Discovery Request data.
      * @param[in]  aContext  A pointer to application-specific context.
@@ -552,7 +552,7 @@ public:
     void SetCcmEnabled(bool aEnabled) { mCcmEnabled = aEnabled; }
 
     /**
-     * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
+     * Sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
      *
      * @param[in]  aEnabled  TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
      *

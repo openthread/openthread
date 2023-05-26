@@ -378,7 +378,7 @@ public:
     /**
      * Returns the current state of the radio.
      *
-     * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+     * Is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
      *
      * @note This function may be not implemented. In this case it always returns OT_RADIO_STATE_INVALID state.
      *
@@ -527,7 +527,7 @@ public:
     /**
      * Begins the energy scan sequence on the radio.
      *
-     * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+     * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
      *
      * @param[in] aScanChannel   The channel to perform the energy scan on.
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.

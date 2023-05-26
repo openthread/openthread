@@ -251,7 +251,7 @@ typedef enum OT_MUST_USE_RESULT otError
 } otError;
 
 /**
- * This function converts an otError enum into a string.
+ * Converts an otError enum into a string.
  *
  * @param[in]  aError     An otError enum.
  *

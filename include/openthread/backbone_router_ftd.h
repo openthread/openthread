@@ -235,7 +235,7 @@ typedef enum
 } otBackboneRouterMulticastListenerEvent;
 
 /**
- * This function pointer is called whenever the Multicast Listeners change.
+ * Pointer is called whenever the Multicast Listeners change.
  *
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The Multicast Listener event.
@@ -312,7 +312,7 @@ typedef struct otBackboneRouterMulticastListenerInfo
 } otBackboneRouterMulticastListenerInfo;
 
 /**
- * This function gets the next Multicast Listener info (using an iterator).
+ * Gets the next Multicast Listener info (using an iterator).
  *
  * @param[in]      aInstance      A pointer to an OpenThread instance.
  * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
@@ -346,7 +346,7 @@ typedef enum
 } otBackboneRouterNdProxyEvent;
 
 /**
- * This function pointer is called whenever the Nd Proxy changed.
+ * Pointer is called whenever the Nd Proxy changed.
  *
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The ND Proxy event.
@@ -408,7 +408,7 @@ typedef enum
 } otBackboneRouterDomainPrefixEvent;
 
 /**
- * This function pointer is called whenever the Domain Prefix changed.
+ * Pointer is called whenever the Domain Prefix changed.
  *
  * @param[in] aContext       The user context pointer.
  * @param[in] aEvent         The Domain Prefix event.

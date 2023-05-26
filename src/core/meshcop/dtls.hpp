@@ -80,7 +80,7 @@ public:
     explicit Dtls(Instance &aInstance, bool aLayerTwoSecurity);
 
     /**
-     * This function pointer is called when a connection is established or torn down.
+     * Pointer is called when a connection is established or torn down.
      *
      * @param[in]  aContext    A pointer to application-specific context.
      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
@@ -89,7 +89,7 @@ public:
     typedef void (*ConnectedHandler)(void *aContext, bool aConnected);
 
     /**
-     * This function pointer is called when data is received from the DTLS session.
+     * Pointer is called when data is received from the DTLS session.
      *
      * @param[in]  aContext  A pointer to application-specific context.
      * @param[in]  aBuf      A pointer to the received data buffer.
@@ -99,7 +99,7 @@ public:
     typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
 
     /**
-     * This function pointer is called when secure CoAP server want to send encrypted message.
+     * Pointer is called when secure CoAP server want to send encrypted message.
      *
      * @param[in]  aContext      A pointer to arbitrary context information.
      * @param[in]  aMessage      A reference to the message to send.

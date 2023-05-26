@@ -191,7 +191,7 @@ public:
     Error BecomeChild(void);
 
     /**
-     * This function notifies other nodes in the network (if any) and then stops Thread protocol operation.
+     * Notifies other nodes in the network (if any) and then stops Thread protocol operation.
      *
      * It sends an Address Release if it's a router, or sets its child timeout to 0 if it's a child.
      *
@@ -626,7 +626,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     /**
-     * This function registers the client callback that is called when processing an MLE Parent Response message.
+     * Registers the client callback that is called when processing an MLE Parent Response message.
      *
      * @param[in]  aCallback A pointer to a function that is called to deliver MLE Parent Response data.
      * @param[in]  aContext  A pointer to application-specific context.

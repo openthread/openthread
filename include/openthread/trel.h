@@ -93,7 +93,7 @@ typedef uint16_t otTrelPeerIterator;
 void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
 
 /**
- * This function indicates whether the TREL operation is enabled.
+ * Indicates whether the TREL operation is enabled.
  *
  * @param[in] aInstance   The OpenThread instance.
  *
@@ -104,7 +104,7 @@ void otTrelSetEnabled(otInstance *aInstance, bool aEnable);
 bool otTrelIsEnabled(otInstance *aInstance);
 
 /**
- * This function initializes a peer table iterator.
+ * Initializes a peer table iterator.
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aIterator   The iterator to initialize.
@@ -113,7 +113,7 @@ bool otTrelIsEnabled(otInstance *aInstance);
 void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator);
 
 /**
- * This function iterates over the peer table entries and get the next entry from the table
+ * Iterates over the peer table entries and get the next entry from the table
  *
  * @param[in] aInstance   The OpenThread instance.
  * @param[in] aIterator   The iterator. MUST be initialized.
@@ -124,7 +124,7 @@ void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator
 const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator);
 
 /**
- * This function sets the filter mode (enables/disables filtering).
+ * Sets the filter mode (enables/disables filtering).
  *
  * When filter mode is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
  * intended for use during testing.
@@ -139,7 +139,7 @@ const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *a
 void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable);
 
 /**
- * This function indicates whether or not the filter mode is enabled.
+ * Indicates whether or not the filter mode is enabled.
  *
  * @param[in] aInstance   The OpenThread instance.
  *

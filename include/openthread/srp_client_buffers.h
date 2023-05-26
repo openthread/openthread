@@ -65,7 +65,7 @@ typedef struct otSrpClientBuffersServiceEntry
 } otSrpClientBuffersServiceEntry;
 
 /**
- * This function gets the string buffer to use for SRP client host name.
+ * Gets the string buffer to use for SRP client host name.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  * @param[out] aSize      Pointer to a variable to return the size (number of bytes) of the string buffer (MUST NOT be
@@ -77,7 +77,7 @@ typedef struct otSrpClientBuffersServiceEntry
 char *otSrpClientBuffersGetHostNameString(otInstance *aInstance, uint16_t *aSize);
 
 /**
- * This function gets the array of IPv6 address entries to use as SRP client host address list.
+ * Gets the array of IPv6 address entries to use as SRP client host address list.
  *
  * @param[in]  aInstance     A pointer to the OpenThread instance.
  * @param[out] aArrayLength  Pointer to a variable to return the array length i.e., number of IPv6 address entries in
@@ -89,7 +89,7 @@ char *otSrpClientBuffersGetHostNameString(otInstance *aInstance, uint16_t *aSize
 otIp6Address *otSrpClientBuffersGetHostAddressesArray(otInstance *aInstance, uint8_t *aArrayLength);
 
 /**
- * This function allocates a new service entry from the pool.
+ * Allocates a new service entry from the pool.
  *
  * The returned service entry instance will be initialized as follows:
  *
@@ -115,7 +115,7 @@ otIp6Address *otSrpClientBuffersGetHostAddressesArray(otInstance *aInstance, uin
 otSrpClientBuffersServiceEntry *otSrpClientBuffersAllocateService(otInstance *aInstance);
 
 /**
- * This function frees a previously allocated service entry.
+ * Frees a previously allocated service entry.
  *
  * The @p aService MUST be previously allocated using `otSrpClientBuffersAllocateService()` and not yet freed. Otherwise
  * the behavior of this function is undefined.
@@ -127,7 +127,7 @@ otSrpClientBuffersServiceEntry *otSrpClientBuffersAllocateService(otInstance *aI
 void otSrpClientBuffersFreeService(otInstance *aInstance, otSrpClientBuffersServiceEntry *aService);
 
 /**
- * This function frees all previously allocated service entries.
+ * Frees all previously allocated service entries.
  *
  * @param[in] aInstance   A pointer to the OpenThread instance.
  *
@@ -135,7 +135,7 @@ void otSrpClientBuffersFreeService(otInstance *aInstance, otSrpClientBuffersServ
 void otSrpClientBuffersFreeAllServices(otInstance *aInstance);
 
 /**
- * This function gets the string buffer for service name from a service entry.
+ * Gets the string buffer for service name from a service entry.
  *
  * @param[in]  aEntry   A pointer to a previously allocated service entry (MUST NOT be NULL).
  * @param[out] aSize    A pointer to a variable to return the size (number of bytes) of the string buffer (MUST NOT be
@@ -147,7 +147,7 @@ void otSrpClientBuffersFreeAllServices(otInstance *aInstance);
 char *otSrpClientBuffersGetServiceEntryServiceNameString(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize);
 
 /**
- * This function gets the string buffer for service instance name from a service entry.
+ * Gets the string buffer for service instance name from a service entry.
  *
  * @param[in]  aEntry   A pointer to a previously allocated service entry (MUST NOT be NULL).
  * @param[out] aSize    A pointer to a variable to return the size (number of bytes) of the string buffer (MUST NOT be
@@ -159,7 +159,7 @@ char *otSrpClientBuffersGetServiceEntryServiceNameString(otSrpClientBuffersServi
 char *otSrpClientBuffersGetServiceEntryInstanceNameString(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize);
 
 /**
- * This function gets the buffer for TXT record from a service entry.
+ * Gets the buffer for TXT record from a service entry.
  *
  * @param[in]  aEntry   A pointer to a previously allocated service entry (MUST NOT be NULL).
  * @param[out] aSize    A pointer to a variable to return the size (number of bytes) of the buffer (MUST NOT be NULL).
@@ -170,7 +170,7 @@ char *otSrpClientBuffersGetServiceEntryInstanceNameString(otSrpClientBuffersServ
 uint8_t *otSrpClientBuffersGetServiceEntryTxtBuffer(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize);
 
 /**
- * This function gets the array for service subtype labels from the service entry.
+ * Gets the array for service subtype labels from the service entry.
  *
  * @param[in]  aEntry          A pointer to a previously allocated service entry (MUST NOT be NULL).
  * @param[out] aArrayLength    A pointer to a variable to return the array length (MUST NOT be NULL).

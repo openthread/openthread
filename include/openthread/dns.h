@@ -108,7 +108,7 @@ typedef struct otDnsTxtEntryIterator
 } otDnsTxtEntryIterator;
 
 /**
- * This function initializes a TXT record iterator.
+ * Initializes a TXT record iterator.
  *
  * The buffer pointer @p aTxtData and its content MUST persist and remain unchanged while @p aIterator object
  * is being used.
@@ -121,7 +121,7 @@ typedef struct otDnsTxtEntryIterator
 void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
 /**
- * This function parses the TXT data from an iterator and gets the next TXT record entry (key/value pair).
+ * Parses the TXT data from an iterator and gets the next TXT record entry (key/value pair).
  *
  * The @p aIterator MUST be initialized using `otDnsInitTxtEntryIterator()` before calling this function and the TXT
  * data buffer used to initialize the iterator MUST persist and remain unchanged. Otherwise the behavior of this
@@ -142,7 +142,7 @@ void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *
 otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aEntry);
 
 /**
- * This function enables/disables the "DNS name compression" mode.
+ * Enables/disables the "DNS name compression" mode.
  *
  * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This
  * is applicable to OpenThread's DNS and SRP client/server modules.
@@ -158,7 +158,7 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
 void otDnsSetNameCompressionEnabled(bool aEnabled);
 
 /**
- * This function indicates whether the "DNS name compression" mode is enabled or not.
+ * Indicates whether the "DNS name compression" mode is enabled or not.
  *
  * This is intended for testing only and available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` config is enabled.
  *

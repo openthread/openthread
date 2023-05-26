@@ -74,7 +74,7 @@ typedef struct otUdpReceiver
 } otUdpReceiver;
 
 /**
- * This function adds a UDP receiver.
+ * Adds a UDP receiver.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
@@ -86,7 +86,7 @@ typedef struct otUdpReceiver
 otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
- * This function removes a UDP receiver.
+ * Removes a UDP receiver.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aUdpReceiver    A pointer to the UDP receiver.
@@ -98,7 +98,7 @@ otError otUdpAddReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
 
 /**
- * This function sends a UDP message without socket.
+ * Sends a UDP message without socket.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMessage      A pointer to a message without UDP header.
@@ -241,7 +241,7 @@ otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAd
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This function gets the head of linked list of UDP Sockets.
+ * Gets the head of linked list of UDP Sockets.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
@@ -269,7 +269,7 @@ otUdpSocket *otUdpGetSockets(otInstance *aInstance);
  */
 
 /**
- * This function pointer delivers the UDP packet to host and host should send the packet through its own network stack.
+ * Pointer delivers the UDP packet to host and host should send the packet through its own network stack.
  *
  * @param[in]  aMessage   A pointer to the UDP Message.
  * @param[in]  aPeerPort  The destination UDP port.

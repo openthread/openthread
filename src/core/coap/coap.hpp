@@ -371,7 +371,7 @@ public:
 #endif
 
     /**
-     * This function pointer is called before CoAP server processing a CoAP message.
+     * Pointer is called before CoAP server processing a CoAP message.
      *
      * @param[in]   aMessage        A reference to the message.
      @ @param[in]   aMessageInfo    A reference to the message info associated with @p aMessage.
@@ -814,7 +814,7 @@ protected:
                                     const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This function pointer is called to send a CoAP message.
+     * Pointer is called to send a CoAP message.
      *
      * @param[in]  aCoapBase     A reference to the CoAP agent.
      * @param[in]  aMessage      A reference to the message to send.

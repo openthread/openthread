@@ -180,7 +180,7 @@ public:
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     /**
-     * This function returns the short address.
+     * Returns the short address.
      *
      * @returns short address.
      *
@@ -199,7 +199,7 @@ public:
     Error SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This function returns PANID.
+     * Returns PANID.
      *
      * @returns PANID.
      *
@@ -234,7 +234,7 @@ public:
     Error SetChannel(uint8_t aChannel);
 
     /**
-     * This function returns the extended address.
+     * Returns the extended address.
      *
      * @returns A reference to the extended address.
      *

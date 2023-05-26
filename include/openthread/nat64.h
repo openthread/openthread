@@ -317,7 +317,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 /**
  * Sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
  *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ * Is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
  * @note A valid CIDR must have a non-zero prefix length. The actual addresses pool is limited by the size of the
  * mapping pool and the number of addresses available in the CIDR block.
@@ -358,7 +358,7 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
 otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
 
 /**
- * This function pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
+ * Pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
@@ -436,7 +436,7 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
 #define OT_IP4_CIDR_STRING_SIZE 20 ///< Length of 000.000.000.000/00 plus a suffix NUL
 
 /**
- * This function converts a human-readable IPv4 CIDR string into a binary representation.
+ * Converts a human-readable IPv4 CIDR string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aCidr     A pointer to an IPv4 CIDR.

@@ -80,7 +80,7 @@ public:
     otError Add(const char *aKey, const char *aValue);
 
     /**
-     * This function removes all configurations with the same key string from the configuration file.
+     * Removes all configurations with the same key string from the configuration file.
      *
      * @param[in]  aKey  The key string associated with the requested configuration.
      *

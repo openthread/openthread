@@ -64,7 +64,7 @@ extern "C" {
 typedef otPlatCryptoSha256Hash otCryptoSha256Hash;
 
 /**
- * This function performs HMAC computation.
+ * Performs HMAC computation.
  *
  * @param[in]     aKey           A pointer to the key.
  * @param[in]     aBuf           A pointer to the input buffer.

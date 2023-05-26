@@ -252,7 +252,7 @@ typedef struct otHistoryTrackerExternalRouteInfo
 } otHistoryTrackerExternalRouteInfo;
 
 /**
- * This function initializes an `otHistoryTrackerIterator`.
+ * Initializes an `otHistoryTrackerIterator`.
  *
  * An iterator MUST be initialized before it is used.
  *
@@ -268,7 +268,7 @@ typedef struct otHistoryTrackerExternalRouteInfo
 void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator);
 
 /**
- * This function iterates over the entries in the network info history list.
+ * Iterates over the entries in the network info history list.
  *
  * @param[in]     aInstance   A pointer to the OpenThread instance.
  * @param[in,out] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -285,7 +285,7 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
                                                                          uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the unicast address history list.
+ * Iterates over the entries in the unicast address history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -303,7 +303,7 @@ const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressH
     uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the multicast address history list.
+ * Iterates over the entries in the multicast address history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -321,7 +321,7 @@ const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddr
     uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the RX message history list.
+ * Iterates over the entries in the RX message history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -338,7 +338,7 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance  
                                                                     uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the TX message history list.
+ * Iterates over the entries in the TX message history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -355,7 +355,7 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance  
                                                                     uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the neighbor history list.
+ * Iterates over the entries in the neighbor history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -372,7 +372,7 @@ const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otIns
                                                                            uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the router history list.
+ * Iterates over the entries in the router history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -389,7 +389,7 @@ const otHistoryTrackerRouterInfo *otHistoryTrackerIterateRouterHistory(otInstanc
                                                                        uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the Network Data on mesh prefix entry history list.
+ * Iterates over the entries in the Network Data on mesh prefix entry history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -406,7 +406,7 @@ const otHistoryTrackerOnMeshPrefixInfo *otHistoryTrackerIterateOnMeshPrefixHisto
                                                                                    uint32_t                 *aEntryAge);
 
 /**
- * This function iterates over the entries in the Network Data external route entry history list.
+ * Iterates over the entries in the Network Data external route entry history list.
  *
  * @param[in]     aInstance  A pointer to the OpenThread instance.
  * @param[in,out] aIterator  A pointer to an iterator. MUST be initialized or the behavior is undefined.
@@ -424,7 +424,7 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
     uint32_t                 *aEntryAge);
 
 /**
- * This function converts a given entry age to a human-readable string.
+ * Converts a given entry age to a human-readable string.
  *
  * The entry age string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if
  * shorter than one day) or "<dd> days <hh>:<mm>:<ss>.<mmmm>" (if longer than one day).

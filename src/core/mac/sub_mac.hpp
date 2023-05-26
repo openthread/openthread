@@ -254,7 +254,7 @@ public:
     void SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This function gets the extended address.
+     * Gets the extended address.
      *
      * @returns A reference to the extended address.
      *

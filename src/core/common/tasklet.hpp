@@ -104,7 +104,7 @@ public:
     };
 
     /**
-     * This function reference is called when the tasklet is run.
+     * Reference is called when the tasklet is run.
      *
      * @param[in]  aTasklet  A reference to the tasklet being run.
      *

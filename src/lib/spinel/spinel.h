@@ -5031,9 +5031,9 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
                                                         const char    *pack_format,
                                                         ...);
 /**
- * This function parses spinel data similar to sscanf().
+ * Parses spinel data similar to sscanf().
  *
- * This function actually calls spinel_datatype_vunpack_in_place() to parse data.
+ * Actually calls spinel_datatype_vunpack_in_place() to parse data.
  *
  * @param[in]   data_in     A pointer to the data to parse.
  * @param[in]   data_len    The length of @p data_in in bytes.
@@ -5063,7 +5063,7 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack(const uint8_t *data_in,
                                                          const char    *pack_format,
                                                          va_list        args);
 /**
- * This function parses spinel data similar to vsscanf().
+ * Parses spinel data similar to vsscanf().
  *
  * @param[in]   data_in     A pointer to the data to parse.
  * @param[in]   data_len    The length of @p data_in in bytes.

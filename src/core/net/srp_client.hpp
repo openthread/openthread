@@ -93,7 +93,7 @@ public:
     };
 
     /**
-     * This function pointer type defines the callback used by SRP client to notify user of a changes/events/errors.
+     * Pointer type defines the callback used by SRP client to notify user of a changes/events/errors.
      *
      * Please see `otSrpClientCallback` for more details.
      *
@@ -361,7 +361,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     /**
-     * This function pointer type defines the callback used by SRP client to notify user when it is auto-started or
+     * Pointer type defines the callback used by SRP client to notify user when it is auto-started or
      * stopped.
      *
      */

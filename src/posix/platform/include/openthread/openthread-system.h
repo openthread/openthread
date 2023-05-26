@@ -102,7 +102,7 @@ typedef struct otRcpInterfaceMetrics
 } otRcpInterfaceMetrics;
 
 /**
- * This function performs all platform-specific initialization of OpenThread's drivers and initializes the OpenThread
+ * Performs all platform-specific initialization of OpenThread's drivers and initializes the OpenThread
  * instance.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
@@ -116,7 +116,7 @@ typedef struct otRcpInterfaceMetrics
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
 /**
- * This function finalizes the OpenThread instance and performs all platform-specific deinitialization for OpenThread's
+ * Finalizes the OpenThread instance and performs all platform-specific deinitialization for OpenThread's
  * drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
@@ -139,7 +139,7 @@ typedef struct otSysMainloopContext
 } otSysMainloopContext;
 
 /**
- * This function updates the file descriptor sets with file descriptors used by OpenThread drivers.
+ * Updates the file descriptor sets with file descriptors used by OpenThread drivers.
  *
  * @param[in]       aInstance   The OpenThread instance structure.
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
@@ -148,7 +148,7 @@ typedef struct otSysMainloopContext
 void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop);
 
 /**
- * This function polls OpenThread's mainloop.
+ * Polls OpenThread's mainloop.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
@@ -158,7 +158,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 int otSysMainloopPoll(otSysMainloopContext *aMainloop);
 
 /**
- * This function performs all platform-specific processing for OpenThread's example applications.
+ * Performs all platform-specific processing for OpenThread's example applications.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       in the main loop when processing OpenThread's drivers is most appropriate.
@@ -220,7 +220,7 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
 
 /**
- * This function returns the ifr_flags of the infrastructure network interface.
+ * Returns the ifr_flags of the infrastructure network interface.
  *
  * @returns The ifr_flags of infrastructure network interface.
  *

@@ -85,7 +85,7 @@ enum
 };
 
 /**
- * This function converts an exit code into a string.
+ * Converts an exit code into a string.
  *
  * @param[in]  aExitCode  An exit code.
  *

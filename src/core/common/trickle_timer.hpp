@@ -76,7 +76,7 @@ public:
     static constexpr uint16_t kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax;
 
     /**
-     * This function pointer is called when the timer expires (i.e., transmission should happen).
+     * Pointer is called when the timer expires (i.e., transmission should happen).
      *
      * @param[in]  aTimer  A reference to the trickle timer.
      *

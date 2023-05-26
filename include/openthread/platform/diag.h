@@ -67,7 +67,7 @@ typedef enum
 } otGpioMode;
 
 /**
- * This function processes a factory diagnostics command line.
+ * Processes a factory diagnostics command line.
  *
  * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
  * output buffer.
@@ -90,7 +90,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
                           size_t      aOutputMaxLen);
 
 /**
- * This function enables/disables the factory diagnostics mode.
+ * Enables/disables the factory diagnostics mode.
  *
  * @param[in]  aMode  TRUE to enable diagnostics mode, FALSE otherwise.
  *
@@ -98,7 +98,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 void otPlatDiagModeSet(bool aMode);
 
 /**
- * This function indicates whether or not factory diagnostics mode is enabled.
+ * Indicates whether or not factory diagnostics mode is enabled.
  *
  * @returns TRUE if factory diagnostics mode is enabled, FALSE otherwise.
  *
@@ -106,7 +106,7 @@ void otPlatDiagModeSet(bool aMode);
 bool otPlatDiagModeGet(void);
 
 /**
- * This function sets the channel to use for factory diagnostics.
+ * Sets the channel to use for factory diagnostics.
  *
  * @param[in]  aChannel  The channel value.
  *
@@ -114,7 +114,7 @@ bool otPlatDiagModeGet(void);
 void otPlatDiagChannelSet(uint8_t aChannel);
 
 /**
- * This function sets the transmit power to use for factory diagnostics.
+ * Sets the transmit power to use for factory diagnostics.
  *
  * @param[in]  aTxPower  The transmit power value.
  *
@@ -122,7 +122,7 @@ void otPlatDiagChannelSet(uint8_t aChannel);
 void otPlatDiagTxPowerSet(int8_t aTxPower);
 
 /**
- * This function processes the received radio frame.
+ * Processes the received radio frame.
  *
  * @param[in]   aInstance   The OpenThread instance for current request.
  * @param[in]   aFrame      The received radio frame.
@@ -132,7 +132,7 @@ void otPlatDiagTxPowerSet(int8_t aTxPower);
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * This function processes the alarm event.
+ * Processes the alarm event.
  *
  * @param[in]   aInstance   The OpenThread instance for current request.
  *
@@ -140,7 +140,7 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
 void otPlatDiagAlarmCallback(otInstance *aInstance);
 
 /**
- * This function sets the gpio value.
+ * Sets the gpio value.
  *
  * @param[in]  aGpio   The gpio number.
  * @param[in]  aValue  true to set the gpio to high level, or false otherwise.
@@ -155,7 +155,7 @@ void otPlatDiagAlarmCallback(otInstance *aInstance);
 otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
 
 /**
- * This function gets the gpio value.
+ * Gets the gpio value.
  *
  * @param[in]   aGpio   The gpio number.
  * @param[out]  aValue  A pointer where to put gpio value.
@@ -170,7 +170,7 @@ otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue);
 otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
 
 /**
- * This function sets the gpio mode.
+ * Sets the gpio mode.
  *
  * @param[in]   aGpio   The gpio number.
  * @param[out]  aMode   The gpio mode.
@@ -185,7 +185,7 @@ otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue);
 otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode);
 
 /**
- * This function gets the gpio mode.
+ * Gets the gpio mode.
  *
  * @param[in]   aGpio   The gpio number.
  * @param[out]  aMode   A pointer where to put gpio mode.

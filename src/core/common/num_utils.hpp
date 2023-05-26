@@ -182,7 +182,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
 }
 
 /**
- * This function casts a given `uint32_t` to `unsigned long`.
+ * Casts a given `uint32_t` to `unsigned long`.
  *
  * @param[in] aUint32   A `uint32_t` value.
  *
@@ -192,7 +192,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
 inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned long>(aUint32); }
 
 /**
- * This function counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
+ * Counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
  *
  * @tparam UintType   The unsigned int type (MUST be `uint8_t`, uint16_t`, uint32_t`, or `uint64_t`).
  *

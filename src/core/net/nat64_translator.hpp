@@ -57,7 +57,7 @@ enum State : uint8_t
 };
 
 /**
- * This function converts a `State` into a string.
+ * Converts a `State` into a string.
  *
  * @param[in]  aState     A state.
  *
@@ -253,7 +253,7 @@ public:
 
     /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
-     * This function equals to `ClearNat64Prefix` when an empty prefix is provided.
+     * Equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
      * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
      *

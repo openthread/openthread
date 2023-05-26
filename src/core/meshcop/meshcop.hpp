@@ -407,7 +407,7 @@ private:
 };
 
 /**
- * This function generates PSKc.
+ * Generates PSKc.
  *
  * PSKc is used to establish the Commissioner Session.
  *
@@ -426,7 +426,7 @@ Error GeneratePskc(const char          *aPassPhrase,
                    Pskc                &aPskc);
 
 /**
- * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
+ * Computes the Joiner ID from a factory-assigned IEEE EUI-64.
  *
  * @param[in]   aEui64     The factory-assigned IEEE EUI-64.
  * @param[out]  aJoinerId  The Joiner ID.
@@ -435,7 +435,7 @@ Error GeneratePskc(const char          *aPassPhrase,
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
 /**
- * This function gets the border agent RLOC.
+ * Gets the border agent RLOC.
  *
  * @param[in]   aNetIf  A reference to the thread interface.
  * @param[out]  aRloc   Border agent RLOC.
@@ -448,7 +448,7 @@ Error GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 /**
- * This function emits a log message indicating an error during a MeshCoP action.
+ * Emits a log message indicating an error during a MeshCoP action.
  *
  * Note that log message is emitted only if there is an error, i.e. @p aError is not `kErrorNone`. The log
  * message will have the format "Failed to {aActionText} : {ErrorString}".

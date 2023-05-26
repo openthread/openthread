@@ -90,7 +90,7 @@ enum
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *
- * This function also sets the sensitive keys that should be stored in the secure area.
+ * Also sets the sensitive keys that should be stored in the secure area.
  *
  * Note that the memory pointed by @p aSensitiveKeys MUST not be released before @p aInstance is destroyed.
  *
@@ -113,13 +113,13 @@ void otPlatSettingsDeinit(otInstance *aInstance);
 /**
  * Fetches the value of a setting.
  *
- * This function fetches the value of the setting identified
+ * Fetches the value of the setting identified
  * by @p aKey and write it to the memory pointed to by aValue.
  * It then writes the length to the integer pointed to by
  * @p aValueLength. The initial value of @p aValueLength is the
  * maximum number of bytes to be written to @p aValue.
  *
- * This function can be used to check for the existence of
+ * Can be used to check for the existence of
  * a key without fetching the value by setting @p aValue and
  * @p aValueLength to NULL. You can also check the length of
  * the setting without fetching it by setting only aValue
@@ -149,7 +149,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 /**
  * Sets or replaces the value of a setting.
  *
- * This function sets or replaces the value of a setting
+ * Sets or replaces the value of a setting
  * identified by @p aKey.
  *
  * Calling this function successfully may cause unrelated
@@ -178,7 +178,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 /**
  * Adds a value to a setting.
  *
- * This function adds the value to a setting
+ * Adds the value to a setting
  * identified by @p aKey, without replacing any existing
  * values.
  *
@@ -214,7 +214,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 /**
  * Removes a setting from the setting store.
  *
- * This function deletes a specific value from the
+ * Deletes a specific value from the
  * setting identified by aKey from the settings store.
  *
  * Note that the underlying implementation is not required
@@ -235,7 +235,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 /**
  * Removes all settings from the setting store.
  *
- * This function deletes all settings from the settings
+ * Deletes all settings from the settings
  * store, resetting it to its initial factory state.
  *
  * @param[in] aInstance  The OpenThread instance structure.

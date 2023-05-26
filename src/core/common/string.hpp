@@ -70,7 +70,7 @@ enum StringMatchMode : uint8_t
 static constexpr char kNullChar = '\0'; ///< null character.
 
 /**
- * This function returns the number of characters that precede the terminating null character.
+ * Returns the number of characters that precede the terminating null character.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
@@ -82,7 +82,7 @@ static constexpr char kNullChar = '\0'; ///< null character.
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 
 /**
- * This function finds the first occurrence of a given character in a null-terminated string.
+ * Finds the first occurrence of a given character in a null-terminated string.
  *
  * @param[in] aString     A pointer to the string.
  * @param[in] aChar       A char to search for in the string.
@@ -93,7 +93,7 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 const char *StringFind(const char *aString, char aChar);
 
 /**
- * This function finds the first occurrence of a given sub-string in a null-terminated string.
+ * Finds the first occurrence of a given sub-string in a null-terminated string.
  *
  * @param[in] aString     A pointer to the string.
  * @param[in] aSubString  A sub-string to search for.
@@ -106,7 +106,7 @@ const char *StringFind(const char *aString, char aChar);
 const char *StringFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether a null-terminated string starts with a given prefix string.
+ * Checks whether a null-terminated string starts with a given prefix string.
  *
  * @param[in] aString         A pointer to the string.
  * @param[in] aPrefixString   A prefix string.
@@ -119,7 +119,7 @@ const char *StringFind(const char *aString, const char *aSubString, StringMatchM
 bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether a null-terminated string ends with a given character.
+ * Checks whether a null-terminated string ends with a given character.
  *
  * @param[in] aString  A pointer to the string.
  * @param[in] aChar    A char to check.
@@ -131,7 +131,7 @@ bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatc
 bool StringEndsWith(const char *aString, char aChar);
 
 /**
- * This function checks whether a null-terminated string ends with a given sub-string.
+ * Checks whether a null-terminated string ends with a given sub-string.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aSubString   A sub-string to check against.
@@ -144,7 +144,7 @@ bool StringEndsWith(const char *aString, char aChar);
 bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether or not two null-terminated strings match.
+ * Checks whether or not two null-terminated strings match.
  *
  * @param[in] aFirstString   A pointer to the first string.
  * @param[in] aSecondString  A pointer to the second string.
@@ -157,7 +157,7 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
  *
  * If the string does not start with a digit, `kErrorParse` is returned.
  *
@@ -177,7 +177,7 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
 Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue);
 
 /**
- * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
  *
  * If the string does not start with a digit, `kErrorParse` is returned.
  *
@@ -196,7 +196,7 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue)
 Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 
 /**
- * This function converts all uppercase letter characters in a given string to lowercase.
+ * Converts all uppercase letter characters in a given string to lowercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
  *
@@ -204,7 +204,7 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 void StringConvertToLowercase(char *aString);
 
 /**
- * This function converts all lowercase letter characters in a given string to uppercase.
+ * Converts all lowercase letter characters in a given string to uppercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
  *
@@ -212,7 +212,7 @@ void StringConvertToLowercase(char *aString);
 void StringConvertToUppercase(char *aString);
 
 /**
- * This function converts an uppercase letter character to lowercase.
+ * Converts an uppercase letter character to lowercase.
  *
  * If @p aChar is uppercase letter it is converted lowercase. Otherwise, it remains unchanged.
  *
@@ -224,7 +224,7 @@ void StringConvertToUppercase(char *aString);
 char ToLowercase(char aChar);
 
 /**
- * This function converts a lowercase letter character to uppercase.
+ * Converts a lowercase letter character to uppercase.
  *
  * If @p aChar is lowercase letter it is converted uppercase. Otherwise, it remains unchanged.
  *
@@ -236,7 +236,7 @@ char ToLowercase(char aChar);
 char ToUppercase(char aChar);
 
 /**
- * This function coverts a boolean to "yes" or "no" string.
+ * Coverts a boolean to "yes" or "no" string.
  *
  * @param[in] aBool  A boolean value to convert.
  *
@@ -246,7 +246,7 @@ char ToUppercase(char aChar);
 const char *ToYesNo(bool aBool);
 
 /**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Validates whether a given byte sequence (string) follows UTF-8 encoding.
  * Control characters are not allowed.
  *
  * @param[in]  aString  A null-terminated byte sequence.
@@ -258,7 +258,7 @@ const char *ToYesNo(bool aBool);
 bool IsValidUtf8String(const char *aString);
 
 /**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Validates whether a given byte sequence (string) follows UTF-8 encoding.
  * Control characters are not allowed.
  *
  * @param[in]  aString  A byte sequence.

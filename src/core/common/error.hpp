@@ -94,7 +94,7 @@ constexpr Error kErrorGeneric                    = OT_ERROR_GENERIC;
 constexpr uint8_t kNumErrors = OT_NUM_ERRORS;
 
 /**
- * This function converts an `Error` into a string.
+ * Converts an `Error` into a string.
  *
  * @param[in]  aError     An error.
  *

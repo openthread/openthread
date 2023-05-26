@@ -529,7 +529,7 @@ class Decoder
 {
 public:
     /**
-     * This function pointer is called when either a complete frame has been decoded or an error occurs during
+     * Pointer is called when either a complete frame has been decoded or an error occurs during
      * decoding.
      *
      * The decoded frame (or the partially decoded frame in case of an error) is available in `aFrameWritePointer`

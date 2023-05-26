@@ -285,7 +285,7 @@ typedef struct otNetworkDiagTlv
 } otNetworkDiagTlv;
 
 /**
- * This function gets the next Network Diagnostic TLV in the message.
+ * Gets the next Network Diagnostic TLV in the message.
  *
  * Requires `OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE`.
  *
@@ -306,7 +306,7 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagTlv      *aNetworkDiagTlv);
 
 /**
- * This function pointer is called when Network Diagnostic Get response is received.
+ * Pointer is called when Network Diagnostic Get response is received.
  *
  * @param[in]  aError        The error when failed to get the response.
  * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic

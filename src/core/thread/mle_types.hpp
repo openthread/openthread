@@ -653,7 +653,7 @@ typedef Mac::Key Key;
 typedef otMleCounters Counters;
 
 /**
- * This function derives the Child ID from a given RLOC16.
+ * Derives the Child ID from a given RLOC16.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -663,7 +663,7 @@ typedef otMleCounters Counters;
 inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
 /**
- * This function derives the Router ID portion from a given RLOC16.
+ * Derives the Router ID portion from a given RLOC16.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -673,7 +673,7 @@ inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChild
 inline uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
 /**
- * This function returns whether the two RLOC16 have the same Router ID.
+ * Returns whether the two RLOC16 have the same Router ID.
  *
  * @param[in]  aRloc16A  The first RLOC16 value.
  * @param[in]  aRloc16B  The second RLOC16 value.
@@ -687,7 +687,7 @@ inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
 }
 
 /**
- * This function returns the Service ID corresponding to a Service ALOC16.
+ * Returns the Service ID corresponding to a Service ALOC16.
  *
  * @param[in]  aAloc16  The Service ALOC16 value.
  *
@@ -697,7 +697,7 @@ inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
 inline uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
 /**
- * This function returns the Service ALOC16 corresponding to a Service ID.
+ * Returns the Service ALOC16 corresponding to a Service ID.
  *
  * @param[in]  aServiceId  The Service ID value.
  *
@@ -710,7 +710,7 @@ inline uint16_t ServiceAlocFromId(uint8_t aServiceId)
 }
 
 /**
- * This function returns the Commissioner Aloc corresponding to a Commissioner Session ID.
+ * Returns the Commissioner Aloc corresponding to a Commissioner Session ID.
  *
  * @param[in]  aSessionId   The Commissioner Session ID value.
  *
@@ -723,7 +723,7 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 }
 
 /**
- * This function derives RLOC16 from a given Router ID.
+ * Derives RLOC16 from a given Router ID.
  *
  * @param[in]  aRouterId  The Router ID value.
  *
@@ -733,7 +733,7 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
- * This function indicates whether or not @p aRloc16 refers to an active router.
+ * Indicates whether or not @p aRloc16 refers to an active router.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -744,7 +744,7 @@ inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint1
 inline bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
 
 /**
- * This function converts a device role into a human-readable string.
+ * Converts a device role into a human-readable string.
  *
  * @param[in] aRole  The device role to convert.
  *

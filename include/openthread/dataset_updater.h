@@ -69,7 +69,7 @@ extern "C" {
 typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
 
 /**
- * This function requests an update to Operational Dataset.
+ * Requests an update to Operational Dataset.
  *
  * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
@@ -94,7 +94,7 @@ otError otDatasetUpdaterRequestUpdate(otInstance                 *aInstance,
                                       void                       *aContext);
 
 /**
- * This function cancels an ongoing (if any) Operational Dataset update request.
+ * Cancels an ongoing (if any) Operational Dataset update request.
  *
  * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *
@@ -104,7 +104,7 @@ otError otDatasetUpdaterRequestUpdate(otInstance                 *aInstance,
 void otDatasetUpdaterCancelUpdate(otInstance *aInstance);
 
 /**
- * This function indicates whether there is an ongoing Operation Dataset update request.
+ * Indicates whether there is an ongoing Operation Dataset update request.
  *
  * Available when `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE` is enabled.
  *

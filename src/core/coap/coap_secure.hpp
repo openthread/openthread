@@ -53,7 +53,7 @@ class CoapSecure : public CoapBase
 {
 public:
     /**
-     * This function pointer is called once DTLS connection is established.
+     * Pointer is called once DTLS connection is established.
      *
      * @param[in]  aConnected  TRUE if a connection was established, FALSE otherwise.
      * @param[in]  aContext    A pointer to arbitrary context information.

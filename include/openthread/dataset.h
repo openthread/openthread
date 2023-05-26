@@ -316,7 +316,7 @@ typedef enum otMeshcopTlvType
 } otMeshcopTlvType;
 
 /**
- * This function pointer is called when a response to a MGMT_SET request is received or times out.
+ * Pointer is called when a response to a MGMT_SET request is received or times out.
  *
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
@@ -331,7 +331,7 @@ typedef enum otMeshcopTlvType
 typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
 
 /**
- * This function indicates whether a valid network is present in the Active Operational Dataset or not.
+ * Indicates whether a valid network is present in the Active Operational Dataset or not.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -353,7 +353,7 @@ bool otDatasetIsCommissioned(otInstance *aInstance);
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * This function gets the Active Operational Dataset.
+ * Gets the Active Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
@@ -391,7 +391,7 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
- * This function sets the Active Operational Dataset.
+ * Sets the Active Operational Dataset.
  *
  * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
  *
@@ -417,7 +417,7 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
 
 /**
- * This function gets the Pending Operational Dataset.
+ * Gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
@@ -429,7 +429,7 @@ otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDataset
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * This function gets the Pending Operational Dataset.
+ * Gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
@@ -454,7 +454,7 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
- * This function sets the Pending Operational Dataset.
+ * Sets the Pending Operational Dataset.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
@@ -549,7 +549,7 @@ otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
                                     void                       *aContext);
 
 /**
- * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
+ * Generates PSKc from a given pass-phrase, network name, and extended PAN ID.
  *
  * PSKc is used to establish the Commissioner Session.
  *

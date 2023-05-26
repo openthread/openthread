@@ -56,7 +56,7 @@ namespace CmdLineParser {
  */
 
 /**
- * This function parses a string as a `uint8_t` value.
+ * Parses a string as a `uint8_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
  *
@@ -70,7 +70,7 @@ namespace CmdLineParser {
 otError ParseAsUint8(const char *aString, uint8_t &aUint8);
 
 /**
- * This function parses a string as a `uint16_t` value.
+ * Parses a string as a `uint16_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
  *
@@ -84,7 +84,7 @@ otError ParseAsUint8(const char *aString, uint8_t &aUint8);
 otError ParseAsUint16(const char *aString, uint16_t &aUint16);
 
 /**
- * This function parses a string as a `uint32_t` value.
+ * Parses a string as a `uint32_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
  *
@@ -98,7 +98,7 @@ otError ParseAsUint16(const char *aString, uint16_t &aUint16);
 otError ParseAsUint32(const char *aString, uint32_t &aUint32);
 
 /**
- * This function parses a string as a `uint64_t` value.
+ * Parses a string as a `uint64_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
  *
@@ -112,7 +112,7 @@ otError ParseAsUint32(const char *aString, uint32_t &aUint32);
 otError ParseAsUint64(const char *aString, uint64_t &aUint64);
 
 /**
- * This function parses a string as a `int8_t` value.
+ * Parses a string as a `int8_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
  * `+`/`-` sign.
@@ -127,7 +127,7 @@ otError ParseAsUint64(const char *aString, uint64_t &aUint64);
 otError ParseAsInt8(const char *aString, int8_t &aInt8);
 
 /**
- * This function parses a string as a `int16_t` value.
+ * Parses a string as a `int16_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
  * `+`/`-` sign.
@@ -142,7 +142,7 @@ otError ParseAsInt8(const char *aString, int8_t &aInt8);
 otError ParseAsInt16(const char *aString, int16_t &aInt16);
 
 /**
- * This function parses a string as a `int32_t` value.
+ * Parses a string as a `int32_t` value.
  *
  * The number in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
  * `+`/`-` sign.
@@ -157,7 +157,7 @@ otError ParseAsInt16(const char *aString, int16_t &aInt16);
 otError ParseAsInt32(const char *aString, int32_t &aInt32);
 
 /**
- * This function parses a string as a `bool` value.
+ * Parses a string as a `bool` value.
  *
  * Zero value is treated as `false`, non-zero value as `true`.
  *
@@ -172,7 +172,7 @@ otError ParseAsBool(const char *aString, bool &aBool);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 /**
- * This function parses a string as an IPv6 address.
+ * Parses a string as an IPv6 address.
  *
  *
  * @param[in]  aString   The string to parse.
@@ -185,7 +185,7 @@ otError ParseAsBool(const char *aString, bool &aBool);
 otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 
 /**
- * This function parses a string as an IPv4 address.
+ * Parses a string as an IPv4 address.
  *
  * @param[in]  aString   The string to parse.
  * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
@@ -197,7 +197,7 @@ otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
 
 /**
- * This function parses a string as an IPv6 prefix.
+ * Parses a string as an IPv6 prefix.
  *
  * The string is parsed as `{IPv6Address}/{PrefixLength}`.
  *
@@ -212,13 +212,13 @@ otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 /**
- * This function parses a hex string into a byte array of fixed expected size.
+ * Parses a hex string into a byte array of fixed expected size.
  *
- * This function returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
+ * Returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
  * there are fewer or more bytes in hex string that @p aSize, the parsed bytes (up to @p aSize) are copied into the
  * `aBuffer` and `kErrorInvalidArgs` is returned.
  *
- * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
+ * Correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
  * @param[in]  aString   The string to parse.
@@ -234,11 +234,11 @@ otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
 /**
  * This template function parses a hex string into a a given fixed size array.
  *
- * This function returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
+ * Returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
  * If there are fewer or more bytes in hex string that @p kBufferSize, the parsed bytes (up to @p kBufferSize) are
  * copied into the `aBuffer` and `kErrorInvalidArgs` is returned.
  *
- * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
+ * Correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
  * @tparam kBufferSize   The byte array size (number of bytes).
@@ -256,11 +256,11 @@ template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aStr
 }
 
 /**
- * This function parses a hex string into a byte array.
+ * Parses a hex string into a byte array.
  *
- * This function verifies that the parsed hex string bytes fit in @p aBuffer with its given @p aSize.
+ * Verifies that the parsed hex string bytes fit in @p aBuffer with its given @p aSize.
  *
- * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
+ * Correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
  * @param[in]      aString   The string to parse.
@@ -275,14 +275,14 @@ template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aStr
 otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer);
 
 /**
- * This function parses a segment of a hex string up to a given size.
+ * Parses a segment of a hex string up to a given size.
  *
- * This function allows a longer hex string to be parsed and read in smaller segments into a given buffer. If the
+ * Allows a longer hex string to be parsed and read in smaller segments into a given buffer. If the
  * entire hex string bytes can fit in the given @p aBuffer with its @p aSize, they are copied into @p aBuffer and
  * function returns `kErrorNone`. Otherwise, @p aSize bytes are read and copied and function returns `kErrorPending`
  * to indicate that there are more bytes to parse. The @p aString is also updated to skip over the parsed segment.
  *
- * This function correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
+ * Correctly handles hex strings with even or odd length. For example, "AABBCCDD" (with even length) is
  * parsed as {0xaa, 0xbb, 0xcc, 0xdd} and "123" (with odd length) is parsed as {0x01, 0x23}.
  *
  * @param[in,out] aString    A reference to string to parse. On successful parse, updated to skip parsed digits.
@@ -626,9 +626,9 @@ private:
 };
 
 /**
- * This function parses a given command line string and breaks it into an argument list.
+ * Parses a given command line string and breaks it into an argument list.
  *
- * This function may change the input @p aCommandString, it will put a '\0' by the end of each argument, and @p aArgs
+ * May change the input @p aCommandString, it will put a '\0' by the end of each argument, and @p aArgs
  * will point to the arguments in the input @p aCommandString. Backslash ('\') can be used to escape separators
  * (' ', '\t', '\r', '\n') and the backslash itself.
  *
@@ -636,7 +636,7 @@ private:
  * will be cleared and marked as empty. So the number of arguments can be determined by going through @p aArgs array
  * entries till we get to an empty `Arg` (i.e., `Arg::IsEmpty()` returns `true).
  *
- * This function ensures that the last entry in @p aArgs array is always used to indicate the end (always  marked as
+ * Ensures that the last entry in @p aArgs array is always used to indicate the end (always  marked as
  * empty), so the @p aArgs array should have one more entry than the desired max number of arguments.
  *
  * @param[in]   aCommandString  A null-terminated input string.

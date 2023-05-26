@@ -174,7 +174,7 @@ public:
     /**
       * Initializes the OpenThread instance.
       *
-      * This function must be called before any other calls on OpenThread instance.
+      * Must be called before any other calls on OpenThread instance.
       *
       * @param[in]     aBuffer      The buffer for OpenThread to use for allocating the Instance.
       * @param[in,out] aBufferSize  On input, the size of `aBuffer`. On output, if not enough space for `Instance`, the

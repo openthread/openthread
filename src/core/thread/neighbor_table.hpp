@@ -50,7 +50,7 @@ class NeighborTable : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This function pointer is called to notify that a child or router neighbor is being added to or removed from
+     * Pointer is called to notify that a child or router neighbor is being added to or removed from
      * neighbor table.
      *
      * Note that this callback in invoked while the neighbor/child table is being updated and always before the related

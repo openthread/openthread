@@ -71,12 +71,12 @@ extern "C" {
 typedef struct otInstance otInstance;
 
 /**
- * This function initializes the OpenThread library.
+ * Initializes the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
+ * Initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
- * This function is available and can only be used when support for multiple OpenThread instances is enabled.
+ * Is available and can only be used when support for multiple OpenThread instances is enabled.
  *
  * @param[in]     aInstanceBuffer      The buffer for OpenThread to use for allocating the otInstance structure.
  * @param[in,out] aInstanceBufferSize  On input, the size of aInstanceBuffer. On output, if not enough space for
@@ -90,12 +90,12 @@ typedef struct otInstance otInstance;
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize);
 
 /**
- * This function initializes the static single instance of the OpenThread library.
+ * Initializes the static single instance of the OpenThread library.
  *
- * This function initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
+ * Initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
  * called before any other calls to OpenThread.
  *
- * This function is available and can only be used when support for multiple OpenThread instances is disabled.
+ * Is available and can only be used when support for multiple OpenThread instances is disabled.
  *
  * @returns A pointer to the single OpenThread instance.
  *
@@ -114,7 +114,7 @@ otInstance *otInstanceInitSingle(void);
 uint32_t otInstanceGetId(otInstance *aInstance);
 
 /**
- * This function indicates whether or not the instance is valid/initialized.
+ * Indicates whether or not the instance is valid/initialized.
  *
  * The instance is considered valid if it is acquired and initialized using either `otInstanceInitSingle()` (in single
  * instance case) or `otInstanceInit()` (in multi instance case). A subsequent call to `otInstanceFinalize()` causes
@@ -128,7 +128,7 @@ uint32_t otInstanceGetId(otInstance *aInstance);
 bool otInstanceIsInitialized(otInstance *aInstance);
 
 /**
- * This function disables the OpenThread library.
+ * Disables the OpenThread library.
  *
  * Call this function when OpenThread is no longer in use.
  *
@@ -138,9 +138,9 @@ bool otInstanceIsInitialized(otInstance *aInstance);
 void otInstanceFinalize(otInstance *aInstance);
 
 /**
- * This function returns the current instance uptime (in msec).
+ * Returns the current instance uptime (in msec).
  *
- * This function requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+ * Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
  *
  * The uptime is given as number of milliseconds since OpenThread instance was initialized.
  *
@@ -154,9 +154,9 @@ uint64_t otInstanceGetUptime(otInstance *aInstance);
 #define OT_UPTIME_STRING_SIZE 24 ///< Recommended size for string representation of uptime.
 
 /**
- * This function returns the current instance uptime as a human-readable string.
+ * Returns the current instance uptime as a human-readable string.
  *
- * This function requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+ * Requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
  *
  * The string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if uptime is
  * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day).
@@ -218,7 +218,7 @@ enum
 typedef uint32_t otChangedFlags;
 
 /**
- * This function pointer is called to notify certain configuration or state changes within OpenThread.
+ * Pointer is called to notify certain configuration or state changes within OpenThread.
  *
  * @param[in]  aFlags    A bit-field indicating specific state that has changed.  See `OT_CHANGED_*` definitions.
  * @param[in]  aContext  A pointer to application-specific context.
@@ -227,7 +227,7 @@ typedef uint32_t otChangedFlags;
 typedef void (*otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
 
 /**
- * This function registers a callback to indicate when certain configuration or state changes within OpenThread.
+ * Registers a callback to indicate when certain configuration or state changes within OpenThread.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aCallback  A pointer to a function that is called with certain configuration or state changes.
@@ -241,7 +241,7 @@ typedef void (*otStateChangedCallback)(otChangedFlags aFlags, void *aContext);
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
- * This function removes a callback to indicate when certain configuration or state changes within OpenThread.
+ * Removes a callback to indicate when certain configuration or state changes within OpenThread.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aCallback   A pointer to a function that is called with certain configuration or state changes.
@@ -282,7 +282,7 @@ void otInstanceFactoryReset(otInstance *aInstance);
 void otInstanceResetRadioStack(otInstance *aInstance);
 
 /**
- * This function erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
+ * Erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
  * Erase is successful only if the device is in `disabled` state/role.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -294,7 +294,7 @@ void otInstanceResetRadioStack(otInstance *aInstance);
 otError otInstanceErasePersistentInfo(otInstance *aInstance);
 
 /**
- * This function gets the OpenThread version string.
+ * Gets the OpenThread version string.
  *
  * @returns A pointer to the OpenThread version.
  *
@@ -302,7 +302,7 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance);
 const char *otGetVersionString(void);
 
 /**
- * This function gets the OpenThread radio version string.
+ * Gets the OpenThread radio version string.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *

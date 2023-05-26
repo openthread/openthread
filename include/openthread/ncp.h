@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This function pointer is called to send HDLC encoded NCP data.
+ * Pointer is called to send HDLC encoded NCP data.
  *
  * @param[in]  aBuf        A pointer to a buffer with an output.
  * @param[in]  aBufLength  A length of the output data stored in the buffer.
@@ -66,13 +66,13 @@ extern "C" {
 typedef int (*otNcpHdlcSendCallback)(const uint8_t *aBuf, uint16_t aBufLength);
 
 /**
- * This function is called after NCP send finished.
+ * Is called after NCP send finished.
  *
  */
 void otNcpHdlcSendDone(void);
 
 /**
- * This function is called after HDLC encoded NCP data received.
+ * Is called after HDLC encoded NCP data received.
  *
  * @param[in]  aBuf        A pointer to a buffer.
  * @param[in]  aBufLength  The length of the data stored in the buffer.
@@ -100,7 +100,7 @@ void otNcpSpiInit(otInstance *aInstance);
 /**
  * @brief Send data to the host via a specific stream.
  *
- * This function attempts to send the given data to the host
+ * Attempts to send the given data to the host
  * using the given aStreamId. This is useful for reporting
  * error messages, implementing debug/diagnostic consoles,
  * and potentially other types of datastreams.

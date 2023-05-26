@@ -108,7 +108,7 @@ enum RoleFilter : uint8_t
 };
 
 /**
- * This function indicates whether a given `int8_t` preference value is a valid route preference (i.e., one of the
+ * Indicates whether a given `int8_t` preference value is a valid route preference (i.e., one of the
  * values from `RoutePreference` enumeration).
  *
  * @param[in] aPref  The signed route preference value.
@@ -120,7 +120,7 @@ enum RoleFilter : uint8_t
 inline bool IsRoutePreferenceValid(int8_t aPref) { return Preference::IsValid(aPref); }
 
 /**
- * This function coverts a route preference to a 2-bit unsigned value.
+ * Coverts a route preference to a 2-bit unsigned value.
  *
  * The @p aPref MUST be valid (value from `RoutePreference` enumeration), or the behavior is undefined.
  *
@@ -132,7 +132,7 @@ inline bool IsRoutePreferenceValid(int8_t aPref) { return Preference::IsValid(aP
 inline uint8_t RoutePreferenceToValue(int8_t aPref) { return Preference::To2BitUint(aPref); }
 
 /**
- * This function coverts a 2-bit unsigned value to a route preference.
+ * Coverts a 2-bit unsigned value to a route preference.
  *
  * @param[in] aValue   The 2-bit unsigned value to convert from. Note that only the first two bits of @p aValue
  *                     are used and the rest of bits are ignored.
@@ -146,7 +146,7 @@ inline RoutePreference RoutePreferenceFromValue(uint8_t aValue)
 }
 
 /**
- * This function converts a router preference to a human-readable string.
+ * Converts a router preference to a human-readable string.
  *
  * @param[in] aPreference  The preference to convert
  *

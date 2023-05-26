@@ -115,7 +115,7 @@ public:
     void Remove(Source &aSource);
 
     /**
-     * This function returns the Mainloop singleton.
+     * Returns the Mainloop singleton.
      *
      * @returns A reference to the Mainloop singleton.
      *

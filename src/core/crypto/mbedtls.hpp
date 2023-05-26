@@ -92,7 +92,7 @@ public:
 
 #if !OPENTHREAD_RADIO
     /**
-     * This function fills a given buffer with cryptographically secure random bytes.
+     * Fills a given buffer with cryptographically secure random bytes.
      *
      * @param[in]  aContext A pointer to arbitrary context.
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
