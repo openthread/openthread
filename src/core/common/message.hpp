@@ -862,7 +862,7 @@ public:
     void WriteBytesFromMessage(uint16_t aWriteOffset, const Message &aMessage, uint16_t aReadOffset, uint16_t aLength);
 
     /**
-     * This methods writes an object to the message.
+     * Writes an object to the message.
      *
      * Will not resize the message. The entire given object (all its bytes) MUST fit within the existing
      * message buffer (from the given offset @p aOffset up to the message's length).

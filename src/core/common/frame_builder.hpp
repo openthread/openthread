@@ -242,7 +242,7 @@ public:
     void WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength);
 
     /**
-     * This methods writes an object to the `FrameBuilder` at a given offset overwriting previously appended content.
+     * Writes an object to the `FrameBuilder` at a given offset overwriting previously appended content.
      *
      * Does not perform any bound checks. The caller MUST ensure the given data length fits within the
      * previously appended content. Otherwise the behavior of this method is undefined.

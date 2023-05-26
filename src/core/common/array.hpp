@@ -206,7 +206,7 @@ public:
     IndexType GetLength(void) const { return mLength; }
 
     /**
-     * This methods sets the current length (number of elements) of the array.
+     * Sets the current length (number of elements) of the array.
      *
      * @param[in] aLength   The array length.
      *

@@ -177,7 +177,7 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
-     * This methods increases the Length value by a given amount.
+     * Increases the Length value by a given amount.
      *
      * @param[in]  aIncrement  The increment amount to increase the length.
      *
@@ -185,7 +185,7 @@ public:
     void IncreaseLength(uint8_t aIncrement) { mLength += aIncrement; }
 
     /**
-     * This methods decreases the Length value by a given amount.
+     * Decreases the Length value by a given amount.
      *
      * @param[in]  aDecrement  The decrement amount to decrease the length.
      *

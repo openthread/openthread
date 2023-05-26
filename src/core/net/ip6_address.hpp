@@ -657,7 +657,7 @@ public:
     bool IsLinkLocal(void) const;
 
     /**
-     * This methods sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
+     * Sets the IPv6 address to a Link-Local address with Interface Identifier generated from a given
      * MAC Extended Address.
      *
      * @param[in]  aExtAddress  A MAC Extended Address (used to generate the IID).
@@ -666,7 +666,7 @@ public:
     void SetToLinkLocalAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * This methods sets the IPv6 address to a Link-Local address with a given Interface Identifier.
+     * Sets the IPv6 address to a Link-Local address with a given Interface Identifier.
      *
      * @param[in]  aIid   An Interface Identifier.
      *

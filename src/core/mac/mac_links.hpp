@@ -630,7 +630,7 @@ public:
     }
 
     /**
-     * This methods gets a reference to the `SubMac` instance.
+     * Gets a reference to the `SubMac` instance.
      *
      * @returns A reference to the `SubMac` instance.
      *
@@ -638,7 +638,7 @@ public:
     SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
-     * This methods gets a reference to the `SubMac` instance.
+     * Gets a reference to the `SubMac` instance.
      *
      * @returns A reference to the `SubMac` instance.
      *

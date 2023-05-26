@@ -284,7 +284,7 @@ public:
                        uint8_t           &aServiceId) const;
 
     /**
-     * This methods gets the preferred NAT64 prefix from network data.
+     * Gets the preferred NAT64 prefix from network data.
      *
      * The returned prefix is the highest preference external route entry in Network Data with NAT64 flag set. If there
      * are multiple such entries the first one is returned.

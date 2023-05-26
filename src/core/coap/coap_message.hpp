@@ -1147,7 +1147,7 @@ public:
         const Message &GetMessage(void) const { return *static_cast<const Message *>(mMessage); }
 
         /**
-         * This methods gets a pointer to the current CoAP Option to which the iterator is currently pointing.
+         * Gets a pointer to the current CoAP Option to which the iterator is currently pointing.
          *
          * @returns A pointer to the current CoAP Option, or `nullptr` if iterator is done (or there was an earlier
          *          parse error).

@@ -332,7 +332,7 @@ public:
     void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
     /**
-     * This methods gets the metrics.
+     * Gets the metrics.
      *
      * @returns  The metrics associated with `SeriesInfo`.
      *
