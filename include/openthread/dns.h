@@ -63,7 +63,7 @@ extern "C" {
 #define OT_DNS_TXT_KEY_MAX_LENGTH 9 ///< Recommended maximum length of TXT record key string (RFC 6763 - section 6.4).
 
 /**
- * This structure represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
+ * Represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
  *
  * The string buffers pointed to by `mKey` and `mValue` MUST persist and remain unchanged after an instance of such
  * structure is passed to OpenThread (as part of `otSrpClientService` instance).
@@ -95,7 +95,7 @@ typedef struct otDnsTxtEntry
 } otDnsTxtEntry;
 
 /**
- * This structure represents an iterator for TXT record entries (key/value pairs).
+ * Represents an iterator for TXT record entries (key/value pairs).
  *
  * The data fields in this structure are intended for use by OpenThread core and caller should not read or change them.
  *

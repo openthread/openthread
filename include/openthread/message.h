@@ -70,7 +70,7 @@ typedef enum otMessagePriority
 } otMessagePriority;
 
 /**
- * This structure represents a message settings.
+ * Represents a message settings.
  *
  */
 typedef struct otMessageSettings
@@ -263,7 +263,7 @@ uint16_t otMessageRead(const otMessage *aMessage, uint16_t aOffset, void *aBuf, 
 int otMessageWrite(otMessage *aMessage, uint16_t aOffset, const void *aBuf, uint16_t aLength);
 
 /**
- * This structure represents an OpenThread message queue.
+ * Represents an OpenThread message queue.
  */
 typedef struct
 {
@@ -271,7 +271,7 @@ typedef struct
 } otMessageQueue;
 
 /**
- * This structure represents information about a message queue.
+ * Represents information about a message queue.
  *
  */
 typedef struct otMessageQueueInfo
@@ -282,7 +282,7 @@ typedef struct otMessageQueueInfo
 } otMessageQueueInfo;
 
 /**
- * This structure represents the message buffer information for different queues used by OpenThread stack.
+ * Represents the message buffer information for different queues used by OpenThread stack.
  *
  */
 typedef struct otBufferInfo

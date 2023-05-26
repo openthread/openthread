@@ -156,7 +156,7 @@ typedef enum otSrpServerAddressMode
 } otSrpServerAddressMode;
 
 /**
- * This structure includes SRP server TTL configurations.
+ * Includes SRP server TTL configurations.
  *
  */
 typedef struct otSrpServerTtlConfig
@@ -166,7 +166,7 @@ typedef struct otSrpServerTtlConfig
 } otSrpServerTtlConfig;
 
 /**
- * This structure includes SRP server LEASE and KEY-LEASE configurations.
+ * Includes SRP server LEASE and KEY-LEASE configurations.
  *
  */
 typedef struct otSrpServerLeaseConfig
@@ -178,7 +178,7 @@ typedef struct otSrpServerLeaseConfig
 } otSrpServerLeaseConfig;
 
 /**
- * This structure includes SRP server lease information of a host/service.
+ * Includes SRP server lease information of a host/service.
  *
  */
 typedef struct otSrpServerLeaseInfo
@@ -190,7 +190,7 @@ typedef struct otSrpServerLeaseInfo
 } otSrpServerLeaseInfo;
 
 /**
- * This structure includes the statistics of SRP server responses.
+ * Includes the statistics of SRP server responses.
  *
  */
 typedef struct otSrpServerResponseCounters

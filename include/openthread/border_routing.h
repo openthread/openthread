@@ -73,7 +73,7 @@ extern "C" {
  */
 
 /**
- * This structure represents an iterator to iterate through the Border Router's discovered prefix table.
+ * Represents an iterator to iterate through the Border Router's discovered prefix table.
  *
  * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
  * accessed or used by caller.
@@ -89,7 +89,7 @@ typedef struct otBorderRoutingPrefixTableIterator
 } otBorderRoutingPrefixTableIterator;
 
 /**
- * This structure represents an entry from the discovered prefix table.
+ * Represents an entry from the discovered prefix table.
  *
  * The entries in the discovered table track the Prefix/Route Info Options in the received Router Advertisement messages
  * from other routers on infrastructure link.

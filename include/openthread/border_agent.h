@@ -60,7 +60,7 @@ extern "C" {
 /**
  * @struct otBorderAgentId
  *
- * This structure represents a Border Agent ID.
+ * Represents a Border Agent ID.
  *
  */
 OT_TOOL_PACKED_BEGIN

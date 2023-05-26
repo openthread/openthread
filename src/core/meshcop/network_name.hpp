@@ -101,7 +101,7 @@ public:
 };
 
 /**
- * This structure represents an Network Name.
+ * Represents an Network Name.
  *
  */
 class NetworkName : public otNetworkName, public Unequatable<NetworkName>

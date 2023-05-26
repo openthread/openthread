@@ -51,7 +51,7 @@ extern "C" {
  */
 
 /**
- * This structure holds diagnostic information for a Thread Child
+ * Holds diagnostic information for a Thread Child
  *
  */
 typedef struct
@@ -95,7 +95,7 @@ typedef enum otCacheEntryState
 } otCacheEntryState;
 
 /**
- * This structure represents an EID cache entry.
+ * Represents an EID cache entry.
  *
  */
 typedef struct otCacheEntryInfo
@@ -212,7 +212,7 @@ typedef enum
 } otPowerSupply;
 
 /**
- * This structure represents the device properties which are used for calculating the local leader weight on a
+ * Represents the device properties which are used for calculating the local leader weight on a
  * device.
  *
  * The parameters are set based on device's capability, whether acting as border router, its power supply config, etc.

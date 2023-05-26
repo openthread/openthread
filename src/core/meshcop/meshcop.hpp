@@ -246,7 +246,7 @@ public:
     static constexpr uint8_t kMaxLength = OT_STEERING_DATA_MAX_LENGTH; ///< Maximum Steering Data length (in bytes).
 
     /**
-     * This structure represents the hash bit index values for the bloom filter calculated from a Joiner ID.
+     * Represents the hash bit index values for the bloom filter calculated from a Joiner ID.
      *
      * The first hash bit index is derived using CRC16-CCITT and second one using CRC16-ANSI.
      *

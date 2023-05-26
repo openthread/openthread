@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 /**
- * This structure represents a CLI command.
+ * Represents a CLI command.
  *
  */
 typedef struct otCliCommand

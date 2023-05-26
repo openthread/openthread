@@ -85,7 +85,7 @@ typedef enum otIcmp6Code
 /**
  * @struct otIcmp6Header
  *
- * This structure represents an ICMPv6 header.
+ * Represents an ICMPv6 header.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -123,7 +123,7 @@ typedef void (*otIcmp6ReceiveCallback)(void                *aContext,
                                        const otIcmp6Header *aIcmpHeader);
 
 /**
- * This structure implements ICMPv6 message handler.
+ * Implements ICMPv6 message handler.
  *
  */
 typedef struct otIcmp6Handler

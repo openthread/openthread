@@ -81,7 +81,7 @@ typedef otCoapResponseHandler ResponseHandler;
 typedef otCoapRequestHandler RequestHandler;
 
 /**
- * This structure represents the CoAP transmission parameters.
+ * Represents the CoAP transmission parameters.
  *
  */
 class TxParameters : public otCoapTxParameters

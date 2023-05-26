@@ -169,7 +169,7 @@ public:
     static const uint8_t kServiceData = kServiceNumber;
 
     /**
-     * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
+     * Represents information about an DNS/SRP server parsed from related Network Data service entries.
      *
      */
     struct Info
@@ -251,7 +251,7 @@ public:
     };
 
     /**
-     * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
+     * Represents information about an DNS/SRP server parsed from related Network Data service entries.
      *
      */
     struct Info

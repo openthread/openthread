@@ -63,7 +63,7 @@ extern "C" {
 typedef bool (*otUdpHandler)(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This structure represents a UDP receiver.
+ * Represents a UDP receiver.
  *
  */
 typedef struct otUdpReceiver
@@ -117,7 +117,7 @@ otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageI
 typedef void (*otUdpReceive)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * This structure represents a UDP socket.
+ * Represents a UDP socket.
  *
  */
 typedef struct otUdpSocket

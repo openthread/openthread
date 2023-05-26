@@ -647,7 +647,7 @@ typedef Mac::KeyMaterial KeyMaterial;
 typedef Mac::Key Key;
 
 /**
- * This structure represents the Thread MLE counters.
+ * Represents the Thread MLE counters.
  *
  */
 typedef otMleCounters Counters;

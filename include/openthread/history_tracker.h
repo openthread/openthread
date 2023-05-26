@@ -75,7 +75,7 @@ typedef struct otHistoryTrackerIterator
 } otHistoryTrackerIterator;
 
 /**
- * This structure represents Thread network info.
+ * Represents Thread network info.
  *
  */
 typedef struct otHistoryTrackerNetworkInfo
@@ -98,7 +98,7 @@ typedef enum
 } otHistoryTrackerAddressEvent;
 
 /**
- * This structure represent a unicast IPv6 address info.
+ * Represent a unicast IPv6 address info.
  *
  */
 typedef struct otHistoryTrackerUnicastAddressInfo
@@ -114,7 +114,7 @@ typedef struct otHistoryTrackerUnicastAddressInfo
 } otHistoryTrackerUnicastAddressInfo;
 
 /**
- * This structure represent an IPv6 multicast address info.
+ * Represent an IPv6 multicast address info.
  *
  */
 typedef struct otHistoryTrackerMulticastAddressInfo
@@ -137,7 +137,7 @@ enum
 };
 
 /**
- * This structure represents a RX/TX IPv6 message info.
+ * Represents a RX/TX IPv6 message info.
  *
  * Some of the fields in this struct are applicable to a RX message or a TX message only, e.g., `mAveRxRss` is the
  * average RSS of all fragment frames that form a received message and is only applicable for a RX message.
@@ -177,7 +177,7 @@ typedef enum
 } otHistoryTrackerNeighborEvent;
 
 /**
- * This structure represents a neighbor info.
+ * Represents a neighbor info.
  *
  */
 typedef struct otHistoryTrackerNeighborInfo
@@ -209,7 +209,7 @@ typedef enum
 #define OT_HISTORY_TRACKER_INFINITE_PATH_COST 0 ///< Infinite path cost - used in `otHistoryTrackerRouterInfo`.
 
 /**
- * This structure represents a router table entry event.
+ * Represents a router table entry event.
  *
  */
 typedef struct otHistoryTrackerRouterInfo
@@ -232,7 +232,7 @@ typedef enum
 } otHistoryTrackerNetDataEvent;
 
 /**
- * This structure represent a Network Data on mesh prefix info.
+ * Represent a Network Data on mesh prefix info.
  *
  */
 typedef struct otHistoryTrackerOnMeshPrefixInfo
@@ -242,7 +242,7 @@ typedef struct otHistoryTrackerOnMeshPrefixInfo
 } otHistoryTrackerOnMeshPrefixInfo;
 
 /**
- * This structure represent a Network Data extern route info.
+ * Represent a Network Data extern route info.
  *
  */
 typedef struct otHistoryTrackerExternalRouteInfo

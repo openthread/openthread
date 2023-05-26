@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * This structure represents a circular send buffer for use with a TCP endpoint.
+ * Represents a circular send buffer for use with a TCP endpoint.
  *
  * Using a circular send buffer is optional. Applications can use a TCP
  * endpoint to send data by managing otLinkedBuffers directly. However, some

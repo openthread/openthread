@@ -87,7 +87,7 @@ typedef enum otCommissionerJoinerEvent
 #define OT_STEERING_DATA_MAX_LENGTH 16 ///< Max steering data length (bytes)
 
 /**
- * This structure represents the steering data.
+ * Represents the steering data.
  *
  */
 typedef struct otSteeringData
@@ -97,7 +97,7 @@ typedef struct otSteeringData
 } otSteeringData;
 
 /**
- * This structure represents a Commissioning Dataset.
+ * Represents a Commissioning Dataset.
  *
  */
 typedef struct otCommissioningDataset
@@ -116,7 +116,7 @@ typedef struct otCommissioningDataset
 #define OT_JOINER_MAX_PSKD_LENGTH 32 ///< Maximum string length of a Joiner PSKd (does not include null char).
 
 /**
- * This structure represents a Joiner PSKd.
+ * Represents a Joiner PSKd.
  *
  */
 typedef struct otJoinerPskd
@@ -136,7 +136,7 @@ typedef enum otJoinerInfoType
 } otJoinerInfoType;
 
 /**
- * This structure represents a Joiner Info.
+ * Represents a Joiner Info.
  *
  */
 typedef struct otJoinerInfo

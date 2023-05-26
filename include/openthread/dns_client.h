@@ -111,7 +111,7 @@ typedef enum
 } otDnsTransportProto;
 
 /**
- * This structure represents a DNS query configuration.
+ * Represents a DNS query configuration.
  *
  * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
  * fields are treated is determined by the function which uses the instance of `otDnsQueryConfig`.
@@ -341,7 +341,7 @@ typedef struct otDnsBrowseResponse otDnsBrowseResponse;
 typedef void (*otDnsBrowseCallback)(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
 
 /**
- * This structure provides info for a DNS service instance.
+ * Provides info for a DNS service instance.
  *
  */
 typedef struct otDnsServiceInfo

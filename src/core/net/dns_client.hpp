@@ -278,7 +278,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     /**
-     * This structure provides info for a DNS service instance.
+     * Provides info for a DNS service instance.
      *
      */
     typedef otDnsServiceInfo ServiceInfo;

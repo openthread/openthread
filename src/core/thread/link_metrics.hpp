@@ -88,7 +88,7 @@ public:
     typedef otLinkMetricsEnhAckProbingIeReportCallback EnhAckProbingIeReportCallback;
 
     /**
-     * This structure provides the info used for appending MLE Link Metric Query TLV.
+     * Provides the info used for appending MLE Link Metric Query TLV.
      *
      */
     struct QueryInfo : public Clearable<QueryInfo>

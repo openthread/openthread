@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This structure represents the set of configurations used when discovering mesh topology indicating which items to
+ * Represents the set of configurations used when discovering mesh topology indicating which items to
  * discover.
  *
  */

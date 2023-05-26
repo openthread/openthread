@@ -130,7 +130,7 @@ public:
                   "Core settings keys overlap with vendor reserved keys");
 
     /**
-     * This structure represents the device's own network information for settings storage.
+     * Represents the device's own network information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -337,7 +337,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This structure represents the parent information for settings storage.
+     * Represents the parent information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -400,7 +400,7 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * This structure represents the child information for settings storage.
+     * Represents the child information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -531,7 +531,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     /**
-     * This structure represents the duplicate address detection information for settings storage.
+     * Represents the duplicate address detection information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -665,7 +665,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     /**
-     * This structure represents the SRP client info (selected server address).
+     * Represents the SRP client info (selected server address).
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -726,7 +726,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
     /**
-     * This structure represents the SRP server info.
+     * Represents the SRP server info.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -769,7 +769,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     /**
-     * This structure represents the Border Agent ID.
+     * Represents the Border Agent ID.
      *
      */
     OT_TOOL_PACKED_BEGIN

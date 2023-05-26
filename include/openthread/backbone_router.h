@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This structure represents Backbone Router configuration.
+ * Represents Backbone Router configuration.
  *
  */
 typedef struct otBackboneRouterConfig

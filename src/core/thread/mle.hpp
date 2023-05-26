@@ -1395,7 +1395,7 @@ protected:
     };
 
     /**
-     * This structure represents a received MLE message containing additional information about the message (e.g.
+     * Represents a received MLE message containing additional information about the message (e.g.
      * key sequence, neighbor from which it was received).
      *
      */

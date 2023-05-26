@@ -97,7 +97,7 @@ enum
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
 
 /**
- * This structure represents a Network Diagnostic Connectivity value.
+ * Represents a Network Diagnostic Connectivity value.
  *
  */
 typedef struct otNetworkDiagConnectivity
@@ -149,7 +149,7 @@ typedef struct otNetworkDiagConnectivity
 } otNetworkDiagConnectivity;
 
 /**
- * This structure represents a Network Diagnostic Route data.
+ * Represents a Network Diagnostic Route data.
  *
  */
 typedef struct otNetworkDiagRouteData
@@ -161,7 +161,7 @@ typedef struct otNetworkDiagRouteData
 } otNetworkDiagRouteData;
 
 /**
- * This structure represents a Network Diagnostic Route TLV value.
+ * Represents a Network Diagnostic Route TLV value.
  *
  */
 typedef struct otNetworkDiagRoute
@@ -183,7 +183,7 @@ typedef struct otNetworkDiagRoute
 } otNetworkDiagRoute;
 
 /**
- * This structure represents a Network Diagnostic Mac Counters value.
+ * Represents a Network Diagnostic Mac Counters value.
  *
  * See <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
  *
@@ -202,7 +202,7 @@ typedef struct otNetworkDiagMacCounters
 } otNetworkDiagMacCounters;
 
 /**
- * This structure represents a Network Diagnostic Child Table Entry.
+ * Represents a Network Diagnostic Child Table Entry.
  *
  */
 typedef struct otNetworkDiagChildEntry
@@ -232,7 +232,7 @@ typedef struct otNetworkDiagChildEntry
 } otNetworkDiagChildEntry;
 
 /**
- * This structure represents a Network Diagnostic TLV.
+ * Represents a Network Diagnostic TLV.
  *
  */
 typedef struct otNetworkDiagTlv

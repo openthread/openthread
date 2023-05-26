@@ -107,7 +107,7 @@ typedef void (*otDnssdQueryUnsubscribeCallback)(void *aContext, const char *aFul
 typedef void otDnssdQuery;
 
 /**
- * This structure represents information of a discovered service instance for a DNS-SD query.
+ * Represents information of a discovered service instance for a DNS-SD query.
  *
  */
 typedef struct otDnssdServiceInstanceInfo
@@ -125,7 +125,7 @@ typedef struct otDnssdServiceInstanceInfo
 } otDnssdServiceInstanceInfo;
 
 /**
- * This structure represents information of a discovered host for a DNS-SD query.
+ * Represents information of a discovered host for a DNS-SD query.
  *
  */
 typedef struct otDnssdHostInfo
@@ -148,7 +148,7 @@ typedef enum
 } otDnssdQueryType;
 
 /**
- * This structure contains the counters of DNS-SD server.
+ * Contains the counters of DNS-SD server.
  *
  */
 typedef struct otDnssdCounters

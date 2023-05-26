@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This structure relates a given public OT type to its corresponding core C++ class/type.
+ * Relates a given public OT type to its corresponding core C++ class/type.
  *
  * @tparam FromType  The public OT type.
  *
@@ -118,7 +118,7 @@ template <typename Type> const typename CoreType<Type>::Type *AsCoreTypePtr(cons
 }
 
 /**
- * This structure maps two enumeration types.
+ * Maps two enumeration types.
  *
  * @tparam FromEnumType  The enum type.
  *

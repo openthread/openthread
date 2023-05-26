@@ -69,7 +69,7 @@ enum
 };
 
 /**
- * This structure represents platform specific configurations.
+ * Represents platform specific configurations.
  *
  */
 typedef struct otPlatformConfig
@@ -86,7 +86,7 @@ typedef struct otPlatformConfig
 } otPlatformConfig;
 
 /**
- * This structure represents RCP interface metrics.
+ * Represents RCP interface metrics.
  *
  */
 typedef struct otRcpInterfaceMetrics
@@ -126,7 +126,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 void otSysDeinit(void);
 
 /**
- * This structure represents a context for a select() based mainloop.
+ * Represents a context for a select() based mainloop.
  *
  */
 typedef struct otSysMainloopContext

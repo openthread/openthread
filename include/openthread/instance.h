@@ -66,7 +66,7 @@ extern "C" {
  */
 
 /**
- * This structure represents the OpenThread instance structure.
+ * Represents the OpenThread instance structure.
  */
 typedef struct otInstance otInstance;
 

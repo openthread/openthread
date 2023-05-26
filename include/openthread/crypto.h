@@ -58,7 +58,7 @@ extern "C" {
 /**
  * @struct otCryptoSha256Hash
  *
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 typedef otPlatCryptoSha256Hash otCryptoSha256Hash;

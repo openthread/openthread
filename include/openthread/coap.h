@@ -151,7 +151,7 @@ typedef enum otCoapOptionType
 } otCoapOptionType;
 
 /**
- * This structure represents a CoAP option.
+ * Represents a CoAP option.
  *
  */
 typedef struct otCoapOption
@@ -161,7 +161,7 @@ typedef struct otCoapOption
 } otCoapOption;
 
 /**
- * This structure acts as an iterator for CoAP options
+ * Acts as an iterator for CoAP options
  *
  */
 typedef struct otCoapOptionIterator
@@ -409,7 +409,7 @@ typedef otError (*otCoapBlockwiseTransmitHook)(void     *aContext,
                                                bool     *aMore);
 
 /**
- * This structure represents a CoAP resource.
+ * Represents a CoAP resource.
  *
  */
 typedef struct otCoapResource
@@ -421,7 +421,7 @@ typedef struct otCoapResource
 } otCoapResource;
 
 /**
- * This structure represents a CoAP resource with block-wise transfer.
+ * Represents a CoAP resource with block-wise transfer.
  *
  */
 typedef struct otCoapBlockwiseResource
@@ -445,7 +445,7 @@ typedef struct otCoapBlockwiseResource
 } otCoapBlockwiseResource;
 
 /**
- * This structure represents the CoAP transmission parameters.
+ * Represents the CoAP transmission parameters.
  *
  * @note mAckTimeout * ((2 ** (mMaxRetransmit + 1)) - 1) * (mAckRandomFactorNumerator / mAckRandomFactorDenominator)
  *       must not exceed what can be represented by a uint32_t (0xffffffff). This limitation allows OpenThread to

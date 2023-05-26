@@ -69,7 +69,7 @@ typedef enum
 } otSrpClientItemState;
 
 /**
- * This structure represents an SRP client host info.
+ * Represents an SRP client host info.
  *
  */
 typedef struct otSrpClientHostInfo
@@ -82,7 +82,7 @@ typedef struct otSrpClientHostInfo
 } otSrpClientHostInfo;
 
 /**
- * This structure represents an SRP client service.
+ * Represents an SRP client service.
  *
  * The values in this structure, including the string buffers for the names and the TXT record entries, MUST persist
  * and stay constant after an instance of this structure is passed to OpenThread from `otSrpClientAddService()` or

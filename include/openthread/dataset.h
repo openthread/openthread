@@ -58,7 +58,7 @@ extern "C" {
 /**
  * @struct otNetworkKey
  *
- * This structure represents a Thread Network Key.
+ * Represents a Thread Network Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -68,7 +68,7 @@ struct otNetworkKey
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a Thread Network Key.
+ * Represents a Thread Network Key.
  *
  */
 typedef struct otNetworkKey otNetworkKey;
@@ -82,7 +82,7 @@ typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
 #define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
 
 /**
- * This structure represents a Network Name.
+ * Represents a Network Name.
  *
  * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
  *
@@ -95,7 +95,7 @@ typedef struct otNetworkName
 #define OT_EXT_PAN_ID_SIZE 8 ///< Size of a Thread PAN ID (bytes)
 
 /**
- * This structure represents an Extended PAN ID.
+ * Represents an Extended PAN ID.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -105,7 +105,7 @@ struct otExtendedPanId
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an Extended PAN ID.
+ * Represents an Extended PAN ID.
  *
  */
 typedef struct otExtendedPanId otExtendedPanId;
@@ -113,7 +113,7 @@ typedef struct otExtendedPanId otExtendedPanId;
 #define OT_MESH_LOCAL_PREFIX_SIZE OT_IP6_PREFIX_SIZE ///< Size of the Mesh Local Prefix (bytes)
 
 /**
- * This structure represents a Mesh Local Prefix.
+ * Represents a Mesh Local Prefix.
  *
  */
 typedef otIp6NetworkPrefix otMeshLocalPrefix;
@@ -121,7 +121,7 @@ typedef otIp6NetworkPrefix otMeshLocalPrefix;
 #define OT_PSKC_MAX_SIZE 16 ///< Maximum size of the PSKc (bytes)
 
 /**
- * This structure represents PSKc.
+ * Represents PSKc.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -131,7 +131,7 @@ struct otPskc
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a PSKc.
+ * Represents a PSKc.
  *
  */
 typedef struct otPskc otPskc;
@@ -143,7 +143,7 @@ typedef struct otPskc otPskc;
 typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
 
 /**
- * This structure represent Security Policy.
+ * Represent Security Policy.
  *
  */
 typedef struct otSecurityPolicy
@@ -196,7 +196,7 @@ typedef uint32_t otChannelMask;
 #define OT_CHANNEL_26_MASK (1 << 26) ///< Channel 26
 
 /**
- * This structure represents presence of different components in Active or Pending Operational Dataset.
+ * Represents presence of different components in Active or Pending Operational Dataset.
  *
  */
 typedef struct otOperationalDatasetComponents
@@ -216,7 +216,7 @@ typedef struct otOperationalDatasetComponents
 } otOperationalDatasetComponents;
 
 /**
- * This structure represents a Thread Dataset timestamp component.
+ * Represents a Thread Dataset timestamp component.
  *
  */
 typedef struct otTimestamp
@@ -227,7 +227,7 @@ typedef struct otTimestamp
 } otTimestamp;
 
 /**
- * This structure represents an Active or Pending Operational Dataset.
+ * Represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponents` structure specifies which components are present in the Dataset.
  *
@@ -256,7 +256,7 @@ typedef struct otOperationalDataset
 #define OT_OPERATIONAL_DATASET_MAX_LENGTH 254
 
 /**
- * This structure represents an Active or Pending Operational Dataset.
+ * Represents an Active or Pending Operational Dataset.
  *
  * The Operational Dataset is TLV encoded as specified by Thread.
  *

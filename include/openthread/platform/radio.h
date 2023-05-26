@@ -172,7 +172,7 @@ enum
 /**
  * @struct otExtAddress
  *
- * This structure represents the IEEE 802.15.4 Extended Address.
+ * Represents the IEEE 802.15.4 Extended Address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -182,7 +182,7 @@ struct otExtAddress
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents the IEEE 802.15.4 Extended Address.
+ * Represents the IEEE 802.15.4 Extended Address.
  *
  */
 typedef struct otExtAddress otExtAddress;
@@ -192,7 +192,7 @@ typedef struct otExtAddress otExtAddress;
 /**
  * @struct otMacKey
  *
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -202,7 +202,7 @@ struct otMacKey
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 typedef struct otMacKey otMacKey;
@@ -216,7 +216,7 @@ typedef otCryptoKeyRef otMacKeyRef;
 /**
  * @struct otMacKeyMaterial
  *
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 typedef struct otMacKeyMaterial
@@ -239,7 +239,7 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
+ * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
 {
@@ -249,7 +249,7 @@ typedef struct otRadioIeInfo
 } otRadioIeInfo;
 
 /**
- * This structure represents an IEEE 802.15.4 radio frame.
+ * Represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
 {
@@ -352,7 +352,7 @@ typedef struct otRadioFrame
 } otRadioFrame;
 
 /**
- * This structure represents the state of a radio.
+ * Represents the state of a radio.
  * Initially, a radio is in the Disabled state.
  */
 typedef enum otRadioState
@@ -382,7 +382,7 @@ typedef enum otRadioState
  */
 
 /**
- * This structure represents radio coexistence metrics.
+ * Represents radio coexistence metrics.
  */
 typedef struct otRadioCoexMetrics
 {
@@ -408,7 +408,7 @@ typedef struct otRadioCoexMetrics
 } otRadioCoexMetrics;
 
 /**
- * This structure represents what metrics are specified to query.
+ * Represents what metrics are specified to query.
  *
  */
 typedef struct otLinkMetrics

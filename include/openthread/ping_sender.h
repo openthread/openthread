@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This structure represents a ping reply.
+ * Represents a ping reply.
  *
  */
 typedef struct otPingSenderReply
@@ -69,7 +69,7 @@ typedef struct otPingSenderReply
 } otPingSenderReply;
 
 /**
- * This structure represents statistics of a ping request.
+ * Represents statistics of a ping request.
  *
  */
 typedef struct otPingSenderStatistics
@@ -102,7 +102,7 @@ typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void 
 typedef void (*otPingSenderStatisticsCallback)(const otPingSenderStatistics *aStatistics, void *aContext);
 
 /**
- * This structure represents a ping request configuration.
+ * Represents a ping request configuration.
  *
  */
 typedef struct otPingSenderConfig

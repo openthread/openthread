@@ -119,7 +119,7 @@ public:
     typedef Utils::CmdLineParser::Arg Arg; ///< An argument
 
     /**
-     * This structure represent a CLI command table entry, mapping a command with `aName` to a handler method.
+     * Represent a CLI command table entry, mapping a command with `aName` to a handler method.
      *
      * @tparam Cli    The CLI module type.
      *
@@ -204,7 +204,7 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
-     * This structure represents a buffer which is used when converting a `uint64` value to string in decimal format.
+     * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
      *
      */
     struct Uint64StringBuffer
@@ -441,7 +441,7 @@ public:
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
     /**
-     * This structure represents a buffer which is used when converting an encoded rate value to percentage string.
+     * Represents a buffer which is used when converting an encoded rate value to percentage string.
      *
      */
     struct PercentageStringBuffer

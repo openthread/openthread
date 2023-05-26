@@ -60,7 +60,7 @@ extern "C" {
 /**
  * @struct otIp6InterfaceIdentifier
  *
- * This structure represents the Interface Identifier of an IPv6 address.
+ * Represents the Interface Identifier of an IPv6 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -75,7 +75,7 @@ struct otIp6InterfaceIdentifier
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents the Interface Identifier of an IPv6 address.
+ * Represents the Interface Identifier of an IPv6 address.
  *
  */
 typedef struct otIp6InterfaceIdentifier otIp6InterfaceIdentifier;
@@ -83,7 +83,7 @@ typedef struct otIp6InterfaceIdentifier otIp6InterfaceIdentifier;
 /**
  * @struct otIp6NetworkPrefix
  *
- * This structure represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ * Represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -93,7 +93,7 @@ struct otIp6NetworkPrefix
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ * Represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
  *
  */
 typedef struct otIp6NetworkPrefix otIp6NetworkPrefix;
@@ -101,7 +101,7 @@ typedef struct otIp6NetworkPrefix otIp6NetworkPrefix;
 /**
  * @struct otIp6AddressComponents
  *
- * This structure represents the components of an IPv6 address.
+ * Represents the components of an IPv6 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -112,7 +112,7 @@ struct otIp6AddressComponents
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents the components of an IPv6 address.
+ * Represents the components of an IPv6 address.
  *
  */
 typedef struct otIp6AddressComponents otIp6AddressComponents;
@@ -120,7 +120,7 @@ typedef struct otIp6AddressComponents otIp6AddressComponents;
 /**
  * @struct otIp6Address
  *
- * This structure represents an IPv6 address.
+ * Represents an IPv6 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -136,13 +136,13 @@ struct otIp6Address
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IPv6 address.
+ * Represents an IPv6 address.
  *
  */
 typedef struct otIp6Address otIp6Address;
 
 /**
- * This structure represents an IPv6 prefix.
+ * Represents an IPv6 prefix.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -153,7 +153,7 @@ struct otIp6Prefix
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IPv6 prefix.
+ * Represents an IPv6 prefix.
  *
  */
 typedef struct otIp6Prefix otIp6Prefix;
@@ -171,7 +171,7 @@ enum
 };
 
 /**
- * This structure represents an IPv6 network interface unicast address.
+ * Represents an IPv6 network interface unicast address.
  *
  */
 typedef struct otNetifAddress
@@ -188,7 +188,7 @@ typedef struct otNetifAddress
 } otNetifAddress;
 
 /**
- * This structure represents an IPv6 network interface multicast address.
+ * Represents an IPv6 network interface multicast address.
  *
  */
 typedef struct otNetifMulticastAddress
@@ -198,7 +198,7 @@ typedef struct otNetifMulticastAddress
 } otNetifMulticastAddress;
 
 /**
- * This structure represents an IPv6 socket address.
+ * Represents an IPv6 socket address.
  *
  */
 typedef struct otSockAddr
@@ -220,7 +220,7 @@ enum
 };
 
 /**
- * This structure represents the local and peer IPv6 socket addresses.
+ * Represents the local and peer IPv6 socket addresses.
  *
  */
 typedef struct otMessageInfo
@@ -450,7 +450,7 @@ void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallba
 /**
  * @struct otIp6AddressInfo
  *
- * This structure represents IPv6 address information.
+ * Represents IPv6 address information.
  *
  */
 typedef struct otIp6AddressInfo
@@ -867,7 +867,7 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 const char *otIp6ProtoToString(uint8_t aIpProto);
 
 /**
- * This structure represents the counters for packets and bytes.
+ * Represents the counters for packets and bytes.
  *
  */
 typedef struct otPacketsAndBytes
@@ -877,7 +877,7 @@ typedef struct otPacketsAndBytes
 } otPacketsAndBytes;
 
 /**
- * This structure represents the counters of packets forwarded via Border Routing.
+ * Represents the counters of packets forwarded via Border Routing.
  *
  */
 typedef struct otBorderRoutingCounters

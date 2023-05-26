@@ -57,7 +57,7 @@ extern "C" {
 /**
  * @struct otIp4Address
  *
- * This structure represents an IPv4 address.
+ * Represents an IPv4 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -71,7 +71,7 @@ struct otIp4Address
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IPv4 address.
+ * Represents an IPv4 address.
  *
  */
 typedef struct otIp4Address otIp4Address;
@@ -79,7 +79,7 @@ typedef struct otIp4Address otIp4Address;
 /**
  * @struct otIp4Cidr
  *
- * This structure represents an IPv4 CIDR block.
+ * Represents an IPv4 CIDR block.
  *
  */
 typedef struct otIp4Cidr

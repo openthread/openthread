@@ -71,7 +71,7 @@ namespace Lowpan {
 using ot::Encoding::BigEndian::HostSwap16;
 
 /**
- * This structure represents a LOWPAN_IPHC Context.
+ * Represents a LOWPAN_IPHC Context.
  *
  */
 struct Context : public Clearable<Context>

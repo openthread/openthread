@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 /**
- * This structure represents a DSO connection.
+ * Represents a DSO connection.
  *
  * It is an opaque struct (the platform implementation only deals with pointers to this struct).
  *

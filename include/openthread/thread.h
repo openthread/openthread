@@ -74,7 +74,7 @@ typedef enum
 } otDeviceRole;
 
 /**
- * This structure represents an MLE Link Mode configuration.
+ * Represents an MLE Link Mode configuration.
  */
 typedef struct otLinkModeConfig
 {
@@ -84,7 +84,7 @@ typedef struct otLinkModeConfig
 } otLinkModeConfig;
 
 /**
- * This structure holds diagnostic information for a neighboring Thread node
+ * Holds diagnostic information for a neighboring Thread node
  *
  */
 typedef struct
@@ -113,7 +113,7 @@ typedef struct
 typedef int16_t otNeighborInfoIterator; ///< Used to iterate through neighbor table.
 
 /**
- * This structure represents the Thread Leader Data.
+ * Represents the Thread Leader Data.
  *
  */
 typedef struct otLeaderData
@@ -126,7 +126,7 @@ typedef struct otLeaderData
 } otLeaderData;
 
 /**
- * This structure holds diagnostic information for a Thread Router
+ * Holds diagnostic information for a Thread Router
  *
  */
 typedef struct
@@ -152,7 +152,7 @@ typedef struct
 } otRouterInfo;
 
 /**
- * This structure represents the IP level counters.
+ * Represents the IP level counters.
  *
  */
 typedef struct otIpCounters
@@ -164,7 +164,7 @@ typedef struct otIpCounters
 } otIpCounters;
 
 /**
- * This structure represents the Thread MLE counters.
+ * Represents the Thread MLE counters.
  *
  */
 typedef struct otMleCounters
@@ -203,7 +203,7 @@ typedef struct otMleCounters
 } otMleCounters;
 
 /**
- * This structure represents the MLE Parent Response data.
+ * Represents the MLE Parent Response data.
  *
  */
 typedef struct otThreadParentResponseInfo
@@ -946,7 +946,7 @@ void otThreadRegisterParentResponseCallback(otInstance                    *aInst
                                             void                          *aContext);
 
 /**
- * This structure represents the Thread Discovery Request data.
+ * Represents the Thread Discovery Request data.
  *
  */
 typedef struct otThreadDiscoveryRequestInfo

@@ -34,7 +34,7 @@
 /**
  * @struct otUrl
  *
- * This structure represents a URL.
+ * Represents a URL.
  *
  */
 struct otUrl

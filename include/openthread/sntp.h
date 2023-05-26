@@ -57,7 +57,7 @@ extern "C" {
 #define OT_SNTP_DEFAULT_SERVER_PORT 123                ///< Defines default SNTP Server port.
 
 /**
- * This structure implements SNTP Query parameters.
+ * Implements SNTP Query parameters.
  *
  */
 typedef struct otSntpQuery

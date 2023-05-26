@@ -302,7 +302,7 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
 typedef uint16_t otBackboneRouterMulticastListenerIterator; ///< Used to iterate through Multicast Listeners.
 
 /**
- * This structure represents a Backbone Router Multicast Listener info.
+ * Represents a Backbone Router Multicast Listener info.
  *
  */
 typedef struct otBackboneRouterMulticastListenerInfo

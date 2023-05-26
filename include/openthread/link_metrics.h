@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This structure represents the result (value) for a Link Metrics query.
+ * Represents the result (value) for a Link Metrics query.
  *
  */
 typedef struct otLinkMetricsValues
@@ -70,7 +70,7 @@ typedef struct otLinkMetricsValues
 } otLinkMetricsValues;
 
 /**
- * This structure represents which frames are accounted in a Forward Tracking Series.
+ * Represents which frames are accounted in a Forward Tracking Series.
  *
  */
 typedef struct otLinkMetricsSeriesFlags

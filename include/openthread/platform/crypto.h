@@ -111,7 +111,7 @@ typedef uint32_t otCryptoKeyRef;
 /**
  * @struct otCryptoKey
  *
- * This structure represents the Key Material required for Crypto operations.
+ * Represents the Key Material required for Crypto operations.
  *
  */
 typedef struct otCryptoKey
@@ -124,7 +124,7 @@ typedef struct otCryptoKey
 /**
  * @struct otCryptoContext
  *
- * This structure stores the context object for platform APIs.
+ * Stores the context object for platform APIs.
  *
  */
 typedef struct otCryptoContext
@@ -142,7 +142,7 @@ typedef struct otCryptoContext
 /**
  * @struct otPlatCryptoSha256Hash
  *
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -152,7 +152,7 @@ struct otPlatCryptoSha256Hash
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
@@ -166,7 +166,7 @@ typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
 /**
  * @struct otPlatCryptoEcdsaKeyPair
  *
- * This structure represents an ECDSA key pair (public and private keys).
+ * Represents an ECDSA key pair (public and private keys).
  *
  * The key pair is stored using Distinguished Encoding Rules (DER) format (per RFC 5915).
  *

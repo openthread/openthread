@@ -98,7 +98,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 void otPlatTrelDisable(otInstance *aInstance);
 
 /**
- * This structure represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
+ * Represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
  *
  */
 typedef struct otPlatTrelPeerInfo

@@ -66,7 +66,7 @@ class Filter : private NonCopyable
 {
 public:
     /**
-     * This structure represents a Mac Filter entry (used during iteration).
+     * Represents a Mac Filter entry (used during iteration).
      *
      */
     typedef otMacFilterEntry Entry;

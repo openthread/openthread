@@ -72,7 +72,7 @@ typedef enum otJoinerState
 #define OT_JOINER_MAX_DISCERNER_LENGTH 64 ///< Maximum length of a Joiner Discerner in bits.
 
 /**
- * This structure represents a Joiner Discerner.
+ * Represents a Joiner Discerner.
  *
  */
 typedef struct otJoinerDiscerner

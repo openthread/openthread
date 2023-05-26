@@ -54,7 +54,7 @@ typedef enum
 } otMacAddressType;
 
 /**
- * This structure represents an IEEE 802.15.4 short or extended Address.
+ * Represents an IEEE 802.15.4 short or extended Address.
  *
  */
 typedef struct otMacAddress

@@ -896,7 +896,7 @@ private:
 #endif
 
     /**
-     * This structure represents a CoAP header excluding CoAP options.
+     * Represents a CoAP header excluding CoAP options.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -909,7 +909,7 @@ private:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This structure represents a HelpData used by this CoAP message.
+     * Represents a HelpData used by this CoAP message.
      *
      */
     struct HelpData : public Clearable<HelpData>

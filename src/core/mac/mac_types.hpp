@@ -85,7 +85,7 @@ constexpr ShortAddress kShortAddrInvalid   = 0xfffe; ///< Invalid Short Address.
 PanId GenerateRandomPanId(void);
 
 /**
- * This structure represents an IEEE 802.15.4 Extended Address.
+ * Represents an IEEE 802.15.4 Extended Address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -412,7 +412,7 @@ private:
 };
 
 /**
- * This structure represents two MAC addresses corresponding to source and destination.
+ * Represents two MAC addresses corresponding to source and destination.
  *
  */
 struct Addresses
@@ -422,7 +422,7 @@ struct Addresses
 };
 
 /**
- * This structure represents two PAN IDs corresponding to source and destination.
+ * Represents two PAN IDs corresponding to source and destination.
  *
  */
 struct PanIds
