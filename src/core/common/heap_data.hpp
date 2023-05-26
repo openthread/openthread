@@ -74,7 +74,7 @@ public:
     ~Data(void) { Free(); }
 
     /**
-     * This method indicates whether or not the `Heap::Data` is null (i.e., it was never successfully set or it was
+     * Indicates whether or not the `Heap::Data` is null (i.e., it was never successfully set or it was
      * freed).
      *
      * @retval TRUE  The `Heap::Data` is null.
@@ -84,7 +84,7 @@ public:
     bool IsNull(void) const { return (mData.GetBytes() == nullptr); }
 
     /**
-     * This method returns a pointer to the `Heap::Data` bytes buffer.
+     * Returns a pointer to the `Heap::Data` bytes buffer.
      *
      * @returns A pointer to data buffer or `nullptr` if the `Heap::Data` is null (never set or freed).
      *
@@ -92,7 +92,7 @@ public:
     const uint8_t *GetBytes(void) const { return mData.GetBytes(); }
 
     /**
-     * This method returns the `Heap::Data` length.
+     * Returns the `Heap::Data` length.
      *
      * @returns The data length (number of bytes) or zero if the `HeapData` is null.
      *
@@ -100,7 +100,7 @@ public:
     uint16_t GetLength(void) const { return mData.GetLength(); }
 
     /**
-     * This method sets the `Heap::Data` from the content of a given buffer.
+     * Sets the `Heap::Data` from the content of a given buffer.
      *
      * @param[in] aBuffer     The buffer to copy bytes from.
      * @param[in] aLength     The buffer length (number of bytes).
@@ -112,7 +112,7 @@ public:
     Error SetFrom(const uint8_t *aBuffer, uint16_t aLength);
 
     /**
-     * This method sets the `Heap::Data` from the content of a given message.
+     * Sets the `Heap::Data` from the content of a given message.
      *
      * The bytes are copied from current offset in @p aMessage till the end of the message.
      *
@@ -125,7 +125,7 @@ public:
     Error SetFrom(const Message &aMessage);
 
     /**
-     * This method sets the `Heap::Data` from the content of a given message read at a given offset up to a given
+     * Sets the `Heap::Data` from the content of a given message read at a given offset up to a given
      * length.
      *
      * @param[in] aMessage    The message to read and copy bytes from.
@@ -141,7 +141,7 @@ public:
     Error SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
-     * This method sets the `Heap::Data` from another one (move semantics).
+     * Sets the `Heap::Data` from another one (move semantics).
      *
      * @param[in] aData   The other `Heap::Data` to set from (rvalue reference).
      *
@@ -149,7 +149,7 @@ public:
     void SetFrom(Data &&aData);
 
     /**
-     * This method appends the bytes from `Heap::Data` to a given message.
+     * Appends the bytes from `Heap::Data` to a given message.
      *
      * @param[in] aMessage   The message to append the bytes into.
      *
@@ -160,7 +160,7 @@ public:
     Error CopyBytesTo(Message &aMessage) const { return aMessage.AppendBytes(mData.GetBytes(), mData.GetLength()); }
 
     /**
-     * This method copies the bytes from `Heap::Data` into a given buffer.
+     * Copies the bytes from `Heap::Data` into a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough space for the current data length.
      *
@@ -170,7 +170,7 @@ public:
     void CopyBytesTo(uint8_t *aBuffer) const { return mData.CopyBytesTo(aBuffer); }
 
     /**
-     * This method frees any buffer allocated by the `Heap::Data`.
+     * Frees any buffer allocated by the `Heap::Data`.
      *
      * The `Heap::Data` destructor will automatically call `Free()`. This method allows caller to free the buffer
      * explicitly.

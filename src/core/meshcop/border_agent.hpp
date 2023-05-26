@@ -113,7 +113,7 @@ public:
 #endif
 
     /**
-     * This method gets the UDP port of this service.
+     * Gets the UDP port of this service.
      *
      * @returns  UDP port number.
      *
@@ -121,19 +121,19 @@ public:
     uint16_t GetUdpPort(void) const;
 
     /**
-     * This method starts the Border Agent service.
+     * Starts the Border Agent service.
      *
      */
     void Start(void);
 
     /**
-     * This method stops the Border Agent service.
+     * Stops the Border Agent service.
      *
      */
     void Stop(void);
 
     /**
-     * This method gets the state of the Border Agent service.
+     * Gets the state of the Border Agent service.
      *
      * @returns The state of the Border Agent service.
      *
@@ -141,13 +141,13 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * This method applies the Mesh Local Prefix.
+     * Applies the Mesh Local Prefix.
      *
      */
     void ApplyMeshLocalPrefix(void);
 
     /**
-     * This method returns the UDP Proxy port to which the commissioner is currently
+     * Returns the UDP Proxy port to which the commissioner is currently
      * bound.
      *
      * @returns  The current UDP Proxy port or 0 if no Proxy Transmit has been received yet.

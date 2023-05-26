@@ -53,7 +53,7 @@ template <typename Type> class Unequatable
 {
 public:
     /**
-     * This method overloads operator `!=` to evaluate whether or not two instances of `Type` are equal.
+     * Overloads operator `!=` to evaluate whether or not two instances of `Type` are equal.
      *
      * This is implemented in terms of an existing `==` overload provided by `Type` class itself.
      *
@@ -79,7 +79,7 @@ template <typename Type> class Equatable : public Unequatable<Type>
 {
 public:
     /**
-     * This method overloads operator `==` to evaluate whether or not two instances of `Type` are equal.
+     * Overloads operator `==` to evaluate whether or not two instances of `Type` are equal.
      *
      * @param[in]  aOther  The other `Type` instance to compare with.
      *

@@ -84,7 +84,7 @@ public:
     explicit TimeTicker(Instance &aInstance);
 
     /**
-     * This method registers a receiver with `TimeTicker` to receive periodic ticks.
+     * Registers a receiver with `TimeTicker` to receive periodic ticks.
      *
      * @param[in] aReceiver   A tick receiver identifier.
      *
@@ -92,7 +92,7 @@ public:
     void RegisterReceiver(Receiver aReceiver);
 
     /**
-     * This method unregisters a receiver with `TimeTicker` to receive periodic ticks.
+     * Unregisters a receiver with `TimeTicker` to receive periodic ticks.
      *
      * @param[in] aReceiver   A tick receiver identifier.
      *
@@ -100,7 +100,7 @@ public:
     void UnregisterReceiver(Receiver aReceiver);
 
     /**
-     * This method indicates whether a receiver is registered with `TimeTicker` to receive periodic ticks.
+     * Indicates whether a receiver is registered with `TimeTicker` to receive periodic ticks.
      *
      * @param[in] aReceiver   A tick receiver identifier.
      *

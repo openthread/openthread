@@ -87,7 +87,7 @@ public:
     explicit Time(uint32_t aValue) { SetValue(aValue); }
 
     /**
-     * This method gets the numeric time value associated with the `Time` object.
+     * Gets the numeric time value associated with the `Time` object.
      *
      * @returns The numeric `Time` value.
      *
@@ -95,7 +95,7 @@ public:
     uint32_t GetValue(void) const { return mValue; }
 
     /**
-     * This method sets the numeric time value.
+     * Sets the numeric time value.
      *
      * @param[in] aValue   The numeric time value.
      *
@@ -103,7 +103,7 @@ public:
     void SetValue(uint32_t aValue) { mValue = aValue; }
 
     /**
-     * This method calculates the time duration between two `Time` instances.
+     * Calculates the time duration between two `Time` instances.
      *
      * @note Expression `(t1 - t2)` returns the duration of the interval starting from `t2` and ending at `t1`. When
      * calculating the duration, `t2 is assumed to be in the past relative to `t1`. The duration calculation correctly
@@ -118,7 +118,7 @@ public:
     uint32_t operator-(const Time &aOther) const { return mValue - aOther.mValue; }
 
     /**
-     * This method returns a new `Time` which is ahead of this `Time` object by a given duration.
+     * Returns a new `Time` which is ahead of this `Time` object by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -128,7 +128,7 @@ public:
     Time operator+(uint32_t aDuration) const { return Time(mValue + aDuration); }
 
     /**
-     * This method returns a new `Time` which is behind this `Time` object by a given duration.
+     * Returns a new `Time` which is behind this `Time` object by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -138,7 +138,7 @@ public:
     Time operator-(uint32_t aDuration) const { return Time(mValue - aDuration); }
 
     /**
-     * This method moves this `Time` object forward by a given duration.
+     * Moves this `Time` object forward by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -146,7 +146,7 @@ public:
     void operator+=(uint32_t aDuration) { mValue += aDuration; }
 
     /**
-     * This method moves this `Time` object backward by a given duration.
+     * Moves this `Time` object backward by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -154,7 +154,7 @@ public:
     void operator-=(uint32_t aDuration) { mValue -= aDuration; }
 
     /**
-     * This method indicates whether two `Time` instances are equal.
+     * Indicates whether two `Time` instances are equal.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -165,7 +165,7 @@ public:
     bool operator==(const Time &aOther) const { return mValue == aOther.mValue; }
 
     /**
-     * This method indicates whether this `Time` instance is strictly before another one.
+     * Indicates whether this `Time` instance is strictly before another one.
      *
      * @note The comparison operators correctly take into account the wrapping of `Time` numeric value. For a given
      * `Time` instance `t0`, any `Time` instance `t` where `(t - t0)` is less than half the range of `uint32_t` type
@@ -182,7 +182,7 @@ public:
     bool operator<(const Time &aOther) const { return SerialNumber::IsLess(mValue, aOther.mValue); }
 
     /**
-     * This method indicates whether this `Time` instance is after or equal to another one.
+     * Indicates whether this `Time` instance is after or equal to another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -193,7 +193,7 @@ public:
     bool operator>=(const Time &aOther) const { return !(*this < aOther); }
 
     /**
-     * This method indicates whether this `Time` instance is before or equal to another one.
+     * Indicates whether this `Time` instance is before or equal to another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -204,7 +204,7 @@ public:
     bool operator<=(const Time &aOther) const { return (aOther >= *this); }
 
     /**
-     * This method indicates whether this `Time` instance is strictly after another one.
+     * Indicates whether this `Time` instance is strictly after another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -215,7 +215,7 @@ public:
     bool operator>(const Time &aOther) const { return (aOther < *this); }
 
     /**
-     * This method returns a new `Time` instance which is in distant future relative to current `Time` object.
+     * Returns a new `Time` instance which is in distant future relative to current `Time` object.
      *
      * The returned distance future `Time` is guaranteed to be equal or after (as defined by comparison operator `<=`)
      * any other `Time` which is after this `Time` object, i.e., for any `t` for which we have `*this <= t`, it is
@@ -227,7 +227,7 @@ public:
     Time GetDistantFuture(void) const { return Time(mValue + kDistantFuture); }
 
     /**
-     * This method returns a new `Time` instance which is in distant past relative to current `Time` object.
+     * Returns a new `Time` instance which is in distant past relative to current `Time` object.
      *
      * The returned distance past `Time` is guaranteed to be equal or before (as defined by comparison operator `>=`)
      * any other `Time` which is before this `Time` object, i.e., for any `t` for which we have `*this >= t`, it is

@@ -119,7 +119,7 @@ typedef enum
 } otBorderRoutingState;
 
 /**
- * This method initializes the Border Routing Manager on given infrastructure interface.
+ * Initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
  *

@@ -82,7 +82,7 @@ public:
     {
     public:
         /**
-         * This method returns the length (in bytes) of server data.
+         * Returns the length (in bytes) of server data.
          *
          * @returns The server data length in bytes.
          *
@@ -90,7 +90,7 @@ public:
         uint8_t GetLength(void) const { return sizeof(ServerData); }
 
         /**
-         * This method returns the sequence number of Backbone Router.
+         * Returns the sequence number of Backbone Router.
          *
          * @returns  The sequence number of the Backbone Router.
          *
@@ -98,7 +98,7 @@ public:
         uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
 
         /**
-         * This method sets the sequence number of Backbone Router.
+         * Sets the sequence number of Backbone Router.
          *
          * @param[in]  aSequenceNumber  The sequence number of Backbone Router.
          *
@@ -106,7 +106,7 @@ public:
         void SetSequenceNumber(uint8_t aSequenceNumber) { mSequenceNumber = aSequenceNumber; }
 
         /**
-         * This method returns the Registration Delay (in seconds) of Backbone Router.
+         * Returns the Registration Delay (in seconds) of Backbone Router.
          *
          * @returns The BBR Registration Delay (in seconds) of Backbone Router.
          *
@@ -114,7 +114,7 @@ public:
         uint16_t GetReregistrationDelay(void) const { return HostSwap16(mReregistrationDelay); }
 
         /**
-         * This method sets the Registration Delay (in seconds) of Backbone Router.
+         * Sets the Registration Delay (in seconds) of Backbone Router.
          *
          * @param[in]  aReregistrationDelay  The Registration Delay (in seconds) of Backbone Router.
          *
@@ -125,7 +125,7 @@ public:
         }
 
         /**
-         * This method returns the multicast listener report timeout (in seconds) of Backbone Router.
+         * Returns the multicast listener report timeout (in seconds) of Backbone Router.
          *
          * @returns The multicast listener report timeout (in seconds) of Backbone Router.
          *
@@ -133,7 +133,7 @@ public:
         uint32_t GetMlrTimeout(void) const { return HostSwap32(mMlrTimeout); }
 
         /**
-         * This method sets multicast listener report timeout (in seconds) of Backbone Router.
+         * Sets multicast listener report timeout (in seconds) of Backbone Router.
          *
          * @param[in]  aMlrTimeout  The multicast listener report timeout (in seconds) of Backbone Router.
          *
@@ -200,7 +200,7 @@ public:
         }
 
         /**
-         * This method returns the length (in bytes) of service data.
+         * Returns the length (in bytes) of service data.
          *
          * @returns The data length in bytes.
          *
@@ -208,7 +208,7 @@ public:
         uint8_t GetLength(void) const { return sizeof(ServiceData); }
 
         /**
-         * This method returns the sequence number.
+         * Returns the sequence number.
          *
          * @returns The sequence number.
          *
@@ -285,7 +285,7 @@ public:
         }
 
         /**
-         * This method returns the length (in bytes) of service data.
+         * Returns the length (in bytes) of service data.
          *
          * @returns The data length in bytes.
          *
@@ -293,7 +293,7 @@ public:
         uint8_t GetLength(void) const { return sizeof(ServiceData); }
 
         /**
-         * This method returns the IPv6 address.
+         * Returns the IPv6 address.
          *
          * @returns The IPv6 address
          *
@@ -301,7 +301,7 @@ public:
         const Ip6::Address &GetAddress(void) const { return mAddress; }
 
         /**
-         * This method returns the port number.
+         * Returns the port number.
          *
          * @returns The port number.
          *
@@ -336,7 +336,7 @@ public:
         }
 
         /**
-         * This method returns the length (in bytes) of server data.
+         * Returns the length (in bytes) of server data.
          *
          * @returns The data length in bytes.
          *
@@ -344,7 +344,7 @@ public:
         uint8_t GetLength(void) const { return sizeof(ServerData); }
 
         /**
-         * This method returns the IPv6 address.
+         * Returns the IPv6 address.
          *
          * @returns The IPv6 address
          *
@@ -352,7 +352,7 @@ public:
         const Ip6::Address &GetAddress(void) const { return mAddress; }
 
         /**
-         * This method returns the port number.
+         * Returns the port number.
          *
          * @returns The port number.
          *
@@ -394,7 +394,7 @@ public:
         }
 
         /**
-         * This method resets the iterator to start from beginning.
+         * Resets the iterator to start from beginning.
          *
          */
         void Reset(void)
@@ -421,7 +421,7 @@ public:
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     /**
-     * This method adds a Thread Service entry to the local Thread Network Data.
+     * Adds a Thread Service entry to the local Thread Network Data.
      *
      * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format with a non-empty and potentially non-const server data format (provided as input parameter).
@@ -448,7 +448,7 @@ public:
     }
 
     /**
-     * This method adds a Thread Service entry to the local Thread Network Data.
+     * Adds a Thread Service entry to the local Thread Network Data.
      *
      * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service data
      * format (provided as input parameter) with an empty server data.
@@ -473,7 +473,7 @@ public:
     }
 
     /**
-     * This method removes a Thread Service entry from the local Thread Network Data.
+     * Removes a Thread Service entry from the local Thread Network Data.
      *
      * This version of `Remove<SeviceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format.
@@ -493,7 +493,7 @@ public:
     }
 
     /**
-     * This method removes a Thread Service entry from the local Thread Network Data.
+     * Removes a Thread Service entry from the local Thread Network Data.
      *
      * This version of `Remove<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service
      * data format (provided as input parameter).
@@ -518,7 +518,7 @@ public:
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     /**
-     * This method gets the Service ID for the specified service from Thread Network Data.
+     * Gets the Service ID for the specified service from Thread Network Data.
      *
      * The template type `ServiceType` has the following requirements:
      *   - It MUST have a constant `ServiceType::kServiceNumber` specifying the service number.
@@ -539,7 +539,7 @@ public:
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     /**
-     * This method gets the Primary Backbone Router (PBBR) in the Thread Network Data.
+     * Gets the Primary Backbone Router (PBBR) in the Thread Network Data.
      *
      * @param[out]  aConfig      The Primary Backbone Router configuration.
      *
@@ -548,7 +548,7 @@ public:
 #endif
 
     /**
-     * This method gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Anycast Address" entries.
+     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Anycast Address" entries.
      *
      * To get the first entry, @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).
@@ -563,7 +563,7 @@ public:
     Error GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info &aInfo) const;
 
     /**
-     * This method finds the preferred DNS/SRP info among all the Thread Network Data "DNS/SRP Service Anycast Address"
+     * Finds the preferred DNS/SRP info among all the Thread Network Data "DNS/SRP Service Anycast Address"
      * entries.
      *
      * The preferred entry is determined based on the sequence number value where a larger value (in the sense
@@ -578,7 +578,7 @@ public:
     Error FindPreferredDnsSrpAnycastInfo(DnsSrpAnycast::Info &aInfo) const;
 
     /**
-     * This method gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Unicast Address" entries.
+     * Gets the next DNS/SRP info from the Thread Network Data "DNS/SRP Service Unicast Address" entries.
      *
      * To get the first entry @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).

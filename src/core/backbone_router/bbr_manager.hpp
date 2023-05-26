@@ -76,7 +76,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     /**
-     * This method returns the NdProxy Table.
+     * Returns the NdProxy Table.
      *
      * @returns The NdProxy Table.
      *
@@ -86,7 +86,7 @@ public:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * This method configures response status for next DUA registration.
+     * Configures response status for next DUA registration.
      *
      * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      *       Only used for test and certification.
@@ -100,7 +100,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     /**
-     * This method configures response status for next Multicast Listener Registration.
+     * Configures response status for next Multicast Listener Registration.
      *
      * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      *       Only used for test and certification.
@@ -114,7 +114,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     /**
-     * This method gets the Multicast Listeners Table.
+     * Gets the Multicast Listeners Table.
      *
      * @returns The Multicast Listeners Table.
      *
@@ -123,7 +123,7 @@ public:
 #endif
 
     /**
-     * This method returns if messages destined to a given Domain Unicast Address should be forwarded to the Backbone
+     * Returns if messages destined to a given Domain Unicast Address should be forwarded to the Backbone
      * link.
      *
      * @param aAddress The Domain Unicast Address.
@@ -135,7 +135,7 @@ public:
     bool ShouldForwardDuaToBackbone(const Ip6::Address &aAddress);
 
     /**
-     * This method returns a reference to the Backbone TMF agent.
+     * Returns a reference to the Backbone TMF agent.
      *
      * @returns A reference to the Backbone TMF agent.
      *
@@ -143,7 +143,7 @@ public:
     BackboneTmfAgent &GetBackboneTmfAgent(void) { return mBackboneTmfAgent; }
 
     /**
-     * This method sends BB.qry on the Backbone link.
+     * Sends BB.qry on the Backbone link.
      *
      * @param[in]  aDua     The Domain Unicast Address to query.
      * @param[in]  aRloc16  The short address of the address resolution initiator or `Mac::kShortAddrInvalid` for
@@ -157,7 +157,7 @@ public:
     Error SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
 
     /**
-     * This method send a Proactive Backbone Notification (PRO_BB.ntf) on the Backbone link.
+     * Send a Proactive Backbone Notification (PRO_BB.ntf) on the Backbone link.
      *
      * @param[in] aDua                          The Domain Unicast Address to notify.
      * @param[in] aMeshLocalIid                 The Mesh-Local IID to notify.

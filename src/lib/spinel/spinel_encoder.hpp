@@ -66,7 +66,7 @@ public:
     }
 
     /**
-     * This method begins a new frame to be added/written to the frame buffer.
+     * Begins a new frame to be added/written to the frame buffer.
      *
      * If there is a previous frame being written (for which `EndFrame()` has not yet been called), calling
      * `BeginFrame()` will discard and clear the previous unfinished frame.
@@ -80,7 +80,7 @@ public:
     otError BeginFrame(Spinel::Buffer::Priority aPriority);
 
     /**
-     * This method begins a new spinel command frame to be added/written to the frame buffer.
+     * Begins a new spinel command frame to be added/written to the frame buffer.
      *
      * If there is a previous frame being written (for which `EndFrame()` has not yet been called), calling
      * `BeginFrame()` will discard and clear the previous unfinished frame.
@@ -98,7 +98,7 @@ public:
     otError BeginFrame(uint8_t aHeader, unsigned int aCommand);
 
     /**
-     * This method begins a new spinel property update command frame to be added/written to the frame buffer.
+     * Begins a new spinel property update command frame to be added/written to the frame buffer.
      *
      * If there is a previous frame being written (for which `EndFrame()` has not yet been called), calling
      * `BeginFrame()` will discard and clear the previous unfinished frame.
@@ -106,7 +106,7 @@ public:
      * The spinel transaction ID (TID) in the given spinel header is used to determine the priority level of the new
      * frame. Non-zero TID value indicates that the frame is a response and therefore it uses higher priority level.
      *
-     * This method saves the write position before the property key (see also `SavePosition()`) so that if fetching the
+     * Saves the write position before the property key (see also `SavePosition()`) so that if fetching the
      * property fails and the property key should be switched to `LAST_STATUS` with an error status, the saved
      * position can be used to update the property key in the frame (see also `OverwriteWithLastStatusError()`)
      *
@@ -121,12 +121,12 @@ public:
     otError BeginFrame(uint8_t aHeader, unsigned int aCommand, spinel_prop_key_t aKey);
 
     /**
-     * This method overwrites the property key with `LAST_STATUS` in a property update command frame.
+     * Overwrites the property key with `LAST_STATUS` in a property update command frame.
      *
-     * This method should be only used after a successful `BeginFrame(aHeader, aCommand, aPropertyKey)`, otherwise, its
+     * Should be only used after a successful `BeginFrame(aHeader, aCommand, aPropertyKey)`, otherwise, its
      * behavior is undefined.
      *
-     * This method moves the write position back to saved position by `BeginFrame()` and replaces the property key
+     * Moves the write position back to saved position by `BeginFrame()` and replaces the property key
      * `SPINEL_PROP_LAST_STATUS` and writes the given spinel status error.
      *
      * @param[in] aStatus               Spinel error status
@@ -138,7 +138,7 @@ public:
     otError OverwriteWithLastStatusError(spinel_status_t aStatus);
 
     /**
-     * This method finalizes/ends the current frame being written to the buffer.
+     * Finalizes/ends the current frame being written to the buffer.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new frame. Otherwise, this method
      * does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -146,7 +146,7 @@ public:
      * If no buffer space is available, this method will discard and clear the frame and return error status
      * `OT_ERROR_NO_BUFS`.
      *
-     * This method ensures to close any open structure (previously opened using `OpenStruct()` but not closed using
+     * Ensures to close any open structure (previously opened using `OpenStruct()` but not closed using
      * `CloseStruct()`).
      *
      * @retval OT_ERROR_NONE            Successfully ended the input frame.
@@ -157,7 +157,7 @@ public:
     otError EndFrame(void);
 
     /**
-     * This method encodes and writes a boolean value to current input frame.
+     * Encodes and writes a boolean value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -175,7 +175,7 @@ public:
     otError WriteBool(bool aBool) { return mNcpBuffer.InFrameFeedByte(aBool ? 0x01 : 0x00); }
 
     /**
-     * This method encodes and writes a `uint8_t` value to current input frame.
+     * Encodes and writes a `uint8_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -193,7 +193,7 @@ public:
     otError WriteUint8(uint8_t aUint8) { return mNcpBuffer.InFrameFeedByte(aUint8); }
 
     /**
-     * This method encodes and writes an `int8_t` value to current input frame.
+     * Encodes and writes an `int8_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -211,7 +211,7 @@ public:
     otError WriteInt8(int8_t aInt8) { return WriteUint8(static_cast<uint8_t>(aInt8)); }
 
     /**
-     * This method encodes and writes a `uint16_t` value to current input frame.
+     * Encodes and writes a `uint16_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -229,7 +229,7 @@ public:
     otError WriteUint16(uint16_t aUint16);
 
     /**
-     * This method encodes and writes an `int16_t` value to current input frame.
+     * Encodes and writes an `int16_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -247,7 +247,7 @@ public:
     otError WriteInt16(int16_t aInt16) { return WriteUint16(static_cast<uint16_t>(aInt16)); }
 
     /**
-     * This method encodes and writes a `uint32_t` value to current input frame.
+     * Encodes and writes a `uint32_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -265,7 +265,7 @@ public:
     otError WriteUint32(uint32_t aUint32);
 
     /**
-     * This method encodes and writes an `int32_t` value to current input frame.
+     * Encodes and writes an `int32_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -283,7 +283,7 @@ public:
     otError WriteInt32(int32_t aInt32) { return WriteUint32(static_cast<uint32_t>(aInt32)); }
 
     /**
-     * This method encodes and writes a `uint64_t` value to current input frame.
+     * Encodes and writes a `uint64_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -301,7 +301,7 @@ public:
     otError WriteUint64(uint64_t aUint64);
 
     /**
-     * This method encodes and writes an `int64_t` value to current input frame.
+     * Encodes and writes an `int64_t` value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -319,7 +319,7 @@ public:
     otError WriteInt64(int64_t aInt64) { return WriteUint64(static_cast<uint64_t>(aInt64)); }
 
     /**
-     * This method encodes (using spinel packed integer format) and writes a value to current input frame.
+     * Encodes (using spinel packed integer format) and writes a value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -337,7 +337,7 @@ public:
     otError WriteUintPacked(unsigned int aUint);
 
     /**
-     * This method encodes and writes an IPv6 address to current input frame.
+     * Encodes and writes an IPv6 address to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -355,7 +355,7 @@ public:
     otError WriteIp6Address(const spinel_ipv6addr_t &aIp6Addr) { return WriteIp6Address(aIp6Addr.bytes); }
 
     /**
-     * This method encodes and writes an IPv6 address to current input frame.
+     * Encodes and writes an IPv6 address to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -373,7 +373,7 @@ public:
     otError WriteIp6Address(const otIp6Address &aIp6Addr) { return WriteIp6Address(aIp6Addr.mFields.m8); }
 
     /**
-     * This method encodes and writes an IPv6 address to current input frame.
+     * Encodes and writes an IPv6 address to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -391,7 +391,7 @@ public:
     otError WriteIp6Address(const uint8_t *aIp6AddrBuf) { return WriteData(aIp6AddrBuf, sizeof(spinel_ipv6addr_t)); }
 
     /**
-     * This method encodes and writes an EUI64 value to current input frame.
+     * Encodes and writes an EUI64 value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -409,7 +409,7 @@ public:
     otError WriteEui64(const spinel_eui64_t &aEui64) { return WriteEui64(aEui64.bytes); }
 
     /**
-     * This method encodes and writes an EUI64 value to current input frame.
+     * Encodes and writes an EUI64 value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -427,7 +427,7 @@ public:
     otError WriteEui64(const otExtAddress &aExtAddress) { return WriteEui64(aExtAddress.m8); }
 
     /**
-     * This method encodes and writes an EUI64 value to current input frame.
+     * Encodes and writes an EUI64 value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -445,7 +445,7 @@ public:
     otError WriteEui64(const uint8_t *aEui64) { return WriteData(aEui64, sizeof(spinel_eui64_t)); }
 
     /**
-     * This method encodes and writes an EUI48 value to current input frame.
+     * Encodes and writes an EUI48 value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -463,7 +463,7 @@ public:
     otError WriteEui48(const spinel_eui48_t &aEui48) { return WriteEui48(aEui48.bytes); }
 
     /**
-     * This method encodes and writes an EUI48 value to current input frame.
+     * Encodes and writes an EUI48 value to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -481,7 +481,7 @@ public:
     otError WriteEui48(const uint8_t *aEui48) { return WriteData(aEui48, sizeof(spinel_eui48_t)); }
 
     /**
-     * This method encodes and writes a UTF8 string to current input frame.
+     * Encodes and writes a UTF8 string to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -499,7 +499,7 @@ public:
     otError WriteUtf8(const char *aUtf8);
 
     /**
-     * This method encodes and writes a sequence of bytes to current input frame.
+     * Encodes and writes a sequence of bytes to current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -518,7 +518,7 @@ public:
     otError WriteData(const uint8_t *aData, uint16_t aDataLen) { return mNcpBuffer.InFrameFeedData(aData, aDataLen); }
 
     /**
-     * This method encodes and writes a data blob (sequence of bytes) with its length prepended before the data.
+     * Encodes and writes a data blob (sequence of bytes) with its length prepended before the data.
      *
      * The length of the data (in bytes) is prepended (with the length encoded as a `uint16`). The size of the length
      * field is not included in the length. This is similar to `SPINEL_DATATYPE_DATA_WLEN` type.
@@ -541,7 +541,7 @@ public:
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     /**
-     * This method adds a message to the current input frame.
+     * Adds a message to the current input frame.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -567,7 +567,7 @@ public:
 #endif
 
     /**
-     * This method encodes and writes a set of variables to the current input frame using a given spinel packing format
+     * Encodes and writes a set of variables to the current input frame using a given spinel packing format
      * string.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
@@ -590,7 +590,7 @@ public:
     otError WritePacked(const char *aPackFormat, ...);
 
     /**
-     * This method encodes and writes a set of variables to the current input frame using a given spinel packing format
+     * Encodes and writes a set of variables to the current input frame using a given spinel packing format
      * string.
      *
      * Before using this method `BeginFrame()` must be called to start and prepare a new input frame. Otherwise, this
@@ -613,7 +613,7 @@ public:
     otError WriteVPacked(const char *aPackFormat, va_list aArgs);
 
     /**
-     * This method opens a struct in the current input frame.
+     * Opens a struct in the current input frame.
      *
      * After a successful call to this method, all the subsequent `Write<SomeType>()` methods add the field/value to
      * the current open struct until the struct is closed using `CloseStruct()` method. Structures can be nested. Up to
@@ -634,7 +634,7 @@ public:
     otError OpenStruct(void);
 
     /**
-     * This method closes the most recently opened struct (using `OpenStruct()`) in the current input frame.
+     * Closes the most recently opened struct (using `OpenStruct()`) in the current input frame.
      *
      * Each call to `CloseStruct()` must correspond to an earlier successfully opened struct. If a frame is ended using
      * `EndFrame()` with remaining open structs, the `EndFrame()` method will close all the remaining structs.
@@ -650,7 +650,7 @@ public:
     otError CloseStruct(void);
 
     /**
-     * This method saves the current write position in the input frame.
+     * Saves the current write position in the input frame.
      *
      * The saved position can later be used to discard a portion of written/encoded frame and move the write pointer
      * back to the saved position (using `ResetToSaved()`).
@@ -662,7 +662,7 @@ public:
     otError SavePosition(void);
 
     /**
-     * This method resets the write position of input frame back to a previously saved position. Any added content
+     * Resets the write position of input frame back to a previously saved position. Any added content
      * after the write position is discarded.
      *
      * The saved position must belong to the same input frame saved earlier with `SavePosition()`. This method cannot

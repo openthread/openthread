@@ -149,7 +149,7 @@ void otNcpPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
 typedef bool (*otNcpDelegateAllowPeekPoke)(uint32_t aAddress, uint16_t aCount);
 
 /**
- * This method registers peek/poke delegate functions with NCP module.
+ * Registers peek/poke delegate functions with NCP module.
  *
  * The delegate functions are called by NCP module to decide whether to allow peek or poke of a specific memory region.
  * If the delegate pointer is set to NULL, it allows peek/poke operation for any address.

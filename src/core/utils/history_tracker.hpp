@@ -116,7 +116,7 @@ public:
 
     public:
         /**
-         * This method initializes an `Iterator`
+         * Initializes an `Iterator`
          *
          * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
          * the beginning of the list.
@@ -150,7 +150,7 @@ public:
     explicit HistoryTracker(Instance &aInstance);
 
     /**
-     * This method iterates over the entries in the network info history list.
+     * Iterates over the entries in the network info history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -167,7 +167,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the unicast address history list.
+     * Iterates over the entries in the unicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -184,7 +184,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the multicast address history list.
+     * Iterates over the entries in the multicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -201,7 +201,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the RX history list.
+     * Iterates over the entries in the RX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -218,7 +218,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the TX history list.
+     * Iterates over the entries in the TX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.

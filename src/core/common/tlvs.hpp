@@ -64,7 +64,7 @@ public:
     static constexpr uint8_t kBaseTlvMaxLength = OT_NETWORK_BASE_TLV_MAX_LENGTH;
 
     /**
-     * This method returns the Type value.
+     * Returns the Type value.
      *
      * @returns The Type value.
      *
@@ -72,7 +72,7 @@ public:
     uint8_t GetType(void) const { return mType; }
 
     /**
-     * This method sets the Type value.
+     * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      *
@@ -80,7 +80,7 @@ public:
     void SetType(uint8_t aType) { mType = aType; }
 
     /**
-     * This method indicates whether the TLV is an Extended TLV.
+     * Indicates whether the TLV is an Extended TLV.
      *
      * @retval TRUE  If the TLV is an Extended TLV.
      * @retval FALSE If the TLV is not an Extended TLV.
@@ -89,7 +89,7 @@ public:
     bool IsExtended(void) const { return (mLength == kExtendedLength); }
 
     /**
-     * This method returns the Length value.
+     * Returns the Length value.
      *
      * @note This method should be used when TLV is not an Extended TLV, otherwise the returned length from this method
      * would not be correct. When TLV is an Extended TLV, the TLV should be down-casted to the `ExtendedTlv` type and
@@ -101,7 +101,7 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method sets the Length value.
+     * Sets the Length value.
      *
      * @param[in]  aLength  The Length value.
      *
@@ -109,9 +109,9 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
-     * This method returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
+     * Returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
      *
-     * This method correctly returns the TLV size independent of whether the TLV is an Extended TLV or not.
+     * Correctly returns the TLV size independent of whether the TLV is an Extended TLV or not.
      *
      * @returns The total size include Type, Length, and Value fields.
      *
@@ -119,9 +119,9 @@ public:
     uint32_t GetSize(void) const;
 
     /**
-     * This method returns a pointer to the Value.
+     * Returns a pointer to the Value.
      *
-     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     * Can be used independent of whether the TLV is an Extended TLV or not.
      *
      * @returns A pointer to the value.
      *
@@ -129,9 +129,9 @@ public:
     uint8_t *GetValue(void);
 
     /**
-     * This method returns a pointer to the Value.
+     * Returns a pointer to the Value.
      *
-     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     * Can be used independent of whether the TLV is an Extended TLV or not.
      *
      * @returns A pointer to the value.
      *
@@ -139,9 +139,9 @@ public:
     const uint8_t *GetValue(void) const;
 
     /**
-     * This method returns a pointer to the next TLV.
+     * Returns a pointer to the next TLV.
      *
-     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
+     * Correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
@@ -149,9 +149,9 @@ public:
     Tlv *GetNext(void) { return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + GetSize()); }
 
     /**
-     * This method returns a pointer to the next TLV.
+     * Returns a pointer to the next TLV.
      *
-     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
+     * Correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
@@ -162,7 +162,7 @@ public:
     }
 
     /**
-     * This method appends a TLV to the end of the message.
+     * Appends a TLV to the end of the message.
      *
      * On success, this method grows the message by the size of the TLV.
      *
@@ -177,7 +177,7 @@ public:
     /**
      * This static method reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
-     * This method can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    The message to read from.
      * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
@@ -250,7 +250,7 @@ public:
     /**
      * This static method searches for and reads a requested TLV out of a given message.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -266,7 +266,7 @@ public:
     /**
      * This static method searches for and reads a requested TLV out of a given message.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @tparam      TlvType     The TlvType to search for (must be a sub-class of `Tlv`).
      *
@@ -285,7 +285,7 @@ public:
     /**
      * This static method obtains the offset of a TLV within @p aMessage.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -300,7 +300,7 @@ public:
     /**
      * This static method finds the offset and length of a given TLV type.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage      A reference to the message.
      * @param[in]   aType         The Type value to search for.
@@ -531,13 +531,13 @@ class ExtendedTlv : public Tlv
 {
 public:
     /**
-     * This method returns the Length value.
+     * Returns the Length value.
      *
      */
     uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
     /**
-     * This method sets the Length value.
+     * Sets the Length value.
      *
      * @param[in]  aLength  The Length value.
      *

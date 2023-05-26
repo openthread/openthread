@@ -85,19 +85,19 @@ public:
     }
 
     /**
-     * This method sets the local socket port to TMF port.
+     * Sets the local socket port to TMF port.
      *
      */
     void SetSockPortToTmf(void) { SetSockPort(kUdpPort); }
 
     /**
-     * This method sets the local socket address to mesh-local RLOC address.
+     * Sets the local socket address to mesh-local RLOC address.
      *
      */
     void SetSockAddrToRloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to leader ALOC.
+     * Sets the local socket address to RLOC address and the peer socket address to leader ALOC.
      *
      * @retval kErrorNone      Successfully set the addresses.
      * @retval kErrorDetached  Cannot set leader ALOC since device is currently detached.
@@ -106,7 +106,7 @@ public:
     Error SetSockAddrToRlocPeerAddrToLeaderAloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to leader RLOC.
+     * Sets the local socket address to RLOC address and the peer socket address to leader RLOC.
      *
      * @retval kErrorNone      Successfully set the addresses.
      * @retval kErrorDetached  Cannot set leader RLOC since device is currently detached.
@@ -115,14 +115,14 @@ public:
     Error SetSockAddrToRlocPeerAddrToLeaderRloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to realm-local all
+     * Sets the local socket address to RLOC address and the peer socket address to realm-local all
      * routers multicast address.
      *
      */
     void SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
+     * Sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
      * a given RLOC16.
      *
      * @param[in] aRloc16     The RLOC16 to use for peer address.
@@ -131,7 +131,7 @@ public:
     void SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to a given address.
+     * Sets the local socket address to RLOC address and the peer socket address to a given address.
      *
      * @param[in] aPeerAddress  The peer address.
      *
@@ -155,7 +155,7 @@ public:
     explicit Agent(Instance &aInstance);
 
     /**
-     * This method starts the TMF agent.
+     * Starts the TMF agent.
      *
      * @retval kErrorNone    Successfully started the CoAP service.
      * @retval kErrorFailed  Failed to start the TMF agent.
@@ -164,7 +164,7 @@ public:
     Error Start(void);
 
     /**
-     * This method indicates whether or not a message meets TMF addressing rules.
+     * Indicates whether or not a message meets TMF addressing rules.
      *
      * A TMF message MUST comply with following rules:
      *

@@ -87,7 +87,7 @@ public:
     Header(void) { Clear(); }
 
     /**
-     * This method returns the Message ID.
+     * Returns the Message ID.
      *
      * @returns The Message ID value.
      *
@@ -95,7 +95,7 @@ public:
     uint16_t GetMessageId(void) const { return HostSwap16(mMessageId); }
 
     /**
-     * This method sets the Message ID.
+     * Sets the Message ID.
      *
      * @param[in]  aMessageId The Message ID value.
      *
@@ -103,7 +103,7 @@ public:
     void SetMessageId(uint16_t aMessageId) { mMessageId = HostSwap16(aMessageId); }
 
     /**
-     * This method sets the Message ID to a crypto-secure randomly generated number.
+     * Sets the Message ID to a crypto-secure randomly generated number.
      *
      * @retval  kErrorNone     Successfully generated random Message ID.
      * @retval  kErrorFailed   Could not generate random Message ID.
@@ -122,7 +122,7 @@ public:
     };
 
     /**
-     * This method returns the type of the message.
+     * Returns the type of the message.
      *
      * @returns The type of the message.
      *
@@ -130,7 +130,7 @@ public:
     Type GetType(void) const { return static_cast<Type>((mFlags[0] & kQrFlagMask) >> kQrFlagOffset); }
 
     /**
-     * This method sets the type of the message.
+     * Sets the type of the message.
      *
      * @param[in]  aType The type of the message.
      *
@@ -156,7 +156,7 @@ public:
     };
 
     /**
-     * This method returns the type of the query.
+     * Returns the type of the query.
      *
      * @returns The type of the query.
      *
@@ -164,7 +164,7 @@ public:
     QueryType GetQueryType(void) const { return static_cast<QueryType>((mFlags[0] & kOpCodeMask) >> kOpCodeOffset); }
 
     /**
-     * This method sets the type of the query.
+     * Sets the type of the query.
      *
      * @param[in]  aType The type of the query.
      *
@@ -176,7 +176,7 @@ public:
     }
 
     /**
-     * This method specifies in response message if the responding name server is an
+     * Specifies in response message if the responding name server is an
      * authority for the domain name in question section.
      *
      * @returns True if Authoritative Answer flag (AA) is set in the header, false otherwise.
@@ -185,19 +185,19 @@ public:
     bool IsAuthoritativeAnswerFlagSet(void) const { return (mFlags[0] & kAaFlagMask) == kAaFlagMask; }
 
     /**
-     * This method clears the Authoritative Answer flag (AA) in the header.
+     * Clears the Authoritative Answer flag (AA) in the header.
      *
      */
     void ClearAuthoritativeAnswerFlag(void) { mFlags[0] &= ~kAaFlagMask; }
 
     /**
-     * This method sets the Authoritative Answer flag (AA) in the header.
+     * Sets the Authoritative Answer flag (AA) in the header.
      *
      */
     void SetAuthoritativeAnswerFlag(void) { mFlags[0] |= kAaFlagMask; }
 
     /**
-     * This method specifies if message is truncated.
+     * Specifies if message is truncated.
      *
      * @returns True if Truncation flag (TC) is set in the header, false otherwise.
      *
@@ -205,19 +205,19 @@ public:
     bool IsTruncationFlagSet(void) const { return (mFlags[0] & kTcFlagMask) == kTcFlagMask; }
 
     /**
-     * This method clears the Truncation flag (TC) in the header.
+     * Clears the Truncation flag (TC) in the header.
      *
      */
     void ClearTruncationFlag(void) { mFlags[0] &= ~kTcFlagMask; }
 
     /**
-     * This method sets the Truncation flag (TC) in the header.
+     * Sets the Truncation flag (TC) in the header.
      *
      */
     void SetTruncationFlag(void) { mFlags[0] |= kTcFlagMask; }
 
     /**
-     * This method specifies if resolver wants to direct the name server to pursue
+     * Specifies if resolver wants to direct the name server to pursue
      * the query recursively.
      *
      * @returns True if Recursion Desired flag (RD) is set in the header, false otherwise.
@@ -226,19 +226,19 @@ public:
     bool IsRecursionDesiredFlagSet(void) const { return (mFlags[0] & kRdFlagMask) == kRdFlagMask; }
 
     /**
-     * This method clears the Recursion Desired flag (RD) in the header.
+     * Clears the Recursion Desired flag (RD) in the header.
      *
      */
     void ClearRecursionDesiredFlag(void) { mFlags[0] &= ~kRdFlagMask; }
 
     /**
-     * This method sets the Recursion Desired flag (RD) in the header.
+     * Sets the Recursion Desired flag (RD) in the header.
      *
      */
     void SetRecursionDesiredFlag(void) { mFlags[0] |= kRdFlagMask; }
 
     /**
-     * This method denotes whether recursive query support is available in the name server.
+     * Denotes whether recursive query support is available in the name server.
      *
      * @returns True if Recursion Available flag (RA) is set in the header, false otherwise.
      *
@@ -246,13 +246,13 @@ public:
     bool IsRecursionAvailableFlagSet(void) const { return (mFlags[1] & kRaFlagMask) == kRaFlagMask; }
 
     /**
-     * This method clears the Recursion Available flag (RA) in the header.
+     * Clears the Recursion Available flag (RA) in the header.
      *
      */
     void ClearRecursionAvailableFlag(void) { mFlags[1] &= ~kRaFlagMask; }
 
     /**
-     * This method sets the Recursion Available flag (RA) in the header.
+     * Sets the Recursion Available flag (RA) in the header.
      *
      */
     void SetRecursionAvailableFlag(void) { mFlags[1] |= kRaFlagMask; }
@@ -281,7 +281,7 @@ public:
     };
 
     /**
-     * This method returns the response code.
+     * Returns the response code.
      *
      * @returns The response code from the header.
      *
@@ -289,7 +289,7 @@ public:
     Response GetResponseCode(void) const { return static_cast<Response>((mFlags[1] & kRCodeMask) >> kRCodeOffset); }
 
     /**
-     * This method sets the response code.
+     * Sets the response code.
      *
      * @param[in]  aResponse The type of the response.
      *
@@ -301,7 +301,7 @@ public:
     }
 
     /**
-     * This method converts a Response Code into a related `Error`.
+     * Converts a Response Code into a related `Error`.
      *
      * - kResponseSuccess (0)         : Success (no error condition)                    -> kErrorNone
      * - kResponseFormatError (1)     : Server unable to interpret due to format error  -> kErrorParse
@@ -326,7 +326,7 @@ public:
     static Error ResponseCodeToError(Response aResponse);
 
     /**
-     * This method returns the number of entries in question section.
+     * Returns the number of entries in question section.
      *
      * @returns The number of entries in question section.
      *
@@ -334,7 +334,7 @@ public:
     uint16_t GetQuestionCount(void) const { return HostSwap16(mQdCount); }
 
     /**
-     * This method sets the number of entries in question section.
+     * Sets the number of entries in question section.
      *
      * @param[in]  aCount The number of entries in question section.
      *
@@ -342,7 +342,7 @@ public:
     void SetQuestionCount(uint16_t aCount) { mQdCount = HostSwap16(aCount); }
 
     /**
-     * This method returns the number of entries in answer section.
+     * Returns the number of entries in answer section.
      *
      * @returns The number of entries in answer section.
      *
@@ -350,7 +350,7 @@ public:
     uint16_t GetAnswerCount(void) const { return HostSwap16(mAnCount); }
 
     /**
-     * This method sets the number of entries in answer section.
+     * Sets the number of entries in answer section.
      *
      * @param[in]  aCount The number of entries in answer section.
      *
@@ -358,7 +358,7 @@ public:
     void SetAnswerCount(uint16_t aCount) { mAnCount = HostSwap16(aCount); }
 
     /**
-     * This method returns the number of entries in authority records section.
+     * Returns the number of entries in authority records section.
      *
      * @returns The number of entries in authority records section.
      *
@@ -366,7 +366,7 @@ public:
     uint16_t GetAuthorityRecordCount(void) const { return HostSwap16(mNsCount); }
 
     /**
-     * This method sets the number of entries in authority records section.
+     * Sets the number of entries in authority records section.
      *
      * @param[in]  aCount The number of entries in authority records section.
      *
@@ -374,7 +374,7 @@ public:
     void SetAuthorityRecordCount(uint16_t aCount) { mNsCount = HostSwap16(aCount); }
 
     /**
-     * This method returns the number of entries in additional records section.
+     * Returns the number of entries in additional records section.
      *
      * @returns The number of entries in additional records section.
      *
@@ -382,7 +382,7 @@ public:
     uint16_t GetAdditionalRecordCount(void) const { return HostSwap16(mArCount); }
 
     /**
-     * This method sets the number of entries in additional records section.
+     * Sets the number of entries in additional records section.
      *
      * @param[in]  aCount The number of entries in additional records section.
      *
@@ -434,7 +434,7 @@ public:
     UpdateHeader(void) { SetQueryType(kQueryTypeUpdate); }
 
     /**
-     * This method returns the number of records in Zone section.
+     * Returns the number of records in Zone section.
      *
      * @returns The number of records in Zone section.
      *
@@ -442,7 +442,7 @@ public:
     uint16_t GetZoneRecordCount(void) const { return GetQuestionCount(); }
 
     /**
-     * This method sets the number of records in Zone section.
+     * Sets the number of records in Zone section.
      *
      * @param[in]  aCount The number of records in Zone section.
      *
@@ -450,7 +450,7 @@ public:
     void SetZoneRecordCount(uint16_t aCount) { SetQuestionCount(aCount); }
 
     /**
-     * This method returns the number of records in Prerequisite section.
+     * Returns the number of records in Prerequisite section.
      *
      * @returns The number of records in Prerequisite section.
      *
@@ -458,7 +458,7 @@ public:
     uint16_t GetPrerequisiteRecordCount(void) const { return GetAnswerCount(); }
 
     /**
-     * This method sets the number of records in Prerequisite section.
+     * Sets the number of records in Prerequisite section.
      *
      * @param[in]  aCount The number of records in Prerequisite section.
      *
@@ -466,7 +466,7 @@ public:
     void SetPrerequisiteRecordCount(uint16_t aCount) { SetAnswerCount(aCount); }
 
     /**
-     * This method returns the number of records in Update section.
+     * Returns the number of records in Update section.
      *
      * @returns The number of records in Update section.
      *
@@ -474,7 +474,7 @@ public:
     uint16_t GetUpdateRecordCount(void) const { return GetAuthorityRecordCount(); }
 
     /**
-     * This method sets the number of records in Update section.
+     * Sets the number of records in Update section.
      *
      * @param[in]  aCount The number of records in Update section.
      *
@@ -561,7 +561,7 @@ public:
     }
 
     /**
-     * This method indicates whether the name is empty (not specified).
+     * Indicates whether the name is empty (not specified).
      *
      * @returns TRUE if the name is empty, FALSE otherwise.
      *
@@ -569,7 +569,7 @@ public:
     bool IsEmpty(void) const { return (mString == nullptr) && (mMessage == nullptr); }
 
     /**
-     * This method indicates whether the name is specified from a C string.
+     * Indicates whether the name is specified from a C string.
      *
      * @returns TRUE if the name is specified from a string, FALSE otherwise.
      *
@@ -577,7 +577,7 @@ public:
     bool IsFromCString(void) const { return mString != nullptr; }
 
     /**
-     * This method indicates whether the name is specified from a message.
+     * Indicates whether the name is specified from a message.
      *
      * @returns TRUE if the name is specified from a message, FALSE otherwise.
      *
@@ -585,7 +585,7 @@ public:
     bool IsFromMessage(void) const { return mMessage != nullptr; }
 
     /**
-     * This method gets the type of `Name` object indicating whether it is empty, specified by a C string or from a
+     * Gets the type of `Name` object indicating whether it is empty, specified by a C string or from a
      * message
      *
      * @returns The name type.
@@ -597,7 +597,7 @@ public:
     }
 
     /**
-     * This method sets the name from a given C string.
+     * Sets the name from a given C string.
      *
      * @param[in] aString   A C string specifying the name (dot '.' separated sequence of labels).
      *
@@ -609,7 +609,7 @@ public:
     }
 
     /**
-     * This method sets the name from a message at a given offset.
+     * Sets the name from a message at a given offset.
      *
      * @param[in] aMessage   The message containing the encoded name. `aMessage.GetOffset()` MUST point to the start of
      *                       the DNS header in the message (used to parse compressed name).
@@ -624,9 +624,9 @@ public:
     }
 
     /**
-     * This method gets the name as a C string.
+     * Gets the name as a C string.
      *
-     * This method MUST be used only when the type is `kTypeString`. Otherwise its behavior is undefined.
+     * MUST be used only when the type is `kTypeString`. Otherwise its behavior is undefined.
      *
      * @returns A pointer to the C string.
      *
@@ -634,9 +634,9 @@ public:
     const char *GetAsCString(void) const { return mString; }
 
     /**
-     * This method gets the name message and offset.
+     * Gets the name message and offset.
      *
-     * This method MUST be used only when the type is `kTypeMessage`. Otherwise its behavior is undefined.
+     * MUST be used only when the type is `kTypeMessage`. Otherwise its behavior is undefined.
      *
      * @param[out]  aOffset    A reference to a variable to output the offset of the start of the name in the message.
      *
@@ -650,7 +650,7 @@ public:
     }
 
     /**
-     * This method encodes and appends the name to a message.
+     * Encodes and appends the name to a message.
      *
      * If the name is empty (not specified), then root "." is appended to @p aMessage. If the name is from a C string
      * then the string is checked and appended (similar to static `AppendName(const char *aName, Message &)` method).
@@ -712,7 +712,7 @@ public:
      * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "_http._tcp", "_http._tcp." (same as previous one), "host-1.test".
      *
-     * This method validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
+     * Validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
      * `kMaxLabelLength` (63) characters or less.
      *
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
@@ -730,15 +730,15 @@ public:
 
     /**
      * This static method encodes and appends a sequence of name labels within the specified length to a given message.
-     * This method stops appending labels if @p aLength characters are read or '\0' is found before @p aLength
+     * Stops appending labels if @p aLength characters are read or '\0' is found before @p aLength
      * characters.
      *
-     * This method is useful for appending a number of labels of the name instead of appending all labels.
+     * Is useful for appending a number of labels of the name instead of appending all labels.
      *
      * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "_http._tcp", "_http._tcp." (same as previous one), "host-1.test".
      *
-     * This method validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
+     * Validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
      * `kMaxLabelLength` (63) characters or less.
      *
      * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
@@ -789,7 +789,7 @@ public:
      * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
      *
-     * This method validates that the @p aName is a valid name format, i.e. no empty labels, and labels are
+     * Validates that the @p aName is a valid name format, i.e. no empty labels, and labels are
      * `kMaxLabelLength` (63) characters or less, and the name is `kMaxLength` (255) characters or less.
      *
      * @param[in]  aName              A name string. Can be `nullptr` (then treated as "." or root).
@@ -820,7 +820,7 @@ public:
     /**
      * This static method reads a name label from a message.
      *
-     * This method can be used to read labels one by one in a name. After a successful label read, @p aOffset is
+     * Can be used to read labels one by one in a name. After a successful label read, @p aOffset is
      * updated to point to the start of the next label. When we reach the end of the name, kErrorNotFound is
      * returned. This method handles compressed names which use pointer labels. So as the labels in a name are read,
      * the @p aOffset may jump back in the message and at the end the @p aOffset does not necessarily point to the end
@@ -853,7 +853,7 @@ public:
      * On successful read, the read name follows  "<label1>.<label2>.<label3>.", i.e., a sequence of labels separated by
      * dot '.' character. The read name will ALWAYS end with a dot.
      *
-     * This method verifies that the read labels in message do not contain any dot character, otherwise it returns
+     * Verifies that the read labels in message do not contain any dot character, otherwise it returns
      * `kErrorParse`).
      *
      * @param[in]     aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
@@ -874,7 +874,7 @@ public:
     /**
      * This static method compares a single name label from a message with a given label string.
      *
-     * This method can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
+     * Can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
      * @p aLabel string (case-insensitive comparison).
      *
      * Unlike `CompareName()` which requires the labels in the the name string to contain no dot '.' character, this
@@ -898,7 +898,7 @@ public:
     /**
      * This static method parses and compares a full name from a message with a given name.
      *
-     * This method checks whether the encoded name in a message matches a given name string (using case-insensitive
+     * Checks whether the encoded name in a message matches a given name string (using case-insensitive
      * comparison). It checks the name in the message in place and handles compressed names. If the name read from the
      * message does not match @p aName, it returns `kErrorNotFound`. `kErrorNone` indicates that the name matches
      * @p aName.
@@ -926,7 +926,7 @@ public:
     /**
      * This static method parses and compares a full name from a message with a name from another message.
      *
-     * This method checks whether the encoded name in @p aMessage matches the name from @p aMessage2 (using
+     * Checks whether the encoded name in @p aMessage matches the name from @p aMessage2 (using
      * case-insensitive comparison). It compares the names in both messages in place and handles compressed names. Note
      * that this method works correctly even when the same message instance is used for both @p aMessage and
      * @p aMessage2 (e.g., at different offsets).
@@ -1092,7 +1092,7 @@ public:
 
     public:
         /**
-         * This method initializes a TXT record iterator.
+         * Initializes a TXT record iterator.
          *
          * The buffer pointer @p aTxtData and its content MUST persist and remain unchanged while the iterator object
          * is being used.
@@ -1104,7 +1104,7 @@ public:
         void Init(const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
         /**
-         * This method parses the TXT data from the `Iterator` and gets the next TXT record entry (key/value pair).
+         * Parses the TXT data from the `Iterator` and gets the next TXT record entry (key/value pair).
          *
          * The `Iterator` instance MUST be initialized using `Init()` before calling this method and the TXT data
          * buffer used to initialize the iterator MUST persist and remain unchanged.
@@ -1154,7 +1154,7 @@ public:
     TxtEntry(const char *aKey, const uint8_t *aValue, uint8_t aValueLength) { Init(aKey, aValue, aValueLength); }
 
     /**
-     * This method initializes a `TxtEntry` object.
+     * Initializes a `TxtEntry` object.
      *
      * @param[in] aKey           A pointer to the key string.
      * @param[in] aValue         A pointer to a buffer containing the value.
@@ -1169,7 +1169,7 @@ public:
     }
 
     /**
-     * This method encodes and appends the `TxtEntry` to a message.
+     * Encodes and appends the `TxtEntry` to a message.
      *
      * @param[in] aMessage  The message to append to.
      *
@@ -1246,9 +1246,9 @@ public:
     static constexpr uint16_t kClassAny      = 255; ///< Class code Any (ANY).
 
     /**
-     * This method initializes the resource record by setting its type and class.
+     * Initializes the resource record by setting its type and class.
      *
-     * This method only sets the type and class fields. Other fields (TTL and length) remain unchanged/uninitialized.
+     * Only sets the type and class fields. Other fields (TTL and length) remain unchanged/uninitialized.
      *
      * @param[in] aType   The type of the resource record.
      * @param[in] aClass  The class of the resource record (default is `kClassInternet`).
@@ -1261,7 +1261,7 @@ public:
     }
 
     /**
-     * This method indicates whether the resources records matches a given type and class code.
+     * Indicates whether the resources records matches a given type and class code.
      *
      * @param[in] aType   The resource record type to compare with.
      * @param[in] aClass  The resource record class code to compare with (default is `kClassInternet`).
@@ -1275,7 +1275,7 @@ public:
     }
 
     /**
-     * This method returns the type of the resource record.
+     * Returns the type of the resource record.
      *
      * @returns The type of the resource record.
      *
@@ -1283,7 +1283,7 @@ public:
     uint16_t GetType(void) const { return HostSwap16(mType); }
 
     /**
-     * This method sets the type of the resource record.
+     * Sets the type of the resource record.
      *
      * @param[in]  aType The type of the resource record.
      *
@@ -1291,7 +1291,7 @@ public:
     void SetType(uint16_t aType) { mType = HostSwap16(aType); }
 
     /**
-     * This method returns the class of the resource record.
+     * Returns the class of the resource record.
      *
      * @returns The class of the resource record.
      *
@@ -1299,7 +1299,7 @@ public:
     uint16_t GetClass(void) const { return HostSwap16(mClass); }
 
     /**
-     * This method sets the class of the resource record.
+     * Sets the class of the resource record.
      *
      * @param[in]  aClass The class of the resource record.
      *
@@ -1307,7 +1307,7 @@ public:
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
     /**
-     * This method returns the time to live field of the resource record.
+     * Returns the time to live field of the resource record.
      *
      * @returns The time to live field of the resource record.
      *
@@ -1315,7 +1315,7 @@ public:
     uint32_t GetTtl(void) const { return HostSwap32(mTtl); }
 
     /**
-     * This method sets the time to live field of the resource record.
+     * Sets the time to live field of the resource record.
      *
      * @param[in]  aTtl The time to live field of the resource record.
      *
@@ -1323,7 +1323,7 @@ public:
     void SetTtl(uint32_t aTtl) { mTtl = HostSwap32(aTtl); }
 
     /**
-     * This method returns the length of the resource record data.
+     * Returns the length of the resource record data.
      *
      * @returns The length of the resource record data.
      *
@@ -1331,7 +1331,7 @@ public:
     uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
     /**
-     * This method sets the length of the resource record data.
+     * Sets the length of the resource record data.
      *
      * @param[in]  aLength The length of the resource record data.
      *
@@ -1339,7 +1339,7 @@ public:
     void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
 
     /**
-     * This method returns the size of (number of bytes) in resource record and its data RDATA section (excluding the
+     * Returns the size of (number of bytes) in resource record and its data RDATA section (excluding the
      * name field).
      *
      * @returns Size (number of bytes) of resource record and its data section (excluding the name field)
@@ -1389,7 +1389,7 @@ public:
      * This template static method searches in a message to find the i-th occurrence of resource records of specific
      * type with a given record name and if found, reads the record from the message.
      *
-     * This method searches in @p aMessage starting from @p aOffset up to maximum of @p aNumRecords, for the
+     * Searches in @p aMessage starting from @p aOffset up to maximum of @p aNumRecords, for the
      * `(aIndex+1)`th occurrence of a resource record of `RecordType` with record name @p aName.
      *
      * On success (i.e., when a matching record is found and read from the message), @p aOffset is updated to point
@@ -1433,10 +1433,10 @@ public:
      * This template static method tries to read a resource record of a given type from a message. If the record type
      * does not matches the type, it skips over the record.
      *
-     * This method requires the record name to be already parsed/read from the message. On input, @p aOffset should
+     * Requires the record name to be already parsed/read from the message. On input, @p aOffset should
      * point to the start of the `ResourceRecord` fields (type, class, TTL, data length) in @p aMessage.
      *
-     * This method verifies that the record is well-formed in the message. It then reads the record type and compares
+     * Verifies that the record is well-formed in the message. It then reads the record type and compares
      * it with `RecordType::kType` and ensures that the record size is at least `sizeof(RecordType)`. If it all matches,
      * the record is read into @p aRecord.
      *
@@ -1516,7 +1516,7 @@ public:
     static constexpr uint16_t kType = kTypeA; ///< The A record type.
 
     /**
-     * This method initializes the A Resource Record by setting its type, class, and length.
+     * Initializes the A Resource Record by setting its type, class, and length.
      *
      * Other record fields (TTL, address) remain unchanged/uninitialized.
      *
@@ -1528,7 +1528,7 @@ public:
     }
 
     /**
-     * This method sets the IPv4 address of the resource record.
+     * Sets the IPv4 address of the resource record.
      *
      * @param[in]  aAddress The IPv4 address of the resource record.
      *
@@ -1536,7 +1536,7 @@ public:
     void SetAddress(const Ip4::Address &aAddress) { mAddress = aAddress; }
 
     /**
-     * This method returns the reference to IPv4 address of the resource record.
+     * Returns the reference to IPv4 address of the resource record.
      *
      * @returns The reference to IPv4 address of the resource record.
      *
@@ -1558,7 +1558,7 @@ public:
     static constexpr uint16_t kType = kTypeCname; ///< The CNAME record type.
 
     /**
-     * This method initializes the CNAME Resource Record by setting its type and class.
+     * Initializes the CNAME Resource Record by setting its type and class.
      *
      * Other record fields (TTL, length) remain unchanged/uninitialized.
      *
@@ -1568,9 +1568,9 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeCname, aClass); }
 
     /**
-     * This method parses and reads the CNAME alias name from a message.
+     * Parses and reads the CNAME alias name from a message.
      *
-     * This method also verifies that the CNAME record is well-formed (e.g., the record data length `GetLength()`
+     * Also verifies that the CNAME record is well-formed (e.g., the record data length `GetLength()`
      * matches the CNAME encoded name).
      *
      * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of
@@ -1609,7 +1609,7 @@ public:
     static constexpr uint16_t kType = kTypePtr; ///< The PTR record type.
 
     /**
-     * This method initializes the PTR Resource Record by setting its type and class.
+     * Initializes the PTR Resource Record by setting its type and class.
      *
      * Other record fields (TTL, length) remain unchanged/uninitialized.
      *
@@ -1619,9 +1619,9 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypePtr, aClass); }
 
     /**
-     * This method parses and reads the PTR name from a message.
+     * Parses and reads the PTR name from a message.
      *
-     * This method also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
+     * Also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
      * the PTR encoded name).
      *
      * @param[in]      aMessage         The message to read from.  `aMessage.GetOffset()` MUST point to the start of
@@ -1646,9 +1646,9 @@ public:
     }
 
     /**
-     * This method parses and reads the PTR name from a message.
+     * Parses and reads the PTR name from a message.
      *
-     * This method also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
+     * Also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
      * the PTR encoded name).
      *
      * Unlike the previous method which reads the entire PTR name into a single char buffer, this method reads the
@@ -1694,7 +1694,7 @@ public:
     static constexpr uint16_t kType = kTypeTxt; ///< The TXT record type.
 
     /**
-     * This method initializes the TXT Resource Record by setting its type and class.
+     * Initializes the TXT Resource Record by setting its type and class.
      *
      * Other record fields (TTL, length) remain unchanged/uninitialized.
      *
@@ -1704,9 +1704,9 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeTxt, aClass); }
 
     /**
-     * This method parses and reads the TXT record data from a message.
+     * Parses and reads the TXT record data from a message.
      *
-     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()` when it is successfully
+     * Also checks if the TXT data is well-formed by calling `VerifyTxtData()` when it is successfully
      * read.
      *
      * @param[in]      aMessage         The message to read from.
@@ -1752,7 +1752,7 @@ public:
     static constexpr uint16_t kType = kTypeAaaa; ///< The AAAA record type.
 
     /**
-     * This method initializes the AAAA Resource Record by setting its type, class, and length.
+     * Initializes the AAAA Resource Record by setting its type, class, and length.
      *
      * Other record fields (TTL, address) remain unchanged/uninitialized.
      *
@@ -1764,7 +1764,7 @@ public:
     }
 
     /**
-     * This method tells whether this is a valid AAAA record.
+     * Tells whether this is a valid AAAA record.
      *
      * @returns  A boolean indicates whether this is a valid AAAA record.
      *
@@ -1772,7 +1772,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method sets the IPv6 address of the resource record.
+     * Sets the IPv6 address of the resource record.
      *
      * @param[in]  aAddress The IPv6 address of the resource record.
      *
@@ -1780,7 +1780,7 @@ public:
     void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
 
     /**
-     * This method returns the reference to IPv6 address of the resource record.
+     * Returns the reference to IPv6 address of the resource record.
      *
      * @returns The reference to IPv6 address of the resource record.
      *
@@ -1802,7 +1802,7 @@ public:
     static constexpr uint16_t kType = kTypeSrv; ///< The SRV record type.
 
     /**
-     * This method initializes the SRV Resource Record by settings its type and class.
+     * Initializes the SRV Resource Record by settings its type and class.
      *
      * Other record fields (TTL, length, propriety, weight, port, ...) remain unchanged/uninitialized.
      *
@@ -1812,7 +1812,7 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeSrv, aClass); }
 
     /**
-     * This method returns the SRV record's priority value.
+     * Returns the SRV record's priority value.
      *
      * @returns The priority value.
      *
@@ -1820,7 +1820,7 @@ public:
     uint16_t GetPriority(void) const { return HostSwap16(mPriority); }
 
     /**
-     * This method sets the SRV record's priority value.
+     * Sets the SRV record's priority value.
      *
      * @param[in]  aPriority  The priority value.
      *
@@ -1828,7 +1828,7 @@ public:
     void SetPriority(uint16_t aPriority) { mPriority = HostSwap16(aPriority); }
 
     /**
-     * This method returns the SRV record's weight value.
+     * Returns the SRV record's weight value.
      *
      * @returns The weight value.
      *
@@ -1836,7 +1836,7 @@ public:
     uint16_t GetWeight(void) const { return HostSwap16(mWeight); }
 
     /**
-     * This method sets the SRV record's weight value.
+     * Sets the SRV record's weight value.
      *
      * @param[in]  aWeight  The weight value.
      *
@@ -1844,7 +1844,7 @@ public:
     void SetWeight(uint16_t aWeight) { mWeight = HostSwap16(aWeight); }
 
     /**
-     * This method returns the SRV record's port number on the target host for this service.
+     * Returns the SRV record's port number on the target host for this service.
      *
      * @returns The port number.
      *
@@ -1852,7 +1852,7 @@ public:
     uint16_t GetPort(void) const { return HostSwap16(mPort); }
 
     /**
-     * This method sets the SRV record's port number on the target host for this service.
+     * Sets the SRV record's port number on the target host for this service.
      *
      * @param[in]  aPort  The port number.
      *
@@ -1860,9 +1860,9 @@ public:
     void SetPort(uint16_t aPort) { mPort = HostSwap16(aPort); }
 
     /**
-     * This method parses and reads the SRV target host name from a message.
+     * Parses and reads the SRV target host name from a message.
      *
-     * This method also verifies that the SRV record is well-formed (e.g., the record data length `GetLength()` matches
+     * Also verifies that the SRV record is well-formed (e.g., the record data length `GetLength()` matches
      * the SRV encoded name).
      *
      * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of
@@ -1970,7 +1970,7 @@ public:
     static constexpr uint8_t kSignatoryFlagGeneral = 1 << 0;
 
     /**
-     * This method initializes the KEY Resource Record by setting its type and class.
+     * Initializes the KEY Resource Record by setting its type and class.
      *
      * Other record fields (TTL, length, flags, protocol, algorithm) remain unchanged/uninitialized.
      *
@@ -1980,7 +1980,7 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeKey, aClass); }
 
     /**
-     * This method tells whether the KEY record is valid.
+     * Tells whether the KEY record is valid.
      *
      * @returns  TRUE if this is a valid KEY record, FALSE if an invalid KEY record.
      *
@@ -1988,7 +1988,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method gets the key use (or key type) flags.
+     * Gets the key use (or key type) flags.
      *
      * @returns The key use flags.
      *
@@ -1996,7 +1996,7 @@ public:
     UseFlags GetUseFlags(void) const { return static_cast<UseFlags>(mFlags[0] & kUseFlagsMask); }
 
     /**
-     * This method gets the owner (or name type) flags.
+     * Gets the owner (or name type) flags.
      *
      * @returns The key owner flags.
      *
@@ -2004,7 +2004,7 @@ public:
     OwnerFlags GetOwnerFlags(void) const { return static_cast<OwnerFlags>(mFlags[0] & kOwnerFlagsMask); }
 
     /**
-     * This method gets the signatory flags.
+     * Gets the signatory flags.
      *
      * @returns The signatory flags.
      *
@@ -2012,7 +2012,7 @@ public:
     uint8_t GetSignatoryFlags(void) const { return (mFlags[1] & kSignatoryFlagsMask); }
 
     /**
-     * This method sets the flags field.
+     * Sets the flags field.
      *
      * @param[in] aUseFlags        The `UseFlags` value.
      * @param[in] aOwnerFlags      The `OwnerFlags` value.
@@ -2026,7 +2026,7 @@ public:
     }
 
     /**
-     * This method returns the KEY record's protocol value.
+     * Returns the KEY record's protocol value.
      *
      * @returns The protocol value.
      *
@@ -2034,7 +2034,7 @@ public:
     uint8_t GetProtocol(void) const { return mProtocol; }
 
     /**
-     * This method sets the KEY record's protocol value.
+     * Sets the KEY record's protocol value.
      *
      * @param[in]  aProtocol  The protocol value.
      *
@@ -2042,7 +2042,7 @@ public:
     void SetProtocol(uint8_t aProtocol) { mProtocol = aProtocol; }
 
     /**
-     * This method returns the KEY record's algorithm value.
+     * Returns the KEY record's algorithm value.
      *
      * @returns The algorithm value.
      *
@@ -2050,7 +2050,7 @@ public:
     uint8_t GetAlgorithm(void) const { return mAlgorithm; }
 
     /**
-     * This method sets the KEY record's algorithm value.
+     * Sets the KEY record's algorithm value.
      *
      * @param[in]  aAlgorithm  The algorithm value.
      *
@@ -2084,7 +2084,7 @@ class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>,
 {
 public:
     /**
-     * This method initializes the KEY Resource Record to ECDSA with curve P-256.
+     * Initializes the KEY Resource Record to ECDSA with curve P-256.
      *
      * Other record fields (TTL, length, flags, protocol) remain unchanged/uninitialized.
      *
@@ -2092,7 +2092,7 @@ public:
     void Init(void);
 
     /**
-     * This method tells whether this is a valid ECDSA DNSKEY with curve P-256.
+     * Tells whether this is a valid ECDSA DNSKEY with curve P-256.
      *
      * @returns  A boolean that indicates whether this is a valid ECDSA DNSKEY RR with curve P-256.
      *
@@ -2100,7 +2100,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method returns the ECDSA P-256 public kek.
+     * Returns the ECDSA P-256 public kek.
      *
      * @returns  A reference to the public key.
      *
@@ -2124,7 +2124,7 @@ public:
     static constexpr uint16_t kType = kTypeSig; ///< The SIG record type.
 
     /**
-     * This method initializes the SIG Resource Record by setting its type and class.
+     * Initializes the SIG Resource Record by setting its type and class.
      *
      * Other record fields (TTL, length, ...) remain unchanged/uninitialized.
      *
@@ -2136,7 +2136,7 @@ public:
     void Init(uint16_t aClass) { ResourceRecord::Init(kTypeSig, aClass); }
 
     /**
-     * This method tells whether the SIG record is valid.
+     * Tells whether the SIG record is valid.
      *
      * @returns  TRUE if this is a valid SIG record, FALSE if not a valid SIG record.
      *
@@ -2144,7 +2144,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method returns the SIG record's type-covered value.
+     * Returns the SIG record's type-covered value.
      *
      * @returns The type-covered value.
      *
@@ -2152,7 +2152,7 @@ public:
     uint16_t GetTypeCovered(void) const { return HostSwap16(mTypeCovered); }
 
     /**
-     * This method sets the SIG record's type-covered value.
+     * Sets the SIG record's type-covered value.
      *
      * @param[in]  aTypeCovered  The type-covered value.
      *
@@ -2160,7 +2160,7 @@ public:
     void SetTypeCovered(uint8_t aTypeCovered) { mTypeCovered = HostSwap16(aTypeCovered); }
 
     /**
-     * This method returns the SIG record's algorithm value.
+     * Returns the SIG record's algorithm value.
      *
      * @returns The algorithm value.
      *
@@ -2168,7 +2168,7 @@ public:
     uint8_t GetAlgorithm(void) const { return mAlgorithm; }
 
     /**
-     * This method sets the SIG record's algorithm value.
+     * Sets the SIG record's algorithm value.
      *
      * @param[in]  aAlgorithm  The algorithm value.
      *
@@ -2176,7 +2176,7 @@ public:
     void SetAlgorithm(uint8_t aAlgorithm) { mAlgorithm = aAlgorithm; }
 
     /**
-     * This method returns the SIG record's labels-count (number of labels, not counting null label, in the original
+     * Returns the SIG record's labels-count (number of labels, not counting null label, in the original
      * name of the owner).
      *
      * @returns The labels-count value.
@@ -2185,7 +2185,7 @@ public:
     uint8_t GetLabels(void) const { return mLabels; }
 
     /**
-     * This method sets the SIG record's labels-count (number of labels, not counting null label, in the original
+     * Sets the SIG record's labels-count (number of labels, not counting null label, in the original
      * name of the owner).
      *
      * @param[in]  aLabels  The labels-count value.
@@ -2194,7 +2194,7 @@ public:
     void SetLabels(uint8_t aLabels) { mLabels = aLabels; }
 
     /**
-     * This method returns the SIG record's original TTL value.
+     * Returns the SIG record's original TTL value.
      *
      * @returns The original TTL value.
      *
@@ -2202,7 +2202,7 @@ public:
     uint32_t GetOriginalTtl(void) const { return HostSwap32(mOriginalTtl); }
 
     /**
-     * This method sets the SIG record's original TTL value.
+     * Sets the SIG record's original TTL value.
      *
      * @param[in]  aOriginalTtl  The original TTL value.
      *
@@ -2210,7 +2210,7 @@ public:
     void SetOriginalTtl(uint32_t aOriginalTtl) { mOriginalTtl = HostSwap32(aOriginalTtl); }
 
     /**
-     * This method returns the SIG record's expiration time value.
+     * Returns the SIG record's expiration time value.
      *
      * @returns The expiration time value (seconds since Jan 1, 1970).
      *
@@ -2218,7 +2218,7 @@ public:
     uint32_t GetExpiration(void) const { return HostSwap32(mExpiration); }
 
     /**
-     * This method sets the SIG record's expiration time value.
+     * Sets the SIG record's expiration time value.
      *
      * @param[in]  aExpiration  The expiration time value (seconds since Jan 1, 1970).
      *
@@ -2226,7 +2226,7 @@ public:
     void SetExpiration(uint32_t aExpiration) { mExpiration = HostSwap32(aExpiration); }
 
     /**
-     * This method returns the SIG record's inception time value.
+     * Returns the SIG record's inception time value.
      *
      * @returns The inception time value (seconds since Jan 1, 1970).
      *
@@ -2234,7 +2234,7 @@ public:
     uint32_t GetInception(void) const { return HostSwap32(mInception); }
 
     /**
-     * This method sets the SIG record's inception time value.
+     * Sets the SIG record's inception time value.
      *
      * @param[in]  aInception  The inception time value (seconds since Jan 1, 1970).
      *
@@ -2242,7 +2242,7 @@ public:
     void SetInception(uint32_t aInception) { mInception = HostSwap32(aInception); }
 
     /**
-     * This method returns the SIG record's key tag value.
+     * Returns the SIG record's key tag value.
      *
      * @returns The key tag value.
      *
@@ -2250,7 +2250,7 @@ public:
     uint16_t GetKeyTag(void) const { return HostSwap16(mKeyTag); }
 
     /**
-     * This method sets the SIG record's key tag value.
+     * Sets the SIG record's key tag value.
      *
      * @param[in]  aKeyTag  The key tag value.
      *
@@ -2258,7 +2258,7 @@ public:
     void SetKeyTag(uint16_t aKeyTag) { mKeyTag = HostSwap16(aKeyTag); }
 
     /**
-     * This method returns a pointer to the start of the record data fields.
+     * Returns a pointer to the start of the record data fields.
      *
      * @returns A pointer to the start of the record data fields.
      *
@@ -2266,7 +2266,7 @@ public:
     const uint8_t *GetRecordData(void) const { return reinterpret_cast<const uint8_t *>(&mTypeCovered); }
 
     /**
-     * This method parses and reads the SIG signer name from a message.
+     * Parses and reads the SIG signer name from a message.
      *
      * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of DNS
      *                                  header.
@@ -2311,7 +2311,7 @@ public:
     static constexpr uint16_t kType = kTypeOpt; ///< The OPT record type.
 
     /**
-     * This method initializes the OPT Resource Record by setting its type and clearing extended Response Code, version
+     * Initializes the OPT Resource Record by setting its type and clearing extended Response Code, version
      * and all flags.
      *
      * Other record fields (UDP payload size, length) remain unchanged/uninitialized.
@@ -2324,7 +2324,7 @@ public:
     }
 
     /**
-     * This method gets the requester's UDP payload size (the number of bytes of the largest UDP payload that can be
+     * Gets the requester's UDP payload size (the number of bytes of the largest UDP payload that can be
      * delivered in the requester's network).
      *
      * The field is encoded in the CLASS field.
@@ -2335,7 +2335,7 @@ public:
     uint16_t GetUdpPayloadSize(void) const { return GetClass(); }
 
     /**
-     * This method gets the requester's UDP payload size (the number of bytes of the largest UDP payload that can be
+     * Gets the requester's UDP payload size (the number of bytes of the largest UDP payload that can be
      * delivered in the requester's network).
      *
      * @param[in] aPayloadSize  The UDP payload size.
@@ -2344,7 +2344,7 @@ public:
     void SetUdpPayloadSize(uint16_t aPayloadSize) { SetClass(aPayloadSize); }
 
     /**
-     * This method gets the upper 8-bit of the extended 12-bit Response Code.
+     * Gets the upper 8-bit of the extended 12-bit Response Code.
      *
      * Value of 0 indicates that an unextended Response code is in use.
      *
@@ -2354,7 +2354,7 @@ public:
     uint8_t GetExtendedResponseCode(void) const { return GetTtlByteAt(kExtRCodeByteIndex); }
 
     /**
-     * This method sets the upper 8-bit of the extended 12-bit Response Code.
+     * Sets the upper 8-bit of the extended 12-bit Response Code.
      *
      * Value of 0 indicates that an unextended Response code is in use.
      *
@@ -2364,7 +2364,7 @@ public:
     void SetExtendedResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
 
     /**
-     * This method gets the Version field.
+     * Gets the Version field.
      *
      * @returns The version.
      *
@@ -2372,7 +2372,7 @@ public:
     uint8_t GetVersion(void) const { return GetTtlByteAt(kVersionByteIndex); }
 
     /**
-     * This method set the Version field.
+     * Set the Version field.
      *
      * @param[in] aVersion  The version.
      *
@@ -2380,7 +2380,7 @@ public:
     void SetVersion(uint8_t aVersion) { GetTtlByteAt(kVersionByteIndex) = aVersion; }
 
     /**
-     * This method indicates whether the DNSSEC OK flag is set or not.
+     * Indicates whether the DNSSEC OK flag is set or not.
      *
      * @returns True if DNSSEC OK flag is set in the header, false otherwise.
      *
@@ -2388,13 +2388,13 @@ public:
     bool IsDnsSecurityFlagSet(void) const { return (GetTtlByteAt(kFlagByteIndex) & kDnsSecFlag) != 0; }
 
     /**
-     * This method clears the DNSSEC OK bit flag.
+     * Clears the DNSSEC OK bit flag.
      *
      */
     void ClearDnsSecurityFlag(void) { GetTtlByteAt(kFlagByteIndex) &= ~kDnsSecFlag; }
 
     /**
-     * This method sets the DNSSEC OK bit flag.
+     * Sets the DNSSEC OK bit flag.
      *
      */
     void SetDnsSecurityFlag(void) { GetTtlByteAt(kFlagByteIndex) |= kDnsSecFlag; }
@@ -2435,7 +2435,7 @@ public:
     static constexpr uint16_t kUpdateLease = 2; ///< Update lease option code.
 
     /**
-     * This method returns the option code value.
+     * Returns the option code value.
      *
      * @returns The option code value.
      *
@@ -2443,7 +2443,7 @@ public:
     uint16_t GetOptionCode(void) const { return HostSwap16(mOptionCode); }
 
     /**
-     * This method sets the option code value.
+     * Sets the option code value.
      *
      * @param[in]  aOptionCode  The option code value.
      *
@@ -2451,7 +2451,7 @@ public:
     void SetOptionCode(uint16_t aOptionCode) { mOptionCode = HostSwap16(aOptionCode); }
 
     /**
-     * This method returns the option length value.
+     * Returns the option length value.
      *
      * @returns The option length (size of option data in bytes).
      *
@@ -2459,7 +2459,7 @@ public:
     uint16_t GetOptionLength(void) const { return HostSwap16(mOptionLength); }
 
     /**
-     * This method sets the option length value.
+     * Sets the option length value.
      *
      * @param[in]  aOptionLength  The option length (size of option data in bytes).
      *
@@ -2467,7 +2467,7 @@ public:
     void SetOptionLength(uint16_t aOptionLength) { mOptionLength = HostSwap16(aOptionLength); }
 
     /**
-     * This method returns the size of (number of bytes) in the Option and its data.
+     * Returns the size of (number of bytes) in the Option and its data.
      *
      * @returns Size (number of bytes) of the Option its data section.
      *
@@ -2493,7 +2493,7 @@ class LeaseOption : public Option
 {
 public:
     /**
-     * This method initializes the Update Lease Option using the short variant format which contains lease interval
+     * Initializes the Update Lease Option using the short variant format which contains lease interval
      * only.
      *
      * @param[in] aLeaseInterval     The lease interval in seconds.
@@ -2502,7 +2502,7 @@ public:
     void InitAsShortVariant(uint32_t aLeaseInterval);
 
     /**
-     * This method initializes the Update Lease Option using the long variant format which contains both lease and
+     * Initializes the Update Lease Option using the long variant format which contains both lease and
      * key lease intervals.
      *
      * @param[in] aLeaseInterval     The lease interval in seconds.
@@ -2512,7 +2512,7 @@ public:
     void InitAsLongVariant(uint32_t aLeaseInterval, uint32_t aKeyLeaseInterval);
 
     /**
-     * This method indicates whether or not the Update Lease Option follows the short variant format which contains
+     * Indicates whether or not the Update Lease Option follows the short variant format which contains
      * only the lease interval.
      *
      * @retval TRUE   The Update Lease Option follows the short variant format.
@@ -2522,9 +2522,9 @@ public:
     bool IsShortVariant(void) const { return (GetOptionLength() == kShortLength); }
 
     /**
-     * This method tells whether this is a valid Lease Option.
+     * Tells whether this is a valid Lease Option.
      *
-     * This method validates that option follows either short or long variant format.
+     * Validates that option follows either short or long variant format.
      *
      * @returns  TRUE if this is a valid Lease Option, FALSE if not a valid Lease Option.
      *
@@ -2532,7 +2532,7 @@ public:
     bool IsValid(void) const;
 
     /**
-     * This method returns the Update Lease OPT record's lease interval value.
+     * Returns the Update Lease OPT record's lease interval value.
      *
      * @returns The lease interval value (in seconds).
      *
@@ -2540,7 +2540,7 @@ public:
     uint32_t GetLeaseInterval(void) const { return HostSwap32(mLeaseInterval); }
 
     /**
-     * This method returns the Update Lease OPT record's key lease interval value.
+     * Returns the Update Lease OPT record's key lease interval value.
      *
      * If the Update Lease Option follows the short variant format the lease interval is returned as key lease interval.
      *
@@ -2553,10 +2553,10 @@ public:
     }
 
     /**
-     * This method searches among the Options is a given message and reads and validates the Update Lease Option if
+     * Searches among the Options is a given message and reads and validates the Update Lease Option if
      * found.
      *
-     * This method reads the Update Lease Option whether it follows the short or long variant formats.
+     * Reads the Update Lease Option whether it follows the short or long variant formats.
      *
      * @param[in] aMessage   The message to read the Option from.
      * @param[in] aOffset    Offset in @p aMessage to the start of Options (start of OPT Record data).
@@ -2605,7 +2605,7 @@ public:
     }
 
     /**
-     * This method returns the type of the question.
+     * Returns the type of the question.
      *
      * @returns The type of the question.
      *
@@ -2613,7 +2613,7 @@ public:
     uint16_t GetType(void) const { return HostSwap16(mType); }
 
     /**
-     * This method sets the type of the question.
+     * Sets the type of the question.
      *
      * @param[in]  aType The type of the question.
      *
@@ -2621,7 +2621,7 @@ public:
     void SetType(uint16_t aType) { mType = HostSwap16(aType); }
 
     /**
-     * This method returns the class of the question.
+     * Returns the class of the question.
      *
      * @returns The class of the question.
      *
@@ -2629,7 +2629,7 @@ public:
     uint16_t GetClass(void) const { return HostSwap16(mClass); }
 
     /**
-     * This method sets the class of the question.
+     * Sets the class of the question.
      *
      * @param[in]  aClass The class of the question.
      *

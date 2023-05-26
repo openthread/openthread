@@ -109,7 +109,7 @@ public:
     typedef String<kAddressStringSize> InfoString;
 
     /**
-     * This method gets the IPv4 address as a pointer to a byte array.
+     * Gets the IPv4 address as a pointer to a byte array.
      *
      * @returns A pointer to a byte array containing the IPv4 address.
      *
@@ -117,7 +117,7 @@ public:
     const uint8_t *GetBytes(void) const { return mFields.m8; }
 
     /**
-     * This method sets the IPv4 address from a given byte array.
+     * Sets the IPv4 address from a given byte array.
      *
      * @param[in] aBuffer    Pointer to an array containing the IPv4 address. `kSize` bytes from the buffer
      *                       are copied to form the IPv4 address.
@@ -126,7 +126,7 @@ public:
     void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
     /**
-     * This method sets the IPv4 address by performing NAT64 address translation from a given IPv6 address as specified
+     * Sets the IPv4 address by performing NAT64 address translation from a given IPv6 address as specified
      * in RFC 6052.
      *
      * The NAT64 @p aPrefixLength MUST be one of the following values: 32, 40, 48, 56, 64, or 96, otherwise the behavior
@@ -139,7 +139,7 @@ public:
     void ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address);
 
     /**
-     * This method sets the IPv4 address from the given CIDR and the host field.
+     * Sets the IPv4 address from the given CIDR and the host field.
      *
      * @param[in] aCidr The CIDR for the IPv4 address.
      * @param[in] aHost The host bits of the IPv4 address in host byte order. The aHost will be masked by host mask.
@@ -148,7 +148,7 @@ public:
     void SynthesizeFromCidrAndHost(const Cidr &aCidr, uint32_t aHost);
 
     /**
-     * This method parses an IPv4 address string terminated by `aTerminatorChar`.
+     * Parses an IPv4 address string terminated by `aTerminatorChar`.
      *
      * The string MUST follow the quad-dotted notation of four decimal values (ranging from 0 to 255 each). For
      * example, "127.0.0.1"
@@ -162,7 +162,7 @@ public:
     Error FromString(const char *aString, char aTerminatorChar = kNullChar);
 
     /**
-     * This method converts the address to a string.
+     * Converts the address to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
      *
@@ -176,7 +176,7 @@ public:
     void ToString(char *aBuffer, uint16_t aSize) const;
 
     /**
-     * This method converts the IPv4 address to a string.
+     * Converts the IPv4 address to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address (e.g., "127.0.0.1").
      *
@@ -207,7 +207,7 @@ public:
     typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;
 
     /**
-     * This method converts the IPv4 CIDR string to binary.
+     * Converts the IPv4 CIDR string to binary.
      *
      * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
      * "127.0.0.1/32").
@@ -221,7 +221,7 @@ public:
     Error FromString(const char *aString);
 
     /**
-     * This method converts the IPv4 CIDR to a string.
+     * Converts the IPv4 CIDR to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
      * "127.0.0.1/32").
@@ -236,7 +236,7 @@ public:
     void ToString(char *aBuffer, uint16_t aSize) const;
 
     /**
-     * This method converts the IPv4 CIDR to a string.
+     * Converts the IPv4 CIDR to a string.
      *
      * The string format uses quad-dotted notation of four bytes in the address with the length of prefix (e.g.,
      * "127.0.0.1/32").
@@ -247,7 +247,7 @@ public:
     InfoString ToString(void) const;
 
     /**
-     * This method gets the prefix as a pointer to a byte array.
+     * Gets the prefix as a pointer to a byte array.
      *
      * @returns A pointer to a byte array containing the Prefix.
      *
@@ -255,7 +255,7 @@ public:
     const uint8_t *GetBytes(void) const { return mAddress.mFields.m8; }
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two prefixes are equal.
+     * Overloads operator `==` to evaluate whether or not two prefixes are equal.
      *
      * @param[in]  aOther  The other prefix to compare with.
      *
@@ -266,7 +266,7 @@ public:
     bool operator==(const Cidr &aOther) const;
 
     /**
-     * This method sets the CIDR.
+     * Sets the CIDR.
      *
      * @param[in] aAddress  A pointer to buffer containing the CIDR bytes. The length of aAddress should be 4 bytes.
      * @param[in] aLength   The length of CIDR in bits.
@@ -307,7 +307,7 @@ public:
     static constexpr uint8_t kDestinationAddressOffset = 16;
 
     /**
-     * This method indicates whether or not the header appears to be well-formed.
+     * Indicates whether or not the header appears to be well-formed.
      *
      * @retval TRUE    If the header appears to be well-formed.
      * @retval FALSE   If the header does not appear to be well-formed.
@@ -316,7 +316,7 @@ public:
     bool IsValid(void) const { return IsVersion4(); }
 
     /**
-     * This method initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
+     * Initializes the Version to 4 and sets Traffic Class and Flow fields to zero.
      *
      * The other fields in the IPv4 header remain unchanged.
      *
@@ -324,7 +324,7 @@ public:
     void InitVersionIhl(void) { SetVersionIhl(kVersIhlInit); }
 
     /**
-     * This method sets the version and Ihl of the IPv4 header.
+     * Sets the version and Ihl of the IPv4 header.
      *
      * @param[in] aVersionIhl The octet for the version and Ihl field.
      *
@@ -332,7 +332,7 @@ public:
     void SetVersionIhl(uint8_t aVersionIhl) { mVersIhl = aVersionIhl; }
 
     /**
-     * This method indicates whether or not the IPv4 Version is set to 6.
+     * Indicates whether or not the IPv4 Version is set to 6.
      *
      * @retval TRUE   If the IPv4 Version is set to 4.
      * @retval FALSE  If the IPv4 Version is not set to 4.
@@ -341,7 +341,7 @@ public:
     bool IsVersion4(void) const { return (mVersIhl & kVersionMask) == kVersion4; }
 
     /**
-     * This method returns the octet for DSCP + ECN.
+     * Returns the octet for DSCP + ECN.
      *
      * @retval The octet for DSCP and ECN.
      *
@@ -349,7 +349,7 @@ public:
     uint8_t GetDscpEcn(void) const { return mDscpEcn; }
 
     /**
-     * This method gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
+     * Gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
      *
      * @returns The DSCP value.
      *
@@ -357,7 +357,7 @@ public:
     uint8_t GetDscp(void) const { return (mDscpEcn & kDscpMask) >> kDscpOffset; }
 
     /**
-     * This method sets 6-bit Differentiated Services Code Point (DSCP) in IPv4 header.
+     * Sets 6-bit Differentiated Services Code Point (DSCP) in IPv4 header.
      *
      * @param[in]  aDscp  The DSCP value.
      *
@@ -365,7 +365,7 @@ public:
     void SetDscp(uint8_t aDscp) { mDscpEcn = static_cast<uint8_t>((mDscpEcn & ~kDscpMask) | (aDscp << kDscpOffset)); }
 
     /**
-     * This method gets the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field.
+     * Gets the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field.
      *
      * @returns The ECN value.
      *
@@ -373,7 +373,7 @@ public:
     Ecn GetEcn(void) const { return static_cast<Ecn>(mDscpEcn & kEcnMask); }
 
     /**
-     * This method sets the 2-bit Explicit Congestion Notification (ECN) in IPv4 header..
+     * Sets the 2-bit Explicit Congestion Notification (ECN) in IPv4 header..
      *
      * @param[in]  aEcn  The ECN value.
      *
@@ -381,7 +381,7 @@ public:
     void SetEcn(Ecn aEcn) { mDscpEcn = ((mDscpEcn & ~kEcnMask) | aEcn); }
 
     /**
-     * This method returns the IPv4 Payload Length value.
+     * Returns the IPv4 Payload Length value.
      *
      * @returns The IPv4 Payload Length value.
      *
@@ -389,7 +389,7 @@ public:
     uint16_t GetTotalLength(void) const { return HostSwap16(mTotalLength); }
 
     /**
-     * This method sets the IPv4 Payload Length value.
+     * Sets the IPv4 Payload Length value.
      *
      * @param[in]  aLength  The IPv4 Payload Length value.
      *
@@ -397,7 +397,7 @@ public:
     void SetTotalLength(uint16_t aLength) { mTotalLength = HostSwap16(aLength); }
 
     /**
-     * This method returns the IPv4 payload protocol.
+     * Returns the IPv4 payload protocol.
      *
      * @returns The IPv4 payload protocol value.
      *
@@ -405,7 +405,7 @@ public:
     uint8_t GetProtocol(void) const { return mProtocol; }
 
     /**
-     * This method sets the IPv4 payload protocol.
+     * Sets the IPv4 payload protocol.
      *
      * @param[in]  aProtocol  The IPv4 payload protocol.
      *
@@ -413,7 +413,7 @@ public:
     void SetProtocol(uint8_t aProtocol) { mProtocol = aProtocol; }
 
     /**
-     * This method returns the IPv4 header checksum, the checksum is in host endian.
+     * Returns the IPv4 header checksum, the checksum is in host endian.
      *
      * @returns The checksum field in the IPv4 header.
      *
@@ -421,7 +421,7 @@ public:
     uint16_t GetChecksum(void) const { return HostSwap16(mHeaderChecksum); }
 
     /**
-     * This method sets the IPv4 header checksum, the checksum is in host endian.
+     * Sets the IPv4 header checksum, the checksum is in host endian.
      *
      * @param[in] aChecksum The checksum for the IPv4 header.
      *
@@ -429,7 +429,7 @@ public:
     void SetChecksum(uint16_t aChecksum) { mHeaderChecksum = HostSwap16(aChecksum); }
 
     /**
-     * This method returns the IPv4 Identification value.
+     * Returns the IPv4 Identification value.
      *
      * @returns The IPv4 Identification value.
      *
@@ -437,7 +437,7 @@ public:
     uint16_t GetIdentification(void) const { return HostSwap16(mIdentification); }
 
     /**
-     * This method sets the IPv4 Identification value.
+     * Sets the IPv4 Identification value.
      *
      * @param[in] aIdentification The IPv4 Identification value.
      *
@@ -445,7 +445,7 @@ public:
     void SetIdentification(uint16_t aIdentification) { mIdentification = HostSwap16(aIdentification); }
 
     /**
-     * This method returns the IPv4 Time-to-Live value.
+     * Returns the IPv4 Time-to-Live value.
      *
      * @returns The IPv4 Time-to-Live value.
      *
@@ -453,7 +453,7 @@ public:
     uint8_t GetTtl(void) const { return mTtl; }
 
     /**
-     * This method sets the IPv4 Time-to-Live value.
+     * Sets the IPv4 Time-to-Live value.
      *
      * @param[in]  aTtl  The IPv4 Time-to-Live value.
      *
@@ -461,7 +461,7 @@ public:
     void SetTtl(uint8_t aTtl) { mTtl = aTtl; }
 
     /**
-     * This method returns the IPv4 Source address.
+     * Returns the IPv4 Source address.
      *
      * @returns A reference to the IPv4 Source address.
      *
@@ -469,7 +469,7 @@ public:
     Address &GetSource(void) { return mSource; }
 
     /**
-     * This method returns the IPv4 Source address.
+     * Returns the IPv4 Source address.
      *
      * @returns A reference to the IPv4 Source address.
      *
@@ -477,7 +477,7 @@ public:
     const Address &GetSource(void) const { return mSource; }
 
     /**
-     * This method sets the IPv4 Source address.
+     * Sets the IPv4 Source address.
      *
      * @param[in]  aSource  A reference to the IPv4 Source address.
      *
@@ -485,7 +485,7 @@ public:
     void SetSource(const Address &aSource) { mSource = aSource; }
 
     /**
-     * This method returns the IPv4 Destination address.
+     * Returns the IPv4 Destination address.
      *
      * @returns A reference to the IPv4 Destination address.
      *
@@ -493,7 +493,7 @@ public:
     Address &GetDestination(void) { return mDestination; }
 
     /**
-     * This method returns the IPv4 Destination address.
+     * Returns the IPv4 Destination address.
      *
      * @returns A reference to the IPv4 Destination address.
      *
@@ -501,7 +501,7 @@ public:
     const Address &GetDestination(void) const { return mDestination; }
 
     /**
-     * This method sets the IPv4 Destination address.
+     * Sets the IPv4 Destination address.
      *
      * @param[in]  aDestination  A reference to the IPv4 Destination address.
      *
@@ -509,7 +509,7 @@ public:
     void SetDestination(const Address &aDestination) { mDestination = aDestination; }
 
     /**
-     * This method parses and validates the IPv4 header from a given message.
+     * Parses and validates the IPv4 header from a given message.
      *
      * The header is read from @p aMessage at offset zero.
      *
@@ -522,7 +522,7 @@ public:
     Error ParseFrom(const Message &aMessage);
 
     /**
-     * This method returns the Df flag in the IPv4 header.
+     * Returns the Df flag in the IPv4 header.
      *
      * @returns Whether don't fragment flag is set.
      *
@@ -530,7 +530,7 @@ public:
     bool GetDf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsDf; }
 
     /**
-     * This method returns the Mf flag in the IPv4 header.
+     * Returns the Mf flag in the IPv4 header.
      *
      * @returns Whether more fragments flag is set.
      *
@@ -538,7 +538,7 @@ public:
     bool GetMf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsMf; }
 
     /**
-     * This method returns the fragment offset in the IPv4 header.
+     * Returns the fragment offset in the IPv4 header.
      *
      * @returns The fragment offset of the IPv4 packet.
      *
@@ -623,7 +623,7 @@ public:
         };
 
         /**
-         * This method returns the type of the ICMP message.
+         * Returns the type of the ICMP message.
          *
          * @returns The type field of the ICMP message.
          *
@@ -631,7 +631,7 @@ public:
         uint8_t GetType(void) const { return mType; }
 
         /**
-         * This method sets the type of the ICMP message.
+         * Sets the type of the ICMP message.
          *
          * @param[in] aType The type of the ICMP message.
          *
@@ -639,7 +639,7 @@ public:
         void SetType(uint8_t aType) { mType = aType; }
 
         /**
-         * This method returns the code of the ICMP message.
+         * Returns the code of the ICMP message.
          *
          * @returns The code field of the ICMP message.
          *
@@ -647,7 +647,7 @@ public:
         uint8_t GetCode(void) const { return mCode; }
 
         /**
-         * This method sets the code of the ICMP message.
+         * Sets the code of the ICMP message.
          *
          * @param[in] aCode The code of the ICMP message.
          *
@@ -655,7 +655,7 @@ public:
         void SetCode(uint8_t aCode) { mCode = aCode; }
 
         /**
-         * This method sets the checksum field in the ICMP message.
+         * Sets the checksum field in the ICMP message.
          *
          * @returns The checksum of the ICMP message.
          *
@@ -663,7 +663,7 @@ public:
         uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
 
         /**
-         * This method sets the checksum field in the ICMP message.
+         * Sets the checksum field in the ICMP message.
          *
          * @param[in] aChecksum The checksum of the ICMP message.
          *
@@ -671,7 +671,7 @@ public:
         void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
 
         /**
-         * This method returns the rest of header field in the ICMP message.
+         * Returns the rest of header field in the ICMP message.
          *
          * @returns The rest of header field in the ICMP message. The returned buffer has 4 octets.
          *
@@ -679,7 +679,7 @@ public:
         const uint8_t *GetRestOfHeader(void) const { return mRestOfHeader; }
 
         /**
-         * This method sets the rest of header field in the ICMP message.
+         * Sets the rest of header field in the ICMP message.
          *
          * @param[in] aRestOfHeader The rest of header field in the ICMP message. The buffer should have 4 octets.
          *

@@ -70,7 +70,7 @@ public:
     static constexpr uint8_t kMaxLength = OT_JOINER_MAX_PSKD_LENGTH; ///< Max PSKd string length (excludes null char)
 
     /**
-     * This method indicates whether the PSKd if well-formed and valid.
+     * Indicates whether the PSKd if well-formed and valid.
      *
      * Per Thread specification, a Joining Device Credential is encoded as uppercase alphanumeric characters
      * (base32-thread: 0-9, A-Z excluding I, O, Q, and Z for readability) with a minimum length of 6 such characters
@@ -82,7 +82,7 @@ public:
     bool IsValid(void) const { return IsPskdValid(m8); }
 
     /**
-     * This method sets the joiner PSKd from a given C string.
+     * Sets the joiner PSKd from a given C string.
      *
      * @param[in] aPskdString   A pointer to the PSKd C string array.
      *
@@ -93,9 +93,9 @@ public:
     Error SetFrom(const char *aPskdString);
 
     /**
-     * This method gets the PSKd as a null terminated C string.
+     * Gets the PSKd as a null terminated C string.
      *
-     * This method must be used after the PSKd is validated, otherwise its behavior is undefined.
+     * Must be used after the PSKd is validated, otherwise its behavior is undefined.
      *
      * @returns The PSKd as a C string.
      *
@@ -103,9 +103,9 @@ public:
     const char *GetAsCString(void) const { return m8; }
 
     /**
-     * This method gets the PSKd string length.
+     * Gets the PSKd string length.
      *
-     * This method must be used after the PSKd is validated, otherwise its behavior is undefined.
+     * Must be used after the PSKd is validated, otherwise its behavior is undefined.
      *
      * @returns The PSKd string length.
      *
@@ -113,7 +113,7 @@ public:
     uint8_t GetLength(void) const { return static_cast<uint8_t>(StringLength(m8, kMaxLength + 1)); }
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two PSKds are equal.
+     * Overloads operator `==` to evaluate whether or not two PSKds are equal.
      *
      * @param[in]  aOther  The other PSKd to compare with.
      *
@@ -156,13 +156,13 @@ public:
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method clears the Joiner Discerner.
+     * Clears the Joiner Discerner.
      *
      */
     void Clear(void) { mLength = 0; }
 
     /**
-     * This method indicates whether the Joiner Discerner is empty (no value set).
+     * Indicates whether the Joiner Discerner is empty (no value set).
      *
      * @returns TRUE if empty, FALSE otherwise.
      *
@@ -170,7 +170,7 @@ public:
     bool IsEmpty(void) const { return mLength == 0; }
 
     /**
-     * This method gets the Joiner Discerner's value.
+     * Gets the Joiner Discerner's value.
      *
      * @returns The Joiner Discerner value.
      *
@@ -178,7 +178,7 @@ public:
     uint64_t GetValue(void) const { return mValue; }
 
     /**
-     * This method gets the Joiner Discerner's length (in bits).
+     * Gets the Joiner Discerner's length (in bits).
      *
      * @return The Joiner Discerner length.
      *
@@ -186,7 +186,7 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method indicates whether the Joiner Discerner is valid (i.e. it not empty and its length is within
+     * Indicates whether the Joiner Discerner is valid (i.e. it not empty and its length is within
      * valid range).
      *
      * @returns TRUE if Joiner Discerner is valid, FALSE otherwise.
@@ -195,7 +195,7 @@ public:
     bool IsValid(void) const { return (0 < mLength) && (mLength <= kMaxLength); }
 
     /**
-     * This method generates a Joiner ID from the Discerner.
+     * Generates a Joiner ID from the Discerner.
      *
      * @param[out] aJoinerId   A reference to `Mac::ExtAddress` to output the generated Joiner ID.
      *
@@ -203,7 +203,7 @@ public:
     void GenerateJoinerId(Mac::ExtAddress &aJoinerId) const;
 
     /**
-     * This method indicates whether a given Joiner ID matches the Discerner.
+     * Indicates whether a given Joiner ID matches the Discerner.
      *
      * @param[in] aJoinerId  A Joiner ID to match with the Discerner.
      *
@@ -213,7 +213,7 @@ public:
     bool Matches(const Mac::ExtAddress &aJoinerId) const;
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two Joiner Discerner instances are equal.
+     * Overloads operator `==` to evaluate whether or not two Joiner Discerner instances are equal.
      *
      * @param[in]  aOther  The other Joiner Discerner to compare with.
      *
@@ -224,7 +224,7 @@ public:
     bool operator==(const JoinerDiscerner &aOther) const;
 
     /**
-     * This method converts the Joiner Discerner to a string.
+     * Converts the Joiner Discerner to a string.
      *
      * @returns An `InfoString` representation of Joiner Discerner.
      *
@@ -259,7 +259,7 @@ public:
     };
 
     /**
-     * This method initializes the Steering Data and clears the bloom filter.
+     * Initializes the Steering Data and clears the bloom filter.
      *
      * @param[in]  aLength   The Steering Data length (in bytes) - MUST be smaller than or equal to `kMaxLength`.
      *
@@ -267,7 +267,7 @@ public:
     void Init(uint8_t aLength = kMaxLength);
 
     /**
-     * This method clears the bloom filter (all bits are cleared and no Joiner Id is accepted)..
+     * Clears the bloom filter (all bits are cleared and no Joiner Id is accepted)..
      *
      * The Steering Data length (bloom filter length) is set to one byte with all bits cleared.
      *
@@ -275,7 +275,7 @@ public:
     void Clear(void) { Init(1); }
 
     /**
-     * This method sets the bloom filter to permit all Joiner IDs.
+     * Sets the bloom filter to permit all Joiner IDs.
      *
      * To permit all Joiner IDs, The Steering Data length (bloom filter length) is set to one byte with all bits set.
      *
@@ -283,7 +283,7 @@ public:
     void SetToPermitAllJoiners(void);
 
     /**
-     * This method returns the Steering Data length (in bytes).
+     * Returns the Steering Data length (in bytes).
      *
      * @returns The Steering Data length (in bytes).
      *
@@ -291,7 +291,7 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method gets the Steering Data buffer (bloom filter).
+     * Gets the Steering Data buffer (bloom filter).
      *
      * @returns A pointer to the Steering Data buffer.
      *
@@ -299,7 +299,7 @@ public:
     const uint8_t *GetData(void) const { return m8; }
 
     /**
-     * This method gets the Steering Data buffer (bloom filter).
+     * Gets the Steering Data buffer (bloom filter).
      *
      * @returns A pointer to the Steering Data buffer.
      *
@@ -307,7 +307,7 @@ public:
     uint8_t *GetData(void) { return m8; }
 
     /**
-     * This method updates the bloom filter adding the given Joiner ID.
+     * Updates the bloom filter adding the given Joiner ID.
      *
      * @param[in]  aJoinerId  The Joiner ID to add to bloom filter.
      *
@@ -315,7 +315,7 @@ public:
     void UpdateBloomFilter(const Mac::ExtAddress &aJoinerId);
 
     /**
-     * This method updates the bloom filter adding a given Joiner Discerner.
+     * Updates the bloom filter adding a given Joiner Discerner.
      *
      * @param[in]  aDiscerner  The Joiner Discerner to add to bloom filter.
      *
@@ -323,7 +323,7 @@ public:
     void UpdateBloomFilter(const JoinerDiscerner &aDiscerner);
 
     /**
-     * This method indicates whether the bloom filter is empty (all the bits are cleared).
+     * Indicates whether the bloom filter is empty (all the bits are cleared).
      *
      * @returns TRUE if the bloom filter is empty, FALSE otherwise.
      *
@@ -331,7 +331,7 @@ public:
     bool IsEmpty(void) const { return DoesAllMatch(0); }
 
     /**
-     * This method indicates whether the bloom filter permits all Joiner IDs (all the bits are set).
+     * Indicates whether the bloom filter permits all Joiner IDs (all the bits are set).
      *
      * @returns TRUE if the bloom filter permits all Joiners IDs, FALSE otherwise.
      *
@@ -339,7 +339,7 @@ public:
     bool PermitsAllJoiners(void) const { return (mLength > 0) && DoesAllMatch(kPermitAll); }
 
     /**
-     * This method indicates whether the bloom filter contains a given Joiner ID.
+     * Indicates whether the bloom filter contains a given Joiner ID.
      *
      * @param[in] aJoinerId  A Joiner ID.
      *
@@ -349,7 +349,7 @@ public:
     bool Contains(const Mac::ExtAddress &aJoinerId) const;
 
     /**
-     * This method indicates whether the bloom filter contains a given Joiner Discerner.
+     * Indicates whether the bloom filter contains a given Joiner Discerner.
      *
      * @param[in] aDiscerner   A Joiner Discerner.
      *
@@ -359,7 +359,7 @@ public:
     bool Contains(const JoinerDiscerner &aDiscerner) const;
 
     /**
-     * This method indicates whether the bloom filter contains the hash bit indexes (derived from a Joiner ID).
+     * Indicates whether the bloom filter contains the hash bit indexes (derived from a Joiner ID).
      *
      * @param[in]  aIndexes   A hash bit index structure (derived from a Joiner ID).
      *

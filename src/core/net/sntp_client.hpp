@@ -78,7 +78,7 @@ public:
     static constexpr uint8_t kKissCodeLength = 4; ///< Length of the kiss code in ASCII format
 
     /**
-     * This method returns the flags field value.
+     * Returns the flags field value.
      *
      * @returns Value of the flags field (LI, VN and Mode).
      *
@@ -86,7 +86,7 @@ public:
     uint8_t GetFlags(void) const { return mFlags; }
 
     /**
-     * This method sets the flags field.
+     * Sets the flags field.
      *
      * @param[in]  aFlags  The value of the flags field.
      *
@@ -94,7 +94,7 @@ public:
     void SetFlags(uint8_t aFlags) { mFlags = aFlags; }
 
     /**
-     * This method returns the SNTP operational mode.
+     * Returns the SNTP operational mode.
      *
      * @returns SNTP operational mode.
      *
@@ -102,7 +102,7 @@ public:
     Mode GetMode(void) const { return static_cast<Mode>((mFlags & kModeMask) >> kModeOffset); }
 
     /**
-     * This method returns the packet stratum field value.
+     * Returns the packet stratum field value.
      *
      * @returns Value of the packet stratum.
      *
@@ -110,7 +110,7 @@ public:
     uint8_t GetStratum(void) const { return mStratum; }
 
     /**
-     * This method sets the packet stratum field value.
+     * Sets the packet stratum field value.
      *
      * @param[in]  aStratum  The value of the packet stratum field.
      *
@@ -118,7 +118,7 @@ public:
     void SetStratum(uint8_t aStratum) { mStratum = aStratum; }
 
     /**
-     * This method returns the poll field value.
+     * Returns the poll field value.
      *
      * @returns Value of the poll field.
      *
@@ -126,7 +126,7 @@ public:
     uint8_t GetPoll(void) const { return mPoll; }
 
     /**
-     * This method sets the poll field.
+     * Sets the poll field.
      *
      * @param[in]  aPoll  The value of the poll field.
      *
@@ -134,7 +134,7 @@ public:
     void SetPoll(uint8_t aPoll) { mPoll = aPoll; }
 
     /**
-     * This method returns the precision field value.
+     * Returns the precision field value.
      *
      * @returns Value of the precision field.
      *
@@ -142,7 +142,7 @@ public:
     uint8_t GetPrecision(void) const { return mPrecision; }
 
     /**
-     * This method sets the precision field.
+     * Sets the precision field.
      *
      * @param[in]  aPrecision  The value of the precision field.
      *
@@ -150,7 +150,7 @@ public:
     void SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
 
     /**
-     * This method returns the root delay field value.
+     * Returns the root delay field value.
      *
      * @returns Value of the root delay field.
      *
@@ -158,7 +158,7 @@ public:
     uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
 
     /**
-     * This method sets the root delay field.
+     * Sets the root delay field.
      *
      * @param[in]  aRootDelay  The value of the root delay field.
      *
@@ -166,7 +166,7 @@ public:
     void SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
 
     /**
-     * This method returns the root dispersion field value.
+     * Returns the root dispersion field value.
      *
      * @returns Value of the root dispersion field.
      *
@@ -174,7 +174,7 @@ public:
     uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
 
     /**
-     * This method sets the root dispersion field.
+     * Sets the root dispersion field.
      *
      * @param[in]  aRootDispersion  The value of the root dispersion field.
      *
@@ -182,7 +182,7 @@ public:
     void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
 
     /**
-     * This method returns the reference identifier field value.
+     * Returns the reference identifier field value.
      *
      * @returns Value of the reference identifier field.
      *
@@ -190,7 +190,7 @@ public:
     uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
 
     /**
-     * This method sets the reference identifier field.
+     * Sets the reference identifier field.
      *
      * @param[in]  aReferenceId  The value of the reference identifier field.
      *
@@ -198,7 +198,7 @@ public:
     void SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
 
     /**
-     * This method returns the kiss code in ASCII format.
+     * Returns the kiss code in ASCII format.
      *
      * @returns Value of the reference identifier field in ASCII format.
      *
@@ -206,7 +206,7 @@ public:
     char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
 
     /**
-     * This method returns the reference timestamp seconds field.
+     * Returns the reference timestamp seconds field.
      *
      * @returns Value of the reference timestamp seconds field.
      *
@@ -214,7 +214,7 @@ public:
     uint32_t GetReferenceTimestampSeconds(void) const { return HostSwap32(mReferenceTimestampSeconds); }
 
     /**
-     * This method sets the reference timestamp seconds field.
+     * Sets the reference timestamp seconds field.
      *
      * @param[in]  aReferenceTimestampSeconds  Value of the reference timestamp seconds field.
      *
@@ -225,7 +225,7 @@ public:
     }
 
     /**
-     * This method returns the reference timestamp fraction field.
+     * Returns the reference timestamp fraction field.
      *
      * @returns Value of the reference timestamp fraction field.
      *
@@ -233,7 +233,7 @@ public:
     uint32_t GetReferenceTimestampFraction(void) const { return HostSwap32(mReferenceTimestampFraction); }
 
     /**
-     * This method sets the reference timestamp fraction field.
+     * Sets the reference timestamp fraction field.
      *
      * @param[in]  aReferenceTimestampFraction  Value of the reference timestamp fraction field.
      *
@@ -244,7 +244,7 @@ public:
     }
 
     /**
-     * This method returns the originate timestamp seconds field.
+     * Returns the originate timestamp seconds field.
      *
      * @returns Value of the originate timestamp seconds field.
      *
@@ -252,7 +252,7 @@ public:
     uint32_t GetOriginateTimestampSeconds(void) const { return HostSwap32(mOriginateTimestampSeconds); }
 
     /**
-     * This method sets the originate timestamp seconds field.
+     * Sets the originate timestamp seconds field.
      *
      * @param[in]  aOriginateTimestampSeconds  Value of the originate timestamp seconds field.
      *
@@ -263,7 +263,7 @@ public:
     }
 
     /**
-     * This method returns the originate timestamp fraction field.
+     * Returns the originate timestamp fraction field.
      *
      * @returns Value of the originate timestamp fraction field.
      *
@@ -271,7 +271,7 @@ public:
     uint32_t GetOriginateTimestampFraction(void) const { return HostSwap32(mOriginateTimestampFraction); }
 
     /**
-     * This method sets the originate timestamp fraction field.
+     * Sets the originate timestamp fraction field.
      *
      * @param[in]  aOriginateTimestampFraction  Value of the originate timestamp fraction field.
      *
@@ -282,7 +282,7 @@ public:
     }
 
     /**
-     * This method returns the receive timestamp seconds field.
+     * Returns the receive timestamp seconds field.
      *
      * @returns Value of the receive timestamp seconds field.
      *
@@ -290,7 +290,7 @@ public:
     uint32_t GetReceiveTimestampSeconds(void) const { return HostSwap32(mReceiveTimestampSeconds); }
 
     /**
-     * This method sets the receive timestamp seconds field.
+     * Sets the receive timestamp seconds field.
      *
      * @param[in]  aReceiveTimestampSeconds  Value of the receive timestamp seconds field.
      *
@@ -301,7 +301,7 @@ public:
     }
 
     /**
-     * This method returns the receive timestamp fraction field.
+     * Returns the receive timestamp fraction field.
      *
      * @returns Value of the receive timestamp fraction field.
      *
@@ -309,7 +309,7 @@ public:
     uint32_t GetReceiveTimestampFraction(void) const { return HostSwap32(mReceiveTimestampFraction); }
 
     /**
-     * This method sets the receive timestamp fraction field.
+     * Sets the receive timestamp fraction field.
      *
      * @param[in]  aReceiveTimestampFraction  Value of the receive timestamp fraction field.
      *
@@ -320,7 +320,7 @@ public:
     }
 
     /**
-     * This method returns the transmit timestamp seconds field.
+     * Returns the transmit timestamp seconds field.
      *
      * @returns Value of the transmit timestamp seconds field.
      *
@@ -328,7 +328,7 @@ public:
     uint32_t GetTransmitTimestampSeconds(void) const { return HostSwap32(mTransmitTimestampSeconds); }
 
     /**
-     * This method sets the transmit timestamp seconds field.
+     * Sets the transmit timestamp seconds field.
      *
      * @param[in]  aTransmitTimestampSeconds  Value of the transmit timestamp seconds field.
      *
@@ -339,7 +339,7 @@ public:
     }
 
     /**
-     * This method returns the transmit timestamp fraction field.
+     * Returns the transmit timestamp fraction field.
      *
      * @returns Value of the transmit timestamp fraction field.
      *
@@ -347,7 +347,7 @@ public:
     uint32_t GetTransmitTimestampFraction(void) const { return HostSwap32(mTransmitTimestampFraction); }
 
     /**
-     * This method sets the transmit timestamp fraction field.
+     * Sets the transmit timestamp fraction field.
      *
      * @param[in]  aTransmitTimestampFraction  Value of the transmit timestamp fraction field.
      *
@@ -408,7 +408,7 @@ public:
     QueryMetadata(otSntpResponseHandler aHandler, void *aContext);
 
     /**
-     * This method appends request data to the message.
+     * Appends request data to the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -419,7 +419,7 @@ public:
     Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 
     /**
-     * This method reads request data from the message.
+     * Reads request data from the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -430,7 +430,7 @@ public:
     }
 
     /**
-     * This method updates request data in the message.
+     * Updates request data in the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -464,7 +464,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method starts the SNTP client.
+     * Starts the SNTP client.
      *
      * @retval kErrorNone     Successfully started the SNTP client.
      * @retval kErrorAlready  The socket is already open.
@@ -472,7 +472,7 @@ public:
     Error Start(void);
 
     /**
-     * This method stops the SNTP client.
+     * Stops the SNTP client.
      *
      * @retval kErrorNone  Successfully stopped the SNTP client.
      *
@@ -480,7 +480,7 @@ public:
     Error Stop(void);
 
     /**
-     * This method returns the unix era number.
+     * Returns the unix era number.
      *
      * @returns The unix era number.
      *
@@ -488,7 +488,7 @@ public:
     uint32_t GetUnixEra(void) const { return mUnixEra; }
 
     /**
-     * This method sets the unix era number.
+     * Sets the unix era number.
      *
      * @param[in]  aUnixEra  The unix era number.
      *
@@ -496,7 +496,7 @@ public:
     void SetUnixEra(uint32_t aUnixEra) { mUnixEra = aUnixEra; }
 
     /**
-     * This method sends an SNTP query.
+     * Sends an SNTP query.
      *
      * @param[in]  aQuery    A pointer to specify SNTP query parameters.
      * @param[in]  aHandler  A function pointer that shall be called on response reception or time-out.

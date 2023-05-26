@@ -62,7 +62,7 @@ public:
     UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

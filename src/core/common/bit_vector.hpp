@@ -63,7 +63,7 @@ template <uint16_t N> class BitVector : public Equatable<BitVector<N>>, public C
 {
 public:
     /**
-     * This method indicates whether a given index is included in the mask.
+     * Indicates whether a given index is included in the mask.
      *
      * @param[in] aIndex  The index.
      *
@@ -78,7 +78,7 @@ public:
     }
 
     /**
-     * This method sets the mask of a given index.
+     * Sets the mask of a given index.
      *
      * @param[in] aIndex  The index.
      * @param[in] aValue  TRUE to set the mask, or FALSE to clear the mask.
@@ -99,7 +99,7 @@ public:
     }
 
     /**
-     * This method returns if any mask is set.
+     * Returns if any mask is set.
      *
      * @retval TRUE   If any index is set.
      * @retval FALSE  If all indexes are clear.

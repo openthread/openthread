@@ -60,7 +60,7 @@ public:
     explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
-     * This method begins the MLE Announce transmission process.
+     * Begins the MLE Announce transmission process.
      *
      * @param[in]  aChannelMask   The channels to use for transmission.
      * @param[in]  aCount         The number of transmissions per channel.

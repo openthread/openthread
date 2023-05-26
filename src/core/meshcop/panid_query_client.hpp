@@ -64,7 +64,7 @@ public:
     explicit PanIdQueryClient(Instance &aInstance);
 
     /**
-     * This method sends a PAN ID Query message.
+     * Sends a PAN ID Query message.
      *
      * @param[in]  aPanId         The PAN ID to query.
      * @param[in]  aChannelMask   The channel mask value.

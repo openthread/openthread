@@ -81,7 +81,7 @@ public:
 
     public:
         /**
-         * This method returns the Extended MAC Address of the discovered TREL peer.
+         * Returns the Extended MAC Address of the discovered TREL peer.
          *
          * @returns The Extended MAC Address of the TREL peer.
          *
@@ -89,7 +89,7 @@ public:
         const Mac::ExtAddress &GetExtAddress(void) const { return static_cast<const Mac::ExtAddress &>(mExtAddress); }
 
         /**
-         * This method returns the Extended PAN Identifier of the discovered TREL peer.
+         * Returns the Extended PAN Identifier of the discovered TREL peer.
          *
          * @returns The Extended PAN Identifier of the TREL peer.
          *
@@ -100,7 +100,7 @@ public:
         }
 
         /**
-         * This method returns the IPv6 socket address of the discovered TREL peer.
+         * Returns the IPv6 socket address of the discovered TREL peer.
          *
          * @returns The IPv6 socket address of the TREP peer.
          *
@@ -108,7 +108,7 @@ public:
         const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
 
         /**
-         * This method indicates whether the peer matches a given Extended Address.
+         * Indicates whether the peer matches a given Extended Address.
          *
          * @param[in] aExtAddress   A Extended Address to match with.
          *
@@ -119,7 +119,7 @@ public:
         bool Matches(const Mac::ExtAddress &aExtAddress) const { return GetExtAddress() == aExtAddress; }
 
         /**
-         * This method indicates whether the peer matches a given Socket Address.
+         * Indicates whether the peer matches a given Socket Address.
          *
          * @param[in] aSockAddr   A Socket Address to match with.
          *
@@ -152,14 +152,14 @@ public:
     typedef otTrelPeerIterator PeerIterator;
 
     /**
-     * This method enables or disables the TREL interface.
+     * Enables or disables the TREL interface.
      *
      * @param[in] aEnable A boolean to enable/disable the TREL interface.
      */
     void SetEnabled(bool aEnable);
 
     /**
-     * This method enables the TREL interface.
+     * Enables the TREL interface.
      *
      * This call initiates an ongoing DNS-SD browse on the service name "_trel._udp" within the local browsing domain
      * to discover other devices supporting TREL. Device also registers a new service to be advertised using DNS-SD,
@@ -170,7 +170,7 @@ public:
     void Enable(void);
 
     /**
-     * This method disables the TREL interface.
+     * Disables the TREL interface.
      *
      * This call stops the DNS-SD browse on the service name "_trel._udp", stops advertising TREL DNS-SD service, and
      * clears the TREL peer table.
@@ -179,7 +179,7 @@ public:
     void Disable(void);
 
     /**
-     * This method indicates whether the TREL interface is enabled.
+     * Indicates whether the TREL interface is enabled.
      *
      * @retval TRUE if the TREL interface is enabled.
      * @retval FALSE if the TREL interface is disabled.
@@ -188,7 +188,7 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method initializes a peer table iterator.
+     * Initializes a peer table iterator.
      *
      * @param[in] aIterator   The iterator to initialize.
      *
@@ -196,7 +196,7 @@ public:
     void InitIterator(PeerIterator &aIterator) const { aIterator = 0; }
 
     /**
-     * This method iterates over the peer table entries.
+     * Iterates over the peer table entries.
      *
      * @param[in] aIterator   The iterator. MUST be initialized.
      *
@@ -206,7 +206,7 @@ public:
     const Peer *GetNextPeer(PeerIterator &aIterator) const;
 
     /**
-     * This method sets the filter mode (enables/disables filtering).
+     * Sets the filter mode (enables/disables filtering).
      *
      * When filtering is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
      * intended for use during testing.
@@ -220,7 +220,7 @@ public:
     void SetFilterEnabled(bool aEnable) { mFiltered = aEnable; }
 
     /**
-     * This method indicates whether or not the filter mode is enabled.
+     * Indicates whether or not the filter mode is enabled.
      *
      * @retval TRUE if the TREL filter mode is enabled.
      * @retval FALSE if the TREL filter mode is disabled.

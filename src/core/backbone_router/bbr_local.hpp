@@ -93,7 +93,7 @@ public:
     explicit Local(Instance &aInstance);
 
     /**
-     * This method enables/disables Backbone function.
+     * Enables/disables Backbone function.
      *
      * @param[in]  aEnable  TRUE to enable the backbone function, FALSE otherwise.
      *
@@ -101,7 +101,7 @@ public:
     void SetEnabled(bool aEnable);
 
     /**
-     * This method retrieves the Backbone Router state.
+     * Retrieves the Backbone Router state.
      *
      *
      * @returns The current state of Backbone Router.
@@ -110,13 +110,13 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * This method resets the local Thread Network Data.
+     * Resets the local Thread Network Data.
      *
      */
     void Reset(void);
 
     /**
-     * This method gets local Backbone Router configuration.
+     * Gets local Backbone Router configuration.
      *
      * @param[out]  aConfig  The local Backbone Router configuration.
      *
@@ -124,7 +124,7 @@ public:
     void GetConfig(Config &aConfig) const;
 
     /**
-     * This method sets local Backbone Router configuration.
+     * Sets local Backbone Router configuration.
      *
      * @param[in]  aConfig  The configuration to set.
      *
@@ -135,7 +135,7 @@ public:
     Error SetConfig(const Config &aConfig);
 
     /**
-     * This method registers Backbone Router Dataset to Leader.
+     * Registers Backbone Router Dataset to Leader.
      *
      * @param[in]  aForce True to force registration regardless of current state.
      *                    False to decide based on current state.
@@ -149,7 +149,7 @@ public:
     Error AddService(bool aForce = false);
 
     /**
-     * This method indicates whether or not the Backbone Router is Primary.
+     * Indicates whether or not the Backbone Router is Primary.
      *
      * @retval  True  if the Backbone Router is Primary.
      * @retval  False if the Backbone Router is not Primary.
@@ -158,7 +158,7 @@ public:
     bool IsPrimary(void) const { return mState == kStatePrimary; }
 
     /**
-     * This method indicates whether or not the Backbone Router is enabled.
+     * Indicates whether or not the Backbone Router is enabled.
      *
      * @retval  True  if the Backbone Router is enabled.
      * @retval  False if the Backbone Router is not enabled.
@@ -167,7 +167,7 @@ public:
     bool IsEnabled(void) const { return mState != kStateDisabled; }
 
     /**
-     * This method sets the Backbone Router registration jitter value.
+     * Sets the Backbone Router registration jitter value.
      *
      * @param[in]  aRegistrationJitter the Backbone Router registration jitter value to set.
      *
@@ -175,7 +175,7 @@ public:
     void SetRegistrationJitter(uint8_t aRegistrationJitter) { mRegistrationJitter = aRegistrationJitter; }
 
     /**
-     * This method returns the Backbone Router registration jitter value.
+     * Returns the Backbone Router registration jitter value.
      *
      * @returns The Backbone Router registration jitter value.
      *
@@ -183,7 +183,7 @@ public:
     uint8_t GetRegistrationJitter(void) const { return mRegistrationJitter; }
 
     /**
-     * This method notifies Primary Backbone Router status.
+     * Notifies Primary Backbone Router status.
      *
      * @param[in]  aState   The state or state change of Primary Backbone Router.
      * @param[in]  aConfig  The Primary Backbone Router service.
@@ -192,7 +192,7 @@ public:
     void HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config &aConfig);
 
     /**
-     * This method gets the Domain Prefix configuration.
+     * Gets the Domain Prefix configuration.
      *
      * @param[out]  aConfig  A reference to the Domain Prefix configuration.
      *
@@ -203,7 +203,7 @@ public:
     Error GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig);
 
     /**
-     * This method removes the local Domain Prefix configuration.
+     * Removes the local Domain Prefix configuration.
      *
      * @param[in]  aPrefix A reference to the IPv6 Domain Prefix.
      *
@@ -215,7 +215,7 @@ public:
     Error RemoveDomainPrefix(const Ip6::Prefix &aPrefix);
 
     /**
-     * This method sets the local Domain Prefix configuration.
+     * Sets the local Domain Prefix configuration.
      *
      * @param[in]  aConfig A reference to the Domain Prefix configuration.
      *
@@ -226,7 +226,7 @@ public:
     Error SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
 
     /**
-     * This method returns a reference to the All Network Backbone Routers Multicast Address.
+     * Returns a reference to the All Network Backbone Routers Multicast Address.
      *
      * @returns A reference to the All Network Backbone Routers Multicast Address.
      *
@@ -234,7 +234,7 @@ public:
     const Ip6::Address &GetAllNetworkBackboneRoutersAddress(void) const { return mAllNetworkBackboneRouters; }
 
     /**
-     * This method returns a reference to the All Domain Backbone Routers Multicast Address.
+     * Returns a reference to the All Domain Backbone Routers Multicast Address.
      *
      * @returns A reference to the All Domain Backbone Routers Multicast Address.
      *
@@ -242,13 +242,13 @@ public:
     const Ip6::Address &GetAllDomainBackboneRoutersAddress(void) const { return mAllDomainBackboneRouters; }
 
     /**
-     * This method applies the Mesh Local Prefix.
+     * Applies the Mesh Local Prefix.
      *
      */
     void ApplyMeshLocalPrefix(void);
 
     /**
-     * This method updates the subscription of All Domain Backbone Routers Multicast Address.
+     * Updates the subscription of All Domain Backbone Routers Multicast Address.
      *
      * @param[in]  aState  The Domain Prefix state or state change.
      *
@@ -256,7 +256,7 @@ public:
     void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
 
     /**
-     * This method sets the Domain Prefix callback.
+     * Sets the Domain Prefix callback.
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.

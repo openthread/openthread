@@ -83,7 +83,7 @@ public:
         }
 
         /**
-         * This method indicates whether or not there are tasklets pending.
+         * Indicates whether or not there are tasklets pending.
          *
          * @retval TRUE   If there are tasklets pending.
          * @retval FALSE  If there are no tasklets pending.
@@ -92,7 +92,7 @@ public:
         bool AreTaskletsPending(void) const { return mTail != nullptr; }
 
         /**
-         * This method processes all tasklets queued when this is called.
+         * Processes all tasklets queued when this is called.
          *
          */
         void ProcessQueuedTasklets(void);
@@ -126,7 +126,7 @@ public:
     }
 
     /**
-     * This method puts the tasklet on the tasklet scheduler run queue.
+     * Puts the tasklet on the tasklet scheduler run queue.
      *
      * If the tasklet is already posted, no change is made and run queue stays as before.
      *
@@ -134,7 +134,7 @@ public:
     void Post(void);
 
     /**
-     * This method indicates whether the tasklet is posted or not.
+     * Indicates whether the tasklet is posted or not.
      *
      * @retval TRUE  The tasklet is posted.
      * @retval FALSE The tasklet is not posted.
@@ -203,7 +203,7 @@ public:
     }
 
     /**
-     * This method returns the pointer to the arbitrary context information.
+     * Returns the pointer to the arbitrary context information.
      *
      * @returns Pointer to the arbitrary context information.
      *

@@ -87,7 +87,7 @@ public:
     explicit Joiner(Instance &aInstance);
 
     /**
-     * This method starts the Joiner service.
+     * Starts the Joiner service.
      *
      * @param[in]  aPskd             A pointer to the PSKd.
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr`).
@@ -113,13 +113,13 @@ public:
                 void            *aContext);
 
     /**
-     * This method stops the Joiner service.
+     * Stops the Joiner service.
      *
      */
     void Stop(void);
 
     /**
-     * This method gets the Joiner State.
+     * Gets the Joiner State.
      *
      * @returns The Joiner state (see `State`).
      *
@@ -127,7 +127,7 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * This method retrieves the Joiner ID.
+     * Retrieves the Joiner ID.
      *
      * @returns The Joiner ID.
      *
@@ -135,7 +135,7 @@ public:
     const Mac::ExtAddress &GetId(void) const { return mId; }
 
     /**
-     * This method gets the Jointer Discerner.
+     * Gets the Jointer Discerner.
      *
      * @returns A pointer to the current Joiner Discerner or `nullptr` if none is set.
      *
@@ -143,7 +143,7 @@ public:
     const JoinerDiscerner *GetDiscerner(void) const;
 
     /**
-     * This method sets the Joiner Discerner.
+     * Sets the Joiner Discerner.
      *
      * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
      *
@@ -161,7 +161,7 @@ public:
     Error SetDiscerner(const JoinerDiscerner &aDiscerner);
 
     /**
-     * This method clears any previously set Joiner Discerner.
+     * Clears any previously set Joiner Discerner.
      *
      * When cleared, Joiner ID is derived as first 64 bits of SHA-256 of factory-assigned IEEE EUI-64.
      *
@@ -172,7 +172,7 @@ public:
     Error ClearDiscerner(void);
 
     /**
-     * This method converts a given Joiner state to its human-readable string representation.
+     * Converts a given Joiner state to its human-readable string representation.
      *
      * @param[in] aState  The Joiner state to convert.
      *

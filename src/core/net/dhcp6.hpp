@@ -101,7 +101,7 @@ public:
     static constexpr uint16_t kSize = 3; ///< Transaction Id size (in bytes).
 
     /**
-     * This method generates a cryptographically secure random sequence to populate the transaction identifier.
+     * Generates a cryptographically secure random sequence to populate the transaction identifier.
      *
      * @retval kErrorNone     Successfully generated a random transaction identifier.
      * @retval kErrorFailed   Failed to generate random sequence.
@@ -122,7 +122,7 @@ class Header : public Clearable<Header>
 {
 public:
     /**
-     * This method returns the DHCPv6 message type.
+     * Returns the DHCPv6 message type.
      *
      * @returns The DHCPv6 message type.
      *
@@ -130,7 +130,7 @@ public:
     Type GetType(void) const { return mType; }
 
     /**
-     * This method sets the DHCPv6 message type.
+     * Sets the DHCPv6 message type.
      *
      * @param[in]  aType  The DHCPv6 message type.
      *
@@ -138,7 +138,7 @@ public:
     void SetType(Type aType) { mType = aType; }
 
     /**
-     * This method returns the DHCPv6 message transaction identifier.
+     * Returns the DHCPv6 message transaction identifier.
      *
      * @returns The DHCPv6 message transaction identifier.
      *
@@ -146,7 +146,7 @@ public:
     const TransactionId &GetTransactionId(void) const { return mTransactionId; }
 
     /**
-     * This method sets the DHCPv6 message transaction identifier.
+     * Sets the DHCPv6 message transaction identifier.
      *
      * @param[in]  aTransactionId  The DHCPv6 message transaction identifier.
      *
@@ -197,7 +197,7 @@ class Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 option to all zeros.
+     * Initializes the DHCPv6 option to all zeros.
      *
      */
     void Init(void)
@@ -207,7 +207,7 @@ public:
     }
 
     /**
-     * This method returns the DHCPv6 option code.
+     * Returns the DHCPv6 option code.
      *
      * @returns The DHCPv6 option code.
      *
@@ -215,7 +215,7 @@ public:
     Code GetCode(void) const { return static_cast<Code>(HostSwap16(mCode)); }
 
     /**
-     * This method sets the DHCPv6 option code.
+     * Sets the DHCPv6 option code.
      *
      * @param[in]  aCode  The DHCPv6 option code.
      *
@@ -223,7 +223,7 @@ public:
     void SetCode(Code aCode) { mCode = HostSwap16(static_cast<uint16_t>(aCode)); }
 
     /**
-     * This method returns the length of DHCPv6 option.
+     * Returns the length of DHCPv6 option.
      *
      * @returns The length of DHCPv6 option.
      *
@@ -231,7 +231,7 @@ public:
     uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
     /**
-     * This method sets the length of DHCPv6 option.
+     * Sets the length of DHCPv6 option.
      *
      * @param[in]  aLength  The length of DHCPv6 option.
      *
@@ -259,7 +259,7 @@ class ClientIdentifier : public Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -269,7 +269,7 @@ public:
     }
 
     /**
-     * This method returns the client DUID Type.
+     * Returns the client DUID Type.
      *
      * @returns The client DUID Type.
      *
@@ -277,7 +277,7 @@ public:
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the client DUID Type.
+     * Sets the client DUID Type.
      *
      * @param[in]  aDuidType  The client DUID Type.
      *
@@ -285,7 +285,7 @@ public:
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
 
     /**
-     * This method returns the client Duid HardwareType.
+     * Returns the client Duid HardwareType.
      *
      * @returns The client Duid HardwareType.
      *
@@ -293,7 +293,7 @@ public:
     uint16_t GetDuidHardwareType(void) const { return HostSwap16(mDuidHardwareType); }
 
     /**
-     * This method sets the client Duid HardwareType.
+     * Sets the client Duid HardwareType.
      *
      * @param[in]  aDuidHardwareType  The client Duid HardwareType.
      *
@@ -301,7 +301,7 @@ public:
     void SetDuidHardwareType(uint16_t aDuidHardwareType) { mDuidHardwareType = HostSwap16(aDuidHardwareType); }
 
     /**
-     * This method returns the client LinkLayerAddress.
+     * Returns the client LinkLayerAddress.
      *
      * @returns The link-layer address.
      *
@@ -309,7 +309,7 @@ public:
     const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
 
     /**
-     * This method sets the client LinkLayerAddress.
+     * Sets the client LinkLayerAddress.
      *
      * @param[in]  aDuidLinkLayerAddress  The client LinkLayerAddress.
      *
@@ -330,7 +330,7 @@ class ServerIdentifier : public Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -340,7 +340,7 @@ public:
     }
 
     /**
-     * This method returns the server DUID Type.
+     * Returns the server DUID Type.
      *
      * @returns The server DUID Type.
      *
@@ -348,7 +348,7 @@ public:
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the server DUID Type.
+     * Sets the server DUID Type.
      *
      * @param[in]  aDuidType  The server DUID Type.
      *
@@ -356,7 +356,7 @@ public:
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
 
     /**
-     * This method returns the server DUID HardwareType.
+     * Returns the server DUID HardwareType.
      *
      * @returns The server DUID HardwareType.
      *
@@ -364,7 +364,7 @@ public:
     uint16_t GetDuidHardwareType(void) const { return HostSwap16(mDuidHardwareType); }
 
     /**
-     * This method sets the server DUID HardwareType.
+     * Sets the server DUID HardwareType.
      *
      * @param[in]  aDuidHardwareType  The server DUID HardwareType.
      *
@@ -372,7 +372,7 @@ public:
     void SetDuidHardwareType(uint16_t aDuidHardwareType) { mDuidHardwareType = HostSwap16(aDuidHardwareType); }
 
     /**
-     * This method returns the server LinkLayerAddress.
+     * Returns the server LinkLayerAddress.
      *
      * @returns The link-layer address.
      *
@@ -380,7 +380,7 @@ public:
     const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
 
     /**
-     * This method sets the server LinkLayerAddress.
+     * Sets the server LinkLayerAddress.
      *
      * @param[in]  aDuidLinkLayerAddress  The server LinkLayerAddress.
      *
@@ -408,7 +408,7 @@ public:
     static constexpr uint32_t kDefaultT2 = 0xffffffffU; ///< Default T2 value.
 
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -418,7 +418,7 @@ public:
     }
 
     /**
-     * This method returns client IAID.
+     * Returns client IAID.
      *
      * @returns The client IAID.
      *
@@ -426,7 +426,7 @@ public:
     uint32_t GetIaid(void) const { return HostSwap32(mIaid); }
 
     /**
-     * This method sets the client IAID.
+     * Sets the client IAID.
      *
      * @param[in]  aIaid  The client IAID.
      *
@@ -434,7 +434,7 @@ public:
     void SetIaid(uint32_t aIaid) { mIaid = HostSwap32(aIaid); }
 
     /**
-     * This method returns T1.
+     * Returns T1.
      *
      * @returns The value of T1.
      *
@@ -442,7 +442,7 @@ public:
     uint32_t GetT1(void) const { return HostSwap32(mT1); }
 
     /**
-     * This method sets the value of T1.
+     * Sets the value of T1.
      *
      * @param[in]  aT1  The value of T1.
      *
@@ -450,7 +450,7 @@ public:
     void SetT1(uint32_t aT1) { mT1 = HostSwap32(aT1); }
 
     /**
-     * This method returns T2.
+     * Returns T2.
      *
      * @returns The value of T2.
      *
@@ -458,7 +458,7 @@ public:
     uint32_t GetT2(void) const { return HostSwap32(mT2); }
 
     /**
-     * This method sets the value of T2.
+     * Sets the value of T2.
      *
      * @param[in]  aT2  The value of T2.
      *
@@ -483,7 +483,7 @@ public:
     static constexpr uint32_t kDefaultValidLifetime     = 0xffffffffU; ///< Default valid lifetime.
 
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -493,7 +493,7 @@ public:
     }
 
     /**
-     * This method returns a reference to the IPv6 address.
+     * Returns a reference to the IPv6 address.
      *
      * @returns A reference to the IPv6 address.
      *
@@ -501,7 +501,7 @@ public:
     Ip6::Address &GetAddress(void) { return mAddress; }
 
     /**
-     * This method returns a reference to the IPv6 address.
+     * Returns a reference to the IPv6 address.
      *
      * @returns A reference to the IPv6 address.
      *
@@ -509,7 +509,7 @@ public:
     const Ip6::Address &GetAddress(void) const { return mAddress; }
 
     /**
-     * This method sets the IPv6 address.
+     * Sets the IPv6 address.
      *
      * @param[in]  aAddress  The reference to the IPv6 address to set.
      *
@@ -517,7 +517,7 @@ public:
     void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
 
     /**
-     * This method returns the preferred lifetime of the IPv6 address.
+     * Returns the preferred lifetime of the IPv6 address.
      *
      * @returns The preferred lifetime of the IPv6 address.
      *
@@ -525,7 +525,7 @@ public:
     uint32_t GetPreferredLifetime(void) const { return HostSwap32(mPreferredLifetime); }
 
     /**
-     * This method sets the preferred lifetime of the IPv6 address.
+     * Sets the preferred lifetime of the IPv6 address.
      *
      * @param[in]  aPreferredLifetime  The preferred lifetime of the IPv6 address.
      *
@@ -533,7 +533,7 @@ public:
     void SetPreferredLifetime(uint32_t aPreferredLifetime) { mPreferredLifetime = HostSwap32(aPreferredLifetime); }
 
     /**
-     * This method returns the valid lifetime of the IPv6 address.
+     * Returns the valid lifetime of the IPv6 address.
      *
      * @returns The valid lifetime of the IPv6 address.
      *
@@ -541,7 +541,7 @@ public:
     uint32_t GetValidLifetime(void) const { return HostSwap32(mValidLifetime); }
 
     /**
-     * This method sets the valid lifetime of the IPv6 address.
+     * Sets the valid lifetime of the IPv6 address.
      *
      * @param[in]  aValidLifetime  The valid lifetime of the IPv6 address.
      *
@@ -563,7 +563,7 @@ class ElapsedTime : public Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -573,7 +573,7 @@ public:
     }
 
     /**
-     * This method returns the elapsed time since solicit starts.
+     * Returns the elapsed time since solicit starts.
      *
      * @returns The elapsed time since solicit starts.
      *
@@ -581,7 +581,7 @@ public:
     uint16_t GetElapsedTime(void) const { return HostSwap16(mElapsedTime); }
 
     /**
-     * This method sets the elapsed time since solicit starts.
+     * Sets the elapsed time since solicit starts.
      *
      * @param[in] aElapsedTime The elapsed time since solicit starts.
      *
@@ -619,7 +619,7 @@ class StatusCode : public Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)
@@ -629,7 +629,7 @@ public:
     }
 
     /**
-     * This method returns the status code.
+     * Returns the status code.
      *
      * @returns The status code.
      *
@@ -637,7 +637,7 @@ public:
     Status GetStatusCode(void) const { return static_cast<Status>(HostSwap16(mStatus)); }
 
     /**
-     * This method sets the status code.
+     * Sets the status code.
      *
      * @param[in] aStatus The status code.
      *
@@ -657,7 +657,7 @@ class RapidCommit : public Option
 {
 public:
     /**
-     * This method initializes the DHCPv6 Option.
+     * Initializes the DHCPv6 Option.
      *
      */
     void Init(void)

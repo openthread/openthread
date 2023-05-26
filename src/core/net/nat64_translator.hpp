@@ -179,7 +179,7 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
+     * Translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
      *
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
      * processing is complete, including when a value other than `kErrorNone` is returned.

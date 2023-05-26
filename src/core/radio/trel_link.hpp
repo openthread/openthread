@@ -87,7 +87,7 @@ public:
     explicit Link(Instance &aInstance);
 
     /**
-     * This method sets the PAN Identifier.
+     * Sets the PAN Identifier.
      *
      * @param[in] aPanId   A PAN Identifier.
      *
@@ -95,32 +95,32 @@ public:
     void SetPanId(Mac::PanId aPanId) { mPanId = aPanId; }
 
     /**
-     * This method notifies TREL radio link that device's extended MAC address has changed for it to update any
+     * Notifies TREL radio link that device's extended MAC address has changed for it to update any
      * internal address/state.
      *
      */
     void HandleExtAddressChange(void) { mInterface.HandleExtAddressChange(); }
 
     /**
-     * This method enables the TREL radio link.
+     * Enables the TREL radio link.
      *
      */
     void Enable(void);
 
     /**
-     * This method disables the TREL radio link.
+     * Disables the TREL radio link.
      *
      */
     void Disable(void);
 
     /**
-     * This method requests TREL radio link to transition to Sleep mode
+     * Requests TREL radio link to transition to Sleep mode
      *
      */
     void Sleep(void);
 
     /**
-     * This method requests TREL radio link to transition to Receive mode on a given channel.
+     * Requests TREL radio link to transition to Receive mode on a given channel.
      *
      * `Mac::HandleReceivedFrame()` is used to notify MAC layer upon receiving a frame.
      *
@@ -130,7 +130,7 @@ public:
     void Receive(uint8_t aChannel);
 
     /**
-     * This method gets the radio transmit frame for TREL radio link.
+     * Gets the radio transmit frame for TREL radio link.
      *
      * @returns The transmit frame.
      *
@@ -138,7 +138,7 @@ public:
     Mac::TxFrame &GetTransmitFrame(void) { return mTxFrame; }
 
     /**
-     * This method requests a frame to be sent over TREL radio link.
+     * Requests a frame to be sent over TREL radio link.
      *
      * The frame should be already placed in `GetTransmitFrame()` frame.
      *

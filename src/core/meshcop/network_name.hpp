@@ -70,7 +70,7 @@ public:
     NameData(const char *aBuffer, uint8_t aLength) { Init(aBuffer, aLength); }
 
     /**
-     * This method returns the pointer to char buffer (not necessarily null terminated).
+     * Returns the pointer to char buffer (not necessarily null terminated).
      *
      * @returns The pointer to the char buffer.
      *
@@ -78,7 +78,7 @@ public:
     const char *GetBuffer(void) const { return reinterpret_cast<const char *>(GetBytes()); }
 
     /**
-     * This method returns the length (number of chars in buffer).
+     * Returns the length (number of chars in buffer).
      *
      * @returns The name length.
      *
@@ -86,7 +86,7 @@ public:
     uint8_t GetLength(void) const { return Data<kWithUint8Length>::GetLength(); }
 
     /**
-     * This method copies the name data into a given char buffer with a given size.
+     * Copies the name data into a given char buffer with a given size.
      *
      * The given buffer is cleared (`memset` to zero) before copying the name into it. The copied string
      * in @p aBuffer is NOT necessarily null terminated.
@@ -123,7 +123,7 @@ public:
     NetworkName(void) { m8[0] = '\0'; }
 
     /**
-     * This method gets the Network Name as a null terminated C string.
+     * Gets the Network Name as a null terminated C string.
      *
      * @returns The Network Name as a null terminated C string array.
      *
@@ -131,7 +131,7 @@ public:
     const char *GetAsCString(void) const { return m8; }
 
     /**
-     * This method gets the Network Name as NameData.
+     * Gets the Network Name as NameData.
      *
      * @returns The Network Name as NameData.
      *
@@ -139,9 +139,9 @@ public:
     NameData GetAsData(void) const;
 
     /**
-     * This method sets the Network Name from a given null terminated C string.
+     * Sets the Network Name from a given null terminated C string.
      *
-     * This method also validates that the given @p aNameString follows UTF-8 encoding and can fit in `kMaxSize`
+     * Also validates that the given @p aNameString follows UTF-8 encoding and can fit in `kMaxSize`
      * chars.
      *
      * @param[in] aNameString      A name C string.
@@ -154,7 +154,7 @@ public:
     Error Set(const char *aNameString);
 
     /**
-     * This method sets the Network Name.
+     * Sets the Network Name.
      *
      * @param[in]  aNameData           A reference to name data.
      *
@@ -166,7 +166,7 @@ public:
     Error Set(const NameData &aNameData);
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two given `NetworkName` objects are equal.
+     * Overloads operator `==` to evaluate whether or not two given `NetworkName` objects are equal.
      *
      * @param[in]  aOther  The other `NetworkName` to compare with.
      *
@@ -201,7 +201,7 @@ public:
     explicit NetworkNameManager(Instance &aInstance);
 
     /**
-     * This method returns the Network Name.
+     * Returns the Network Name.
      *
      * @returns The Network Name.
      *
@@ -209,7 +209,7 @@ public:
     const NetworkName &GetNetworkName(void) const { return mNetworkName; }
 
     /**
-     * This method sets the Network Name.
+     * Sets the Network Name.
      *
      * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
      *
@@ -220,7 +220,7 @@ public:
     Error SetNetworkName(const char *aNameString);
 
     /**
-     * This method sets the Network Name.
+     * Sets the Network Name.
      *
      * @param[in]  aNameData     A name data (pointer to char buffer and length).
      *
@@ -232,7 +232,7 @@ public:
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     /**
-     * This method returns the Thread Domain Name.
+     * Returns the Thread Domain Name.
      *
      * @returns The Thread Domain Name.
      *
@@ -240,7 +240,7 @@ public:
     const DomainName &GetDomainName(void) const { return mDomainName; }
 
     /**
-     * This method sets the Thread Domain Name.
+     * Sets the Thread Domain Name.
      *
      * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
      *
@@ -251,7 +251,7 @@ public:
     Error SetDomainName(const char *aNameString);
 
     /**
-     * This method sets the Thread Domain Name.
+     * Sets the Thread Domain Name.
      *
      * @param[in]  aNameData     A name data (pointer to char buffer and length).
      *

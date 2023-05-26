@@ -306,13 +306,13 @@ class Arg
 {
 public:
     /**
-     * This method clears the argument.
+     * Clears the argument.
      *
      */
     void Clear(void) { mString = nullptr; }
 
     /**
-     * This method indicates whether or not the argument is empty (i.e., reached the end of argument list).
+     * Indicates whether or not the argument is empty (i.e., reached the end of argument list).
      *
      * @retval TRUE   The argument is empty.
      * @retval FALSE  The argument is not empty.
@@ -321,7 +321,7 @@ public:
     bool IsEmpty(void) const { return (mString == nullptr); }
 
     /**
-     * This method returns the length (number of characters) in the argument C string.
+     * Returns the length (number of characters) in the argument C string.
      *
      * @returns The argument string length if argument is not empty, zero otherwise.
      *
@@ -329,7 +329,7 @@ public:
     uint16_t GetLength(void) const;
 
     /**
-     * This method gets the argument as a C string.
+     * Gets the argument as a C string.
      *
      * @returns A pointer to the argument as a C string, or `nullptr` if argument is empty.
      *
@@ -337,7 +337,7 @@ public:
     const char *GetCString(void) const { return mString; }
 
     /**
-     * This method gets the argument as C string.
+     * Gets the argument as C string.
      *
      * @returns A pointer to the argument as a C string, or `nullptr` if argument is empty.
      *
@@ -345,7 +345,7 @@ public:
     char *GetCString(void) { return mString; }
 
     /**
-     * This method sets the argument with a given C string.
+     * Sets the argument with a given C string.
      *
      * @param[in] aString    A pointer to the new C string.
      *
@@ -353,7 +353,7 @@ public:
     void SetCString(char *aString) { mString = aString; }
 
     /**
-     * This method overload the operator `==` to evaluate whether the argument is equal to a given C string.
+     * Overload the operator `==` to evaluate whether the argument is equal to a given C string.
      *
      * If the argument is empty (`IsEmpty()` is `true`) then comparing it using operator `==` with any C string will
      * return false.
@@ -367,7 +367,7 @@ public:
     bool operator==(const char *aString) const;
 
     /**
-     * This method overload the operator `!=` to evaluate whether the argument is unequal to a given C string.
+     * Overload the operator `!=` to evaluate whether the argument is unequal to a given C string.
      *
      * @param[in] aString    The C string to compare with (MUST not be `nullptr`).
      *
@@ -378,7 +378,7 @@ public:
     bool operator!=(const char *aString) const { return !(*this == aString); }
 
     /**
-     * This method parses the argument as a `uint8_t` value.
+     * Parses the argument as a `uint8_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
      *
@@ -391,7 +391,7 @@ public:
     otError ParseAsUint8(uint8_t &aUint8) const { return CmdLineParser::ParseAsUint8(mString, aUint8); }
 
     /**
-     * This method parses the argument as a `uint16_t` value.
+     * Parses the argument as a `uint16_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
      *
@@ -404,7 +404,7 @@ public:
     otError ParseAsUint16(uint16_t &aUint16) const { return CmdLineParser::ParseAsUint16(mString, aUint16); }
 
     /**
-     * This method parses the argument as a `uint32_t` value.
+     * Parses the argument as a `uint32_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
      *
@@ -417,7 +417,7 @@ public:
     otError ParseAsUint32(uint32_t &aUint32) const { return CmdLineParser::ParseAsUint32(mString, aUint32); }
 
     /**
-     * This method parses the argument as a `uint64_t` value.
+     * Parses the argument as a `uint64_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
      *
@@ -430,7 +430,7 @@ public:
     otError ParseAsUint64(uint64_t &aUint64) const { return CmdLineParser::ParseAsUint64(mString, aUint64); }
 
     /**
-     * This method parses the argument as a `int8_t` value.
+     * Parses the argument as a `int8_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
      * `+`/`-` sign.
@@ -444,7 +444,7 @@ public:
     otError ParseAsInt8(int8_t &aInt8) const { return CmdLineParser::ParseAsInt8(mString, aInt8); }
 
     /**
-     * This method parses the argument as a `int16_t` value.
+     * Parses the argument as a `int16_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
      * `+`/`-` sign.
@@ -458,7 +458,7 @@ public:
     otError ParseAsInt16(int16_t &aInt16) const { return CmdLineParser::ParseAsInt16(mString, aInt16); }
 
     /**
-     * This method parses the argument as a `int32_t` value.
+     * Parses the argument as a `int32_t` value.
      *
      * The number is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string can start with
      * `+`/`-` sign.
@@ -472,7 +472,7 @@ public:
     otError ParseAsInt32(int32_t &aInt32) const { return CmdLineParser::ParseAsInt32(mString, aInt32); }
 
     /**
-     * This method parses the argument as a `bool` value.
+     * Parses the argument as a `bool` value.
      *
      * Zero value is treated as `false`, non-zero value as `true`.
      *
@@ -486,7 +486,7 @@ public:
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
-     * This method parses the argument as an IPv6 address.
+     * Parses the argument as an IPv6 address.
      *
      * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
      *
@@ -500,7 +500,7 @@ public:
     }
 
     /**
-     * This method parses the argument as an IPv4 address.
+     * Parses the argument as an IPv4 address.
      *
      * @param[out] aAddress  A reference to an `otIp4Address` to output the parsed IPv4 address.
      *
@@ -514,7 +514,7 @@ public:
     }
 
     /**
-     * This method parses the argument as an IPv6 prefix.
+     * Parses the argument as an IPv6 prefix.
      *
      * The string is parsed as `{IPv6Address}/{PrefixLength}`.
      *
@@ -542,9 +542,9 @@ public:
     template <typename Type> otError ParseAs(Type &aValue) const;
 
     /**
-     * This method parses the argument as a hex string into a byte array of fixed expected size.
+     * Parses the argument as a hex string into a byte array of fixed expected size.
      *
-     * This method returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
+     * Returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
      * there are fewer or more bytes in hex string that @p aSize, the parsed bytes (up to @p aSize) are copied into the
      * `aBuffer` and `kErrorInvalidArgs` is returned.
      *
@@ -563,7 +563,7 @@ public:
     /**
      * This template method parses the argument as a hex string into a a given fixed size array.
      *
-     * This method returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
+     * Returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
      * If there are fewer or more bytes in hex string that @p kBufferSize, the parsed bytes (up to @p kBufferSize) are
      * copied into the `aBuffer` and `kErrorInvalidArgs` is returned.
      *
@@ -581,9 +581,9 @@ public:
     }
 
     /**
-     * This method parses the argument as a hex string into a byte array.
+     * Parses the argument as a hex string into a byte array.
      *
-     * This method verifies that the parsed hex string bytes fit in @p aBuffer with its given @p aSize.
+     * Verifies that the parsed hex string bytes fit in @p aBuffer with its given @p aSize.
      *
      * @param[in,out]  aSize    On entry indicates the number of bytes in @p aBuffer (max size of @p aBuffer).
      *                          On exit provides number of bytes parsed and copied into @p aBuffer.

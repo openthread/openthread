@@ -75,13 +75,13 @@ public:
     explicit Server(Instance &aInstance);
 
     /**
-     * This method updates DHCP Agents and DHCP ALOCs.
+     * Updates DHCP Agents and DHCP ALOCs.
      *
      */
     Error UpdateService(void);
 
     /**
-     * This method applies the Mesh Local Prefix.
+     * Applies the Mesh Local Prefix.
      *
      */
     void ApplyMeshLocalPrefix(void);
@@ -91,7 +91,7 @@ private:
     {
     public:
         /**
-         * This method indicates whether or not @p aAddress has a matching prefix.
+         * Indicates whether or not @p aAddress has a matching prefix.
          *
          * @param[in]  aAddress  The IPv6 address to compare.
          *
@@ -102,7 +102,7 @@ private:
         bool IsPrefixMatch(const Ip6::Address &aAddress) const { return aAddress.MatchesPrefix(GetPrefix()); }
 
         /**
-         * This method indicates whether or not this entry is valid.
+         * Indicates whether or not this entry is valid.
          *
          * @retval TRUE if this entry is valid.
          * @retval FALSE if this entry is not valid.
@@ -111,13 +111,13 @@ private:
         bool IsValid(void) const { return mAloc.mValid; }
 
         /**
-         * This method sets the entry to invalid.
+         * Sets the entry to invalid.
          *
          */
         void Clear(void) { mAloc.mValid = false; }
 
         /**
-         * This method returns the 6LoWPAN context ID.
+         * Returns the 6LoWPAN context ID.
          *
          * @returns The 6LoWPAN context ID.
          *
@@ -125,7 +125,7 @@ private:
         uint8_t GetContextId(void) const { return mAloc.mAddress.mFields.m8[15]; }
 
         /**
-         * This method returns the ALOC.
+         * Returns the ALOC.
          *
          * @returns the ALOC.
          *
@@ -133,7 +133,7 @@ private:
         Ip6::Netif::UnicastAddress &GetAloc(void) { return mAloc; }
 
         /**
-         * This method returns the IPv6 prefix.
+         * Returns the IPv6 prefix.
          *
          * @returns The IPv6 prefix.
          *
@@ -141,7 +141,7 @@ private:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
 
         /**
-         * This method returns the IPv6 prefix.
+         * Returns the IPv6 prefix.
          *
          * @returns The IPv6 prefix.
          *
@@ -149,7 +149,7 @@ private:
         Ip6::Prefix &GetPrefix(void) { return mPrefix; }
 
         /**
-         * This method returns the IPv6 prefix as an IPv6 address.
+         * Returns the IPv6 prefix as an IPv6 address.
          *
          * @returns The IPv6 prefix as an IPv6 address.
          *
@@ -160,7 +160,7 @@ private:
         }
 
         /**
-         * This method sets the ALOC.
+         * Sets the ALOC.
          *
          * @param[in]  aPrefix           The IPv6 prefix.
          * @param[in]  aMeshLocalPrefix  The Mesh Local Prefix.

@@ -85,7 +85,7 @@ public:
         };
 
         /**
-         * This method gets the Mesh-Local IID of the ND Proxy.
+         * Gets the Mesh-Local IID of the ND Proxy.
          *
          * @returns  The Mesh-Local IID.
          *
@@ -93,7 +93,7 @@ public:
         const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
         /**
-         * This method gets the time since last transaction of the ND Proxy.
+         * Gets the time since last transaction of the ND Proxy.
          *
          * @returns  The time since last transaction in seconds.
          *
@@ -104,7 +104,7 @@ public:
         }
 
         /**
-         * This method gets the short address of the device who sends the DUA registration.
+         * Gets the short address of the device who sends the DUA registration.
          *
          * @returns  The RLOC16 value.
          *
@@ -112,7 +112,7 @@ public:
         uint16_t GetRloc16(void) const { return mRloc16; }
 
         /**
-         * This method gets the DAD flag of the ND Proxy.
+         * Gets the DAD flag of the ND Proxy.
          *
          * @returns  The DAD flag.
          *
@@ -155,7 +155,7 @@ public:
     }
 
     /**
-     * This method registers a given IPv6 address IID with related information to the NdProxy table.
+     * Registers a given IPv6 address IID with related information to the NdProxy table.
      *
      * @param[in] aAddressIid                The IPv6 address IID.
      * @param[in] aMeshLocalIid              The Mesh-Local IID.
@@ -173,7 +173,7 @@ public:
                    const uint32_t                 *aTimeSinceLastTransaction);
 
     /**
-     * This method checks if a given IPv6 address IID was registered.
+     * Checks if a given IPv6 address IID was registered.
      *
      * @param[in] aAddressIid  The IPv6 address IID.
      *
@@ -184,7 +184,7 @@ public:
     bool IsRegistered(const Ip6::InterfaceIdentifier &aAddressIid) { return FindByAddressIid(aAddressIid) != nullptr; }
 
     /**
-     * This method notifies Domain Prefix status.
+     * Notifies Domain Prefix status.
      *
      * @param[in]  aState  The Domain Prefix state or state change.
      *
@@ -192,13 +192,13 @@ public:
     void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
 
     /**
-     * This method notifies ND Proxy table of the timer tick.
+     * Notifies ND Proxy table of the timer tick.
      *
      */
     void HandleTimer(void);
 
     /**
-     * This method gets the ND Proxy info for a given Domain Unicast Address.
+     * Gets the ND Proxy info for a given Domain Unicast Address.
      *
      * @param[in] aDua  The Domain Unicast Address.
      *
@@ -208,7 +208,7 @@ public:
     NdProxy *ResolveDua(const Ip6::Address &aDua);
 
     /**
-     * This method notifies DAD completed for a given ND Proxy.
+     * Notifies DAD completed for a given ND Proxy.
      *
      * @param[in] aNdProxy      The ND Proxy to notify of.
      * @param[in] aDuplicated   Whether duplicate was detected.
@@ -217,7 +217,7 @@ public:
     static void NotifyDadComplete(NdProxy &aNdProxy, bool aDuplicated);
 
     /**
-     * This method removes the ND Proxy.
+     * Removes the ND Proxy.
      *
      * @param[in] aNdProxy      The ND Proxy to remove.
      *
@@ -225,7 +225,7 @@ public:
     static void Erase(NdProxy &aNdProxy);
 
     /*
-     * This method sets the ND Proxy callback.
+     * Sets the ND Proxy callback.
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
@@ -234,7 +234,7 @@ public:
     void SetCallback(NdProxy::Callback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
 
     /**
-     * This method retrieves the ND Proxy info of the Domain Unicast Address.
+     * Retrieves the ND Proxy info of the Domain Unicast Address.
      *
      * @param[in] aDua          The Domain Unicast Address to get info.
      * @param[in] aNdProxyInfo  A pointer to the ND Proxy info.

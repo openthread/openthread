@@ -79,7 +79,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method update addresses that shall be automatically created using DHCP.
+     * Update addresses that shall be automatically created using DHCP.
      *
      *
      */

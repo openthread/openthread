@@ -91,7 +91,7 @@ public:
     static NcpBase *GetNcpInstance(void);
 
     /**
-     * This method sends data to host via specific stream.
+     * Sends data to host via specific stream.
      *
      *
      * @param[in]  aStreamId  A numeric identifier for the stream to write to.
@@ -109,7 +109,7 @@ public:
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
     /**
-     * This method send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
+     * Send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
      *
      * @param[in] aLogLevel   The log level
      * @param[in] aLogRegion  The log region
@@ -120,7 +120,7 @@ public:
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     /**
-     * This method registers peek/poke delegate functions with NCP module.
+     * Registers peek/poke delegate functions with NCP module.
      *
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
@@ -131,7 +131,7 @@ public:
 #endif
 
     /**
-     * This method is called by the framer whenever a framing error is detected.
+     * Is called by the framer whenever a framing error is detected.
      */
     void IncrementFrameErrorCounter(void);
 
@@ -462,7 +462,7 @@ protected:
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     /**
-     * This method defines a vendor "command handler" hook to process vendor-specific spinel commands.
+     * Defines a vendor "command handler" hook to process vendor-specific spinel commands.
      *
      * @param[in] aHeader   The spinel frame header.
      * @param[in] aCommand  The spinel command key.
@@ -474,7 +474,7 @@ protected:
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
 
     /**
-     * This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
+     * Is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
      * spinel frame is sent and removed from NCP buffer.
      *
      * (a) This can be used to track and verify that a vendor spinel frame response is delivered to the host (tracking
@@ -489,7 +489,7 @@ protected:
     void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
-     * This method defines a vendor "get property handler" hook to process vendor spinel properties.
+     * Defines a vendor "get property handler" hook to process vendor spinel properties.
      *
      * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "get" operation for the
      * given property key. Otherwise, the vendor handler should behave like other property get handlers, i.e., it
@@ -506,7 +506,7 @@ protected:
     otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
 
     /**
-     * This method defines a vendor "set property handler" hook to process vendor spinel properties.
+     * Defines a vendor "set property handler" hook to process vendor spinel properties.
      *
      * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
      * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it

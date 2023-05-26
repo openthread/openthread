@@ -107,7 +107,7 @@ class InstanceLocator : public GetProvider<InstanceLocator>
 
 public:
     /**
-     * This method returns a reference to the parent OpenThread Instance.
+     * Returns a reference to the parent OpenThread Instance.
      *
      * @returns A reference to the parent otInstance.
      *

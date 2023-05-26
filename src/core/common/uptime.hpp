@@ -66,7 +66,7 @@ public:
     explicit Uptime(Instance &aInstance);
 
     /**
-     * This method returns the current device uptime (in msec).
+     * Returns the current device uptime (in msec).
      *
      * The uptime is maintained as number of milliseconds since OpenThread instance was initialized.
      *
@@ -76,7 +76,7 @@ public:
     uint64_t GetUptime(void) const;
 
     /**
-     * This method gets the current uptime as a human-readable string.
+     * Gets the current uptime as a human-readable string.
      *
      * The string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if uptime is
      * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day).
@@ -91,7 +91,7 @@ public:
     void GetUptime(char *aBuffer, uint16_t aSize) const;
 
     /**
-     * This method converts an uptime value (number of milliseconds) to a human-readable string.
+     * Converts an uptime value (number of milliseconds) to a human-readable string.
      *
      * The string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if uptime is
      * shorter than one day) or "<dd>d.<hh>:<mm>:<ss>.<mmmm>" (if longer than a day). @p aIncludeMsec can be used

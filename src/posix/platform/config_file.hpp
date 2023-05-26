@@ -44,7 +44,7 @@ class ConfigFile
 {
 public:
     /**
-     * This method initializes the configuration file path.
+     * Initializes the configuration file path.
      *
      * @param[in]  aFilePath  A pointer to the null-terminated file path.
      *
@@ -52,7 +52,7 @@ public:
     explicit ConfigFile(const char *aFilePath);
 
     /**
-     * This method gets a configuration from the configuration file.
+     * Gets a configuration from the configuration file.
      *
      * @param[in]      aKey          The key string associated with the requested configuration.
      * @param[in,out]  aIterator     A reference to an iterator. MUST be initialized to 0 or the behavior is undefined.
@@ -68,7 +68,7 @@ public:
     otError Get(const char *aKey, int &aIterator, char *aValue, int aValueLength);
 
     /**
-     * This method adds a configuration to the configuration file.
+     * Adds a configuration to the configuration file.
      *
      * @param[in]  aKey    The key string associated with the requested configuration.
      * @param[in]  aValue  A pointer to where the new value string of the configuration should be written.

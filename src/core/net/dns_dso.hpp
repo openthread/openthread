@@ -141,7 +141,7 @@ public:
         static constexpr Type kEncryptionPaddingType = 3; ///< Encryption Padding TLV type.
 
         /**
-         * This method initializes the `Tlv` instance with a given type and length.
+         * Initializes the `Tlv` instance with a given type and length.
          *
          * @param[in] aType    The TLV type.
          * @param[in] aLength  The TLV length.
@@ -154,7 +154,7 @@ public:
         }
 
         /**
-         * This method gets the TLV type.
+         * Gets the TLV type.
          *
          * @returns The TLV type.
          *
@@ -162,7 +162,7 @@ public:
         Type GetType(void) const { return HostSwap16(mType); }
 
         /**
-         * This method gets the TLV length.
+         * Gets the TLV length.
          *
          * @returns The TLV length (in bytes).
          *
@@ -170,7 +170,7 @@ public:
         uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
         /**
-         * This method returns the total size of the TLV (including the type and length fields).
+         * Returns the total size of the TLV (including the type and length fields).
          *
          * @returns The total size (number of bytes) of the TLV.
          *
@@ -419,7 +419,7 @@ public:
                    uint32_t             aKeepAliveInterval = kDefaultTimeout);
 
         /**
-         * This method gets the current state of the `Connection`.
+         * Gets the current state of the `Connection`.
          *
          * @returns The `Connection` state.
          *
@@ -427,7 +427,7 @@ public:
         State GetState(void) const { return mState; }
 
         /**
-         * This method returns the `Connection` peer socket address.
+         * Returns the `Connection` peer socket address.
          *
          * @returns The peer socket address.
          *
@@ -435,7 +435,7 @@ public:
         const Ip6::SockAddr &GetPeerSockAddr(void) const { return mPeerSockAddr; }
 
         /**
-         * This method indicates whether or not the device is acting as a DSO server on this `Connection`.
+         * Indicates whether or not the device is acting as a DSO server on this `Connection`.
          *
          * Server is the software entity with a listening socket, awaiting incoming connection requests.
          *
@@ -446,7 +446,7 @@ public:
         bool IsServer(void) const { return mIsServer; }
 
         /**
-         * This method indicates whether or not the device is acting as a DSO client on this `Connection`.
+         * Indicates whether or not the device is acting as a DSO client on this `Connection`.
          *
          * Client is the software entity that initiates a connection to the server's listening socket.
          *
@@ -457,7 +457,7 @@ public:
         bool IsClient(void) const { return !mIsServer; }
 
         /**
-         * This method allocates a new DSO message.
+         * Allocates a new DSO message.
          *
          * @returns A pointer to the allocated message or `nullptr` if out of message buffers.
          *
@@ -465,10 +465,10 @@ public:
         Message *NewMessage(void);
 
         /**
-         * This method requests the device to initiate a connection (connect as a client) to the peer (acting as a
+         * Requests the device to initiate a connection (connect as a client) to the peer (acting as a
          * server).
          *
-         * This method MUST be called when `Connection` is `kStateDisconnected` state.
+         * MUST be called when `Connection` is `kStateDisconnected` state.
          *
          * After calling `Connect()`, either
          * - `Callbacks::HandleConnected()` is invoked when connection is successfully established, or
@@ -485,7 +485,7 @@ public:
         void Connect(void);
 
         /**
-         * This method requests the connection to be disconnected.
+         * Requests the connection to be disconnected.
          *
          * Note that calling `Disconnect()` does not trigger the `Callbacks::HandleDisconnected()` to be invoked (as
          * this callback is used when DSO module itself or the peer disconnects the connections).
@@ -500,7 +500,7 @@ public:
         void Disconnect(DisconnectMode aMode, DisconnectReason aReason);
 
         /**
-         * This method returns the last disconnect reason.
+         * Returns the last disconnect reason.
          *
          * @returns The last disconnect reason.
          *
@@ -508,14 +508,14 @@ public:
         DisconnectReason GetDisconnectReason(void) const { return mDisconnectReason; }
 
         /**
-         * This method implicitly marks the DSO session as established (set state to `kStateSessionEstablished`).
+         * Implicitly marks the DSO session as established (set state to `kStateSessionEstablished`).
          *
-         * This method MUST be called when `Connection is in `kStateConnectedButSessionless` state.
+         * MUST be called when `Connection is in `kStateConnectedButSessionless` state.
          *
          * The DSO module itself will mark the session as established after the first successful DSO message exchange
          * (sending a request message from client and receiving a response from server).
          *
-         * This method is intended for implicit DSO session establishment where it may be known in advance by some
+         * Is intended for implicit DSO session establishment where it may be known in advance by some
          * external means that both client and server support DSO and then the session may be established as soon as
          * the connection is established.
          *
@@ -523,9 +523,9 @@ public:
         void MarkSessionEstablished(void);
 
         /**
-         * This method sends a DSO request message.
+         * Sends a DSO request message.
          *
-         * This method MUST be called when `Connection` is in certain states depending on whether it is acting as a
+         * MUST be called when `Connection` is in certain states depending on whether it is acting as a
          * client or server:
          * - On client, a request message can be sent after connection is established (`kStateConnectedButSessionless`).
          *   The first request is used to establish the DSO session. While in `kStateEstablishingSession` or
@@ -553,9 +553,9 @@ public:
                                  uint32_t   aResponseTimeout = kResponseTimeout);
 
         /**
-         * This method sends a DSO unidirectional message.
+         * Sends a DSO unidirectional message.
          *
-         * This method MUST be called when session is established (in `kStateSessionEstablished` state).
+         * MUST be called when session is established (in `kStateSessionEstablished` state).
          *
          * Similar to `SendRequestMessage()` method, only TLV(s) need to be included in the message. The DNS header and
          * Encryption Padding TLV will be added by the DSO module.
@@ -572,7 +572,7 @@ public:
         Error SendUnidirectionalMessage(Message &aMessage);
 
         /**
-         * This method sends a DSO response message for a received request message.
+         * Sends a DSO response message for a received request message.
          *
          * Similar to `SendRequestMessage()` method, only TLV(s) need to be included in the message. The DNS header and
          * Encryption Padding TLV will be added by DSO module.
@@ -590,7 +590,7 @@ public:
         Error SendResponseMessage(Message &aMessage, MessageId aResponseId);
 
         /**
-         * This method returns the Keep Alive timeout interval (in msec).
+         * Returns the Keep Alive timeout interval (in msec).
          *
          * On client, this indicates the value granted by server, on server the value to grant.
          *
@@ -600,7 +600,7 @@ public:
         uint32_t GetKeepAliveInterval(void) const { return mKeepAlive.GetInterval(); }
 
         /**
-         * This method returns the Inactivity timeout interval (in msec).
+         * Returns the Inactivity timeout interval (in msec).
          *
          * On client, this indicates the value granted by server, on server the value to grant.
          *
@@ -610,9 +610,9 @@ public:
         uint32_t GetInactivityTimeout(void) const { return mInactivity.GetInterval(); }
 
         /**
-         * This method sends a Keep Alive message.
+         * Sends a Keep Alive message.
          *
-         * This method MUST be called when `Connection` is in certain states depending on whether it is acting as a
+         * MUST be called when `Connection` is in certain states depending on whether it is acting as a
          * client or server:
          * - On client, it can be called in any state after the connection is established. Sending Keep Alive message
          *   can be used to initiate establishing DSO session.
@@ -628,13 +628,13 @@ public:
         Error SendKeepAliveMessage(void);
 
         /**
-         * This method sets the Inactivity and Keep Alive timeout intervals.
+         * Sets the Inactivity and Keep Alive timeout intervals.
          *
          * On client, the specified timeout intervals are used in Keep Alive request message, i.e., they are the values
          * that client would wish to get. On server, the given timeout intervals specify the values that server would
          * grant to a client upon receiving a Keep Alive request from it.
          *
-         * This method can be called in any `Connection` state. If current state allows, calling this method will also
+         * Can be called in any `Connection` state. If current state allows, calling this method will also
          * trigger sending of a Keep Alive message (as if `SendKeepAliveMessage()` is also called). For states which
          * trigger the tx, see `SendKeepAliveMessage()`.
          *
@@ -653,7 +653,7 @@ public:
         Error SetTimeouts(uint32_t aInactivityTimeout, uint32_t aKeepAliveInterval);
 
         /**
-         * This method enables/disables long-lived operation on the session.
+         * Enables/disables long-lived operation on the session.
          *
          * When a long-lived operation is active, the Inactivity timeout is always cleared, i.e., the DSO session stays
          * connected even if no messages are exchanged.
@@ -664,9 +664,9 @@ public:
         void SetLongLivedOperation(bool aLongLivedOperation);
 
         /**
-         * This method sends a unidirectional Retry Delay message from server to client.
+         * Sends a unidirectional Retry Delay message from server to client.
          *
-         * This method MUST be used on a server only and when DSO session is already established, i.e., in state
+         * MUST be used on a server only and when DSO session is already established, i.e., in state
          * `kStateSessionEstablished`. It sends a unidirectional Retry Delay message to client requesting it to close
          * the connection and not connect again for at least the specified delay amount.
          *
@@ -685,9 +685,9 @@ public:
                                     Dns::Header::Response aResponseCode = Dns::Header::kResponseSuccess);
 
         /**
-         * This method returns the requested retry delay interval (in msec) by server.
+         * Returns the requested retry delay interval (in msec) by server.
          *
-         * This method MUST be used after a `HandleDisconnected()` callback with `kReasonServerRetryDelayRequest`
+         * MUST be used after a `HandleDisconnected()` callback with `kReasonServerRetryDelayRequest`
          *
          * @returns The retry delay interval requested by server.
          *
@@ -695,9 +695,9 @@ public:
         uint32_t GetRetryDelay(void) const { return mRetryDelay; }
 
         /**
-         * This method returns the DNS error code in the last retry delay message received on client from server.
+         * Returns the DNS error code in the last retry delay message received on client from server.
          *
-         * This method MUST be used after a `HandleDisconnected()` callback with `kReasonServerRetryDelayRequest`
+         * MUST be used after a `HandleDisconnected()` callback with `kReasonServerRetryDelayRequest`
          *
          * @returns The DNS error code in the last Retry Delay message received on client from server.
          *
@@ -862,7 +862,7 @@ public:
     explicit Dso(Instance &aInstance);
 
     /**
-     * This method starts listening for DSO connection requests from peers.
+     * Starts listening for DSO connection requests from peers.
      *
      * Once a connection request (from a peer) is received, the `Dso` module will invoke the `AcceptHandler` to
      * determine whether to accept or reject the request.
@@ -873,13 +873,13 @@ public:
     void StartListening(AcceptHandler aAcceptHandler);
 
     /**
-     * This method stops listening for DSO connection requests from peers.
+     * Stops listening for DSO connection requests from peers.
      *
      */
     void StopListening(void);
 
     /**
-     * This method finds a client `Connection` instance (being currently managed by the `Dso` module) matching a given
+     * Finds a client `Connection` instance (being currently managed by the `Dso` module) matching a given
      * peer socket address.
      *
      * @param[in] aPeerSockAddr   The peer socket address.
@@ -890,7 +890,7 @@ public:
     Connection *FindClientConnection(const Ip6::SockAddr &aPeerSockAddr);
 
     /**
-     * This method finds a server `Connection` instance (being currently managed by the `Dso` module) matching a given
+     * Finds a server `Connection` instance (being currently managed by the `Dso` module) matching a given
      * peer socket address.
      *
      * @param[in] aPeerSockAddr   The peer socket address.

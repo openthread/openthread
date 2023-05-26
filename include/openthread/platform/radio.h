@@ -630,7 +630,7 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
                           otRadioKeyType          aKeyType);
 
 /**
- * This method sets the current MAC frame counter value.
+ * Sets the current MAC frame counter value.
  *
  * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
@@ -641,7 +641,7 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
- * This method sets the current MAC frame counter value only if the new given value is larger than the current value.
+ * Sets the current MAC frame counter value only if the new given value is larger than the current value.
  *
  * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *

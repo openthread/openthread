@@ -170,7 +170,7 @@ class OnMeshPrefixConfig : public otBorderRouterConfig,
 
 public:
     /**
-     * This method gets the prefix.
+     * Gets the prefix.
      *
      * @return The prefix.
      *
@@ -178,7 +178,7 @@ public:
     const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
-     * This method gets the prefix.
+     * Gets the prefix.
      *
      * @return The prefix.
      *
@@ -186,7 +186,7 @@ public:
     Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
     /**
-     * This method gets the preference.
+     * Gets the preference.
      *
      * @return The preference.
      *
@@ -195,7 +195,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
-     * This method indicates whether or not the prefix configuration is valid.
+     * Indicates whether or not the prefix configuration is valid.
      *
      * @param[in] aInstance   A reference to the OpenThread instance.
      *
@@ -230,7 +230,7 @@ class ExternalRouteConfig : public otExternalRouteConfig,
 
 public:
     /**
-     * This method gets the prefix.
+     * Gets the prefix.
      *
      * @return The prefix.
      *
@@ -238,7 +238,7 @@ public:
     const Ip6::Prefix &GetPrefix(void) const { return AsCoreType(&mPrefix); }
 
     /**
-     * This method gets the prefix.
+     * Gets the prefix.
      *
      * @return The prefix.
      *
@@ -246,7 +246,7 @@ public:
     Ip6::Prefix &GetPrefix(void) { return AsCoreType(&mPrefix); }
 
     /**
-     * This method sets the prefix.
+     * Sets the prefix.
      *
      * @param[in]  aPrefix  The prefix to set to.
      *
@@ -255,7 +255,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
-     * This method indicates whether or not the external route configuration is valid.
+     * Indicates whether or not the external route configuration is valid.
      *
      * @param[in] aInstance   A reference to the OpenThread instance.
      *
@@ -287,7 +287,7 @@ class LowpanContextInfo : public otLowpanContextInfo, public Clearable<LowpanCon
 
 public:
     /**
-     * This method gets the prefix.
+     * Gets the prefix.
      *
      * @return The prefix.
      *
@@ -334,7 +334,7 @@ public:
 
     public:
         /**
-         * This method gets the Server Data.
+         * Gets the Server Data.
          *
          * @param[out] aServerData   A reference to a`ServerData` to return the data.
          *
@@ -342,7 +342,7 @@ public:
         void GetServerData(ServerData &aServerData) const { aServerData.Init(mServerData, mServerDataLength); }
 
         /**
-         * This method overloads operator `==` to evaluate whether or not two `ServerConfig` instances are equal.
+         * Overloads operator `==` to evaluate whether or not two `ServerConfig` instances are equal.
          *
          * @param[in]  aOther  The other `ServerConfig` instance to compare with.
          *
@@ -357,7 +357,7 @@ public:
     };
 
     /**
-     * This method gets the Service Data.
+     * Gets the Service Data.
      *
      * @param[out] aServiceData   A reference to a `ServiceData` to return the data.
      *
@@ -365,7 +365,7 @@ public:
     void GetServiceData(ServiceData &aServiceData) const { aServiceData.Init(mServiceData, mServiceDataLength); }
 
     /**
-     * This method gets the Server configuration.
+     * Gets the Server configuration.
      *
      * @returns The Server configuration.
      *
@@ -373,7 +373,7 @@ public:
     const ServerConfig &GetServerConfig(void) const { return static_cast<const ServerConfig &>(mServerConfig); }
 
     /**
-     * This method gets the Server configuration.
+     * Gets the Server configuration.
      *
      * @returns The Server configuration.
      *
@@ -381,7 +381,7 @@ public:
     ServerConfig &GetServerConfig(void) { return static_cast<ServerConfig &>(mServerConfig); }
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two `ServiceConfig` instances are equal.
+     * Overloads operator `==` to evaluate whether or not two `ServiceConfig` instances are equal.
      *
      * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
      *

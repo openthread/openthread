@@ -96,7 +96,7 @@ public:
 
     public:
         /**
-         * This method gets the source IPv6 address of the ping.
+         * Gets the source IPv6 address of the ping.
          *
          * @returns The ping source IPv6 address.
          *
@@ -104,7 +104,7 @@ public:
         Ip6::Address &GetSource(void) { return AsCoreType(&mSource); }
 
         /**
-         * This method gets the source IPv6 address of the ping.
+         * Gets the source IPv6 address of the ping.
          *
          * @returns The ping source IPv6 address.
          *
@@ -112,7 +112,7 @@ public:
         const Ip6::Address &GetSource(void) const { return AsCoreType(&mSource); }
 
         /**
-         * This method gets the destination IPv6 address to ping.
+         * Gets the destination IPv6 address to ping.
          *
          * @returns The ping destination IPv6 address.
          *
@@ -120,7 +120,7 @@ public:
         Ip6::Address &GetDestination(void) { return AsCoreType(&mDestination); }
 
         /**
-         * This method gets the destination IPv6 address to ping.
+         * Gets the destination IPv6 address to ping.
          *
          * @returns The ping destination IPv6 address.
          *
@@ -147,7 +147,7 @@ public:
     explicit PingSender(Instance &aInstance);
 
     /**
-     * This method starts a ping.
+     * Starts a ping.
      *
      * @param[in] aConfig          The ping config to use.
      *
@@ -159,7 +159,7 @@ public:
     Error Ping(const Config &aConfig);
 
     /**
-     * This method stops an ongoing ping.
+     * Stops an ongoing ping.
      *
      */
     void Stop(void);

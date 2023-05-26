@@ -89,7 +89,7 @@ public:
 
     public:
         /**
-         * This method returns the number of queued messages for the child.
+         * Returns the number of queued messages for the child.
          *
          * @returns Number of queued messages for the child.
          *
@@ -142,13 +142,13 @@ public:
     explicit IndirectSender(Instance &aInstance);
 
     /**
-     * This method enables indirect transmissions.
+     * Enables indirect transmissions.
      *
      */
     void Start(void) { mEnabled = true; }
 
     /**
-     * This method disables indirect transmission.
+     * Disables indirect transmission.
      *
      * Any previously scheduled indirect transmission is canceled.
      *
@@ -156,7 +156,7 @@ public:
     void Stop(void);
 
     /**
-     * This method adds a message for indirect transmission to a sleepy child.
+     * Adds a message for indirect transmission to a sleepy child.
      *
      * @param[in] aMessage  The message to add.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
@@ -165,7 +165,7 @@ public:
     void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
 
     /**
-     * This method removes a message for indirect transmission to a sleepy child.
+     * Removes a message for indirect transmission to a sleepy child.
      *
      * @param[in] aMessage  The message to update.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
@@ -177,7 +177,7 @@ public:
     Error RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
 
     /**
-     * This method removes all added messages for a specific child and frees message (with no indirect/direct tx).
+     * Removes all added messages for a specific child and frees message (with no indirect/direct tx).
      *
      * @param[in]  aChild  A reference to a child whose messages shall be removed.
      *
@@ -185,7 +185,7 @@ public:
     void ClearAllMessagesForSleepyChild(Child &aChild);
 
     /**
-     * This method sets whether to use the extended or short address for a child.
+     * Sets whether to use the extended or short address for a child.
      *
      * @param[in] aChild            A reference to the child.
      * @param[in] aUseShortAddress  `true` to use short address, `false` to use extended address.
@@ -194,7 +194,7 @@ public:
     void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
 
     /**
-     * This method handles a child mode change and updates any queued messages for the child accordingly.
+     * Handles a child mode change and updates any queued messages for the child accordingly.
      *
      * @param[in]  aChild    The child whose device mode was changed.
      * @param[in]  aOldMode  The old device mode of the child.

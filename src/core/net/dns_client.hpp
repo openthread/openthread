@@ -177,7 +177,7 @@ public:
         QueryConfig(void) = default;
 
         /**
-         * This method gets the server socket address (IPv6 address and port number).
+         * Gets the server socket address (IPv6 address and port number).
          *
          * @returns The server socket address.
          *
@@ -188,7 +188,7 @@ public:
         }
 
         /**
-         * This method gets the wait time to receive response from server (in msec).
+         * Gets the wait time to receive response from server (in msec).
          *
          * @returns The timeout interval in msec.
          *
@@ -196,7 +196,7 @@ public:
         uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
 
         /**
-         * This method gets the maximum number of query transmit attempts before reporting failure.
+         * Gets the maximum number of query transmit attempts before reporting failure.
          *
          * @returns The maximum number of query transmit attempts.
          *
@@ -204,7 +204,7 @@ public:
         uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
 
         /**
-         * This method gets the recursion flag indicating whether the server can resolve the query recursively or not.
+         * Gets the recursion flag indicating whether the server can resolve the query recursively or not.
          *
          * @returns The recursion flag.
          *
@@ -213,7 +213,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         /**
-         * This method gets the NAT64 mode.
+         * Gets the NAT64 mode.
          *
          * @returns The NAT64 mode.
          *
@@ -221,7 +221,7 @@ public:
         Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
         /**
-         * This method gets the service resolution mode.
+         * Gets the service resolution mode.
          *
          * @returns The service resolution mode.
          *
@@ -229,7 +229,7 @@ public:
         ServiceMode GetServiceMode(void) const { return static_cast<ServiceMode>(mServiceMode); }
 
         /**
-         * This method gets the transport protocol.
+         * Gets the transport protocol.
          *
          * @returns The transport protocol.
          *
@@ -359,9 +359,9 @@ public:
 
     public:
         /**
-         * This method gets the host name associated with an address resolution DNS response.
+         * Gets the host name associated with an address resolution DNS response.
          *
-         * This method MUST only be used from `AddressCallback`.
+         * MUST only be used from `AddressCallback`.
          *
          * @param[out] aNameBuffer       A buffer to char array to output the host name.
          * @param[in]  aNameBufferSize   The size of @p aNameBuffer.
@@ -376,9 +376,9 @@ public:
         }
 
         /**
-         * This method gets the IPv6 address associated with an address resolution DNS response.
+         * Gets the IPv6 address associated with an address resolution DNS response.
          *
-         * This method MUST only be used from `AddressCallback`.
+         * MUST only be used from `AddressCallback`.
          *
          * The response may include multiple IPv6 address records. @p aIndex can be used to iterate through the list of
          * addresses. Index zero gets the the first address and so on. When we reach end of the list, this method
@@ -421,9 +421,9 @@ public:
 
     public:
         /**
-         * This method gets the service name associated with a DNS browse response.
+         * Gets the service name associated with a DNS browse response.
          *
-         * This method MUST only be used from `BrowseCallback`.
+         * MUST only be used from `BrowseCallback`.
          *
          * @param[out] aNameBuffer       A buffer to char array to output the host name.
          * @param[in]  aNameBufferSize   The size of @p aNameBuffer.
@@ -438,9 +438,9 @@ public:
         }
 
         /**
-         * This method gets a service instance associated with a DNS browse (service instance enumeration) response.
+         * Gets a service instance associated with a DNS browse (service instance enumeration) response.
          *
-         * This method MUST only be used from `BrowseCallback`.
+         * MUST only be used from `BrowseCallback`.
          *
          * A response may include multiple service instance records. @p aIndex can be used to iterate through the list.
          * Index zero gives the the first record. When we reach end of the list, `kErrorNotFound` is returned.
@@ -461,9 +461,9 @@ public:
         Error GetServiceInstance(uint16_t aIndex, char *aLabelBuffer, uint8_t aLabelBufferSize) const;
 
         /**
-         * This method gets info for a service instance from a DNS browse (service instance enumeration) response.
+         * Gets info for a service instance from a DNS browse (service instance enumeration) response.
          *
-         * This method MUST only be used from `BrowseCallback`.
+         * MUST only be used from `BrowseCallback`.
          *
          * A browse DNS response should include the SRV, TXT, and AAAA records for the service instances that are
          * enumerated (note that it is a SHOULD and not a MUST requirement). This method tries to retrieve this info
@@ -488,9 +488,9 @@ public:
         Error GetServiceInfo(const char *aInstanceLabel, ServiceInfo &aServiceInfo) const;
 
         /**
-         * This method gets the host IPv6 address from a DNS browse (service instance enumeration) response.
+         * Gets the host IPv6 address from a DNS browse (service instance enumeration) response.
          *
-         * This method MUST only be used from `BrowseCallback`.
+         * MUST only be used from `BrowseCallback`.
          *
          * The response can include zero or more IPv6 address records. @p aIndex can be used to iterate through the
          * list of addresses. Index zero gets the first address and so on. When we reach end of the list, this method
@@ -529,9 +529,9 @@ public:
 
     public:
         /**
-         * This method gets the service instance name associated with a DNS service instance resolution response.
+         * Gets the service instance name associated with a DNS service instance resolution response.
          *
-         * This method MUST only be used from `ServiceCallback`.
+         * MUST only be used from `ServiceCallback`.
          *
          * @param[out] aLabelBuffer      A buffer to char array to output the service instance label (MUST NOT be NULL).
          * @param[in]  aLabelBufferSize  The size of @p aLabelBuffer.
@@ -549,9 +549,9 @@ public:
                              uint16_t aNameBufferSize) const;
 
         /**
-         * This method gets info for a service instance from a DNS service instance resolution response.
+         * Gets info for a service instance from a DNS service instance resolution response.
          *
-         * This method MUST only be used from `ServiceCallback`.
+         * MUST only be used from `ServiceCallback`.
          *
          * - If no matching SRV record is found, `kErrorNotFound` is returned.
          * - If a matching SRV record is found, @p aServiceInfo is updated and `kErrorNone` is returned.
@@ -571,9 +571,9 @@ public:
         Error GetServiceInfo(ServiceInfo &aServiceInfo) const;
 
         /**
-         * This method gets the host IPv6 address from a DNS service instance resolution response.
+         * Gets the host IPv6 address from a DNS service instance resolution response.
          *
-         * This method MUST only be used from `ServiceCallback`.
+         * MUST only be used from `ServiceCallback`.
          *
          * The response can include zero or more IPv6 address records. @p aIndex can be used to iterate through the
          * list of addresses. Index zero gets the first address and so on. When we reach end of the list, this method
@@ -603,7 +603,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method starts the DNS client.
+     * Starts the DNS client.
      *
      * @retval kErrorNone     Successfully started the DNS client.
      * @retval kErrorAlready  The socket is already open.
@@ -612,13 +612,13 @@ public:
     Error Start(void);
 
     /**
-     * This method stops the DNS client.
+     * Stops the DNS client.
      *
      */
     void Stop(void);
 
     /**
-     * This method gets the current default query config being used by DNS client.
+     * Gets the current default query config being used by DNS client.
      *
      * @returns The current default query config.
      *
@@ -626,7 +626,7 @@ public:
     const QueryConfig &GetDefaultConfig(void) const { return mDefaultConfig; }
 
     /**
-     * This method sets the default query config.
+     * Sets the default query config.
      *
      * @param[in] aQueryConfig   The new default query config.
      *
@@ -634,7 +634,7 @@ public:
     void SetDefaultConfig(const QueryConfig &aQueryConfig);
 
     /**
-     * This method resets the default config to the config used when the OpenThread stack starts.
+     * Resets the default config to the config used when the OpenThread stack starts.
      *
      * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
@@ -644,7 +644,7 @@ public:
     void ResetDefaultConfig(void);
 
     /**
-     * This method sends an address resolution DNS query for AAAA (IPv6) record for a given host name.
+     * Sends an address resolution DNS query for AAAA (IPv6) record for a given host name.
      *
      * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
      * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
@@ -668,7 +668,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     /**
-     * This method sends an address resolution DNS query for A (IPv4) record for a given host name.
+     * Sends an address resolution DNS query for A (IPv4) record for a given host name.
      *
      * When a successful response is received, the addresses are returned from @p aCallback as NAT64 IPv6 translated
      * versions of the IPv4 addresses from the query response.
@@ -697,7 +697,7 @@ public:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
     /**
-     * This method sends a browse (service instance enumeration) DNS query for a given service name.
+     * Sends a browse (service instance enumeration) DNS query for a given service name.
      *
      * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
      * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
@@ -718,7 +718,7 @@ public:
                  const QueryConfig *aConfig = nullptr);
 
     /**
-     * This method starts a DNS service instance resolution for a given service instance.
+     * Starts a DNS service instance resolution for a given service instance.
      *
      * The @p aConfig can be `nullptr`. In this case the default config (from `GetDefaultConfig()`) will be used as
      * the config for this query. In a non-`nullptr` @p aConfig, some of the fields can be left unspecified (value
@@ -742,7 +742,7 @@ public:
                          const QueryConfig   *aConfig = nullptr);
 
     /**
-     * This method starts a DNS service instance resolution for a given service instance, with a potential follow-up
+     * Starts a DNS service instance resolution for a given service instance, with a potential follow-up
      * host name resolution (if the server/resolver does not provide AAAA/A records for the host name in the response
      * to SRV query).
      *

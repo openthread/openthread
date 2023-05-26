@@ -79,7 +79,7 @@ public:
     typedef otDatasetUpdaterCallback UpdaterCallback;
 
     /**
-     * This method requests an update to Operational Dataset.
+     * Requests an update to Operational Dataset.
      *
      * @p aDataset should contain the fields to be updated and their new value. It must not contain Active or Pending
      * Timestamp fields. The Delay field is optional, if not provided a default value (`kDefaultDelay`) would be used.
@@ -98,13 +98,13 @@ public:
     Error RequestUpdate(const Dataset::Info &aDataset, UpdaterCallback aCallback, void *aContext);
 
     /**
-     * This method cancels an ongoing (if any) Operational Dataset update request.
+     * Cancels an ongoing (if any) Operational Dataset update request.
      *
      */
     void CancelUpdate(void);
 
     /**
-     * This method indicates whether there is an ongoing Operation Dataset update request.
+     * Indicates whether there is an ongoing Operation Dataset update request.
      *
      * @retval TRUE    There is an ongoing update.
      * @retval FALSE   There is no ongoing update.

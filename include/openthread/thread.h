@@ -299,7 +299,7 @@ otError otThreadDiscover(otInstance              *aInstance,
 bool otThreadIsDiscoverInProgress(otInstance *aInstance);
 
 /**
- * This method sets the Thread Joiner Advertisement when discovering Thread network.
+ * Sets the Thread Joiner Advertisement when discovering Thread network.
  *
  * Thread Joiner Advertisement is used to allow a Joiner to advertise its own application-specific information
  * (such as Vendor ID, Product ID, Discriminator, etc.) via a newly-proposed Joiner Advertisement TLV,

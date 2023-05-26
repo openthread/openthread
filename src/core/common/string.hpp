@@ -307,7 +307,7 @@ public:
     StringWriter(char *aBuffer, uint16_t aSize);
 
     /**
-     * This method clears the string writer.
+     * Clears the string writer.
      *
      * @returns The string writer.
      *
@@ -315,7 +315,7 @@ public:
     StringWriter &Clear(void);
 
     /**
-     * This method returns whether the output is truncated.
+     * Returns whether the output is truncated.
      *
      * @note If the output is truncated, the buffer is still null-terminated.
      *
@@ -326,7 +326,7 @@ public:
     bool IsTruncated(void) const { return mLength >= mSize; }
 
     /**
-     * This method gets the length of the wanted string.
+     * Gets the length of the wanted string.
      *
      * Similar to `strlen()` the length does not include the null character at the end of the string.
      *
@@ -336,7 +336,7 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the size (number of chars) in the buffer.
+     * Returns the size (number of chars) in the buffer.
      *
      * @returns The size of the buffer.
      *
@@ -344,7 +344,7 @@ public:
     uint16_t GetSize(void) const { return mSize; }
 
     /**
-     * This method appends `printf()` style formatted data to the buffer.
+     * Appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] ...        Arguments for the format specification.
@@ -355,7 +355,7 @@ public:
     StringWriter &Append(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
-     * This method appends `printf()` style formatted data to the buffer.
+     * Appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] aArgs      Arguments for the format specification (as `va_list`).
@@ -366,7 +366,7 @@ public:
     StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
 
     /**
-     * This method appends an array of bytes in hex representation (using "%02x" style) to the buffer.
+     * Appends an array of bytes in hex representation (using "%02x" style) to the buffer.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
@@ -377,13 +377,13 @@ public:
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
-     * This method converts all uppercase letter characters in the string to lowercase.
+     * Converts all uppercase letter characters in the string to lowercase.
      *
      */
     void ConvertToLowercase(void) { StringConvertToLowercase(mBuffer); }
 
     /**
-     * This method converts all lowercase letter characters in the string to uppercase.
+     * Converts all lowercase letter characters in the string to uppercase.
      *
      */
     void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
@@ -413,7 +413,7 @@ public:
     }
 
     /**
-     * This method returns the string as a null-terminated C string.
+     * Returns the string as a null-terminated C string.
      *
      * @returns The null-terminated C string.
      *

@@ -103,7 +103,7 @@ public:
     explicit ChannelMonitor(Instance &aInstance);
 
     /**
-     * This method starts the Channel Monitoring operation.
+     * Starts the Channel Monitoring operation.
      *
      * Once started, any previously collected data is cleared.
      *
@@ -114,7 +114,7 @@ public:
     Error Start(void);
 
     /**
-     * This method stops the Channel Monitoring operation.
+     * Stops the Channel Monitoring operation.
      *
      * @note After `Stop()`, the previous data is still valid and can be read.
      *
@@ -125,7 +125,7 @@ public:
     Error Stop(void);
 
     /**
-     * This method indicates whether the Channel Monitoring operation is started and running.
+     * Indicates whether the Channel Monitoring operation is started and running.
      *
      * @returns TRUE if the Channel Monitoring operation is running, FALSE otherwise.
      *
@@ -133,13 +133,13 @@ public:
     bool IsRunning(void) const { return mTimer.IsRunning(); }
 
     /**
-     * This method clears all currently stored data.
+     * Clears all currently stored data.
      *
      */
     void Clear(void);
 
     /**
-     * This method returns the total number of RSSI samples (per channel) taken so far (since call to `Start()`).
+     * Returns the total number of RSSI samples (per channel) taken so far (since call to `Start()`).
      *
      * @returns total number of RSSI sample taken since last call to `Start()`.
      *
@@ -147,7 +147,7 @@ public:
     uint32_t GetSampleCount(void) const { return mSampleCount; }
 
     /**
-     * This method returns the current channel occupancy for a given channel.
+     * Returns the current channel occupancy for a given channel.
      *
      * The channel occupancy represents the average rate/percentage of RSSI samples that were above RSSI threshold
      * `kRssiThreshold` ("bad" RSSI samples).
@@ -168,7 +168,7 @@ public:
     uint16_t GetChannelOccupancy(uint8_t aChannel) const;
 
     /**
-     * This method finds the best channel(s) (with least occupancy rate) in a given channel mask.
+     * Finds the best channel(s) (with least occupancy rate) in a given channel mask.
      *
      * The channels are compared based on their occupancy rate from `GetChannelOccupancy()` and lower occupancy rate
      * is considered better.

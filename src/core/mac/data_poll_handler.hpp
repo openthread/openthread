@@ -214,13 +214,13 @@ public:
     explicit DataPollHandler(Instance &aInstance);
 
     /**
-     * This method clears any state/info saved per child for indirect frame transmission.
+     * Clears any state/info saved per child for indirect frame transmission.
      *
      */
     void Clear(void);
 
     /**
-     * This method informs data poll handler that there is a new frame for a given child.
+     * Informs data poll handler that there is a new frame for a given child.
      *
      * After this call, the data poll handler can use the `Callbacks::PrepareFrameForChild()` method to request the
      * frame to be prepared. A subsequent call to `Callbacks::PrepareFrameForChild()` should ensure to prepare the same
@@ -234,7 +234,7 @@ public:
     void HandleNewFrame(Child &aChild);
 
     /**
-     * This method requests a frame change for a given child.
+     * Requests a frame change for a given child.
      *
      * Two types of frame change requests are supported:
      *

@@ -341,7 +341,7 @@ public:
     explicit DeviceMode(ModeConfig aModeConfig) { Set(aModeConfig); }
 
     /**
-     * This method gets the device mode as a mode TLV bitmask.
+     * Gets the device mode as a mode TLV bitmask.
      *
      * @returns The device mode as a mode TLV bitmask.
      *
@@ -349,7 +349,7 @@ public:
     uint8_t Get(void) const { return mMode; }
 
     /**
-     * This method sets the device mode from a given mode TLV bitmask.
+     * Sets the device mode from a given mode TLV bitmask.
      *
      * @param[in] aMode   A mode TLV bitmask.
      *
@@ -357,7 +357,7 @@ public:
     void Set(uint8_t aMode) { mMode = aMode | kModeReserved; }
 
     /**
-     * This method gets the device mode as a mode configuration structure.
+     * Gets the device mode as a mode configuration structure.
      *
      * @param[out] aModeConfig   A reference to a mode configuration structure to output the device mode.
      *
@@ -373,7 +373,7 @@ public:
     void Set(const ModeConfig &aModeConfig);
 
     /**
-     * This method indicates whether or not the device is rx-on-when-idle.
+     * Indicates whether or not the device is rx-on-when-idle.
      *
      * @retval TRUE   If the device is rx-on-when-idle (non-sleepy).
      * @retval FALSE  If the device is not rx-on-when-idle (sleepy).
@@ -382,7 +382,7 @@ public:
     bool IsRxOnWhenIdle(void) const { return (mMode & kModeRxOnWhenIdle) != 0; }
 
     /**
-     * This method indicates whether or not the device is a Full Thread Device.
+     * Indicates whether or not the device is a Full Thread Device.
      *
      * @retval TRUE   If the device is Full Thread Device.
      * @retval FALSE  If the device if not Full Thread Device.
@@ -391,7 +391,7 @@ public:
     bool IsFullThreadDevice(void) const { return (mMode & kModeFullThreadDevice) != 0; }
 
     /**
-     * This method gets the Network Data type (full set or stable subset) that the device requests.
+     * Gets the Network Data type (full set or stable subset) that the device requests.
      *
      * @returns The Network Data type requested by this device.
      *
@@ -402,7 +402,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the device is a Minimal End Device.
+     * Indicates whether or not the device is a Minimal End Device.
      *
      * @retval TRUE   If the device is a Minimal End Device.
      * @retval FALSE  If the device is not a Minimal End Device.
@@ -414,7 +414,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the device mode flags are valid.
+     * Indicates whether or not the device mode flags are valid.
      *
      * An FTD which is not rx-on-when-idle (is sleepy) is considered invalid.
      *
@@ -426,7 +426,7 @@ public:
     bool IsValid(void) const { return !IsFullThreadDevice() || IsRxOnWhenIdle(); }
 
     /**
-     * This method converts the device mode into a human-readable string.
+     * Converts the device mode into a human-readable string.
      *
      * @returns An `InfoString` object representing the device mode.
      *
@@ -466,13 +466,13 @@ public:
     DeviceProperties(void);
 
     /**
-     * This method clamps the `mLeaderWeightAdjustment` value to the valid range.
+     * Clamps the `mLeaderWeightAdjustment` value to the valid range.
      *
      */
     void ClampWeightAdjustment(void);
 
     /**
-     * This method calculates the leader weight based on the device properties.
+     * Calculates the leader weight based on the device properties.
      *
      * @returns The calculated leader weight.
      *
@@ -506,7 +506,7 @@ class LeaderData : public otLeaderData, public Clearable<LeaderData>
 {
 public:
     /**
-     * This method returns the Partition ID value.
+     * Returns the Partition ID value.
      *
      * @returns The Partition ID value.
      *
@@ -514,7 +514,7 @@ public:
     uint32_t GetPartitionId(void) const { return mPartitionId; }
 
     /**
-     * This method sets the Partition ID value.
+     * Sets the Partition ID value.
      *
      * @param[in]  aPartitionId  The Partition ID value.
      *
@@ -522,7 +522,7 @@ public:
     void SetPartitionId(uint32_t aPartitionId) { mPartitionId = aPartitionId; }
 
     /**
-     * This method returns the Weighting value.
+     * Returns the Weighting value.
      *
      * @returns The Weighting value.
      *
@@ -530,7 +530,7 @@ public:
     uint8_t GetWeighting(void) const { return mWeighting; }
 
     /**
-     * This method sets the Weighting value.
+     * Sets the Weighting value.
      *
      * @param[in]  aWeighting  The Weighting value.
      *
@@ -538,7 +538,7 @@ public:
     void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
 
     /**
-     * This method returns the Data Version value for a type (full set or stable subset).
+     * Returns the Data Version value for a type (full set or stable subset).
      *
      * @param[in] aType   The Network Data type (full set or stable subset).
      *
@@ -551,7 +551,7 @@ public:
     }
 
     /**
-     * This method sets the Data Version value.
+     * Sets the Data Version value.
      *
      * @param[in]  aVersion  The Data Version value.
      *
@@ -559,7 +559,7 @@ public:
     void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
 
     /**
-     * This method sets the Stable Data Version value.
+     * Sets the Stable Data Version value.
      *
      * @param[in]  aVersion  The Stable Data Version value.
      *
@@ -567,7 +567,7 @@ public:
     void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
 
     /**
-     * This method returns the Leader Router ID value.
+     * Returns the Leader Router ID value.
      *
      * @returns The Leader Router ID value.
      *
@@ -575,7 +575,7 @@ public:
     uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
 
     /**
-     * This method sets the Leader Router ID value.
+     * Sets the Leader Router ID value.
      *
      * @param[in]  aRouterId  The Leader Router ID value.
      *
@@ -588,13 +588,13 @@ class RouterIdSet : public Equatable<RouterIdSet>
 {
 public:
     /**
-     * This method clears the Router Id Set.
+     * Clears the Router Id Set.
      *
      */
     void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
 
     /**
-     * This method indicates whether or not a Router ID bit is set.
+     * Indicates whether or not a Router ID bit is set.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -605,7 +605,7 @@ public:
     bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
 
     /**
-     * This method sets a given Router ID.
+     * Sets a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to set.
      *
@@ -613,7 +613,7 @@ public:
     void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= MaskFor(aRouterId); }
 
     /**
-     * This method removes a given Router ID.
+     * Removes a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to remove.
      *
@@ -621,7 +621,7 @@ public:
     void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~MaskFor(aRouterId); }
 
     /**
-     * This method calculates the number of allocated Router IDs in the set.
+     * Calculates the number of allocated Router IDs in the set.
      *
      * @returns The number of allocated Router IDs in the set.
      *

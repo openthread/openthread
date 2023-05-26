@@ -81,7 +81,7 @@ public:
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     /**
-     * This method returns the vendor name string.
+     * Returns the vendor name string.
      *
      * @returns The vendor name string.
      *
@@ -89,7 +89,7 @@ public:
     const char *GetVendorName(void) const { return mVendorName; }
 
     /**
-     * This method sets the vendor name string.
+     * Sets the vendor name string.
      *
      * @param[in] aVendorName     The vendor name string.
      *
@@ -100,7 +100,7 @@ public:
     Error SetVendorName(const char *aVendorName);
 
     /**
-     * This method returns the vendor model string.
+     * Returns the vendor model string.
      *
      * @returns The vendor model string.
      *
@@ -108,7 +108,7 @@ public:
     const char *GetVendorModel(void) const { return mVendorModel; }
 
     /**
-     * This method sets the vendor model string.
+     * Sets the vendor model string.
      *
      * @param[in] aVendorModel     The vendor model string.
      *
@@ -119,7 +119,7 @@ public:
     Error SetVendorModel(const char *aVendorModel);
 
     /**
-     * This method returns the vendor software version string.
+     * Returns the vendor software version string.
      *
      * @returns The vendor software version string.
      *
@@ -127,7 +127,7 @@ public:
     const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
 
     /**
-     * This method sets the vendor sw version string
+     * Sets the vendor sw version string
      *
      * @param[in] aVendorSwVersion     The vendor sw version string.
      *
@@ -199,7 +199,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
+     * Sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
      * message is sent or the DIAG_GET.req otherwise.
      *
      * @param[in]  aDestination      The destination address.
@@ -216,7 +216,7 @@ public:
                             void               *Context);
 
     /**
-     * This method sends Diagnostic Reset request.
+     * Sends Diagnostic Reset request.
      *
      * @param[in] aDestination  The destination address.
      * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.

@@ -73,7 +73,7 @@ public:
     explicit AnycastLocator(Instance &aInstance);
 
     /**
-     * This method requests the closest destination of a given anycast address to be located.
+     * Requests the closest destination of a given anycast address to be located.
      *
      * If a previous `Locate()` request is ongoing, a subsequent call to this method will cancel and replace the
      * earlier request.
@@ -90,7 +90,7 @@ public:
     Error Locate(const Ip6::Address &aAnycastAddress, LocatorCallback aCallback, void *aContext);
 
     /**
-     * This method indicates whether an earlier request is in progress.
+     * Indicates whether an earlier request is in progress.
      *
      * @returns TRUE if an earlier request is in progress, FALSE otherwise.
      *

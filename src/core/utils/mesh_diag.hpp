@@ -81,7 +81,7 @@ public:
 
     public:
         /**
-         * This method iterates through the discovered IPv6 address of a router.
+         * Iterates through the discovered IPv6 address of a router.
          *
          * @param[out]     aIp6Address  A reference to return the next IPv6 address (if any).
          *
@@ -129,7 +129,7 @@ public:
 
     public:
         /**
-         * This method iterates through the discovered children of a router.
+         * Iterates through the discovered children of a router.
          *
          * @param[out]     aChildInfo  A reference to return the info for the next child (if any).
          *
@@ -157,7 +157,7 @@ public:
     explicit MeshDiag(Instance &aInstance);
 
     /**
-     * This method starts network topology discovery.
+     * Starts network topology discovery.
      *
      * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
      * @param[in] aCallback        The callback to report the discovered routers.
@@ -172,7 +172,7 @@ public:
     Error DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext);
 
     /**
-     * This method cancels an ongoing topology discovery if there one, otherwise no action.
+     * Cancels an ongoing topology discovery if there one, otherwise no action.
      *
      * When ongoing discovery is cancelled, the callback from `DiscoverTopology()` will not be called anymore.
      *

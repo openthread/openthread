@@ -59,13 +59,13 @@ public:
     explicit NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
     /**
-     * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
+     * Is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
      *
      */
     void HandleHdlcSendDone(void);
 
     /**
-     * This method is called when uart received a data buffer.
+     * Is called when uart received a data buffer.
      *
      */
     void HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);

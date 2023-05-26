@@ -84,13 +84,13 @@ public:
     static ExtensionBase &Init(Instance &aInstance);
 
     /**
-     * This method notifies the extension object that OpenThread instance has been initialized.
+     * Notifies the extension object that OpenThread instance has been initialized.
      *
      */
     void SignalInstanceInit(void);
 
     /**
-     * This method notifies the extension object that NCP instance has been initialized.
+     * Notifies the extension object that NCP instance has been initialized.
      *
      * @param[in] aNcpInstance   A reference to the NCP object.
      *
@@ -98,7 +98,7 @@ public:
     void SignalNcpInit(Ncp::NcpBase &aNcpInstance);
 
     /**
-     * This method notifies the extension object of events from  OpenThread `Notifier`.
+     * Notifies the extension object of events from  OpenThread `Notifier`.
      *
      * @param[in] aEvents   The list of events emitted by `Notifier`.
      *

@@ -74,7 +74,7 @@ public:
     ~AesEcb(void);
 
     /**
-     * This method sets the key.
+     * Sets the key.
      *
      * @param[in]  aKey     Crypto Key used for ECB operation
      *
@@ -82,7 +82,7 @@ public:
     void SetKey(const Key &aKey);
 
     /**
-     * This method encrypts data.
+     * Encrypts data.
      *
      * @param[in]   aInput   A pointer to the input buffer.
      * @param[out]  aOutput  A pointer to the output buffer.

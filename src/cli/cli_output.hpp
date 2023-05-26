@@ -129,7 +129,7 @@ public:
         typedef otError (Cli::*Handler)(Arg aArgs[]); ///< The handler method pointer type.
 
         /**
-         * This method compares the entry's name with a given name.
+         * Compares the entry's name with a given name.
          *
          * @param aName    The name string to compare with.
          *
@@ -196,7 +196,7 @@ public:
     }
 
     /**
-     * This method returns the pointer to OpenThread instance.
+     * Returns the pointer to OpenThread instance.
      *
      * @returns The pointer to the OpenThread instance.
      *
@@ -226,7 +226,7 @@ public:
     static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
 
     /**
-     * This method delivers a formatted output string to the CLI console.
+     * Delivers a formatted output string to the CLI console.
      *
      * @param[in]  aFormat  A pointer to the format string.
      * @param[in]  ...      A variable list of arguments to format.
@@ -235,7 +235,7 @@ public:
     void OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
-     * This method delivers a formatted output string to the CLI console (to which it prepends a given number
+     * Delivers a formatted output string to the CLI console (to which it prepends a given number
      * indentation space chars).
      *
      * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
@@ -246,7 +246,7 @@ public:
     void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
     /**
-     * This method delivers a formatted output string to the CLI console (to which it also appends newline "\r\n").
+     * Delivers a formatted output string to the CLI console (to which it also appends newline "\r\n").
      *
      * @param[in]  aFormat  A pointer to the format string.
      * @param[in]  ...      A variable list of arguments to format.
@@ -255,7 +255,7 @@ public:
     void OutputLine(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
-     * This method delivers a formatted output string to the CLI console (to which it prepends a given number
+     * Delivers a formatted output string to the CLI console (to which it prepends a given number
      * indentation space chars and appends newline "\r\n").
      *
      * @param[in]  aIndentSize   Number of indentation space chars to prepend to the string.
@@ -266,13 +266,13 @@ public:
     void OutputLine(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
     /**
-     * This method delivered newline "\r\n" to the CLI console.
+     * Delivered newline "\r\n" to the CLI console.
      *
      */
     void OutputNewLine(void);
 
     /**
-     * This method outputs a given number of space chars to the CLI console.
+     * Outputs a given number of space chars to the CLI console.
      *
      * @param[in] aCount  Number of space chars to output.
      *
@@ -280,7 +280,7 @@ public:
     void OutputSpaces(uint8_t aCount);
 
     /**
-     * This method outputs a number of bytes to the CLI console as a hex string.
+     * Outputs a number of bytes to the CLI console as a hex string.
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
      * @param[in]  aLength  @p aBytes length.
@@ -289,7 +289,7 @@ public:
     void OutputBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
-     * This method outputs a number of bytes to the CLI console as a hex string and at the end it also outputs newline
+     * Outputs a number of bytes to the CLI console as a hex string and at the end it also outputs newline
      * "\r\n".
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
@@ -299,7 +299,7 @@ public:
     void OutputBytesLine(const uint8_t *aBytes, uint16_t aLength);
 
     /**
-     * This method outputs a number of bytes to the CLI console as a hex string.
+     * Outputs a number of bytes to the CLI console as a hex string.
      *
      * @tparam kBytesLength   The length of @p aBytes array.
      *
@@ -312,7 +312,7 @@ public:
     }
 
     /**
-     * This method outputs a number of bytes to the CLI console as a hex string and at the end it also outputs newline
+     * Outputs a number of bytes to the CLI console as a hex string and at the end it also outputs newline
      * "\r\n".
      *
      * @tparam kBytesLength   The length of @p aBytes array.
@@ -326,7 +326,7 @@ public:
     }
 
     /**
-     * This method outputs an Extended MAC Address to the CLI console.
+     * Outputs an Extended MAC Address to the CLI console.
      *
      * param[in] aExtAddress  The Extended MAC Address to output.
      *
@@ -334,7 +334,7 @@ public:
     void OutputExtAddress(const otExtAddress &aExtAddress) { OutputBytes(aExtAddress.m8); }
 
     /**
-     * This method outputs an Extended MAC Address to the CLI console and at the end it also outputs newline "\r\n".
+     * Outputs an Extended MAC Address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * param[in] aExtAddress  The Extended MAC Address to output.
      *
@@ -342,7 +342,7 @@ public:
     void OutputExtAddressLine(const otExtAddress &aExtAddress) { OutputBytesLine(aExtAddress.m8); }
 
     /**
-     * This method outputs a `uint64_t` value in decimal format.
+     * Outputs a `uint64_t` value in decimal format.
      *
      * @param[in] aUint64   The `uint64_t` value to output.
      *
@@ -350,7 +350,7 @@ public:
     void OutputUint64(uint64_t aUint64);
 
     /**
-     * This method outputs a `uint64_t` value in decimal format and at the end it also outputs newline "\r\n".
+     * Outputs a `uint64_t` value in decimal format and at the end it also outputs newline "\r\n".
      *
      * @param[in] aUint64   The `uint64_t` value to output.
      *
@@ -358,7 +358,7 @@ public:
     void OutputUint64Line(uint64_t aUint64);
 
     /**
-     * This method outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").
+     * Outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").
      *
      * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
      *
@@ -368,7 +368,7 @@ public:
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
-     * This method outputs an IPv6 address to the CLI console.
+     * Outputs an IPv6 address to the CLI console.
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
      *
@@ -376,7 +376,7 @@ public:
     void OutputIp6Address(const otIp6Address &aAddress);
 
     /**
-     * This method outputs an IPv6 address to the CLI console and at the end it also outputs newline "\r\n".
+     * Outputs an IPv6 address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aAddress  A reference to the IPv6 address.
      *
@@ -384,7 +384,7 @@ public:
     void OutputIp6AddressLine(const otIp6Address &aAddress);
 
     /**
-     * This method outputs an IPv6 prefix to the CLI console.
+     * Outputs an IPv6 prefix to the CLI console.
      *
      * @param[in]  aPrefix  A reference to the IPv6 prefix.
      *
@@ -392,7 +392,7 @@ public:
     void OutputIp6Prefix(const otIp6Prefix &aPrefix);
 
     /**
-     * This method outputs an IPv6 prefix to the CLI console and at the end it also outputs newline "\r\n".
+     * Outputs an IPv6 prefix to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aPrefix  A reference to the IPv6 prefix.
      *
@@ -400,7 +400,7 @@ public:
     void OutputIp6PrefixLine(const otIp6Prefix &aPrefix);
 
     /**
-     * This method outputs an IPv6 network prefix to the CLI console.
+     * Outputs an IPv6 network prefix to the CLI console.
      *
      * @param[in]  aPrefix  A reference to the IPv6 network prefix.
      *
@@ -408,7 +408,7 @@ public:
     void OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix);
 
     /**
-     * This method outputs an IPv6 network prefix to the CLI console and at the end it also outputs newline "\r\n".
+     * Outputs an IPv6 network prefix to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in]  aPrefix  A reference to the IPv6 network prefix.
      *
@@ -416,7 +416,7 @@ public:
     void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix);
 
     /**
-     * This method outputs an IPv6 socket address to the CLI console.
+     * Outputs an IPv6 socket address to the CLI console.
      *
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
      *
@@ -424,7 +424,7 @@ public:
     void OutputSockAddr(const otSockAddr &aSockAddr);
 
     /**
-     * This method outputs an IPv6 socket address to the CLI console and at the end it also outputs newline "\r\n".
+     * Outputs an IPv6 socket address to the CLI console and at the end it also outputs newline "\r\n".
      *
      * @param[in] aSockAddr   A reference to the IPv6 socket address.
      *
@@ -432,7 +432,7 @@ public:
     void OutputSockAddrLine(const otSockAddr &aSockAddr);
 
     /**
-     * This method outputs DNS TXT data to the CLI console.
+     * Outputs DNS TXT data to the CLI console.
      *
      * @param[in] aTxtData        A pointer to a buffer containing the DNS TXT data.
      * @param[in] aTxtDataLength  The length of @p aTxtData (in bytes).
@@ -469,7 +469,7 @@ public:
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
-     * This method outputs a table header to the CLI console.
+     * Outputs a table header to the CLI console.
      *
      * An example of the table header format:
      *
@@ -492,7 +492,7 @@ public:
     }
 
     /**
-     * This method outputs a table separator to the CLI console.
+     * Outputs a table separator to the CLI console.
      *
      * An example of the table separator:
      *
@@ -511,7 +511,7 @@ public:
     }
 
     /**
-     * This method outputs the list of commands from a given command table.
+     * Outputs the list of commands from a given command table.
      *
      * @tparam Cli      The CLI module type.
      * @tparam kLength  The length of command table array.

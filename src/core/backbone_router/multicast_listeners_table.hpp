@@ -86,7 +86,7 @@ public:
         Listener(void) { Clear(); }
 
         /**
-         * This method returns the Multicast Listener address.
+         * Returns the Multicast Listener address.
          *
          * @returns The Multicast Listener address.
          *
@@ -94,7 +94,7 @@ public:
         const Ip6::Address &GetAddress(void) const { return mAddress; }
 
         /**
-         * This method returns the expire time of the Multicast Listener.
+         * Returns the expire time of the Multicast Listener.
          *
          * @returns The Multicast Listener expire time.
          *
@@ -124,7 +124,7 @@ public:
     }
 
     /**
-     * This method adds a Multicast Listener with given address and expire time.
+     * Adds a Multicast Listener with given address and expire time.
      *
      * @param[in] aAddress     The Multicast Listener address.
      * @param[in] aExpireTime  The Multicast Listener expire time.
@@ -137,7 +137,7 @@ public:
     Error Add(const Ip6::Address &aAddress, TimeMilli aExpireTime);
 
     /**
-     * This method removes a given Multicast Listener.
+     * Removes a given Multicast Listener.
      *
      * @param[in] aAddress  The Multicast Listener address.
      *
@@ -145,13 +145,13 @@ public:
     void Remove(const Ip6::Address &aAddress);
 
     /**
-     * This method removes expired Multicast Listeners.
+     * Removes expired Multicast Listeners.
      *
      */
     void Expire(void);
 
     /**
-     * This method counts the number of valid Multicast Listeners.
+     * Counts the number of valid Multicast Listeners.
      *
      * @returns The number of valid Multicast Listeners.
      *
@@ -159,9 +159,9 @@ public:
     uint16_t Count(void) const { return mNumValidListeners; }
 
     /**
-     * This method enables range-based `for` loop iteration over all Multicast Listeners.
+     * Enables range-based `for` loop iteration over all Multicast Listeners.
      *
-     * This method should be used as follows:
+     * Should be used as follows:
      *
      *     for (MulticastListenersTable::Listener &listener : Get<MulticastListenersTable>().Iterate())
      *
@@ -171,13 +171,13 @@ public:
     IteratorBuilder Iterate(void) { return IteratorBuilder(GetInstance()); }
 
     /**
-     * This method removes all the Multicast Listeners.
+     * Removes all the Multicast Listeners.
      *
      */
     void Clear(void);
 
     /**
-     * This method sets the Multicast Listener callback.
+     * Sets the Multicast Listener callback.
      *
      * @param[in] aCallback  The callback function.
      * @param[in] aContext   A user context pointer.
@@ -186,7 +186,7 @@ public:
     void SetCallback(Listener::Callback aCallback, void *aContext);
 
     /**
-     * This method gets the next Multicast Listener.
+     * Gets the next Multicast Listener.
      *
      * @param[in]  aIterator      A pointer to the Multicast Listener Iterator.
      * @param[out] aInfo          A reference to output the Multicast Listener info.

@@ -89,7 +89,7 @@ public:
     explicit NeighborTable(Instance &aInstance);
 
     /**
-     * This method searches among parent and parent candidate to find a `Neighbor` corresponding to a given short
+     * Searches among parent and parent candidate to find a `Neighbor` corresponding to a given short
      * address.
      *
      * @param[in]  aShortAddress  A short address.
@@ -102,7 +102,7 @@ public:
                          Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches in parent and parent candidate to find a `Neighbor` corresponding to a given MAC Extended
+     * Searches in parent and parent candidate to find a `Neighbor` corresponding to a given MAC Extended
      * Address.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
@@ -115,7 +115,7 @@ public:
                          Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches among parent and parent candidate to find a `Neighbor` object corresponding to a given MAC
+     * Searches among parent and parent candidate to find a `Neighbor` object corresponding to a given MAC
      * address.
      *
      * @param[in]  aMacAddress  A MAC address.
@@ -128,7 +128,7 @@ public:
                          Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches in the neighbor table to find a `Neighbor` corresponding to a given short address.
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given short address.
      *
      * @param[in]  aShortAddress  A short address.
      * @param[in]  aFilter        A neighbor state filter.
@@ -140,7 +140,7 @@ public:
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address.
+     * Searches in the neighbor table to find a `Neighbor` corresponding to a given MAC Extended Address.
      *
      * @param[in]  aExtAddress   A MAC Extended Address.
      * @param[in]  aFilter       A neighbor state filter.
@@ -152,7 +152,7 @@ public:
                            Neighbor::StateFilter  aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address.
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given MAC address.
      *
      * @param[in]  aMacAddress  A MAC address.
      * @param[in]  aFilter      A neighbor state filter.
@@ -166,7 +166,7 @@ public:
 #if OPENTHREAD_FTD
 
     /**
-     * This method searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address.
+     * Searches in the neighbor table to find a `Neighbor` object corresponding to a given IPv6 address.
      *
      * @param[in]  aIp6Address  An IPv6 address.
      * @pram[in]   aFilter      A neighbor state filter.
@@ -178,7 +178,7 @@ public:
                            Neighbor::StateFilter aFilter = Neighbor::kInStateValidOrRestoring);
 
     /**
-     * This method searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the
+     * Searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the
      * case of an FTD child with neighbor routers).
      *
      * @param[in]  aMacAddress  A MAC address.
@@ -191,7 +191,7 @@ public:
 #endif // OPENTHREAD_FTD
 
     /**
-     * This method gets the next neighbor information. It is used to iterate through the entries of
+     * Gets the next neighbor information. It is used to iterate through the entries of
      * the neighbor table.
      *
      * @param[in,out]  aIterator  A reference to the iterator context. To get the first neighbor entry
@@ -205,7 +205,7 @@ public:
     Error GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
-     * This method registers the "neighbor table changed" callback function.
+     * Registers the "neighbor table changed" callback function.
      *
      * The provided callback (if non-`nullptr`) will be invoked when a child/router entry is being added/remove to/from
      * the neighbor table. Subsequent calls to this method will overwrite the previous callback.
@@ -216,9 +216,9 @@ public:
     void RegisterCallback(Callback aCallback) { mCallback = aCallback; }
 
     /**
-     * This method signals a "neighbor table changed" event.
+     * Signals a "neighbor table changed" event.
      *
-     * This method invokes the `NeighborTable::Callback` and also signals the change through a related `Notifier` event.
+     * Invokes the `NeighborTable::Callback` and also signals the change through a related `Notifier` event.
      *
      * @param[in] aEvent     The event to emit (child/router added/removed, or child mode changed).
      * @param[in] aNeighbor  The neighbor that is being added/removed.

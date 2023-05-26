@@ -75,7 +75,7 @@ public:
     ~SpiInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP).
+     * Initializes the interface to the Radio Co-processor (RCP).
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
@@ -89,13 +89,13 @@ public:
     otError Init(const Url::Url &aRadioUrl);
 
     /**
-     * This method deinitializes the interface to the RCP.
+     * Deinitializes the interface to the RCP.
      *
      */
     void Deinit(void);
 
     /**
-     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+     * Encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
      * @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
      * @param[in] aLength    The length (number of bytes) in the frame.
@@ -109,7 +109,7 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving part or all of spinel frame within specified interval.
+     * Waits for receiving part or all of spinel frame within specified interval.
      *
      * @param[in]  aTimeout  The timeout value in microseconds.
      *
@@ -120,7 +120,7 @@ public:
     otError WaitForFrame(uint64_t aTimeoutUs);
 
     /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
      * @param[in,out]  aWriteFdSet  A reference to the write file descriptors.
@@ -131,7 +131,7 @@ public:
     void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
 
     /**
-     * This method performs radio driver processing.
+     * Performs radio driver processing.
      *
      * @param[in]   aContext        The context containing fd_sets.
      *
@@ -139,7 +139,7 @@ public:
     void Process(const RadioProcessContext &aContext);
 
     /**
-     * This method returns the bus speed between the host and the radio.
+     * Returns the bus speed between the host and the radio.
      *
      * @returns   Bus speed in bits/second.
      *
@@ -147,7 +147,7 @@ public:
     uint32_t GetBusSpeed(void) const { return ((mSpiDevFd >= 0) ? mSpiSpeedHz : 0); }
 
     /**
-     * This method hardware resets the RCP.
+     * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
@@ -156,7 +156,7 @@ public:
     otError HardwareReset(void);
 
     /**
-     * This method returns the RCP interface metrics.
+     * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
      *

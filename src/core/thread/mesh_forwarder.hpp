@@ -82,7 +82,7 @@ class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
 {
 public:
     /**
-     * This method returns the IEEE 802.15.4 Source PAN ID.
+     * Returns the IEEE 802.15.4 Source PAN ID.
      *
      * @returns The IEEE 802.15.4 Source PAN ID.
      *
@@ -90,7 +90,7 @@ public:
     Mac::PanId GetPanId(void) const { return mPanId; }
 
     /**
-     * This method returns the IEEE 802.15.4 Channel.
+     * Returns the IEEE 802.15.4 Channel.
      *
      * @returns The IEEE 802.15.4 Channel.
      *
@@ -98,7 +98,7 @@ public:
     uint8_t GetChannel(void) const { return mChannel; }
 
     /**
-     * This method returns whether the Destination PAN ID is broadcast.
+     * Returns whether the Destination PAN ID is broadcast.
      *
      * @retval TRUE   If Destination PAN ID is broadcast.
      * @retval FALSE  If Destination PAN ID is not broadcast.
@@ -107,7 +107,7 @@ public:
     bool IsDstPanIdBroadcast(void) const { return mIsDstPanIdBroadcast; }
 
     /**
-     * This method indicates whether or not link security is enabled.
+     * Indicates whether or not link security is enabled.
      *
      * @retval TRUE   If link security is enabled.
      * @retval FALSE  If link security is not enabled.
@@ -116,7 +116,7 @@ public:
     bool IsLinkSecurityEnabled(void) const { return mLinkSecurity; }
 
     /**
-     * This method returns the Received Signal Strength (RSS) in dBm.
+     * Returns the Received Signal Strength (RSS) in dBm.
      *
      * @returns The Received Signal Strength (RSS) in dBm.
      *
@@ -124,7 +124,7 @@ public:
     int8_t GetRss(void) const { return mRss; }
 
     /**
-     * This method returns the frame/radio Link Quality Indicator (LQI) value.
+     * Returns the frame/radio Link Quality Indicator (LQI) value.
      *
      * @returns The Link Quality Indicator value.
      *
@@ -133,7 +133,7 @@ public:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
-     * This method returns the Time Sync Sequence.
+     * Returns the Time Sync Sequence.
      *
      * @returns The Time Sync Sequence.
      *
@@ -141,7 +141,7 @@ public:
     uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
-     * This method returns the time offset to the Thread network time (in microseconds).
+     * Returns the time offset to the Thread network time (in microseconds).
      *
      * @returns The time offset to the Thread network time (in microseconds).
      *
@@ -150,7 +150,7 @@ public:
 #endif
 
     /**
-     * This method sets the `ThreadLinkInfo` from a given received frame.
+     * Sets the `ThreadLinkInfo` from a given received frame.
      *
      * @param[in] aFrame  A received frame.
      *
@@ -182,19 +182,19 @@ public:
     explicit MeshForwarder(Instance &aInstance);
 
     /**
-     * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
+     * Enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      */
     void Start(void);
 
     /**
-     * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
+     * Disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
      */
     void Stop(void);
 
     /**
-     * This method submits a message to the mesh forwarder for forwarding.
+     * Submits a message to the mesh forwarder for forwarding.
      *
      * @param[in]  aMessage  A reference to the message.
      *
@@ -207,7 +207,7 @@ public:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * This method sends an empty data frame to the parent.
+     * Sends an empty data frame to the parent.
      *
      * @retval kErrorNone          Successfully enqueued an empty message.
      * @retval kErrorInvalidState  Device is not in Rx-Off-When-Idle mode or it has no parent.
@@ -218,7 +218,7 @@ public:
 #endif
 
     /**
-     * This method is called by the address resolver when an EID-to-RLOC mapping has been resolved.
+     * Is called by the address resolver when an EID-to-RLOC mapping has been resolved.
      *
      * @param[in]  aEid    A reference to the EID that has been resolved.
      * @param[in]  aError  kErrorNone on success and kErrorDrop otherwise.
@@ -227,7 +227,7 @@ public:
     void HandleResolved(const Ip6::Address &aEid, Error aError);
 
     /**
-     * This method indicates whether or not rx-on-when-idle mode is enabled.
+     * Indicates whether or not rx-on-when-idle mode is enabled.
      *
      * @retval TRUE   The rx-on-when-idle mode is enabled.
      * @retval FALSE  The rx-on-when-idle-mode is disabled.
@@ -236,7 +236,7 @@ public:
     bool GetRxOnWhenIdle(void) const;
 
     /**
-     * This method sets the rx-on-when-idle mode
+     * Sets the rx-on-when-idle mode
      *
      * @param[in]  aRxOnWhenIdle  TRUE to enable, FALSE otherwise.
      *
@@ -244,7 +244,7 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets the scan parameters for MLE Discovery Request messages.
+     * Sets the scan parameters for MLE Discovery Request messages.
      *
      * @param[in]  aScanChannels  A reference to channel mask indicating which channels to scan.
      *                            If @p aScanChannels is empty, then all channels are used instead.
@@ -254,7 +254,7 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * This method frees any messages queued for an existing child.
+     * Frees any messages queued for an existing child.
      *
      * @param[in]  aChild    A reference to the child.
      * @param[in]  aSubType  The message sub-type to remove.
@@ -265,13 +265,13 @@ public:
 #endif
 
     /**
-     * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
+     * Frees unicast/multicast MLE Data Responses from Send Message Queue if any.
      *
      */
     void RemoveDataResponseMessages(void);
 
     /**
-     * This method evicts the message with lowest priority in the send queue.
+     * Evicts the message with lowest priority in the send queue.
      *
      * @param[in]  aPriority  The highest priority level of the evicted message.
      *
@@ -282,7 +282,7 @@ public:
     Error EvictMessage(Message::Priority aPriority);
 
     /**
-     * This method returns a reference to the send queue.
+     * Returns a reference to the send queue.
      *
      * @returns  A reference to the send queue.
      *
@@ -290,7 +290,7 @@ public:
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
-     * This method returns a reference to the reassembly queue.
+     * Returns a reference to the reassembly queue.
      *
      * @returns  A reference to the reassembly queue.
      *
@@ -298,7 +298,7 @@ public:
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
-     * This method returns a reference to the IP level counters.
+     * Returns a reference to the IP level counters.
      *
      * @returns A reference to the IP level counters.
      *
@@ -306,14 +306,14 @@ public:
     const otIpCounters &GetCounters(void) const { return mIpCounters; }
 
     /**
-     * This method resets the IP level counters.
+     * Resets the IP level counters.
      *
      */
     void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method handles a deferred ack.
+     * Handles a deferred ack.
      *
      * Some radio links can use deferred ack logic, where a tx request always report `HandleSentFrame()` quickly. The
      * link layer would wait for the ack and report it at a later time using this method.

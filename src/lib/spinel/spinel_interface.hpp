@@ -61,7 +61,7 @@ public:
     typedef void (*ReceiveFrameCallback)(void *aContext);
 
     /**
-     * This method indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
+     * Indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
      *
      * @param[in] aFrame   A pointer to buffer containing the spinel frame.
      * @param[in] aLength  The length (number of bytes) in the frame.

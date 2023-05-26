@@ -60,7 +60,7 @@ public:
     }
 
     /**
-     * This method processes a factory command.
+     * Processes a factory command.
      *
      * @param[in]   aArgs          The arguments of command line.
      * @param[in]   aArgsLength    The number of args in @p aArgs.
@@ -69,7 +69,7 @@ public:
     void ProcessCommand(Utils::CmdLineParser::Arg aArgs[]);
 
     /**
-     * This method processes the command line.
+     * Processes the command line.
      *
      * @param[in]  aLine   A pointer to a command line string.
      *
@@ -77,7 +77,7 @@ public:
     void ProcessLine(char *aLine);
 
     /**
-     * This method outputs the prompt.
+     * Outputs the prompt.
      *
      */
     void OutputPrompt(void);

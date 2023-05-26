@@ -78,7 +78,7 @@ public:
     explicit Leader(Instance &aInstance);
 
     /**
-     * This method sends a MGMT_DATASET_CHANGED message to commissioner.
+     * Sends a MGMT_DATASET_CHANGED message to commissioner.
      *
      * @param[in]  aAddress   The IPv6 address of destination.
      *
@@ -86,7 +86,7 @@ public:
     void SendDatasetChanged(const Ip6::Address &aAddress);
 
     /**
-     * This method sets minimal delay timer.
+     * Sets minimal delay timer.
      *
      * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
      *
@@ -97,7 +97,7 @@ public:
     Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
 
     /**
-     * This method gets minimal delay timer.
+     * Gets minimal delay timer.
      *
      * @retval the minimal delay timer (in ms).
      *
@@ -105,7 +105,7 @@ public:
     uint32_t GetDelayTimerMinimal(void) const;
 
     /**
-     * This method sets empty Commissioner Data TLV in the Thread Network Data.
+     * Sets empty Commissioner Data TLV in the Thread Network Data.
      *
      */
     void SetEmptyCommissionerData(void);

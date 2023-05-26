@@ -115,7 +115,7 @@ public:
     typedef otNetDataDnsSrpServicePublisherCallback DnsSrpServiceCallback;
 
     /**
-     * This method sets a callback for notifying when a published "DNS/SRP Service" is actually added to or removed
+     * Sets a callback for notifying when a published "DNS/SRP Service" is actually added to or removed
      * from the Thread Network Data.
      *
      * A subsequent call to this method replaces any previously set callback function.
@@ -130,7 +130,7 @@ public:
     }
 
     /**
-     * This method requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
+     * Requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
      *
      * A call to this method will remove and replace any previous "DNS/SRP Service" entry that was being published
      * (from earlier call to any of `PublishDnsSrpService{Type}()` methods).
@@ -141,12 +141,12 @@ public:
     void PublishDnsSrpServiceAnycast(uint8_t aSequenceNumber) { mDnsSrpServiceEntry.PublishAnycast(aSequenceNumber); }
 
     /**
-     * This method requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+     * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
      *
      * A call to this method will remove and replace any previous "DNS/SRP Service" entry that was being published
      * (from earlier call to any of `PublishDnsSrpService{Type}()` methods).
      *
-     * This method publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the
+     * Publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the
      * Service TLV data.
      *
      * @param[in] aAddress   The DNS/SRP server address to publish.
@@ -159,7 +159,7 @@ public:
     }
 
     /**
-     * This method requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+     * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
      *
      * A call to this method will remove and replace any previous "DNS/SRP Service" entry that was being published
      * (from earlier call to any of `PublishDnsSrpService{Type}()` methods).
@@ -174,7 +174,7 @@ public:
     void PublishDnsSrpServiceUnicast(uint16_t aPort) { mDnsSrpServiceEntry.PublishUnicast(aPort); }
 
     /**
-     * This method indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
+     * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
      *
      * @retval TRUE    The published DNS/SRP Service entry is added to the Thread Network Data.
      * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
@@ -183,7 +183,7 @@ public:
     bool IsDnsSrpServiceAdded(void) const { return mDnsSrpServiceEntry.IsAdded(); }
 
     /**
-     * This method unpublishes any previously added "DNS/SRP (Anycast or Unicast) Service" entry from the Thread
+     * Unpublishes any previously added "DNS/SRP (Anycast or Unicast) Service" entry from the Thread
      * Network Data.
      *
      */
@@ -204,7 +204,7 @@ public:
     typedef otNetDataPrefixPublisherCallback PrefixCallback;
 
     /**
-     * This method sets a callback for notifying when a published prefix entry is actually added to or removed from
+     * Sets a callback for notifying when a published prefix entry is actually added to or removed from
      * the Thread Network Data.
      *
      * A subsequent call to this method replaces any previously set callback function.
@@ -216,7 +216,7 @@ public:
     void SetPrefixCallback(PrefixCallback aCallback, void *aContext) { mPrefixCallback.Set(aCallback, aContext); }
 
     /**
-     * This method requests an on-mesh prefix to be published in the Thread Network Data.
+     * Requests an on-mesh prefix to be published in the Thread Network Data.
      *
      * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be `true`).
      *
@@ -242,7 +242,7 @@ public:
     Error PublishOnMeshPrefix(const OnMeshPrefixConfig &aConfig, Requester aRequester);
 
     /**
-     * This method requests an external route prefix to be published in the Thread Network Data.
+     * Requests an external route prefix to be published in the Thread Network Data.
      *
      * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be `true`).
      *
@@ -267,7 +267,7 @@ public:
     Error PublishExternalRoute(const ExternalRouteConfig &aConfig, Requester aRequester);
 
     /**
-     * This method replaces a previously published external route.
+     * Replaces a previously published external route.
      *
      * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be `true`).
      *
@@ -304,7 +304,7 @@ public:
                                         Requester                  aRequester);
 
     /**
-     * This method indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
+     * Indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
      * the Thread Network Data.
      *
      * @param[in] aPrefix   The prefix to check.
@@ -316,7 +316,7 @@ public:
     bool IsPrefixAdded(const Ip6::Prefix &aPrefix) const;
 
     /**
-     * This method unpublishes a previously published prefix (on-mesh or external route).
+     * Unpublishes a previously published prefix (on-mesh or external route).
      *
      * @param[in] aPrefix       The prefix to unpublish.
      *

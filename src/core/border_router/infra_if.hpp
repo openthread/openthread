@@ -71,7 +71,7 @@ public:
     explicit InfraIf(Instance &aInstance);
 
     /**
-     * This method initializes the `InfraIf`.
+     * Initializes the `InfraIf`.
      *
      * @param[in]  aIfIndex        The infrastructure interface index.
      *
@@ -83,13 +83,13 @@ public:
     Error Init(uint32_t aIfIndex);
 
     /**
-     * This method deinitilaizes the `InfraIf`.
+     * Deinitilaizes the `InfraIf`.
      *
      */
     void Deinit(void);
 
     /**
-     * This method indicates whether or not the `InfraIf` is initialized.
+     * Indicates whether or not the `InfraIf` is initialized.
      *
      * @retval TRUE    The `InfraIf` is initialized.
      * @retval FALSE   The `InfraIf` is not initialized.
@@ -98,7 +98,7 @@ public:
     bool IsInitialized(void) const { return mInitialized; }
 
     /**
-     * This method indicates whether or not the infra interface is running.
+     * Indicates whether or not the infra interface is running.
      *
      * @retval TRUE   The infrastructure interface is running.
      * @retval FALSE  The infrastructure interface is not running.
@@ -107,7 +107,7 @@ public:
     bool IsRunning(void) const { return mIsRunning; }
 
     /**
-     * This method returns the infrastructure interface index.
+     * Returns the infrastructure interface index.
      *
      * @returns The interface index or zero if not initialized.
      *
@@ -115,9 +115,9 @@ public:
     uint32_t GetIfIndex(void) const { return mIfIndex; }
 
     /**
-     * This method indicates whether or not the infra interface has the given IPv6 address assigned.
+     * Indicates whether or not the infra interface has the given IPv6 address assigned.
      *
-     * This method MUST be used when interface is initialized.
+     * MUST be used when interface is initialized.
      *
      * @param[in]  aAddress       The IPv6 address.
      *
@@ -128,9 +128,9 @@ public:
     bool HasAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * This method sends an ICMPv6 Neighbor Discovery packet on the infrastructure interface.
+     * Sends an ICMPv6 Neighbor Discovery packet on the infrastructure interface.
      *
-     * This method MUST be used when interface is initialized.
+     * MUST be used when interface is initialized.
      *
      * @param[in]  aPacket        The ICMPv6 packet to send.
      * @param[in]  aDestination   The destination address.
@@ -142,7 +142,7 @@ public:
     Error Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const;
 
     /**
-     * This method processes a received ICMPv6 Neighbor Discovery packet from an infrastructure interface.
+     * Processes a received ICMPv6 Neighbor Discovery packet from an infrastructure interface.
      *
      * @param[in]  aIfIndex       The infrastructure interface index on which the ICMPv6 message is received.
      * @param[in]  aSource        The IPv6 source address.
@@ -152,7 +152,7 @@ public:
     void HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
 
     /**
-     * This method sends a request to discover the NAT64 prefix on the infrastructure interface.
+     * Sends a request to discover the NAT64 prefix on the infrastructure interface.
      *
      * @note  This method MUST be used when interface is initialized.
      *
@@ -163,7 +163,7 @@ public:
     Error DiscoverNat64Prefix(void) const;
 
     /**
-     * This method processes the discovered NAT64 prefix.
+     * Processes the discovered NAT64 prefix.
      *
      * @param[in]  aIfIndex    The infrastructure interface index on which the host address is received.
      * @param[in]  aPrefix     The NAT64 prefix on the infrastructure link.
@@ -172,7 +172,7 @@ public:
     void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 
     /**
-     * This method handles infrastructure interface state changes.
+     * Handles infrastructure interface state changes.
      *
      * @param[in]  aIfIndex         The infrastructure interface index.
      * @param[in]  aIsRunning       A boolean that indicates whether the infrastructure interface is running.
@@ -185,7 +185,7 @@ public:
     Error HandleStateChanged(uint32_t aIfIndex, bool aIsRunning);
 
     /**
-     * This method converts the `InfraIf` to a human-readable string.
+     * Converts the `InfraIf` to a human-readable string.
      *
      * @returns The string representation of `InfraIf`.
      *

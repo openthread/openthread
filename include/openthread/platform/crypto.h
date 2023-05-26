@@ -616,7 +616,7 @@ otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, 
 /**
  * Calculate the ECDSA signature for a hashed message using the private key from the input context.
  *
- * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ * Uses the deterministic digital signature generation procedure from RFC 6979.
  *
  * @param[in]  aKeyPair           A pointer to an ECDSA key-pair structure where the key-pair is stored.
  * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation
@@ -656,7 +656,7 @@ otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
 /**
  * Calculate the ECDSA signature for a hashed message using the Key reference passed.
  *
- * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ * Uses the deterministic digital signature generation procedure from RFC 6979.
  *
  * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
  * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation

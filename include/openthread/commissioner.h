@@ -269,7 +269,7 @@ otError otCommissionerAddJoinerWithDiscerner(otInstance              *aInstance,
                                              uint32_t                 aTimeout);
 
 /**
- * This method get joiner info at aIterator position.
+ * Get joiner info at aIterator position.
  *
  * @param[in]      aInstance   A pointer to instance.
  * @param[in,out]  aIterator   A pointer to the Joiner Info iterator context.

@@ -80,7 +80,7 @@ public:
     explicit SourceMatchController(Instance &aInstance);
 
     /**
-     * This method returns the current state of source address matching.
+     * Returns the current state of source address matching.
      *
      * @returns `true` if source address matching is enabled, `false` otherwise.
      *
@@ -88,7 +88,7 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method increments the message count for a child and updates the source match table.
+     * Increments the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
      *
@@ -96,7 +96,7 @@ public:
     void IncrementMessageCount(Child &aChild);
 
     /**
-     * This method decrements the message count for a child and updates the source match table.
+     * Decrements the message count for a child and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
      *
@@ -104,7 +104,7 @@ public:
     void DecrementMessageCount(Child &aChild);
 
     /**
-     * This method resets the message count for a child to zero and updates the source match table.
+     * Resets the message count for a child to zero and updates the source match table.
      *
      * @param[in] aChild    A reference to the child.
      *
@@ -112,7 +112,7 @@ public:
     void ResetMessageCount(Child &aChild);
 
     /**
-     * This method sets whether or not to perform source address matching on the extended or short address for
+     * Sets whether or not to perform source address matching on the extended or short address for
      * a child.
      *
      * @param[in] aChild            A reference to the child.
@@ -123,13 +123,13 @@ public:
 
 private:
     /**
-     * This method clears the source match table.
+     * Clears the source match table.
      *
      */
     void ClearTable(void);
 
     /**
-     * This method enables or disables the source matching.
+     * Enables or disables the source matching.
      *
      * If enabled, the radio uses the source match table to determine whether to set or clear the "frame pending" bit
      * in an acknowledgment to a MAC Data Request command. If disabled, the radio layer sets the "frame pending" on all
@@ -141,7 +141,7 @@ private:
     void Enable(bool aEnable);
 
     /**
-     * This method adds an entry to source match table for a given child and updates the state of source matching
+     * Adds an entry to source match table for a given child and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is added successfully, source matching feature is enabled (if not already enabled) after ensuring
@@ -154,7 +154,7 @@ private:
     void AddEntry(Child &aChild);
 
     /**
-     * This method clears an entry in source match table for a given child and updates the state of source matching
+     * Clears an entry in source match table for a given child and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is removed successfully and frees up space in the source match table, any remaining pending
@@ -166,7 +166,7 @@ private:
     void ClearEntry(Child &aChild);
 
     /**
-     * This method adds a given child's address (short or extended address depending on child's setting) to the source
+     * Adds a given child's address (short or extended address depending on child's setting) to the source
      * source match table (@sa SetSrcMatchAsShort.
      *
      * @param[in] aChild            A reference to the child
@@ -178,7 +178,7 @@ private:
     Error AddAddress(const Child &aChild);
 
     /**
-     * This method adds all pending entries to the source match table.
+     * Adds all pending entries to the source match table.
      *
      * @retval kErrorNone     All pending entries were successfully added.
      * @retval kErrorNoBufs   No available space in the source match table.

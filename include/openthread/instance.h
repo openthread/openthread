@@ -251,7 +251,7 @@ otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback 
 void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext);
 
 /**
- * This method triggers a platform reset.
+ * Triggers a platform reset.
  *
  * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that the
  * `otPlatformReset` does not erase any persistent state/info saved in non-volatile memory.
@@ -270,7 +270,7 @@ void otInstanceReset(otInstance *aInstance);
 void otInstanceFactoryReset(otInstance *aInstance);
 
 /**
- * This method resets the internal states of the OpenThread radio stack.
+ * Resets the internal states of the OpenThread radio stack.
  *
  * Callbacks and configurations are preserved.
  *

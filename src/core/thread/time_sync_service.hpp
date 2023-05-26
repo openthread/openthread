@@ -108,7 +108,7 @@ public:
 #endif
 
     /**
-     * This method gets the time synchronization sequence.
+     * Gets the time synchronization sequence.
      *
      * @returns The time synchronization sequence.
      *
@@ -116,7 +116,7 @@ public:
     uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
-     * This method gets the time offset to the Thread network time.
+     * Gets the time offset to the Thread network time.
      *
      * @returns The time offset to the Thread network time, in microseconds.
      *

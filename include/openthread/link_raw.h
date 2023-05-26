@@ -149,7 +149,7 @@ otError otLinkRawReceive(otInstance *aInstance);
 
 /**
  * The radio transitions from Transmit to Receive.
- * This method returns a pointer to the transmit buffer.
+ * Returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otLinkRawTransmit()
  * to request transmission.
@@ -180,7 +180,7 @@ typedef void (*otLinkRawTransmitDone)(otInstance   *aInstance,
                                       otError       aError);
 
 /**
- * This method begins the transmit sequence on the radio.
+ * Begins the transmit sequence on the radio.
  *
  * The caller must form the IEEE 802.15.4 frame in the buffer provided by otLinkRawGetTransmitBuffer() before
  * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
@@ -228,7 +228,7 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance);
 typedef void (*otLinkRawEnergyScanDone)(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
- * This method begins the energy scan sequence on the radio.
+ * Begins the energy scan sequence on the radio.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aScanChannel     The channel to perform the energy scan on.

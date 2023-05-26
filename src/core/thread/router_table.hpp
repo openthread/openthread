@@ -63,19 +63,19 @@ public:
     explicit RouterTable(Instance &aInstance);
 
     /**
-     * This method clears the router table.
+     * Clears the router table.
      *
      */
     void Clear(void);
 
     /**
-     * This method removes all neighbor links to routers.
+     * Removes all neighbor links to routers.
      *
      */
     void ClearNeighbors(void);
 
     /**
-     * This method allocates a router with a random Router ID.
+     * Allocates a router with a random Router ID.
      *
      * @returns A pointer to the allocated router or `nullptr` if a Router ID is not available.
      *
@@ -83,7 +83,7 @@ public:
     Router *Allocate(void);
 
     /**
-     * This method allocates a router with a specified Router ID.
+     * Allocates a router with a specified Router ID.
      *
      * @param[in] aRouterId   The Router ID to try to allocate.
      *
@@ -93,7 +93,7 @@ public:
     Router *Allocate(uint8_t aRouterId);
 
     /**
-     * This method releases a Router ID.
+     * Releases a Router ID.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -105,7 +105,7 @@ public:
     Error Release(uint8_t aRouterId);
 
     /**
-     * This method removes a router link.
+     * Removes a router link.
      *
      * @param[in]  aRouter  A reference to the router.
      *
@@ -113,7 +113,7 @@ public:
     void RemoveRouterLink(Router &aRouter);
 
     /**
-     * This method returns the number of active routers in the Thread network.
+     * Returns the number of active routers in the Thread network.
      *
      * @returns The number of active routers in the Thread network.
      *
@@ -121,7 +121,7 @@ public:
     uint8_t GetActiveRouterCount(void) const { return mRouters.GetLength(); }
 
     /**
-     * This method returns the leader in the Thread network.
+     * Returns the leader in the Thread network.
      *
      * @returns A pointer to the Leader in the Thread network.
      *
@@ -129,7 +129,7 @@ public:
     Router *GetLeader(void) { return AsNonConst(AsConst(this)->GetLeader()); }
 
     /**
-     * This method returns the leader in the Thread network.
+     * Returns the leader in the Thread network.
      *
      * @returns A pointer to the Leader in the Thread network.
      *
@@ -137,7 +137,7 @@ public:
     const Router *GetLeader(void) const;
 
     /**
-     * This method returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
+     * Returns the leader's age in seconds, i.e., seconds since the last Router ID Sequence update.
      *
      * @returns The leader's age.
      *
@@ -145,7 +145,7 @@ public:
     uint32_t GetLeaderAge(void) const;
 
     /**
-     * This method returns the link cost for a neighboring router.
+     * Returns the link cost for a neighboring router.
      *
      * @param[in]  aRouter   A router.
      *
@@ -155,7 +155,7 @@ public:
     uint8_t GetLinkCost(const Router &aRouter) const;
 
     /**
-     * This method returns the link cost to the given Router.
+     * Returns the link cost to the given Router.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -165,7 +165,7 @@ public:
     uint8_t GetLinkCost(uint8_t aRouterId) const;
 
     /**
-     * This method returns the minimum mesh path cost to the given RLOC16
+     * Returns the minimum mesh path cost to the given RLOC16
      *
      * @param[in]  aDestRloc16  The RLOC16 of destination
      *
@@ -175,7 +175,7 @@ public:
     uint8_t GetPathCost(uint16_t aDestRloc16) const;
 
     /**
-     * This method returns the mesh path cost to leader.
+     * Returns the mesh path cost to leader.
      *
      * @returns The path cost to leader.
      *
@@ -183,7 +183,7 @@ public:
     uint8_t GetPathCostToLeader(void) const;
 
     /**
-     * This method determines the next hop towards an RLOC16 destination.
+     * Determines the next hop towards an RLOC16 destination.
      *
      * @param[in]  aDestRloc16  The RLOC16 of the destination.
      *
@@ -193,7 +193,7 @@ public:
     uint16_t GetNextHop(uint16_t aDestRloc16) const;
 
     /**
-     * This method determines the next hop and the path cost towards an RLOC16 destination.
+     * Determines the next hop and the path cost towards an RLOC16 destination.
      *
      * @param[in]  aDestRloc16      The RLOC16 of the destination.
      * @param[out] aNextHopRloc16   A reference to return the RLOC16 of next hop if known, or `Mle::kInvalidRloc16`.
@@ -203,7 +203,7 @@ public:
     void GetNextHopAndPathCost(uint16_t aDestRloc16, uint16_t &aNextHopRloc16, uint8_t &aPathCost) const;
 
     /**
-     * This method finds the router for a given Router ID.
+     * Finds the router for a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to search for.
      *
@@ -213,7 +213,7 @@ public:
     Router *FindRouterById(uint8_t aRouterId) { return AsNonConst(AsConst(this)->FindRouterById(aRouterId)); }
 
     /**
-     * This method finds the router for a given Router ID.
+     * Finds the router for a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to search for.
      *
@@ -223,7 +223,7 @@ public:
     const Router *FindRouterById(uint8_t aRouterId) const;
 
     /**
-     * This method finds the router for a given RLOC16.
+     * Finds the router for a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 to search for.
      *
@@ -233,7 +233,7 @@ public:
     Router *FindRouterByRloc16(uint16_t aRloc16) { return AsNonConst(AsConst(this)->FindRouterByRloc16(aRloc16)); }
 
     /**
-     * This method finds the router for a given RLOC16.
+     * Finds the router for a given RLOC16.
      *
      * @param[in]  aRloc16  The RLOC16 to search for.
      *
@@ -243,7 +243,7 @@ public:
     const Router *FindRouterByRloc16(uint16_t aRloc16) const;
 
     /**
-     * This method finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop of a given router.
      *
      * @param[in]  aRouter  The router to find next hop of.
      *
@@ -253,7 +253,7 @@ public:
     Router *FindNextHopOf(const Router &aRouter) { return AsNonConst(AsConst(this)->FindNextHopOf(aRouter)); }
 
     /**
-     * This method finds the router that is the next hop of a given router.
+     * Finds the router that is the next hop of a given router.
      *
      * @param[in]  aRouter  The router to find next hop of.
      *
@@ -263,7 +263,7 @@ public:
     const Router *FindNextHopOf(const Router &aRouter) const;
 
     /**
-     * This method find the router for a given MAC Extended Address.
+     * Find the router for a given MAC Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the MAC Extended Address.
      *
@@ -273,7 +273,7 @@ public:
     Router *FindRouter(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * This method indicates whether the router table contains a given `Neighbor` instance.
+     * Indicates whether the router table contains a given `Neighbor` instance.
      *
      * @param[in]  aNeighbor  A reference to a `Neighbor`.
      *
@@ -288,7 +288,7 @@ public:
     }
 
     /**
-     * This method retains diagnostic information for a given router.
+     * Retains diagnostic information for a given router.
      *
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
      * @param[out]  aRouterInfo  The router information.
@@ -301,7 +301,7 @@ public:
     Error GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo);
 
     /**
-     * This method returns the Router ID Sequence.
+     * Returns the Router ID Sequence.
      *
      * @returns The Router ID Sequence.
      *
@@ -309,7 +309,7 @@ public:
     uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
 
     /**
-     * This method returns the local time when the Router ID Sequence was last updated.
+     * Returns the local time when the Router ID Sequence was last updated.
      *
      * @returns The local time when the Router ID Sequence was last updated.
      *
@@ -317,7 +317,7 @@ public:
     TimeMilli GetRouterIdSequenceLastUpdated(void) const { return mRouterIdSequenceLastUpdated; }
 
     /**
-     * This method determines whether the Router ID Sequence in a received Route TLV is more recent than the current
+     * Determines whether the Router ID Sequence in a received Route TLV is more recent than the current
      * Router ID Sequence being used by `RouterTable`.
      *
      * @param[in] aRouteTlv   The Route TLV to compare.
@@ -329,7 +329,7 @@ public:
     bool IsRouteTlvIdSequenceMoreRecent(const Mle::RouteTlv &aRouteTlv) const;
 
     /**
-     * This method returns the number of neighbor links.
+     * Returns the number of neighbor links.
      *
      * @returns The number of neighbor links.
      *
@@ -337,7 +337,7 @@ public:
     uint8_t GetNeighborCount(void) const;
 
     /**
-     * This method indicates whether or not a Router ID is allocated.
+     * Indicates whether or not a Router ID is allocated.
      *
      * @param[in] aRouterId  The Router ID.
      *
@@ -348,7 +348,7 @@ public:
     bool IsAllocated(uint8_t aRouterId) const { return mRouterIdMap.IsAllocated(aRouterId); }
 
     /**
-     * This method updates the Router ID allocation set.
+     * Updates the Router ID allocation set.
      *
      * @param[in]  aRouterIdSequence  The Router ID Sequence.
      * @param[in]  aRouterIdSet       The Router ID Set.
@@ -357,7 +357,7 @@ public:
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
 
     /**
-     * This method updates the routes based on a received `RouteTlv` from a neighboring router.
+     * Updates the routes based on a received `RouteTlv` from a neighboring router.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv`
      * @param[in]  aNeighborId  The router ID of neighboring router from which @p aRouteTlv is received.
@@ -366,9 +366,9 @@ public:
     void UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId);
 
     /**
-     * This method updates the routes on an FED based on a received `RouteTlv` from the parent.
+     * Updates the routes on an FED based on a received `RouteTlv` from the parent.
      *
-     * This method MUST be called when device is an FED child and @p aRouteTlv is received from its current parent.
+     * MUST be called when device is an FED child and @p aRouteTlv is received from its current parent.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv` from parent.
      * @param[in]  aParentId    The Router ID of parent.
@@ -377,7 +377,7 @@ public:
     void UpdateRoutesOnFed(const Mle::RouteTlv &aRouteTlv, uint8_t aParentId);
 
     /**
-     * This method gets the allocated Router ID set.
+     * Gets the allocated Router ID set.
      *
      * @returns The allocated Router ID set.
      *
@@ -385,7 +385,7 @@ public:
     void GetRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const { return mRouterIdMap.GetAsRouterIdSet(aRouterIdSet); }
 
     /**
-     * This method fills a Route TLV.
+     * Fills a Route TLV.
      *
      * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `Mle::kLinkAcceptMaxRouters` when
      * populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure to
@@ -398,14 +398,14 @@ public:
     void FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighbor = nullptr) const;
 
     /**
-     * This method updates the router table and must be called with a one second period.
+     * Updates the router table and must be called with a one second period.
      *
      */
     void HandleTimeTick(void);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * This method gets the range of Router IDs.
+     * Gets the range of Router IDs.
      *
      * All the Router IDs in the range `[aMinRouterId, aMaxRouterId]` are allowed. This is intended for testing only.
      *
@@ -416,7 +416,7 @@ public:
     void GetRouterIdRange(uint8_t &aMinRouterId, uint8_t &aMaxRouterId) const;
 
     /**
-     * This method sets the range of Router IDs.
+     * Sets the range of Router IDs.
      *
      * All the Router IDs in the range `[aMinRouterId, aMaxRouterId]` are allowed. This is intended for testing only.
      *

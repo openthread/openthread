@@ -71,7 +71,7 @@ public:
     explicit CoapSecure(Instance &aInstance, bool aLayerTwoSecurity = false);
 
     /**
-     * This method starts the secure CoAP agent.
+     * Starts the secure CoAP agent.
      *
      * @param[in]  aPort      The local UDP port to bind to.
      *
@@ -82,7 +82,7 @@ public:
     Error Start(uint16_t aPort);
 
     /**
-     * This method starts the secure CoAP agent, but do not use socket to transmit/receive messages.
+     * Starts the secure CoAP agent, but do not use socket to transmit/receive messages.
      *
      * @param[in]  aCallback  A pointer to a function for sending messages.
      * @param[in]  aContext   A pointer to arbitrary context information.
@@ -94,7 +94,7 @@ public:
     Error Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext);
 
     /**
-     * This method sets connected callback of this secure CoAP agent.
+     * Sets connected callback of this secure CoAP agent.
      *
      * @param[in]  aCallback  A pointer to a function to get called when connection state changes.
      * @param[in]  aContext   A pointer to arbitrary context information.
@@ -106,13 +106,13 @@ public:
     }
 
     /**
-     * This method stops the secure CoAP agent.
+     * Stops the secure CoAP agent.
      *
      */
     void Stop(void);
 
     /**
-     * This method initializes DTLS session with a peer.
+     * Initializes DTLS session with a peer.
      *
      * @param[in]  aSockAddr               A reference to the remote socket address,
      * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
@@ -124,7 +124,7 @@ public:
     Error Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext);
 
     /**
-     * This method indicates whether or not the DTLS session is active.
+     * Indicates whether or not the DTLS session is active.
      *
      * @retval TRUE  If DTLS session is active.
      * @retval FALSE If DTLS session is not active.
@@ -133,7 +133,7 @@ public:
     bool IsConnectionActive(void) const { return mDtls.IsConnectionActive(); }
 
     /**
-     * This method indicates whether or not the DTLS session is connected.
+     * Indicates whether or not the DTLS session is connected.
      *
      * @retval TRUE   The DTLS session is connected.
      * @retval FALSE  The DTLS session is not connected.
@@ -142,13 +142,13 @@ public:
     bool IsConnected(void) const { return mDtls.IsConnected(); }
 
     /**
-     * This method stops the DTLS connection.
+     * Stops the DTLS connection.
      *
      */
     void Disconnect(void) { mDtls.Disconnect(); }
 
     /**
-     * This method returns a reference to the DTLS object.
+     * Returns a reference to the DTLS object.
      *
      * @returns  A reference to the DTLS object.
      *
@@ -156,7 +156,7 @@ public:
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
 
     /**
-     * This method gets the UDP port of this agent.
+     * Gets the UDP port of this agent.
      *
      * @returns  UDP port number.
      *
@@ -164,7 +164,7 @@ public:
     uint16_t GetUdpPort(void) const { return mDtls.GetUdpPort(); }
 
     /**
-     * This method sets the PSK.
+     * Sets the PSK.
      *
      * @param[in]  aPsk        A pointer to the PSK.
      * @param[in]  aPskLength  The PSK length.
@@ -176,7 +176,7 @@ public:
     Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mDtls.SetPsk(aPsk, aPskLength); }
 
     /**
-     * This method sets the PSK.
+     * Sets the PSK.
      *
      * @param[in]  aPskd  A Joiner PSKd.
      *
@@ -187,7 +187,7 @@ public:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
     /**
-     * This method sets the Pre-Shared Key (PSK) for DTLS sessions identified by a PSK.
+     * Sets the Pre-Shared Key (PSK) for DTLS sessions identified by a PSK.
      *
      * DTLS mode "TLS with AES 128 CCM 8" for Application CoAPS.
      *
@@ -205,7 +205,7 @@ public:
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     /**
-     * This method sets a X509 certificate with corresponding private key for DTLS session.
+     * Sets a X509 certificate with corresponding private key for DTLS session.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -224,7 +224,7 @@ public:
     }
 
     /**
-     * This method sets the trusted top level CAs. It is needed for validate the certificate of the peer.
+     * Sets the trusted top level CAs. It is needed for validate the certificate of the peer.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -240,7 +240,7 @@ public:
 
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
     /**
-     * This method returns the peer x509 certificate base64 encoded.
+     * Returns the peer x509 certificate base64 encoded.
      *
      * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
      *
@@ -259,7 +259,7 @@ public:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
     /**
-     * This method sets the connected callback to indicate, when a Client connect to the CoAP Secure server.
+     * Sets the connected callback to indicate, when a Client connect to the CoAP Secure server.
      *
      * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
      * @param[in]  aContext      A pointer to arbitrary context information.
@@ -271,7 +271,7 @@ public:
     }
 
     /**
-     * This method sets the authentication mode for the CoAP secure connection. It disables or enables the verification
+     * Sets the authentication mode for the CoAP secure connection. It disables or enables the verification
      * of peer certificate.
      *
      * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should be verified
@@ -283,7 +283,7 @@ public:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
-     * This method sends a CoAP message over secure DTLS connection.
+     * Sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be NULL pointers.
@@ -307,7 +307,7 @@ public:
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 
     /**
-     * This method sends a CoAP message over secure DTLS connection.
+     * Sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be NULL pointers.
@@ -333,7 +333,7 @@ public:
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
-     * This method sends a CoAP message over secure DTLS connection.
+     * Sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be nullptr pointers.
@@ -351,7 +351,7 @@ public:
     Error SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
 
     /**
-     * This method sends a CoAP message over secure DTLS connection.
+     * Sends a CoAP message over secure DTLS connection.
      *
      * If a response for a request is expected, respective function and context information should be provided.
      * If no response is expected, these arguments should be nullptr pointers.
@@ -374,7 +374,7 @@ public:
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
-     * This method is used to pass UDP messages to the secure CoAP server.
+     * Is used to pass UDP messages to the secure CoAP server.
      *
      * @param[in]  aMessage      A reference to the received message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
@@ -386,7 +386,7 @@ public:
     }
 
     /**
-     * This method returns the DTLS session's peer address.
+     * Returns the DTLS session's peer address.
      *
      * @return DTLS session's message info.
      *

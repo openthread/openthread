@@ -90,7 +90,7 @@ typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list 
 void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
 /**
- * This method is called to feed in a console input line.
+ * Is called to feed in a console input line.
  *
  * @param[in]  aBuf        A pointer to a null-terminated string.
  *

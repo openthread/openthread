@@ -132,7 +132,7 @@ public:
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * This method returns a reference to the interpreter object.
+     * Returns a reference to the interpreter object.
      *
      * @returns A reference to the interpreter object.
      *
@@ -145,7 +145,7 @@ public:
     }
 
     /**
-     * This method initializes the Console interpreter.
+     * Initializes the Console interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
@@ -155,7 +155,7 @@ public:
     static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * This method returns whether the interpreter is initialized.
+     * Returns whether the interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
      *
@@ -163,7 +163,7 @@ public:
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
 
     /**
-     * This method interprets a CLI command.
+     * Interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
      *
@@ -184,7 +184,7 @@ public:
     static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
 
     /**
-     * This method adds commands to the user command table.
+     * Adds commands to the user command table.
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
@@ -198,7 +198,7 @@ public:
     static constexpr uint8_t kLinkModeStringSize = sizeof("rdn"); ///< Size of string buffer for a MLE Link Mode.
 
     /**
-     * This method converts a given MLE Link Mode to flag string.
+     * Converts a given MLE Link Mode to flag string.
      *
      * The characters 'r', 'd', and 'n' are respectively used for `mRxOnWhenIdle`, `mDeviceType` and `mNetworkData`
      * flags. If all flags are `false`, then "-" is returned.
@@ -212,7 +212,7 @@ public:
     static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
 
     /**
-     * This method converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
+     * Converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
      *
      * @param[in] aOrigin   The IPv6 address origin to convert.
      *
@@ -245,7 +245,7 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * This method parses the argument as an IP address.
+     * Parses the argument as an IP address.
      *
      * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.

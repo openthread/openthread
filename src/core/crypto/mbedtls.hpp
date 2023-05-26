@@ -81,7 +81,7 @@ public:
     MbedTls(void);
 
     /**
-     * This method converts an mbed TLS error to OpenThread error.
+     * Converts an mbed TLS error to OpenThread error.
      *
      * @param[in] aMbedTlsError  The mbed TLS error.
      *

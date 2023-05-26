@@ -674,7 +674,7 @@ otError otLinkSetPollPeriod(otInstance *aInstance, uint32_t aPollPeriod);
 otShortAddress otLinkGetShortAddress(otInstance *aInstance);
 
 /**
- * This method returns the maximum number of frame retries during direct transmission.
+ * Returns the maximum number of frame retries during direct transmission.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -684,7 +684,7 @@ otShortAddress otLinkGetShortAddress(otInstance *aInstance);
 uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance);
 
 /**
- * This method sets the maximum number of frame retries during direct transmission.
+ * Sets the maximum number of frame retries during direct transmission.
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
  * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
@@ -693,7 +693,7 @@ uint8_t otLinkGetMaxFrameRetriesDirect(otInstance *aInstance);
 void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetriesDirect);
 
 /**
- * This method returns the maximum number of frame retries during indirect transmission.
+ * Returns the maximum number of frame retries during indirect transmission.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -703,7 +703,7 @@ void otLinkSetMaxFrameRetriesDirect(otInstance *aInstance, uint8_t aMaxFrameRetr
 uint8_t otLinkGetMaxFrameRetriesIndirect(otInstance *aInstance);
 
 /**
- * This method sets the maximum number of frame retries during indirect transmission.
+ * Sets the maximum number of frame retries during indirect transmission.
  *
  * @param[in]  aInstance                 A pointer to an OpenThread instance.
  * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
@@ -735,7 +735,7 @@ otMacFilterAddressMode otLinkFilterGetAddressMode(otInstance *aInstance);
 void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aMode);
 
 /**
- * This method adds an Extended Address to MAC filter.
+ * Adds an Extended Address to MAC filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -749,7 +749,7 @@ void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aM
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method removes an Extended Address from MAC filter.
+ * Removes an Extended Address from MAC filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -762,7 +762,7 @@ otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAd
 void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method clears all the Extended Addresses from MAC filter.
+ * Clears all the Extended Addresses from MAC filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -772,7 +772,7 @@ void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAd
 void otLinkFilterClearAddresses(otInstance *aInstance);
 
 /**
- * This method gets an in-use address filter entry.
+ * Gets an in-use address filter entry.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -788,7 +788,7 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * This method adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
+ * Adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
  * MAC Filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
@@ -804,7 +804,7 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
- * This method removes a MAC Filter entry for fixed received signal strength setting for a given Extended Address.
+ * Removes a MAC Filter entry for fixed received signal strength setting for a given Extended Address.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -817,7 +817,7 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
 void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress);
 
 /**
- * This method sets the default received signal strength (in dBm) on MAC Filter.
+ * Sets the default received signal strength (in dBm) on MAC Filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -831,7 +831,7 @@ void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
 void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
 
 /**
- * This method clears any previously set default received signal strength (in dBm) on MAC Filter.
+ * Clears any previously set default received signal strength (in dBm) on MAC Filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -841,7 +841,7 @@ void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
 void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
 
 /**
- * This method clears all the received signal strength entries (including default RSS-in) on MAC Filter.
+ * Clears all the received signal strength entries (including default RSS-in) on MAC Filter.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -851,7 +851,7 @@ void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
 void otLinkFilterClearAllRssIn(otInstance *aInstance);
 
 /**
- * This method gets an in-use RssIn filter entry.
+ * Gets an in-use RssIn filter entry.
  *
  * This function is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
  *
@@ -896,7 +896,7 @@ void otLinkSetRadioFilterEnabled(otInstance *aInstance, bool aFilterEnabled);
 bool otLinkIsRadioFilterEnabled(otInstance *aInstance);
 
 /**
- * This method converts received signal strength to link quality.
+ * Converts received signal strength to link quality.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aRss       The received signal strength value to be converted.
@@ -907,7 +907,7 @@ bool otLinkIsRadioFilterEnabled(otInstance *aInstance);
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss);
 
 /**
- * This method converts link quality to typical received signal strength.
+ * Converts link quality to typical received signal strength.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aLinkQuality  LinkQuality value, should be in range [0,3].
@@ -918,7 +918,7 @@ uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss);
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality);
 
 /**
- * This method gets histogram of retries for a single direct packet until success.
+ * Gets histogram of retries for a single direct packet until success.
  *
  * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *
@@ -931,7 +931,7 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
 const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
 
 /**
- * This method gets histogram of retries for a single indirect packet until success.
+ * Gets histogram of retries for a single indirect packet until success.
  *
  * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *
@@ -945,7 +945,7 @@ const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, ui
 const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries);
 
 /**
- * This method clears histogram statistics for direct and indirect transmissions.
+ * Clears histogram statistics for direct and indirect transmissions.
  *
  * This function is valid when OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE configuration is enabled.
  *

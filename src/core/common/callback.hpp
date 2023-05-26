@@ -62,13 +62,13 @@ template <typename HandlerType> class CallbackBase
 {
 public:
     /**
-     * This method clears the `Callback` by setting the handler function pointer to `nullptr`.
+     * Clears the `Callback` by setting the handler function pointer to `nullptr`.
      *
      */
     void Clear(void) { mHandler = nullptr; }
 
     /**
-     * This method sets the callback handler function pointer and its associated context.
+     * Sets the callback handler function pointer and its associated context.
      *
      * @param[in] aHandler   The handler function pointer.
      * @param[in] aContext   The context associated with handler.
@@ -81,7 +81,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the callback is set (not `nullptr`).
+     * Indicates whether or not the callback is set (not `nullptr`).
      *
      * @retval TRUE   The handler is set.
      * @retval FALSE  The handler is not set.
@@ -90,7 +90,7 @@ public:
     bool IsSet(void) const { return (mHandler != nullptr); }
 
     /**
-     * This method returns the handler function pointer.
+     * Returns the handler function pointer.
      *
      * @returns The handler function pointer.
      *
@@ -98,7 +98,7 @@ public:
     HandlerType GetHandler(void) const { return mHandler; }
 
     /**
-     * This method returns the context associated with callback.
+     * Returns the context associated with callback.
      *
      * @returns The context.
      *
@@ -106,7 +106,7 @@ public:
     void *GetContext(void) const { return mContext; }
 
     /**
-     * This method indicates whether the callback matches a given handler function pointer and context.
+     * Indicates whether the callback matches a given handler function pointer and context.
      *
      * @param[in] aHandler   The handler function pointer to compare with.
      * @param[in] aContext   The context associated with handler.
@@ -174,7 +174,7 @@ public:
     Callback(void) = default;
 
     /**
-     * This method invokes the callback handler.
+     * Invokes the callback handler.
      *
      * The caller MUST ensure that callback is set (`IsSet()` returns `true`) before calling this method.
      *
@@ -189,7 +189,7 @@ public:
     }
 
     /**
-     * This method invokes the callback handler if it is set.
+     * Invokes the callback handler if it is set.
      *
      * The method MUST be used when the handler function returns `void`.
      *

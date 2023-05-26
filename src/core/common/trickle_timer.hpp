@@ -93,7 +93,7 @@ public:
     TrickleTimer(Instance &aInstance, Handler aHandler);
 
     /**
-     * This method indicates whether or not the trickle timer instance is running.
+     * Indicates whether or not the trickle timer instance is running.
      *
      * @retval TRUE   If the trickle timer is running.
      * @retval FALSE  If the trickle timer is not running.
@@ -102,7 +102,7 @@ public:
     bool IsRunning(void) const { return TimerMilli::IsRunning(); }
 
     /**
-     * This method gets the current operation mode of the trickle timer.
+     * Gets the current operation mode of the trickle timer.
      *
      * @returns The current operation mode of the timer.
      *
@@ -110,7 +110,7 @@ public:
     Mode GetMode(void) const { return mMode; }
 
     /**
-     * This method starts the trickle timer.
+     * Starts the trickle timer.
      *
      * @param[in]  aMode                The operation mode of timer (trickle or plain periodic mode).
      * @param[in]  aIntervalMin         The minimum interval for the timer in milliseconds.
@@ -126,13 +126,13 @@ public:
                uint16_t aRedundancyConstant = kInfiniteRedundancyConstant);
 
     /**
-     * This method stops the trickle timer.
+     * Stops the trickle timer.
      *
      */
     void Stop(void) { TimerMilli::Stop(); }
 
     /**
-     * This method indicates to the trickle timer a 'consistent' event.
+     * Indicates to the trickle timer a 'consistent' event.
      *
      * The 'consistent' events are used to control suppression behavior. The trickle timer keeps track of the number of
      * 'consistent' events in each interval. The timer handler is invoked only if the number of `consistent` events
@@ -142,7 +142,7 @@ public:
     void IndicateConsistent(void);
 
     /**
-     * This method indicates to the trickle timer an 'inconsistent' event.
+     * Indicates to the trickle timer an 'inconsistent' event.
      *
      * Receiving an 'inconsistent' event causes the trickle timer to reset (i.e., start with interval set to the min
      * value) unless the current interval being used is already equal to the min interval.

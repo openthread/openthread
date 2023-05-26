@@ -64,7 +64,7 @@ public:
     }
 
     /**
-     * This method initializes the settings storage driver.
+     * Initializes the settings storage driver.
      *
      * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys.
      * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
@@ -83,7 +83,7 @@ public:
     }
 
     /**
-     * This method deinitializes the settings driver.
+     * Deinitializes the settings driver.
      *
      */
     void Deinit(void)
@@ -94,7 +94,7 @@ public:
     }
 
     /**
-     * This method adds a value to @p aKey.
+     * Adds a value to @p aKey.
      *
      * @param[in]  aKey          The key associated with the value.
      * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
@@ -119,7 +119,7 @@ public:
     }
 
     /**
-     * This method removes a value from @p aKey.
+     * Removes a value from @p aKey.
      *
      * @param[in] aKey    The key associated with the value.
      * @param[in] aIndex  The index of the value to be removed.
@@ -142,7 +142,7 @@ public:
     }
 
     /**
-     * This method fetches the value identified by @p aKey at a given @p aIndex.
+     * Fetches the value identified by @p aKey at a given @p aIndex.
      *
      * @param[in]      aKey          The key associated with the requested value.
      * @param[in]      aIndex        The index of the specific item to get.
@@ -172,7 +172,7 @@ public:
     }
 
     /**
-     * This method fetches the value identified by @p aKey.
+     * Fetches the value identified by @p aKey.
      *
      * @param[in]      aKey          The key associated with the requested value.
      * @param[out]     aValue        A pointer to where the value of the setting should be written.
@@ -190,7 +190,7 @@ public:
     Error Get(uint16_t aKey, void *aValue, uint16_t *aValueLength) const { return Get(aKey, 0, aValue, aValueLength); }
 
     /**
-     * This method sets or replaces the value identified by @p aKey.
+     * Sets or replaces the value identified by @p aKey.
      *
      * If there was more than one value previously associated with @p aKey, then they are all deleted and replaced with
      * this single entry.
@@ -218,7 +218,7 @@ public:
     }
 
     /**
-     * This method removes all values.
+     * Removes all values.
      *
      */
     void Wipe(void)

@@ -104,19 +104,19 @@ public:
     explicit ChildSupervisor(Instance &aInstance);
 
     /**
-     * This method starts the child supervision process on parent.
+     * Starts the child supervision process on parent.
      *
      */
     void Start(void);
 
     /**
-     * This method stops the child supervision process on parent.
+     * Stops the child supervision process on parent.
      *
      */
     void Stop(void);
 
     /**
-     * This method returns the destination for a supervision message.
+     * Returns the destination for a supervision message.
      *
      * @param[in] aMessage The message for which to get the destination.
      *
@@ -127,7 +127,7 @@ public:
     Child *GetDestination(const Message &aMessage) const;
 
     /**
-     * This method updates the supervision state for a child. It informs the child supervisor that a message was
+     * Updates the supervision state for a child. It informs the child supervisor that a message was
      * successfully sent to the child.
      *
      * @param[in] aChild     The child to which a message was successfully sent.
@@ -162,19 +162,19 @@ public:
     explicit SupervisionListener(Instance &aInstance);
 
     /**
-     * This method starts the supervision listener operation.
+     * Starts the supervision listener operation.
      *
      */
     void Start(void);
 
     /**
-     * This method stops the supervision listener operation.
+     * Stops the supervision listener operation.
      *
      */
     void Stop(void);
 
     /**
-     * This method sets the supervision interval.
+     * Sets the supervision interval.
      *
      * @param[in] aInterval If non-zero, the desired supervision interval (in seconds), zero to disable supervision.
      *
@@ -182,7 +182,7 @@ public:
     void SetInterval(uint16_t aInterval);
 
     /**
-     * This method returns the supervision interval.
+     * Returns the supervision interval.
      *
      * @returns  The current supervision interval (seconds), or zero if supervision is disabled.
      *
@@ -190,7 +190,7 @@ public:
     uint16_t GetInterval(void) const { return mInterval; }
 
     /**
-     * This method sets the supervision check timeout (in seconds).
+     * Sets the supervision check timeout (in seconds).
      *
      * If the child does not hear from its parent within the given check timeout interval, it initiates the re-attach
      * process (MLE Child Update Request/Response exchange with its parent). Setting the timeout to zero, disables the
@@ -205,7 +205,7 @@ public:
     void SetTimeout(uint16_t aTimeout);
 
     /**
-     * This method returns the supervision check timeout interval (in seconds).
+     * Returns the supervision check timeout interval (in seconds).
      *
      * @returns   The check timeout interval (in seconds) or zero if the supervision check on the child is disabled.
      *
@@ -213,7 +213,7 @@ public:
     uint16_t GetTimeout(void) const { return mTimeout; }
 
     /**
-     * This method returns the value of supervision check timeout failure counter.
+     * Returns the value of supervision check timeout failure counter.
      *
      * The counter tracks the number of supervision check failures on the child. It is incremented when the child does
      * not hear from its parent within the specified check timeout interval.
@@ -222,13 +222,13 @@ public:
     uint16_t GetCounter(void) const { return mCounter; }
 
     /**
-     * This method reset the supervision check timeout failure counter.
+     * Reset the supervision check timeout failure counter.
      *
      */
     void ResetCounter(void) { mCounter = 0; }
 
     /**
-     * This method updates the supervision listener state. It informs the listener of a received frame.
+     * Updates the supervision listener state. It informs the listener of a received frame.
      *
      * @param[in]   aSourceAddress    The source MAC address of the received frame
      * @param[in]   aIsSecure         TRUE to indicate that the received frame is secure, FALSE otherwise.

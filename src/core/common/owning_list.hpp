@@ -68,7 +68,7 @@ public:
     ~OwningList(void) { Free(); }
 
     /**
-     * This method clears the list and frees all existing entries in it.
+     * Clears the list and frees all existing entries in it.
      *
      */
     void Free(void)
@@ -79,13 +79,13 @@ public:
     }
 
     /**
-     * This method clears the list and frees all existing entries in it.
+     * Clears the list and frees all existing entries in it.
      *
      */
     void Clear(void) { Free(); }
 
     /**
-     * This method pops an entry from head of the linked list and return an `OwnedPtr` to it.
+     * Pops an entry from head of the linked list and return an `OwnedPtr` to it.
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *
@@ -95,7 +95,7 @@ public:
     OwnedPtr<Type> Pop(void) { return OwnedPtr<Type>(LinkedList<Type>::Pop()); }
 
     /**
-     * This method pops an entry after a given previous entry.
+     * Pops an entry after a given previous entry.
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.
      *

@@ -694,7 +694,7 @@ const char *otSrpClientItemStateToString(otSrpClientItemState aItemState);
 void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This method indicates whether the "service key record inclusion" mode is enabled or disabled.
+ * Indicates whether the "service key record inclusion" mode is enabled or disabled.
  *
  * This function is available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration is enabled.
  *

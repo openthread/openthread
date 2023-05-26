@@ -97,13 +97,13 @@ public:
     static constexpr uint8_t kMinLength = 2; ///< Minimum expected TLV length (type ID and u8 value).
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void) { SetType(SubTlv::kReport); }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
@@ -112,7 +112,7 @@ public:
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
-     * This method returns the Link Metrics Type ID.
+     * Returns the Link Metrics Type ID.
      *
      * @returns The Link Metrics Type ID.
      *
@@ -120,7 +120,7 @@ public:
     uint8_t GetMetricsTypeId(void) const { return mMetricsTypeId; }
 
     /**
-     * This method sets the Link Metrics Type ID.
+     * Sets the Link Metrics Type ID.
      *
      * @param[in]  aMetricsTypeId  The Link Metrics Type ID to set.
      *
@@ -128,7 +128,7 @@ public:
     void SetMetricsTypeId(uint8_t aMetricsTypeId) { mMetricsTypeId = aMetricsTypeId; }
 
     /**
-     * This method returns the metric value in 8 bits.
+     * Returns the metric value in 8 bits.
      *
      * @returns The metric value.
      *
@@ -136,7 +136,7 @@ public:
     uint8_t GetMetricsValue8(void) const { return mMetricsValue.m8; }
 
     /**
-     * This method returns the metric value in 32 bits.
+     * Returns the metric value in 32 bits.
      *
      * @returns The metric value.
      *
@@ -144,7 +144,7 @@ public:
     uint32_t GetMetricsValue32(void) const { return HostSwap32(mMetricsValue.m32); }
 
     /**
-     * This method sets the metric value (8 bits).
+     * Sets the metric value (8 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
      *
@@ -156,7 +156,7 @@ public:
     }
 
     /**
-     * This method sets the metric value (32 bits).
+     * Sets the metric value (32 bits).
      *
      * @param[in]  aMetricsValue  Metrics value.
      *
@@ -185,7 +185,7 @@ class QueryOptionsSubTlv : public Tlv, public TlvInfo<SubTlv::kQueryOptions>
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -195,7 +195,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
@@ -216,7 +216,7 @@ public:
     static constexpr uint8_t kMinLength = sizeof(uint8_t) + sizeof(uint8_t); ///< Minimum expected TLV length
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -226,7 +226,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
@@ -235,7 +235,7 @@ public:
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
-     * This method gets the Forward Series ID value.
+     * Gets the Forward Series ID value.
      *
      * @returns The Forward Series ID.
      *
@@ -243,7 +243,7 @@ public:
     uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
-     * This method sets the Forward Series ID value.
+     * Sets the Forward Series ID value.
      *
      * @param[in] aSeriesId  The Forward Series ID.
      *
@@ -251,7 +251,7 @@ public:
     void SetSeriesId(uint8_t aSeriesId) { mSeriesId = aSeriesId; }
 
     /**
-     * This method gets the Forward Series Flags bit-mask.
+     * Gets the Forward Series Flags bit-mask.
      *
      * @returns The Forward Series Flags mask.
      *
@@ -259,7 +259,7 @@ public:
     uint8_t GetSeriesFlagsMask(void) const { return mSeriesFlagsMask; }
 
     /**
-     * This method sets the Forward Series Flags bit-mask
+     * Sets the Forward Series Flags bit-mask
      *
      * @param[in] aSeriesFlagsMask  The Forward Series Flags.
      *
@@ -267,7 +267,7 @@ public:
     void SetSeriesFlagsMask(uint8_t aSeriesFlagsMask) { mSeriesFlagsMask = aSeriesFlagsMask; }
 
     /**
-     * This method gets the start of Type ID array.
+     * Gets the start of Type ID array.
      *
      * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
      *
@@ -287,7 +287,7 @@ public:
     static constexpr uint8_t kMinLength = sizeof(uint8_t); ///< Minimum TLV length (only `EnhAckFlags`).
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -297,7 +297,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval true   The TLV appears to be well-formed.
      * @retval false  The TLV does not appear to be well-formed.
@@ -306,7 +306,7 @@ public:
     bool IsValid(void) const { return GetLength() >= kMinLength; }
 
     /**
-     * This method gets the Enhanced ACK Flags.
+     * Gets the Enhanced ACK Flags.
      *
      * @returns The Enhanced ACK Flags.
      *
@@ -314,7 +314,7 @@ public:
     uint8_t GetEnhAckFlags(void) const { return mEnhAckFlags; }
 
     /**
-     * This method sets Enhanced ACK Flags.
+     * Sets Enhanced ACK Flags.
      *
      * @param[in] aEnhAckFlags  The value of Enhanced ACK Flags.
      *
@@ -322,7 +322,7 @@ public:
     void SetEnhAckFlags(EnhAckFlags aEnhAckFlags) { mEnhAckFlags = aEnhAckFlags; }
 
     /**
-     * This method gets the start of Type ID array.
+     * Gets the start of Type ID array.
      *
      * @returns The start of Type ID array. Array has `kMaxTypeIds` max length.
      *

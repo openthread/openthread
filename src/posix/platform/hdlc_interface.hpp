@@ -71,7 +71,7 @@ public:
     ~HdlcInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP)
+     * Initializes the interface to the Radio Co-processor (RCP)
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
@@ -85,13 +85,13 @@ public:
     otError Init(const Url::Url &aRadioUrl);
 
     /**
-     * This method deinitializes the interface to the RCP.
+     * Deinitializes the interface to the RCP.
      *
      */
     void Deinit(void);
 
     /**
-     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+     * Encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
      * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
      * up to `kMaxWaitTime` interval.
@@ -107,7 +107,7 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving part or all of spinel frame within specified interval.
+     * Waits for receiving part or all of spinel frame within specified interval.
      *
      * @param[in]  aTimeout  The timeout value in microseconds.
      *
@@ -118,7 +118,7 @@ public:
     otError WaitForFrame(uint64_t aTimeoutUs);
 
     /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
      * @param[in,out]  aWriteFdSet  A reference to the write file descriptors.
@@ -129,7 +129,7 @@ public:
     void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
 
     /**
-     * This method performs radio driver processing.
+     * Performs radio driver processing.
      *
      * @param[in]   aContext        The context containing fd_sets.
      *
@@ -138,9 +138,9 @@ public:
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     /**
-     * This method process read data (decode the data).
+     * Process read data (decode the data).
      *
-     * This method is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
+     * Is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
      * reading the data from the radio socket, it uses the given data in @p `aEvent`.
      *
      * @param[in] aEvent   The data event.
@@ -150,7 +150,7 @@ public:
 #endif
 
     /**
-     * This method returns the bus speed between the host and the radio.
+     * Returns the bus speed between the host and the radio.
      *
      * @returns   Bus speed in bits/second.
      *
@@ -158,7 +158,7 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method hardware resets the RCP.
+     * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
@@ -167,7 +167,7 @@ public:
     otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     /**
-     * This method returns the RCP interface metrics.
+     * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
      *
@@ -176,13 +176,13 @@ public:
 
 private:
     /**
-     * This method is called when RCP is reset to recreate the connection with it.
+     * Is called when RCP is reset to recreate the connection with it.
      *
      */
     otError ResetConnection(void);
 
     /**
-     * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
+     * Instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
@@ -191,7 +191,7 @@ private:
     void Read(void);
 
     /**
-     * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
+     * Waits for the socket file descriptor associated with the HDLC interface to become writable within
      * `kMaxWaitTime` interval.
      *
      * @retval OT_ERROR_NONE   Socket is writable.
@@ -201,7 +201,7 @@ private:
     otError WaitForWritable(void);
 
     /**
-     * This method writes a given frame to the socket.
+     * Writes a given frame to the socket.
      *
      * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
      * up to `kMaxWaitTime` interval.
@@ -216,7 +216,7 @@ private:
     otError Write(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method performs HDLC decoding on received data.
+     * Performs HDLC decoding on received data.
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
@@ -231,7 +231,7 @@ private:
     void        HandleHdlcFrame(otError aError);
 
     /**
-     * This method opens file specified by aRadioUrl.
+     * Opens file specified by aRadioUrl.
      *
      * @param[in] aRadioUrl  A reference to object containing path to file and data for configuring
      *                       the connection with tty type file.
@@ -241,7 +241,7 @@ private:
     int OpenFile(const Url::Url &aRadioUrl);
 
     /**
-     * This method closes file associated with the file descriptor.
+     * Closes file associated with the file descriptor.
      *
      */
     void CloseFile(void);

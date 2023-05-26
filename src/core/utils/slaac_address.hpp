@@ -87,7 +87,7 @@ public:
     explicit Slaac(Instance &aInstance);
 
     /**
-     * This method enables the SLAAC module.
+     * Enables the SLAAC module.
      *
      * When enabled, new SLAAC addresses are generated and added from on-mesh prefixes in network data.
      *
@@ -95,7 +95,7 @@ public:
     void Enable(void);
 
     /**
-     * This method disables the SLAAC module.
+     * Disables the SLAAC module.
      *
      * When disabled, any previously added SLAAC address by this module is removed.
      *
@@ -103,7 +103,7 @@ public:
     void Disable(void);
 
     /**
-     * This method indicates whether SLAAC module is enabled or not.
+     * Indicates whether SLAAC module is enabled or not.
      *
      * @retval TRUE    SLAAC module is enabled.
      * @retval FALSE   SLAAC module is disabled.
@@ -112,7 +112,7 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method sets a SLAAC prefix filter handler.
+     * Sets a SLAAC prefix filter handler.
      *
      * The handler is invoked by SLAAC module when it is about to add a SLAAC address based on a prefix. The return
      * boolean value from handler determines whether the address is filtered or added (TRUE to filter the address,
@@ -124,7 +124,7 @@ public:
     void SetFilter(otIp6SlaacPrefixFilter aFilter);
 
     /**
-     * This method generates the IID of an IPv6 address.
+     * Generates the IID of an IPv6 address.
      *
      * @param[in,out]  aAddress            A reference to the address that will be filled with the IID generated.
      *                                     Note the prefix of the address must already be filled and will be used

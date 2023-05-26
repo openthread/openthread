@@ -211,7 +211,7 @@ class Key : public otCryptoKey, public Clearable<Key>
 {
 public:
     /**
-     * This method sets the `Key` as a literal key from a given byte array and length.
+     * Sets the `Key` as a literal key from a given byte array and length.
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
      * @param[in] aKeyLength  The key length (number of bytes in @p aKeyBytes).
@@ -224,7 +224,7 @@ public:
     }
 
     /**
-     * This method gets the pointer to the bye array containing the key.
+     * Gets the pointer to the bye array containing the key.
      *
      * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
      * method returns `nullptr`.
@@ -235,7 +235,7 @@ public:
     const uint8_t *GetBytes(void) const { return mKey; }
 
     /**
-     * This method gets the key length (number of bytes).
+     * Gets the key length (number of bytes).
      *
      * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
      * method returns zero.
@@ -248,7 +248,7 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
-     * This method indicates whether or not the key is represented as a `KeyRef`.
+     * Indicates whether or not the key is represented as a `KeyRef`.
      *
      * @retval TRUE  The `Key` represents a `KeyRef`
      * @retval FALSE The `Key` represents a literal key.
@@ -257,9 +257,9 @@ public:
     bool IsKeyRef(void) const { return (mKey == nullptr); }
 
     /**
-     * This method gets the `KeyRef`.
+     * Gets the `KeyRef`.
      *
-     * This method MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
+     * MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
      *
      * @returns The `KeyRef` associated with `Key`.
      *
@@ -267,7 +267,7 @@ public:
     Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
 
     /**
-     * This method sets the `Key` as a `KeyRef`.
+     * Sets the `Key` as a `KeyRef`.
      *
      * @param[in] aKeyRef   The `KeyRef` to set from.
      *
@@ -280,9 +280,9 @@ public:
     }
 
     /**
-     * This method extracts and return the literal key when the key is represented as a `KeyRef`
+     * Extracts and return the literal key when the key is represented as a `KeyRef`
      *
-     * This method MUST be used when `IsKeyRef()` returns `true`.
+     * MUST be used when `IsKeyRef()` returns `true`.
      *
      * @param[out]     aKeyBuffer  Pointer to a byte array buffer to place the extracted key.
      * @param[in,out]  aKeyLength  On input, the size of @p aKeyBuffer.
@@ -317,7 +317,7 @@ public:
     explicit LiteralKey(const Key &aKey);
 
     /*
-     * This method gets the pointer to the byte array containing the literal key.
+     * Gets the pointer to the byte array containing the literal key.
      *
      * @returns The pointer to the byte array containing the literal key.
      *
@@ -325,7 +325,7 @@ public:
     const uint8_t *GetBytes(void) const { return mKey; }
 
     /**
-     * This method gets the key length.
+     * Gets the key length.
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`).
      *

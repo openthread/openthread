@@ -80,7 +80,7 @@ public:
     };
 
     /**
-     * This method returns the Type value.
+     * Returns the Type value.
      *
      * @returns The Type value.
      *
@@ -88,7 +88,7 @@ public:
     Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
-     * This method sets the Type value.
+     * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      *
@@ -206,7 +206,7 @@ class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterM
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -217,7 +217,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
@@ -226,7 +226,7 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
-     * This method returns the ID Sequence value.
+     * Returns the ID Sequence value.
      *
      * @returns The ID Sequence value.
      *
@@ -234,7 +234,7 @@ public:
     uint8_t GetIdSequence(void) const { return mIdSequence; }
 
     /**
-     * This method sets the ID Sequence value.
+     * Sets the ID Sequence value.
      *
      * @param[in]  aSequence  The ID Sequence value.
      *
@@ -242,7 +242,7 @@ public:
     void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
 
     /**
-     * This method gets the Assigned Router ID Mask.
+     * Gets the Assigned Router ID Mask.
      *
      * @returns The Assigned Router ID Mask.
      *
@@ -250,7 +250,7 @@ public:
     const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
 
     /**
-     * This method gets the Assigned Router ID Mask.
+     * Gets the Assigned Router ID Mask.
      *
      * @returns The Assigned Router ID Mask.
      *
@@ -258,7 +258,7 @@ public:
     Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
 
     /**
-     * This method sets the Assigned Router ID Mask.
+     * Sets the Assigned Router ID Mask.
      *
      * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
      *
@@ -279,7 +279,7 @@ class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThread
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -289,7 +289,7 @@ public:
     }
 
     /**
-     * This method overrides same method of the base class
+     * Overrides same method of the base class
      *
      * @retval TRUE  the TLV appears to be well-formed.
      *
@@ -297,7 +297,7 @@ public:
     bool IsValid(void) const { return true; }
 
     /**
-     * This method returns a pointer to the Network Data TLVs.
+     * Returns a pointer to the Network Data TLVs.
      *
      * @returns A pointer to the Network Data TLVs.
      *
@@ -325,13 +325,13 @@ public:
     static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void) { SetType(kIp6Addresses); }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
@@ -345,7 +345,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the IPv6 address entry.
+     * Returns a pointer to the IPv6 address entry.
      *
      * @param[in]  aIndex  The index into the IPv6 address list.
      *

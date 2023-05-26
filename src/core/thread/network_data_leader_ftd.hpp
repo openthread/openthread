@@ -90,13 +90,13 @@ public:
     explicit Leader(Instance &aInstance);
 
     /**
-     * This method reset the Thread Network Data.
+     * Reset the Thread Network Data.
      *
      */
     void Reset(void);
 
     /**
-     * This method starts the Leader services.
+     * Starts the Leader services.
      *
      * The start mode indicates whether device is starting normally as leader or restoring its role as leader after
      * reset. In the latter case, we do not accept any new registrations (`HandleServerData()`) and wait for
@@ -109,19 +109,19 @@ public:
     void Start(Mle::LeaderStartMode aStartMode);
 
     /**
-     * This method increments the Thread Network Data version.
+     * Increments the Thread Network Data version.
      *
      */
     void IncrementVersion(void);
 
     /**
-     * This method increments both the Thread Network Data version and stable version.
+     * Increments both the Thread Network Data version and stable version.
      *
      */
     void IncrementVersionAndStableVersion(void);
 
     /**
-     * This method returns CONTEXT_ID_RESUSE_DELAY value.
+     * Returns CONTEXT_ID_RESUSE_DELAY value.
      *
      * @returns The CONTEXT_ID_REUSE_DELAY value (in seconds).
      *
@@ -129,7 +129,7 @@ public:
     uint32_t GetContextIdReuseDelay(void) const { return mContextIds.GetReuseDelay(); }
 
     /**
-     * This method sets CONTEXT_ID_RESUSE_DELAY value.
+     * Sets CONTEXT_ID_RESUSE_DELAY value.
      *
      * @warning This method should only be used for testing.
      *
@@ -139,7 +139,7 @@ public:
     void SetContextIdReuseDelay(uint32_t aDelay) { mContextIds.SetReuseDelay(aDelay); }
 
     /**
-     * This method removes Network Data entries matching with a given RLOC16.
+     * Removes Network Data entries matching with a given RLOC16.
      *
      * @param[in]  aRloc16    A RLOC16 value.
      * @param[in]  aMatchMode A match mode (@sa MatchMode).
@@ -148,7 +148,7 @@ public:
     void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
 
     /**
-     * This method synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
+     * Synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
      *
      * Note that this method should be called only by the Leader once after reset.
      *
@@ -156,7 +156,7 @@ public:
     void HandleNetworkDataRestoredAfterReset(void);
 
     /**
-     * This method scans network data for given Service ID and returns pointer to the respective TLV, if present.
+     * Scans network data for given Service ID and returns pointer to the respective TLV, if present.
      *
      * @param aServiceId Service ID to look for.
      * @return Pointer to the Service TLV for given Service ID, or nullptr if not present.
@@ -166,7 +166,7 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
+     * Indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
      *
      * @param[in]  aPrefix   The OMR prefix to check.
      *

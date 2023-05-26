@@ -61,7 +61,7 @@ class Metrics : public otLinkMetrics, public Clearable<Metrics>
 {
 public:
     /**
-     * This method converts the `Metrics` into an array of Type IDs.
+     * Converts the `Metrics` into an array of Type IDs.
      *
      * @param[out] aTypeIds   The array of Type IDs to populate. MUST have at least `kMaxTypeIds` elements.
      *
@@ -81,7 +81,7 @@ class MetricsValues : public otLinkMetricsValues, public Clearable<MetricsValues
 {
 public:
     /**
-     * This method gets the metrics flags.
+     * Gets the metrics flags.
      *
      * @returns The metrics flags.
      *
@@ -89,7 +89,7 @@ public:
     Metrics &GetMetrics(void) { return static_cast<Metrics &>(mMetrics); }
 
     /**
-     * This method gets the metrics flags.
+     * Gets the metrics flags.
      *
      * @returns The metrics flags.
      *
@@ -97,7 +97,7 @@ public:
     const Metrics &GetMetrics(void) const { return static_cast<const Metrics &>(mMetrics); }
 
     /**
-     * This method set the metrics flags.
+     * Set the metrics flags.
      *
      * @param[in] aMetrics  The metrics flags to set from.
      *
@@ -186,7 +186,7 @@ class SeriesFlags : public otLinkMetricsSeriesFlags
 {
 public:
     /**
-     * This method converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
+     * Converts the `SeriesFlags` to `uint8_t` bit-mask (for inclusion in TLVs).
      *
      * @returns The bit-mask representation.
      *
@@ -194,7 +194,7 @@ public:
     uint8_t ConvertToMask(void) const;
 
     /**
-     * This method sets the `SeriesFlags` from a given bit-mask value.
+     * Sets the `SeriesFlags` from a given bit-mask value.
      *
      * @param[in] aFlagsMask  The bit-mask flags.
      *
@@ -202,7 +202,7 @@ public:
     void SetFrom(uint8_t aFlagsMask);
 
     /**
-     * This method indicates whether or not the Link Probe flag is set.
+     * Indicates whether or not the Link Probe flag is set.
      *
      * @retval true   The Link Probe flag is set.
      * @retval false  The Link Probe flag is not set.
@@ -211,7 +211,7 @@ public:
     bool IsLinkProbeFlagSet(void) const { return mLinkProbe; }
 
     /**
-     * This method indicates whether or not the MAC Data flag is set.
+     * Indicates whether or not the MAC Data flag is set.
      *
      * @retval true   The MAC Data flag is set.
      * @retval false  The MAC Data flag is not set.
@@ -220,7 +220,7 @@ public:
     bool IsMacDataFlagSet(void) const { return mMacData; }
 
     /**
-     * This method indicates whether or not the MAC Data Request flag is set.
+     * Indicates whether or not the MAC Data Request flag is set.
      *
      * @retval true   The MAC Data Request flag is set.
      * @retval false  The MAC Data Request flag is not set.
@@ -229,7 +229,7 @@ public:
     bool IsMacDataRequestFlagSet(void) const { return mMacDataRequest; }
 
     /**
-     * This method indicates whether or not the Mac Ack flag is set.
+     * Indicates whether or not the Mac Ack flag is set.
      *
      * @retval true   The Mac Ack flag is set.
      * @retval false  The Mac Ack flag is not set.
@@ -280,7 +280,7 @@ public:
     static constexpr uint8_t kSeriesTypeLinkProbe = 0;
 
     /**
-     * This method initializes the SeriesInfo object.
+     * Initializes the SeriesInfo object.
      *
      * @param[in]  aSeriesId          The Series ID.
      * @param[in]  aSeriesFlagsMask   The Series Flags bitmask which specify what types of frames are to be accounted.
@@ -290,7 +290,7 @@ public:
     void Init(uint8_t aSeriesId, uint8_t aSeriesFlagsMask, const Metrics &aMetrics);
 
     /**
-     * This method gets the Series ID.
+     * Gets the Series ID.
      *
      * @returns  The Series ID.
      *
@@ -298,7 +298,7 @@ public:
     uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
-     * This method gets the PDU count.
+     * Gets the PDU count.
      *
      * @returns  The PDU count.
      *
@@ -306,7 +306,7 @@ public:
     uint32_t GetPduCount(void) const { return mPduCount; }
 
     /**
-     * This method gets the average LQI.
+     * Gets the average LQI.
      *
      * @returns  The average LQI.
      *
@@ -314,7 +314,7 @@ public:
     uint8_t GetAverageLqi(void) const { return mLqiAverager.GetAverage(); }
 
     /**
-     * This method gets the average RSS.
+     * Gets the average RSS.
      *
      * @returns  The average RSS.
      *
@@ -322,7 +322,7 @@ public:
     int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
     /**
-     * This method aggregates the Link Metrics data of a frame into this series.
+     * Aggregates the Link Metrics data of a frame into this series.
      *
      * @param[in]  aFrameType    The type of the frame.
      * @param[in]  aLqi          The LQI value.

@@ -153,7 +153,7 @@ uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
- * This method indicates whether or not the device is router-eligible.
+ * Indicates whether or not the device is router-eligible.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *

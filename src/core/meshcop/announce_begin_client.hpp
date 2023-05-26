@@ -59,7 +59,7 @@ public:
     explicit AnnounceBeginClient(Instance &aInstance);
 
     /**
-     * This method sends a Announce Begin message.
+     * Sends a Announce Begin message.
      *
      * @param[in]  aChannelMask   The channel mask value.
      * @param[in]  aCount         The number of Announce messages sent per channel.

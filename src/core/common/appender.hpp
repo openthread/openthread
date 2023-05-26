@@ -87,7 +87,7 @@ public:
     Appender(uint8_t *aBuffer, uint16_t aSize);
 
     /**
-     * This method indicates the `Appender` type (whether appending to a `Message` or data buffer).
+     * Indicates the `Appender` type (whether appending to a `Message` or data buffer).
      *
      * @returns The type of `Appender`.
      *
@@ -95,7 +95,7 @@ public:
     Type GetType(void) const { return mType; }
 
     /**
-     * This method appends bytes to the `Appender` object
+     * Appends bytes to the `Appender` object
      *
      * @param[in] aBuffer  A pointer to a data buffer (MUST NOT be `nullptr`) to append.
      * @param[in] aLength  The number of bytes to append.
@@ -107,7 +107,7 @@ public:
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
     /**
-     * This method appends an object to the end of the `Appender` object.
+     * Appends an object to the end of the `Appender` object.
      *
      * @tparam    ObjectType   The object type to append to the message.
      *
@@ -125,9 +125,9 @@ public:
     }
 
     /**
-     * This method returns the number of bytes appended so far using `Appender` methods.
+     * Returns the number of bytes appended so far using `Appender` methods.
      *
-     * This method can be used independent of the `Type` of `Appender`.
+     * Can be used independent of the `Type` of `Appender`.
      *
      * @returns The number of byes appended so far.
      *
@@ -135,9 +135,9 @@ public:
     uint16_t GetAppendedLength(void) const;
 
     /**
-     * This method returns the `Message` associated with `Appender`.
+     * Returns the `Message` associated with `Appender`.
      *
-     * This method MUST be used when `GetType() == kMessage`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kMessage`. Otherwise its behavior is undefined.
      *
      * @returns The `Message` instance associated with `Appender`.
      *
@@ -145,9 +145,9 @@ public:
     Message &GetMessage(void) const { return *mShared.mMessage.mMessage; }
 
     /**
-     * This method returns a pointer to the start of the data buffer associated with `Appender`.
+     * Returns a pointer to the start of the data buffer associated with `Appender`.
      *
-     * This method MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
      *
      * @returns A pointer to the start of the data buffer associated with `Appender`.
      *
@@ -155,9 +155,9 @@ public:
     uint8_t *GetBufferStart(void) const { return AsNonConst(mShared.mFrameBuilder.GetBytes()); }
 
     /**
-     * This method gets the data buffer associated with `Appender` as a `Data`.
+     * Gets the data buffer associated with `Appender` as a `Data`.
      *
-     * This method MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
+     * MUST be used when `GetType() == kBuffer`. Otherwise its behavior is undefined.
      *
      * @pram[out] aData  A reference to a `Data` to output the data buffer.
      *

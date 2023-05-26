@@ -171,7 +171,7 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * This method updates the next CSL transmission (finds the nearest child).
+     * Updates the next CSL transmission (finds the nearest child).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
      * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
@@ -181,7 +181,7 @@ public:
     void Update(void);
 
     /**
-     * This method clears all the states inside `CslTxScheduler` and the related states in each child.
+     * Clears all the states inside `CslTxScheduler` and the related states in each child.
      *
      */
     void Clear(void);

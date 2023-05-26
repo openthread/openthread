@@ -727,7 +727,7 @@ otCoapCode otCoapMessageGetCode(const otMessage *aMessage);
 void otCoapMessageSetCode(otMessage *aMessage, otCoapCode aCode);
 
 /**
- * This method returns the CoAP Code as human readable string.
+ * Returns the CoAP Code as human readable string.
  *
  * @param[in]   aMessage    A pointer to the CoAP message.
  *

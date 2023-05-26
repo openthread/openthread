@@ -170,7 +170,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop);
 void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMainloop);
 
 /**
- * This method returns the radio url help string.
+ * Returns the radio url help string.
  *
  * @returns the radio url help string.
  *
@@ -180,7 +180,7 @@ const char *otSysGetRadioUrlHelpString(void);
 extern otPlatResetReason gPlatResetReason;
 
 /**
- * This method returns the Thread network interface name.
+ * Returns the Thread network interface name.
  *
  * @returns The Thread network interface name.
  *
@@ -188,7 +188,7 @@ extern otPlatResetReason gPlatResetReason;
 const char *otSysGetThreadNetifName(void);
 
 /**
- * This method returns the Thread network interface index.
+ * Returns the Thread network interface index.
  *
  * @returns The Thread network interface index.
  *
@@ -196,7 +196,7 @@ const char *otSysGetThreadNetifName(void);
 unsigned int otSysGetThreadNetifIndex(void);
 
 /**
- * This method returns the infrastructure network interface name.
+ * Returns the infrastructure network interface name.
  *
  * @returns The infrastructure network interface name, or `nullptr` if not specified.
  *
@@ -204,7 +204,7 @@ unsigned int otSysGetThreadNetifIndex(void);
 const char *otSysGetInfraNetifName(void);
 
 /**
- * This method returns the radio spinel metrics.
+ * Returns the radio spinel metrics.
  *
  * @returns The radio spinel metrics.
  *
@@ -212,7 +212,7 @@ const char *otSysGetInfraNetifName(void);
 const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
 
 /**
- * This method returns the RCP interface metrics.
+ * Returns the RCP interface metrics.
  *
  * @returns The RCP interface metrics.
  *

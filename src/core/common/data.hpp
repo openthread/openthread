@@ -118,7 +118,7 @@ public:
     using LengthType = typename TypeTraits::Conditional<kDataLengthType == kWithUint8Length, uint8_t, uint16_t>::Type;
 
     /**
-     * This method initializes the `Data` to point to a given buffer with a given length.
+     * Initializes the `Data` to point to a given buffer with a given length.
      *
      * @param[in] aBuffer   A pointer to a buffer containing the data.
      * @param[in] aLength   The data length (number of bytes in @p aBuffer)
@@ -131,7 +131,7 @@ public:
     }
 
     /**
-     * This method initializes the `Data` to point to a range of bytes in a given buffer.
+     * Initializes the `Data` to point to a range of bytes in a given buffer.
      *
      * The range is specified by the pointers to its start @p aStart and its end @p aEnd. `Data` will point to the
      * bytes in the buffer from @p aStart up to but excluding @p aEnd (i.e., `aStart <= bytes < aEnd`).
@@ -160,7 +160,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the data bytes buffer.
+     * Returns a pointer to the data bytes buffer.
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is cleared).
      *
@@ -168,7 +168,7 @@ public:
     const uint8_t *GetBytes(void) const { return mBuffer; }
 
     /**
-     * This method returns the data length.
+     * Returns the data length.
      *
      * @returns The data length (number of bytes).
      *
@@ -176,7 +176,7 @@ public:
     LengthType GetLength(void) const { return mLength; }
 
     /**
-     * This method sets the data length.
+     * Sets the data length.
      *
      * @param[in] aLength   The data length (number of bytes).
      *
@@ -184,7 +184,7 @@ public:
     void SetLength(LengthType aLength) { mLength = aLength; }
 
     /**
-     * This method copies the `Data` bytes to a given buffer.
+     * Copies the `Data` bytes to a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough space for the current data length.
      *
@@ -194,7 +194,7 @@ public:
     void CopyBytesTo(void *aBuffer) const { memcpy(aBuffer, mBuffer, mLength); }
 
     /**
-     * This method compares the `Data` content with the bytes from a given buffer.
+     * Compares the `Data` content with the bytes from a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough bytes to compare with the current data length.
      *
@@ -207,7 +207,7 @@ public:
     bool MatchesBytesIn(const void *aBuffer) const { return memcmp(mBuffer, aBuffer, mLength) == 0; }
 
     /**
-     * This method compares the `Data` content with the bytes from a given buffer using a given `Matcher` function.
+     * Compares the `Data` content with the bytes from a given buffer using a given `Matcher` function.
      *
      * It is up to the caller to ensure that @p aBuffer has enough bytes to compare with the current data length.
      *
@@ -224,7 +224,7 @@ public:
     }
 
     /**
-     * This method overloads operator `==` to compare the `Data` content with the content from another one.
+     * Overloads operator `==` to compare the `Data` content with the content from another one.
      *
      * @param[in] aOtherData   The other `Data` to compare with.
      *
@@ -238,9 +238,9 @@ public:
     }
 
     /**
-     * This method checks whether the `Data` starts with the same byte content as from another `Data` instance.
+     * Checks whether the `Data` starts with the same byte content as from another `Data` instance.
      *
-     * This method checks that the `Data` instance contains the same bytes as @p aOtherData but allows it to have
+     * Checks that the `Data` instance contains the same bytes as @p aOtherData but allows it to have
      * additional bytes at the end.
      *
      * @param[in] aOtherData  The other `Data` to compare with.
@@ -285,7 +285,7 @@ public:
     using LengthType = typename Base::LengthType;
 
     /**
-     * This method initializes the `MutableData` to point to a given buffer with a given length.
+     * Initializes the `MutableData` to point to a given buffer with a given length.
      *
      * @param[in] aBuffer   A pointer to a buffer containing the data.
      * @param[in] aLength   The data length (number of bytes in @p aBuffer)
@@ -294,7 +294,7 @@ public:
     void Init(void *aBuffer, LengthType aLength) { Base::Init(aBuffer, aLength); }
 
     /**
-     * This method initializes the `MutableData` to point to a range of bytes in a given buffer.
+     * Initializes the `MutableData` to point to a range of bytes in a given buffer.
      *
      * The range is specified by the pointers to its start @p aStart and its end @p aEnd. `Data` will point to the
      * bytes in the buffer from @p aStart up to but excluding @p aEnd (i.e., `aStart <= bytes < aEnd`).
@@ -320,7 +320,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the data bytes buffer.
+     * Returns a pointer to the data bytes buffer.
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is empty or uninitialized).
      *
@@ -328,7 +328,7 @@ public:
     uint8_t *GetBytes(void) { return AsNonConst(Base::GetBytes()); }
 
     /**
-     * This method returns a pointer to the data bytes buffer.
+     * Returns a pointer to the data bytes buffer.
      *
      * @returns A pointer to the data bytes buffer (can be `nullptr` if `Data` is empty or uninitialized).
      *
@@ -336,13 +336,13 @@ public:
     const uint8_t *GetBytes(void) const { return Base::GetBytes(); }
 
     /**
-     * This method clears all the bytes (sets them to zero) in the buffer pointed by the `MutableData`.
+     * Clears all the bytes (sets them to zero) in the buffer pointed by the `MutableData`.
      *
      */
     void ClearBytes(void) { memset(GetBytes(), 0, mLength); }
 
     /**
-     * This method copies the bytes from a given buffer into the `MutableData` buffer.
+     * Copies the bytes from a given buffer into the `MutableData` buffer.
      *
      * If the current `MutableData` length is larger than or equal to @p aLength, then all the bytes are copied
      * from @p aBuffer into the buffer of `MutableData` and the `MutableData`'s length is changed to @p aLength.
@@ -368,7 +368,7 @@ public:
     }
 
     /**
-     * This method copies the bytes from an given `Data` instance into the `MutableData` buffer.
+     * Copies the bytes from an given `Data` instance into the `MutableData` buffer.
      *
      * If the current `MutableData` length is larger than or equal to the @p aData length, then all the bytes are copied
      * from @p aData into the buffer of `MutableData` and the `MutableData`'s length is adjusted accordingly.

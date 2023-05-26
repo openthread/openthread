@@ -143,7 +143,7 @@ public:
         static constexpr Key kKey = kKeyNetworkInfo; ///< The associated key.
 
         /**
-         * This method initializes the `NetworkInfo` object.
+         * Initializes the `NetworkInfo` object.
          *
          */
         void Init(void)
@@ -153,7 +153,7 @@ public:
         }
 
         /**
-         * This method returns the Thread role.
+         * Returns the Thread role.
          *
          * @returns The Thread role.
          *
@@ -161,7 +161,7 @@ public:
         uint8_t GetRole(void) const { return mRole; }
 
         /**
-         * This method sets the Thread role.
+         * Sets the Thread role.
          *
          * @param[in] aRole  The Thread Role.
          *
@@ -169,7 +169,7 @@ public:
         void SetRole(uint8_t aRole) { mRole = aRole; }
 
         /**
-         * This method returns the Thread device mode.
+         * Returns the Thread device mode.
          *
          * @returns the Thread device mode.
          *
@@ -177,7 +177,7 @@ public:
         uint8_t GetDeviceMode(void) const { return mDeviceMode; }
 
         /**
-         * This method sets the Thread device mode.
+         * Sets the Thread device mode.
          *
          * @param[in] aDeviceMode  The Thread device mode.
          *
@@ -185,7 +185,7 @@ public:
         void SetDeviceMode(uint8_t aDeviceMode) { mDeviceMode = aDeviceMode; }
 
         /**
-         * This method returns the RLOC16.
+         * Returns the RLOC16.
          *
          * @returns The RLOC16.
          *
@@ -193,7 +193,7 @@ public:
         uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
 
         /**
-         * This method sets the RLOC16.
+         * Sets the RLOC16.
          *
          * @param[in] aRloc16  The RLOC16.
          *
@@ -201,7 +201,7 @@ public:
         void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
 
         /**
-         * This method returns the key sequence.
+         * Returns the key sequence.
          *
          * @returns The key sequence.
          *
@@ -209,7 +209,7 @@ public:
         uint32_t GetKeySequence(void) const { return Encoding::LittleEndian::HostSwap32(mKeySequence); }
 
         /**
-         * This method sets the key sequence.
+         * Sets the key sequence.
          *
          * @param[in] aKeySequence  The key sequence.
          *
@@ -217,7 +217,7 @@ public:
         void SetKeySequence(uint32_t aKeySequence) { mKeySequence = Encoding::LittleEndian::HostSwap32(aKeySequence); }
 
         /**
-         * This method returns the MLE frame counter.
+         * Returns the MLE frame counter.
          *
          * @returns The MLE frame counter.
          *
@@ -225,7 +225,7 @@ public:
         uint32_t GetMleFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMleFrameCounter); }
 
         /**
-         * This method sets the MLE frame counter.
+         * Sets the MLE frame counter.
          *
          * @param[in] aMleFrameCounter  The MLE frame counter.
          *
@@ -236,7 +236,7 @@ public:
         }
 
         /**
-         * This method returns the MAC frame counter.
+         * Returns the MAC frame counter.
          *
          * @returns The MAC frame counter.
          *
@@ -244,7 +244,7 @@ public:
         uint32_t GetMacFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMacFrameCounter); }
 
         /**
-         * This method sets the MAC frame counter.
+         * Sets the MAC frame counter.
          *
          * @param[in] aMacFrameCounter  The MAC frame counter.
          *
@@ -255,7 +255,7 @@ public:
         }
 
         /**
-         * This method returns the previous partition ID.
+         * Returns the previous partition ID.
          *
          * @returns The previous partition ID.
          *
@@ -263,7 +263,7 @@ public:
         uint32_t GetPreviousPartitionId(void) const { return Encoding::LittleEndian::HostSwap32(mPreviousPartitionId); }
 
         /**
-         * This method sets the previous partition id.
+         * Sets the previous partition id.
          *
          * @param[in] aPreviousPartitionId  The previous partition ID.
          *
@@ -274,7 +274,7 @@ public:
         }
 
         /**
-         * This method returns the extended address.
+         * Returns the extended address.
          *
          * @returns The extended address.
          *
@@ -282,7 +282,7 @@ public:
         const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
         /**
-         * This method sets the extended address.
+         * Sets the extended address.
          *
          * @param[in] aExtAddress  The extended address.
          *
@@ -290,7 +290,7 @@ public:
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
         /**
-         * This method returns the Mesh Local Interface Identifier.
+         * Returns the Mesh Local Interface Identifier.
          *
          * @returns The Mesh Local Interface Identifier.
          *
@@ -298,7 +298,7 @@ public:
         const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMlIid; }
 
         /**
-         * This method sets the Mesh Local Interface Identifier.
+         * Sets the Mesh Local Interface Identifier.
          *
          * @param[in] aMeshLocalIid  The Mesh Local Interface Identifier.
          *
@@ -306,7 +306,7 @@ public:
         void SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMeshLocalIid) { mMlIid = aMeshLocalIid; }
 
         /**
-         * This method returns the Thread version.
+         * Returns the Thread version.
          *
          * @returns The Thread version.
          *
@@ -314,7 +314,7 @@ public:
         uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
 
         /**
-         * This method sets the Thread version.
+         * Sets the Thread version.
          *
          * @param[in] aVersion  The Thread version.
          *
@@ -350,7 +350,7 @@ public:
         static constexpr Key kKey = kKeyParentInfo; ///< The associated key.
 
         /**
-         * This method initializes the `ParentInfo` object.
+         * Initializes the `ParentInfo` object.
          *
          */
         void Init(void)
@@ -360,7 +360,7 @@ public:
         }
 
         /**
-         * This method returns the extended address.
+         * Returns the extended address.
          *
          * @returns The extended address.
          *
@@ -368,7 +368,7 @@ public:
         const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
         /**
-         * This method sets the extended address.
+         * Sets the extended address.
          *
          * @param[in] aExtAddress  The extended address.
          *
@@ -376,7 +376,7 @@ public:
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
         /**
-         * This method returns the Thread version.
+         * Returns the Thread version.
          *
          * @returns The Thread version.
          *
@@ -384,7 +384,7 @@ public:
         uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
 
         /**
-         * This method sets the Thread version.
+         * Sets the Thread version.
          *
          * @param[in] aVersion  The Thread version.
          *
@@ -412,7 +412,7 @@ public:
         static constexpr Key kKey = kKeyChildInfo; ///< The associated key.
 
         /**
-         * This method clears the struct object (setting all the fields to zero).
+         * Clears the struct object (setting all the fields to zero).
          *
          */
         void Init(void)
@@ -422,7 +422,7 @@ public:
         }
 
         /**
-         * This method returns the extended address.
+         * Returns the extended address.
          *
          * @returns The extended address.
          *
@@ -430,7 +430,7 @@ public:
         const Mac::ExtAddress &GetExtAddress(void) const { return mExtAddress; }
 
         /**
-         * This method sets the extended address.
+         * Sets the extended address.
          *
          * @param[in] aExtAddress  The extended address.
          *
@@ -438,7 +438,7 @@ public:
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
         /**
-         * This method returns the child timeout.
+         * Returns the child timeout.
          *
          * @returns The child timeout.
          *
@@ -446,7 +446,7 @@ public:
         uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
 
         /**
-         * This method sets the child timeout.
+         * Sets the child timeout.
          *
          * @param[in] aTimeout  The child timeout.
          *
@@ -454,7 +454,7 @@ public:
         void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
 
         /**
-         * This method returns the RLOC16.
+         * Returns the RLOC16.
          *
          * @returns The RLOC16.
          *
@@ -462,7 +462,7 @@ public:
         uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
 
         /**
-         * This method sets the RLOC16.
+         * Sets the RLOC16.
          *
          * @param[in] aRloc16  The RLOC16.
          *
@@ -470,7 +470,7 @@ public:
         void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
 
         /**
-         * This method returns the Thread device mode.
+         * Returns the Thread device mode.
          *
          * @returns The Thread device mode.
          *
@@ -478,7 +478,7 @@ public:
         uint8_t GetMode(void) const { return mMode; }
 
         /**
-         * This method sets the Thread device mode.
+         * Sets the Thread device mode.
          *
          * @param[in] aMode  The Thread device mode.
          *
@@ -486,7 +486,7 @@ public:
         void SetMode(uint8_t aMode) { mMode = aMode; }
 
         /**
-         * This method returns the Thread version.
+         * Returns the Thread version.
          *
          * @returns The Thread version.
          *
@@ -494,7 +494,7 @@ public:
         uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
 
         /**
-         * This method sets the Thread version.
+         * Sets the Thread version.
          *
          * @param[in] aVersion  The Thread version.
          *
@@ -544,13 +544,13 @@ public:
         static constexpr Key kKey = kKeyDadInfo; ///< The associated key.
 
         /**
-         * This method initializes the `DadInfo` object.
+         * Initializes the `DadInfo` object.
          *
          */
         void Init(void) { Clear(); }
 
         /**
-         * This method returns the Dad Counter.
+         * Returns the Dad Counter.
          *
          * @returns The Dad Counter value.
          *
@@ -558,7 +558,7 @@ public:
         uint8_t GetDadCounter(void) const { return mDadCounter; }
 
         /**
-         * This method sets the Dad Counter.
+         * Sets the Dad Counter.
          *
          * @param[in] aDadCounter The Dad Counter value.
          *
@@ -601,13 +601,13 @@ public:
         static constexpr Key kKey = kKeyBrOnLinkPrefixes; ///< The associated key.
 
         /**
-         * This method initializes the `BrOnLinkPrefix` object.
+         * Initializes the `BrOnLinkPrefix` object.
          *
          */
         void Init(void) { Clear(); }
 
         /**
-         * This method gets the prefix.
+         * Gets the prefix.
          *
          * @returns The prefix.
          *
@@ -615,7 +615,7 @@ public:
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
 
         /**
-         * This method set the prefix.
+         * Set the prefix.
          *
          * @param[in] aPrefix   The prefix.
          *
@@ -623,7 +623,7 @@ public:
         void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
 
         /**
-         * This method gets the remaining prefix lifetime in seconds.
+         * Gets the remaining prefix lifetime in seconds.
          *
          * @returns The prefix lifetime in seconds.
          *
@@ -631,7 +631,7 @@ public:
         uint32_t GetLifetime(void) const { return mLifetime; }
 
         /**
-         * This method sets the the prefix lifetime.
+         * Sets the the prefix lifetime.
          *
          * @param[in] aLifetime  The prefix lifetime in seconds.
          *
@@ -678,13 +678,13 @@ public:
         static constexpr Key kKey = kKeySrpClientInfo; ///< The associated key.
 
         /**
-         * This method initializes the `SrpClientInfo` object.
+         * Initializes the `SrpClientInfo` object.
          *
          */
         void Init(void) { Clear(); }
 
         /**
-         * This method returns the server IPv6 address.
+         * Returns the server IPv6 address.
          *
          * @returns The server IPv6 address.
          *
@@ -692,7 +692,7 @@ public:
         const Ip6::Address &GetServerAddress(void) const { return mServerAddress; }
 
         /**
-         * This method sets the server IPv6 address.
+         * Sets the server IPv6 address.
          *
          * @param[in] aAddress  The server IPv6 address.
          *
@@ -700,7 +700,7 @@ public:
         void SetServerAddress(const Ip6::Address &aAddress) { mServerAddress = aAddress; }
 
         /**
-         * This method returns the server port number.
+         * Returns the server port number.
          *
          * @returns The server port number.
          *
@@ -708,7 +708,7 @@ public:
         uint16_t GetServerPort(void) const { return Encoding::LittleEndian::HostSwap16(mServerPort); }
 
         /**
-         * This method sets the server port number.
+         * Sets the server port number.
          *
          * @param[in] aPort  The server port number.
          *
@@ -739,13 +739,13 @@ public:
         static constexpr Key kKey = kKeySrpServerInfo; ///< The associated key.
 
         /**
-         * This method initializes the `SrpServerInfo` object.
+         * Initializes the `SrpServerInfo` object.
          *
          */
         void Init(void) { Clear(); }
 
         /**
-         * This method returns the server port number.
+         * Returns the server port number.
          *
          * @returns The server port number.
          *
@@ -753,7 +753,7 @@ public:
         uint16_t GetPort(void) const { return Encoding::LittleEndian::HostSwap16(mPort); }
 
         /**
-         * This method sets the server port number.
+         * Sets the server port number.
          *
          * @param[in] aPort  The server port number.
          *
@@ -781,13 +781,13 @@ public:
         static constexpr Key kKey = kKeyBorderAgentId; ///< The associated key.
 
         /**
-         * This method initializes the `BorderAgentId` object.
+         * Initializes the `BorderAgentId` object.
          *
          */
         void Init(void) { mId = {}; }
 
         /**
-         * This method returns the Border Agent ID.
+         * Returns the Border Agent ID.
          *
          * @returns The Border Agent ID.
          *
@@ -795,7 +795,7 @@ public:
         const MeshCoP::BorderAgent::Id &GetId(void) const { return mId; }
 
         /**
-         * This method returns the Border Agent ID.
+         * Returns the Border Agent ID.
          *
          * @returns The Border Agent ID.
          *
@@ -803,7 +803,7 @@ public:
         MeshCoP::BorderAgent::Id &GetId(void) { return mId; }
 
         /**
-         * This method sets the Border Agent ID.
+         * Sets the Border Agent ID.
          *
          */
         void SetId(const MeshCoP::BorderAgent::Id &aId) { mId = aId; }
@@ -854,7 +854,7 @@ public:
     }
 
     /**
-     * This method initializes the platform settings (non-volatile) module.
+     * Initializes the platform settings (non-volatile) module.
      *
      * This should be called before any other method from this class.
      *
@@ -862,21 +862,21 @@ public:
     void Init(void);
 
     /**
-     * This method de-initializes the platform settings (non-volatile) module.
+     * De-initializes the platform settings (non-volatile) module.
      *
-     * This method should be called when OpenThread instance is no longer in use.
+     * Should be called when OpenThread instance is no longer in use.
      *
      */
     void Deinit(void);
 
     /**
-     * This method removes all settings from the non-volatile store.
+     * Removes all settings from the non-volatile store.
      *
      */
     void Wipe(void);
 
     /**
-     * This method saves the Operational Dataset (active or pending).
+     * Saves the Operational Dataset (active or pending).
      *
      * @param[in]   aType       The Dataset type (active or pending) to save.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
@@ -888,7 +888,7 @@ public:
     Error SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
 
     /**
-     * This method reads the Operational Dataset (active or pending).
+     * Reads the Operational Dataset (active or pending).
      *
      * @param[in]   aType            The Dataset type (active or pending) to read.
      * @param[out]  aDataset         A reference to a `Dataset` object to output the read content.
@@ -901,7 +901,7 @@ public:
     Error ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const;
 
     /**
-     * This method deletes the Operational Dataset (active/pending) from settings.
+     * Deletes the Operational Dataset (active/pending) from settings.
      *
      * @param[in]   aType            The Dataset type (active or pending) to delete.
      *
@@ -1031,7 +1031,7 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * This method adds a Child Info entry to settings.
+     * Adds a Child Info entry to settings.
      *
      * @note Child Info is a list-based settings property and can contain multiple entries.
      *
@@ -1044,7 +1044,7 @@ public:
     Error AddChildInfo(const ChildInfo &aChildInfo);
 
     /**
-     * This method deletes all Child Info entries from the settings.
+     * Deletes all Child Info entries from the settings.
      *
      * @note Child Info is a list-based settings property and can contain multiple entries.
      *
@@ -1055,9 +1055,9 @@ public:
     Error DeleteAllChildInfo(void);
 
     /**
-     * This method enables range-based `for` loop iteration over all child info entries in the `Settings`.
+     * Enables range-based `for` loop iteration over all child info entries in the `Settings`.
      *
-     * This method should be used as follows:
+     * Should be used as follows:
      *
      *     for (const ChildInfo &childInfo : Get<Settings>().IterateChildInfo()) { ... }
      *
@@ -1085,7 +1085,7 @@ public:
         explicit ChildInfoIterator(Instance &aInstance);
 
         /**
-         * This method indicates whether there are no more Child Info entries in the list (iterator has reached end of
+         * Indicates whether there are no more Child Info entries in the list (iterator has reached end of
          * the list), or the current entry is valid.
          *
          * @retval TRUE   There are no more entries in the list (reached end of the list).
@@ -1095,21 +1095,21 @@ public:
         bool IsDone(void) const { return mIsDone; }
 
         /**
-         * This method overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
+         * Overloads operator `++` (pre-increment) to advance the iterator to move to the next Child Info
          * entry in the list (if any).
          *
          */
         void operator++(void) { Advance(); }
 
         /**
-         * This method overloads operator `++` (post-increment) to advance the iterator to move to the next Child Info
+         * Overloads operator `++` (post-increment) to advance the iterator to move to the next Child Info
          * entry in the list (if any).
          *
          */
         void operator++(int) { Advance(); }
 
         /**
-         * This method gets the Child Info corresponding to the current iterator entry in the list.
+         * Gets the Child Info corresponding to the current iterator entry in the list.
          *
          * @note This method should be used only if `IsDone()` is returning FALSE indicating that the iterator is
          * pointing to a valid entry.
@@ -1120,7 +1120,7 @@ public:
         const ChildInfo &GetChildInfo(void) const { return mChildInfo; }
 
         /**
-         * This method deletes the current Child Info entry.
+         * Deletes the current Child Info entry.
          *
          * @retval kErrorNone            The entry was deleted successfully.
          * @retval kErrorInvalidState    The entry is not valid (iterator has reached end of list).
@@ -1130,7 +1130,7 @@ public:
         Error Delete(void);
 
         /**
-         * This method overloads the `*` dereference operator and gets a reference to `ChildInfo` entry to which the
+         * Overloads the `*` dereference operator and gets a reference to `ChildInfo` entry to which the
          * iterator is currently pointing.
          *
          * @note This method should be used only if `IsDone()` is returning FALSE indicating that the iterator is
@@ -1143,7 +1143,7 @@ public:
         const ChildInfo &operator*(void) const { return mChildInfo; }
 
         /**
-         * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.
+         * Overloads operator `==` to evaluate whether or not two iterator instances are equal.
          *
          * @param[in]  aOther  The other iterator to compare with.
          *
@@ -1180,7 +1180,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This method adds or updates an on-link prefix.
+     * Adds or updates an on-link prefix.
      *
      * If there is no matching entry (matching the same `GetPrefix()`) saved in `Settings`, the new entry will be added.
      * If there is matching entry, it will be updated to the new @p aPrefix.
@@ -1194,7 +1194,7 @@ public:
     Error AddOrUpdateBrOnLinkPrefix(const BrOnLinkPrefix &aBrOnLinkPrefix);
 
     /**
-     * This method removes an on-link prefix entry matching a given prefix.
+     * Removes an on-link prefix entry matching a given prefix.
      *
      * @param[in] aPrefix            The prefix to remove
      *
@@ -1205,7 +1205,7 @@ public:
     Error RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix);
 
     /**
-     * This method deletes all on-link prefix entries from the settings.
+     * Deletes all on-link prefix entries from the settings.
      *
      * @retval kErrorNone            Successfully deleted the entries.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
@@ -1214,7 +1214,7 @@ public:
     Error DeleteAllBrOnLinkPrefixes(void);
 
     /**
-     * This method retrieves an entry from on-link prefixes list at a given index.
+     * Retrieves an entry from on-link prefixes list at a given index.
      *
      * @param[in]  aIndex            The index to read.
      * @param[out] aBrOnLinkPrefix   A reference to `BrOnLinkPrefix` to output the read value.

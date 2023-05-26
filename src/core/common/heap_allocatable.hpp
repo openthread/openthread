@@ -109,7 +109,7 @@ public:
     }
 
     /**
-     * This method frees the `Type` instance.
+     * Frees the `Type` instance.
      *
      * The instance MUST be heap allocated using either `Allocate()` or `AllocateAndInit()`.
      *

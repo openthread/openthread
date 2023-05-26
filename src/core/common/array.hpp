@@ -166,13 +166,13 @@ public:
     }
 
     /**
-     * This method clears the array.
+     * Clears the array.
      *
      */
     void Clear(void) { mLength = 0; }
 
     /**
-     * This method indicates whether or not the array is empty.
+     * Indicates whether or not the array is empty.
      *
      * @retval TRUE when array is empty.
      * @retval FALSE when array is not empty.
@@ -181,7 +181,7 @@ public:
     bool IsEmpty(void) const { return (mLength == 0); }
 
     /**
-     * This method indicates whether or not the array is full.
+     * Indicates whether or not the array is full.
      *
      * @retval TRUE when array is full.
      * @retval FALSE when array is not full.
@@ -190,7 +190,7 @@ public:
     bool IsFull(void) const { return (mLength == GetMaxSize()); }
 
     /**
-     * This method returns the maximum array size (max number of elements).
+     * Returns the maximum array size (max number of elements).
      *
      * @returns The maximum array size (max number of elements that can be added to the array).
      *
@@ -198,7 +198,7 @@ public:
     IndexType GetMaxSize(void) const { return static_cast<IndexType>(kMaxSize); }
 
     /**
-     * This method returns the current length of array (number of elements).
+     * Returns the current length of array (number of elements).
      *
      * @returns The current array length.
      *
@@ -214,7 +214,7 @@ public:
     void SetLength(IndexType aLength) { mLength = aLength; }
 
     /**
-     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     * Returns the pointer to the start of underlying C array buffer serving as `Array` storage.
      *
      * @return The pointer to start of underlying C array buffer.
      *
@@ -222,7 +222,7 @@ public:
     Type *GetArrayBuffer(void) { return mElements; }
 
     /**
-     * This method returns the pointer to the start of underlying C array buffer serving as `Array` storage.
+     * Returns the pointer to the start of underlying C array buffer serving as `Array` storage.
      *
      * @return The pointer to start of underlying C array buffer.
      *
@@ -230,9 +230,9 @@ public:
     const Type *GetArrayBuffer(void) const { return mElements; }
 
     /**
-     * This method overloads the `[]` operator to get the element at a given index.
+     * Overloads the `[]` operator to get the element at a given index.
      *
-     * This method does not perform index bounds checking. Behavior is undefined if @p aIndex is not valid.
+     * Does not perform index bounds checking. Behavior is undefined if @p aIndex is not valid.
      *
      * @param[in] aIndex  The index to get.
      *
@@ -242,9 +242,9 @@ public:
     Type &operator[](IndexType aIndex) { return mElements[aIndex]; }
 
     /**
-     * This method overloads the `[]` operator to get the element at a given index.
+     * Overloads the `[]` operator to get the element at a given index.
      *
-     * This method does not perform index bounds checking. Behavior is undefined if @p aIndex is not valid.
+     * Does not perform index bounds checking. Behavior is undefined if @p aIndex is not valid.
      *
      * @param[in] aIndex  The index to get.
      *
@@ -254,7 +254,7 @@ public:
     const Type &operator[](IndexType aIndex) const { return mElements[aIndex]; }
 
     /**
-     * This method gets a pointer to the element at a given index.
+     * Gets a pointer to the element at a given index.
      *
      * Unlike `operator[]`, this method checks @p aIndex to be valid and within the current length.
      *
@@ -266,7 +266,7 @@ public:
     Type *At(IndexType aIndex) { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
 
     /**
-     * This method gets a pointer to the element at a given index.
+     * Gets a pointer to the element at a given index.
      *
      * Unlike `operator[]`, this method checks @p aIndex to be valid and within the current length.
      *
@@ -278,7 +278,7 @@ public:
     const Type *At(IndexType aIndex) const { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
 
     /**
-     * This method gets a pointer to the element at the front of the array (first element).
+     * Gets a pointer to the element at the front of the array (first element).
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
      *
@@ -286,7 +286,7 @@ public:
     Type *Front(void) { return At(0); }
 
     /**
-     * This method gets a pointer to the element at the front of the array (first element).
+     * Gets a pointer to the element at the front of the array (first element).
      *
      * @returns A pointer to the front element or `nullptr` if array is empty.
      *
@@ -294,7 +294,7 @@ public:
     const Type *Front(void) const { return At(0); }
 
     /**
-     * This method gets a pointer to the element at the back of the array (last element).
+     * Gets a pointer to the element at the back of the array (last element).
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
      *
@@ -302,7 +302,7 @@ public:
     Type *Back(void) { return At(mLength - 1); }
 
     /**
-     * This method gets a pointer to the element at the back of the array (last element).
+     * Gets a pointer to the element at the back of the array (last element).
      *
      * @returns A pointer to the back element or `nullptr` if array is empty.
      *
@@ -310,7 +310,7 @@ public:
     const Type *Back(void) const { return At(mLength - 1); }
 
     /**
-     * This method appends a new entry to the end of the array.
+     * Appends a new entry to the end of the array.
      *
      * The method uses assignment `=` operator on `Type` to copy @p aEntry into the added array element.
      *
@@ -323,7 +323,7 @@ public:
     Error PushBack(const Type &aEntry) { return IsFull() ? kErrorNoBufs : (mElements[mLength++] = aEntry, kErrorNone); }
 
     /**
-     * This method appends a new entry to the end of the array.
+     * Appends a new entry to the end of the array.
      *
      * On success, this method returns a pointer to the newly appended element in the array for the caller to
      * initialize and use.
@@ -334,7 +334,7 @@ public:
     Type *PushBack(void) { return IsFull() ? nullptr : &mElements[mLength++]; }
 
     /**
-     * This method removes the last element in the array.
+     * Removes the last element in the array.
      *
      * @returns A pointer to the removed element from the array, or `nullptr` if array is empty.
      *
@@ -342,7 +342,7 @@ public:
     Type *PopBack(void) { return IsEmpty() ? nullptr : &mElements[--mLength]; }
 
     /**
-     * This method returns the index of an element in the array.
+     * Returns the index of an element in the array.
      *
      * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.
      *
@@ -354,7 +354,7 @@ public:
     IndexType IndexOf(const Type &aElement) const { return static_cast<IndexType>(&aElement - &mElements[0]); }
 
     /**
-     * This method removes an element from the array.
+     * Removes an element from the array.
      *
      * The @p aElement MUST be from the array, otherwise the behavior of this method is undefined.
      *
@@ -375,9 +375,9 @@ public:
     }
 
     /**
-     * This method finds the first match of a given entry in the array.
+     * Finds the first match of a given entry in the array.
      *
-     * This method uses `==` operator on `Type` to compare the array element with @p aEntry.
+     * Uses `==` operator on `Type` to compare the array element with @p aEntry.
      *
      * @param[in] aEntry   The entry to search for within the array.
      *
@@ -387,9 +387,9 @@ public:
     Type *Find(const Type &aEntry) { return AsNonConst(AsConst(this)->Find(aEntry)); }
 
     /**
-     * This method finds the first match of a given entry in the array.
+     * Finds the first match of a given entry in the array.
      *
-     * This method uses `==` operator to compare the array elements with @p aEntry.
+     * Uses `==` operator to compare the array elements with @p aEntry.
      *
      * @param[in] aEntry   The entry to search for within the array.
      *
@@ -413,9 +413,9 @@ public:
     }
 
     /**
-     * This method indicates whether or not a match to given entry exists in the array.
+     * Indicates whether or not a match to given entry exists in the array.
      *
-     * This method uses `==` operator on `Type` to compare the array elements with @p aEntry.
+     * Uses `==` operator on `Type` to compare the array elements with @p aEntry.
      *
      * @param[in] aEntry   The entry to search for within the array.
      *
@@ -497,7 +497,7 @@ public:
     /**
      * This template method removes the first element in the array matching a given indicator.
      *
-     * This method behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
+     * Behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
      * in the array (using `=` operator on `Type`). So the order of items in the array can change after a call to this
      * method.
      *
@@ -523,7 +523,7 @@ public:
     /**
      * This template method removes all elements in the array matching a given indicator.
      *
-     * This method behaves similar to `Remove()`, i.e., a matched element is replaced with the last element in the
+     * Behaves similar to `Remove()`, i.e., a matched element is replaced with the last element in the
      * array (using `=` operator on `Type`). So the order of items in the array can change after a call to this method.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
@@ -557,7 +557,7 @@ public:
     }
 
     /**
-     * This method overloads assignment `=` operator to copy elements from another array into the array.
+     * Overloads assignment `=` operator to copy elements from another array into the array.
      *
      * The method uses assignment `=` operator on `Type` to copy each element from @p aOtherArray into the elements of
      * the array.
@@ -578,9 +578,9 @@ public:
     }
 
     /**
-     * This method indicates whether a given entry pointer is from the array buffer.
+     * Indicates whether a given entry pointer is from the array buffer.
      *
-     * This method does not check the current length of array and only checks that @p aEntry is pointing to an address
+     * Does not check the current length of array and only checks that @p aEntry is pointing to an address
      * contained within underlying C array buffer.
      *
      * @param[in] aEntry   A pointer to an entry to check.

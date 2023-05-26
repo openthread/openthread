@@ -65,7 +65,7 @@ public:
     explicit EnergyScanClient(Instance &aInstance);
 
     /**
-     * This method sends an Energy Scan Query message.
+     * Sends an Energy Scan Query message.
      *
      * @param[in]  aChannelMask   The channel mask value.
      * @param[in]  aCount         The number of energy measurements per channel.

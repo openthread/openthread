@@ -79,7 +79,7 @@ public:
     /**
      * This template method indicates whether a given table array is sorted based or not.
      *
-     * This method is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
+     * Is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
      * array is sorted. It is not recommended for use in other situations.
      *
      * @tparam Entry       The table entry type.

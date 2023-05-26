@@ -85,7 +85,7 @@ public:
     typedef void (&Handler)(Timer &aTimer);
 
     /**
-     * This method returns the fire time of the timer.
+     * Returns the fire time of the timer.
      *
      * @returns The fire time.
      *
@@ -93,7 +93,7 @@ public:
     Time GetFireTime(void) const { return mFireTime; }
 
     /**
-     * This method indicates whether or not the timer instance is running.
+     * Indicates whether or not the timer instance is running.
      *
      * @retval TRUE   If the timer is running.
      * @retval FALSE  If the timer is not running.
@@ -195,7 +195,7 @@ public:
     }
 
     /**
-     * This method schedules the timer to fire after a given delay (in milliseconds) from now.
+     * Schedules the timer to fire after a given delay (in milliseconds) from now.
      *
      * @param[in]  aDelay   The delay in milliseconds. It must not be longer than `kMaxDelay`.
      *
@@ -203,7 +203,7 @@ public:
     void Start(uint32_t aDelay);
 
     /**
-     * This method schedules the timer to fire after a given delay (in milliseconds) from a given start time.
+     * Schedules the timer to fire after a given delay (in milliseconds) from a given start time.
      *
      * @param[in]  aStartTime  The start time.
      * @param[in]  aDelay      The delay in milliseconds. It must not be longer than `kMaxDelay`.
@@ -212,7 +212,7 @@ public:
     void StartAt(TimeMilli aStartTime, uint32_t aDelay);
 
     /**
-     * This method schedules the timer to fire at a given fire time.
+     * Schedules the timer to fire at a given fire time.
      *
      * @param[in]  aFireTime  The fire time.
      *
@@ -229,7 +229,7 @@ public:
     void FireAtIfEarlier(TimeMilli aFireTime);
 
     /**
-     * This method stops the timer.
+     * Stops the timer.
      *
      */
     void Stop(void);
@@ -300,7 +300,7 @@ public:
     }
 
     /**
-     * This method returns the pointer to the arbitrary context information.
+     * Returns the pointer to the arbitrary context information.
      *
      * @returns Pointer to the arbitrary context information.
      *
@@ -365,7 +365,7 @@ public:
     }
 
     /**
-     * This method schedules the timer to fire after a given delay (in microseconds) from now.
+     * Schedules the timer to fire after a given delay (in microseconds) from now.
      *
      * @param[in]  aDelay   The delay in microseconds. It must not be be longer than `kMaxDelay`.
      *
@@ -373,7 +373,7 @@ public:
     void Start(uint32_t aDelay);
 
     /**
-     * This method schedules the timer to fire after a given delay (in microseconds) from a given start time.
+     * Schedules the timer to fire after a given delay (in microseconds) from a given start time.
      *
      * @param[in]  aStartTime  The start time.
      * @param[in]  aDelay      The delay in microseconds. It must not be longer than `kMaxDelay`.
@@ -382,7 +382,7 @@ public:
     void StartAt(TimeMicro aStartTime, uint32_t aDelay);
 
     /**
-     * This method schedules the timer to fire at a given fire time.
+     * Schedules the timer to fire at a given fire time.
      *
      * @param[in]  aFireTime  The fire time.
      *
@@ -390,7 +390,7 @@ public:
     void FireAt(TimeMicro aFireTime);
 
     /**
-     * This method stops the timer.
+     * Stops the timer.
      *
      */
     void Stop(void);
