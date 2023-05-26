@@ -853,7 +853,7 @@ public:
     uint8_t *GetPsdu(void) { return mPsdu; }
 
     /**
-     * This const method returns a pointer to the PSDU.
+     * Returns a pointer to the PSDU.
      *
      * @returns A pointer to the PSDU.
      *
@@ -869,7 +869,7 @@ public:
     uint8_t *GetHeader(void) { return GetPsdu(); }
 
     /**
-     * This const method returns a pointer to the MAC Header.
+     * Returns a pointer to the MAC Header.
      *
      * @returns A pointer to the MAC Header.
      *
@@ -885,7 +885,7 @@ public:
     uint8_t *GetPayload(void) { return AsNonConst(AsConst(this)->GetPayload()); }
 
     /**
-     * This const method returns a pointer to the MAC Payload.
+     * Returns a pointer to the MAC Payload.
      *
      * @returns A pointer to the MAC Payload.
      *
@@ -901,7 +901,7 @@ public:
     uint8_t *GetFooter(void) { return AsNonConst(AsConst(this)->GetFooter()); }
 
     /**
-     * This const method returns a pointer to the MAC Footer.
+     * Returns a pointer to the MAC Footer.
      *
      * @returns A pointer to the MAC Footer.
      *
