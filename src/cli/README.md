@@ -3551,7 +3551,7 @@ Address Mode: Allowlist
 0f6127e33af6b402
 RssIn List:
 0f6127e33af6b403 : rss -95 (lqi 1)
-Default rss : -50 (lqi 3)
+Default rss: -50 (lqi 3)
 Done
 ```
 
