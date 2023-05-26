@@ -217,6 +217,39 @@ public:
     void ClearRouteInfoOptionPreference(void);
 
     /**
+     * This method gets the current preference used for published routes in Network Data.
+     *
+     * The preference is determined as follows:
+     *
+     * - If explicitly set by user by calling `SetRoutePreference()`, the given preference is used.
+     * - Otherwise, it is determined automatically by `RoutingManager` based on the device's role and link quality.
+     *
+     * @returns The current published route preference.
+     *
+     */
+    RoutePreference GetRoutePreference(void) const { return mRoutePublisher.GetPreference(); }
+
+    /**
+     * This method explicitly sets the preference of published routes in Network Data.
+     *
+     * After a call to this method, BR will use the given preference. The preference can be cleared by calling
+     * `ClearRoutePreference`()`.
+     *
+     * @param[in] aPreference   The route preference to use.
+     *
+     */
+    void SetRoutePreference(RoutePreference aPreference) { mRoutePublisher.SetPreference(aPreference); }
+
+    /**
+     * This method clears a previously set preference value for published routes in Network Data.
+     *
+     * After a call to this method, BR will determine the preference automatically based on the device's role and
+     * link quality (to the parent when acting as end-device).
+     *
+     */
+    void ClearRoutePreference(void) { mRoutePublisher.ClearPreference(); }
+
+    /**
      * This method returns the local off-mesh-routable (OMR) prefix.
      *
      * The randomly generated 64-bit prefix will be added to the Thread Network Data if there isn't already an OMR

@@ -74,6 +74,23 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance)
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ClearRouteInfoOptionPreference();
 }
 
+otRoutePreference otBorderRoutingGetRoutePreference(otInstance *aInstance)
+{
+    return static_cast<otRoutePreference>(
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetRoutePreference());
+}
+
+void otBorderRoutingSetRoutePreference(otInstance *aInstance, otRoutePreference aPreference)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRoutePreference(
+        static_cast<NetworkData::RoutePreference>(aPreference));
+}
+
+void otBorderRoutingClearRoutePreference(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ClearRoutePreference();
+}
+
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));

@@ -203,6 +203,44 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
 void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
+ * This function gets the current preference used for published routes in Network Data.
+ *
+ * The preference is determined as follows:
+ *
+ * - If explicitly set by user by calling `otBorderRoutingSetRoutePreference()`, the given preference is used.
+ * - Otherwise, it is determined automatically by `RoutingManager` based on the device's role and link quality.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ * @returns The current published route preference.
+ *
+ */
+otRoutePreference otBorderRoutingGetRoutePreference(otInstance *aInstance);
+
+/**
+ * This function explicitly sets the preference of published routes in Network Data.
+ *
+ * After a call to this function, BR will use the given preference. The preference can be cleared by calling
+ * `otBorderRoutingClearRoutePreference`()`.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ * @param[in] aPreference   The route preference to use.
+ *
+ */
+void otBorderRoutingSetRoutePreference(otInstance *aInstance, otRoutePreference aPreference);
+
+/**
+ * This function clears a previously set preference value for published routes in Network Data.
+ *
+ * After a call to this function, BR will determine the preference automatically based on the device's role and
+ * link quality (to the parent when acting as end-device).
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ */
+void otBorderRoutingClearRoutePreference(otInstance *aInstance);
+
+/**
  * Gets the local Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
  * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
