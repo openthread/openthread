@@ -113,7 +113,7 @@ typedef otHandleEnergyScanResult EnergyScanHandler;
 typedef otEnergyScanResult EnergyScanResult;
 
 /**
- * This class implements the IEEE 802.15.4 MAC.
+ * Implements the IEEE 802.15.4 MAC.
  *
  */
 class Mac : public InstanceLocator, private NonCopyable

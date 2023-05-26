@@ -102,7 +102,7 @@ class RoutingManager;
 namespace Srp {
 
 /**
- * This class implements the SRP server.
+ * Implements the SRP server.
  *
  */
 class Server : public InstanceLocator, private NonCopyable
@@ -173,7 +173,7 @@ public:
     };
 
     /**
-     * This class implements a server-side SRP service.
+     * Implements a server-side SRP service.
      *
      */
     class Service : public otSrpServerService,
@@ -444,7 +444,7 @@ public:
     };
 
     /**
-     * This class implements the Host which registers services on the SRP server.
+     * Implements the Host which registers services on the SRP server.
      *
      */
     class Host : public otSrpServerHost,
@@ -632,7 +632,7 @@ public:
     };
 
     /**
-     * This class handles TTL configuration.
+     * Handles TTL configuration.
      *
      */
     class TtlConfig : public otSrpServerTtlConfig
@@ -652,7 +652,7 @@ public:
     };
 
     /**
-     * This class handles LEASE and KEY-LEASE configurations.
+     * Handles LEASE and KEY-LEASE configurations.
      *
      */
     class LeaseConfig : public otSrpServerLeaseConfig

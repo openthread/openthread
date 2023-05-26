@@ -37,7 +37,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class provides read/write/clear methods for key/value configuration files.
+ * Provides read/write/clear methods for key/value configuration files.
  *
  */
 class ConfigFile

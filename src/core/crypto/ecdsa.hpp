@@ -60,7 +60,7 @@ namespace Ecdsa {
  */
 
 /**
- * This class implements ECDSA key-generation, signing, and verification for NIST P-256 curve using SHA-256 hash.
+ * Implements ECDSA key-generation, signing, and verification for NIST P-256 curve using SHA-256 hash.
  *
  * NIST P-256 curve is also known as 256-bit Random ECP Group (RFC 5114 - 2.6), or secp256r1 (RFC 4492 - Appendix A).
  *
@@ -83,7 +83,7 @@ public:
 #endif
 
     /**
-     * This class represents an ECDSA signature.
+     * Represents an ECDSA signature.
      *
      * The signature is encoded as the concatenated binary representation of two MPIs `r` and `s` which are calculated
      * during signing (RFC 6605 - section 4).
@@ -111,7 +111,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This class represents a key pair (public and private keys).
+     * Represents a key pair (public and private keys).
      *
      * The key pair is stored using Distinguished Encoding Rules (DER) format (per RFC 5915).
      *
@@ -213,7 +213,7 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
-     * This class represents a key pair (public and private keys) as a PSA KeyRef.
+     * Represents a key pair (public and private keys) as a PSA KeyRef.
      *
      */
     class KeyPairAsRef
@@ -311,7 +311,7 @@ public:
 #endif
 
     /**
-     * This class represents a public key.
+     * Represents a public key.
      *
      * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
      *

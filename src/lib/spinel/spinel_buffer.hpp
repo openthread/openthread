@@ -41,7 +41,7 @@ namespace ot {
 namespace Spinel {
 
 /**
- * This class implements a buffer/queue for storing Ncp frames.
+ * Implements a buffer/queue for storing Ncp frames.
  *
  * A frame can consist of a sequence of data bytes and/or the content of an `otMessage` or a combination of the two.
  * `Buffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low

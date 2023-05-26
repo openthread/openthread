@@ -56,9 +56,9 @@ namespace ot {
 namespace Hdlc {
 
 /**
- * This class defines a frame write pointer used by `Hdlc::Encoder` or `Hdlc::Decoder`.
+ * Defines a frame write pointer used by `Hdlc::Encoder` or `Hdlc::Decoder`.
  *
- * This class defines the minimum set of APIs used by `Encoder/Decoder` for writing an encoded/decoded frame. It is
+ * Defines the minimum set of APIs used by `Encoder/Decoder` for writing an encoded/decoded frame. It is
  * simply a wrapper over a pointer into a buffer indicating where next byte should be written. Along with a write
  * pointer, this class stores a remaining length variable indicating number of remaining bytes that can be written into
  * the buffer.
@@ -127,7 +127,7 @@ protected:
 };
 
 /**
- * This class defines a template frame buffer of a given size for storing a single frame.
+ * Defines a template frame buffer of a given size for storing a single frame.
  *
  * The template parameter `kSize` specifies the size of the buffer.
  *
@@ -185,7 +185,7 @@ private:
 };
 
 /**
- * This class defines a template frame buffer of a given size for storing multiple frames.
+ * Defines a template frame buffer of a given size for storing multiple frames.
  *
  * The template parameter `kSize` specifies the total size of the buffer.
  *
@@ -456,7 +456,7 @@ private:
 };
 
 /**
- * This class implements the HDLC-lite encoder.
+ * Implements the HDLC-lite encoder.
  *
  */
 class Encoder
@@ -522,7 +522,7 @@ private:
 };
 
 /**
- * This class implements the HDLC-lite decoder.
+ * Implements the HDLC-lite decoder.
  *
  */
 class Decoder

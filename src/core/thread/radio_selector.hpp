@@ -65,7 +65,7 @@ class RadioSelector : InstanceLocator
 {
 public:
     /**
-     * This class defines all the neighbor info required for multi radio link and radio selection.
+     * Defines all the neighbor info required for multi radio link and radio selection.
      *
      * `Neighbor` class publicly inherits from this class.
      *

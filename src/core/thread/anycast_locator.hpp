@@ -47,7 +47,7 @@
 namespace ot {
 
 /**
- * This class implements Anycast Locator functionality which allows caller to determine the mesh local EID and RLOC16
+ * Implements Anycast Locator functionality which allows caller to determine the mesh local EID and RLOC16
  * of the closest destination of an anycast address (if any).
  *
  * The closest destination is determined based on the current routing table and path costs within the Thread mesh.

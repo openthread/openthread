@@ -63,7 +63,7 @@ namespace NetworkData {
  */
 
 /**
- * This class implements the Thread Network Data maintained by the Leader.
+ * Implements the Thread Network Data maintained by the Leader.
  *
  */
 class Leader : public LeaderBase, private NonCopyable

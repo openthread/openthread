@@ -56,7 +56,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements a CLI-based TCP example.
+ * Implements a CLI-based TCP example.
  *
  */
 class TcpExample : private Output

@@ -69,7 +69,7 @@ namespace Utils {
      (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0))
 
 /**
- * This class implements History Tracker.
+ * Implements History Tracker.
  *
  */
 class HistoryTracker : public InstanceLocator, private NonCopyable

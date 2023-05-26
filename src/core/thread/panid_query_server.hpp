@@ -47,7 +47,7 @@
 namespace ot {
 
 /**
- * This class implements handling PANID Query Requests.
+ * Implements handling PANID Query Requests.
  *
  */
 class PanIdQueryServer : public InstanceLocator, private NonCopyable

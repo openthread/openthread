@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Dataset CLI interpreter.
+ * Implements the Dataset CLI interpreter.
  *
  */
 class Dataset : private Output

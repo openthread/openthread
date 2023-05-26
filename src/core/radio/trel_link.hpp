@@ -65,7 +65,7 @@ namespace Trel {
  */
 
 /**
- * This class represents a Thread Radio Encapsulation Link (TREL).
+ * Represents a Thread Radio Encapsulation Link (TREL).
  *
  */
 class Link : public InstanceLocator
@@ -197,7 +197,7 @@ private:
 };
 
 /**
- * This class defines all the neighbor info required for TREL link.
+ * Defines all the neighbor info required for TREL link.
  *
  * `Neighbor` class publicly inherits from this class.
  *

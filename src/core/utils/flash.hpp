@@ -45,7 +45,7 @@
 namespace ot {
 
 /**
- * This class implements the flash storage driver.
+ * Implements the flash storage driver.
  *
  */
 class Flash : public InstanceLocator

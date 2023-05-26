@@ -60,7 +60,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements the data poll (mac data request command) handler.
+ * Implements the data poll (mac data request command) handler.
  *
  */
 class DataPollHandler : public InstanceLocator, private NonCopyable
@@ -81,7 +81,7 @@ public:
     };
 
     /**
-     * This class defines all the child info required for handling of data polls and indirect frame transmissions.
+     * Defines all the child info required for handling of data polls and indirect frame transmissions.
      *
      * `Child` class publicly inherits from this class.
      *
@@ -136,7 +136,7 @@ public:
     };
 
     /**
-     * This class defines the callbacks used by the `DataPollHandler`.
+     * Defines the callbacks used by the `DataPollHandler`.
      *
      */
     class Callbacks : public InstanceLocator

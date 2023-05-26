@@ -59,7 +59,7 @@ namespace Mac {
  */
 
 /**
- * This class implements Mac Filter on IEEE 802.15.4 frames.
+ * Implements Mac Filter on IEEE 802.15.4 frames.
  *
  */
 class Filter : private NonCopyable

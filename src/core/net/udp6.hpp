@@ -78,14 +78,14 @@ enum NetifIdentifier : uint8_t
 };
 
 /**
- * This class implements core UDP message handling.
+ * Implements core UDP message handling.
  *
  */
 class Udp : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class implements a UDP/IPv6 socket.
+     * Implements a UDP/IPv6 socket.
      *
      */
     class SocketHandle : public otUdpSocket, public LinkedListEntry<SocketHandle>, public Clearable<SocketHandle>
@@ -145,7 +145,7 @@ public:
     };
 
     /**
-     * This class implements a UDP/IPv6 socket.
+     * Implements a UDP/IPv6 socket.
      *
      */
     class Socket : public InstanceLocator, public SocketHandle
@@ -325,7 +325,7 @@ public:
     };
 
     /**
-     * This class implements a UDP receiver.
+     * Implements a UDP receiver.
      *
      */
     class Receiver : public otUdpReceiver, public LinkedListEntry<Receiver>
@@ -355,7 +355,7 @@ public:
     };
 
     /**
-     * This class implements UDP header generation and parsing.
+     * Implements UDP header generation and parsing.
      *
      */
     OT_TOOL_PACKED_BEGIN

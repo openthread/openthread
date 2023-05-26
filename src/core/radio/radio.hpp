@@ -68,7 +68,7 @@ static constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
  */
 
 /**
- * This class represents an OpenThread radio abstraction.
+ * Represents an OpenThread radio abstraction.
  *
  */
 class Radio : public InstanceLocator, private NonCopyable
@@ -116,7 +116,7 @@ public:
                   "must be set to 1 to specify the radio mode");
 
     /**
-     * This class defines the callbacks from `Radio`.
+     * Defines the callbacks from `Radio`.
      *
      */
     class Callbacks : public InstanceLocator

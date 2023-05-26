@@ -51,7 +51,7 @@ namespace ot {
 namespace BorderRouter {
 
 /**
- * This class represents the infrastructure network interface on a border router.
+ * Represents the infrastructure network interface on a border router.
  *
  */
 class InfraIf : public InstanceLocator

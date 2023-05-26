@@ -439,7 +439,7 @@ private:
 
 #if OPENTHREAD_FTD
 /**
- * This class represents device properties.
+ * Represents device properties.
  *
  * The device properties are used for calculating the local leader weight on the device.
  *
@@ -499,7 +499,7 @@ private:
 #endif // OPENTHREAD_FTD
 
 /**
- * This class represents the Thread Leader Data.
+ * Represents the Thread Leader Data.
  *
  */
 class LeaderData : public otLeaderData, public Clearable<LeaderData>
@@ -635,13 +635,13 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a MLE Key Material
+ * Represents a MLE Key Material
  *
  */
 typedef Mac::KeyMaterial KeyMaterial;
 
 /**
- * This class represents a MLE Key.
+ * Represents a MLE Key.
  *
  */
 typedef Mac::Key Key;

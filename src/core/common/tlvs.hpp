@@ -50,7 +50,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 class Message;
 
 /**
- * This class implements TLV generation and parsing.
+ * Implements TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -601,7 +601,7 @@ template <class TlvType> TlvType &As(Tlv &aTlv) { return static_cast<TlvType &>(
 template <class TlvType> const TlvType &As(const Tlv &aTlv) { return static_cast<const TlvType &>(aTlv); }
 
 /**
- * This class defines constants for a TLV.
+ * Defines constants for a TLV.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  *
@@ -613,7 +613,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with an unsigned int value type.
+ * Defines constants and types for a simple TLV with an unsigned int value type.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<UintTlvType>()`, and
  * the related `Tlv::Find<UintTlvType>()` and `Tlv::Read<UintTlvType>()`.
@@ -633,7 +633,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with a single value.
+ * Defines constants and types for a simple TLV with a single value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<SimpleTlvType>()`,
  * and the related `Tlv::Find<SimpleTlvType>()` and `Tlv::Read<SimpleTlvType>()`.
@@ -657,7 +657,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with a UTF-8 string value.
+ * Defines constants and types for a simple TLV with a UTF-8 string value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<StringTlvType>()`,
  * and the related `Tlv::Find<StringTlvType>()` and `Tlv::Read<StringTlvType>()`.

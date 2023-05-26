@@ -56,7 +56,7 @@ namespace ot {
  */
 
 /**
- * This class implements the data poll (mac data request command) sender.
+ * Implements the data poll (mac data request command) sender.
  *
  */
 

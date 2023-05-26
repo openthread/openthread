@@ -46,7 +46,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class manages infrastructure network interface.
+ * Manages infrastructure network interface.
  *
  */
 class InfraNetif : public Mainloop::Source, private NonCopyable

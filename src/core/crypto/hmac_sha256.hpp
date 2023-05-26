@@ -59,7 +59,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements HMAC SHA-256 computation.
+ * Implements HMAC SHA-256 computation.
  *
  */
 class HmacSha256

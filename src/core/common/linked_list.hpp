@@ -57,7 +57,7 @@ namespace ot {
 /**
  * This template class represents a linked list entry.
  *
- * This class provides methods to `GetNext()` and `SetNext()` in the linked list entry.
+ * Provides methods to `GetNext()` and `SetNext()` in the linked list entry.
  *
  * Users of this class should follow CRTP-style inheritance, i.e., the `Type` class itself should publicly inherit
  * from `LinkedListEntry<Type>`.

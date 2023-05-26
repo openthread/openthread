@@ -55,7 +55,7 @@ namespace BackboneRouter {
 typedef otBackboneRouterConfig Config;
 
 /**
- * This class implements the basic Primary Backbone Router service operations.
+ * Implements the basic Primary Backbone Router service operations.
  *
  */
 class Leader : public InstanceLocator, private NonCopyable

@@ -75,7 +75,7 @@ class HistoryTracker;
  */
 
 /**
- * This class represents link-specific information for messages received from the Thread radio.
+ * Represents link-specific information for messages received from the Thread radio.
  *
  */
 class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
@@ -159,7 +159,7 @@ public:
 };
 
 /**
- * This class implements mesh forwarding within Thread.
+ * Implements mesh forwarding within Thread.
  *
  */
 class MeshForwarder : public InstanceLocator, private NonCopyable

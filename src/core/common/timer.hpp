@@ -62,7 +62,7 @@ namespace ot {
  */
 
 /**
- * This class implements a timer.
+ * Implements a timer.
  *
  */
 class Timer : public InstanceLocator, public LinkedListEntry<Timer>
@@ -146,14 +146,14 @@ protected:
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance);
 
 /**
- * This class implements the millisecond timer.
+ * Implements the millisecond timer.
  *
  */
 class TimerMilli : public Timer
 {
 public:
     /**
-     * This class implements the millisecond timer scheduler.
+     * Implements the millisecond timer scheduler.
      *
      */
     class Scheduler : private Timer::Scheduler
@@ -274,7 +274,7 @@ private:
 };
 
 /**
- * This class implements a millisecond timer that also maintains a user context pointer.
+ * Implements a millisecond timer that also maintains a user context pointer.
  *
  * In typical `TimerMilli`/`TimerMicro` use, in the timer callback handler, the owner of the timer is determined using
  * `GetOwner<Type>` method. This method works if there is a single instance of `Type` within OpenThread instance
@@ -316,14 +316,14 @@ private:
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
- * This class implements the microsecond timer.
+ * Implements the microsecond timer.
  *
  */
 class TimerMicro : public Timer
 {
 public:
     /**
-     * This class implements the microsecond timer scheduler.
+     * Implements the microsecond timer scheduler.
      *
      */
     class Scheduler : private Timer::Scheduler

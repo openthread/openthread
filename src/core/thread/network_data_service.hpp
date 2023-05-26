@@ -74,7 +74,7 @@ public:
     static constexpr uint8_t kServiceDataMinSize = 1;
 
     /**
-     * This class implements the generation and parsing of "Backbone Router Service" server data.
+     * Implements the generation and parsing of "Backbone Router Service" server data.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -179,7 +179,7 @@ public:
     };
 
     /**
-     * This class represents the "DNS/SRP Service (Anycast)" service data.
+     * Represents the "DNS/SRP Service (Anycast)" service data.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -262,7 +262,7 @@ public:
     };
 
     /**
-     * This class represents long version of "DNS/SRP Service (Unicast)" service data.
+     * Represents long version of "DNS/SRP Service (Unicast)" service data.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -315,7 +315,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This class represents long version of "DNS/SRP Service (Unicast)" server data.
+     * Represents long version of "DNS/SRP Service (Unicast)" server data.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -368,14 +368,14 @@ public:
 };
 
 /**
- * This class manages the Thread Service entries in Thread Network Data.
+ * Manages the Thread Service entries in Thread Network Data.
  *
  */
 class Manager : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class represents an iterator used to iterate through Network Data Service entries.
+     * Represents an iterator used to iterate through Network Data Service entries.
      *
      */
     class Iterator : public Clearable<Iterator>

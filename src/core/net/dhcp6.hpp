@@ -91,7 +91,7 @@ enum Type : uint8_t
 };
 
 /**
- * This class represents a DHCP6 transaction identifier.
+ * Represents a DHCP6 transaction identifier.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -114,7 +114,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements DHCPv6 header.
+ * Implements DHCPv6 header.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -189,7 +189,7 @@ enum Code : uint16_t
 };
 
 /**
- * This class implements DHCPv6 option.
+ * Implements DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN

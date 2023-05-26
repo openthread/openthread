@@ -51,7 +51,7 @@
 namespace ot {
 
 /**
- * This class implements tracking of device uptime (in msec).
+ * Implements tracking of device uptime (in msec).
  *
  */
 class Uptime : public InstanceLocator, private NonCopyable

@@ -123,7 +123,7 @@ namespace ot {
 namespace Ncp {
 
 /**
- * This class defines a SPI frame.
+ * Defines a SPI frame.
  *
  */
 class SpiFrame

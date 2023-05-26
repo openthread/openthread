@@ -47,7 +47,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the History Tracker CLI interpreter.
+ * Implements the History Tracker CLI interpreter.
  *
  */
 class History : private Output

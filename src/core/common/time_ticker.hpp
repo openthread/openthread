@@ -46,7 +46,7 @@
 namespace ot {
 
 /**
- * This class represents a time ticker.
+ * Represents a time ticker.
  *
  * The time ticker emits periodic ticks (with 1 second period interval) to a set of registered tick receiver modules.
  * The tick receivers (OpenThread objects) are identified by the `Receiver` enumeration. The receiver objects

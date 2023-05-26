@@ -52,7 +52,7 @@ namespace Sntp {
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements SNTP header generation and parsing.
+ * Implements SNTP header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -384,7 +384,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements metadata required for SNTP retransmission.
+ * Implements metadata required for SNTP retransmission.
  *
  */
 class QueryMetadata
@@ -449,7 +449,7 @@ private:
 };
 
 /**
- * This class implements SNTP client.
+ * Implements SNTP client.
  *
  */
 class Client : private NonCopyable

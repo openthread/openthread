@@ -63,7 +63,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 
 /**
- * This class implements MLE TLV generation and parsing.
+ * Implements MLE TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -143,109 +143,109 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Source Address TLV constants and types.
+ * Defines Source Address TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kSourceAddress, uint16_t> SourceAddressTlv;
 
 /**
- * This class defines Mode TLV constants and types.
+ * Defines Mode TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMode, uint8_t> ModeTlv;
 
 /**
- * This class defines Timeout TLV constants and types.
+ * Defines Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kTimeout, uint32_t> TimeoutTlv;
 
 /**
- * This class defines Challenge TLV constants and types.
+ * Defines Challenge TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kChallenge> ChallengeTlv;
 
 /**
- * This class defines Response TLV constants and types.
+ * Defines Response TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kResponse> ResponseTlv;
 
 /**
- * This class defines Link Frame Counter TLV constants and types.
+ * Defines Link Frame Counter TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kLinkFrameCounter, uint32_t> LinkFrameCounterTlv;
 
 /**
- * This class defines MLE Frame Counter TLV constants and types.
+ * Defines MLE Frame Counter TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMleFrameCounter, uint32_t> MleFrameCounterTlv;
 
 /**
- * This class defines Address16 TLV constants and types.
+ * Defines Address16 TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kAddress16, uint16_t> Address16Tlv;
 
 /**
- * This class defines Network Data TLV constants and types.
+ * Defines Network Data TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kNetworkData> NetworkDataTlv;
 
 /**
- * This class defines TLV Request TLV constants and types.
+ * Defines TLV Request TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kTlvRequest> TlvRequestTlv;
 
 /**
- * This class defines Link Margin TLV constants and types.
+ * Defines Link Margin TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kLinkMargin, uint8_t> LinkMarginTlv;
 
 /**
- * This class defines Version TLV constants and types.
+ * Defines Version TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
 
 /**
- * This class defines PAN ID TLV constants and types.
+ * Defines PAN ID TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kPanId, uint16_t> PanIdTlv;
 
 /**
- * This class defines Active Timestamp TLV constants and types.
+ * Defines Active Timestamp TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kActiveTimestamp, MeshCoP::Timestamp> ActiveTimestampTlv;
 
 /**
- * This class defines Pending Timestamp TLV constants and types.
+ * Defines Pending Timestamp TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kPendingTimestamp, MeshCoP::Timestamp> PendingTimestampTlv;
 
 /**
- * This class defines Timeout TLV constants and types.
+ * Defines Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kSupervisionInterval, uint16_t> SupervisionIntervalTlv;
 
 /**
- * This class defines CSL Timeout TLV constants and types.
+ * Defines CSL Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kCslTimeout, uint32_t> CslTimeoutTlv;
 
 /**
- * This class defines XTAL Accuracy TLV constants and types.
+ * Defines XTAL Accuracy TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kXtalAccuracy, uint16_t> XtalAccuracyTlv;
@@ -253,7 +253,7 @@ typedef UintTlvInfo<Tlv::kXtalAccuracy, uint16_t> XtalAccuracyTlv;
 #if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
- * This class implements Route TLV generation and parsing.
+ * Implements Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -409,7 +409,7 @@ private:
 #else // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
- * This class implements Route TLV generation and parsing.
+ * Implements Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -636,7 +636,7 @@ private:
 #endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
 
 /**
- * This class implements Leader Data TLV generation and parsing.
+ * Implements Leader Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -701,7 +701,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Scan Mask TLV generation and parsing.
+ * Implements Scan Mask TLV generation and parsing.
  *
  */
 class ScanMaskTlv : public UintTlvInfo<Tlv::kScanMask, uint8_t>
@@ -732,7 +732,7 @@ public:
 };
 
 /**
- * This class implements Connectivity TLV generation and parsing.
+ * Implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -960,7 +960,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class specifies Status TLV status values.
+ * Specifies Status TLV status values.
  *
  */
 struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
@@ -975,7 +975,7 @@ struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
 };
 
 /**
- * This class provides constants and methods for generation and parsing of Address Registration TLV.
+ * Provides constants and methods for generation and parsing of Address Registration TLV.
  *
  */
 class AddressRegistrationTlv : public TlvInfo<Tlv::kAddressRegistration>
@@ -1028,7 +1028,7 @@ private:
 };
 
 /**
- * This class implements Channel TLV generation and parsing.
+ * Implements Channel TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1093,13 +1093,13 @@ private:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
- * This class defines Time Request TLV constants and types.
+ * Defines Time Request TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kTimeRequest> TimeRequestTlv;
 
 /**
- * This class implements Time Parameter TLV generation and parsing.
+ * Implements Time Parameter TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1166,7 +1166,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 /**
- * This class implements CSL Channel TLV generation and parsing.
+ * Implements CSL Channel TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1233,7 +1233,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
- * This class implements CSL Clock Accuracy TLV generation and parsing.
+ * Implements CSL Clock Accuracy TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

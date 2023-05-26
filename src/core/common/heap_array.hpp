@@ -49,7 +49,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This class represents a heap allocated array.
+ * Represents a heap allocated array.
  *
  * The buffer to store the elements is allocated from heap and is managed by the `Heap::Array` class itself. The `Array`
  * implementation will automatically grow the buffer when new entries are added. The `Heap::Array` destructor will

@@ -179,7 +179,7 @@ public:
 };
 
 /**
- * This class represents the Series Flags for Forward Tracking Series.
+ * Represents the Series Flags for Forward Tracking Series.
  *
  */
 class SeriesFlags : public otLinkMetricsSeriesFlags
@@ -255,13 +255,13 @@ enum EnhAckFlags : uint8_t
 };
 
 /**
- * This class represents one Series that is being tracked by the Subject.
+ * Represents one Series that is being tracked by the Subject.
  *
  * When an Initiator successfully configured a Forward Tracking Series, the Subject would use an instance of this class
  * to track the information of the Series. The Subject has a `Pool` of `SeriesInfo`. It would allocate one when a new
  * Series comes, and free it when a Series finishes.
  *
- * This class inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
+ * Inherits `LinkedListEntry` and each `Neighbor` has a list of `SeriesInfo` so that the Subject could track
  * per Series initiated by neighbors as long as it has available resources.
  *
  */

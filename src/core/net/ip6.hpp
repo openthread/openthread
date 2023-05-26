@@ -103,7 +103,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 
 /**
- * This class implements the core IPv6 message processing.
+ * Implements the core IPv6 message processing.
  *
  */
 class Ip6 : public InstanceLocator, private NonCopyable
@@ -453,7 +453,7 @@ private:
 };
 
 /**
- * This class represents parsed IPv6 header along with UDP/TCP/ICMP6 headers from a received message/frame.
+ * Represents parsed IPv6 header along with UDP/TCP/ICMP6 headers from a received message/frame.
  *
  */
 class Headers : private Clearable<Headers>

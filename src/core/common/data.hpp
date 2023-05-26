@@ -76,7 +76,7 @@ enum DataLengthType : uint8_t
 typedef bool (*ByteMatcher)(uint8_t aFirst, uint8_t aSecond);
 
 /**
- * This class implements common utility methods used by `Data` and `MutableData`.
+ * Implements common utility methods used by `Data` and `MutableData`.
  *
  */
 class DataUtils

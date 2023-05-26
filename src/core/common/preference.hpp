@@ -42,7 +42,7 @@
 namespace ot {
 
 /**
- * This class provides constants and static methods to convert between `int8_t` preference and its 2-bit unsigned
+ * Provides constants and static methods to convert between `int8_t` preference and its 2-bit unsigned
  * representation.
  *
  */

@@ -101,7 +101,7 @@ extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 extern "C" void otCliOutputFormat(const char *aFmt, ...);
 
 /**
- * This class implements the CLI interpreter.
+ * Implements the CLI interpreter.
  *
  */
 class Interpreter : public OutputImplementer, public Output

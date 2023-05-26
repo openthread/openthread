@@ -59,9 +59,9 @@ namespace Extension {
  */
 
 /**
- * This class defines the base class for an OpenThread vendor Extension object.
+ * Defines the base class for an OpenThread vendor Extension object.
  *
- * This class is used by OpenThread core to interact with the extension module. Methods in this class are expected
+ * Is used by OpenThread core to interact with the extension module. Methods in this class are expected
  * to be implemented by the vendor extension module.
  *
  * Support for vendor extension can be enabled using `OPENTHREAD_ENABLE_VENDOR_EXTENSION` configuration option.

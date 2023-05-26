@@ -55,7 +55,7 @@ namespace ot {
  */
 
 /**
- * This class implements an operation Success Rate Tracker.
+ * Implements an operation Success Rate Tracker.
  *
  * This can be used to track different link quality related metrics, e.g., CCA failure rate, frame tx success rate).
  * The success rate is maintained using an exponential moving IIR averaging filter with a `uint16_t` as the storage.
@@ -98,7 +98,7 @@ private:
 };
 
 /**
- * This class implements a Received Signal Strength (RSS) averager.
+ * Implements a Received Signal Strength (RSS) averager.
  *
  * The average is maintained using an adaptive exponentially weighted moving filter.
  *
@@ -188,7 +188,7 @@ private:
 };
 
 /**
- * This class implements a Link Quality Indicator (LQI) averager.
+ * Implements a Link Quality Indicator (LQI) averager.
  *
  * It maintains the exponential moving average value of LQI.
  *
@@ -290,7 +290,7 @@ LinkQuality LinkQualityForLinkMargin(uint8_t aLinkMargin);
 int8_t GetTypicalRssForLinkQuality(int8_t aNoiseFloor, LinkQuality aLinkQuality);
 
 /**
- * This class encapsulates/stores all relevant information about quality of a link, including average received signal
+ * Encapsulates/stores all relevant information about quality of a link, including average received signal
  * strength (RSS), last RSS, link margin, and link quality.
  *
  */

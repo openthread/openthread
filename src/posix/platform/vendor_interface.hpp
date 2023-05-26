@@ -47,7 +47,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class defines a vendor interface to the Radio Co-processor (RCP).
+ * Defines a vendor interface to the Radio Co-processor (RCP).
  *
  */
 class VendorInterface

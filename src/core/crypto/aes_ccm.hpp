@@ -57,7 +57,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements AES CCM computation.
+ * Implements AES CCM computation.
  *
  */
 class AesCcm

@@ -65,7 +65,7 @@
 namespace ot {
 
 /**
- * This class represents a Thread neighbor.
+ * Represents a Thread neighbor.
  *
  */
 class Neighbor : public InstanceLocatorInit
@@ -114,7 +114,7 @@ public:
     };
 
     /**
-     * This class represents an Address Matcher used to find a neighbor (child/router) with a given MAC address also
+     * Represents an Address Matcher used to find a neighbor (child/router) with a given MAC address also
      * matching a given state filter.
      *
      */
@@ -859,7 +859,7 @@ private:
 #if OPENTHREAD_FTD
 
 /**
- * This class represents a Thread Child.
+ * Represents a Thread Child.
  *
  */
 class Child : public Neighbor,
@@ -876,7 +876,7 @@ public:
     static constexpr uint8_t kMaxRequestTlvs = 6;
 
     /**
-     * This class represents diagnostic information for a Thread Child.
+     * Represents diagnostic information for a Thread Child.
      *
      */
     class Info : public otChildInfo, public Clearable<Info>
@@ -892,7 +892,7 @@ public:
     };
 
     /**
-     * This class defines an iterator used to go through IPv6 address entries of a child.
+     * Defines an iterator used to go through IPv6 address entries of a child.
      *
      */
     class AddressIterator : public Unequatable<AddressIterator>
@@ -1370,14 +1370,14 @@ private:
 class Parent;
 
 /**
- * This class represents a Thread Router
+ * Represents a Thread Router
  *
  */
 class Router : public Neighbor
 {
 public:
     /**
-     * This class represents diagnostic information for a Thread Router.
+     * Represents diagnostic information for a Thread Router.
      *
      */
     class Info : public otRouterInfo, public Clearable<Info>
@@ -1493,7 +1493,7 @@ private:
 };
 
 /**
- * This class represent parent of a child node.
+ * Represent parent of a child node.
  *
  */
 class Parent : public Router

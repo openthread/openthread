@@ -53,7 +53,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements Timestamp generation and parsing.
+ * Implements Timestamp generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

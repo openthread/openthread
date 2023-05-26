@@ -65,7 +65,7 @@ namespace Srp {
 #endif
 
 /**
- * This class implements SRP client.
+ * Implements SRP client.
  *
  */
 class Client : public InstanceLocator, private NonCopyable

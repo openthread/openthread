@@ -62,7 +62,7 @@ namespace ot {
 namespace NetworkData {
 
 /**
- * This class implements the Network Data Publisher.
+ * Implements the Network Data Publisher.
  *
  * It provides mechanisms to limit the number of similar Service and/or Prefix (on-mesh prefix or external route)
  * entries in the Thread Network Data by monitoring the Network Data and managing if or when to add or remove entries.

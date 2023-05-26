@@ -49,7 +49,7 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class represents a memory block.
+ * Represents a memory block.
  *
  * A block is of the structure as below.
  *
@@ -160,7 +160,7 @@ private:
 };
 
 /**
- * This class defines functionality to manipulate heap.
+ * Defines functionality to manipulate heap.
  *
  * This implementation is currently for mbedTLS.
  *

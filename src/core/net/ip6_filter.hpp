@@ -55,7 +55,7 @@ namespace Ip6 {
  */
 
 /**
- * This class implements an IPv6 datagram filter.
+ * Implements an IPv6 datagram filter.
  *
  */
 class Filter : public InstanceLocator, private NonCopyable

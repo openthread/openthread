@@ -47,7 +47,7 @@
 namespace ot {
 
 /**
- * This class represents the Thread child table.
+ * Represents the Thread child table.
  *
  */
 class ChildTable : public InstanceLocator, private NonCopyable
@@ -57,7 +57,7 @@ class ChildTable : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class represents an iterator for iterating through the child entries in the child table.
+     * Represents an iterator for iterating through the child entries in the child table.
      *
      */
     class Iterator : public InstanceLocator, public ItemPtrIterator<Child, Iterator>

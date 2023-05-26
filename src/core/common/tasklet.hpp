@@ -58,14 +58,14 @@ class TaskletScheduler;
  */
 
 /**
- * This class is used to represent a tasklet.
+ * Is used to represent a tasklet.
  *
  */
 class Tasklet : public InstanceLocator
 {
 public:
     /**
-     * This class implements the tasklet scheduler.
+     * Implements the tasklet scheduler.
      *
      */
     class Scheduler : private NonCopyable
@@ -177,7 +177,7 @@ private:
 };
 
 /**
- * This class defines a tasklet that also maintains a user context pointer.
+ * Defines a tasklet that also maintains a user context pointer.
  *
  * In typical `Tasklet` use, in the handler callback, the owner of the tasklet is determined using `GetOwner<Type>`
  * method. This method works if there is a single instance of `Type` within OpenThread instance hierarchy. The

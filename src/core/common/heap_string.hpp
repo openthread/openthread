@@ -44,7 +44,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This class represents a heap allocated string.
+ * Represents a heap allocated string.
  *
  * The buffer to store the string is allocated from heap and is manged by the `Heap::String` class itself, e.g., it may
  * be reused and/or freed and reallocated when the string is set. The `Heap::String` destructor will always free the

@@ -70,7 +70,7 @@ namespace Mle {
 #if OPENTHREAD_FTD
 
 /**
- * This class implements MLE functionality required by the Thread Router and Leader roles.
+ * Implements MLE functionality required by the Thread Router and Leader roles.
  *
  */
 class MleRouter : public Mle

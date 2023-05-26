@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Joiner CLI interpreter.
+ * Implements the Joiner CLI interpreter.
  *
  */
 class Joiner : private Output

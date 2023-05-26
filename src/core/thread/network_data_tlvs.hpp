@@ -112,7 +112,7 @@ template <class TlvType> TlvType &As(NetworkDataTlv &aTlv) { return static_cast<
 template <class TlvType> const TlvType &As(const NetworkDataTlv &aTlv) { return static_cast<const TlvType &>(aTlv); }
 
 /**
- * This class implements Thread Network Data TLV generation and parsing.
+ * Implements Thread Network Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -400,7 +400,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Has Route TLV entry generation and parsing.
+ * Implements Has Route TLV entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -514,7 +514,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Has Route TLV generation and parsing.
+ * Implements Has Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -613,7 +613,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Prefix TLV generation and parsing.
+ * Implements Prefix TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -901,7 +901,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Border Router Entry generation and parsing.
+ * Implements Border Router Entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1088,7 +1088,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Border Router TLV generation and parsing.
+ * Implements Border Router TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1190,7 +1190,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Context TLV generation and processing.
+ * Implements Context TLV generation and processing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1262,7 +1262,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Commissioning Data TLV generation and parsing.
+ * Implements Commissioning Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1284,7 +1284,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Service Data TLV generation and parsing.
+ * Implements Service Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1455,7 +1455,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Server Data TLV generation and parsing.
+ * Implements Server Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1555,7 +1555,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a Network Data TLV iterator.
+ * Represents a Network Data TLV iterator.
  *
  */
 class TlvIterator

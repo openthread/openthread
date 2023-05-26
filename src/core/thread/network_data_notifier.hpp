@@ -51,7 +51,7 @@ namespace NetworkData {
 class NetworkData;
 
 /**
- * This class implements the SVR_DATA.ntf transmission logic.
+ * Implements the SVR_DATA.ntf transmission logic.
  *
  */
 class Notifier : public InstanceLocator, private NonCopyable

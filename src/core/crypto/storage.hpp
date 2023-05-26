@@ -201,7 +201,7 @@ void DestroyPersistentKeys(void);
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 /**
- * This class represents a crypto key.
+ * Represents a crypto key.
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
  * or a `KeyRef` (if `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled).
@@ -297,7 +297,7 @@ public:
 };
 
 /**
- * This class represents a literal key derived from a `Key`.
+ * Represents a literal key derived from a `Key`.
  *
  */
 class LiteralKey : public Clearable<LiteralKey>, private NonCopyable

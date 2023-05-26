@@ -67,7 +67,7 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements the definitions for local Backbone Router service.
+ * Implements the definitions for local Backbone Router service.
  *
  */
 class Local : public InstanceLocator, private NonCopyable

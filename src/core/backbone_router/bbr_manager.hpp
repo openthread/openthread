@@ -56,7 +56,7 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements the definitions for Backbone Router management.
+ * Implements the definitions for Backbone Router management.
  *
  */
 class Manager : public InstanceLocator, private NonCopyable

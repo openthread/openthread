@@ -53,7 +53,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements AES ECB computation.
+ * Implements AES ECB computation.
  *
  */
 class AesEcb

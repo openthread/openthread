@@ -186,7 +186,7 @@ private:
 };
 
 /**
- * This class implements the OpenThread Notifier.
+ * Implements the OpenThread Notifier.
  *
  * For core internal modules, `Notifier` class emits events directly to them by invoking method `HandleNotifierEvents()`
  * on the module instance.

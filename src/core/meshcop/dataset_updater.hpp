@@ -53,7 +53,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class implements the Dataset Updater.
+ * Implements the Dataset Updater.
  *
  */
 class DatasetUpdater : public InstanceLocator, private NonCopyable

@@ -48,7 +48,7 @@ namespace ot {
 namespace Trel {
 
 /**
- * This class represents a TREL radio link packet encapsulation header.
+ * Represents a TREL radio link packet encapsulation header.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -251,7 +251,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a TREL radio link packet.
+ * Represents a TREL radio link packet.
  *
  */
 class Packet : private MutableData<kWithUint16Length>

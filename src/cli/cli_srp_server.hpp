@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the SRP Server CLI interpreter.
+ * Implements the SRP Server CLI interpreter.
  *
  */
 class SrpServer : private Output

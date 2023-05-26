@@ -47,7 +47,7 @@
 namespace ot {
 
 /**
- * This class implements IP checksum calculation and verification.
+ * Implements IP checksum calculation and verification.
  *
  */
 class Checksum

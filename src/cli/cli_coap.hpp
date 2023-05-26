@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI CoAP server and client.
+ * Implements the CLI CoAP server and client.
  *
  */
 class Coap : private Output

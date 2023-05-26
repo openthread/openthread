@@ -64,7 +64,7 @@ namespace Dhcp6 {
  */
 
 /**
- * This class implements DHCPv6 Client.
+ * Implements DHCPv6 Client.
  *
  */
 class Client : public InstanceLocator, private NonCopyable

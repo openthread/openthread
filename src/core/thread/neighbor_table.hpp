@@ -43,7 +43,7 @@
 namespace ot {
 
 /**
- * This class represents the Thread neighbor table.
+ * Represents the Thread neighbor table.
  *
  */
 class NeighborTable : public InstanceLocator, private NonCopyable

@@ -66,7 +66,7 @@ namespace Ip6 {
  */
 
 /**
- * This class represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
+ * Represents the Network Prefix of an IPv6 address (most significant 64 bits of the address).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -89,7 +89,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents an IPv6 Prefix.
+ * Represents an IPv6 Prefix.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -362,7 +362,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents the Interface Identifier of an IPv6 address.
+ * Represents the Interface Identifier of an IPv6 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -568,7 +568,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements an IPv6 address object.
+ * Implements an IPv6 address object.
  *
  */
 OT_TOOL_PACKED_BEGIN

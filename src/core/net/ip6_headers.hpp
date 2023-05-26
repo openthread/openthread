@@ -88,7 +88,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 
 /**
- * This class implements IPv6 header generation and parsing.
+ * Implements IPv6 header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -370,7 +370,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Extension Header generation and processing.
+ * Implements IPv6 Extension Header generation and processing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -440,7 +440,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Hop-by-Hop Options Header generation and parsing.
+ * Implements IPv6 Hop-by-Hop Options Header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -449,7 +449,7 @@ class HopByHopHeader : public ExtensionHeader
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Options generation and parsing.
+ * Implements IPv6 Options generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -557,7 +557,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Pad Options (Pad1 or PadN) generation.
+ * Implements IPv6 Pad Options (Pad1 or PadN) generation.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -599,7 +599,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Fragment Header generation and parsing.
+ * Implements IPv6 Fragment Header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

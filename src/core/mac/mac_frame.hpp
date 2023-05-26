@@ -61,7 +61,7 @@ using ot::Encoding::LittleEndian::WriteUint24;
  */
 
 /**
- * This class implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
+ * Implements IEEE 802.15.4 IE (Information Element) header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -143,7 +143,7 @@ private:
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || \
     OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 /**
- * This class implements vendor specific Header IE generation and parsing.
+ * Implements vendor specific Header IE generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -194,7 +194,7 @@ private:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
- * This class implements Time Header IE generation and parsing.
+ * Implements Time Header IE generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -269,7 +269,7 @@ public:
        // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 /**
- * This class implements IEEE 802.15.4 MAC frame generation and parsing.
+ * Implements IEEE 802.15.4 MAC frame generation and parsing.
  *
  */
 class Frame : public otRadioFrame
@@ -1155,7 +1155,7 @@ protected:
 };
 
 /**
- * This class supports received IEEE 802.15.4 MAC frame processing.
+ * Supports received IEEE 802.15.4 MAC frame processing.
  *
  */
 class RxFrame : public Frame
@@ -1249,7 +1249,7 @@ public:
 };
 
 /**
- * This class supports IEEE 802.15.4 MAC frame generation for transmission.
+ * Supports IEEE 802.15.4 MAC frame generation for transmission.
  *
  */
 class TxFrame : public Frame
@@ -1570,7 +1570,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
+ * Implements IEEE 802.15.4 Beacon Payload generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1709,7 +1709,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements CSL IE data structure.
+ * Implements CSL IE data structure.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1757,9 +1757,9 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Termination2 IE.
+ * Implements Termination2 IE.
  *
- * This class is empty for template specialization.
+ * Is empty for template specialization.
  *
  */
 class Termination2Ie

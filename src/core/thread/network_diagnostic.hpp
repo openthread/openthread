@@ -62,7 +62,7 @@ namespace NetworkDiagnostic {
 class Client;
 
 /**
- * This class implements the Network Diagnostic server responding to requests.
+ * Implements the Network Diagnostic server responding to requests.
  *
  */
 class Server : public InstanceLocator, private NonCopyable
@@ -175,7 +175,7 @@ DeclareTmfHandler(Server, kUriDiagnosticGetAnswer);
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
 
 /**
- * This class implements the Network Diagnostic client sending requests and queries.
+ * Implements the Network Diagnostic client sending requests and queries.
  *
  */
 class Client : public InstanceLocator, private NonCopyable

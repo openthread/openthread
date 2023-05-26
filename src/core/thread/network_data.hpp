@@ -105,7 +105,7 @@ typedef otNetworkDataIterator Iterator;
 constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializer for `Iterator` type.
 
 /**
- * This class represents an immutable Network Data.
+ * Represents an immutable Network Data.
  *
  */
 class NetworkData : public InstanceLocator
@@ -584,7 +584,7 @@ private:
 };
 
 /**
- * This class represents mutable Network Data.
+ * Represents mutable Network Data.
  *
  */
 class MutableNetworkData : public NetworkData

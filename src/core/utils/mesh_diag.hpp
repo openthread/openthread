@@ -60,7 +60,7 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements the Mesh Diagnostics.
+ * Implements the Mesh Diagnostics.
  *
  */
 class MeshDiag : public InstanceLocator

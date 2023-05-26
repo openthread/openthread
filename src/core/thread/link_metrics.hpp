@@ -74,7 +74,7 @@ namespace LinkMetrics {
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 /**
- * This class implements the Thread Link Metrics Initiator.
+ * Implements the Thread Link Metrics Initiator.
  *
  * The Initiator makes queries, configures Link Metrics probing at the Subject and generates reports of the results.
  *
@@ -269,7 +269,7 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 /**
- * This class implements the Thread Link Metrics Subject.
+ * Implements the Thread Link Metrics Subject.
  *
  * The Subject reponds queries with reports, handles Link Metrics Management Requests and Link Probe Messages.
  *

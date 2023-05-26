@@ -83,7 +83,7 @@ struct Context : public Clearable<Context>
 };
 
 /**
- * This class implements LOWPAN_IPHC header compression.
+ * Implements LOWPAN_IPHC header compression.
  *
  */
 class Lowpan : public InstanceLocator, private NonCopyable
@@ -291,7 +291,7 @@ private:
 };
 
 /**
- * This class implements Mesh Header generation and processing.
+ * Implements Mesh Header generation and processing.
  *
  */
 class MeshHeader
@@ -456,7 +456,7 @@ private:
 };
 
 /**
- * This class implements Fragment Header generation and parsing.
+ * Implements Fragment Header generation and parsing.
  *
  */
 class FragmentHeader

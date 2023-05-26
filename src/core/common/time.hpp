@@ -55,7 +55,7 @@ namespace ot {
  */
 
 /**
- * This class represents a time instance.
+ * Represents a time instance.
  *
  */
 class Time : public Unequatable<Time>

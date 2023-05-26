@@ -62,7 +62,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements indirect transmission.
+ * Implements indirect transmission.
  *
  */
 class IndirectSender : public InstanceLocator, public IndirectSenderBase, private NonCopyable
@@ -75,7 +75,7 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase, privat
 
 public:
     /**
-     * This class defines all the child info required for indirect transmission.
+     * Defines all the child info required for indirect transmission.
      *
      * `Child` class publicly inherits from this class.
      *

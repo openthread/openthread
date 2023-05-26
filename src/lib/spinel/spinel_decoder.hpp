@@ -44,7 +44,7 @@ namespace ot {
 namespace Spinel {
 
 /**
- * This class defines a spinel decoder.
+ * Defines a spinel decoder.
  *
  */
 class Decoder

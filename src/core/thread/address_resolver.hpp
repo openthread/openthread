@@ -61,7 +61,7 @@ namespace ot {
  */
 
 /**
- * This class implements the EID-to-RLOC mapping and caching.
+ * Implements the EID-to-RLOC mapping and caching.
  *
  */
 class AddressResolver : public InstanceLocator, private NonCopyable

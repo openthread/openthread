@@ -58,7 +58,7 @@ namespace Utils {
  */
 
 /**
- * This class implements the Channel Manager.
+ * Implements the Channel Manager.
  *
  */
 class ChannelManager : public InstanceLocator, private NonCopyable

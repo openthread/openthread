@@ -58,7 +58,7 @@ namespace Mac {
  */
 
 /**
- * This class represents tx frames for different radio link types.
+ * Represents tx frames for different radio link types.
  *
  */
 class TxFrames : InstanceLocator
@@ -284,7 +284,7 @@ private:
 };
 
 /**
- * This class represents MAC radio links (multi radio).
+ * Represents MAC radio links (multi radio).
  *
  */
 class Links : public InstanceLocator

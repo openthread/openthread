@@ -57,7 +57,7 @@ namespace NetworkData {
 class Notifier;
 
 /**
- * This class implements the Thread Network Data contributed by the local device.
+ * Implements the Thread Network Data contributed by the local device.
  *
  */
 class Local : public MutableNetworkData, private NonCopyable

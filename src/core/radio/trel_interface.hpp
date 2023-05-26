@@ -60,7 +60,7 @@ extern "C" void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer
 extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
- * This class represents a TREL link interface.
+ * Represents a TREL link interface.
  *
  */
 class Interface : public InstanceLocator
@@ -71,7 +71,7 @@ class Interface : public InstanceLocator
 
 public:
     /**
-     * This class represents information about a discovered TREL peer.
+     * Represents information about a discovered TREL peer.
      *
      */
     class Peer : public otTrelPeer

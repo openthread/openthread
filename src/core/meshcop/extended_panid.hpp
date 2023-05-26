@@ -50,7 +50,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class represents an Extended PAN Identifier.
+ * Represents an Extended PAN Identifier.
  *
  */
 OT_TOOL_PACKED_BEGIN

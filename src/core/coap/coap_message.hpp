@@ -161,7 +161,7 @@ enum OptionNumber : uint16_t
 };
 
 /**
- * This class implements CoAP message generation and parsing.
+ * Implements CoAP message generation and parsing.
  *
  */
 class Message : public ot::Message
@@ -971,7 +971,7 @@ private:
 };
 
 /**
- * This class implements a CoAP message queue.
+ * Implements a CoAP message queue.
  *
  */
 class MessageQueue : public ot::MessageQueue
@@ -1045,14 +1045,14 @@ public:
 };
 
 /**
- * This class represents a CoAP option.
+ * Represents a CoAP option.
  *
  */
 class Option : public otCoapOption
 {
 public:
     /**
-     * This class represents an iterator for CoAP options.
+     * Represents an iterator for CoAP options.
      *
      */
     class Iterator : public otCoapOptionIterator

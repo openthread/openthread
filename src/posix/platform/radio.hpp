@@ -35,7 +35,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class manages Thread radio.
+ * Manages Thread radio.
  *
  */
 class Radio

@@ -52,7 +52,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI CoAP Secure server and client.
+ * Implements the CLI CoAP Secure server and client.
  *
  */
 class CoapSecure : private Output

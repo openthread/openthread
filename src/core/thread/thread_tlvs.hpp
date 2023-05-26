@@ -50,7 +50,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements Network Layer TLV generation and parsing.
+ * Implements Network Layer TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -98,55 +98,55 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Target TLV constants and types.
+ * Defines Target TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<ThreadTlv::kTarget, Ip6::Address> ThreadTargetTlv;
 
 /**
- * This class defines Extended MAC Address TLV constants and types.
+ * Defines Extended MAC Address TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<ThreadTlv::kExtMacAddress, Mac::ExtAddress> ThreadExtMacAddressTlv;
 
 /**
- * This class defines RLOC16 TLV constants and types.
+ * Defines RLOC16 TLV constants and types.
  *
  */
 typedef UintTlvInfo<ThreadTlv::kRloc16, uint16_t> ThreadRloc16Tlv;
 
 /**
- * This class defines ML-EID TLV constants and types.
+ * Defines ML-EID TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<ThreadTlv::kMeshLocalEid, Ip6::InterfaceIdentifier> ThreadMeshLocalEidTlv;
 
 /**
- * This class defines Time Since Last Transaction TLV constants and types.
+ * Defines Time Since Last Transaction TLV constants and types.
  *
  */
 typedef UintTlvInfo<ThreadTlv::kLastTransactionTime, uint32_t> ThreadLastTransactionTimeTlv;
 
 /**
- * This class defines Timeout TLV constants and types.
+ * Defines Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<ThreadTlv::kTimeout, uint32_t> ThreadTimeoutTlv;
 
 /**
- * This class defines Network Name TLV constants and types.
+ * Defines Network Name TLV constants and types.
  *
  */
 typedef StringTlvInfo<ThreadTlv::kNetworkName, MeshCoP::NetworkName::kMaxSize> ThreadNetworkNameTlv;
 
 /**
- * This class defines Commissioner Session ID TLV constants and types.
+ * Defines Commissioner Session ID TLV constants and types.
  *
  */
 typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissionerSessionIdTlv;
 
 /**
- * This class defines Status TLV constants and types.
+ * Defines Status TLV constants and types.
  *
  */
 class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
@@ -199,7 +199,7 @@ public:
 };
 
 /**
- * This class implements Router Mask TLV generation and parsing.
+ * Implements Router Mask TLV generation and parsing.
  *
  */
 class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
@@ -271,7 +271,7 @@ private:
 };
 
 /**
- * This class implements Thread Network Data TLV generation and parsing.
+ * Implements Thread Network Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -313,7 +313,7 @@ private:
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * This class implements IPv6 Addresses TLV generation and parsing.
+ * Implements IPv6 Addresses TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

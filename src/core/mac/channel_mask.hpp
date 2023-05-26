@@ -57,7 +57,7 @@ namespace Mac {
  */
 
 /**
- * This class defines a channel mask.
+ * Defines a channel mask.
  *
  * It is a wrapper class around a `uint32_t` bit vector representing a set of channels.
  *

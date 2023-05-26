@@ -49,7 +49,7 @@ namespace ot {
 namespace Url {
 
 /**
- * This class implements the URL processing.
+ * Implements the URL processing.
  *
  */
 class Url : public otUrl

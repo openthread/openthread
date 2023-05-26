@@ -52,7 +52,7 @@ namespace ot {
  */
 
 /**
- * This class implements a trickle timer.
+ * Implements a trickle timer.
  *
  */
 class TrickleTimer : public TimerMilli

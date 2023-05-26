@@ -86,7 +86,7 @@ class Child;
 #if OPENTHREAD_FTD
 
 /**
- * This class implements a child supervisor.
+ * Implements a child supervisor.
  *
  */
 class ChildSupervisor : public InstanceLocator, private NonCopyable
@@ -147,7 +147,7 @@ private:
 #endif // #if OPENTHREAD_FTD
 
 /**
- * This class implements a child supervision listener.
+ * Implements a child supervision listener.
  *
  */
 class SupervisionListener : public InstanceLocator, private NonCopyable

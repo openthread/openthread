@@ -43,7 +43,7 @@ namespace Posix {
 using ot::Spinel::SpinelInterface;
 
 /**
- * This class defines the vendor implementation object.
+ * Defines the vendor implementation object.
  *
  */
 class VendorInterfaceImpl

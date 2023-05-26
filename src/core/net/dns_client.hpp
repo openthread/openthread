@@ -102,7 +102,7 @@ class Client;
 namespace Dns {
 
 /**
- * This class implements DNS client.
+ * Implements DNS client.
  *
  */
 class Client : public InstanceLocator, private NonCopyable
@@ -285,7 +285,7 @@ public:
 #endif
 
     /**
-     * This class represents a DNS query response.
+     * Represents a DNS query response.
      *
      */
     class Response : public otDnsAddressResponse,

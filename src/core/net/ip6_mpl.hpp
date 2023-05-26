@@ -57,7 +57,7 @@ namespace Ip6 {
  */
 
 /**
- * This class implements MPL header generation and parsing.
+ * Implements MPL header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -160,7 +160,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements MPL message processing.
+ * Implements MPL message processing.
  *
  */
 class Mpl : public InstanceLocator, private NonCopyable

@@ -55,7 +55,7 @@ namespace Ip6 {
  */
 
 /**
- * This class implements message information for an IPv6 message.
+ * Implements message information for an IPv6 message.
  *
  */
 class MessageInfo : public otMessageInfo, public Clearable<MessageInfo>
@@ -248,7 +248,7 @@ public:
 };
 
 /**
- * This class implements a socket address.
+ * Implements a socket address.
  *
  */
 class SockAddr : public otSockAddr, public Clearable<SockAddr>, public Unequatable<SockAddr>

@@ -92,7 +92,7 @@ using Ecn = Ip6::Ecn;
 class Cidr;
 
 /**
- * This class represents an IPv4 address.
+ * Represents an IPv4 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -190,7 +190,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents an IPv4 CIDR block.
+ * Represents an IPv4 CIDR block.
  *
  */
 class Cidr : public otIp4Cidr, public Unequatable<Cidr>, public Clearable<Address>
@@ -288,7 +288,7 @@ private:
 };
 
 /**
- * This class implements IPv4 header generation and parsing.
+ * Implements IPv4 header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -584,7 +584,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements ICMP(v4).
+ * Implements ICMP(v4).
  * Note: ICMP(v4) messages will only be generated / handled by NAT64. So only header definition is required.
  *
  */
@@ -592,7 +592,7 @@ class Icmp
 {
 public:
     /**
-     * This class represents an IPv4 ICMP header.
+     * Represents an IPv4 ICMP header.
      *
      */
     OT_TOOL_PACKED_BEGIN

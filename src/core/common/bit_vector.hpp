@@ -54,7 +54,7 @@ namespace ot {
  */
 
 /**
- * This class represents a bit-vector.
+ * Represents a bit-vector.
  *
  * @tparam N  Specifies the number of bits.
  *

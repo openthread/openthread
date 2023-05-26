@@ -52,7 +52,7 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements the definitions for Multicast Listeners Table.
+ * Implements the definitions for Multicast Listeners Table.
  *
  */
 class MulticastListenersTable : public InstanceLocator, private NonCopyable
@@ -61,7 +61,7 @@ class MulticastListenersTable : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class represents a Multicast Listener entry.
+     * Represents a Multicast Listener entry.
      *
      */
     class Listener : public Clearable<Listener>

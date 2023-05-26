@@ -56,12 +56,12 @@ class Child;
  */
 
 /**
- * This class implements the "source address match" controller.
+ * Implements the "source address match" controller.
  *
  * The source address match feature controls how the radio layer decides the "frame pending" bit for acks sent in
  * response to data request commands from sleepy children.
  *
- * This class updates the source match table and also controls when to enable or disable the source matching
+ * Updates the source match table and also controls when to enable or disable the source matching
  * feature.
  *
  * The source address match table provides the list of children for which there is a pending frame. Either a short

@@ -56,7 +56,7 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements the OTNS Stub that interacts with OTNS.
+ * Implements the OTNS Stub that interacts with OTNS.
  *
  */
 class Otns : public InstanceLocator, private NonCopyable

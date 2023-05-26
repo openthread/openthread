@@ -63,7 +63,7 @@ namespace Dns {
 namespace ServiceDiscovery {
 
 /**
- * This class implements DNS-SD server.
+ * Implements DNS-SD server.
  *
  */
 class Server : public InstanceLocator, private NonCopyable
@@ -72,7 +72,7 @@ class Server : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class contains the counters of the DNS-SD server.
+     * Contains the counters of the DNS-SD server.
      *
      */
     class Counters : public otDnssdCounters, public Clearable<Counters>
@@ -81,7 +81,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
-     * This class represents an upstream query transaction. The methods should only be used by
+     * Represents an upstream query transaction. The methods should only be used by
      * `Dns::ServiceDiscovery::Server`.
      *
      */
@@ -401,7 +401,7 @@ private:
     };
 
     /**
-     * This class contains the compress information for a dns packet.
+     * Contains the compress information for a dns packet.
      *
      */
     class QueryTransaction : public InstanceLocatorInit

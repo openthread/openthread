@@ -56,7 +56,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements Network Diagnostic TLV generation and parsing.
+ * Implements Network Diagnostic TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -135,91 +135,91 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Extended MAC Address TLV constants and types.
+ * Defines Extended MAC Address TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kExtMacAddress, Mac::ExtAddress> ExtMacAddressTlv;
 
 /**
- * This class defines Address16 TLV constants and types.
+ * Defines Address16 TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kAddress16, uint16_t> Address16Tlv;
 
 /**
- * This class defines Mode TLV constants and types.
+ * Defines Mode TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMode, uint8_t> ModeTlv;
 
 /**
- * This class defines Timeout TLV constants and types.
+ * Defines Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kTimeout, uint32_t> TimeoutTlv;
 
 /**
- * This class defines Network Data TLV constants and types.
+ * Defines Network Data TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kNetworkData> NetworkDataTlv;
 
 /**
- * This class defines IPv6 Address List TLV constants and types.
+ * Defines IPv6 Address List TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kIp6AddressList> Ip6AddressListTlv;
 
 /**
- * This class defines Battery Level TLV constants and types.
+ * Defines Battery Level TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kBatteryLevel, uint8_t> BatteryLevelTlv;
 
 /**
- * This class defines Supply Voltage TLV constants and types.
+ * Defines Supply Voltage TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
 
 /**
- * This class defines Child Table TLV constants and types.
+ * Defines Child Table TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kChildTable> ChildTableTlv;
 
 /**
- * This class defines Max Child Timeout TLV constants and types.
+ * Defines Max Child Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
 
 /**
- * This class defines Version TLV constants and types.
+ * Defines Version TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
 
 /**
- * This class defines Vendor Name TLV constants and types.
+ * Defines Vendor Name TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorName, Tlv::kMaxVendorNameLength> VendorNameTlv;
 
 /**
- * This class defines Vendor Model TLV constants and types.
+ * Defines Vendor Model TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorModel, Tlv::kMaxVendorModelLength> VendorModelTlv;
 
 /**
- * This class defines Vendor SW Version TLV constants and types.
+ * Defines Vendor SW Version TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> VendorSwVersionTlv;
 
 /**
- * This class defines Thread Stack Version TLV constants and types.
+ * Defines Thread Stack Version TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLength> ThreadStackVersionTlv;
@@ -227,7 +227,7 @@ typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLengt
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 
 /**
- * This class implements Connectivity TLV generation and parsing.
+ * Implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -268,7 +268,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Route TLV generation and parsing.
+ * Implements Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -289,7 +289,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Leader Data TLV generation and parsing.
+ * Implements Leader Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -310,7 +310,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Mac Counters TLV generation and parsing.
+ * Implements Mac Counters TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -501,7 +501,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Child Table Entry generation and parsing.
+ * Implements Child Table Entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -606,7 +606,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel Pages TLV generation and parsing.
+ * Implements Channel Pages TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -649,7 +649,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Address List TLV generation and parsing.
+ * Implements IPv6 Address List TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

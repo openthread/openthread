@@ -54,14 +54,14 @@ namespace ot {
 namespace BackboneRouter {
 
 /**
- * This class implements NdProxy Table maintenance on Primary Backbone Router.
+ * Implements NdProxy Table maintenance on Primary Backbone Router.
  *
  */
 class NdProxyTable : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class represents a ND Proxy instance.
+     * Represents a ND Proxy instance.
      *
      */
     class NdProxy : private Clearable<NdProxy>
@@ -256,7 +256,7 @@ private:
     };
 
     /**
-     * This class represents an iterator for iterating through the NdProxy Table.
+     * Represents an iterator for iterating through the NdProxy Table.
      *
      */
     class Iterator : public InstanceLocator, public ItemPtrIterator<NdProxy, Iterator>

@@ -44,7 +44,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This class represents a heap allocated data.
+ * Represents a heap allocated data.
  *
  */
 class Data

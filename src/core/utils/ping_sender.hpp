@@ -55,20 +55,20 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
+ * Implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
  *
  */
 class PingSender : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class represents a ping reply.
+     * Represents a ping reply.
      *
      */
     typedef otPingSenderReply Reply;
 
     /**
-     * This class represents the statistics of several ping requests.
+     * Represents the statistics of several ping requests.
      *
      */
     struct Statistics : public otPingSenderStatistics
@@ -87,7 +87,7 @@ public:
     };
 
     /**
-     * This class represents a ping request configuration.
+     * Represents a ping request configuration.
      *
      */
     class Config : public otPingSenderConfig

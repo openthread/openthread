@@ -65,7 +65,7 @@ using ot::Encoding::BigEndian::ReadUint24;
 using ot::Encoding::BigEndian::WriteUint24;
 
 /**
- * This class implements MeshCoP TLV generation and parsing.
+ * Implements MeshCoP TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -270,7 +270,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements extended MeshCoP TLV generation and parsing.
+ * Implements extended MeshCoP TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -295,55 +295,55 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Commissioner UDP Port TLV constants and types.
+ * Defines Commissioner UDP Port TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kCommissionerUdpPort, uint16_t> CommissionerUdpPortTlv;
 
 /**
- * This class defines IPv6 Address TLV constants and types.
+ * Defines IPv6 Address TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kIp6Address, Ip6::Address> Ip6AddressTlv;
 
 /**
- * This class defines Joiner IID TLV constants and types.
+ * Defines Joiner IID TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kJoinerIid, Ip6::InterfaceIdentifier> JoinerIidTlv;
 
 /**
- * This class defines Joiner Router Locator TLV constants and types.
+ * Defines Joiner Router Locator TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kJoinerRouterLocator, uint16_t> JoinerRouterLocatorTlv;
 
 /**
- * This class defines Joiner Router KEK TLV constants and types.
+ * Defines Joiner Router KEK TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kJoinerRouterKek, Kek> JoinerRouterKekTlv;
 
 /**
- * This class defines Count TLV constants and types.
+ * Defines Count TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kCount, uint8_t> CountTlv;
 
 /**
- * This class defines Period TLV constants and types.
+ * Defines Period TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kPeriod, uint16_t> PeriodTlv;
 
 /**
- * This class defines Scan Duration TLV constants and types.
+ * Defines Scan Duration TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kScanDuration, uint16_t> ScanDurationTlv;
 
 /**
- * This class implements Channel TLV generation and parsing.
+ * Implements Channel TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -408,7 +408,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements PAN ID TLV generation and parsing.
+ * Implements PAN ID TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -455,7 +455,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Extended PAN ID TLV generation and parsing.
+ * Implements Extended PAN ID TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -502,7 +502,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Network Name TLV generation and parsing.
+ * Implements Network Name TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -549,7 +549,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements PSKc TLV generation and parsing.
+ * Implements PSKc TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -596,7 +596,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Network Network Key TLV generation and parsing.
+ * Implements Network Network Key TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -643,7 +643,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Network Key Sequence TLV generation and parsing.
+ * Implements Network Key Sequence TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -690,7 +690,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Mesh Local Prefix TLV generation and parsing.
+ * Implements Mesh Local Prefix TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -747,7 +747,7 @@ private:
 class SteeringData;
 
 /**
- * This class implements Steering Data TLV generation and parsing.
+ * Implements Steering Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -804,7 +804,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Border Agent Locator TLV generation and parsing.
+ * Implements Border Agent Locator TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -851,7 +851,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements the Commissioner ID TLV generation and parsing.
+ * Implements the Commissioner ID TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -907,7 +907,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Commissioner Session ID TLV generation and parsing.
+ * Implements Commissioner Session ID TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -954,7 +954,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Security Policy TLV generation and parsing.
+ * Implements Security Policy TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1013,7 +1013,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Active Timestamp TLV generation and parsing.
+ * Implements Active Timestamp TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1069,7 +1069,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements State TLV generation and parsing.
+ * Implements State TLV generation and parsing.
  *
  */
 class StateTlv : public UintTlvInfo<Tlv::kState, uint8_t>
@@ -1090,7 +1090,7 @@ public:
 };
 
 /**
- * This class implements Joiner UDP Port TLV generation and parsing.
+ * Implements Joiner UDP Port TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1137,7 +1137,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Pending Timestamp TLV generation and parsing.
+ * Implements Pending Timestamp TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1193,7 +1193,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Delay Timer TLV generation and parsing.
+ * Implements Delay Timer TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1257,7 +1257,7 @@ private:
 class ChannelMaskTlv;
 
 /**
- * This class implements Channel Mask Entry generation and parsing.
+ * Implements Channel Mask Entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1365,7 +1365,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel Mask Entry Page 0 generation and parsing.
+ * Implements Channel Mask Entry Page 0 generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1412,7 +1412,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel Mask TLV generation and parsing.
+ * Implements Channel Mask TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1456,7 +1456,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel Mask TLV generation and parsing.
+ * Implements Channel Mask TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1507,7 +1507,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Energy List TLV generation and parsing.
+ * Implements Energy List TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1556,37 +1556,37 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Provisioning TLV constants and types.
+ * Defines Provisioning TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kProvisioningUrl, Tlv::kMaxProvisioningUrlLength> ProvisioningUrlTlv;
 
 /**
- * This class defines Vendor Name TLV constants and types.
+ * Defines Vendor Name TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorName, Tlv::kMaxVendorNameLength> VendorNameTlv;
 
 /**
- * This class defines Vendor Model TLV constants and types.
+ * Defines Vendor Model TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorModel, Tlv::kMaxVendorModelLength> VendorModelTlv;
 
 /**
- * This class defines Vendor SW Version TLV constants and types.
+ * Defines Vendor SW Version TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> VendorSwVersionTlv;
 
 /**
- * This class defines Vendor Data TLV constants and types.
+ * Defines Vendor Data TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorData, Tlv::kMaxVendorDataLength> VendorDataTlv;
 
 /**
- * This class implements Vendor Stack Version TLV generation and parsing.
+ * Implements Vendor Stack Version TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1734,13 +1734,13 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines UDP Encapsulation TLV types and constants.
+ * Defines UDP Encapsulation TLV types and constants.
  *
  */
 typedef TlvInfo<MeshCoP::Tlv::kUdpEncapsulation> UdpEncapsulationTlv;
 
 /**
- * This class represents UDP Encapsulation TLV value header (source and destination ports).
+ * Represents UDP Encapsulation TLV value header (source and destination ports).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1786,7 +1786,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Discovery Request TLV generation and parsing.
+ * Implements Discovery Request TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1871,7 +1871,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Discovery Response TLV generation and parsing.
+ * Implements Discovery Response TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1985,7 +1985,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Joiner Advertisement TLV generation and parsing.
+ * Implements Joiner Advertisement TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN

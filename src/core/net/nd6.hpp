@@ -61,7 +61,7 @@ namespace Nd {
 typedef NetworkData::RoutePreference RoutePreference; ///< Route Preference
 
 /**
- * This class represents the variable length options in Neighbor Discovery messages.
+ * Represents the variable length options in Neighbor Discovery messages.
  *
  * @sa PrefixInfoOption
  * @sa RouteInfoOption
@@ -167,7 +167,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents the Prefix Information Option.
+ * Represents the Prefix Information Option.
  *
  * See section 4.6.2 of RFC 4861 for definition of this option [https://tools.ietf.org/html/rfc4861#section-4.6.2]
  *
@@ -324,7 +324,7 @@ private:
 static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structure");
 
 /**
- * This class represents the Route Information Option.
+ * Represents the Route Information Option.
  *
  * See section 2.3 of RFC 4191 for definition of this option. [https://tools.ietf.org/html/rfc4191#section-2.3]
  *
@@ -459,14 +459,14 @@ private:
 static_assert(sizeof(RouteInfoOption) == 8, "invalid RouteInfoOption structure");
 
 /**
- * This class represents a Router Advertisement message.
+ * Represents a Router Advertisement message.
  *
  */
 class RouterAdvertMessage
 {
 public:
     /**
-     * This class implements the RA message header.
+     * Implements the RA message header.
      *
      * See section 2.2 of RFC 4191 [https://datatracker.ietf.org/doc/html/rfc4191]
      *
@@ -676,7 +676,7 @@ private:
 };
 
 /**
- * This class implements the Router Solicitation message.
+ * Implements the Router Solicitation message.
  *
  * See section 4.1 of RFC 4861 for definition of this message.
  * https://tools.ietf.org/html/rfc4861#section-4.1
@@ -699,7 +699,7 @@ private:
 static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
 
 /**
- * This class represents a Neighbor Solicitation (NS) message.
+ * Represents a Neighbor Solicitation (NS) message.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -768,7 +768,7 @@ private:
 static_assert(sizeof(NeighborSolicitMessage) == 24, "Invalid NeighborSolicitMessage definition");
 
 /**
- * This class represents a Neighbor Advertisement (NA) message.
+ * Represents a Neighbor Advertisement (NA) message.
  *
  */
 OT_TOOL_PACKED_BEGIN

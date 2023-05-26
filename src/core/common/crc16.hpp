@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This class implements CRC16 computations.
+ * Implements CRC16 computations.
  *
  */
 class Crc16

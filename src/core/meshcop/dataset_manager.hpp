@@ -183,7 +183,7 @@ public:
 
 protected:
     /**
-     * This class defines a generic Dataset TLV to read from a message.
+     * Defines a generic Dataset TLV to read from a message.
      *
      */
     OT_TOOL_PACKED_BEGIN

@@ -53,7 +53,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF) [RFC5869] using SHA-256.
+ * Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF) [RFC5869] using SHA-256.
  *
  */
 class HkdfSha256

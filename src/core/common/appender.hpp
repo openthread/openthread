@@ -48,7 +48,7 @@ namespace ot {
  * The `Appender` class acts as a wrapper over either a `Message` or a data buffer and provides different flavors of
  * `Append()` method.
  *
- * This class helps in construction of message content where the destination can be either a `Message` or a buffer.
+ * Helps in construction of message content where the destination can be either a `Message` or a buffer.
  *
  */
 class Appender

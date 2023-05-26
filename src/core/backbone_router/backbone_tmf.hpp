@@ -47,7 +47,7 @@ namespace BackboneRouter {
 constexpr uint16_t kBackboneUdpPort = 61631; ///< Backbone TMF UDP Port
 
 /**
- * This class implements functionality of the Backbone TMF agent.
+ * Implements functionality of the Backbone TMF agent.
  *
  */
 class BackboneTmfAgent : public Coap::Coap

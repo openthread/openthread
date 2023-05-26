@@ -56,7 +56,7 @@ namespace Utils {
 #endif
 
 /**
- * This class represents the SRP client buffers and service pool.
+ * Represents the SRP client buffers and service pool.
  *
  */
 class SrpClientBuffers : public InstanceLocator, private NonCopyable
@@ -105,7 +105,7 @@ public:
     static constexpr uint16_t kTxtBufferSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE;
 
     /**
-     * This class represents a SRP client service entry from the pool.
+     * Represents a SRP client service entry from the pool.
      *
      */
     class ServiceEntry : public otSrpClientBuffersServiceEntry, public Clearable<ServiceEntry>

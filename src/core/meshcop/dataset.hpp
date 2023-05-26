@@ -53,7 +53,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class represents MeshCop Dataset.
+ * Represents MeshCop Dataset.
  *
  */
 class Dataset
@@ -76,7 +76,7 @@ public:
     };
 
     /**
-     * This class represents presence of different components in Active or Pending Operational Dataset.
+     * Represents presence of different components in Active or Pending Operational Dataset.
      *
      */
     class Components : public otOperationalDatasetComponents, public Clearable<Components>

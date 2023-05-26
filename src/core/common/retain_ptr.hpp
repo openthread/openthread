@@ -173,7 +173,7 @@ private:
 };
 
 /**
- * This class provides mechanism to track retain count.
+ * Provides mechanism to track retain count.
  *
  */
 class RetainCountable

@@ -50,7 +50,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class represents a name string as data (pointer to a char buffer along with a length).
+ * Represents a name string as data (pointer to a char buffer along with a length).
  *
  * @note The char array does NOT need to be null terminated.
  *
@@ -186,7 +186,7 @@ typedef NetworkName DomainName;
 #endif
 
 /**
- * This class manages the Network Name value.
+ * Manages the Network Name value.
  *
  */
 class NetworkNameManager : public InstanceLocator, private NonCopyable

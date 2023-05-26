@@ -70,7 +70,7 @@ extern "C" void otPlatDsoHandleReceive(otPlatDsoConnection *aConnection, otMessa
 extern "C" void otPlatDsoHandleDisconnected(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode);
 
 /**
- * This class implements DNS Stateful Operations (DSO).
+ * Implements DNS Stateful Operations (DSO).
  *
  */
 class Dso : public InstanceLocator, private NonCopyable
@@ -126,7 +126,7 @@ public:
     static constexpr uint32_t kMinServerInactivityWaitTime = TimeMilli::SecToMsec(5);
 
     /**
-     * This class represents a DSO TLV.
+     * Represents a DSO TLV.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -183,7 +183,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This class represents a DSO connection to a peer.
+     * Represents a DSO connection to a peer.
      *
      */
     class Connection : public otPlatDsoConnection,
@@ -243,7 +243,7 @@ public:
         };
 
         /**
-         * This class defines the callback functions used by a `Connection`.
+         * Defines the callback functions used by a `Connection`.
          *
          */
         class Callbacks

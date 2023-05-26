@@ -68,7 +68,7 @@ class Ip6;
  */
 
 /**
- * This class implements an IPv6 network interface.
+ * Implements an IPv6 network interface.
  *
  */
 class Netif : public InstanceLocator, private NonCopyable
@@ -102,7 +102,7 @@ public:
     };
 
     /**
-     * This class implements an IPv6 network interface unicast address.
+     * Implements an IPv6 network interface unicast address.
      *
      */
     class UnicastAddress : public otNetifAddress,
@@ -220,7 +220,7 @@ public:
     };
 
     /**
-     * This class implements an IPv6 network interface multicast address.
+     * Implements an IPv6 network interface multicast address.
      *
      */
     class MulticastAddress : public otNetifMulticastAddress,
@@ -273,7 +273,7 @@ public:
 
     public:
         /**
-         * This class represents an iterator for iterating external multicast addresses in a `Netif` instance.
+         * Represents an iterator for iterating external multicast addresses in a `Netif` instance.
          *
          */
         class Iterator : public ItemPtrIterator<ExternalMulticastAddress, Iterator>

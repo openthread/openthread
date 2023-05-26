@@ -138,7 +138,7 @@ private:
 };
 
 /**
- * This class implements CoAP resource handling.
+ * Implements CoAP resource handling.
  *
  */
 class Resource : public otCoapResource, public LinkedListEntry<Resource>
@@ -183,7 +183,7 @@ protected:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 /**
- * This class implements CoAP block-wise resource handling.
+ * Implements CoAP block-wise resource handling.
  *
  */
 class ResourceBlockWise : public otCoapBlockwiseResource
@@ -277,7 +277,7 @@ protected:
 #endif
 
 /**
- * This class caches CoAP responses to implement message deduplication.
+ * Caches CoAP responses to implement message deduplication.
  *
  */
 class ResponsesQueue
@@ -358,7 +358,7 @@ private:
 };
 
 /**
- * This class implements the CoAP client and server.
+ * Implements the CoAP client and server.
  *
  */
 class CoapBase : public InstanceLocator, private NonCopyable
@@ -961,7 +961,7 @@ private:
 };
 
 /**
- * This class implements the CoAP client and server.
+ * Implements the CoAP client and server.
  *
  */
 class Coap : public CoapBase

@@ -54,7 +54,7 @@ class MeshForwarder;
 namespace Mle {
 
 /**
- * This class implements MLE Discover Scan.
+ * Implements MLE Discover Scan.
  *
  */
 class DiscoverScanner : public InstanceLocator, private NonCopyable

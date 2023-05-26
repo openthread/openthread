@@ -156,7 +156,7 @@ inline RoutePreference RoutePreferenceFromValue(uint8_t aValue)
 inline const char *RoutePreferenceToString(RoutePreference aPreference) { return Preference::ToString(aPreference); }
 
 /**
- * This class represents an On-mesh Prefix (Border Router) configuration.
+ * Represents an On-mesh Prefix (Border Router) configuration.
  *
  */
 class OnMeshPrefixConfig : public otBorderRouterConfig,
@@ -217,7 +217,7 @@ private:
 };
 
 /**
- * This class represents an External Route configuration.
+ * Represents an External Route configuration.
  *
  */
 class ExternalRouteConfig : public otExternalRouteConfig,
@@ -278,7 +278,7 @@ private:
 };
 
 /**
- * This class represents 6LoWPAN Context ID information associated with a prefix in Network Data.
+ * Represents 6LoWPAN Context ID information associated with a prefix in Network Data.
  *
  */
 class LowpanContextInfo : public otLowpanContextInfo, public Clearable<LowpanContextInfo>
@@ -300,7 +300,7 @@ private:
 };
 
 /**
- * This class represents a Service Data.
+ * Represents a Service Data.
  *
  */
 class ServiceData : public Data<kWithUint8Length>
@@ -308,7 +308,7 @@ class ServiceData : public Data<kWithUint8Length>
 };
 
 /**
- * This class represents a Server Data.
+ * Represents a Server Data.
  *
  */
 class ServerData : public Data<kWithUint8Length>
@@ -325,7 +325,7 @@ class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>, p
 
 public:
     /**
-     * This class represents a Server configuration.
+     * Represents a Server configuration.
      *
      */
     class ServerConfig : public otServerConfig, public Unequatable<ServerConfig>

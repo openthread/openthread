@@ -87,7 +87,7 @@ class LinkRaw;
 #endif
 
 /**
- * This class implements the IEEE 802.15.4 MAC (sub-MAC).
+ * Implements the IEEE 802.15.4 MAC (sub-MAC).
  *
  * Sub-MAC layer implements a subset of IEEE802.15.4 MAC primitives which are shared by both MAC layer (in FTD/MTD
  * modes) and Raw Link (Radio only mode).
@@ -110,7 +110,7 @@ class SubMac : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class defines the callbacks notifying `SubMac` user of changes and events.
+     * Defines the callbacks notifying `SubMac` user of changes and events.
      *
      */
     class Callbacks : public InstanceLocator

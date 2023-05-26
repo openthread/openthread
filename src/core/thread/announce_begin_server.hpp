@@ -45,7 +45,7 @@
 namespace ot {
 
 /**
- * This class implements handling Announce Begin Requests.
+ * Implements handling Announce Begin Requests.
  *
  */
 class AnnounceBeginServer : public AnnounceSenderBase

@@ -62,7 +62,7 @@ constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 typedef Coap::Message Message; ///< A TMF message.
 
 /**
- * This class represents message information for a TMF message.
+ * Represents message information for a TMF message.
  *
  * This is sub-class of `Ip6::MessageInfo` intended for use when sending TMF messages.
  *
@@ -140,7 +140,7 @@ public:
 };
 
 /**
- * This class implements functionality of the Thread TMF agent.
+ * Implements functionality of the Thread TMF agent.
  *
  */
 class Agent : public Coap::Coap
@@ -217,7 +217,7 @@ private:
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 /**
- * This class implements functionality of the secure TMF agent.
+ * Implements functionality of the secure TMF agent.
  *
  */
 class SecureAgent : public Coap::CoapSecure

@@ -73,7 +73,7 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 
 /**
- * This class implements DNS header generation and parsing.
+ * Implements DNS header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -416,7 +416,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements DNS Update message header generation and parsing.
+ * Implements DNS Update message header generation and parsing.
  *
  * The DNS header specifies record counts for its four sections: Question, Answer, Authority, and Additional. A DNS
  * Update header uses the same fields, and the same section formats, but the naming and use of these sections differs:
@@ -484,7 +484,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a DNS name and implements helper methods for encoding/decoding of DNS Names.
+ * Represents a DNS name and implements helper methods for encoding/decoding of DNS Names.
  *
  */
 class Name : public Clearable<Name>
@@ -1083,7 +1083,7 @@ public:
     static constexpr uint8_t kMaxKeyLength = OT_DNS_TXT_KEY_MAX_LENGTH;
 
     /**
-     * This class represents an iterator for TXT record entries (key/value pairs).
+     * Represents an iterator for TXT record entries (key/value pairs).
      *
      */
     class Iterator : public otDnsTxtEntryIterator
@@ -1217,7 +1217,7 @@ private:
 };
 
 /**
- * This class implements Resource Record (RR) body format.
+ * Implements Resource Record (RR) body format.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1506,7 +1506,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of A type.
+ * Implements Resource Record body format of A type.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1548,7 +1548,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of CNAME type.
+ * Implements Resource Record body format of CNAME type.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1599,7 +1599,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of PTR type.
+ * Implements Resource Record body format of PTR type.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1684,7 +1684,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of TXT type.
+ * Implements Resource Record body format of TXT type.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1742,7 +1742,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of AAAA type.
+ * Implements Resource Record body format of AAAA type.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1792,7 +1792,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of SRV type (RFC 2782).
+ * Implements Resource Record body format of SRV type (RFC 2782).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -1898,7 +1898,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Resource Record body format of KEY type (RFC 2535).
+ * Implements Resource Record body format of KEY type (RFC 2535).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -2113,7 +2113,7 @@ private:
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 /**
- * This class implements Resource Record body format of SIG type (RFC 2535 - section-4.1).
+ * Implements Resource Record body format of SIG type (RFC 2535 - section-4.1).
  *
  *
  */
@@ -2301,7 +2301,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements DNS OPT Pseudo Resource Record header for EDNS(0) (RFC 6891 - Section 6.1).
+ * Implements DNS OPT Pseudo Resource Record header for EDNS(0) (RFC 6891 - Section 6.1).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -2425,7 +2425,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements the body of an Option in OPT Pseudo Resource Record (RFC 6981 - Section 6.1).
+ * Implements the body of an Option in OPT Pseudo Resource Record (RFC 6981 - Section 6.1).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -2482,7 +2482,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements an Update Lease Option body.
+ * Implements an Update Lease Option body.
  *
  * This implementation is intended for use in Dynamic DNS Update Lease Requests and Responses as specified in
  * https://tools.ietf.org/html/draft-sekar-dns-ul-02.
@@ -2581,7 +2581,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Question format.
+ * Implements Question format.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -2642,7 +2642,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Zone section body for DNS Update (RFC 2136 - section 2.3).
+ * Implements Zone section body for DNS Update (RFC 2136 - section 2.3).
  *
  */
 OT_TOOL_PACKED_BEGIN

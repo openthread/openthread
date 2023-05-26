@@ -77,7 +77,7 @@ namespace ot {
  */
 
 /**
- * This class implements managing DUA.
+ * Implements managing DUA.
  *
  */
 class DuaManager : public InstanceLocator, private NonCopyable

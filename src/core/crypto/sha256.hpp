@@ -62,7 +62,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements SHA-256 computation.
+ * Implements SHA-256 computation.
  *
  */
 class Sha256

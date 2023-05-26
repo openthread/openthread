@@ -231,7 +231,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents an IEEE 802.15.4 Short or Extended Address.
+ * Represents an IEEE 802.15.4 Short or Extended Address.
  *
  */
 class Address
@@ -432,7 +432,7 @@ struct PanIds
 };
 
 /**
- * This class represents a MAC key.
+ * Represents a MAC key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -458,7 +458,7 @@ public:
 typedef otMacKeyRef KeyRef;
 
 /**
- * This class represents a MAC Key Material.
+ * Represents a MAC Key Material.
  *
  */
 class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
@@ -596,7 +596,7 @@ constexpr uint8_t kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4
                                     ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0));
 
 /**
- * This class represents a set of radio links.
+ * Represents a set of radio links.
  *
  */
 class RadioTypes
@@ -746,7 +746,7 @@ const char *RadioTypeToString(RadioType aRadioType);
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
 /**
- * This class represents Link Frame Counters for all supported radio links.
+ * Represents Link Frame Counters for all supported radio links.
  *
  */
 class LinkFrameCounters
@@ -877,7 +877,7 @@ private:
 };
 
 /**
- * This class represents CSL accuracy.
+ * Represents CSL accuracy.
  *
  */
 class CslAccuracy

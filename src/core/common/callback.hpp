@@ -53,7 +53,7 @@ enum CallbackContextPosition : uint8_t
 };
 
 /**
- * This class is the base class for `Callback` (a function pointer handler and a `void *` context).
+ * Is the base class for `Callback` (a function pointer handler and a `void *` context).
  *
  * @tparam HandlerType    The handler function pointer type.
  *
@@ -132,7 +132,7 @@ protected:
 };
 
 /**
- * This class represents a `Callback` (a function pointer handler and a `void *` context).
+ * Represents a `Callback` (a function pointer handler and a `void *` context).
  *
  * The context is passed as one of the arguments to the function pointer handler when invoked.
  *

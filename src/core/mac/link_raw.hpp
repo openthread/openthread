@@ -50,7 +50,7 @@ namespace ot {
 namespace Mac {
 
 /**
- * This class defines the raw link-layer object.
+ * Defines the raw link-layer object.
  *
  */
 class LinkRaw : public InstanceLocator, private NonCopyable

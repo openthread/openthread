@@ -69,7 +69,7 @@ namespace ot {
 namespace BorderRouter {
 
 /**
- * This class implements bi-directional routing between Thread and Infrastructure networks.
+ * Implements bi-directional routing between Thread and Infrastructure networks.
  *
  * The Border Routing manager works on both Thread interface and infrastructure interface.
  * All ICMPv6 messages are sent/received on the infrastructure interface.

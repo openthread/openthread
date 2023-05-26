@@ -41,7 +41,7 @@ namespace Posix {
 namespace Mainloop {
 
 /**
- * This class is the base for all mainloop event sources.
+ * Is the base for all mainloop event sources.
  *
  */
 class Source
@@ -76,7 +76,7 @@ private:
 };
 
 /**
- * This class manages mainloop.
+ * Manages mainloop.
  *
  */
 class Manager

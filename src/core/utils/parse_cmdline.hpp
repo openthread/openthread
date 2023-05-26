@@ -299,7 +299,7 @@ otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
 otError ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer);
 
 /**
- * This class represents a single argument from an argument list.
+ * Represents a single argument from an argument list.
  *
  */
 class Arg

@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Commissioner CLI interpreter.
+ * Implements the Commissioner CLI interpreter.
  *
  */
 class Commissioner : private Output

@@ -57,7 +57,7 @@ namespace Utils {
  */
 
 /**
- * This class implements the SLAAC utility for Thread protocol.
+ * Implements the SLAAC utility for Thread protocol.
  *
  */
 class Slaac : public InstanceLocator, private NonCopyable

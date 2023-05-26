@@ -51,7 +51,7 @@
 namespace ot {
 
 /**
- * This class implements OpenThread Time Synchronization Service.
+ * Implements OpenThread Time Synchronization Service.
  *
  */
 class TimeSync : public InstanceLocator, private NonCopyable

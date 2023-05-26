@@ -59,7 +59,7 @@ namespace Utils {
  */
 
 /**
- * This class implements the channel monitoring logic.
+ * Implements the channel monitoring logic.
  *
  * Channel Monitoring will periodically monitor all channels to help determine the cleaner channels (channels
  * with less interference).

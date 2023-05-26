@@ -42,7 +42,7 @@
 namespace ot {
 
 /**
- * This class represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
+ * Represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
  *
  * It provide helper method to parse the content. As data is parsed and read, the `FrameData` is updated to skip over
  * the read content.

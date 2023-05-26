@@ -65,7 +65,7 @@ namespace ot {
  */
 
 /**
- * This class represents Security Policy Rotation and Flags.
+ * Represents Security Policy Rotation and Flags.
  *
  */
 class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
@@ -131,7 +131,7 @@ private:
 };
 
 /**
- * This class represents a Thread Network Key.
+ * Represents a Thread Network Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -162,7 +162,7 @@ typedef otNetworkKeyRef NetworkKeyRef;
 #endif
 
 /**
- * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
+ * Represents a Thread Pre-Shared Key for the Commissioner (PSKc).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -192,20 +192,20 @@ typedef otPskcRef PskcRef;
 
 /**
  *
- * This class represents a Key Encryption Key (KEK).
+ * Represents a Key Encryption Key (KEK).
  *
  */
 typedef Mac::Key Kek;
 
 /**
  *
- * This class represents a Key Material for Key Encryption Key (KEK).
+ * Represents a Key Material for Key Encryption Key (KEK).
  *
  */
 typedef Mac::KeyMaterial KekKeyMaterial;
 
 /**
- * This class defines Thread Key Manager.
+ * Defines Thread Key Manager.
  *
  */
 class KeyManager : public InstanceLocator, private NonCopyable

@@ -152,7 +152,7 @@ class PriorityQueue;
 class ThreadLinkInfo;
 
 /**
- * This class represents a Message buffer.
+ * Represents a Message buffer.
  *
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
@@ -257,7 +257,7 @@ static_assert(sizeof(Buffer) >= kBufferSize,
               "Buffer size is not valid. Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
 /**
- * This class represents a message.
+ * Represents a message.
  *
  */
 class Message : public otMessage, public Buffer, public GetProvider<Message>
@@ -348,7 +348,7 @@ public:
     };
 
     /**
-     * This class represents settings used for creating a new message.
+     * Represents settings used for creating a new message.
      *
      */
     class Settings : public otMessageSettings
@@ -1419,7 +1419,7 @@ private:
 };
 
 /**
- * This class implements a message queue.
+ * Implements a message queue.
  *
  */
 class MessageQueue : public otMessageQueue
@@ -1533,7 +1533,7 @@ private:
 };
 
 /**
- * This class implements a priority queue.
+ * Implements a priority queue.
  *
  */
 class PriorityQueue : private Clearable<PriorityQueue>
@@ -1680,7 +1680,7 @@ private:
 };
 
 /**
- * This class represents a message pool
+ * Represents a message pool
  *
  */
 class MessagePool : public InstanceLocator, private NonCopyable

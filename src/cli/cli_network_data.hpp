@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Network Data CLI.
+ * Implements the Network Data CLI.
  *
  */
 class NetworkData : private Output

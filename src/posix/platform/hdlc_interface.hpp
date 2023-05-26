@@ -46,7 +46,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class defines an HDLC interface to the Radio Co-processor (RCP)
+ * Defines an HDLC interface to the Radio Co-processor (RCP)
  *
  */
 class HdlcInterface

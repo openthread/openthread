@@ -48,7 +48,7 @@ namespace ot {
 namespace Random {
 
 /**
- * This class manages random number generator initialization/deinitialization.
+ * Manages random number generator initialization/deinitialization.
  *
  */
 class Manager : private NonCopyable

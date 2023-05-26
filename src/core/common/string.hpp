@@ -291,7 +291,7 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 }
 
 /**
- * This class implements writing to a string buffer.
+ * Implements writing to a string buffer.
  *
  */
 class StringWriter
@@ -395,7 +395,7 @@ private:
 };
 
 /**
- * This class defines a fixed-size string.
+ * Defines a fixed-size string.
  *
  */
 template <uint16_t kSize> class String : public StringWriter
@@ -425,7 +425,7 @@ private:
 };
 
 /**
- * This class provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
+ * Provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
  * string using binary search in a lookup table.
  *
  */
@@ -433,7 +433,7 @@ class Stringify : public BinarySearch
 {
 public:
     /**
-     * This class represents a entry in the lookup table.
+     * Represents a entry in the lookup table.
      *
      */
     class Entry

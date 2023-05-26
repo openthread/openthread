@@ -91,7 +91,7 @@ protected:
 };
 
 /**
- * This class implements a locator for an OpenThread Instance object.
+ * Implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
  * to get to its owning/parent OpenThread `Instance` and also any other `Type` within the `Instance` member variable
@@ -142,7 +142,7 @@ private:
 };
 
 /**
- * This class implements a locator for an OpenThread Instance object.
+ * Implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocatorInit` is similar to `InstanceLocator` but provides a default constructor (instead of a
  * parameterized one) and allows an inheriting class to initialize the object (set the OpenThread Instance) post

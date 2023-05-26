@@ -69,7 +69,7 @@ const char *StateToString(State aState);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
- * This class implements the NAT64 translator.
+ * Implements the NAT64 translator.
  *
  */
 class Translator : public InstanceLocator, private NonCopyable

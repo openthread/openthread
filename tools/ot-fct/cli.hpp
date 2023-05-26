@@ -47,7 +47,7 @@ namespace Fct {
 class Cli;
 
 /**
- * This class implements the factory CLI.
+ * Implements the factory CLI.
  *
  */
 class Cli

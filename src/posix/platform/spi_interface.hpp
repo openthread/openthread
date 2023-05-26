@@ -50,7 +50,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class defines an SPI interface to the Radio Co-processor (RCP).
+ * Defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
 class SpiInterface

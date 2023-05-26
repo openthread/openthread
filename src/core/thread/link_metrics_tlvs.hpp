@@ -53,7 +53,7 @@ namespace LinkMetrics {
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class defines constants related to Link Metrics Sub-TLVs.
+ * Defines constants related to Link Metrics Sub-TLVs.
  *
  */
 class SubTlv
@@ -75,7 +75,7 @@ public:
 };
 
 /**
- * This class defines Link Metrics Query ID Sub-TLV constants and types.
+ * Defines Link Metrics Query ID Sub-TLV constants and types.
  *
  */
 typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
@@ -87,7 +87,7 @@ typedef UintTlvInfo<SubTlv::kQueryId, uint8_t> QueryIdSubTlv;
 typedef UintTlvInfo<SubTlv::kStatus, uint8_t> StatusSubTlv;
 
 /**
- * This class implements Link Metrics Report Sub-TLV generation and parsing.
+ * Implements Link Metrics Report Sub-TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -177,7 +177,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Link Metrics Query Options Sub-TLV generation and parsing.
+ * Implements Link Metrics Query Options Sub-TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -206,7 +206,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Link Metrics Forward Probing Registration Sub-TLV.
+ * Defines Link Metrics Forward Probing Registration Sub-TLV.
  *
  */
 OT_TOOL_PACKED_BEGIN

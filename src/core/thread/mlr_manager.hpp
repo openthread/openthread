@@ -71,7 +71,7 @@ namespace ot {
  */
 
 /**
- * This class implements MLR management.
+ * Implements MLR management.
  *
  */
 class MlrManager : public InstanceLocator, private NonCopyable

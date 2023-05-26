@@ -59,9 +59,9 @@ namespace ot {
 class Settings;
 
 /**
- * This class defines the base class used by `Settings` and `Settings::ChildInfoIterator`.
+ * Defines the base class used by `Settings` and `Settings::ChildInfoIterator`.
  *
- * This class provides structure definitions for different settings keys.
+ * Provides structure definitions for different settings keys.
  *
  */
 class SettingsBase : public InstanceLocator
@@ -514,7 +514,7 @@ public:
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     /**
-     * This class defines constants and types for SLAAC IID Secret key settings.
+     * Defines constants and types for SLAAC IID Secret key settings.
      *
      */
     class SlaacIidSecretKey
@@ -574,7 +574,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This class defines constants and types for BR ULA prefix settings.
+     * Defines constants and types for BR ULA prefix settings.
      *
      */
     class BrUlaPrefix
@@ -589,7 +589,7 @@ public:
     };
 
     /**
-     * This class represents a BR on-link prefix entry for settings storage.
+     * Represents a BR on-link prefix entry for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -649,7 +649,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     /**
-     * This class defines constants and types for SRP ECDSA key settings.
+     * Defines constants and types for SRP ECDSA key settings.
      *
      */
     class SrpEcdsaKey
@@ -834,7 +834,7 @@ protected:
 };
 
 /**
- * This class defines methods related to non-volatile storage of settings.
+ * Defines methods related to non-volatile storage of settings.
  *
  */
 class Settings : public SettingsBase, private NonCopyable
@@ -1068,7 +1068,7 @@ public:
     ChildInfoIteratorBuilder IterateChildInfo(void) { return ChildInfoIteratorBuilder(GetInstance()); }
 
     /**
-     * This class defines an iterator to access all Child Info entries in the settings.
+     * Defines an iterator to access all Child Info entries in the settings.
      *
      */
     class ChildInfoIterator : public SettingsBase, public Unequatable<ChildInfoIterator>

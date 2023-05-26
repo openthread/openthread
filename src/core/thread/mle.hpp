@@ -95,7 +95,7 @@ namespace Mle {
  */
 
 /**
- * This class implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
+ * Implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
  *
  */
 class Mle : public InstanceLocator, private NonCopyable
@@ -921,7 +921,7 @@ protected:
     };
 
     /**
-     * This class represents an MLE Tx message.
+     * Represents an MLE Tx message.
      *
      */
     class TxMessage : public Message
@@ -1290,7 +1290,7 @@ protected:
     };
 
     /**
-     * This class represents an MLE Rx message.
+     * Represents an MLE Rx message.
      *
      */
     class RxMessage : public Message

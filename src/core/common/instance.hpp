@@ -154,9 +154,9 @@ typedef struct otInstance
 namespace ot {
 
 /**
- * This class represents an OpenThread instance.
+ * Represents an OpenThread instance.
  *
- * This class contains all the components used by OpenThread.
+ * Contains all the components used by OpenThread.
  *
  */
 class Instance : public otInstance, private NonCopyable

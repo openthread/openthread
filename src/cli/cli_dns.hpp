@@ -60,7 +60,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the DNS CLI interpreter.
+ * Implements the DNS CLI interpreter.
  *
  */
 class Dns : private Output

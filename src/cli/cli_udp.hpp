@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements a CLI-based UDP example.
+ * Implements a CLI-based UDP example.
  *
  */
 class UdpExample : private Output

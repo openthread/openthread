@@ -55,7 +55,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements CSL tx scheduling functionality.
+ * Implements CSL tx scheduling functionality.
  *
  */
 class CslTxScheduler : public InstanceLocator, private NonCopyable
@@ -67,7 +67,7 @@ public:
     static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This class defines all the child info required for scheduling CSL transmissions.
+     * Defines all the child info required for scheduling CSL transmissions.
      *
      * `Child` class publicly inherits from this class.
      *
@@ -114,7 +114,7 @@ public:
     };
 
     /**
-     * This class defines the callbacks used by the `CslTxScheduler`.
+     * Defines the callbacks used by the `CslTxScheduler`.
      *
      */
     class Callbacks : public InstanceLocator

@@ -82,14 +82,14 @@ namespace Ip6 {
  */
 
 /**
- * This class implements TCP message handling.
+ * Implements TCP message handling.
  *
  */
 class Tcp : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This class represents an endpoint of a TCP/IPv6 connection.
+     * Represents an endpoint of a TCP/IPv6 connection.
      *
      */
     class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>, public GetProvider<Endpoint>
@@ -408,7 +408,7 @@ public:
     };
 
     /**
-     * This class represents a TCP/IPv6 listener.
+     * Represents a TCP/IPv6 listener.
      *
      */
     class Listener : public otTcpListener, public LinkedListEntry<Listener>, public GetProvider<Listener>
@@ -535,7 +535,7 @@ public:
     };
 
     /**
-     * This class implements TCP header parsing.
+     * Implements TCP header parsing.
      *
      */
     OT_TOOL_PACKED_BEGIN

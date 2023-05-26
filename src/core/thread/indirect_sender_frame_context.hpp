@@ -50,7 +50,7 @@ namespace ot {
  */
 
 /**
- * This class defines the `FrameContext` type.
+ * Defines the `FrameContext` type.
  *
  * This is the base class for `IndirectSender`.
  *

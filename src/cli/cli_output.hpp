@@ -72,7 +72,7 @@ constexpr static CommandId Cmd(const char *aString)
 class Output;
 
 /**
- * This class implements the basic output functions.
+ * Implements the basic output functions.
  *
  */
 class OutputImplementer
@@ -110,7 +110,7 @@ private:
 };
 
 /**
- * This class provides CLI output helper methods.
+ * Provides CLI output helper methods.
  *
  */
 class Output

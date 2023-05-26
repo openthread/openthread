@@ -68,7 +68,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements mbedTLS memory.
+ * Implements mbedTLS memory.
  *
  */
 class MbedTls : private NonCopyable

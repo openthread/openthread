@@ -64,14 +64,14 @@ using ot::Encoding::BigEndian::HostSwap16;
 class Headers;
 
 /**
- * This class implements ICMPv6.
+ * Implements ICMPv6.
  *
  */
 class Icmp : public InstanceLocator, private NonCopyable
 {
 public:
     /*
-     * This class implements ICMPv6 header generation and parsing.
+     * Implements ICMPv6 header generation and parsing.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -202,7 +202,7 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
-     * This class implements ICMPv6 message handlers.
+     * Implements ICMPv6 message handlers.
      *
      */
     class Handler : public otIcmp6Handler, public LinkedListEntry<Handler>
