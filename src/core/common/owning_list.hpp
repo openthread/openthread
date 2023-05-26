@@ -43,7 +43,7 @@
 namespace ot {
 
 /**
- * This template class represents a singly linked list which owns its entries and frees them upon destruction of the
+ * Represents a singly linked list which owns its entries and frees them upon destruction of the
  * list.
  *
  */

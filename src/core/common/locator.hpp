@@ -59,7 +59,7 @@ extern uint64_t gInstanceRaw[];
  */
 
 /**
- * This template class implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
+ * Implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
  * instance.
  *
  * Users of this class MUST follow CRTP-style inheritance, i.e., the class `Class` itself should publicly inherit

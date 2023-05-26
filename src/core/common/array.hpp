@@ -101,7 +101,7 @@ template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(c
 }
 
 /**
- * This template class represents an array of elements with a fixed max size.
+ * Represents an array of elements with a fixed max size.
  *
  * @tparam Type        The array element type.
  * @tparam kMaxSize    Specifies the max array size (maximum number of elements in the array).

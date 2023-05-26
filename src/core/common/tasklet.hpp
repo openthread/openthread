@@ -150,7 +150,7 @@ private:
 };
 
 /**
- * This template class defines a tasklet owned by specific type and using a method on owner type as the callback.
+ * Defines a tasklet owned by specific type and using a method on owner type as the callback.
  *
  * @tparam Owner              The type of owner of this tasklet.
  * @tparam HandleTaskletPtr   A pointer to a non-static member method of `Owner` to use as tasklet handler.

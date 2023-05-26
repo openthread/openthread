@@ -45,7 +45,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This template class defines a `Heap::Allocatable` object.
+ * Defines a `Heap::Allocatable` object.
  *
  * `Heap::Allocatable` provides methods to allocate and free instances of `Type` on heap.
  *

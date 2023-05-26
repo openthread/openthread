@@ -55,7 +55,7 @@ namespace ot {
  */
 
 /**
- * This template class represents a linked list entry.
+ * Represents a linked list entry.
  *
  * Provides methods to `GetNext()` and `SetNext()` in the linked list entry.
  *
@@ -95,7 +95,7 @@ public:
 };
 
 /**
- * This template class represents a singly linked list.
+ * Represents a singly linked list.
  *
  * The template type `Type` should provide `GetNext()` and `SetNext()` methods (which can be realized by `Type`
  * inheriting from `LinkedListEntry<Type>` class).

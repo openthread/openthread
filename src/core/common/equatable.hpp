@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class defines an overload of operator `!=`.
+ * Defines an overload of operator `!=`.
  *
  * The `!=` implementation uses an existing `==` overload provided by the `Type` class.
  *
@@ -67,7 +67,7 @@ public:
 };
 
 /**
- * This template class defines overloads of operators `==` and `!=`.
+ * Defines overloads of operators `==` and `!=`.
  *
  * The `==` implementation simply compares all the bytes of two `Type` instances to be equal (using `memcmp()`).
  *

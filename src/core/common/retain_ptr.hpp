@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class represents a retain (reference counted) smart pointer.
+ * Represents a retain (reference counted) smart pointer.
  *
  * The `Type` class MUST provide mechanism to track its current retain count. It MUST provide the following three
  * methods:

@@ -55,7 +55,7 @@ class Instance;
  */
 
 /**
- * This template class represents an object pool.
+ * Represents an object pool.
  *
  * @tparam Type         The object type. Type should provide `GetNext() and `SetNext()` so that it can be added to a
  *                      linked list.

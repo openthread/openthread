@@ -42,7 +42,7 @@
 namespace ot {
 
 /**
- * This template class represents a wrapper over a pointer.
+ * Represents a wrapper over a pointer.
  *
  * This is intended as base class of `OwnedPtr` or `RetainPtr` providing common simple methods.
  *

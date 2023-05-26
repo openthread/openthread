@@ -247,7 +247,7 @@ protected:
 };
 
 /**
- * This template class defines a timer owned by a specific type and using a method on owner type as the callback.
+ * Defines a timer owned by a specific type and using a method on owner type as the callback.
  *
  * @tparam Owner              The type of the owner of this timer.
  * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.
@@ -408,7 +408,7 @@ protected:
 };
 
 /**
- * This template class defines a timer owned by a specific type and using a method on owner type as the callback.
+ * Defines a timer owned by a specific type and using a method on owner type as the callback.
  *
  * @tparam Owner              The type of the owner of this timer.
  * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.

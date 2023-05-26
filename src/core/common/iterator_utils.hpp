@@ -47,7 +47,7 @@ namespace ot {
  */
 
 /**
- * This template class is used as a base class for those item-pointer iterators.
+ * Is used as a base class for those item-pointer iterators.
  *
  * These iterators have common methods and operators like `Advance()` and `++` and hold a pointer to the
  * object.

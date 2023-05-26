@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class represents an owned smart pointer.
+ * Represents an owned smart pointer.
  *
  * `OwnedPtr` acts as sole owner of the object it manages. An `OwnedPtr` is non-copyable (copy constructor is deleted)
  * but the ownership can be transferred from one `OwnedPtr` to another using move semantics.
