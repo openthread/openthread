@@ -553,7 +553,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `Tlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -565,7 +565,7 @@ private:
 template <class TlvType> TlvType *As(Tlv *aTlv) { return static_cast<TlvType *>(aTlv); }
 
 /**
- * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `Tlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -577,7 +577,7 @@ template <class TlvType> TlvType *As(Tlv *aTlv) { return static_cast<TlvType *>(
 template <class TlvType> const TlvType *As(const Tlv *aTlv) { return static_cast<const TlvType *>(aTlv); }
 
 /**
- * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ * Casts a `Tlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -589,7 +589,7 @@ template <class TlvType> const TlvType *As(const Tlv *aTlv) { return static_cast
 template <class TlvType> TlvType &As(Tlv &aTlv) { return static_cast<TlvType &>(aTlv); }
 
 /**
- * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ * Casts a `Tlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *

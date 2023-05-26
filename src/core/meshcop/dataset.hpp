@@ -643,7 +643,7 @@ public:
     const Tlv *GetTlv(Tlv::Type aType) const;
 
     /**
-     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     * Returns a pointer to the TLV with a given template type `TlvType`
      *
      * @returns A pointer to the TLV or `nullptr` if none is found.
      *
@@ -654,7 +654,7 @@ public:
     }
 
     /**
-     * This template method returns a pointer to the TLV with a given template type `TlvType`
+     * Returns a pointer to the TLV with a given template type `TlvType`
      *
      * @returns A pointer to the TLV or `nullptr` if none is found.
      *
@@ -766,7 +766,7 @@ public:
     Error SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
 
     /**
-     * This template method sets a TLV with a given TLV Type and Value.
+     * Sets a TLV with a given TLV Type and Value.
      *
      * @tparam ValueType    The type of TLV's Value.
      *

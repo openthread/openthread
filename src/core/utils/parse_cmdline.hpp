@@ -529,7 +529,7 @@ public:
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
-     * This template method parses the argument as a specified value type.
+     * Parses the argument as a specified value type.
      *
      * @tparam Type               The value type.
      *
@@ -561,7 +561,7 @@ public:
     }
 
     /**
-     * This template method parses the argument as a hex string into a a given fixed size array.
+     * Parses the argument as a hex string into a a given fixed size array.
      *
      * Returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
      * If there are fewer or more bytes in hex string that @p kBufferSize, the parsed bytes (up to @p kBufferSize) are

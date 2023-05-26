@@ -108,7 +108,7 @@ public:
     OwnedPtr<Type> PopAfter(Type *aPrevEntry) { return OwnedPtr<Type>(LinkedList<Type>::PopAfter(aPrevEntry)); }
 
     /**
-     * This template method removes an entry matching a given entry indicator from the linked list.
+     * Removes an entry matching a given entry indicator from the linked list.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
@@ -130,7 +130,7 @@ public:
     }
 
     /**
-     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * Removes all entries in the list matching a given entry indicator from the list and adds
      * them to a new list.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries

@@ -369,7 +369,7 @@ public:
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
-     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
+     * Returns a reference to a given `Type` object belonging to the OpenThread instance.
      *
      * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
      *

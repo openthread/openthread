@@ -64,7 +64,7 @@ using ot::Encoding::BigEndian::HostSwap32;
 class NetworkDataTlv;
 
 /**
- * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
  *
@@ -76,7 +76,7 @@ class NetworkDataTlv;
 template <class TlvType> TlvType *As(NetworkDataTlv *aTlv) { return static_cast<TlvType *>(aTlv); }
 
 /**
- * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
  *
@@ -88,7 +88,7 @@ template <class TlvType> TlvType *As(NetworkDataTlv *aTlv) { return static_cast<
 template <class TlvType> const TlvType *As(const NetworkDataTlv *aTlv) { return static_cast<const TlvType *>(aTlv); }
 
 /**
- * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ * Casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
  *
@@ -100,7 +100,7 @@ template <class TlvType> const TlvType *As(const NetworkDataTlv *aTlv) { return 
 template <class TlvType> TlvType &As(NetworkDataTlv &aTlv) { return static_cast<TlvType &>(aTlv); }
 
 /**
- * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ * Casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
  *
@@ -779,7 +779,7 @@ public:
     }
 
     /**
-     * This template method searches in the sub-TLVs to find the first one matching a given TLV type.
+     * Searches in the sub-TLVs to find the first one matching a given TLV type.
      *
      * @tparam     SubTlvType    The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
@@ -792,7 +792,7 @@ public:
     }
 
     /**
-     * This template method searches in the sub-TLVs to find the first one matching a given TLV Type.
+     * Searches in the sub-TLVs to find the first one matching a given TLV Type.
      *
      * @tparam     SubTlvType   The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
@@ -805,7 +805,7 @@ public:
     }
 
     /**
-     * This template method searches in the sub-TLVs to find the first one matching a given TLV type and stable flag.
+     * Searches in the sub-TLVs to find the first one matching a given TLV type and stable flag.
      *
      * @tparam     SubTlvType    The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
@@ -820,7 +820,7 @@ public:
     }
 
     /**
-     * This template method searches in the sub-TLVs to find the first one matching a given TLV type and stable flag.
+     * Searches in the sub-TLVs to find the first one matching a given TLV type and stable flag.
      *
      * @tparam     SubTlvType   The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
@@ -1610,7 +1610,7 @@ public:
     }
 
     /**
-     * This template method iterates to the next TLV with a given type.
+     * Iterates to the next TLV with a given type.
      *
      * @tparam  TlvType The TLV Type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
@@ -1620,7 +1620,7 @@ public:
     template <typename TlvType> const TlvType *Iterate(void) { return As<TlvType>(Iterate(TlvType::kType)); }
 
     /**
-     * This template method iterates to the next TLV with a given type and stable flag.
+     * Iterates to the next TLV with a given type and stable flag.
      *
      * @tparam  TlvType The TLV Type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *

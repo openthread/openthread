@@ -265,7 +265,7 @@ public:
     bool HasSignaled(Event aEvent) const { return mSignaledEvents.Contains(aEvent); }
 
     /**
-     * This template method updates a variable of a type `Type` with a new value and signals the given event.
+     * Updates a variable of a type `Type` with a new value and signals the given event.
      *
      * If the variable is already set to the same value, this method returns `kErrorAlready` and the event is
      * signaled using `SignalIfFirst()` (i.e., signal is scheduled only if event has not been signaled before).

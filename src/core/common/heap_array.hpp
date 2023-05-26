@@ -430,7 +430,7 @@ public:
     bool Contains(const Type &aEntry) const { return Find(aEntry) != nullptr; }
 
     /**
-     * This template method finds the first element in the array matching a given indicator.
+     * Finds the first element in the array matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
@@ -451,7 +451,7 @@ public:
     }
 
     /**
-     * This template method finds the first element in the array matching a given indicator.
+     * Finds the first element in the array matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
@@ -483,7 +483,7 @@ public:
     }
 
     /**
-     * This template method indicates whether or not the array contains an element matching a given indicator.
+     * Indicates whether or not the array contains an element matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each

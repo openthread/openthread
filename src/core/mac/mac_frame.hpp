@@ -929,7 +929,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
-     * This template method appends an Header IE at specified index in this frame.
+     * Appends an Header IE at specified index in this frame.
      *
      * Also sets the IE present bit in the Frame Control Field (FCF).
      *

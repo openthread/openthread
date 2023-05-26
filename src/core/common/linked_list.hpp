@@ -249,7 +249,7 @@ public:
     }
 
     /**
-     * This template method indicates whether the linked list contains an entry matching a given entry indicator.
+     * Indicates whether the linked list contains an entry matching a given entry indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
@@ -319,7 +319,7 @@ public:
     }
 
     /**
-     * This template method removes an entry matching a given entry indicator from the linked list.
+     * Removes an entry matching a given entry indicator from the linked list.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
@@ -351,7 +351,7 @@ public:
     }
 
     /**
-     * This template method removes all entries in the list matching a given entry indicator from the list and adds
+     * Removes all entries in the list matching a given entry indicator from the list and adds
      * them to a new list.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
@@ -437,7 +437,7 @@ public:
     }
 
     /**
-     * This template method searches within a given range of the linked list to find an entry matching a given
+     * Searches within a given range of the linked list to find an entry matching a given
      * indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
@@ -479,7 +479,7 @@ public:
     }
 
     /**
-     * This template method searches within a given range of the linked list to find an entry matching a given
+     * Searches within a given range of the linked list to find an entry matching a given
      * indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
@@ -506,7 +506,7 @@ public:
     }
 
     /**
-     * This template method searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
@@ -529,7 +529,7 @@ public:
     }
 
     /**
-     * This template method searches within the linked list to find an entry matching a given indicator, and if found
+     * Searches within the linked list to find an entry matching a given indicator, and if found
      * returns a pointer to its previous entry in the list.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
@@ -553,7 +553,7 @@ public:
     }
 
     /**
-     * This template method searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
@@ -574,7 +574,7 @@ public:
     }
 
     /**
-     * This template method searches within the linked list to find an entry matching a given indicator.
+     * Searches within the linked list to find an entry matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
      * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each

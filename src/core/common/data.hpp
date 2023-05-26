@@ -146,7 +146,7 @@ public:
     }
 
     /**
-     * This template method initializes the `Data` to point to the content of an object.
+     * Initializes the `Data` to point to the content of an object.
      *
      * @tparm ObjectType   The object type (MUST not be a pointer type).
      *
@@ -306,7 +306,7 @@ public:
     void InitFormRange(uint8_t *aStart, uint8_t *aEnd) { Base::InitFormRange(aStart, aEnd); }
 
     /**
-     * This template method initializes the `MutableData` to point to the content of an object.
+     * Initializes the `MutableData` to point to the content of an object.
      *
      * @tparm ObjectType   The object type (MUST not be a pointer type).
      *

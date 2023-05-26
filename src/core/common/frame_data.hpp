@@ -143,7 +143,7 @@ public:
     Error ReadBytes(void *aBuffer, uint16_t aLength);
 
     /**
-     * This template method reads an object from the `FrameData`.
+     * Reads an object from the `FrameData`.
      *
      * @tparam     ObjectType   The object type to read from the message.
      *

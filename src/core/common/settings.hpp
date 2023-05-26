@@ -912,7 +912,7 @@ public:
     Error DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
 
     /**
-     * This template method reads a specified settings entry.
+     * Reads a specified settings entry.
      *
      * The template type `EntryType` specifies the entry's value data structure. It must provide the following:
      *
@@ -939,7 +939,7 @@ public:
     }
 
     /**
-     * This template method reads a specified settings entry.
+     * Reads a specified settings entry.
      *
      * The template type `EntryType` provides information about the entry's value type. It must provide the following:
      *
@@ -964,7 +964,7 @@ public:
     }
 
     /**
-     * This template method saves a specified settings entry.
+     * Saves a specified settings entry.
      *
      * The template type `EntryType` specifies the entry's value data structure. It must provide the following:
      *
@@ -989,7 +989,7 @@ public:
     }
 
     /**
-     * This template method saves a specified settings entry.
+     * Saves a specified settings entry.
      *
      * The template type `EntryType` provides information about the entry's value type. It must provide the following:
      *
@@ -1015,7 +1015,7 @@ public:
     }
 
     /**
-     * This template method deletes a specified setting entry.
+     * Deletes a specified setting entry.
      *
      * The template type `EntryType` provides information about the entry's key.
      *

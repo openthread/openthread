@@ -426,7 +426,7 @@ public:
     bool Contains(const Type &aEntry) const { return Find(aEntry) != nullptr; }
 
     /**
-     * This template method finds the first element in the array matching a given indicator.
+     * Finds the first element in the array matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
@@ -445,7 +445,7 @@ public:
     }
 
     /**
-     * This template method finds the first element in the array matching a given indicator.
+     * Finds the first element in the array matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
@@ -475,7 +475,7 @@ public:
     }
 
     /**
-     * This template method indicates whether or not the array contains an element matching a given indicator.
+     * Indicates whether or not the array contains an element matching a given indicator.
      *
      * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
      * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
@@ -495,7 +495,7 @@ public:
     }
 
     /**
-     * This template method removes the first element in the array matching a given indicator.
+     * Removes the first element in the array matching a given indicator.
      *
      * Behaves similar to `Remove()`, i.e., the matched element (if found) is replaced with the last element
      * in the array (using `=` operator on `Type`). So the order of items in the array can change after a call to this
@@ -521,7 +521,7 @@ public:
     }
 
     /**
-     * This template method removes all elements in the array matching a given indicator.
+     * Removes all elements in the array matching a given indicator.
      *
      * Behaves similar to `Remove()`, i.e., a matched element is replaced with the last element in the
      * array (using `=` operator on `Type`). So the order of items in the array can change after a call to this method.

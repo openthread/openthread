@@ -39,7 +39,7 @@
 namespace ot {
 
 /**
- * This template method casts a given non-const reference to a const reference.
+ * Casts a given non-const reference to a const reference.
  *
  * @tparam Type        The reference type.
  *
@@ -51,7 +51,7 @@ namespace ot {
 template <typename Type> const Type &AsConst(Type &aObject) { return const_cast<const Type &>(aObject); }
 
 /**
- * This template method casts a given non-const pointer to a const pointer.
+ * Casts a given non-const pointer to a const pointer.
  *
  * @tparam Type        The pointer type.
  *
@@ -63,7 +63,7 @@ template <typename Type> const Type &AsConst(Type &aObject) { return const_cast<
 template <typename Type> const Type *AsConst(Type *aPointer) { return const_cast<const Type *>(aPointer); }
 
 /**
- * This template method casts a given const reference to a non-const reference.
+ * Casts a given const reference to a non-const reference.
  *
  * @tparam Type        The reference type.
  *
@@ -75,7 +75,7 @@ template <typename Type> const Type *AsConst(Type *aPointer) { return const_cast
 template <typename Type> Type &AsNonConst(const Type &aObject) { return const_cast<Type &>(aObject); }
 
 /**
- * This template method casts a given const pointer to a non-const pointer.
+ * Casts a given const pointer to a non-const pointer.
  *
  * @tparam Type        The pointer type.
  *
