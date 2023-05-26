@@ -165,7 +165,7 @@ protected:
     };
 
     /**
-     * This struct represents a spinel response entry.
+     * Represents a spinel response entry.
      *
      */
     struct ResponseEntry

@@ -54,7 +54,7 @@ extern "C" {
 #endif
 
 /**
- * This struct represents an OpenThread message buffer.
+ * Represents an OpenThread message buffer.
  *
  */
 typedef struct otMessageBuffer

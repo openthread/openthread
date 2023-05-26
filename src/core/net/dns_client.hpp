@@ -66,7 +66,7 @@
 #endif
 
 /**
- * This struct represents an opaque (and empty) type for a response to an address resolution DNS query.
+ * Represents an opaque (and empty) type for a response to an address resolution DNS query.
  *
  */
 struct otDnsAddressResponse
@@ -76,7 +76,7 @@ struct otDnsAddressResponse
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 /**
- * This struct represents an opaque (and empty) type for a response to browse (service instance enumeration) DNS query.
+ * Represents an opaque (and empty) type for a response to browse (service instance enumeration) DNS query.
  *
  */
 struct otDnsBrowseResponse
@@ -84,7 +84,7 @@ struct otDnsBrowseResponse
 };
 
 /**
- * This struct represents an opaque (and empty) type for a response to service inst resolution DNS query.
+ * Represents an opaque (and empty) type for a response to service inst resolution DNS query.
  *
  */
 struct otDnsServiceResponse

@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This struct represents a SRP client service pool entry.
+ * Represents a SRP client service pool entry.
  *
  */
 typedef struct otSrpClientBuffersServiceEntry

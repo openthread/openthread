@@ -60,7 +60,7 @@
 #include "thread/link_quality.hpp"
 
 /**
- * This struct represents an opaque (and empty) type for an OpenThread message buffer.
+ * Represents an opaque (and empty) type for an OpenThread message buffer.
  *
  */
 struct otMessage

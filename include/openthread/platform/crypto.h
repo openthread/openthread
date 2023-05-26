@@ -186,7 +186,7 @@ typedef struct otPlatCryptoEcdsaKeyPair
 /**
  * @struct otPlatCryptoEcdsaPublicKey
  *
- * This struct represents a ECDSA public key.
+ * Represents a ECDSA public key.
  *
  * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
  *
@@ -208,7 +208,7 @@ typedef struct otPlatCryptoEcdsaPublicKey otPlatCryptoEcdsaPublicKey;
 /**
  * @struct otPlatCryptoEcdsaSignature
  *
- * This struct represents an ECDSA signature.
+ * Represents an ECDSA signature.
  *
  * The signature is encoded as the concatenated binary representation of two MPIs `r` and `s` which are calculated
  * during signing (RFC 6605 - section 4).

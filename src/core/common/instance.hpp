@@ -144,7 +144,7 @@
  */
 
 /**
- * This struct represents an opaque (and empty) type corresponding to an OpenThread instance object.
+ * Represents an opaque (and empty) type corresponding to an OpenThread instance object.
  *
  */
 typedef struct otInstance

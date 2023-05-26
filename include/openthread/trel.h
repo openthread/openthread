@@ -57,7 +57,7 @@ extern "C" {
  */
 
 /**
- * This struct represents a TREL peer.
+ * Represents a TREL peer.
  *
  */
 typedef struct otTrelPeer
