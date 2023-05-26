@@ -71,13 +71,13 @@ public:
     static constexpr uint32_t kDefaultScanDuration = Mac::kScanDurationDefault;
 
     /**
-     * This type represents Discover Scan result.
+     * Represents Discover Scan result.
      *
      */
     typedef otActiveScanResult ScanResult;
 
     /**
-     * This type represents the handler function pointer called with any Discover Scan result or when the scan
+     * Represents the handler function pointer called with any Discover Scan result or when the scan
      * completes.
      *
      * The handler function format is `void (*oHandler)(ScanResult *aResult, void *aContext);`. End of scan is
@@ -87,7 +87,7 @@ public:
     typedef otHandleActiveScanResult Handler;
 
     /**
-     * This type represents the filter indexes, i.e., hash bit index values for the bloom filter (calculated from a
+     * Represents the filter indexes, i.e., hash bit index values for the bloom filter (calculated from a
      * Joiner ID).
      *
      * This is used when filtering is enabled during Discover Scan, i.e., received MLE Discovery Responses with steering

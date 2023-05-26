@@ -163,7 +163,7 @@ class Instance : public otInstance, private NonCopyable
 {
 public:
     /**
-     * This type represents the message buffer information (number of messages/buffers in all OT stack message queues).
+     * Represents the message buffer information (number of messages/buffers in all OT stack message queues).
      *
      */
     class BufferInfo : public otBufferInfo, public Clearable<BufferInfo>

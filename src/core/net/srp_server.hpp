@@ -188,7 +188,7 @@ public:
 
     public:
         /**
-         * This type represents the flags which indicates which services to include or exclude when searching in (or
+         * Represents the flags which indicates which services to include or exclude when searching in (or
          * iterating over) the list of SRP services.
          *
          */

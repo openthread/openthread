@@ -52,7 +52,7 @@ namespace LinkMetrics {
 constexpr uint8_t kMaxTypeIds = 4; ///< Maximum number of Type IDs in a `Metrics`.
 
 /**
- * This type represents Link Metric Flags indicating a set of metrics.
+ * Represents Link Metric Flags indicating a set of metrics.
  *
  * @sa otLinkMetrics
  *
@@ -72,7 +72,7 @@ public:
 };
 
 /**
- * This type represents the results (values) for a set of metrics.
+ * Represents the results (values) for a set of metrics.
  *
  * @sa otLinkMetricsValues
  *

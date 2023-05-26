@@ -196,7 +196,7 @@ public:
     };
 
     /**
-     * This type represents diagnostic information for a neighboring node.
+     * Represents diagnostic information for a neighboring node.
      *
      */
     class Info : public otNeighborInfo, public Clearable<Info>
@@ -901,7 +901,7 @@ public:
 
     public:
         /**
-         * This type represents an index indicating the current IPv6 address entry to which the iterator is pointing.
+         * Represents an index indicating the current IPv6 address entry to which the iterator is pointing.
          *
          */
         typedef otChildIp6AddressIterator Index;

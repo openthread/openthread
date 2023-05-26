@@ -69,7 +69,7 @@ class Sha256
 {
 public:
     /**
-     * This type represents a SHA-256 hash.
+     * Represents a SHA-256 hash.
      *
      */
     class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>

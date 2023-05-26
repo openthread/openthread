@@ -66,7 +66,7 @@ class Slaac : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This type represents the secret key used for generating semantically opaque IID (per RFC 7217).
+     * Represents the secret key used for generating semantically opaque IID (per RFC 7217).
      *
      */
     struct IidSecretKey

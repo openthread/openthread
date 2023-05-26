@@ -101,7 +101,7 @@ public:
     typedef otSrpClientCallback ClientCallback;
 
     /**
-     * This type represents an SRP client host info.
+     * Represents an SRP client host info.
      *
      */
     class HostInfo : public otSrpClientHostInfo, private Clearable<HostInfo>
@@ -173,7 +173,7 @@ public:
     };
 
     /**
-     * This type represents an SRP client service.
+     * Represents an SRP client service.
      *
      */
     class Service : public otSrpClientService, public LinkedListEntry<Service>

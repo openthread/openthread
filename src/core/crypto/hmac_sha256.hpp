@@ -66,7 +66,7 @@ class HmacSha256
 {
 public:
     /**
-     * This type represents a HMAC SHA-256 hash.
+     * Represents a HMAC SHA-256 hash.
      *
      */
     typedef Sha256::Hash Hash;

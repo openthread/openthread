@@ -72,7 +72,7 @@ public:
     typedef otMacFilterEntry Entry;
 
     /**
-     * This type represents an iterator used to iterate through filter entries.
+     * Represents an iterator used to iterate through filter entries.
      *
      * See `GetNextAddress()` and `GetNextRssIn()`.
      *

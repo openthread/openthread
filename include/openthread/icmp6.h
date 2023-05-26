@@ -103,7 +103,7 @@ struct otIcmp6Header
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an ICMPv6 header.
+ * Represents an ICMPv6 header.
  *
  */
 typedef struct otIcmp6Header otIcmp6Header;

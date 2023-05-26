@@ -73,7 +73,7 @@ public:
         typedef otBackboneRouterNdProxyCallback Callback; ///< ND Proxy callback.
 
         /**
-         * This type represents the ND Proxy events.
+         * Represents the ND Proxy events.
          *
          */
         enum Event

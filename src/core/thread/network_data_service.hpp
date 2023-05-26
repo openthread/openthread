@@ -58,7 +58,7 @@ const uint32_t kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber; //
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 /**
- * This type implements Thread Network Data "Backbone Router Service" server data generation and parsing.
+ * Implements Thread Network Data "Backbone Router Service" server data generation and parsing.
  *
  */
 class BackboneRouter
@@ -152,7 +152,7 @@ public:
 #endif // #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 /**
- * This type implements Thread Network Data "DNS/SRP Service Anycast Address" generation and parsing.
+ * Implements Thread Network Data "DNS/SRP Service Anycast Address" generation and parsing.
  *
  */
 class DnsSrpAnycast
@@ -224,7 +224,7 @@ public:
 };
 
 /**
- * This type implements Thread Network Data DNS/SRP Service (Unicast Address) generation and parsing.
+ * Implements Thread Network Data DNS/SRP Service (Unicast Address) generation and parsing.
  *
  */
 class DnsSrpUnicast

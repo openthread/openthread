@@ -43,7 +43,7 @@
 namespace ot {
 
 /**
- * This type represents error codes used by OpenThread core modules.
+ * Represents error codes used by OpenThread core modules.
  *
  */
 typedef otError Error;

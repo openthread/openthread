@@ -169,7 +169,7 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
 void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig);
 
 /**
- * This type is an opaque representation of a response to an address resolution DNS query.
+ * An opaque representation of a response to an address resolution DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsAddressCallback`.
  *
@@ -315,7 +315,7 @@ otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
                                        uint32_t                   *aTtl);
 
 /**
- * This type is an opaque representation of a response to a browse (service instance enumeration) DNS query.
+ * An opaque representation of a response to a browse (service instance enumeration) DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsBrowseCallback`.
  *
@@ -489,7 +489,7 @@ otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
                                           uint32_t                  *aTtl);
 
 /**
- * This type is an opaque representation of a response to a service instance resolution DNS query.
+ * An opaque representation of a response to a service instance resolution DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsAddressCallback`.
  *

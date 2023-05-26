@@ -100,14 +100,14 @@ enum Event : uint32_t
 };
 
 /**
- * This type represents a list of events.
+ * Represents a list of events.
  *
  */
 class Events
 {
 public:
     /**
-     * This type represents a bit-field indicating a list of events (with values from `Event`)
+     * Represents a bit-field indicating a list of events (with values from `Event`)
      *
      */
     typedef otChangedFlags Flags;

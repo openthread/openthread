@@ -180,7 +180,7 @@ public:
     };
 
     /**
-     * This type represents the information about the fields contained an Active or Pending Operational Dataset.
+     * Represents the information about the fields contained an Active or Pending Operational Dataset.
      *
      */
     class Info : public otOperationalDataset, public Clearable<Info>

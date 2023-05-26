@@ -74,7 +74,7 @@ class AddressResolver : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This type represents an iterator used for iterating through the EID cache table entries.
+     * Represents an iterator used for iterating through the EID cache table entries.
      *
      */
     class Iterator : public otCacheEntryIterator, public Clearable<Iterator>
@@ -91,7 +91,7 @@ public:
     };
 
     /**
-     * This type represents an EID cache entry.
+     * Represents an EID cache entry.
      *
      */
     class EntryInfo : public otCacheEntryInfo, public Clearable<EntryInfo>

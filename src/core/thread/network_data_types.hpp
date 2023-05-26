@@ -316,7 +316,7 @@ class ServerData : public Data<kWithUint8Length>
 };
 
 /**
- * This type represents a Service configuration.
+ * Represents a Service configuration.
  *
  */
 class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>, public Unequatable<ServiceConfig>

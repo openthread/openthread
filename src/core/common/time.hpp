@@ -265,7 +265,7 @@ private:
 };
 
 /**
- * This type represents a time instance (millisecond time).
+ * Represents a time instance (millisecond time).
  *
  */
 typedef Time TimeMilli;
@@ -273,7 +273,7 @@ typedef Time TimeMilli;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
- * This type represents a time instance (microsecond time).
+ * Represents a time instance (microsecond time).
  *
  */
 typedef Time TimeMicro;

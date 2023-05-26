@@ -114,7 +114,7 @@ enum
 };
 
 /**
- * This type represents radio capabilities.
+ * Represents radio capabilities.
  *
  * The value is a bit-field indicating the capabilities supported by the radio. See `OT_RADIO_CAPS_*` definitions.
  *
@@ -141,13 +141,13 @@ enum
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
 
 /**
- * This type represents the IEEE 802.15.4 PAN ID.
+ * Represents the IEEE 802.15.4 PAN ID.
  *
  */
 typedef uint16_t otPanId;
 
 /**
- * This type represents the IEEE 802.15.4 Short Address.
+ * Represents the IEEE 802.15.4 Short Address.
  *
  */
 typedef uint16_t otShortAddress;
@@ -208,7 +208,7 @@ struct otMacKey
 typedef struct otMacKey otMacKey;
 
 /**
- * This type represents a MAC Key Ref used by PSA.
+ * Represents a MAC Key Ref used by PSA.
  *
  */
 typedef otCryptoKeyRef otMacKeyRef;

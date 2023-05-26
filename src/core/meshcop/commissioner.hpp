@@ -97,7 +97,7 @@ public:
     typedef otCommissionerJoinerCallback JoinerCallback; ///< Joiner state change callback function pointer type.
 
     /**
-     * This type represents a Commissioning Dataset.
+     * Represents a Commissioning Dataset.
      *
      */
     class Dataset : public otCommissioningDataset, public Clearable<Dataset>

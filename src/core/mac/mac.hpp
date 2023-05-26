@@ -88,26 +88,26 @@ constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
 /**
- * This type defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
+ * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
  *
  */
 typedef otHandleActiveScanResult ActiveScanHandler;
 
 /**
- * This type defines an Active Scan result.
+ * Defines an Active Scan result.
  *
  */
 typedef otActiveScanResult ActiveScanResult;
 
 /**
- * This type defines the function pointer which is called during an Energy Scan when the scan result for a channel is
+ * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
  * ready or when the scan completes.
  *
  */
 typedef otHandleEnergyScanResult EnergyScanHandler;
 
 /**
- * This type defines an Energy Scan result.
+ * Defines an Energy Scan result.
  *
  */
 typedef otEnergyScanResult EnergyScanResult;

@@ -179,7 +179,7 @@ public:
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 /**
- * This type represents a Thread Domain Name.
+ * Represents a Thread Domain Name.
  *
  */
 typedef NetworkName DomainName;

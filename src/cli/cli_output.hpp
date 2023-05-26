@@ -51,7 +51,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This type represents a ID number value associated with a CLI command string.
+ * Represents a ID number value associated with a CLI command string.
  *
  */
 typedef uint64_t CommandId;

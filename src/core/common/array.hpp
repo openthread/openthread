@@ -120,7 +120,7 @@ class Array
 
 public:
     /**
-     * This type represents the length or index in array.
+     * Represents the length or index in array.
      *
      * It is typically either `uint8_t` or `uint16_t` (determined based on the maximum array size (`kMaxSize`)).
      *

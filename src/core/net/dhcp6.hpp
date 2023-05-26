@@ -397,7 +397,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an Identity Association for Non-temporary Address DHCPv6 option.
+ * Represents an Identity Association for Non-temporary Address DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -472,7 +472,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an Identity Association Address DHCPv6 option.
+ * Represents an Identity Association Address DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -555,7 +555,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an Elapsed Time DHCPv6 option.
+ * Represents an Elapsed Time DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -611,7 +611,7 @@ enum Status : uint16_t
 };
 
 /**
- * This type represents an Status Code DHCPv6 option.
+ * Represents an Status Code DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -649,7 +649,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an Rapid Commit DHCPv6 option.
+ * Represents an Rapid Commit DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN

@@ -60,7 +60,7 @@ class ThreadNetif;
 namespace MeshCoP {
 
 /**
- * This type represents a Joiner PSKd.
+ * Represents a Joiner PSKd.
  *
  */
 class JoinerPskd : public otJoinerPskd, public Clearable<JoinerPskd>, public Unequatable<JoinerPskd>
@@ -137,7 +137,7 @@ public:
 };
 
 /**
- * This type represents a Joiner Discerner.
+ * Represents a Joiner Discerner.
  *
  */
 class JoinerDiscerner : public otJoinerDiscerner, public Unequatable<JoinerDiscerner>
@@ -150,7 +150,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 45; ///< Size of `InfoString` to use with `ToString()
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;
@@ -237,7 +237,7 @@ private:
 };
 
 /**
- * This type represents Steering Data (bloom filter).
+ * Represents Steering Data (bloom filter).
  *
  */
 class SteeringData : public otSteeringData

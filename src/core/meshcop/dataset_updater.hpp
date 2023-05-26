@@ -70,7 +70,7 @@ public:
     explicit DatasetUpdater(Instance &aInstance);
 
     /**
-     * This type represents the callback function pointer which is called when a Dataset update request finishes,
+     * Represents the callback function pointer which is called when a Dataset update request finishes,
      * reporting success or failure status of the request.
      *
      * The function pointer has the syntax `void (*UpdaterCallback)(Error aError, void *aContext)`.

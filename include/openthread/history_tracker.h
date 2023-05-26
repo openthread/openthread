@@ -60,7 +60,7 @@ extern "C" {
 #define OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE 21 ///< Recommended size for string representation of an entry age.
 
 /**
- * This type represents an iterator to iterate through a history list.
+ * Represents an iterator to iterate through a history list.
  *
  * The fields in this type are opaque (intended for use by OpenThread core) and therefore should not be accessed/used
  * by caller.

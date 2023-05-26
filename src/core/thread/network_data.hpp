@@ -97,7 +97,7 @@ class Publisher;
 class MutableNetworkData;
 
 /**
- * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
+ * Represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
  *
  */
 typedef otNetworkDataIterator Iterator;

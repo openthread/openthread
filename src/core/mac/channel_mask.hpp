@@ -74,7 +74,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 45; ///< Recommended buffer size to use with `ToString()`.
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;

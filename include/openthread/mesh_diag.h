@@ -66,7 +66,7 @@ typedef struct otMeshDiagDiscoverConfig
 } otMeshDiagDiscoverConfig;
 
 /**
- * This type is an opaque iterator to iterate over list of IPv6 addresses of a router.
+ * An opaque iterator to iterate over list of IPv6 addresses of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
  *
@@ -74,7 +74,7 @@ typedef struct otMeshDiagDiscoverConfig
 typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
 
 /**
- * This type is an opaque iterator to iterate over list of children of a router.
+ * An opaque iterator to iterate over list of children of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
  *
@@ -91,7 +91,7 @@ typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
 #define OT_MESH_DIAG_VERSION_UNKNOWN 0xffff
 
 /**
- * This type represents information about a router in Thread mesh.
+ * Represents information about a router in Thread mesh.
  *
  */
 typedef struct otMeshDiagRouterInfo
@@ -142,7 +142,7 @@ typedef struct otMeshDiagRouterInfo
 } otMeshDiagRouterInfo;
 
 /**
- * This type represents information about a discovered child in Thread mesh.
+ * Represents information about a discovered child in Thread mesh.
  *
  */
 typedef struct otMeshDiagChildInfo

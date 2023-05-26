@@ -146,7 +146,7 @@ public:
     };
 
     /**
-     * This type represents an iterator for iterating over TREL peer table entries.
+     * Represents an iterator for iterating over TREL peer table entries.
      *
      */
     typedef otTrelPeerIterator PeerIterator;

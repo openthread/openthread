@@ -103,7 +103,7 @@ public:
     static constexpr uint16_t kAddressStringSize = 17; ///< String size used by `ToString()`.
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kAddressStringSize> InfoString;
@@ -201,7 +201,7 @@ public:
     static constexpr uint16_t kCidrSuffixSize = 3; ///< Suffix to represent CIDR (/dd).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<Address::kAddressStringSize + kCidrSuffixSize> InfoString;

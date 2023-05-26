@@ -193,7 +193,7 @@ constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
 constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
 
 /**
- * This type represents a Thread device role.
+ * Represents a Thread device role.
  *
  */
 enum DeviceRole : uint8_t
@@ -293,7 +293,7 @@ enum class ChildDuaState : uint8_t
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
- * This type represents a MLE device mode.
+ * Represents a MLE device mode.
  *
  */
 class DeviceMode : public Equatable<DeviceMode>
@@ -307,7 +307,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 45; ///< String buffer size used for `ToString()`.
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;

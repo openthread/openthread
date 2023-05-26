@@ -64,7 +64,7 @@ namespace Coap {
  */
 
 /**
- * This type represents a function pointer which is called when a CoAP response is received or on the request timeout.
+ * Represents a function pointer which is called when a CoAP response is received or on the request timeout.
  *
  * Please see otCoapResponseHandler for details.
  *
@@ -72,7 +72,7 @@ namespace Coap {
 typedef otCoapResponseHandler ResponseHandler;
 
 /**
- * This type represents a function pointer which is called when a CoAP request associated with a given URI path is
+ * Represents a function pointer which is called when a CoAP request associated with a given URI path is
  * received.
  *
  * Please see otCoapRequestHandler for details.
@@ -794,7 +794,7 @@ public:
 
 protected:
     /**
-     * This type defines function pointer to handle a CoAP resource.
+     * Defines function pointer to handle a CoAP resource.
      *
      * When processing a received request, this handler is called first with the URI path before checking the list of
      * added `Resource` entries to match against the URI path.

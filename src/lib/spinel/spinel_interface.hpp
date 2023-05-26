@@ -50,7 +50,7 @@ public:
     };
 
     /**
-     * This type defines a receive frame buffer to store received spinel frame(s).
+     * Defines a receive frame buffer to store received spinel frame(s).
      *
      * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
      * frames in a FIFO queue manner.

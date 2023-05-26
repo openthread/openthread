@@ -850,7 +850,7 @@ protected:
     static constexpr uint8_t kMaxTlvListSize = 32; ///< Maximum number of TLVs in a `TlvList`.
 
     /**
-     * This type represents a list of TLVs (array of TLV types).
+     * Represents a list of TLVs (array of TLV types).
      *
      */
     class TlvList : public Array<uint8_t, kMaxTlvListSize>
@@ -882,7 +882,7 @@ protected:
     };
 
     /**
-     * This type represents a Challenge (or Response) data.
+     * Represents a Challenge (or Response) data.
      *
      */
     struct Challenge

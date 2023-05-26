@@ -211,7 +211,7 @@ enum
 };
 
 /**
- * This type represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`
+ * Represents a bit-field indicating specific state/configuration that has changed. See `OT_CHANGED_*`
  * definitions.
  *
  */

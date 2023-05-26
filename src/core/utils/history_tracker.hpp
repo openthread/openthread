@@ -107,7 +107,7 @@ public:
     static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
 
     /**
-     * This type represents an iterator to iterate through a history list.
+     * Represents an iterator to iterate through a history list.
      *
      */
     class Iterator : public otHistoryTrackerIterator

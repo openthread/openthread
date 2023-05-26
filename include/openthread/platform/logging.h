@@ -107,7 +107,7 @@ extern "C" {
 #define OT_LOG_LEVEL_DEBG 5
 
 /**
- * This type represents the log level.
+ * Represents the log level.
  *
  */
 typedef int otLogLevel;

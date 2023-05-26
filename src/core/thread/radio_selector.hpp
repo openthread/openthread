@@ -76,7 +76,7 @@ public:
 
     public:
         /**
-         * This type represents multi radio information associated with a neighbor.
+         * Represents multi radio information associated with a neighbor.
          *
          */
         typedef otMultiRadioNeighborInfo MultiRadioInfo;

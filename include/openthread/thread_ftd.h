@@ -112,7 +112,7 @@ typedef struct otCacheEntryInfo
 } otCacheEntryInfo;
 
 /**
- * This type represents an iterator used for iterating through the EID cache table entries.
+ * Represents an iterator used for iterating through the EID cache table entries.
  *
  * To initialize the iterator and start from the first entry in the cache table, set all its fields in the structure to
  * zero (e.g., `memset` the iterator to zero).
@@ -781,7 +781,7 @@ typedef enum
 } otNeighborTableEvent;
 
 /**
- * This type represent a neighbor table entry info (child or router) and is used as a parameter in the neighbor table
+ * Represent a neighbor table entry info (child or router) and is used as a parameter in the neighbor table
  * callback `otNeighborTableCallback`.
  *
  */

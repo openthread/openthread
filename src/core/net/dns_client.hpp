@@ -113,7 +113,7 @@ class Client : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This type represents a DNS query configuration (e.g., server address, response wait timeout, etc).
+     * Represents a DNS query configuration (e.g., server address, response wait timeout, etc).
      *
      */
     class QueryConfig : public otDnsQueryConfig, public Clearable<QueryConfig>
@@ -343,14 +343,14 @@ public:
     };
 
     /**
-     * This type represents the function pointer callback which is called when a DNS response for an address resolution
+     * Represents the function pointer callback which is called when a DNS response for an address resolution
      * query is received.
      *
      */
     typedef otDnsAddressCallback AddressCallback;
 
     /**
-     * This type represents an address resolution query DNS response.
+     * Represents an address resolution query DNS response.
      *
      */
     class AddressResponse : public Response
@@ -405,14 +405,14 @@ public:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
     /**
-     * This type represents the function pointer callback which is called when a response for a browse (service
+     * Represents the function pointer callback which is called when a response for a browse (service
      * instance enumeration) DNS query is received.
      *
      */
     typedef otDnsBrowseCallback BrowseCallback;
 
     /**
-     * This type represents a browse (service instance enumeration) DNS response.
+     * Represents a browse (service instance enumeration) DNS response.
      *
      */
     class BrowseResponse : public Response
@@ -513,14 +513,14 @@ public:
     };
 
     /**
-     * This type represents the function pointer callback which is called when a response for a service instance
+     * Represents the function pointer callback which is called when a response for a service instance
      * resolution DNS query is received.
      *
      */
     typedef otDnsServiceCallback ServiceCallback;
 
     /**
-     * This type represents a service instance resolution DNS response.
+     * Represents a service instance resolution DNS response.
      *
      */
     class ServiceResponse : public Response

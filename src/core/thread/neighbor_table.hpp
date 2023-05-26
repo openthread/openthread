@@ -60,7 +60,7 @@ public:
     typedef otNeighborTableCallback Callback;
 
     /**
-     * This type represents a neighbor table entry info (child or router) and is used as a parameter in the neighbor
+     * Represents a neighbor table entry info (child or router) and is used as a parameter in the neighbor
      * table callback.
      *
      */

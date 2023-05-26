@@ -109,7 +109,7 @@ public:
     static constexpr uint16_t kStringSize = 10; ///< Max string size for average (@sa ToString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kStringSize> InfoString;
@@ -303,7 +303,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 50; ///< `InfoString` size (@sa ToInfoString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToInfoString()`.
+     * Defines the fixed-length `String` object returned from `ToInfoString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;

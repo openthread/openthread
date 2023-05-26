@@ -72,7 +72,7 @@ public:
     typedef otMeshDiagDiscoverCallback DiscoverCallback; ///< The discovery callback function pointer type.
 
     /**
-     * This type represents an iterator to go over list of IPv6 addresses of a router.
+     * Represents an iterator to go over list of IPv6 addresses of a router.
      *
      */
     class Ip6AddrIterator : public otMeshDiagIp6AddrIterator
@@ -100,7 +100,7 @@ public:
     };
 
     /**
-     * This type represents information about a router in Thread mesh.
+     * Represents information about a router in Thread mesh.
      *
      */
     class RouterInfo : public otMeshDiagRouterInfo, public Clearable<RouterInfo>
@@ -112,7 +112,7 @@ public:
     };
 
     /**
-     * This type represents information about a child in Thread mesh.
+     * Represents information about a child in Thread mesh.
      *
      */
     class ChildInfo : public otMeshDiagChildInfo, public Clearable<ChildInfo>
@@ -120,7 +120,7 @@ public:
     };
 
     /**
-     * This type represents an iterator to go over list of IPv6 addresses of a router.
+     * Represents an iterator to go over list of IPv6 addresses of a router.
      *
      */
     class ChildIterator : public otMeshDiagChildIterator

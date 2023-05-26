@@ -145,7 +145,7 @@ public:
 
     private:
         /**
-         * This type defines the frame context associated with a prepared frame.
+         * Defines the frame context associated with a prepared frame.
          *
          * Data poll handler treats `FrameContext` as an opaque data type. Data poll handler provides the buffer/object
          * for the context when a new frame is prepared (from the callback `PrepareFrameForChild()`). It ensures

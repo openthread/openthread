@@ -104,7 +104,7 @@ public:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     /**
-     * This type represents the callback function pointer used to notify when a "DNS/SRP Service" entry is added to or
+     * Represents the callback function pointer used to notify when a "DNS/SRP Service" entry is added to or
      * removed from the Thread Network Data.
      *
      * On remove the callback is invoked independent of whether the entry is removed by `Publisher` (e.g., when there
@@ -193,7 +193,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
-     * This type represents the callback function pointer used to notify when a prefix (on-mesh or external route)
+     * Represents the callback function pointer used to notify when a prefix (on-mesh or external route)
      * entry is added to or removed from the Thread Network Data.
      *
      * On remove the callback is invoked independent of whether the entry is removed by `Publisher` (e.g., when there

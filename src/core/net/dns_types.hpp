@@ -1062,7 +1062,7 @@ private:
 };
 
 /**
- * This type represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
+ * Represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
  *
  */
 class TxtEntry : public otDnsTxtEntry

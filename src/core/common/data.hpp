@@ -61,7 +61,7 @@ enum DataLengthType : uint8_t
 };
 
 /**
- * This type specifies a function pointer which matches two given bytes.
+ * Specifies a function pointer which matches two given bytes.
  *
  * Such a function is used as a parameter in `Data::MatchesByteIn()` method. This can be used to relax the definition
  * of a match when comparing data bytes, e.g., can be used for case-insensitive string comparison.
@@ -92,7 +92,7 @@ protected:
 template <DataLengthType kDataLengthType> class MutableData;
 
 /**
- * This type represents a generic `Data` which is simply a wrapper over a pointer to a buffer with a given data length.
+ * Represents a generic `Data` which is simply a wrapper over a pointer to a buffer with a given data length.
  *
  * The data length can be either `uint8_t` or `uint16_t` (determined by the template parameter `kDataLengthType`).
  *
@@ -112,7 +112,7 @@ class Data : public Clearable<Data<kDataLengthType>>, public Unequatable<Data<kD
 
 public:
     /**
-     * This type represents the data length type (`uint8_t` or `uint16_t`).
+     * Represents the data length type (`uint8_t` or `uint16_t`).
      *
      */
     using LengthType = typename TypeTraits::Conditional<kDataLengthType == kWithUint8Length, uint8_t, uint16_t>::Type;
@@ -260,7 +260,7 @@ private:
 };
 
 /**
- * This type represents a generic `MutableData` which is simply a wrapper over a pointer to a buffer with a given data
+ * Represents a generic `MutableData` which is simply a wrapper over a pointer to a buffer with a given data
  * length.
  *
  * It inherits from `Data` but unlike `Data` which treats its buffer content as immutable, `MutableData` allows its
@@ -279,7 +279,7 @@ template <DataLengthType kDataLengthType> class MutableData : public Data<kDataL
 
 public:
     /**
-     * This type represents the data length type (`uint8_t` or `uint16_t`).
+     * Represents the data length type (`uint8_t` or `uint16_t`).
      *
      */
     using LengthType = typename Base::LengthType;

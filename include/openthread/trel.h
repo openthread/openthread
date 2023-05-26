@@ -68,7 +68,7 @@ typedef struct otTrelPeer
 } otTrelPeer;
 
 /**
- * This type represents an iterator for iterating over TREL peer table entries.
+ * Represents an iterator for iterating over TREL peer table entries.
  *
  */
 typedef uint16_t otTrelPeerIterator;

@@ -354,7 +354,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToInfoString()` method.
+     * Defines the fixed-length `String` object returned from `ToInfoString()` method.
      *
      */
     typedef String<kInfoStringSize> InfoString;

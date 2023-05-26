@@ -53,7 +53,7 @@ extern "C" {
  */
 
 /**
- * This type is an opaque representation of an OpenThread message buffer.
+ * An opaque representation of an OpenThread message buffer.
  *
  */
 typedef struct otMessage otMessage;

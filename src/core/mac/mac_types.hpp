@@ -60,7 +60,7 @@ namespace Mac {
  */
 
 /**
- * This type represents the IEEE 802.15.4 PAN ID.
+ * Represents the IEEE 802.15.4 PAN ID.
  *
  */
 typedef otPanId PanId;
@@ -68,7 +68,7 @@ typedef otPanId PanId;
 constexpr PanId kPanIdBroadcast = 0xffff; ///< Broadcast PAN ID.
 
 /**
- * This type represents the IEEE 802.15.4 Short Address.
+ * Represents the IEEE 802.15.4 Short Address.
  *
  */
 typedef otShortAddress ShortAddress;
@@ -95,7 +95,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;
@@ -238,7 +238,7 @@ class Address
 {
 public:
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef ExtAddress::InfoString InfoString;
@@ -452,7 +452,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents a MAC Key Ref used by PSA.
+ * Represents a MAC Key Ref used by PSA.
  *
  */
 typedef otMacKeyRef KeyRef;
@@ -605,7 +605,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 32; ///< Max chars for the info string (`ToString()`).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;

@@ -163,7 +163,7 @@ typedef struct otSecurityPolicy
 } otSecurityPolicy;
 
 /**
- * This type represents Channel Mask.
+ * Represents Channel Mask.
  *
  */
 typedef uint32_t otChannelMask;
