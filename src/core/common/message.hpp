@@ -88,9 +88,9 @@ class HmacSha256;
  */
 
 /**
- * This macro frees a given message buffer if not `nullptr`.
+ * Frees a given message buffer if not `nullptr`.
  *
- * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
+ * And the ones that follow contain small but common code patterns used in many of the core modules. They
  * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
  * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
  * small implementations can add a rather large code-size overhead.
@@ -108,7 +108,7 @@ class HmacSha256;
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `Error` indicates an error.
+ * Frees a given message buffer if a given `Error` indicates an error.
  *
  * The parameter @p aMessage can be `nullptr` in which case this macro does nothing.
  *
@@ -126,7 +126,7 @@ class HmacSha256;
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
+ * Frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.

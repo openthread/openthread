@@ -44,7 +44,7 @@ namespace ot {
 namespace Tmf {
 
 /**
- * This macro declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
+ * Declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
  *
  * The class `Type` MUST declare a template method of the following format:
  *
