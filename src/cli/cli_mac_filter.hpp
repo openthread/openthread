@@ -68,14 +68,15 @@ public:
     }
 
     /**
-     * This method interprets a list of CLI arguments.
+     * This method processes a CLI sub-command.
      *
-     * @param[in]  aArgs        A pointer an array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
-     * @reval  OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
      * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
-     * @retavl OT_ERROR_INVALID_ARGS      Invalid arguments.
-     * @retval ...                        Error handling the command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      *
      */
     otError Process(Arg aArgs[]);
