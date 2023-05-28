@@ -84,6 +84,13 @@ void TimeTicker::HandleTimer(void)
         Get<Mle::MleRouter>().HandleTimeTick();
     }
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mReceivers & Mask(kBackboneRouter))
+    {
+        Get<BackboneRouter::Local>().HandleTimeTick();
+    }
+#endif
+
     if (mReceivers & Mask(kAddressResolver))
     {
         Get<AddressResolver>().HandleTimeTick();

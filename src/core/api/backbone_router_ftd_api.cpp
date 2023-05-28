@@ -57,7 +57,7 @@ void otBackboneRouterGetConfig(otInstance *aInstance, otBackboneRouterConfig *aC
 {
     AssertPointerIsNotNull(aConfig);
 
-    AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(*aConfig);
+    *aConfig = AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig();
 }
 
 otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterConfig *aConfig)
@@ -161,9 +161,7 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
 {
     if (aTimeout == 0)
     {
-        BackboneRouter::Config config;
-        AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig(config);
-        aTimeout = config.mMlrTimeout;
+        aTimeout = AsCoreType(aInstance).Get<BackboneRouter::Local>().GetConfig().mMlrTimeout;
     }
 
     aTimeout = Min(aTimeout, Mle::kMlrTimeoutMax);

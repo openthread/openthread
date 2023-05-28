@@ -59,6 +59,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -72,7 +73,11 @@ namespace BackboneRouter {
  */
 class Local : public InstanceLocator, private NonCopyable
 {
+    friend class ot::TimeTicker;
+
 public:
+    typedef otBackboneRouterDomainPrefixCallback DomainPrefixCallback; ///< Domain Prefix Callback.
+
     /**
      * Represents Backbone Router state.
      *
@@ -118,10 +123,10 @@ public:
     /**
      * Gets local Backbone Router configuration.
      *
-     * @param[out]  aConfig  The local Backbone Router configuration.
+     * @returns The local Backbone Router configuration.
      *
      */
-    void GetConfig(Config &aConfig) const;
+    const Config &GetConfig(void) const { return mConfig; }
 
     /**
      * Sets local Backbone Router configuration.
@@ -262,7 +267,7 @@ public:
      * @param[in] aContext   A user context pointer.
      *
      */
-    void SetDomainPrefixCallback(otBackboneRouterDomainPrefixCallback aCallback, void *aContext)
+    void SetDomainPrefixCallback(DomainPrefixCallback aCallback, void *aContext)
     {
         mDomainPrefixCallback.Set(aCallback, aContext);
     }
@@ -272,7 +277,8 @@ private:
     void RemoveService(void);
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
-    void SequenceNumberIncrease(void);
+    void IncrementSeqNumber(void);
+    void HandleTimeTick(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void LogBackboneRouterService(const char *aAction, Error aError);
     void LogDomainPrefix(const char *aAction, Error aError);
@@ -281,11 +287,10 @@ private:
     void LogDomainPrefix(const char *, Error) {}
 #endif
 
-    State    mState;
-    uint32_t mMlrTimeout;
-    uint16_t mReregistrationDelay;
-    uint8_t  mSequenceNumber;
-    uint8_t  mRegistrationJitter;
+    State   mState;
+    Config  mConfig;
+    uint8_t mRegistrationJitter;
+    uint8_t mRegistrationDelay;
 
     // Indicates whether or not already add Backbone Router Service to local server data.
     // Used to check whether or not in restore stage after reset or whether to remove
@@ -294,10 +299,10 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::Netif::UnicastAddress                     mBackboneRouterPrimaryAloc;
-    Ip6::Address                                   mAllNetworkBackboneRouters;
-    Ip6::Address                                   mAllDomainBackboneRouters;
-    Callback<otBackboneRouterDomainPrefixCallback> mDomainPrefixCallback;
+    Ip6::Netif::UnicastAddress     mBackboneRouterPrimaryAloc;
+    Ip6::Address                   mAllNetworkBackboneRouters;
+    Ip6::Address                   mAllDomainBackboneRouters;
+    Callback<DomainPrefixCallback> mDomainPrefixCallback;
 };
 
 } // namespace BackboneRouter

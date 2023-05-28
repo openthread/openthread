@@ -52,12 +52,14 @@ RegisterLogModule("BbrLocal");
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateDisabled)
-    , mMlrTimeout(Mle::kMlrTimeoutDefault)
-    , mReregistrationDelay(Mle::kRegistrationDelayDefault)
-    , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
+    , mRegistrationDelay(0)
     , mIsServiceAdded(false)
 {
+    mConfig.mMlrTimeout          = Mle::kMlrTimeoutDefault;
+    mConfig.mReregistrationDelay = Mle::kRegistrationDelayDefault;
+    mConfig.mSequenceNumber      = Random::NonCrypto::GetUint8InRange(0, 127);
+
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
     // Primary Backbone Router Aloc
@@ -94,6 +96,7 @@ void Local::SetEnabled(bool aEnable)
         RemoveDomainPrefixFromNetworkData();
         RemoveService();
         SetState(kStateDisabled);
+        mRegistrationDelay = 0;
     }
 
 exit:
@@ -109,7 +112,7 @@ void Local::Reset(void)
     if (mState == kStatePrimary)
     {
         // Increase sequence number when changing from Primary to Secondary.
-        SequenceNumberIncrease();
+        IncrementSeqNumber();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         SetState(kStateSecondary);
     }
@@ -118,53 +121,27 @@ exit:
     return;
 }
 
-void Local::GetConfig(Config &aConfig) const
-{
-    aConfig.mSequenceNumber      = mSequenceNumber;
-    aConfig.mReregistrationDelay = mReregistrationDelay;
-    aConfig.mMlrTimeout          = mMlrTimeout;
-}
-
 Error Local::SetConfig(const Config &aConfig)
 {
-    Error error  = kErrorNone;
-    bool  update = false;
+    Error error = kErrorNone;
+
+    // Validate the configuration: "The Registration Delay in seconds MUST
+    // be lower than (0.5 * MLR Timeout). It MUST be at least 1."
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin && aConfig.mMlrTimeout <= Mle::kMlrTimeoutMax,
                  error = kErrorInvalidArgs);
 #endif
-    // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
-    // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
-    VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = kErrorInvalidArgs);
-    static_assert(sizeof(aConfig.mReregistrationDelay) < sizeof(aConfig.mMlrTimeout),
-                  "the calculation below might overflow");
-    VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = kErrorInvalidArgs);
+    VerifyOrExit(aConfig.mReregistrationDelay > 0, error = kErrorInvalidArgs);
+    VerifyOrExit(static_cast<uint32_t>(aConfig.mReregistrationDelay) * 2 < aConfig.mMlrTimeout,
+                 error = kErrorInvalidArgs);
 
-    if (aConfig.mReregistrationDelay != mReregistrationDelay)
-    {
-        mReregistrationDelay = aConfig.mReregistrationDelay;
-        update               = true;
-    }
+    VerifyOrExit((aConfig.mReregistrationDelay != mConfig.mReregistrationDelay) ||
+                 (aConfig.mMlrTimeout != mConfig.mMlrTimeout) || (aConfig.mSequenceNumber != mConfig.mSequenceNumber));
 
-    if (aConfig.mMlrTimeout != mMlrTimeout)
-    {
-        mMlrTimeout = aConfig.mMlrTimeout;
-        update      = true;
-    }
-
-    if (aConfig.mSequenceNumber != mSequenceNumber)
-    {
-        mSequenceNumber = aConfig.mSequenceNumber;
-        update          = true;
-    }
-
-    if (update)
-    {
-        Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
-
-        IgnoreError(AddService());
-    }
+    mConfig = aConfig;
+    Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
+    IgnoreError(AddService());
 
 exit:
     LogBackboneRouterService("Set", error);
@@ -178,15 +155,18 @@ Error Local::AddService(bool aForce)
 
     VerifyOrExit(mState != kStateDisabled && Get<Mle::Mle>().IsAttached());
 
-    VerifyOrExit(aForce /* if register by force */ ||
-                 !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
-                 Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
-                 /* If the device itself should be BBR. */
-    );
+    if (!aForce)
+    {
+        // Check that there is no available Backbone Router service
+        // yet or device itself should be BBR.
 
-    serverData.SetSequenceNumber(mSequenceNumber);
-    serverData.SetReregistrationDelay(mReregistrationDelay);
-    serverData.SetMlrTimeout(mMlrTimeout);
+        VerifyOrExit(!Get<BackboneRouter::Leader>().HasPrimary() ||
+                     (Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()));
+    }
+
+    serverData.SetSequenceNumber(mConfig.mSequenceNumber);
+    serverData.SetReregistrationDelay(mConfig.mReregistrationDelay);
+    serverData.SetMlrTimeout(mConfig.mMlrTimeout);
 
     SuccessOrExit(error = Get<NetworkData::Service::Manager>().Add<NetworkData::Service::BackboneRouter>(serverData));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
@@ -202,12 +182,17 @@ void Local::RemoveService(void)
 {
     Error error;
 
-    SuccessOrExit(error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::BackboneRouter>());
+    VerifyOrExit(mIsServiceAdded);
+
+    error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::BackboneRouter>();
+    LogBackboneRouterService("Remove", error);
+    SuccessOrExit(error);
+
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
     mIsServiceAdded = false;
 
 exit:
-    LogBackboneRouterService("Remove", error);
+    return;
 }
 
 void Local::SetState(State aState)
@@ -248,16 +233,16 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mac::kShortAddrInvalid)
     {
-        uint8_t delay = 1;
-
         if (!Get<Mle::MleRouter>().IsLeader())
         {
-            delay += Random::NonCrypto::GetUint8InRange(0, mRegistrationJitter < 255 ? mRegistrationJitter + 1
-                                                                                     : mRegistrationJitter);
+            mRegistrationDelay = Random::NonCrypto::GetUint8InRange(1, mRegistrationJitter);
+        }
+        else
+        {
+            mRegistrationDelay = 1;
         }
 
-        // Here uses the timer resource in Mle.
-        Get<Mle::MleRouter>().SetBackboneRouterRegistrationDelay(delay);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kBackboneRouter);
     }
     else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
     {
@@ -267,15 +252,10 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-        mSequenceNumber      = aConfig.mSequenceNumber;
-        mReregistrationDelay = aConfig.mReregistrationDelay;
-        mMlrTimeout          = aConfig.mMlrTimeout;
-        SequenceNumberIncrease();
+        mConfig = aConfig;
+        IncrementSeqNumber();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
-        if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
-        {
-            Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        }
+        IgnoreError(AddService(/* aForce */ true));
     }
     else
     {
@@ -284,6 +264,26 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
 
 exit:
     return;
+}
+
+void Local::HandleTimeTick(void)
+{
+    VerifyOrExit(mRegistrationDelay != 0);
+
+    VerifyOrExit(!Get<Mle::MleRouter>().IsExpectedToBecomeRouterSoon());
+
+    mRegistrationDelay--;
+
+    if ((mRegistrationDelay == 0) && !Get<BackboneRouter::Leader>().HasPrimary())
+    {
+        IgnoreError(AddService());
+    }
+
+exit:
+    if (mRegistrationDelay == 0)
+    {
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kBackboneRouter);
+    }
 }
 
 Error Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
@@ -360,10 +360,7 @@ exit:
 
 void Local::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
 {
-    if (!IsEnabled())
-    {
-        ExitNow();
-    }
+    VerifyOrExit(IsEnabled());
 
     if (aState == Leader::kDomainPrefixRemoved || aState == Leader::kDomainPrefixRefreshed)
     {
@@ -410,20 +407,20 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
     LogDomainPrefix("Remove", error);
 }
 
-void Local::SequenceNumberIncrease(void)
+void Local::IncrementSeqNumber(void)
 {
-    switch (mSequenceNumber)
+    switch (mConfig.mSequenceNumber)
     {
     case 126:
     case 127:
-        mSequenceNumber = 0;
+        mConfig.mSequenceNumber = 0;
         break;
     case 254:
     case 255:
-        mSequenceNumber = 128;
+        mConfig.mSequenceNumber = 128;
         break;
     default:
-        mSequenceNumber++;
+        mConfig.mSequenceNumber++;
         break;
     }
 }
@@ -449,8 +446,8 @@ void Local::LogDomainPrefix(const char *aAction, Error aError)
 
 void Local::LogBackboneRouterService(const char *aAction, Error aError)
 {
-    LogInfo("%s BBR Service: seqno (%u), delay (%us), timeout (%lus), %s", aAction, mSequenceNumber,
-            mReregistrationDelay, ToUlong(mMlrTimeout), ErrorToString(aError));
+    LogInfo("%s BBR Service: seqno (%u), delay (%us), timeout (%lus), %s", aAction, mConfig.mSequenceNumber,
+            mConfig.mReregistrationDelay, ToUlong(mConfig.mMlrTimeout), ErrorToString(aError));
 }
 #endif
 
