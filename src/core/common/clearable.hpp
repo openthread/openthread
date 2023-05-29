@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class defines a `Clearable` object which provides `Clear()` method.
+ * Defines a `Clearable` object which provides `Clear()` method.
  *
  * The `Clear` implementation simply sets all the bytes of a `Type` instance to zero.
  *

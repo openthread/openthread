@@ -55,7 +55,7 @@ class Instance;
  */
 
 /**
- * This template class represents an object pool.
+ * Represents an object pool.
  *
  * @tparam Type         The object type. Type should provide `GetNext() and `SetNext()` so that it can be added to a
  *                      linked list.
@@ -66,7 +66,7 @@ template <class Type, uint16_t kPoolSize> class Pool : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the pool.
+     * Initializes the pool.
      *
      */
     Pool(void)
@@ -79,9 +79,9 @@ public:
     }
 
     /**
-     * This constructor initializes the pool.
+     * Initializes the pool.
      *
-     * This constructor version requires the `Type` class to provide method `void Init(Instance &)` to initialize
+     * Version requires the `Type` class to provide method `void Init(Instance &)` to initialize
      * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstanceLocatorInit()`.
      *
      * @param[in] aInstance   A reference to the OpenThread instance.
@@ -98,7 +98,7 @@ public:
     }
 
     /**
-     * This method allocates a new object from the pool.
+     * Allocates a new object from the pool.
      *
      * @returns A pointer to the newly allocated object, or `nullptr` if all entries from the pool are already
      *          allocated.
@@ -107,7 +107,7 @@ public:
     Type *Allocate(void) { return mFreeList.Pop(); }
 
     /**
-     * This method frees a previously allocated object.
+     * Frees a previously allocated object.
      *
      * The @p aEntry MUST be an entry from the pool previously allocated using `Allocate()` method and not yet freed.
      * An already freed entry MUST not be freed again.
@@ -118,7 +118,7 @@ public:
     void Free(Type &aEntry) { mFreeList.Push(aEntry); }
 
     /**
-     * This method frees all previously allocated objects.
+     * Frees all previously allocated objects.
      *
      */
     void FreeAll(void)
@@ -132,7 +132,7 @@ public:
     }
 
     /**
-     * This method returns the pool size.
+     * Returns the pool size.
      *
      * @returns The pool size (maximum number of objects in the pool).
      *
@@ -140,7 +140,7 @@ public:
     uint16_t GetSize(void) const { return kPoolSize; }
 
     /**
-     * This method indicates whether or not a given `Type` object is from the pool.
+     * Indicates whether or not a given `Type` object is from the pool.
      *
      * @param[in]  aObject   A reference to a `Type` object.
      *
@@ -151,7 +151,7 @@ public:
     bool IsPoolEntry(const Type &aObject) const { return (&mPool[0] <= &aObject) && (&aObject < GetArrayEnd(mPool)); }
 
     /**
-     * This method returns the associated index of a given entry from the pool.
+     * Returns the associated index of a given entry from the pool.
      *
      * The @p aEntry MUST be from the pool, otherwise the behavior of this method is undefined.
      *
@@ -163,7 +163,7 @@ public:
     uint16_t GetIndexOf(const Type &aEntry) const { return static_cast<uint16_t>(&aEntry - mPool); }
 
     /**
-     * This method retrieves a pool entry at a given index.
+     * Retrieves a pool entry at a given index.
      *
      * The @p aIndex MUST be from an earlier call to `GetIndexOf()`.
      *
@@ -175,7 +175,7 @@ public:
     Type &GetEntryAt(uint16_t aIndex) { return mPool[aIndex]; }
 
     /**
-     * This method retrieves a pool entry at a given index.
+     * Retrieves a pool entry at a given index.
      *
      * The @p aIndex MUST be from an earlier call to `GetIndexOf()`.
      *

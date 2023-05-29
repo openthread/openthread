@@ -50,7 +50,7 @@ public:
     };
 
     /**
-     * This type defines a receive frame buffer to store received spinel frame(s).
+     * Defines a receive frame buffer to store received spinel frame(s).
      *
      * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
      * frames in a FIFO queue manner.
@@ -61,7 +61,7 @@ public:
     typedef void (*ReceiveFrameCallback)(void *aContext);
 
     /**
-     * This method indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
+     * Indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
      *
      * @param[in] aFrame   A pointer to buffer containing the spinel frame.
      * @param[in] aLength  The length (number of bytes) in the frame.

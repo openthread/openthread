@@ -64,7 +64,7 @@ static void handleSignal(int aSignal)
 }
 
 /**
- * This enumeration defines the argument return values.
+ * Defines the argument return values.
  *
  */
 enum

@@ -51,7 +51,7 @@ class FrameBuilder
 {
 public:
     /**
-     * This method initializes the `FrameBuilder` to use a given buffer.
+     * Initializes the `FrameBuilder` to use a given buffer.
      *
      * `FrameBuilder` MUST be initialized before its other methods are used.
      *
@@ -62,7 +62,7 @@ public:
     void Init(void *aBuffer, uint16_t aLength);
 
     /**
-     * This method returns a pointer to the start of `FrameBuilder` buffer.
+     * Returns a pointer to the start of `FrameBuilder` buffer.
      *
      * @returns A pointer to the frame buffer.
      *
@@ -70,7 +70,7 @@ public:
     const uint8_t *GetBytes(void) const { return mBuffer; }
 
     /**
-     * This method returns the current length of frame (number of bytes appended so far).
+     * Returns the current length of frame (number of bytes appended so far).
      *
      * @returns The current frame length.
      *
@@ -78,7 +78,7 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the maximum length of the frame.
+     * Returns the maximum length of the frame.
      *
      * @returns The maximum frame length (max number of bytes in the frame buffer).
      *
@@ -86,9 +86,9 @@ public:
     uint16_t GetMaxLength(void) const { return mMaxLength; }
 
     /**
-     * This method sets the maximum length of the frame.
+     * Sets the maximum length of the frame.
      *
-     * This method does not perform any checks on the new given length. The caller MUST ensure that the specified max
+     * Does not perform any checks on the new given length. The caller MUST ensure that the specified max
      * length is valid for the frame buffer.
      *
      * @param[in] aLength  The maximum frame length.
@@ -97,7 +97,7 @@ public:
     void SetMaxLength(uint16_t aLength) { mMaxLength = aLength; }
 
     /**
-     * This method returns the remaining length (number of bytes that can be appended) in the frame.
+     * Returns the remaining length (number of bytes that can be appended) in the frame.
      *
      * @returns The remaining length.
      *
@@ -105,7 +105,7 @@ public:
     uint16_t GetRemainingLength(void) const { return mMaxLength - mLength; }
 
     /**
-     * This method indicates whether or not there are enough bytes remaining in the `FrameBuilder` buffer to append a
+     * Indicates whether or not there are enough bytes remaining in the `FrameBuilder` buffer to append a
      * given number of bytes.
      *
      * @param[in] aLength   The append length.
@@ -117,7 +117,7 @@ public:
     bool CanAppend(uint16_t aLength) const { return (static_cast<uint32_t>(mLength) + aLength) <= mMaxLength; }
 
     /**
-     * This method appends an `uint8_t` value to the `FrameBuilder`.
+     * Appends an `uint8_t` value to the `FrameBuilder`.
      *
      * @param[in] aUint8     The `uint8_t` value to append.
      *
@@ -128,7 +128,7 @@ public:
     Error AppendUint8(uint8_t aUint8);
 
     /**
-     * This method appends an `uint16_t` value assuming big endian encoding to the `FrameBuilder`.
+     * Appends an `uint16_t` value assuming big endian encoding to the `FrameBuilder`.
      *
      * @param[in] aUint16    The `uint16_t` value to append.
      *
@@ -139,7 +139,7 @@ public:
     Error AppendBigEndianUint16(uint16_t aUint16);
 
     /**
-     * This method appends an `uint32_t` value assuming big endian encoding to the `FrameBuilder`.
+     * Appends an `uint32_t` value assuming big endian encoding to the `FrameBuilder`.
      *
      * @param[in] aUint32    The `uint32_t` value to append.
      *
@@ -150,7 +150,7 @@ public:
     Error AppendBigEndianUint32(uint32_t aUint32);
 
     /**
-     * This method appends an `uint16_t` value assuming little endian encoding to the `FrameBuilder`.
+     * Appends an `uint16_t` value assuming little endian encoding to the `FrameBuilder`.
      *
      * @param[in] aUint16    The `uint16_t` value to append.
      *
@@ -161,7 +161,7 @@ public:
     Error AppendLittleEndianUint16(uint16_t aUint16);
 
     /**
-     * This method appends an `uint32_t` value assuming little endian encoding to the `FrameBuilder`.
+     * Appends an `uint32_t` value assuming little endian encoding to the `FrameBuilder`.
      *
      * @param[in] aUint32    The `uint32_t` value to append.
      *
@@ -172,7 +172,7 @@ public:
     Error AppendLittleEndianUint32(uint32_t aUint32);
 
     /**
-     * This method appends bytes from a given buffer to the `FrameBuilder`.
+     * Appends bytes from a given buffer to the `FrameBuilder`.
      *
      * @param[in] aBuffer    A pointer to a data bytes to append.
      * @param[in] aLength    Number of bytes in @p aBuffer.
@@ -184,7 +184,7 @@ public:
     Error AppendBytes(const void *aBuffer, uint16_t aLength);
 
     /**
-     * This method appends a given `Mac::Address` to the `FrameBuilder`.
+     * Appends a given `Mac::Address` to the `FrameBuilder`.
      *
      * @param[in] aMacAddress  A `Mac::Address` to append.
      *
@@ -196,7 +196,7 @@ public:
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
-     * This method appends bytes read from a given message to the `FrameBuilder`.
+     * Appends bytes read from a given message to the `FrameBuilder`.
      *
      * @param[in] aMessage   The message to read the bytes from.
      * @param[in] aOffset    The offset in @p aMessage to start reading the bytes from.
@@ -211,7 +211,7 @@ public:
 #endif
 
     /**
-     * This method appends an object to the `FrameBuilder`.
+     * Appends an object to the `FrameBuilder`.
      *
      * @tparam    ObjectType  The object type to append.
      *
@@ -229,9 +229,9 @@ public:
     }
 
     /**
-     * This method writes bytes in `FrameBuilder` at a given offset overwriting the previously appended content.
+     * Writes bytes in `FrameBuilder` at a given offset overwriting the previously appended content.
      *
-     * This method does not perform any bound checks. The caller MUST ensure that the given data length fits within the
+     * Does not perform any bound checks. The caller MUST ensure that the given data length fits within the
      * previously appended content. Otherwise the behavior of this method is undefined.
      *
      * @param[in] aOffset    The offset to begin writing.
@@ -242,9 +242,9 @@ public:
     void WriteBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength);
 
     /**
-     * This methods writes an object to the `FrameBuilder` at a given offset overwriting previously appended content.
+     * Writes an object to the `FrameBuilder` at a given offset overwriting previously appended content.
      *
-     * This method does not perform any bound checks. The caller MUST ensure the given data length fits within the
+     * Does not perform any bound checks. The caller MUST ensure the given data length fits within the
      * previously appended content. Otherwise the behavior of this method is undefined.
      *
      * @tparam     ObjectType   The object type to write.
@@ -261,7 +261,7 @@ public:
     }
 
     /**
-     * This method inserts bytes in `FrameBuilder` at a given offset, moving previous content forward.
+     * Inserts bytes in `FrameBuilder` at a given offset, moving previous content forward.
      *
      * The caller MUST ensure that @p aOffset is within the current frame length (from 0 up to and including
      * `GetLength()`). Otherwise the behavior of this method is undefined.
@@ -277,7 +277,7 @@ public:
     Error InsertBytes(uint16_t aOffset, const void *aBuffer, uint16_t aLength);
 
     /**
-     * This method inserts an object in `FrameBuilder` at a given offset, moving previous content forward.
+     * Inserts an object in `FrameBuilder` at a given offset, moving previous content forward.
      *
      * The caller MUST ensure that @p aOffset is within the current frame length (from 0 up to and including
      * `GetLength()`). Otherwise the behavior of this method is undefined.
@@ -299,10 +299,10 @@ public:
     }
 
     /**
-     * This method removes a given number of bytes in `FrameBuilder` at a given offset, moving existing content
+     * Removes a given number of bytes in `FrameBuilder` at a given offset, moving existing content
      * after removed bytes backward.
      *
-     * This method does not perform any bound checks. The caller MUST ensure that the given length and offset fits
+     * Does not perform any bound checks. The caller MUST ensure that the given length and offset fits
      * within the previously appended content. Otherwise the behavior of this method is undefined.
      *
      * @param[in] aOffset   The offset to remove bytes from.

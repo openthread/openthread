@@ -44,7 +44,7 @@ class BinarySearch
 {
 public:
     /**
-     * This template method performs binary search in a given sorted table array to find an entry matching a given key.
+     * Performs binary search in a given sorted table array to find an entry matching a given key.
      *
      * @note This method requires the array to be sorted, otherwise its behavior is undefined.
      *
@@ -77,9 +77,9 @@ public:
     }
 
     /**
-     * This template method indicates whether a given table array is sorted based or not.
+     * Indicates whether a given table array is sorted based or not.
      *
-     * This method is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
+     * Is `constexpr` and is intended for use in `static_assert`s to verify that a `constexpr` lookup table
      * array is sorted. It is not recommended for use in other situations.
      *
      * @tparam Entry       The table entry type.

@@ -45,7 +45,7 @@
 namespace ot {
 
 /**
- * This class implements handling Announce Begin Requests.
+ * Implements handling Announce Begin Requests.
  *
  */
 class AnnounceBeginServer : public AnnounceSenderBase
@@ -54,13 +54,13 @@ class AnnounceBeginServer : public AnnounceSenderBase
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit AnnounceBeginServer(Instance &aInstance);
 
     /**
-     * This method begins the MLE Announce transmission process.
+     * Begins the MLE Announce transmission process.
      *
      * @param[in]  aChannelMask   The channels to use for transmission.
      * @param[in]  aCount         The number of transmissions per channel.

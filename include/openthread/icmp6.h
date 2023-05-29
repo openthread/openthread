@@ -85,7 +85,7 @@ typedef enum otIcmp6Code
 /**
  * @struct otIcmp6Header
  *
- * This structure represents an ICMPv6 header.
+ * Represents an ICMPv6 header.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -103,7 +103,7 @@ struct otIcmp6Header
 } OT_TOOL_PACKED_END;
 
 /**
- * This type represents an ICMPv6 header.
+ * Represents an ICMPv6 header.
  *
  */
 typedef struct otIcmp6Header otIcmp6Header;
@@ -123,7 +123,7 @@ typedef void (*otIcmp6ReceiveCallback)(void                *aContext,
                                        const otIcmp6Header *aIcmpHeader);
 
 /**
- * This structure implements ICMPv6 message handler.
+ * Implements ICMPv6 message handler.
  *
  */
 typedef struct otIcmp6Handler
@@ -146,7 +146,7 @@ typedef enum otIcmp6EchoMode
 } otIcmp6EchoMode;
 
 /**
- * This function indicates whether or not ICMPv6 Echo processing is enabled.
+ * Indicates whether or not ICMPv6 Echo processing is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -159,7 +159,7 @@ typedef enum otIcmp6EchoMode
 otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance);
 
 /**
- * This function sets whether or not ICMPv6 Echo processing is enabled.
+ * Sets whether or not ICMPv6 Echo processing is enabled.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aMode     The ICMPv6 Echo processing mode.
@@ -168,7 +168,7 @@ otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance);
 void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode);
 
 /**
- * This function registers a handler to provide received ICMPv6 messages.
+ * Registers a handler to provide received ICMPv6 messages.
  *
  * @note A handler structure @p aHandler has to be stored in persistent (static) memory.
  *       OpenThread does not make a copy of handler structure.
@@ -181,7 +181,7 @@ void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode);
 otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler);
 
 /**
- * This function sends an ICMPv6 Echo Request via the Thread interface.
+ * Sends an ICMPv6 Echo Request via the Thread interface.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aMessage      A pointer to the message buffer containing the ICMPv6 payload.

@@ -56,9 +56,9 @@ namespace ot {
 namespace Hdlc {
 
 /**
- * This class defines a frame write pointer used by `Hdlc::Encoder` or `Hdlc::Decoder`.
+ * Defines a frame write pointer used by `Hdlc::Encoder` or `Hdlc::Decoder`.
  *
- * This class defines the minimum set of APIs used by `Encoder/Decoder` for writing an encoded/decoded frame. It is
+ * Defines the minimum set of APIs used by `Encoder/Decoder` for writing an encoded/decoded frame. It is
  * simply a wrapper over a pointer into a buffer indicating where next byte should be written. Along with a write
  * pointer, this class stores a remaining length variable indicating number of remaining bytes that can be written into
  * the buffer.
@@ -76,7 +76,7 @@ class FrameWritePointer
 {
 public:
     /**
-     * This method indicates whether there is buffer space available to write @p aWriteLength bytes.
+     * Indicates whether there is buffer space available to write @p aWriteLength bytes.
      *
      * param[in] aWriteLength       Number of bytes to write.
      *
@@ -87,7 +87,7 @@ public:
     bool CanWrite(uint16_t aWriteLength) const { return (mRemainingLength >= aWriteLength); }
 
     /**
-     * This method writes a byte into the buffer and updates the write pointer (if space is available).
+     * Writes a byte into the buffer and updates the write pointer (if space is available).
      *
      * @retval OT_ERROR_NONE     Successfully wrote the byte and updated the pointer.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte.
@@ -100,7 +100,7 @@ public:
     }
 
     /**
-     * This method undoes the last @p aUndoLength writes, removing them from frame.
+     * Undoes the last @p aUndoLength writes, removing them from frame.
      *
      * @note Caller should ensure that @p aUndoLength is less than or equal to the number of previously written bytes
      * into the frame. This method does not perform any checks and its behavior is undefined if @p aUndoLength is
@@ -127,7 +127,7 @@ protected:
 };
 
 /**
- * This class defines a template frame buffer of a given size for storing a single frame.
+ * Defines a template frame buffer of a given size for storing a single frame.
  *
  * The template parameter `kSize` specifies the size of the buffer.
  *
@@ -136,7 +136,7 @@ template <uint16_t kSize> class FrameBuffer : public FrameWritePointer
 {
 public:
     /**
-     * This constructor initializes the `FrameBuffer` object.
+     * Initializes the `FrameBuffer` object.
      *
      */
     FrameBuffer(void)
@@ -146,7 +146,7 @@ public:
     }
 
     /**
-     * This method clears the buffer, moving the write pointer to the beginning of the buffer.
+     * Clears the buffer, moving the write pointer to the beginning of the buffer.
      *
      */
     void Clear(void)
@@ -156,7 +156,7 @@ public:
     }
 
     /**
-     * This method indicates whether the buffer is empty or contains a frame.
+     * Indicates whether the buffer is empty or contains a frame.
      *
      * @retval TRUE  Buffer is empty
      * @retval FALSE Buffer contains a frame
@@ -165,7 +165,7 @@ public:
     bool IsEmpty(void) const { return (mWritePointer == mBuffer); }
 
     /**
-     * This method gets the length (number of bytes) in the frame.
+     * Gets the length (number of bytes) in the frame.
      *
      * @returns The length (number of bytes) in the frame.
      *
@@ -173,7 +173,7 @@ public:
     uint16_t GetLength(void) const { return static_cast<uint16_t>(mWritePointer - mBuffer); }
 
     /**
-     * This method gets a pointer to start of the frame.
+     * Gets a pointer to start of the frame.
      *
      * @returns A pointer to start of the frame.
      *
@@ -185,7 +185,7 @@ private:
 };
 
 /**
- * This class defines a template frame buffer of a given size for storing multiple frames.
+ * Defines a template frame buffer of a given size for storing multiple frames.
  *
  * The template parameter `kSize` specifies the total size of the buffer.
  *
@@ -197,7 +197,7 @@ template <uint16_t kSize> class MultiFrameBuffer : public FrameWritePointer
 {
 public:
     /**
-     * This constructor initializes the `MultiFrameBuffer` object.
+     * Initializes the `MultiFrameBuffer` object.
      *
      */
     MultiFrameBuffer(void)
@@ -207,7 +207,7 @@ public:
     }
 
     /**
-     * This method clears the buffer, removing current frame and all previously saved frames.
+     * Clears the buffer, removing current frame and all previously saved frames.
      *
      * It moves the write pointer to the beginning of the buffer.
      *
@@ -222,7 +222,7 @@ public:
     }
 
     /**
-     * This method indicates whether the current frame (being written) is empty or not.
+     * Indicates whether the current frame (being written) is empty or not.
      *
      * @retval TRUE  Current frame is empty.
      * @retval FALSE Current frame is not empty.
@@ -231,7 +231,7 @@ public:
     bool HasFrame(void) const { return (mWritePointer != GetFrame()); }
 
     /**
-     * This method sets the length (number of bytes) of the current frame being written.
+     * Sets the length (number of bytes) of the current frame being written.
      *
      * param[in] aLength  The length of current frame.
      *
@@ -254,7 +254,7 @@ public:
     }
 
     /**
-     * This method gets the length (number of bytes) in the current frame being written into the buffer.
+     * Gets the length (number of bytes) in the current frame being written into the buffer.
      *
      * @returns The length (number of bytes) in the frame.
      *
@@ -262,7 +262,7 @@ public:
     uint16_t GetLength(void) const { return static_cast<uint16_t>(mWritePointer - GetFrame()); }
 
     /**
-     * This method sets the length (number of bytes) of reserved buffer in front of the current frame being written.
+     * Sets the length (number of bytes) of reserved buffer in front of the current frame being written.
      *
      * param[in] aSkipLength  The length of reserved buffer.
      *
@@ -286,7 +286,7 @@ public:
     }
 
     /**
-     * This method gets the length (number of bytes) of reserved buffer in front of the current frame being written.
+     * Gets the length (number of bytes) of reserved buffer in front of the current frame being written.
      *
      * @returns The length (number of bytes) of the reserved buffer.
      *
@@ -297,7 +297,7 @@ public:
     }
 
     /**
-     * This method gets a pointer to the start of the current frame.
+     * Gets a pointer to the start of the current frame.
      *
      * @returns A pointer to the start of the frame.
      *
@@ -305,7 +305,7 @@ public:
     uint8_t *GetFrame(void) const { return mWriteFrameStart + kHeaderSize + GetSkipLength(); }
 
     /**
-     * This method gets the maximum length of the current frame.
+     * Gets the maximum length of the current frame.
      *
      * @returns The maximum length of the current frame.
      *
@@ -313,7 +313,7 @@ public:
     uint16_t GetFrameMaxLength(void) const { return static_cast<uint16_t>(mBuffer + kSize - GetFrame()); }
 
     /**
-     * This method saves the current frame and prepares the write pointer for a next frame to be written into the
+     * Saves the current frame and prepares the write pointer for a next frame to be written into the
      * buffer.
      *
      * Saved frame can be retrieved later using `GetNextSavedFrame()`.
@@ -329,7 +329,7 @@ public:
     }
 
     /**
-     * This method discards the current frame and prepares the write pointer for a next frame to be written into the
+     * Discards the current frame and prepares the write pointer for a next frame to be written into the
      * buffer.
      *
      */
@@ -342,7 +342,7 @@ public:
     }
 
     /**
-     * This method indicates whether there are any saved frames in the buffer.
+     * Indicates whether there are any saved frames in the buffer.
      *
      * @retval TRUE  There is at least one saved frame in the buffer.
      * @retval FALSE There is no saved frame in the buffer.
@@ -351,7 +351,7 @@ public:
     bool HasSavedFrame(void) const { return (mWriteFrameStart != mBuffer); }
 
     /**
-     * This method iterates through previously saved frames in the buffer, getting a next frame in the queue.
+     * Iterates through previously saved frames in the buffer, getting a next frame in the queue.
      *
      * @param[in,out] aFrame   On entry, should point to a previous saved frame or nullptr to get the first frame.
      *                         On exit, the pointer variable is updated to next frame or set to nullptr if there are
@@ -390,7 +390,7 @@ public:
     }
 
     /**
-     * This method clears all saved frames from the buffer and adjusts all the pointers.
+     * Clears all saved frames from the buffer and adjusts all the pointers.
      *
      * @note This method moves the pointers into the buffer and also copies the content. Any previously retrieved
      * pointer to buffer (from `GetFrame()` or `GetNextSavedFrame()`) should be considered invalid after calling this
@@ -456,14 +456,14 @@ private:
 };
 
 /**
- * This class implements the HDLC-lite encoder.
+ * Implements the HDLC-lite encoder.
  *
  */
 class Encoder
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aWritePointer   The `FrameWritePointer` used by `Encoder` to write the encoded frames.
      *
@@ -471,7 +471,7 @@ public:
     explicit Encoder(FrameWritePointer &aWritePointer);
 
     /**
-     * This method begins an HDLC frame.
+     * Begins an HDLC frame.
      *
      * @retval OT_ERROR_NONE     Successfully started the HDLC frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to start the HDLC frame.
@@ -480,7 +480,7 @@ public:
     otError BeginFrame(void);
 
     /**
-     * This method encodes a single byte into current frame.
+     * Encodes a single byte into current frame.
      *
      * If there is no space to add the byte, the write pointer in frame buffer remains the same.
      *
@@ -493,9 +493,9 @@ public:
     otError Encode(uint8_t aByte);
 
     /**
-     * This method encodes a given block of data into current frame.
+     * Encodes a given block of data into current frame.
      *
-     * This method returns success only if there is space in buffer to encode the entire block of data. If there is no
+     * Returns success only if there is space in buffer to encode the entire block of data. If there is no
      * space to encode the entire block of data, the write pointer in frame buffer remains the same.
      *
      * @param[in]    aData       A pointer to a buffer containing the data to encode.
@@ -508,7 +508,7 @@ public:
     otError Encode(const uint8_t *aData, uint16_t aLength);
 
     /**
-     * This method ends/finalizes the HDLC frame.
+     * Ends/finalizes the HDLC frame.
      *
      * @retval OT_ERROR_NONE     Successfully ended the HDLC frame.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to end the HDLC frame.
@@ -522,14 +522,14 @@ private:
 };
 
 /**
- * This class implements the HDLC-lite decoder.
+ * Implements the HDLC-lite decoder.
  *
  */
 class Decoder
 {
 public:
     /**
-     * This function pointer is called when either a complete frame has been decoded or an error occurs during
+     * Pointer is called when either a complete frame has been decoded or an error occurs during
      * decoding.
      *
      * The decoded frame (or the partially decoded frame in case of an error) is available in `aFrameWritePointer`
@@ -544,7 +544,7 @@ public:
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
     /**
-     * This constructor initializes the decoder.
+     * Initializes the decoder.
      *
      * @param[in] aFrameWritePointer   The `FrameWritePointer` used by `Decoder` to write the decoded frames.
      * @param[in] aFrameHandler        The frame handler callback function pointer.
@@ -554,7 +554,7 @@ public:
     Decoder(FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext);
 
     /**
-     * This method feeds a block of data into the decoder.
+     * Feeds a block of data into the decoder.
      *
      * If during decoding, a full HDLC frame is successfully decoded or an error occurs, the `FrameHandler` callback
      * is called. The decoded frame (or the partially decoded frame in case of an error) is available in
@@ -568,7 +568,7 @@ public:
     void Decode(const uint8_t *aData, uint16_t aLength);
 
     /**
-     * This method resets internal states of the decoder.
+     * Resets internal states of the decoder.
      *
      */
     void Reset(void);

@@ -77,7 +77,7 @@ namespace ot {
  */
 
 /**
- * This class implements managing DUA.
+ * Implements managing DUA.
  *
  */
 class DuaManager : public InstanceLocator, private NonCopyable
@@ -88,7 +88,7 @@ class DuaManager : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -96,7 +96,7 @@ public:
     explicit DuaManager(Instance &aInstance);
 
     /**
-     * This method notifies Domain Prefix status.
+     * Notifies Domain Prefix status.
      *
      * @param[in]  aState  The Domain Prefix state or state change.
      *
@@ -104,7 +104,7 @@ public:
     void HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixState aState);
 
     /**
-     * This method notifies Primary Backbone Router status.
+     * Notifies Primary Backbone Router status.
      *
      * @param[in]  aState   The state or state change of Primary Backbone Router.
      * @param[in]  aConfig  The Primary Backbone Router service.
@@ -115,7 +115,7 @@ public:
 #if OPENTHREAD_CONFIG_DUA_ENABLE
 
     /**
-     * This method returns a reference to the Domain Unicast Address.
+     * Returns a reference to the Domain Unicast Address.
      *
      * @returns A reference to the Domain Unicast Address.
      *
@@ -123,7 +123,7 @@ public:
     const Ip6::Address &GetDomainUnicastAddress(void) const { return mDomainUnicastAddress.GetAddress(); }
 
     /**
-     * This method sets the Interface Identifier manually specified for the Thread Domain Unicast Address.
+     * Sets the Interface Identifier manually specified for the Thread Domain Unicast Address.
      *
      * @param[in]  aIid        A reference to the Interface Identifier to set.
      *
@@ -134,13 +134,13 @@ public:
     Error SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
 
     /**
-     * This method clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
+     * Clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
      *
      */
     void ClearFixedDuaInterfaceIdentifier(void);
 
     /**
-     * This method indicates whether or not there is Interface Identifier manually specified for the Thread
+     * Indicates whether or not there is Interface Identifier manually specified for the Thread
      * Domain Unicast Address.
      *
      * @retval true  If there is Interface Identifier manually specified.
@@ -150,7 +150,7 @@ public:
     bool IsFixedDuaInterfaceIdentifierSet(void) { return !mFixedDuaInterfaceIdentifier.IsUnspecified(); }
 
     /**
-     * This method gets the Interface Identifier for the Thread Domain Unicast Address if manually specified.
+     * Gets the Interface Identifier for the Thread Domain Unicast Address if manually specified.
      *
      * @returns A reference to the Interface Identifier.
      *
@@ -158,13 +158,13 @@ public:
     const Ip6::InterfaceIdentifier &GetFixedDuaInterfaceIdentifier(void) const { return mFixedDuaInterfaceIdentifier; }
 
     /*
-     * This method restores duplicate address detection information from non-volatile memory.
+     * Restores duplicate address detection information from non-volatile memory.
      *
      */
     void Restore(void);
 
     /**
-     * This method notifies duplicated Domain Unicast Address.
+     * Notifies duplicated Domain Unicast Address.
      *
      */
     void NotifyDuplicateDomainUnicastAddress(void);

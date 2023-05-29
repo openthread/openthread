@@ -44,7 +44,7 @@ namespace ot {
 namespace Tmf {
 
 /**
- * This macro declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
+ * Declares a TMF handler (a full template specialization of `HandleTmf<Uri>` method) in a given `Type`.
  *
  * The class `Type` MUST declare a template method of the following format:
  *
@@ -62,7 +62,7 @@ constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 typedef Coap::Message Message; ///< A TMF message.
 
 /**
- * This class represents message information for a TMF message.
+ * Represents message information for a TMF message.
  *
  * This is sub-class of `Ip6::MessageInfo` intended for use when sending TMF messages.
  *
@@ -71,7 +71,7 @@ class MessageInfo : public InstanceLocator, public Ip6::MessageInfo
 {
 public:
     /**
-     * This constructor initializes the `MessageInfo`.
+     * Initializes the `MessageInfo`.
      *
      * The peer port is set to `Tmf::kUdpPort` and all other properties are cleared (set to zero).
      *
@@ -85,19 +85,19 @@ public:
     }
 
     /**
-     * This method sets the local socket port to TMF port.
+     * Sets the local socket port to TMF port.
      *
      */
     void SetSockPortToTmf(void) { SetSockPort(kUdpPort); }
 
     /**
-     * This method sets the local socket address to mesh-local RLOC address.
+     * Sets the local socket address to mesh-local RLOC address.
      *
      */
     void SetSockAddrToRloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to leader ALOC.
+     * Sets the local socket address to RLOC address and the peer socket address to leader ALOC.
      *
      * @retval kErrorNone      Successfully set the addresses.
      * @retval kErrorDetached  Cannot set leader ALOC since device is currently detached.
@@ -106,7 +106,7 @@ public:
     Error SetSockAddrToRlocPeerAddrToLeaderAloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to leader RLOC.
+     * Sets the local socket address to RLOC address and the peer socket address to leader RLOC.
      *
      * @retval kErrorNone      Successfully set the addresses.
      * @retval kErrorDetached  Cannot set leader RLOC since device is currently detached.
@@ -115,14 +115,14 @@ public:
     Error SetSockAddrToRlocPeerAddrToLeaderRloc(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to realm-local all
+     * Sets the local socket address to RLOC address and the peer socket address to realm-local all
      * routers multicast address.
      *
      */
     void SetSockAddrToRlocPeerAddrToRealmLocalAllRoutersMulticast(void);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
+     * Sets the local socket address to RLOC address and the peer socket address to a router RLOC based on
      * a given RLOC16.
      *
      * @param[in] aRloc16     The RLOC16 to use for peer address.
@@ -131,7 +131,7 @@ public:
     void SetSockAddrToRlocPeerAddrTo(uint16_t aRloc16);
 
     /**
-     * This method sets the local socket address to RLOC address and the peer socket address to a given address.
+     * Sets the local socket address to RLOC address and the peer socket address to a given address.
      *
      * @param[in] aPeerAddress  The peer address.
      *
@@ -140,14 +140,14 @@ public:
 };
 
 /**
- * This class implements functionality of the Thread TMF agent.
+ * Implements functionality of the Thread TMF agent.
  *
  */
 class Agent : public Coap::Coap
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
@@ -155,7 +155,7 @@ public:
     explicit Agent(Instance &aInstance);
 
     /**
-     * This method starts the TMF agent.
+     * Starts the TMF agent.
      *
      * @retval kErrorNone    Successfully started the CoAP service.
      * @retval kErrorFailed  Failed to start the TMF agent.
@@ -164,7 +164,7 @@ public:
     Error Start(void);
 
     /**
-     * This method indicates whether or not a message meets TMF addressing rules.
+     * Indicates whether or not a message meets TMF addressing rules.
      *
      * A TMF message MUST comply with following rules:
      *
@@ -183,7 +183,7 @@ public:
     bool IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address &aDestAddress, uint16_t aDestPort) const;
 
     /**
-     * This static method converts a TMF message priority to IPv6 header DSCP value.
+     * Converts a TMF message priority to IPv6 header DSCP value.
      *
      * @param[in] aPriority  The message priority to convert.
      *
@@ -193,7 +193,7 @@ public:
     static uint8_t PriorityToDscp(Message::Priority aPriority);
 
     /**
-     * This static method converts a IPv6 header DSCP value to message priority for TMF message.
+     * Converts a IPv6 header DSCP value to message priority for TMF message.
      *
      * @param[in] aDscp      The IPv6 header DSCP value in a TMF message.
      *
@@ -217,14 +217,14 @@ private:
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 /**
- * This class implements functionality of the secure TMF agent.
+ * Implements functionality of the secure TMF agent.
  *
  */
 class SecureAgent : public Coap::CoapSecure
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aInstance      A reference to the OpenThread instance.
      *

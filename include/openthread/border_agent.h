@@ -60,7 +60,7 @@ extern "C" {
 /**
  * @struct otBorderAgentId
  *
- * This structure represents a Border Agent ID.
+ * Represents a Border Agent ID.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -70,7 +70,7 @@ struct otBorderAgentId
 } OT_TOOL_PACKED_END;
 
 /**
- * This enumeration defines the Border Agent state.
+ * Defines the Border Agent state.
  *
  */
 typedef enum otBorderAgentState

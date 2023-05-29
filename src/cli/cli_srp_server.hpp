@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the SRP Server CLI interpreter.
+ * Implements the SRP Server CLI interpreter.
  *
  */
 class SrpServer : private Output
@@ -67,7 +67,7 @@ public:
     }
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

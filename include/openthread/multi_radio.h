@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This type represents information associated with a radio link.
+ * Represents information associated with a radio link.
  *
  */
 typedef struct otRadioLinkInfo
@@ -61,7 +61,7 @@ typedef struct otRadioLinkInfo
 } otRadioLinkInfo;
 
 /**
- * This type represents multi radio link information associated with a neighbor.
+ * Represents multi radio link information associated with a neighbor.
  *
  */
 typedef struct otMultiRadioNeighborInfo
@@ -73,9 +73,9 @@ typedef struct otMultiRadioNeighborInfo
 } otMultiRadioNeighborInfo;
 
 /**
- * This function gets the multi radio link information associated with a neighbor with a given Extended Address.
+ * Gets the multi radio link information associated with a neighbor with a given Extended Address.
  *
- * This function requires the multi radio link feature to be enabled (please see `config/radio_link.h`).
+ * Requires the multi radio link feature to be enabled (please see `config/radio_link.h`).
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aExtAddress    The Extended Address of neighbor.

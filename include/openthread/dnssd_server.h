@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This function is called when a DNS-SD query subscribes one of:
+ * Is called when a DNS-SD query subscribes one of:
  *      1. a service name.
  *      2. a service instance name.
  *      3. a host name.
@@ -83,7 +83,7 @@ extern "C" {
 typedef void (*otDnssdQuerySubscribeCallback)(void *aContext, const char *aFullName);
 
 /**
- * This function is called when a DNS-SD query unsubscribes one of:
+ * Is called when a DNS-SD query unsubscribes one of:
  *      1. a service name.
  *      2. a service instance name.
  *      3. a host name.
@@ -107,7 +107,7 @@ typedef void (*otDnssdQueryUnsubscribeCallback)(void *aContext, const char *aFul
 typedef void otDnssdQuery;
 
 /**
- * This structure represents information of a discovered service instance for a DNS-SD query.
+ * Represents information of a discovered service instance for a DNS-SD query.
  *
  */
 typedef struct otDnssdServiceInstanceInfo
@@ -125,7 +125,7 @@ typedef struct otDnssdServiceInstanceInfo
 } otDnssdServiceInstanceInfo;
 
 /**
- * This structure represents information of a discovered host for a DNS-SD query.
+ * Represents information of a discovered host for a DNS-SD query.
  *
  */
 typedef struct otDnssdHostInfo
@@ -136,7 +136,7 @@ typedef struct otDnssdHostInfo
 } otDnssdHostInfo;
 
 /**
- * This enumeration specifies a DNS-SD query type.
+ * Specifies a DNS-SD query type.
  *
  */
 typedef enum
@@ -148,7 +148,7 @@ typedef enum
 } otDnssdQueryType;
 
 /**
- * This structure contains the counters of DNS-SD server.
+ * Contains the counters of DNS-SD server.
  *
  */
 typedef struct otDnssdCounters
@@ -164,7 +164,7 @@ typedef struct otDnssdCounters
 } otDnssdCounters;
 
 /**
- * This function sets DNS-SD server query callbacks.
+ * Sets DNS-SD server query callbacks.
  *
  * The DNS-SD server calls @p aSubscribe to subscribe to a service or service instance to resolve a DNS-SD query and @p
  * aUnsubscribe to unsubscribe when the query is resolved or timeout.
@@ -183,7 +183,7 @@ void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
                               void                           *aContext);
 
 /**
- * This function notifies a discovered service instance.
+ * Notifies a discovered service instance.
  *
  * The external query resolver (e.g. Discovery Proxy) should call this function to notify OpenThread core of the
  * subscribed services or service instances.
@@ -199,7 +199,7 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aIn
                                                  const char                 *aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo);
 /**
- * This function notifies a discovered host.
+ * Notifies a discovered host.
  *
  * The external query resolver (e.g. Discovery Proxy) should call this function to notify OpenThread core of the
  * subscribed hosts.
@@ -214,7 +214,7 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aIn
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo);
 
 /**
- * This function acquires the next query in the DNS-SD server.
+ * Acquires the next query in the DNS-SD server.
  *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aQuery            The query pointer. Pass NULL to get the first query.
@@ -225,7 +225,7 @@ void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFu
 const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery);
 
 /**
- * This function acquires the DNS-SD query type and name for a specific query.
+ * Acquires the DNS-SD query type and name for a specific query.
  *
  * @param[in]   aQuery            The query pointer acquired from `otDnssdGetNextQuery`.
  * @param[out]  aNameOutput       The name output buffer, which should be `OT_DNS_MAX_NAME_SIZE` bytes long.
@@ -236,7 +236,7 @@ const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuer
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE]);
 
 /**
- * This function returns the counters of the DNS-SD server.
+ * Returns the counters of the DNS-SD server.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *

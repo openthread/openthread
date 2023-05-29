@@ -57,7 +57,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements AES CCM computation.
+ * Implements AES CCM computation.
  *
  */
 class AesCcm
@@ -68,7 +68,7 @@ public:
     static constexpr uint8_t kNonceSize    = 13;                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
 
     /**
-     * This enumeration type represent the encryption vs decryption mode.
+     * Type represent the encryption vs decryption mode.
      *
      */
     enum Mode : uint8_t
@@ -78,7 +78,7 @@ public:
     };
 
     /**
-     * This method sets the key.
+     * Sets the key.
      *
      * @param[in]  aKey    Crypto Key used in AES operation
      *
@@ -86,7 +86,7 @@ public:
     void SetKey(const Key &aKey) { mEcb.SetKey(aKey); }
 
     /**
-     * This method sets the key.
+     * Sets the key.
      *
      * @param[in]  aKey        A pointer to the key.
      * @param[in]  aKeyLength  Length of the key in bytes.
@@ -95,7 +95,7 @@ public:
     void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
 
     /**
-     * This method sets the key.
+     * Sets the key.
      *
      * @param[in]  aMacKey        Key Material for AES operation.
      *
@@ -103,7 +103,7 @@ public:
     void SetKey(const Mac::KeyMaterial &aMacKey);
 
     /**
-     * This method initializes the AES CCM computation.
+     * Initializes the AES CCM computation.
      *
      * @param[in]  aHeaderLength     Length of header in bytes.
      * @param[in]  aPlainTextLength  Length of plaintext in bytes.
@@ -119,7 +119,7 @@ public:
               uint8_t     aNonceLength);
 
     /**
-     * This method processes the header.
+     * Processes the header.
      *
      * @param[in]  aHeader        A pointer to the header.
      * @param[in]  aHeaderLength  Length of header in bytes.
@@ -128,7 +128,7 @@ public:
     void Header(const void *aHeader, uint32_t aHeaderLength);
 
     /**
-     * This method processes the header.
+     * Processes the header.
      *
      * @tparam    ObjectType   The object type.
      *
@@ -143,7 +143,7 @@ public:
     }
 
     /**
-     * This method processes the payload.
+     * Processes the payload.
      *
      * @param[in,out]  aPlainText   A pointer to the plaintext.
      * @param[in,out]  aCipherText  A pointer to the ciphertext.
@@ -155,9 +155,9 @@ public:
 
 #if !OPENTHREAD_RADIO
     /**
-     * This method processes the payload within a given message.
+     * Processes the payload within a given message.
      *
-     * This method encrypts/decrypts the payload content in place within the @p aMessage.
+     * Encrypts/decrypts the payload content in place within the @p aMessage.
      *
      * @param[in,out]  aMessage     The message to read from and update.
      * @param[in]      aOffset      The offset in @p aMessage to start of payload.
@@ -169,7 +169,7 @@ public:
 #endif
 
     /**
-     * This method returns the tag length in bytes.
+     * Returns the tag length in bytes.
      *
      * @returns The tag length in bytes.
      *
@@ -177,7 +177,7 @@ public:
     uint8_t GetTagLength(void) const { return mTagLength; }
 
     /**
-     * This method generates the tag.
+     * Generates the tag.
      *
      * @param[out]  aTag        A pointer to the tag (must have `GetTagLength()` bytes).
      *
@@ -185,7 +185,7 @@ public:
     void Finalize(void *aTag);
 
     /**
-     * This static method generates IEEE 802.15.4 nonce byte sequence.
+     * Generates IEEE 802.15.4 nonce byte sequence.
      *
      * @param[in]  aAddress        An extended address.
      * @param[in]  aFrameCounter   A frame counter.

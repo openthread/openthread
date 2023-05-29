@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Network Data CLI.
+ * Implements the Network Data CLI.
  *
  */
 class NetworkData : private Output
@@ -77,7 +77,7 @@ public:
     }
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *
@@ -91,7 +91,7 @@ public:
     otError Process(Arg aArgs[]);
 
     /**
-     * This method outputs the prefix config.
+     * Outputs the prefix config.
      *
      * @param[in]  aConfig  The prefix config.
      *
@@ -99,7 +99,7 @@ public:
     void OutputPrefix(const otBorderRouterConfig &aConfig);
 
     /**
-     * This method outputs the route config.
+     * Outputs the route config.
      *
      * @param[in]  aConfig  The route config.
      *
@@ -107,7 +107,7 @@ public:
     void OutputRoute(const otExternalRouteConfig &aConfig);
 
     /**
-     * This method outputs the service config.
+     * Outputs the service config.
      *
      * @param[in]  aConfig  The service config.
      *
@@ -115,7 +115,7 @@ public:
     void OutputService(const otServiceConfig &aConfig);
 
     /**
-     * This method converts the flags from a given prefix config to string.
+     * Converts the flags from a given prefix config to string.
      *
      * @param[in]  aConfig  The prefix config.
      * @param[out] aString  The string to populate from @a Config flags.
@@ -124,7 +124,7 @@ public:
     static void PrefixFlagsToString(const otBorderRouterConfig &aConfig, FlagsString &aString);
 
     /**
-     * This method converts the flags from a given route config to string.
+     * Converts the flags from a given route config to string.
      *
      * @param[in]  aConfig  The route config.
      * @param[out] aString  The string to populate from @a Config flags.

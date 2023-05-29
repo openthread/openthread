@@ -42,7 +42,7 @@
 #include "lib/platform/reset_util.h"
 
 /**
- * This function initializes the CLI app.
+ * Initializes the CLI app.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *

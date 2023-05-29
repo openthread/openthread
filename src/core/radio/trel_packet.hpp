@@ -48,7 +48,7 @@ namespace ot {
 namespace Trel {
 
 /**
- * This class represents a TREL radio link packet encapsulation header.
+ * Represents a TREL radio link packet encapsulation header.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -56,7 +56,7 @@ class Header
 {
 public:
     /**
-     * This enumeration defines packet types.
+     * Defines packet types.
      *
      */
     enum Type : uint8_t
@@ -67,7 +67,7 @@ public:
     };
 
     /**
-     * This enumeration represents Ack Mode field in TREL header.
+     * Represents Ack Mode field in TREL header.
      *
      */
     enum AckMode : uint8_t
@@ -79,13 +79,13 @@ public:
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for the info string (@sa ToInfoString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()` method.
+     * Defines the fixed-length `String` object returned from `ToString()` method.
      *
      */
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method initializes the header.
+     * Initializes the header.
      *
      * @param[in] aType     The header type.
      *
@@ -93,7 +93,7 @@ public:
     void Init(Type aType) { mControl = aType + kVersion; }
 
     /**
-     * This method checks whether the version field in header is valid or not
+     * Checks whether the version field in header is valid or not
      *
      * @returns TRUE if the version field is valid, FALSE otherwise.
      *
@@ -101,7 +101,7 @@ public:
     bool IsVersionValid(void) const { return (mControl & kVersionMask) == kVersion; }
 
     /**
-     * This method gets the packet type.
+     * Gets the packet type.
      *
      * @returns The packet type.
      *
@@ -109,7 +109,7 @@ public:
     Type GetType(void) const { return static_cast<Type>(mControl & kTypeMask); }
 
     /**
-     * This method gets the header length based on its type.
+     * Gets the header length based on its type.
      *
      * @returns the header length (number of bytes).
      *
@@ -117,7 +117,7 @@ public:
     uint16_t GetLength(void) const { return GetSize(GetType()); }
 
     /**
-     * This method gets the Ack Mode field from the header.
+     * Gets the Ack Mode field from the header.
      *
      * @returns The Ack Mode field.
      *
@@ -125,7 +125,7 @@ public:
     AckMode GetAckMode(void) const { return (mControl & kAckModeFlag) ? kAckRequested : kNoAck; }
 
     /**
-     * This method sets the Ack Mode field in the header.
+     * Sets the Ack Mode field in the header.
      *
      * @param[in] aAckMode  The Ack Mode field
      *
@@ -133,7 +133,7 @@ public:
     void SetAckMode(AckMode aAckMode);
 
     /**
-     * This method gets the channel field from the header.
+     * Gets the channel field from the header.
      *
      * @returns The channel field.
      *
@@ -141,7 +141,7 @@ public:
     uint8_t GetChannel(void) const { return mChannel; }
 
     /**
-     * This method sets the channel field in the header.
+     * Sets the channel field in the header.
      *
      * @param[in] aChannel   A channel.
      *
@@ -149,7 +149,7 @@ public:
     void SetChannel(uint8_t aChannel) { mChannel = aChannel; }
 
     /**
-     * This method gets the PAN Identifier field from the header.
+     * Gets the PAN Identifier field from the header.
      *
      * @returns The PAN Identifier field.
      *
@@ -157,7 +157,7 @@ public:
     Mac::PanId GetPanId(void) const { return Encoding::BigEndian::HostSwap16(mPanId); }
 
     /**
-     * This method sets the PAN Identifier field in the header.
+     * Sets the PAN Identifier field in the header.
      *
      * @param[in] aPanId   A PAN Identifier.
      *
@@ -165,7 +165,7 @@ public:
     void SetPanId(Mac::PanId aPanId) { mPanId = Encoding::BigEndian::HostSwap16(aPanId); }
 
     /**
-     * This method gets the packet number field from the header.
+     * Gets the packet number field from the header.
      *
      * @returns The packet number field.
      *
@@ -173,7 +173,7 @@ public:
     uint32_t GetPacketNumber(void) const { return Encoding::BigEndian::HostSwap32(mPacketNumber); }
 
     /**
-     * This method sets the packet number field in the header.
+     * Sets the packet number field in the header.
      *
      * @param[in] aPacketNumber  The packet number.
      *
@@ -181,7 +181,7 @@ public:
     void SetPacketNumber(uint32_t aPacketNumber) { mPacketNumber = Encoding::BigEndian::HostSwap32(aPacketNumber); }
 
     /**
-     * This method gets the source MAC address field from the header.
+     * Gets the source MAC address field from the header.
      *
      * @returns The source MAC address field.
      *
@@ -189,7 +189,7 @@ public:
     const Mac::ExtAddress &GetSource(void) const { return mSource; }
 
     /**
-     * This method sets the source MAC address filed in the header.
+     * Sets the source MAC address filed in the header.
      *
      * @param[in] aSource   A MAC extended address to set as source.
      *
@@ -197,9 +197,9 @@ public:
     void SetSource(const Mac::ExtAddress &aSource) { mSource = aSource; }
 
     /**
-     * This method gets the destination MAC address field from the header.
+     * Gets the destination MAC address field from the header.
      *
-     * This method MUST be used with a unicast of ack type packet, otherwise its behavior is undefined.
+     * MUST be used with a unicast of ack type packet, otherwise its behavior is undefined.
      *
      * @returns The destination MAC address field.
      *
@@ -207,9 +207,9 @@ public:
     const Mac::ExtAddress &GetDestination(void) const { return mDestination; }
 
     /**
-     * This method sets the destination MAC address field in the header.
+     * Sets the destination MAC address field in the header.
      *
-     * This method MUST be used with a unicast of ack type packet, otherwise its behavior is undefined.
+     * MUST be used with a unicast of ack type packet, otherwise its behavior is undefined.
      *
      * @param[in] aDest   A MAC extended address to set as destination.
      *
@@ -217,7 +217,7 @@ public:
     void SetDestination(const Mac::ExtAddress &aDest) { mDestination = aDest; }
 
     /**
-     * This static method gets the size (number of bytes) in header of given packet type.
+     * Gets the size (number of bytes) in header of given packet type.
      *
      * @param[in] aType   The packet type.
      *
@@ -227,7 +227,7 @@ public:
     static uint16_t GetSize(Type aType);
 
     /**
-     * This method returns a string representation of header.
+     * Returns a string representation of header.
      *
      * @returns An `InfoString` representation of header.
      *
@@ -251,7 +251,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a TREL radio link packet.
+ * Represents a TREL radio link packet.
  *
  */
 class Packet : private MutableData<kWithUint16Length>
@@ -260,7 +260,7 @@ class Packet : private MutableData<kWithUint16Length>
 
 public:
     /**
-     * This method initializes the `Packet` with a given buffer and length.
+     * Initializes the `Packet` with a given buffer and length.
      *
      * @param[in] aBuffer  A pointer to a buffer containing the entire packet (header and payload).
      * @param[in] aLength  Length (number of bytes) of the packet (including header and payload).
@@ -269,10 +269,10 @@ public:
     void Init(uint8_t *aBuffer, uint16_t aLength) { Base::Init(aBuffer, aLength); }
 
     /**
-     * This method initializes the `Packet` with a specified header type and given a payload.
+     * Initializes the `Packet` with a specified header type and given a payload.
      *
      * The payload buffer @p aPayload should have space reserved before the start of payload for the packet header.
-     * This method will initialize the header with the given type @p aType. Rest of header fields can be updated after
+     * Will initialize the header with the given type @p aType. Rest of header fields can be updated after
      * initializing the packet.
      *
      * @param[in] aType          The packet type.
@@ -284,7 +284,7 @@ public:
     void Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength);
 
     /**
-     * This method gets a pointer to buffer containing the packet.
+     * Gets a pointer to buffer containing the packet.
      *
      * @returns A pointer to buffer containing the packet.
      *
@@ -292,7 +292,7 @@ public:
     uint8_t *GetBuffer(void) { return Base::GetBytes(); }
 
     /**
-     * This method gets a pointer to buffer containing the packet.
+     * Gets a pointer to buffer containing the packet.
      *
      * @returns A pointer to buffer containing the packet.
      *
@@ -300,7 +300,7 @@ public:
     const uint8_t *GetBuffer(void) const { return Base::GetBytes(); }
 
     /**
-     * This method gets the length of packet.
+     * Gets the length of packet.
      *
      * @returns The length (number of bytes) of packet (header and payload).
      *
@@ -308,7 +308,7 @@ public:
     uint16_t GetLength(void) const { return Base::GetLength(); }
 
     /**
-     * This method checks whether or not the packet header is valid.
+     * Checks whether or not the packet header is valid.
      *
      * @retval TRUE   The packet header is valid and well-formed.
      * @retval FALSE  The packet header is not valid.
@@ -317,7 +317,7 @@ public:
     bool IsHeaderValid(void) const;
 
     /**
-     * This method gets the packet header.
+     * Gets the packet header.
      *
      * @returns A reference to the packet header as `Header`.
      *
@@ -325,7 +325,7 @@ public:
     Header &GetHeader(void) { return *reinterpret_cast<Header *>(Base::GetBytes()); }
 
     /**
-     * This method gets the packet header.
+     * Gets the packet header.
      *
      * @returns A reference to the packet header as `Header`.
      *
@@ -333,7 +333,7 @@ public:
     const Header &GetHeader(void) const { return *reinterpret_cast<const Header *>(Base::GetBytes()); }
 
     /**
-     * This method gets a pointer to start of packet payload.
+     * Gets a pointer to start of packet payload.
      *
      * @returns A pointer to start of packet payload (after header).
      *
@@ -341,7 +341,7 @@ public:
     uint8_t *GetPayload(void) { return Base::GetBytes() + GetHeader().GetLength(); }
 
     /**
-     * This method gets a pointer to start of packet payload.
+     * Gets a pointer to start of packet payload.
      *
      * @returns A pointer to start of packet payload (after header).
      *
@@ -349,7 +349,7 @@ public:
     const uint8_t *GetPayload(void) const { return Base::GetBytes() + GetHeader().GetLength(); }
 
     /**
-     * This method gets the payload length.
+     * Gets the payload length.
      *
      * @returns The packet payload length (number of bytes).
      *

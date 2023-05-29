@@ -45,7 +45,7 @@
 namespace ot {
 
 /**
- * This class implements the flash storage driver.
+ * Implements the flash storage driver.
  *
  */
 class Flash : public InstanceLocator
@@ -61,13 +61,13 @@ public:
     }
 
     /**
-     * This method initializes the flash storage driver.
+     * Initializes the flash storage driver.
      *
      */
     void Init(void);
 
     /**
-     * This method fetches the value identified by @p aKey.
+     * Fetches the value identified by @p aKey.
      *
      * @param[in]      aKey          The key associated with the requested value.
      * @param[in]      aIndex        The index of the specific item to get.
@@ -86,7 +86,7 @@ public:
     Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
 
     /**
-     * This method sets or replaces the value identified by @p aKey.
+     * Sets or replaces the value identified by @p aKey.
      *
      * If there was more than one value previously associated with @p aKey, then they are all deleted and replaced with
      * this single entry.
@@ -103,7 +103,7 @@ public:
     Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
-     * This method adds a value to @p aKey.
+     * Adds a value to @p aKey.
      *
      * @param[in]  aKey          The key associated with the value.
      * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
@@ -117,7 +117,7 @@ public:
     Error Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
-     * This method removes a value from @p aKey.
+     * Removes a value from @p aKey.
      *
      *
      * @param[in] aKey    The key associated with the value.
@@ -131,7 +131,7 @@ public:
     Error Delete(uint16_t aKey, int aIndex);
 
     /**
-     * This method removes all values.
+     * Removes all values.
      *
      */
     void Wipe(void);

@@ -41,7 +41,7 @@
 namespace ot {
 
 /**
- * This template class represents a retain (reference counted) smart pointer.
+ * Represents a retain (reference counted) smart pointer.
  *
  * The `Type` class MUST provide mechanism to track its current retain count. It MUST provide the following three
  * methods:
@@ -67,7 +67,7 @@ public:
     RetainPtr(void) = default;
 
     /**
-     * This constructor initializes the `RetainPtr` with a given pointer.
+     * Initializes the `RetainPtr` with a given pointer.
      *
      * Upon construction the `RetainPtr` will increment the retain count on @p aPointer (if not null).
      *
@@ -81,7 +81,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `RetainPtr` from another `RetainPtr`.
+     * Initializes the `RetainPtr` from another `RetainPtr`.
      *
      * @param[in] aOther   Another `RetainPtr`.
      *
@@ -102,7 +102,7 @@ public:
     ~RetainPtr(void) { DecrementRetainCount(); }
 
     /**
-     * This method replaces the managed object by `RetainPtr` with a new one.
+     * Replaces the managed object by `RetainPtr` with a new one.
      *
      * The method correctly handles a self `Reset()` (i.e., @p aPointer being the same pointer as the one currently
      * managed by `RetainPtr`).
@@ -121,7 +121,7 @@ public:
     }
 
     /**
-     * This method releases the ownership of the current pointer in `RetainPtr` (if any) without changing its retain
+     * Releases the ownership of the current pointer in `RetainPtr` (if any) without changing its retain
      * count.
      *
      * After this call, the `RetainPtr` will be null.
@@ -137,7 +137,7 @@ public:
     }
 
     /**
-     * This method overloads the assignment operator `=`.
+     * Overloads the assignment operator `=`.
      *
      * The `RetainPtr` first frees its current managed object (if there is any and it is different from @p aOther)
      * before taking over the ownership of the object from @p aOther. This method correctly handles a self assignment
@@ -173,7 +173,7 @@ private:
 };
 
 /**
- * This class provides mechanism to track retain count.
+ * Provides mechanism to track retain count.
  *
  */
 class RetainCountable
@@ -191,7 +191,7 @@ protected:
     }
 
     /**
-     * This method returns the current retain count.
+     * Returns the current retain count.
      *
      * @returns The current retain count.
      *
@@ -199,13 +199,13 @@ protected:
     uint16_t GetRetainCount(void) const { return mRetainCount; }
 
     /**
-     * This method increments the retain count.
+     * Increments the retain count.
      *
      */
     void IncrementRetainCount(void) { ++mRetainCount; }
 
     /**
-     * This method decrements the retain count.
+     * Decrements the retain count.
      *
      * @returns The retain count value after decrementing it.
      *

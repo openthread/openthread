@@ -40,7 +40,7 @@ extern "C" {
 #endif
 
 /**
- * This structure represents the radio spinel metrics.
+ * Represents the radio spinel metrics.
  *
  */
 typedef struct otRadioSpinelMetrics
