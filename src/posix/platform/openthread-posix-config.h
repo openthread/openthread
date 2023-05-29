@@ -252,6 +252,16 @@
 #endif
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME
+ *
+ * Define the Thread default network interface name.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME
+#define OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME "wpan0"
+#endif
+
 #ifdef __APPLE__
 
 /**
