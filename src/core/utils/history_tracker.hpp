@@ -69,7 +69,7 @@ namespace Utils {
      (OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE > 0))
 
 /**
- * This class implements History Tracker.
+ * Implements History Tracker.
  *
  */
 class HistoryTracker : public InstanceLocator, private NonCopyable
@@ -107,7 +107,7 @@ public:
     static constexpr uint8_t kNoNextHop = OT_HISTORY_TRACKER_NO_NEXT_HOP;
 
     /**
-     * This type represents an iterator to iterate through a history list.
+     * Represents an iterator to iterate through a history list.
      *
      */
     class Iterator : public otHistoryTrackerIterator
@@ -116,7 +116,7 @@ public:
 
     public:
         /**
-         * This method initializes an `Iterator`
+         * Initializes an `Iterator`
          *
          * An iterator MUST be initialized before it is used. An iterator can be initialized again to start from
          * the beginning of the list.
@@ -142,7 +142,7 @@ public:
     typedef otHistoryTrackerExternalRouteInfo    ExternalRouteInfo;    ///< Network Data external route info
 
     /**
-     * This constructor initializes the `HistoryTracker`.
+     * Initializes the `HistoryTracker`.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -150,7 +150,7 @@ public:
     explicit HistoryTracker(Instance &aInstance);
 
     /**
-     * This method iterates over the entries in the network info history list.
+     * Iterates over the entries in the network info history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -167,7 +167,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the unicast address history list.
+     * Iterates over the entries in the unicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -184,7 +184,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the multicast address history list.
+     * Iterates over the entries in the multicast address history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -201,7 +201,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the RX history list.
+     * Iterates over the entries in the RX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -218,7 +218,7 @@ public:
     }
 
     /**
-     * This method iterates over the entries in the TX history list.
+     * Iterates over the entries in the TX history list.
      *
      * @param[in,out] aIterator  An iterator. MUST be initialized.
      * @param[out]    aEntryAge  A reference to a variable to output the entry's age.
@@ -255,7 +255,7 @@ public:
     }
 
     /**
-     * This static method converts a given entry age to a human-readable string.
+     * Converts a given entry age to a human-readable string.
      *
      * The entry age string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond
      * (if shorter than one day) or "<dd> days <hh>:<mm>:<ss>.<mmmm>" (if longer than one day).

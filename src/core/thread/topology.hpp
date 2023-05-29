@@ -65,7 +65,7 @@
 namespace ot {
 
 /**
- * This class represents a Thread neighbor.
+ * Represents a Thread neighbor.
  *
  */
 class Neighbor : public InstanceLocatorInit
@@ -96,7 +96,7 @@ public:
     };
 
     /**
-     * This enumeration defines state filters used for finding a neighbor or iterating through the child/neighbor table.
+     * Defines state filters used for finding a neighbor or iterating through the child/neighbor table.
      *
      * Each filter definition accepts a subset of `State` values.
      *
@@ -114,7 +114,7 @@ public:
     };
 
     /**
-     * This class represents an Address Matcher used to find a neighbor (child/router) with a given MAC address also
+     * Represents an Address Matcher used to find a neighbor (child/router) with a given MAC address also
      * matching a given state filter.
      *
      */
@@ -122,7 +122,7 @@ public:
     {
     public:
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC short address (RCOC16) and state filter.
+         * Initializes the `AddressMatcher` with a given MAC short address (RCOC16) and state filter.
          *
          * @param[in]  aShortAddress   A MAC short address (RLOC16).
          * @param[in]  aStateFilter    A state filter.
@@ -134,7 +134,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC extended address and state filter.
+         * Initializes the `AddressMatcher` with a given MAC extended address and state filter.
          *
          * @param[in]  aExtAddress     A MAC extended address.
          * @param[in]  aStateFilter    A state filter.
@@ -146,7 +146,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given MAC address and state filter.
+         * Initializes the `AddressMatcher` with a given MAC address and state filter.
          *
          * @param[in]  aMacAddress     A MAC address.
          * @param[in]  aStateFilter    A state filter.
@@ -161,7 +161,7 @@ public:
         }
 
         /**
-         * This constructor initializes the `AddressMatcher` with a given state filter (it accepts any address).
+         * Initializes the `AddressMatcher` with a given state filter (it accepts any address).
          *
          * @param[in]  aStateFilter    A state filter.
          *
@@ -172,7 +172,7 @@ public:
         }
 
         /**
-         * This method indicates if a given neighbor matches the address and state filter of `AddressMatcher`.
+         * Indicates if a given neighbor matches the address and state filter of `AddressMatcher`.
          *
          * @param[in] aNeighbor   A neighbor.
          *
@@ -196,14 +196,14 @@ public:
     };
 
     /**
-     * This type represents diagnostic information for a neighboring node.
+     * Represents diagnostic information for a neighboring node.
      *
      */
     class Info : public otNeighborInfo, public Clearable<Info>
     {
     public:
         /**
-         * This method sets the `Info` instance from a given `Neighbor`.
+         * Sets the `Info` instance from a given `Neighbor`.
          *
          * @param[in] aNeighbor   A neighbor.
          *
@@ -212,7 +212,7 @@ public:
     };
 
     /**
-     * This method returns the current state.
+     * Returns the current state.
      *
      * @returns The current state.
      *
@@ -220,7 +220,7 @@ public:
     State GetState(void) const { return static_cast<State>(mState); }
 
     /**
-     * This method sets the current state.
+     * Sets the current state.
      *
      * @param[in]  aState  The state value.
      *
@@ -228,7 +228,7 @@ public:
     void SetState(State aState);
 
     /**
-     * This method indicates whether the neighbor is in the Invalid state.
+     * Indicates whether the neighbor is in the Invalid state.
      *
      * @returns TRUE if the neighbor is in the Invalid state, FALSE otherwise.
      *
@@ -236,7 +236,7 @@ public:
     bool IsStateInvalid(void) const { return (mState == kStateInvalid); }
 
     /**
-     * This method indicates whether the neighbor is in the Child ID Request state.
+     * Indicates whether the neighbor is in the Child ID Request state.
      *
      * @returns TRUE if the neighbor is in the Child ID Request state, FALSE otherwise.
      *
@@ -244,7 +244,7 @@ public:
     bool IsStateChildIdRequest(void) const { return (mState == kStateChildIdRequest); }
 
     /**
-     * This method indicates whether the neighbor is in the Link Request state.
+     * Indicates whether the neighbor is in the Link Request state.
      *
      * @returns TRUE if the neighbor is in the Link Request state, FALSE otherwise.
      *
@@ -252,7 +252,7 @@ public:
     bool IsStateLinkRequest(void) const { return (mState == kStateLinkRequest); }
 
     /**
-     * This method indicates whether the neighbor is in the Parent Response state.
+     * Indicates whether the neighbor is in the Parent Response state.
      *
      * @returns TRUE if the neighbor is in the Parent Response state, FALSE otherwise.
      *
@@ -260,7 +260,7 @@ public:
     bool IsStateParentResponse(void) const { return (mState == kStateParentResponse); }
 
     /**
-     * This method indicates whether the neighbor is being restored.
+     * Indicates whether the neighbor is being restored.
      *
      * @returns TRUE if the neighbor is being restored, FALSE otherwise.
      *
@@ -268,7 +268,7 @@ public:
     bool IsStateRestoring(void) const { return (mState == kStateRestored) || (mState == kStateChildUpdateRequest); }
 
     /**
-     * This method indicates whether the neighbor is in the Restored state.
+     * Indicates whether the neighbor is in the Restored state.
      *
      * @returns TRUE if the neighbor is in the Restored state, FALSE otherwise.
      *
@@ -276,7 +276,7 @@ public:
     bool IsStateRestored(void) const { return (mState == kStateRestored); }
 
     /**
-     * This method indicates whether the neighbor is valid (frame counters are synchronized).
+     * Indicates whether the neighbor is valid (frame counters are synchronized).
      *
      * @returns TRUE if the neighbor is valid, FALSE otherwise.
      *
@@ -284,7 +284,7 @@ public:
     bool IsStateValid(void) const { return (mState == kStateValid); }
 
     /**
-     * This method indicates whether the neighbor is in valid state or if it is being restored.
+     * Indicates whether the neighbor is in valid state or if it is being restored.
      *
      * When in these states messages can be sent to and/or received from the neighbor.
      *
@@ -294,7 +294,7 @@ public:
     bool IsStateValidOrRestoring(void) const { return (mState == kStateValid) || IsStateRestoring(); }
 
     /**
-     * This method indicates if the neighbor state is valid, attaching, or restored.
+     * Indicates if the neighbor state is valid, attaching, or restored.
      *
      * The states `kStateRestored`, `kStateChildIdRequest`, `kStateChildUpdateRequest`, `kStateValid`, and
      * `kStateLinkRequest` are considered as valid, attaching, or restored.
@@ -305,7 +305,7 @@ public:
     bool IsStateValidOrAttaching(void) const;
 
     /**
-     * This method indicates whether neighbor state matches a given state filter.
+     * Indicates whether neighbor state matches a given state filter.
      *
      * @param[in] aFilter   A state filter (`StateFilter` enumeration) to match against.
      *
@@ -315,7 +315,7 @@ public:
     bool MatchesFilter(StateFilter aFilter) const;
 
     /**
-     * This method indicates whether neighbor matches a given `AddressMatcher`.
+     * Indicates whether neighbor matches a given `AddressMatcher`.
      *
      * @param[in]  aMatcher   An `AddressMatcher` to match against.
      *
@@ -325,7 +325,7 @@ public:
     bool Matches(const AddressMatcher &aMatcher) const { return aMatcher.Matches(*this); }
 
     /**
-     * This method gets the device mode flags.
+     * Gets the device mode flags.
      *
      * @returns The device mode flags.
      *
@@ -333,7 +333,7 @@ public:
     Mle::DeviceMode GetDeviceMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
-     * This method sets the device mode flags.
+     * Sets the device mode flags.
      *
      * @param[in]  aMode  The device mode flags.
      *
@@ -341,7 +341,7 @@ public:
     void SetDeviceMode(Mle::DeviceMode aMode) { mMode = aMode.Get(); }
 
     /**
-     * This method indicates whether or not the device is rx-on-when-idle.
+     * Indicates whether or not the device is rx-on-when-idle.
      *
      * @returns TRUE if rx-on-when-idle, FALSE otherwise.
      *
@@ -349,7 +349,7 @@ public:
     bool IsRxOnWhenIdle(void) const { return GetDeviceMode().IsRxOnWhenIdle(); }
 
     /**
-     * This method indicates whether or not the device is a Full Thread Device.
+     * Indicates whether or not the device is a Full Thread Device.
      *
      * @returns TRUE if a Full Thread Device, FALSE otherwise.
      *
@@ -357,7 +357,7 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method gets the Network Data type (full set or stable subset) that the device requests.
+     * Gets the Network Data type (full set or stable subset) that the device requests.
      *
      * @returns The Network Data type.
      *
@@ -365,7 +365,7 @@ public:
     NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
-     * This method returns the Extended Address.
+     * Returns the Extended Address.
      *
      * @returns A const reference to the Extended Address.
      *
@@ -373,7 +373,7 @@ public:
     const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
 
     /**
-     * This method returns the Extended Address.
+     * Returns the Extended Address.
      *
      * @returns A reference to the Extended Address.
      *
@@ -381,7 +381,7 @@ public:
     Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
 
     /**
-     * This method sets the Extended Address.
+     * Sets the Extended Address.
      *
      * @param[in]  aAddress  The Extended Address value to set.
      *
@@ -389,7 +389,7 @@ public:
     void SetExtAddress(const Mac::ExtAddress &aAddress) { mMacAddr = aAddress; }
 
     /**
-     * This method gets the key sequence value.
+     * Gets the key sequence value.
      *
      * @returns The key sequence value.
      *
@@ -397,7 +397,7 @@ public:
     uint32_t GetKeySequence(void) const { return mKeySequence; }
 
     /**
-     * This method sets the key sequence value.
+     * Sets the key sequence value.
      *
      * @param[in]  aKeySequence  The key sequence value.
      *
@@ -405,7 +405,7 @@ public:
     void SetKeySequence(uint32_t aKeySequence) { mKeySequence = aKeySequence; }
 
     /**
-     * This method returns the last heard time.
+     * Returns the last heard time.
      *
      * @returns The last heard time.
      *
@@ -413,7 +413,7 @@ public:
     TimeMilli GetLastHeard(void) const { return mLastHeard; }
 
     /**
-     * This method sets the last heard time.
+     * Sets the last heard time.
      *
      * @param[in]  aLastHeard  The last heard time.
      *
@@ -421,7 +421,7 @@ public:
     void SetLastHeard(TimeMilli aLastHeard) { mLastHeard = aLastHeard; }
 
     /**
-     * This method gets the link frame counters.
+     * Gets the link frame counters.
      *
      * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
@@ -429,7 +429,7 @@ public:
     Mac::LinkFrameCounters &GetLinkFrameCounters(void) { return mValidPending.mValid.mLinkFrameCounters; }
 
     /**
-     * This method gets the link frame counters.
+     * Gets the link frame counters.
      *
      * @returns A reference to `Mac::LinkFrameCounters` containing link frame counter for all supported radio links.
      *
@@ -438,7 +438,7 @@ public:
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
-     * This method gets the link ACK frame counter value.
+     * Gets the link ACK frame counter value.
      *
      * @returns The link ACK frame counter value.
      *
@@ -447,7 +447,7 @@ public:
 #endif
 
     /**
-     * This method sets the link ACK frame counter value.
+     * Sets the link ACK frame counter value.
      *
      * @param[in]  aAckFrameCounter  The link ACK frame counter value.
      *
@@ -462,7 +462,7 @@ public:
     }
 
     /**
-     * This method gets the MLE frame counter value.
+     * Gets the MLE frame counter value.
      *
      * @returns The MLE frame counter value.
      *
@@ -470,7 +470,7 @@ public:
     uint32_t GetMleFrameCounter(void) const { return mValidPending.mValid.mMleFrameCounter; }
 
     /**
-     * This method sets the MLE frame counter value.
+     * Sets the MLE frame counter value.
      *
      * @param[in]  aFrameCounter  The MLE frame counter value.
      *
@@ -478,7 +478,7 @@ public:
     void SetMleFrameCounter(uint32_t aFrameCounter) { mValidPending.mValid.mMleFrameCounter = aFrameCounter; }
 
     /**
-     * This method gets the RLOC16 value.
+     * Gets the RLOC16 value.
      *
      * @returns The RLOC16 value.
      *
@@ -486,7 +486,7 @@ public:
     uint16_t GetRloc16(void) const { return mRloc16; }
 
     /**
-     * This method gets the Router ID value.
+     * Gets the Router ID value.
      *
      * @returns The Router ID value.
      *
@@ -494,7 +494,7 @@ public:
     uint8_t GetRouterId(void) const { return mRloc16 >> Mle::kRouterIdOffset; }
 
     /**
-     * This method sets the RLOC16 value.
+     * Sets the RLOC16 value.
      *
      * @param[in]  aRloc16  The RLOC16 value.
      *
@@ -503,7 +503,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
-     * This method clears the last received fragment tag.
+     * Clears the last received fragment tag.
      *
      * The last received fragment tag is used for detect duplicate frames (received over different radios) when
      * multi-radio feature is enabled.
@@ -512,9 +512,9 @@ public:
     void ClearLastRxFragmentTag(void) { mLastRxFragmentTag = 0; }
 
     /**
-     * This method gets the last received fragment tag.
+     * Gets the last received fragment tag.
      *
-     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     * MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
      *
      * @returns The last received fragment tag.
      *
@@ -522,7 +522,7 @@ public:
     uint16_t GetLastRxFragmentTag(void) const { return mLastRxFragmentTag; }
 
     /**
-     * This method set the last received fragment tag.
+     * Set the last received fragment tag.
      *
      * @param[in] aTag   The new tag value.
      *
@@ -530,7 +530,7 @@ public:
     void SetLastRxFragmentTag(uint16_t aTag);
 
     /**
-     * This method indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
+     * Indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
      *
      * @returns TRUE if the last received fragment tag is set and valid, FALSE otherwise.
      *
@@ -538,9 +538,9 @@ public:
     bool IsLastRxFragmentTagSet(void) const;
 
     /**
-     * This method indicates whether the last received fragment tag is strictly after a given tag value.
+     * Indicates whether the last received fragment tag is strictly after a given tag value.
      *
-     * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
+     * MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
      *
      * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
      * to `LastRxFragmentTag > aTag`.
@@ -556,7 +556,7 @@ public:
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method indicates whether or not it is Thread 1.1.
+     * Indicates whether or not it is Thread 1.1.
      *
      * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
@@ -564,7 +564,7 @@ public:
     bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == kThreadVersion1p1; }
 
     /**
-     * This method indicates whether or not neighbor is Thread 1.2 or higher..
+     * Indicates whether or not neighbor is Thread 1.2 or higher..
      *
      * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
@@ -572,7 +572,7 @@ public:
     bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= kThreadVersion1p2; }
 
     /**
-     * This method indicates whether Thread version supports CSL.
+     * Indicates whether Thread version supports CSL.
      *
      * @returns TRUE if CSL is supported, FALSE otherwise.
      *
@@ -580,7 +580,7 @@ public:
     bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2OrHigher() && !IsRxOnWhenIdle(); }
 
     /**
-     * This method indicates whether Enhanced Keep-Alive is supported or not.
+     * Indicates whether Enhanced Keep-Alive is supported or not.
      *
      * @returns TRUE if Enhanced Keep-Alive is supported, FALSE otherwise.
      *
@@ -591,13 +591,13 @@ public:
     }
 
     /**
-     * This method gets the device MLE version.
+     * Gets the device MLE version.
      *
      */
     uint16_t GetVersion(void) const { return mVersion; }
 
     /**
-     * This method sets the device MLE version.
+     * Sets the device MLE version.
      *
      * @param[in]  aVersion  The device MLE version.
      *
@@ -605,7 +605,7 @@ public:
     void SetVersion(uint16_t aVersion) { mVersion = aVersion; }
 
     /**
-     * This method gets the number of consecutive link failures.
+     * Gets the number of consecutive link failures.
      *
      * @returns The number of consecutive link failures.
      *
@@ -613,19 +613,19 @@ public:
     uint8_t GetLinkFailures(void) const { return mLinkFailures; }
 
     /**
-     * This method increments the number of consecutive link failures.
+     * Increments the number of consecutive link failures.
      *
      */
     void IncrementLinkFailures(void) { mLinkFailures++; }
 
     /**
-     * This method resets the number of consecutive link failures to zero.
+     * Resets the number of consecutive link failures to zero.
      *
      */
     void ResetLinkFailures(void) { mLinkFailures = 0; }
 
     /**
-     * This method returns the LinkQualityInfo object.
+     * Returns the LinkQualityInfo object.
      *
      * @returns The LinkQualityInfo object.
      *
@@ -633,7 +633,7 @@ public:
     LinkQualityInfo &GetLinkInfo(void) { return mLinkInfo; }
 
     /**
-     * This method returns the LinkQualityInfo object.
+     * Returns the LinkQualityInfo object.
      *
      * @returns The LinkQualityInfo object.
      *
@@ -641,7 +641,7 @@ public:
     const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
 
     /**
-     * This method gets the link quality in value.
+     * Gets the link quality in value.
      *
      * @returns The link quality in value.
      *
@@ -649,13 +649,13 @@ public:
     LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
 
     /**
-     * This method generates a new challenge value for MLE Link Request/Response exchanges.
+     * Generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
     void GenerateChallenge(void);
 
     /**
-     * This method returns the current challenge value for MLE Link Request/Response exchanges.
+     * Returns the current challenge value for MLE Link Request/Response exchanges.
      *
      * @returns The current challenge value.
      *
@@ -663,7 +663,7 @@ public:
     const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
     /**
-     * This method returns the size (bytes) of the challenge value for MLE Link Request/Response exchanges.
+     * Returns the size (bytes) of the challenge value for MLE Link Request/Response exchanges.
      *
      * @returns The size (bytes) of the challenge value for MLE Link Request/Response exchanges.
      *
@@ -672,7 +672,7 @@ public:
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     /**
-     * This method returns the connection time (in seconds) of the neighbor (seconds since entering `kStateValid`).
+     * Returns the connection time (in seconds) of the neighbor (seconds since entering `kStateValid`).
      *
      * @returns The connection time (in seconds), zero if device is not currently in `kStateValid`.
      *
@@ -682,7 +682,7 @@ public:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
-     * This method indicates whether or not time sync feature is enabled.
+     * Indicates whether or not time sync feature is enabled.
      *
      * @returns TRUE if time sync feature is enabled, FALSE otherwise.
      *
@@ -690,7 +690,7 @@ public:
     bool IsTimeSyncEnabled(void) const { return mTimeSyncEnabled; }
 
     /**
-     * This method sets whether or not time sync feature is enabled.
+     * Sets whether or not time sync feature is enabled.
      *
      * @param[in]  aEnable    TRUE if time sync feature is enabled, FALSE otherwise.
      *
@@ -700,7 +700,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
-     * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
+     * Aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
      * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregate @p aLqi and
      * @p aRss into its averagers.
@@ -714,7 +714,7 @@ public:
     void AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
     /**
-     * This method adds a new LinkMetrics::SeriesInfo to the neighbor's list.
+     * Adds a new LinkMetrics::SeriesInfo to the neighbor's list.
      *
      * @param[in]  aSeriesInfo  A reference to the new SeriesInfo.
      *
@@ -722,7 +722,7 @@ public:
     void AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo);
 
     /**
-     * This method finds a specific LinkMetrics::SeriesInfo by Series ID.
+     * Finds a specific LinkMetrics::SeriesInfo by Series ID.
      *
      * @param[in] aSeriesId    A reference to the Series ID.
      *
@@ -732,7 +732,7 @@ public:
     LinkMetrics::SeriesInfo *GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method removes a specific LinkMetrics::SeriesInfo by Series ID.
+     * Removes a specific LinkMetrics::SeriesInfo by Series ID.
      *
      * @param[in] aSeriesId    A reference to the Series ID to remove.
      *
@@ -742,13 +742,13 @@ public:
     LinkMetrics::SeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method removes all the Series and return the data structures to the Pool.
+     * Removes all the Series and return the data structures to the Pool.
      *
      */
     void RemoveAllForwardTrackingSeriesInfo(void);
 
     /**
-     * This method gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     * Gets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
      *
      * @returns Enh-ACK Probing metrics configured.
      *
@@ -756,7 +756,7 @@ public:
     const LinkMetrics::Metrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
 
     /**
-     * This method sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
+     * Sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
      *
      * @param[in]  aEnhAckProbingMetrics  The metrics value to set.
      *
@@ -767,7 +767,7 @@ public:
     }
 
     /**
-     * This method indicates if Enh-ACK Probing is configured and active for this `Neighbor` object.
+     * Indicates if Enh-ACK Probing is configured and active for this `Neighbor` object.
      *
      * @retval TRUE   Enh-ACK Probing is configured and active for this `Neighbor`.
      * @retval FALSE  Otherwise.
@@ -781,7 +781,7 @@ public:
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
     /**
-     * This method converts a given `State` to a human-readable string.
+     * Converts a given `State` to a human-readable string.
      *
      * @param[in] aState   A neighbor state.
      *
@@ -792,7 +792,7 @@ public:
 
 protected:
     /**
-     * This method initializes the `Neighbor` object.
+     * Initializes the `Neighbor` object.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
      *
@@ -859,7 +859,7 @@ private:
 #if OPENTHREAD_FTD
 
 /**
- * This class represents a Thread Child.
+ * Represents a Thread Child.
  *
  */
 class Child : public Neighbor,
@@ -876,14 +876,14 @@ public:
     static constexpr uint8_t kMaxRequestTlvs = 6;
 
     /**
-     * This class represents diagnostic information for a Thread Child.
+     * Represents diagnostic information for a Thread Child.
      *
      */
     class Info : public otChildInfo, public Clearable<Info>
     {
     public:
         /**
-         * This method sets the `Info` instance from a given `Child`.
+         * Sets the `Info` instance from a given `Child`.
          *
          * @param[in] aChild   A neighbor.
          *
@@ -892,7 +892,7 @@ public:
     };
 
     /**
-     * This class defines an iterator used to go through IPv6 address entries of a child.
+     * Defines an iterator used to go through IPv6 address entries of a child.
      *
      */
     class AddressIterator : public Unequatable<AddressIterator>
@@ -901,13 +901,13 @@ public:
 
     public:
         /**
-         * This type represents an index indicating the current IPv6 address entry to which the iterator is pointing.
+         * Represents an index indicating the current IPv6 address entry to which the iterator is pointing.
          *
          */
         typedef otChildIp6AddressIterator Index;
 
         /**
-         * This constructor initializes the iterator associated with a given `Child` starting from beginning of the
+         * Initializes the iterator associated with a given `Child` starting from beginning of the
          * IPv6 address list.
          *
          * @param[in] aChild    A reference to a child entry.
@@ -920,7 +920,7 @@ public:
         }
 
         /**
-         * This constructor initializes the iterator associated with a given `Child` starting from a given index
+         * Initializes the iterator associated with a given `Child` starting from a given index
          *
          * @param[in]  aChild   A reference to the child entry.
          * @param[in]  aIndex   An index (`Index`) with which to initialize the iterator.
@@ -936,7 +936,7 @@ public:
         }
 
         /**
-         * This method converts the iterator into an index.
+         * Converts the iterator into an index.
          *
          * @returns An index corresponding to the iterator.
          *
@@ -944,7 +944,7 @@ public:
         Index GetAsIndex(void) const { return mIndex; }
 
         /**
-         * This method gets the iterator's associated `Child` entry.
+         * Gets the iterator's associated `Child` entry.
          *
          * @returns The associated child entry.
          *
@@ -952,7 +952,7 @@ public:
         const Child &GetChild(void) const { return mChild; }
 
         /**
-         * This method gets the current `Child` IPv6 Address to which the iterator is pointing.
+         * Gets the current `Child` IPv6 Address to which the iterator is pointing.
          *
          * @returns  A pointer to the associated IPv6 Address, or `nullptr` if iterator is done.
          *
@@ -960,7 +960,7 @@ public:
         const Ip6::Address *GetAddress(void) const;
 
         /**
-         * This method indicates whether the iterator has reached end of the list.
+         * Indicates whether the iterator has reached end of the list.
          *
          * @retval TRUE   There are no more entries in the list (reached end of the list).
          * @retval FALSE  The current entry is valid.
@@ -969,7 +969,7 @@ public:
         bool IsDone(void) const { return (mIndex >= kMaxIndex); }
 
         /**
-         * This method overloads `++` operator (pre-increment) to advance the iterator.
+         * Overloads `++` operator (pre-increment) to advance the iterator.
          *
          * The iterator is moved to point to the next `Address` entry.  If there are no more `Ip6::Address` entries
          * `IsDone()` returns `true`.
@@ -978,7 +978,7 @@ public:
         void operator++(void) { mIndex++, Update(); }
 
         /**
-         * This method overloads `++` operator (post-increment) to advance the iterator.
+         * Overloads `++` operator (post-increment) to advance the iterator.
          *
          * The iterator is moved to point to the next `Address` entry.  If there are no more `Ip6::Address` entries
          *  `IsDone()` returns `true`.
@@ -987,10 +987,10 @@ public:
         void operator++(int) { mIndex++, Update(); }
 
         /**
-         * This method overloads the `*` dereference operator and gets a reference to `Ip6::Address` to which the
+         * Overloads the `*` dereference operator and gets a reference to `Ip6::Address` to which the
          * iterator is currently pointing.
          *
-         * This method MUST be used when the iterator is not done (i.e., `IsDone()` returns `false`).
+         * MUST be used when the iterator is not done (i.e., `IsDone()` returns `false`).
          *
          * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
          *
@@ -998,9 +998,9 @@ public:
         const Ip6::Address &operator*(void) const { return *GetAddress(); }
 
         /**
-         * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
+         * Overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
          *
-         * This method MUST be used when the two iterators are associated with the same `Child` entry.
+         * MUST be used when the two iterators are associated with the same `Child` entry.
          *
          * @param[in]  aOther  The other `Iterator` to compare with.
          *
@@ -1033,7 +1033,7 @@ public:
     };
 
     /**
-     * This method initializes the `Child` object.
+     * Initializes the `Child` object.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
      *
@@ -1041,19 +1041,19 @@ public:
     void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
-     * This method clears the child entry.
+     * Clears the child entry.
      *
      */
     void Clear(void);
 
     /**
-     * This method clears the IPv6 address list for the child.
+     * Clears the IPv6 address list for the child.
      *
      */
     void ClearIp6Addresses(void);
 
     /**
-     * This method sets the device mode flags.
+     * Sets the device mode flags.
      *
      * @param[in]  aMode  The device mode flags.
      *
@@ -1061,7 +1061,7 @@ public:
     void SetDeviceMode(Mle::DeviceMode aMode);
 
     /**
-     * This method gets the mesh-local IPv6 address.
+     * Gets the mesh-local IPv6 address.
      *
      * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
      *
@@ -1072,7 +1072,7 @@ public:
     Error GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
     /**
-     * This method returns the Mesh Local Interface Identifier.
+     * Returns the Mesh Local Interface Identifier.
      *
      * @returns The Mesh Local Interface Identifier.
      *
@@ -1080,9 +1080,9 @@ public:
     const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
 
     /**
-     * This method enables range-based `for` loop iteration over all (or a subset of) IPv6 addresses.
+     * Enables range-based `for` loop iteration over all (or a subset of) IPv6 addresses.
      *
-     * This method should be used as follows: to iterate over all addresses
+     * Should be used as follows: to iterate over all addresses
      *
      *     for (const Ip6::Address &address : child.IterateIp6Addresses()) { ... }
      *
@@ -1102,7 +1102,7 @@ public:
     }
 
     /**
-     * This method adds an IPv6 address to the list.
+     * Adds an IPv6 address to the list.
      *
      * @param[in]  aAddress           A reference to IPv6 address to be added.
      *
@@ -1115,7 +1115,7 @@ public:
     Error AddIp6Address(const Ip6::Address &aAddress);
 
     /**
-     * This method removes an IPv6 address from the list.
+     * Removes an IPv6 address from the list.
      *
      * @param[in]  aAddress               A reference to IPv6 address to be removed.
      *
@@ -1127,7 +1127,7 @@ public:
     Error RemoveIp6Address(const Ip6::Address &aAddress);
 
     /**
-     * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
+     * Indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
      *
      * @param[in]  aAddress   A reference to IPv6 address.
      *
@@ -1139,7 +1139,7 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
-     * This method retrieves the Domain Unicast Address registered by the child.
+     * Retrieves the Domain Unicast Address registered by the child.
      *
      * @returns A pointer to Domain Unicast Address registered by the child if there is.
      *
@@ -1148,7 +1148,7 @@ public:
 #endif
 
     /**
-     * This method gets the child timeout.
+     * Gets the child timeout.
      *
      * @returns The child timeout.
      *
@@ -1156,7 +1156,7 @@ public:
     uint32_t GetTimeout(void) const { return mTimeout; }
 
     /**
-     * This method sets the child timeout.
+     * Sets the child timeout.
      *
      * @param[in]  aTimeout  The child timeout.
      *
@@ -1164,7 +1164,7 @@ public:
     void SetTimeout(uint32_t aTimeout) { mTimeout = aTimeout; }
 
     /**
-     * This method gets the network data version.
+     * Gets the network data version.
      *
      * @returns The network data version.
      *
@@ -1172,7 +1172,7 @@ public:
     uint8_t GetNetworkDataVersion(void) const { return mNetworkDataVersion; }
 
     /**
-     * This method sets the network data version.
+     * Sets the network data version.
      *
      * @param[in]  aVersion  The network data version.
      *
@@ -1180,13 +1180,13 @@ public:
     void SetNetworkDataVersion(uint8_t aVersion) { mNetworkDataVersion = aVersion; }
 
     /**
-     * This method generates a new challenge value to use during a child attach.
+     * Generates a new challenge value to use during a child attach.
      *
      */
     void GenerateChallenge(void);
 
     /**
-     * This method gets the current challenge value used during attach.
+     * Gets the current challenge value used during attach.
      *
      * @returns The current challenge value.
      *
@@ -1194,7 +1194,7 @@ public:
     const uint8_t *GetChallenge(void) const { return mAttachChallenge; }
 
     /**
-     * This method gets the challenge size (bytes) used during attach.
+     * Gets the challenge size (bytes) used during attach.
      *
      * @returns The challenge size (bytes).
      *
@@ -1202,13 +1202,13 @@ public:
     uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
 
     /**
-     * This method clears the requested TLV list.
+     * Clears the requested TLV list.
      *
      */
     void ClearRequestTlvs(void) { memset(mRequestTlvs, Mle::Tlv::kInvalid, sizeof(mRequestTlvs)); }
 
     /**
-     * This method returns the requested TLV at index @p aIndex.
+     * Returns the requested TLV at index @p aIndex.
      *
      * @param[in]  aIndex  The index into the requested TLV list.
      *
@@ -1218,7 +1218,7 @@ public:
     uint8_t GetRequestTlv(uint8_t aIndex) const { return mRequestTlvs[aIndex]; }
 
     /**
-     * This method sets the requested TLV at index @p aIndex.
+     * Sets the requested TLV at index @p aIndex.
      *
      * @param[in]  aIndex  The index into the requested TLV list.
      * @param[in]  aType   The TLV type.
@@ -1227,7 +1227,7 @@ public:
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
     /**
-     * This method returns the supervision interval (in seconds).
+     * Returns the supervision interval (in seconds).
      *
      * @returns The supervision interval (in seconds).
      *
@@ -1235,7 +1235,7 @@ public:
     uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
 
     /**
-     * This method sets the supervision interval.
+     * Sets the supervision interval.
      *
      * @param[in] aInterval  The supervision interval (in seconds).
      *
@@ -1243,13 +1243,13 @@ public:
     void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
 
     /**
-     * This method increments the number of seconds since last supervision of the child.
+     * Increments the number of seconds since last supervision of the child.
      *
      */
     void IncrementSecondsSinceLastSupervision(void) { mSecondsSinceSupervision++; }
 
     /**
-     * This method returns the number of seconds since last supervision of the child (last message to the child)
+     * Returns the number of seconds since last supervision of the child (last message to the child)
      *
      * @returns Number of seconds since last supervision of the child.
      *
@@ -1257,14 +1257,14 @@ public:
     uint16_t GetSecondsSinceLastSupervision(void) const { return mSecondsSinceSupervision; }
 
     /**
-     * This method resets the number of seconds since last supervision of the child to zero.
+     * Resets the number of seconds since last supervision of the child to zero.
      *
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * This method returns MLR state of an IPv6 multicast address.
+     * Returns MLR state of an IPv6 multicast address.
      *
      * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
@@ -1276,7 +1276,7 @@ public:
     MlrState GetAddressMlrState(const Ip6::Address &aAddress) const;
 
     /**
-     * This method sets MLR state of an IPv6 multicast address.
+     * Sets MLR state of an IPv6 multicast address.
      *
      * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
@@ -1287,7 +1287,7 @@ public:
     void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
 
     /**
-     * This method returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * Returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      *
      * @param[in] aAddress  The IPv6 address.
      *
@@ -1298,7 +1298,7 @@ public:
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * Returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      *
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
@@ -1307,7 +1307,7 @@ public:
     bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
 
     /**
-     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
+     * Returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      *
      * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
@@ -1370,21 +1370,21 @@ private:
 class Parent;
 
 /**
- * This class represents a Thread Router
+ * Represents a Thread Router
  *
  */
 class Router : public Neighbor
 {
 public:
     /**
-     * This class represents diagnostic information for a Thread Router.
+     * Represents diagnostic information for a Thread Router.
      *
      */
     class Info : public otRouterInfo, public Clearable<Info>
     {
     public:
         /**
-         * This method sets the `Info` instance from a given `Router`.
+         * Sets the `Info` instance from a given `Router`.
          *
          * @param[in] aRouter   A router.
          *
@@ -1392,7 +1392,7 @@ public:
         void SetFrom(const Router &aRouter);
 
         /**
-         * This method sets the `Info` instance from a given `Parent`.
+         * Sets the `Info` instance from a given `Parent`.
          *
          * @param[in] aParent   A parent.
          *
@@ -1401,7 +1401,7 @@ public:
     };
 
     /**
-     * This method initializes the `Router` object.
+     * Initializes the `Router` object.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
      *
@@ -1409,19 +1409,19 @@ public:
     void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
-     * This method clears the router entry.
+     * Clears the router entry.
      *
      */
     void Clear(void);
 
     /**
-     * This method sets the `Router` entry from a `Parent`
+     * Sets the `Router` entry from a `Parent`
      *
      */
     void SetFrom(const Parent &aParent);
 
     /**
-     * This method gets the router ID of the next hop to this router.
+     * Gets the router ID of the next hop to this router.
      *
      * @returns The router ID of the next hop to this router.
      *
@@ -1429,7 +1429,7 @@ public:
     uint8_t GetNextHop(void) const { return mNextHop; }
 
     /**
-     * This method gets the link quality out value for this router.
+     * Gets the link quality out value for this router.
      *
      * @returns The link quality out value for this router.
      *
@@ -1437,7 +1437,7 @@ public:
     LinkQuality GetLinkQualityOut(void) const { return static_cast<LinkQuality>(mLinkQualityOut); }
 
     /**
-     * This method sets the link quality out value for this router.
+     * Sets the link quality out value for this router.
      *
      * @param[in]  aLinkQuality  The link quality out value for this router.
      *
@@ -1445,7 +1445,7 @@ public:
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
-     * This method gets the two-way link quality value (minimum of link quality in and out).
+     * Gets the two-way link quality value (minimum of link quality in and out).
      *
      * @returns The two-way link quality value.
      *
@@ -1453,7 +1453,7 @@ public:
     LinkQuality GetTwoWayLinkQuality(void) const;
 
     /**
-     * This method get the route cost to this router.
+     * Get the route cost to this router.
      *
      * @returns The route cost to this router.
      *
@@ -1461,7 +1461,7 @@ public:
     uint8_t GetCost(void) const { return mCost; }
 
     /**
-     * This method sets the next hop and cost to this router.
+     * Sets the next hop and cost to this router.
      *
      * @param[in]  aNextHop  The Router ID of the next hop to this router.
      * @param[in]  aCost     The cost to this router.
@@ -1473,7 +1473,7 @@ public:
     bool SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost);
 
     /**
-     * This method sets the next hop to this router as invalid and clears the cost.
+     * Sets the next hop to this router as invalid and clears the cost.
      *
      * @retval TRUE   If there was a change (next hop was valid before).
      * @retval FALSE  No change to next hop (next hop was invalid before).
@@ -1493,14 +1493,14 @@ private:
 };
 
 /**
- * This class represent parent of a child node.
+ * Represent parent of a child node.
  *
  */
 class Parent : public Router
 {
 public:
     /**
-     * This method initializes the `Parent`.
+     * Initializes the `Parent`.
      *
      * @param[in] aInstance  A reference to OpenThread instance.
      *
@@ -1514,13 +1514,13 @@ public:
     }
 
     /**
-     * This method clears the parent entry.
+     * Clears the parent entry.
      *
      */
     void Clear(void);
 
     /**
-     * This method gets route cost from parent to leader.
+     * Gets route cost from parent to leader.
      *
      * @returns The route cost from parent to leader
      *
@@ -1528,7 +1528,7 @@ public:
     uint8_t GetLeaderCost(void) const { return mLeaderCost; }
 
     /**
-     * This method sets route cost from parent to leader.
+     * Sets route cost from parent to leader.
      *
      * @param[in] aLaderConst  The route cost.
      *
@@ -1537,7 +1537,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method gets the CSL accuracy (clock accuracy and uncertainty).
+     * Gets the CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The CSL accuracy.
      *
@@ -1545,7 +1545,7 @@ public:
     const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
 
     /**
-     * This method sets CSL accuracy.
+     * Sets CSL accuracy.
      *
      * @param[in] aCslAccuracy  The CSL accuracy.
      *

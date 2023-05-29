@@ -47,7 +47,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the MAC Filter CLI interpreter.
+ * Implements the MAC Filter CLI interpreter.
  *
  */
 class MacFilter : private Output
@@ -68,7 +68,7 @@ public:
     }
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

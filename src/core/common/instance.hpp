@@ -144,7 +144,7 @@
  */
 
 /**
- * This struct represents an opaque (and empty) type corresponding to an OpenThread instance object.
+ * Represents an opaque (and empty) type corresponding to an OpenThread instance object.
  *
  */
 typedef struct otInstance
@@ -154,16 +154,16 @@ typedef struct otInstance
 namespace ot {
 
 /**
- * This class represents an OpenThread instance.
+ * Represents an OpenThread instance.
  *
- * This class contains all the components used by OpenThread.
+ * Contains all the components used by OpenThread.
  *
  */
 class Instance : public otInstance, private NonCopyable
 {
 public:
     /**
-     * This type represents the message buffer information (number of messages/buffers in all OT stack message queues).
+     * Represents the message buffer information (number of messages/buffers in all OT stack message queues).
      *
      */
     class BufferInfo : public otBufferInfo, public Clearable<BufferInfo>
@@ -172,9 +172,9 @@ public:
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     /**
-      * This static method initializes the OpenThread instance.
+      * Initializes the OpenThread instance.
       *
-      * This function must be called before any other calls on OpenThread instance.
+      * Must be called before any other calls on OpenThread instance.
       *
       * @param[in]     aBuffer      The buffer for OpenThread to use for allocating the Instance.
       * @param[in,out] aBufferSize  On input, the size of `aBuffer`. On output, if not enough space for `Instance`, the
@@ -188,9 +188,9 @@ public:
 #else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**
-     * This static method initializes the single OpenThread instance.
+     * Initializes the single OpenThread instance.
      *
-     * This method initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
+     * Initializes OpenThread and prepares it for subsequent OpenThread API calls. This function must be
      * called before any other calls to OpenThread.
      *
      * @returns A reference to the single OpenThread instance.
@@ -199,7 +199,7 @@ public:
     static Instance &InitSingle(void);
 
     /**
-     * This static method returns a reference to the single OpenThread instance.
+     * Returns a reference to the single OpenThread instance.
      *
      * @returns A reference to the single OpenThread instance.
      *
@@ -219,7 +219,7 @@ public:
     uint32_t GetId(void) const { return mId; }
 
     /**
-     * This method indicates whether or not the instance is valid/initialized and not yet finalized.
+     * Indicates whether or not the instance is valid/initialized and not yet finalized.
      *
      * @returns TRUE if the instance is valid/initialized, FALSE otherwise.
      *
@@ -227,7 +227,7 @@ public:
     bool IsInitialized(void) const { return mIsInitialized; }
 
     /**
-     * This method triggers a platform reset.
+     * Triggers a platform reset.
      *
      * The reset process ensures that all the OpenThread state/info (stored in volatile memory) is erased. Note that
      * this method does not erase any persistent state/info saved in non-volatile memory.
@@ -237,14 +237,14 @@ public:
 
 #if OPENTHREAD_RADIO
     /**
-     * This method resets the internal states of the radio.
+     * Resets the internal states of the radio.
      *
      */
     void ResetRadioStack(void);
 #endif
 
     /**
-     * This method returns the active log level.
+     * Returns the active log level.
      *
      * @returns The log level.
      *
@@ -262,7 +262,7 @@ public:
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     /**
-     * This method sets the log level.
+     * Sets the log level.
      *
      * @param[in] aLogLevel  A log level.
      *
@@ -271,22 +271,22 @@ public:
 #endif
 
     /**
-     * This method finalizes the OpenThread instance.
+     * Finalizes the OpenThread instance.
      *
-     * This method should be called when OpenThread instance is no longer in use.
+     * Should be called when OpenThread instance is no longer in use.
      *
      */
     void Finalize(void);
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     /**
-     * This method deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
+     * Deletes all the settings stored in non-volatile memory, and then triggers a platform reset.
      *
      */
     void FactoryReset(void);
 
     /**
-     * This method erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
+     * Erases all the OpenThread persistent info (network settings) stored in non-volatile memory.
      *
      * Erase is successful/allowed only if the device is in `disabled` state/role.
      *
@@ -298,7 +298,7 @@ public:
 
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     /**
-     * This method returns a reference to the Heap object.
+     * Returns a reference to the Heap object.
      *
      * @returns A reference to the Heap object.
      *
@@ -308,7 +308,7 @@ public:
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     /**
-     * This method returns a reference to application COAP object.
+     * Returns a reference to application COAP object.
      *
      * @returns A reference to the application COAP object.
      *
@@ -318,7 +318,7 @@ public:
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
-     * This method returns a reference to application COAP Secure object.
+     * Returns a reference to application COAP Secure object.
      *
      * @returns A reference to the application COAP Secure object.
      *
@@ -328,7 +328,7 @@ public:
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * This method enables/disables the "DNS name compressions" mode.
+     * Enables/disables the "DNS name compressions" mode.
      *
      * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed.
      * This is applicable to OpenThread's DNS and SRP client/server modules.
@@ -341,7 +341,7 @@ public:
     static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
 
     /**
-     * This method indicates whether the "DNS name compression" mode is enabled or not.
+     * Indicates whether the "DNS name compression" mode is enabled or not.
      *
      * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
      *
@@ -350,7 +350,7 @@ public:
 #endif
 
     /**
-     * This method retrieves the the Message Buffer information.
+     * Retrieves the the Message Buffer information.
      *
      * @param[out]  aInfo  A `BufferInfo` where information is written.
      *
@@ -358,10 +358,10 @@ public:
     void GetBufferInfo(BufferInfo &aInfo);
 
     /**
-     * This method resets the Message Buffer information counter tracking maximum number buffers in use at the same
+     * Resets the Message Buffer information counter tracking maximum number buffers in use at the same
      * time.
      *
-     * This method resets `mMaxUsedBuffers` in `BufferInfo`.
+     * Resets `mMaxUsedBuffers` in `BufferInfo`.
      *
      */
     void ResetBufferInfo(void);
@@ -369,7 +369,7 @@ public:
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
-     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
+     * Returns a reference to a given `Type` object belonging to the OpenThread instance.
      *
      * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
      *

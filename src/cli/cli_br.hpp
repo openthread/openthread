@@ -45,7 +45,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the Border Router CLI interpreter.
+ * Implements the Border Router CLI interpreter.
  *
  */
 class Br : private Output
@@ -66,7 +66,7 @@ public:
     }
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

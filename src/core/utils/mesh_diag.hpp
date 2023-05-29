@@ -60,7 +60,7 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements the Mesh Diagnostics.
+ * Implements the Mesh Diagnostics.
  *
  */
 class MeshDiag : public InstanceLocator
@@ -72,7 +72,7 @@ public:
     typedef otMeshDiagDiscoverCallback DiscoverCallback; ///< The discovery callback function pointer type.
 
     /**
-     * This type represents an iterator to go over list of IPv6 addresses of a router.
+     * Represents an iterator to go over list of IPv6 addresses of a router.
      *
      */
     class Ip6AddrIterator : public otMeshDiagIp6AddrIterator
@@ -81,7 +81,7 @@ public:
 
     public:
         /**
-         * This method iterates through the discovered IPv6 address of a router.
+         * Iterates through the discovered IPv6 address of a router.
          *
          * @param[out]     aIp6Address  A reference to return the next IPv6 address (if any).
          *
@@ -100,7 +100,7 @@ public:
     };
 
     /**
-     * This type represents information about a router in Thread mesh.
+     * Represents information about a router in Thread mesh.
      *
      */
     class RouterInfo : public otMeshDiagRouterInfo, public Clearable<RouterInfo>
@@ -112,7 +112,7 @@ public:
     };
 
     /**
-     * This type represents information about a child in Thread mesh.
+     * Represents information about a child in Thread mesh.
      *
      */
     class ChildInfo : public otMeshDiagChildInfo, public Clearable<ChildInfo>
@@ -120,7 +120,7 @@ public:
     };
 
     /**
-     * This type represents an iterator to go over list of IPv6 addresses of a router.
+     * Represents an iterator to go over list of IPv6 addresses of a router.
      *
      */
     class ChildIterator : public otMeshDiagChildIterator
@@ -129,7 +129,7 @@ public:
 
     public:
         /**
-         * This method iterates through the discovered children of a router.
+         * Iterates through the discovered children of a router.
          *
          * @param[out]     aChildInfo  A reference to return the info for the next child (if any).
          *
@@ -149,7 +149,7 @@ public:
     };
 
     /**
-     * This constructor initializes the `MeshDiag` instance.
+     * Initializes the `MeshDiag` instance.
      *
      * @param[in] aInstance   The OpenThread instance.
      *
@@ -157,7 +157,7 @@ public:
     explicit MeshDiag(Instance &aInstance);
 
     /**
-     * This method starts network topology discovery.
+     * Starts network topology discovery.
      *
      * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
      * @param[in] aCallback        The callback to report the discovered routers.
@@ -172,7 +172,7 @@ public:
     Error DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback aCallback, void *aContext);
 
     /**
-     * This method cancels an ongoing topology discovery if there one, otherwise no action.
+     * Cancels an ongoing topology discovery if there one, otherwise no action.
      *
      * When ongoing discovery is cancelled, the callback from `DiscoverTopology()` will not be called anymore.
      *

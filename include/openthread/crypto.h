@@ -58,13 +58,13 @@ extern "C" {
 /**
  * @struct otCryptoSha256Hash
  *
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 typedef otPlatCryptoSha256Hash otCryptoSha256Hash;
 
 /**
- * This function performs HMAC computation.
+ * Performs HMAC computation.
  *
  * @param[in]     aKey           A pointer to the key.
  * @param[in]     aBuf           A pointer to the input buffer.
@@ -75,7 +75,7 @@ typedef otPlatCryptoSha256Hash otCryptoSha256Hash;
 void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash);
 
 /**
- * This method performs AES CCM computation.
+ * Performs AES CCM computation.
  *
  * @param[in]      aKey           A pointer to the key.
  * @param[in]      aTagLength     Length of tag in bytes.

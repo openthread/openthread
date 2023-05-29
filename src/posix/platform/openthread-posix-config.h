@@ -166,7 +166,7 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY
  *
- * This macro defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
+ * Defines the priority of OMR routes added to kernel. The larger the number, the lower the priority. We
  * need to assign a high priority to such routes so that kernel prefers the Thread link rather than infrastructure.
  * Otherwise we may unnecessarily transmit packets via infrastructure, which potentially causes looping issue.
  *
@@ -178,7 +178,7 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
  *
- * This macro defines the max number of OMR routes that can be added to kernel.
+ * Defines the max number of OMR routes that can be added to kernel.
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM
@@ -198,7 +198,7 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
  *
- * This macro defines the priority of external routes added to kernel. The larger the number, the lower the priority. We
+ * Defines the priority of external routes added to kernel. The larger the number, the lower the priority. We
  * need to assign a low priority to such routes so that kernel prefers the infra link rather than thread. Otherwise we
  * may unnecessarily transmit packets via thread, which potentially causes performance issue. In linux, normally infra
  * link routes' metric value is not greater than 1024, hence 65535 should be big enough.
@@ -211,7 +211,7 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM
  *
- * This macro defines the max number of external routes that can be added to kernel.
+ * Defines the max number of external routes that can be added to kernel.
  *
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM

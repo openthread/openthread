@@ -35,14 +35,14 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class manages Thread radio.
+ * Manages Thread radio.
  *
  */
 class Radio
 {
 public:
     /**
-     * This method creates the radio manager.
+     * Creates the radio manager.
      *
      * @param[in]   aUrl    A pointer to the null-terminated URL.
      *
@@ -50,13 +50,13 @@ public:
     explicit Radio(const char *aUrl);
 
     /**
-     * This method initialize the Thread radio.
+     * Initialize the Thread radio.
      *
      */
     void Init(void);
 
     /**
-     * This method acts as an accessor to the spinel instance used by the radio.
+     * Acts as an accessor to the spinel instance used by the radio.
      *
      * @returns A pointer to the radio's spinel interface instance.
      *

@@ -53,7 +53,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements Timestamp generation and parsing.
+ * Implements Timestamp generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -61,19 +61,19 @@ class Timestamp : public Clearable<Timestamp>
 {
 public:
     /**
-     * This method converts the timestamp to `otTimestamp`.
+     * Converts the timestamp to `otTimestamp`.
      *
      */
     void ConvertTo(otTimestamp &aTimestamp) const;
 
     /**
-     * This method sets the timestamp from `otTimestamp`.
+     * Sets the timestamp from `otTimestamp`.
      *
      */
     void SetFromTimestamp(const otTimestamp &aTimestamp);
 
     /**
-     * This method returns the Seconds value.
+     * Returns the Seconds value.
      *
      * @returns The Seconds value.
      *
@@ -84,7 +84,7 @@ public:
     }
 
     /**
-     * This method sets the Seconds value.
+     * Sets the Seconds value.
      *
      * @param[in]  aSeconds  The Seconds value.
      *
@@ -96,7 +96,7 @@ public:
     }
 
     /**
-     * This method returns the Ticks value.
+     * Returns the Ticks value.
      *
      * @returns The Ticks value.
      *
@@ -104,7 +104,7 @@ public:
     uint16_t GetTicks(void) const { return HostSwap16(mTicks) >> kTicksOffset; }
 
     /**
-     * This method sets the Ticks value.
+     * Sets the Ticks value.
      *
      * @param[in]  aTicks  The Ticks value.
      *
@@ -115,7 +115,7 @@ public:
     }
 
     /**
-     * This method returns the Authoritative value.
+     * Returns the Authoritative value.
      *
      * @returns The Authoritative value.
      *
@@ -123,7 +123,7 @@ public:
     bool GetAuthoritative(void) const { return (HostSwap16(mTicks) & kAuthoritativeMask) != 0; }
 
     /**
-     * This method sets the Authoritative value.
+     * Sets the Authoritative value.
      *
      * @param[in]  aAuthoritative  The Authoritative value.
      *
@@ -135,13 +135,13 @@ public:
     }
 
     /**
-     * This method increments the timestamp by a random number of ticks [0, 32767].
+     * Increments the timestamp by a random number of ticks [0, 32767].
      *
      */
     void AdvanceRandomTicks(void);
 
     /**
-     * This method indicates whether the timestamp indicates an MLE Orphan Announce message.
+     * Indicates whether the timestamp indicates an MLE Orphan Announce message.
      *
      * @retval TRUE   The timestamp indicates an Orphan Announce message.
      * @retval FALSE  If the timestamp does not indicate an Orphan Announce message.
@@ -150,7 +150,7 @@ public:
     bool IsOrphanTimestamp(void) const { return GetSeconds() == 0 && GetTicks() == 0 && GetAuthoritative(); }
 
     /**
-     * This static method compares two timestamps.
+     * Compares two timestamps.
      *
      * Either one or both @p aFirst or @p aSecond can be `nullptr`. A non-null timestamp is considered greater than
      * a null one. If both are null, they are considered as equal.
@@ -166,7 +166,7 @@ public:
     static int Compare(const Timestamp *aFirst, const Timestamp *aSecond);
 
     /**
-     * This static method compares two timestamps.
+     * Compares two timestamps.
      *
      * @param[in]  aFirst   A reference to the first timestamp to compare.
      * @param[in]  aSecond  A reference to the second timestamp to compare.

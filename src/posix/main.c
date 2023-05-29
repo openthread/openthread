@@ -71,7 +71,7 @@
 #include "lib/platform/reset_util.h"
 
 /**
- * This function initializes NCP app.
+ * Initializes NCP app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
  *
@@ -79,13 +79,13 @@
 void otAppNcpInit(otInstance *aInstance);
 
 /**
- * This function deinitializes NCP app.
+ * Deinitializes NCP app.
  *
  */
 void otAppNcpUpdate(otSysMainloopContext *aContext);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by console.
+ * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
@@ -93,7 +93,7 @@ void otAppNcpUpdate(otSysMainloopContext *aContext);
 void otAppNcpProcess(const otSysMainloopContext *aContext);
 
 /**
- * This function initializes CLI app.
+ * Initializes CLI app.
  *
  * @param[in]  aInstance    A pointer to the OpenThread instance.
  *
@@ -101,13 +101,13 @@ void otAppNcpProcess(const otSysMainloopContext *aContext);
 void otAppCliInit(otInstance *aInstance);
 
 /**
- * This function deinitializes CLI app.
+ * Deinitializes CLI app.
  *
  */
 void otAppCliDeinit(void);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by console.
+ * Updates the file descriptor sets with file descriptors used by console.
  *
  * @param[in,out]   aMainloop   A pointer to the mainloop context.
  *
@@ -115,7 +115,7 @@ void otAppCliDeinit(void);
 void otAppCliUpdate(otSysMainloopContext *aMainloop);
 
 /**
- * This function performs console driver processing.
+ * Performs console driver processing.
  *
  * @param[in]    aMainloop      A pointer to the mainloop context.
  *
@@ -131,7 +131,7 @@ typedef struct PosixConfig
 } PosixConfig;
 
 /**
- * This enumeration defines the argument return values.
+ * Defines the argument return values.
  *
  */
 enum

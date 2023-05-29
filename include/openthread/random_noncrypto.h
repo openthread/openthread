@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This function generates and returns a random `uint32_t` value.
+ * Generates and returns a random `uint32_t` value.
  *
  * @returns    A random `uint32_t` value.
  *
@@ -60,7 +60,7 @@ extern "C" {
 uint32_t otRandomNonCryptoGetUint32(void);
 
 /**
- * This function generates and returns a random byte.
+ * Generates and returns a random byte.
  *
  * @returns A random `uint8_t` value.
  *
@@ -68,7 +68,7 @@ uint32_t otRandomNonCryptoGetUint32(void);
 uint8_t otRandomNonCryptoGetUint8(void);
 
 /**
- * This function generates and returns a random `uint16_t` value.
+ * Generates and returns a random `uint16_t` value.
  *
  * @returns A random `uint16_t` value.
  *
@@ -76,7 +76,7 @@ uint8_t otRandomNonCryptoGetUint8(void);
 uint16_t otRandomNonCryptoGetUint16(void);
 
 /**
- * This function generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
  *
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
@@ -86,7 +86,7 @@ uint16_t otRandomNonCryptoGetUint16(void);
 uint8_t otRandomNonCryptoGetUint8InRange(uint8_t aMin, uint8_t aMax);
 
 /**
- * This function generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
  *
  * @note The returned random value can include the @p aMin value but excludes the @p aMax.
  *
@@ -98,7 +98,7 @@ uint8_t otRandomNonCryptoGetUint8InRange(uint8_t aMin, uint8_t aMax);
 uint16_t otRandomNonCryptoGetUint16InRange(uint16_t aMin, uint16_t aMax);
 
 /**
- * This function generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
  *
  * @note The returned random value can include the @p aMin value but excludes the @p aMax.
  *
@@ -111,7 +111,7 @@ uint16_t otRandomNonCryptoGetUint16InRange(uint16_t aMin, uint16_t aMax);
 uint32_t otRandomNonCryptoGetUint32InRange(uint32_t aMin, uint32_t aMax);
 
 /**
- * This function fills a given buffer with random bytes.
+ * Fills a given buffer with random bytes.
  *
  * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
@@ -120,7 +120,7 @@ uint32_t otRandomNonCryptoGetUint32InRange(uint32_t aMin, uint32_t aMax);
 void otRandomNonCryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
- * This function adds a random jitter within a given range to a given value.
+ * Adds a random jitter within a given range to a given value.
  *
  * @param[in]  aValue     A value to which the random jitter is added.
  * @param[in]  aJitter    Maximum jitter. Random jitter is selected from the range `[-aJitter, aJitter]`.

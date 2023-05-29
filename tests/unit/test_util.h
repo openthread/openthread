@@ -39,7 +39,7 @@ extern "C" {
 #endif
 
 /**
- * This macro verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
+ * Verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
  * given error messages and exits the program.
  *
  * @param[in]  aStatus     A scalar error status to be evaluated against zero (0).
@@ -58,7 +58,7 @@ extern "C" {
     } while (false)
 
 /**
- * This macro verifies that a given boolean condition is true, otherwise, it emits a given error message and exits the
+ * Verifies that a given boolean condition is true, otherwise, it emits a given error message and exits the
  * program.
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.

@@ -56,7 +56,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements a CLI-based TCP example.
+ * Implements a CLI-based TCP example.
  *
  */
 class TcpExample : private Output
@@ -74,7 +74,7 @@ public:
     TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

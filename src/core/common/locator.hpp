@@ -59,7 +59,7 @@ extern uint64_t gInstanceRaw[];
  */
 
 /**
- * This template class implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
+ * Implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
  * instance.
  *
  * Users of this class MUST follow CRTP-style inheritance, i.e., the class `Class` itself should publicly inherit
@@ -74,7 +74,7 @@ template <class InstanceGetProvider> class GetProvider
 {
 public:
     /**
-     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
+     * Returns a reference to a given `Type` object belonging to the OpenThread instance.
      *
      * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
      *
@@ -91,7 +91,7 @@ protected:
 };
 
 /**
- * This class implements a locator for an OpenThread Instance object.
+ * Implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
  * to get to its owning/parent OpenThread `Instance` and also any other `Type` within the `Instance` member variable
@@ -107,7 +107,7 @@ class InstanceLocator : public GetProvider<InstanceLocator>
 
 public:
     /**
-     * This method returns a reference to the parent OpenThread Instance.
+     * Returns a reference to the parent OpenThread Instance.
      *
      * @returns A reference to the parent otInstance.
      *
@@ -120,7 +120,7 @@ public:
 
 protected:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to the OpenThread Instance.
      *
@@ -142,7 +142,7 @@ private:
 };
 
 /**
- * This class implements a locator for an OpenThread Instance object.
+ * Implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocatorInit` is similar to `InstanceLocator` but provides a default constructor (instead of a
  * parameterized one) and allows an inheriting class to initialize the object (set the OpenThread Instance) post

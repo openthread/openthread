@@ -60,7 +60,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the DNS CLI interpreter.
+ * Implements the DNS CLI interpreter.
  *
  */
 class Dns : private Output
@@ -81,7 +81,7 @@ public:
     }
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *

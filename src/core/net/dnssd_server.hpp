@@ -63,7 +63,7 @@ namespace Dns {
 namespace ServiceDiscovery {
 
 /**
- * This class implements DNS-SD server.
+ * Implements DNS-SD server.
  *
  */
 class Server : public InstanceLocator, private NonCopyable
@@ -72,7 +72,7 @@ class Server : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class contains the counters of the DNS-SD server.
+     * Contains the counters of the DNS-SD server.
      *
      */
     class Counters : public otDnssdCounters, public Clearable<Counters>
@@ -81,7 +81,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
-     * This class represents an upstream query transaction. The methods should only be used by
+     * Represents an upstream query transaction. The methods should only be used by
      * `Dns::ServiceDiscovery::Server`.
      *
      */
@@ -89,7 +89,7 @@ public:
     {
     public:
         /**
-         * This method returns whether the transaction is valid.
+         * Returns whether the transaction is valid.
          *
          * @retval  TRUE  The transaction is valid.
          * @retval  FALSE The transaction is not valid.
@@ -98,7 +98,7 @@ public:
         bool IsValid(void) const { return mValid; }
 
         /**
-         * This method returns the time when the transaction expires.
+         * Returns the time when the transaction expires.
          *
          * @returns The expire time of the transaction.
          *
@@ -106,14 +106,14 @@ public:
         TimeMilli GetExpireTime(void) const { return mExpireTime; }
 
         /**
-         * This method resets the transaction with a reason. The transaction will be invalid and can be reused for
+         * Resets the transaction with a reason. The transaction will be invalid and can be reused for
          * another upstream query after this call.
          *
          */
         void Reset(void) { mValid = false; }
 
         /**
-         * This method initializes the transaction.
+         * Initializes the transaction.
          *
          * @param[in] aMessageInfo  The IP message info of the query.
          *
@@ -121,7 +121,7 @@ public:
         void Init(const Ip6::MessageInfo &aMessageInfo);
 
         /**
-         * This method returns the message info of the query.
+         * Returns the message info of the query.
          *
          * @returns  The message info of the query.
          *
@@ -136,7 +136,7 @@ public:
 #endif
 
     /**
-     * This enumeration specifies a DNS-SD query type.
+     * Specifies a DNS-SD query type.
      *
      */
     enum DnsQueryType : uint8_t
@@ -150,7 +150,7 @@ public:
     static constexpr uint16_t kPort = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT; ///< The DNS-SD server port.
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -158,7 +158,7 @@ public:
     explicit Server(Instance &aInstance);
 
     /**
-     * This method starts the DNS-SD server.
+     * Starts the DNS-SD server.
      *
      * @retval kErrorNone     Successfully started the DNS-SD server.
      * @retval kErrorFailed   If failed to open or bind the UDP socket.
@@ -167,13 +167,13 @@ public:
     Error Start(void);
 
     /**
-     * This method stops the DNS-SD server.
+     * Stops the DNS-SD server.
      *
      */
     void Stop(void);
 
     /**
-     * This method sets DNS-SD query callbacks.
+     * Sets DNS-SD query callbacks.
      *
      * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
      * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
@@ -185,7 +185,7 @@ public:
                            void                           *aContext);
 
     /**
-     * This method notifies a discovered service instance.
+     * Notifies a discovered service instance.
      *
      * @param[in] aServiceFullName  The null-terminated full service name.
      * @param[in] aInstanceInfo     A reference to the discovered service instance information.
@@ -195,7 +195,7 @@ public:
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     /**
-     * This method notifies an answer of an upstream DNS query.
+     * Notifies an answer of an upstream DNS query.
      *
      * The Transaction will be released.
      *
@@ -207,7 +207,7 @@ public:
     void OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Message *aResponseMessage);
 
     /**
-     * This method indicates whether the server will forward DNS queries to platform DNS upstream API.
+     * Indicates whether the server will forward DNS queries to platform DNS upstream API.
      *
      * @retval TRUE  If the server will forward DNS queries.
      * @retval FALSE If the server will not forward DNS queries.
@@ -216,7 +216,7 @@ public:
     bool IsUpstreamQueryEnabled(void) const { return mEnableUpstreamQuery; }
 
     /**
-     * This method enables or disables forwarding DNS queries to platform DNS upstream API.
+     * Enables or disables forwarding DNS queries to platform DNS upstream API.
      *
      * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
      *
@@ -225,7 +225,7 @@ public:
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
     /**
-     * This method notifies a discovered host.
+     * Notifies a discovered host.
      *
      * @param[in] aHostFullName     The null-terminated full host name.
      * @param[in] aHostInfo         A reference to the discovered host information.
@@ -234,7 +234,7 @@ public:
     void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
 
     /**
-     * This method acquires the next query in the server.
+     * Acquires the next query in the server.
      *
      * @param[in] aQuery            The query pointer. Pass `nullptr` to get the first query.
      *
@@ -244,7 +244,7 @@ public:
     const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
 
     /**
-     * This method acquires the DNS-SD query type and name for a specific query.
+     * Acquires the DNS-SD query type and name for a specific query.
      *
      * @param[in]   aQuery      The query pointer.
      * @param[out]  aName       The name output buffer.
@@ -255,7 +255,7 @@ public:
     static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
 
     /**
-     * This method returns the counters of the DNS-SD server.
+     * Returns the counters of the DNS-SD server.
      *
      * @returns  A reference to the `Counters` instance.
      *
@@ -263,7 +263,7 @@ public:
     const Counters &GetCounters(void) const { return mCounters; };
 
     /**
-     * This enumeration represents different test mode flags for use in `SetTestMode()`.
+     * Represents different test mode flags for use in `SetTestMode()`.
      *
      */
     enum TestModeFlags : uint8_t
@@ -275,7 +275,7 @@ public:
     static constexpr uint8_t kTestModeDisabled = 0; ///< Test mode is disabled (no flags).
 
     /**
-     * This method sets the test mode for `Server`.
+     * Sets the test mode for `Server`.
      *
      * The test mode flags are intended for testing the client by having server behave in certain ways, e.g., reject
      * messages with certain format (e.g., more than one question in query).
@@ -401,7 +401,7 @@ private:
     };
 
     /**
-     * This class contains the compress information for a dns packet.
+     * Contains the compress information for a dns packet.
      *
      */
     class QueryTransaction : public InstanceLocatorInit

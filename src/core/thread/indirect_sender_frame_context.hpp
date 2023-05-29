@@ -50,7 +50,7 @@ namespace ot {
  */
 
 /**
- * This class defines the `FrameContext` type.
+ * Defines the `FrameContext` type.
  *
  * This is the base class for `IndirectSender`.
  *
@@ -59,9 +59,9 @@ class IndirectSenderBase
 {
 public:
     /**
-     * This type defines the frame context used by `IndirectSender`.
+     * Defines the frame context used by `IndirectSender`.
      *
-     * This type specifies all the info that `IndirectSender` requires to be saved along with a prepared frame for
+     * Specifies all the info that `IndirectSender` requires to be saved along with a prepared frame for
      * indirect transmission.  `IndirectSender` is designed to contain the common code for handling of indirect
      * transmission to sleepy children and be able to interface to different lower-layer implementation of
      * `DataPollHandler`. While the `FrameContext` is defined by the `IndirectSender` itself, the lower-layer

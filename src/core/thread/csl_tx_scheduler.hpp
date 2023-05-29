@@ -55,7 +55,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements CSL tx scheduling functionality.
+ * Implements CSL tx scheduling functionality.
  *
  */
 class CslTxScheduler : public InstanceLocator, private NonCopyable
@@ -67,7 +67,7 @@ public:
     static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This class defines all the child info required for scheduling CSL transmissions.
+     * Defines all the child info required for scheduling CSL transmissions.
      *
      * `Child` class publicly inherits from this class.
      *
@@ -114,7 +114,7 @@ public:
     };
 
     /**
-     * This class defines the callbacks used by the `CslTxScheduler`.
+     * Defines the callbacks used by the `CslTxScheduler`.
      *
      */
     class Callbacks : public InstanceLocator
@@ -125,7 +125,7 @@ public:
         typedef IndirectSenderBase::FrameContext FrameContext;
 
         /**
-         * This constructor initializes the callbacks object.
+         * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
          *
@@ -163,7 +163,7 @@ public:
                                     Child              &aChild);
     };
     /**
-     * This constructor initializes the CSL tx scheduler object.
+     * Initializes the CSL tx scheduler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
@@ -171,7 +171,7 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * This method updates the next CSL transmission (finds the nearest child).
+     * Updates the next CSL transmission (finds the nearest child).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
      * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
@@ -181,7 +181,7 @@ public:
     void Update(void);
 
     /**
-     * This method clears all the states inside `CslTxScheduler` and the related states in each child.
+     * Clears all the states inside `CslTxScheduler` and the related states in each child.
      *
      */
     void Clear(void);

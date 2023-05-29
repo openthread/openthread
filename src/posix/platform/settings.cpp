@@ -107,7 +107,7 @@ static int swapOpen(otInstance *aInstance)
 }
 
 /**
- * This function reads @p aLength bytes from the data file and appends to the swap file.
+ * Reads @p aLength bytes from the data file and appends to the swap file.
  *
  * @param[in]   aFd     The file descriptor of the current swap file.
  * @param[in]   aLength Number of bytes to copy.

@@ -48,7 +48,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the SRP Client CLI interpreter.
+ * Implements the SRP Client CLI interpreter.
  *
  */
 class SrpClient : private Output
@@ -66,7 +66,7 @@ public:
     SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method processes a CLI sub-command.
+     * Processes a CLI sub-command.
      *
      * @param[in]  aArgs     An array of command line arguments.
      *
