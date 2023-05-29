@@ -648,6 +648,8 @@ public:
      * @retval kErrorNone            Successfully enable/disable or update Enhanced-ACK Based Probing for a specific
      *                               Initiator.
      * @retval kErrorInvalidArgs     @p aDataLength or @p aExtAddr is not valid.
+     * @retval kErrorNotFound        The Initiator indicated by @p aShortAddress is not found when trying to clear.
+     * @retval kErrorNoBufs          No more Initiator can be supported.
      * @retval kErrorNotImplemented  Radio driver doesn't support Enhanced-ACK Probing.
      *
      */
