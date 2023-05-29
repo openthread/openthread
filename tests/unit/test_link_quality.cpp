@@ -518,6 +518,13 @@ public:
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(1) == 255);
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(10) == 255);
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(127) == 255);
+
+        // Test corner case of ScaleRawValueToRssi
+        for (uint8_t rawValue = 0; rawValue < 2; rawValue++)
+        {
+            int8_t rssi = LinkMetrics::ScaleRawValueToRssi(rawValue);
+            printf("\nRaw Value: %u -> RSSI : %-3d", rawValue, rssi);
+        }
     }
 };
 

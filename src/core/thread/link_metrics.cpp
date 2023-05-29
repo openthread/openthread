@@ -809,7 +809,8 @@ int8_t ScaleRawValueToRssi(uint8_t aRawValue)
     int32_t value = aRawValue;
 
     value = value * (kMaxRssi - kMinRssi);
-    value = DivideAndRoundToClosest<int32_t>(value, NumericLimits<uint8_t>::kMax);
+    // 0 or 1 plus kMinRssi (-130) will cause overflow on int8_t
+    value = Max(static_cast<int32_t>(2), DivideAndRoundToClosest<int32_t>(value, NumericLimits<uint8_t>::kMax));
     value += kMinRssi;
 
     return static_cast<int8_t>(value);
