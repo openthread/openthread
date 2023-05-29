@@ -60,9 +60,10 @@ typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
 
 void GetFilename(Filename &aFilename, const char *aPattern)
 {
-    int rval;
+    int         rval;
+    const char *netIfName = strlen(gNetifName) > 0 ? gNetifName : OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
 
-    rval = snprintf(aFilename, sizeof(aFilename), aPattern, gNetifName);
+    rval = snprintf(aFilename, sizeof(aFilename), aPattern, netIfName);
     if (rval < 0 && static_cast<size_t>(rval) >= sizeof(aFilename))
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
