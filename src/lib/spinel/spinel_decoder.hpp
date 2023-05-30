@@ -44,7 +44,7 @@ namespace ot {
 namespace Spinel {
 
 /**
- * This class defines a spinel decoder.
+ * Defines a spinel decoder.
  *
  */
 class Decoder
@@ -56,13 +56,13 @@ public:
     };
 
     /**
-     * This constructor initializes a `Decoder` object.
+     * Initializes a `Decoder` object.
      *
      */
     Decoder(void);
 
     /**
-     * This method initializes the decoder to start decoding a new frame.
+     * Initializes the decoder to start decoding a new frame.
      *
      * It sets the read position to the start of the frame and also erases/voids any saved positions (see
      * `SavePosition()` and `ResetToSaved()` methods).
@@ -74,7 +74,7 @@ public:
     void Init(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method returns the pointer to the start of the frame.
+     * Returns the pointer to the start of the frame.
      *
      * @returns A pointer to buffer containing current frame being decoded.
      *
@@ -82,7 +82,7 @@ public:
     const uint8_t *GetFrame(void) const { return mFrame; }
 
     /**
-     * This method returns the total length of current frame being decoded.
+     * Returns the total length of current frame being decoded.
      *
      * @returns The length of current frame being decoded.
      *
@@ -90,7 +90,7 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the number of bytes that are already read/decoded from the frame.
+     * Returns the number of bytes that are already read/decoded from the frame.
      *
      * @returns The number of bytes already read from frame.
      *
@@ -98,7 +98,7 @@ public:
     uint16_t GetReadLength(void) const { return mIndex; }
 
     /**
-     * This method returns the number of remaining (not yet read/decoded) bytes in the frame.
+     * Returns the number of remaining (not yet read/decoded) bytes in the frame.
      *
      * @returns The number of remaining unread bytes in the frame.
      *
@@ -106,7 +106,7 @@ public:
     uint16_t GetRemainingLength(void) const { return mLength - mIndex; }
 
     /**
-     * This method indicates whether or not all the bytes in the frame are read.
+     * Indicates whether or not all the bytes in the frame are read.
      *
      * @returns TRUE if all the bytes in the buffer are read, FALSE otherwise.
      *
@@ -114,14 +114,14 @@ public:
     bool IsAllRead(void) const { return (mIndex == mLength); }
 
     /**
-     * This method resets the read position to beginning of frame. It will also void/erase any previously saved
+     * Resets the read position to beginning of frame. It will also void/erase any previously saved
      * position using `SavePosition()` method.
      *
      */
     void Reset(void);
 
     /**
-     * This method decodes and reads a boolean value form the frame.
+     * Decodes and reads a boolean value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -134,7 +134,7 @@ public:
     otError ReadBool(bool &aBool);
 
     /**
-     * This method decodes and reads an `int8_t` value form the frame.
+     * Decodes and reads an `int8_t` value form the frame.
      *
      * On success, the read position get updated.
      *
@@ -147,7 +147,7 @@ public:
     otError ReadInt8(int8_t &aInt8);
 
     /**
-     * This method decodes and reads an `uint8_t` value form the frame.
+     * Decodes and reads an `uint8_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -160,7 +160,7 @@ public:
     otError ReadUint8(uint8_t &aUint8);
 
     /**
-     * This method decodes and reads an `int16_t` value form the frame.
+     * Decodes and reads an `int16_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -173,7 +173,7 @@ public:
     otError ReadInt16(int16_t &aInt16);
 
     /**
-     * This method decodes and reads an `uint16_t` value form the frame.
+     * Decodes and reads an `uint16_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -186,7 +186,7 @@ public:
     otError ReadUint16(uint16_t &aUint16);
 
     /**
-     * This method decodes and reads an `int32_t` value form the frame.
+     * Decodes and reads an `int32_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -199,7 +199,7 @@ public:
     otError ReadInt32(int32_t &aInt32);
 
     /**
-     * This method decodes and reads an `uint32_t` value form the frame.
+     * Decodes and reads an `uint32_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -212,7 +212,7 @@ public:
     otError ReadUint32(uint32_t &aUint32);
 
     /**
-     * This method decodes and reads an `int64_t` value form the frame.
+     * Decodes and reads an `int64_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -225,7 +225,7 @@ public:
     otError ReadInt64(int64_t &aInt64);
 
     /**
-     * This method decodes and reads an `uint64_t` value form the frame.
+     * Decodes and reads an `uint64_t` value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -238,7 +238,7 @@ public:
     otError ReadUint64(uint64_t &aUint64);
 
     /**
-     * This method decodes (using spinel packed integer format) and reads an unsigned integer value form the frame.
+     * Decodes (using spinel packed integer format) and reads an unsigned integer value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -251,7 +251,7 @@ public:
     otError ReadUintPacked(unsigned int &aUint);
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -268,7 +268,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -285,7 +285,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -302,7 +302,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated and the IP address is copied into the given output variable.
      *
@@ -316,7 +316,7 @@ public:
     otError ReadIp6Address(spinel_ipv6addr_t &aIp6Addr);
 
     /**
-     * This method decodes and reads an IPv6 address form the frame.
+     * Decodes and reads an IPv6 address form the frame.
      *
      * On success, the read position gets updated and the IP address is copied into the given output variable.
      *
@@ -330,7 +330,7 @@ public:
     otError ReadIp6Address(otIp6Address &aIp6Addr);
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -347,7 +347,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -364,7 +364,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -378,7 +378,7 @@ public:
     otError ReadEui64(const uint8_t *&aEui64BufPtr) { return ReadItem(&aEui64BufPtr, sizeof(spinel_eui64_t)); }
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated and the EUI64 value is copied into the given output variable.
      *
@@ -392,7 +392,7 @@ public:
     otError ReadEui64(spinel_eui64_t &aEui64);
 
     /**
-     * This method decodes and reads an EUI64 value form the frame.
+     * Decodes and reads an EUI64 value form the frame.
      *
      * On success, the read position gets updated and the EUI64 value is copied into the given output variable.
      *
@@ -406,7 +406,7 @@ public:
     otError ReadEui64(otExtAddress &aEui64);
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -423,7 +423,7 @@ public:
     }
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -437,7 +437,7 @@ public:
     otError ReadEui48(const uint8_t *&aEui48BufPtr) { return ReadItem(&aEui48BufPtr, sizeof(spinel_eui48_t)); }
 
     /**
-     * This method decodes and reads an EUI48 value form the frame.
+     * Decodes and reads an EUI48 value form the frame.
      *
      * On success, the read position gets updated and the EUI48 value is copied into the given output variable.
      *
@@ -451,7 +451,7 @@ public:
     otError ReadEui48(spinel_eui48_t &aEui48);
 
     /**
-     * This method decodes and reads a UTF8 string form the frame.
+     * Decodes and reads a UTF8 string form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -465,7 +465,7 @@ public:
     otError ReadUtf8(const char *&aUtf8);
 
     /**
-     * This method decodes and reads a data blob (sequence of bytes) form the frame.
+     * Decodes and reads a data blob (sequence of bytes) form the frame.
      *
      * On success, the read position gets updated.
      *
@@ -480,7 +480,7 @@ public:
     otError ReadData(const uint8_t *&aData, uint16_t &aDataLen);
 
     /**
-     * This method decodes and reads a data blob (sequence of bytes) with data length.
+     * Decodes and reads a data blob (sequence of bytes) with data length.
      *
      * The data length is assumed to be prepended before the data content (encoded as a `uint16_t`). The size of the
      * length field should not be included in the length value. This method corresponds to `SPINEL_DATATYPE_DATA_WLEN`
@@ -497,7 +497,7 @@ public:
     otError ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen);
 
     /**
-     * This method opens a struct in the frame.
+     * Opens a struct in the frame.
      *
      * After a successful call to this method, all the subsequent `Read{SomeType}()` methods decode and read the
      * field/value from the current open struct until the struct is closed using `CloseStruct()` method. Structures can
@@ -511,7 +511,7 @@ public:
     otError OpenStruct(void);
 
     /**
-     * This method closes the most recently opened struct (using `OpenStruct()`) in the frame.
+     * Closes the most recently opened struct (using `OpenStruct()`) in the frame.
      *
      * On success, the read position is moved to end of the struct skipping any unread bytes within the struct.
      *
@@ -522,7 +522,7 @@ public:
     otError CloseStruct(void);
 
     /**
-     * This method returns the number of remaining/unread bytes in the current inner-most open structure.
+     * Returns the number of remaining/unread bytes in the current inner-most open structure.
      *
      * If there is no currently open structure the number of remaining bytes in whole frame is returned instead.
      *
@@ -532,7 +532,7 @@ public:
     uint16_t GetRemainingLengthInStruct(void) const { return mEnd - mIndex; }
 
     /**
-     * This method indicates whether or not all the bytes in inner-most open structure are read.
+     * Indicates whether or not all the bytes in inner-most open structure are read.
      *
      * If there is no currently open structure, the whole frame is considered instead.
      *
@@ -542,7 +542,7 @@ public:
     bool IsAllReadInStruct(void) const { return (mIndex == mEnd); }
 
     /**
-     * This method saves the current read position in the frame.
+     * Saves the current read position in the frame.
      *
      * A subsequent call to `SavePosition()` will overwrite the previously saved position. The saved position can be
      * used to move the read position back (using `ResetToSaved()`) and re-read the same content.
@@ -555,7 +555,7 @@ public:
     void SavePosition(void);
 
     /**
-     * This method resets/moves the read position to a previously saved position.
+     * Resets/moves the read position to a previously saved position.
      *
      * The saved position remembers its enclosing structure. When `ResetToSaved()` is called, the current open
      * structure will be the same as when position was saved.

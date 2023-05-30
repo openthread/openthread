@@ -54,7 +54,7 @@ extern "C" {
  */
 
 /**
- * This method provides a full or stable copy of the local Thread Network Data.
+ * Provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]      aInstance    A pointer to an OpenThread instance.
  * @param[in]      aStable      TRUE when copying the stable version, FALSE when copying the full version.
@@ -94,7 +94,7 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
 otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
- * This function gets the next On Mesh Prefix in the local Network Data.
+ * Gets the next On Mesh Prefix in the local Network Data.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first on-mesh entry
@@ -139,7 +139,7 @@ otError otBorderRouterAddRoute(otInstance *aInstance, const otExternalRouteConfi
 otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
- * This function gets the next external route in the local Network Data.
+ * Gets the next external route in the local Network Data.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first external route entry

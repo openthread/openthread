@@ -58,7 +58,7 @@ class JamDetector : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This function pointer is called if jam state changes (assuming jamming detection is enabled).
+     * Pointer is called if jam state changes (assuming jamming detection is enabled).
      *
      * @param[in]  aJamState  `true` if jam is detected, `false` if jam is cleared.
      * @param[in]  aContext  A pointer to application-specific context.
@@ -67,7 +67,7 @@ public:
     typedef void (*Handler)(bool aJamState, void *aContext);
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

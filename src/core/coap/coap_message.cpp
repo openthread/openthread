@@ -106,7 +106,7 @@ void Message::Finish(void)
 uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
 {
     /*
-     * This method encodes a CoAP Option header field (Option Delta/Length) per
+     * Encodes a CoAP Option header field (Option Delta/Length) per
      * RFC 7252. The returned value is a 4-bit unsigned integer. Extended fields
      * (if needed) are written into the given buffer `aBuffer` and the pointer
      * would also be updated.

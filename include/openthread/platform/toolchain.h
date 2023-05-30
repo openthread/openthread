@@ -113,10 +113,10 @@ extern "C" {
 /**
  * @def OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK
  *
- * This macro specifies that a function or method takes `printf` style arguments and should be type-checked against
+ * Specifies that a function or method takes `printf` style arguments and should be type-checked against
  * a format string.
  *
- * This macro must be added after the function/method declaration. For example:
+ * Must be added after the function/method declaration. For example:
  *
  *    `void MyPrintf(void *aObject, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);`
  *

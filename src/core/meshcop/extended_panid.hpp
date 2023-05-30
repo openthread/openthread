@@ -50,7 +50,7 @@ namespace ot {
 namespace MeshCoP {
 
 /**
- * This class represents an Extended PAN Identifier.
+ * Represents an Extended PAN Identifier.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -60,13 +60,13 @@ public:
     static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method converts an address to a string.
+     * Converts an address to a string.
      *
      * @returns An `InfoString` containing the string representation of the Extended PAN Identifier.
      *
@@ -87,7 +87,7 @@ public:
     explicit ExtendedPanIdManager(Instance &aInstance);
 
     /**
-     * This method returns the Extended PAN Identifier.
+     * Returns the Extended PAN Identifier.
      *
      * @returns The Extended PAN Identifier.
      *
@@ -95,7 +95,7 @@ public:
     const ExtendedPanId &GetExtPanId(void) const { return mExtendedPanId; }
 
     /**
-     * This method sets the Extended PAN Identifier.
+     * Sets the Extended PAN Identifier.
      *
      * @param[in]  aExtendedPanId  The Extended PAN Identifier.
      *

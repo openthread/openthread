@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This function pointer on receipt of a IEEE 802.15.4 frame.
+ * Pointer on receipt of a IEEE 802.15.4 frame.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aFrame       A pointer to the received frame or NULL if the receive operation was aborted.
@@ -63,7 +63,7 @@ extern "C" {
 typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
 
 /**
- * This function enables/disables the raw link-layer.
+ * Enables/disables the raw link-layer.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
  * @param[in] aCallback     A pointer to a function called on receipt of a IEEE 802.15.4 frame. NULL to disable the
@@ -77,7 +77,7 @@ typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame
 otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCallback);
 
 /**
- * This function indicates whether or not the raw link-layer is enabled.
+ * Indicates whether or not the raw link-layer is enabled.
  *
  * @param[in] aInstance     A pointer to an OpenThread instance.
  *
@@ -88,7 +88,7 @@ otError otLinkRawSetReceiveDone(otInstance *aInstance, otLinkRawReceiveDone aCal
 bool otLinkRawIsEnabled(otInstance *aInstance);
 
 /**
- * This function gets the status of promiscuous mode.
+ * Gets the status of promiscuous mode.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
@@ -99,7 +99,7 @@ bool otLinkRawIsEnabled(otInstance *aInstance);
 bool otLinkRawGetPromiscuous(otInstance *aInstance);
 
 /**
- * This function enables or disables promiscuous mode.
+ * Enables or disables promiscuous mode.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aEnable      A value to enable or disable promiscuous mode.
@@ -149,7 +149,7 @@ otError otLinkRawReceive(otInstance *aInstance);
 
 /**
  * The radio transitions from Transmit to Receive.
- * This method returns a pointer to the transmit buffer.
+ * Returns a pointer to the transmit buffer.
  *
  * The caller forms the IEEE 802.15.4 frame in this buffer then calls otLinkRawTransmit()
  * to request transmission.
@@ -162,7 +162,7 @@ otError otLinkRawReceive(otInstance *aInstance);
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance);
 
 /**
- * This function pointer on receipt of a IEEE 802.15.4 frame.
+ * Pointer on receipt of a IEEE 802.15.4 frame.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aFrame           A pointer to the frame that was transmitted.
@@ -180,7 +180,7 @@ typedef void (*otLinkRawTransmitDone)(otInstance   *aInstance,
                                       otError       aError);
 
 /**
- * This method begins the transmit sequence on the radio.
+ * Begins the transmit sequence on the radio.
  *
  * The caller must form the IEEE 802.15.4 frame in the buffer provided by otLinkRawGetTransmitBuffer() before
  * requesting transmission.  The channel and transmit power are also included in the otRadioFrame structure.
@@ -219,7 +219,7 @@ int8_t otLinkRawGetRssi(otInstance *aInstance);
 otRadioCaps otLinkRawGetCaps(otInstance *aInstance);
 
 /**
- * This function pointer on receipt of a IEEE 802.15.4 frame.
+ * Pointer on receipt of a IEEE 802.15.4 frame.
  *
  * @param[in]  aInstance            A pointer to an OpenThread instance.
  * @param[in]  aEnergyScanMaxRssi   The maximum RSSI encountered on the scanned channel.
@@ -228,7 +228,7 @@ otRadioCaps otLinkRawGetCaps(otInstance *aInstance);
 typedef void (*otLinkRawEnergyScanDone)(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
- * This method begins the energy scan sequence on the radio.
+ * Begins the energy scan sequence on the radio.
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  * @param[in]  aScanChannel     The channel to perform the energy scan on.
@@ -356,7 +356,7 @@ otError otLinkRawSetMacKey(otInstance     *aInstance,
 /**
  * Sets the current MAC frame counter value.
  *
- * This function always sets the MAC counter to the new given value @p aMacFrameCounter independent of the current
+ * Always sets the MAC counter to the new given value @p aMacFrameCounter independent of the current
  * value.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.

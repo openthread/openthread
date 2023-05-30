@@ -49,7 +49,7 @@ namespace ot {
 namespace Utils {
 
 /**
- * This class implements power calibration module.
+ * Implements power calibration module.
  *
  * The power calibration module implements the radio platform power calibration APIs. It mainly stores the calibrated
  * power table and the target power table, provides an API for the platform to get the raw power setting of the

@@ -50,7 +50,7 @@
 namespace ot {
 
 /**
- * This class implements handling PANID Query Requests.
+ * Implements handling PANID Query Requests.
  *
  */
 class EnergyScanClient : public InstanceLocator
@@ -59,13 +59,13 @@ class EnergyScanClient : public InstanceLocator
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit EnergyScanClient(Instance &aInstance);
 
     /**
-     * This method sends an Energy Scan Query message.
+     * Sends an Energy Scan Query message.
      *
      * @param[in]  aChannelMask   The channel mask value.
      * @param[in]  aCount         The number of energy measurements per channel.

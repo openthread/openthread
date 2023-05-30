@@ -34,7 +34,7 @@
 #include "test_util.h"
 
 /**
- * This function prints the content of a given buffer to screen as a hex dump along with ASCII text translation.
+ * Prints the content of a given buffer to screen as a hex dump along with ASCII text translation.
  *
  * @param[in] aTextMessag    A text message to describe the buffer content (printed before the buffer content)
  * @param[in] aBuffer        A pointer to the buffer

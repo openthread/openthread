@@ -64,6 +64,7 @@
 #include "cli/cli_dns.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
+#include "cli/cli_mac_filter.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
 #include "cli/cli_srp_client.hpp"
@@ -100,7 +101,7 @@ extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 extern "C" void otCliOutputFormat(const char *aFmt, ...);
 
 /**
- * This class implements the CLI interpreter.
+ * Implements the CLI interpreter.
  *
  */
 class Interpreter : public OutputImplementer, public Output
@@ -131,7 +132,7 @@ public:
     explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * This method returns a reference to the interpreter object.
+     * Returns a reference to the interpreter object.
      *
      * @returns A reference to the interpreter object.
      *
@@ -144,7 +145,7 @@ public:
     }
 
     /**
-     * This method initializes the Console interpreter.
+     * Initializes the Console interpreter.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      * @param[in]  aCallback  A pointer to a callback method.
@@ -154,7 +155,7 @@ public:
     static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
-     * This method returns whether the interpreter is initialized.
+     * Returns whether the interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
      *
@@ -162,7 +163,7 @@ public:
     static bool IsInitialized(void) { return sInterpreter != nullptr; }
 
     /**
-     * This method interprets a CLI command.
+     * Interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
      *
@@ -170,7 +171,7 @@ public:
     void ProcessLine(char *aBuf);
 
     /**
-     * This static method checks a given argument string against "enable" or "disable" commands.
+     * Checks a given argument string against "enable" or "disable" commands.
      *
      * @param[in]  aArg     The argument string to parse.
      * @param[out] aEnable  Boolean variable to return outcome on success.
@@ -183,7 +184,7 @@ public:
     static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
 
     /**
-     * This method adds commands to the user command table.
+     * Adds commands to the user command table.
      *
      * @param[in]  aCommands  A pointer to an array with user commands.
      * @param[in]  aLength    @p aUserCommands length.
@@ -197,7 +198,7 @@ public:
     static constexpr uint8_t kLinkModeStringSize = sizeof("rdn"); ///< Size of string buffer for a MLE Link Mode.
 
     /**
-     * This method converts a given MLE Link Mode to flag string.
+     * Converts a given MLE Link Mode to flag string.
      *
      * The characters 'r', 'd', and 'n' are respectively used for `mRxOnWhenIdle`, `mDeviceType` and `mNetworkData`
      * flags. If all flags are `false`, then "-" is returned.
@@ -211,7 +212,7 @@ public:
     static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
 
     /**
-     * This method converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
+     * Converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
      *
      * @param[in] aOrigin   The IPv6 address origin to convert.
      *
@@ -221,7 +222,7 @@ public:
     static const char *AddressOriginToString(uint8_t aOrigin);
 
     /**
-     * This static method parses a given argument string as a route preference comparing it against  "high", "med", or
+     * Parses a given argument string as a route preference comparing it against  "high", "med", or
      * "low".
      *
      * @param[in]  aArg          The argument string to parse.
@@ -234,7 +235,7 @@ public:
     static otError ParsePreference(const Arg &aArg, otRoutePreference &aPreference);
 
     /**
-     * This static method converts a route preference value to human-readable string.
+     * Converts a route preference value to human-readable string.
      *
      * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
      *
@@ -244,7 +245,7 @@ public:
     static const char *PreferenceToString(signed int aPreference);
 
     /**
-     * This method parses the argument as an IP address.
+     * Parses the argument as an IP address.
      *
      * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
      * NAT64 prefix in the network data.
@@ -430,14 +431,6 @@ private:
     void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
 #endif
 
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-    void               PrintMacFilter(void);
-    otError            ProcessMacFilterAddress(Arg aArgs[]);
-    otError            ProcessMacFilterRss(Arg aArgs[]);
-    void               OutputMacFilterEntry(const otMacFilterEntry &aEntry);
-    static const char *MacFilterAddressModeToString(otMacFilterAddressMode aMode);
-#endif
-
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
     static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
@@ -460,6 +453,10 @@ private:
     void OutputLeaderData(uint8_t aIndentSize, const otLeaderData &aLeaderData);
     void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
+#endif
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    void OutputNat64Counters(const otNat64Counters &aCounters);
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -543,6 +540,10 @@ private:
     Dataset     mDataset;
     NetworkData mNetworkData;
     UdpExample  mUdp;
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    MacFilter mMacFilter;
+#endif
 
 #if OPENTHREAD_CLI_DNS_ENABLE
     Dns mDns;

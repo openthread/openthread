@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This enumeration type represents the "Recursion Desired" (RD) flag in an `otDnsQueryConfig`.
+ * Type represents the "Recursion Desired" (RD) flag in an `otDnsQueryConfig`.
  *
  */
 typedef enum
@@ -67,7 +67,7 @@ typedef enum
 } otDnsRecursionFlag;
 
 /**
- * This enumeration type represents the NAT64 mode in an `otDnsQueryConfig`.
+ * Type represents the NAT64 mode in an `otDnsQueryConfig`.
  *
  * The NAT64 mode indicates whether to allow or disallow NAT64 address translation during DNS client address resolution.
  * This mode is only used when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
@@ -81,7 +81,7 @@ typedef enum
 } otDnsNat64Mode;
 
 /**
- * This enumeration type represents the service resolution mode in an `otDnsQueryConfig`.
+ * Type represents the service resolution mode in an `otDnsQueryConfig`.
  *
  * This is only used during DNS client service resolution `otDnsClientResolveService()`. It determines which
  * record types to query.
@@ -98,7 +98,7 @@ typedef enum
 } otDnsServiceMode;
 
 /**
- * This enumeration type represents the DNS transport protocol in an `otDnsQueryConfig`.
+ * Type represents the DNS transport protocol in an `otDnsQueryConfig`.
  *
  * This `OT_DNS_TRANSPORT_TCP` is only supported when `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is enabled.
  *
@@ -111,7 +111,7 @@ typedef enum
 } otDnsTransportProto;
 
 /**
- * This structure represents a DNS query configuration.
+ * Represents a DNS query configuration.
  *
  * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
  * fields are treated is determined by the function which uses the instance of `otDnsQueryConfig`.
@@ -129,7 +129,7 @@ typedef struct otDnsQueryConfig
 } otDnsQueryConfig;
 
 /**
- * This function gets the current default query config used by DNS client.
+ * Gets the current default query config used by DNS client.
  *
  * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
  * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, `_DEFAULT_RESPONSE_TIMEOUT`, etc.
@@ -143,7 +143,7 @@ typedef struct otDnsQueryConfig
 const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
 
 /**
- * This function sets the default query config on DNS client.
+ * Sets the default query config on DNS client.
  *
  * @note Any ongoing query will continue to use the config from when it was started. The new default config will be
  * used for any future DNS queries.
@@ -169,7 +169,7 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
 void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig);
 
 /**
- * This type is an opaque representation of a response to an address resolution DNS query.
+ * An opaque representation of a response to an address resolution DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsAddressCallback`.
  *
@@ -177,7 +177,7 @@ void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *
 typedef struct otDnsAddressResponse otDnsAddressResponse;
 
 /**
- * This function pointer is called when a DNS response is received for an address resolution query.
+ * Pointer is called when a DNS response is received for an address resolution query.
  *
  * Within this callback the user can use `otDnsAddressResponseGet{Item}()` functions along with the @p aResponse
  * pointer to get more info about the response.
@@ -217,7 +217,7 @@ typedef struct otDnsAddressResponse otDnsAddressResponse;
 typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
 
 /**
- * This function sends an address resolution DNS query for AAAA (IPv6) record(s) for a given host name.
+ * Sends an address resolution DNS query for AAAA (IPv6) record(s) for a given host name.
  *
  * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
@@ -242,9 +242,9 @@ otError otDnsClientResolveAddress(otInstance             *aInstance,
                                   const otDnsQueryConfig *aConfig);
 
 /**
- * This function sends an address resolution DNS query for A (IPv4) record(s) for a given host name.
+ * Sends an address resolution DNS query for A (IPv4) record(s) for a given host name.
  *
- * This function requires and is available when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
+ * Requires and is available when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
  *
  * When a successful response is received, the addresses are returned from @p aCallback as NAT64 IPv6 translated
  * versions of the IPv4 addresses from the query response.
@@ -272,9 +272,9 @@ otError otDnsClientResolveIp4Address(otInstance             *aInstance,
                                      const otDnsQueryConfig *aConfig);
 
 /**
- * This function gets the full host name associated with an address resolution DNS response.
+ * Gets the full host name associated with an address resolution DNS response.
  *
- * This function MUST only be used from `otDnsAddressCallback`.
+ * MUST only be used from `otDnsAddressCallback`.
  *
  * @param[in]  aResponse         A pointer to the response.
  * @param[out] aNameBuffer       A buffer to char array to output the full host name (MUST NOT be NULL).
@@ -289,9 +289,9 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
                                         uint16_t                    aNameBufferSize);
 
 /**
- * This function gets an IPv6 address associated with an address resolution DNS response.
+ * Gets an IPv6 address associated with an address resolution DNS response.
  *
- * This function MUST only be used from `otDnsAddressCallback`.
+ * MUST only be used from `otDnsAddressCallback`.
  *
  * The response may include multiple IPv6 address records. @p aIndex can be used to iterate through the list of
  * addresses. Index zero gets the first address and so on. When we reach end of the list, `OT_ERROR_NOT_FOUND` is
@@ -315,7 +315,7 @@ otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
                                        uint32_t                   *aTtl);
 
 /**
- * This type is an opaque representation of a response to a browse (service instance enumeration) DNS query.
+ * An opaque representation of a response to a browse (service instance enumeration) DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsBrowseCallback`.
  *
@@ -323,7 +323,7 @@ otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
 typedef struct otDnsBrowseResponse otDnsBrowseResponse;
 
 /**
- * This function pointer is called when a DNS response is received for a browse (service instance enumeration) query.
+ * Pointer is called when a DNS response is received for a browse (service instance enumeration) query.
  *
  * Within this callback the user can use `otDnsBrowseResponseGet{Item}()` functions along with the @p aResponse
  * pointer to get more info about the response.
@@ -341,7 +341,7 @@ typedef struct otDnsBrowseResponse otDnsBrowseResponse;
 typedef void (*otDnsBrowseCallback)(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
 
 /**
- * This structure provides info for a DNS service instance.
+ * Provides info for a DNS service instance.
  *
  */
 typedef struct otDnsServiceInfo
@@ -361,9 +361,9 @@ typedef struct otDnsServiceInfo
 } otDnsServiceInfo;
 
 /**
- * This function sends a DNS browse (service instance enumeration) query for a given service name.
+ * Sends a DNS browse (service instance enumeration) query for a given service name.
  *
- * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
+ * Is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
  * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
@@ -386,9 +386,9 @@ otError otDnsClientBrowse(otInstance             *aInstance,
                           const otDnsQueryConfig *aConfig);
 
 /**
- * This function gets the service name associated with a DNS browse (service instance enumeration) response.
+ * Gets the service name associated with a DNS browse (service instance enumeration) response.
  *
- * This function MUST only be used from `otDnsBrowseCallback`.
+ * MUST only be used from `otDnsBrowseCallback`.
  *
  * @param[in]  aResponse         A pointer to the response.
  * @param[out] aNameBuffer       A buffer to char array to output the service name (MUST NOT be NULL).
@@ -403,9 +403,9 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
                                           uint16_t                   aNameBufferSize);
 
 /**
- * This function gets a service instance associated with a DNS browse (service instance enumeration) response.
+ * Gets a service instance associated with a DNS browse (service instance enumeration) response.
  *
- * This function MUST only be used from `otDnsBrowseCallback`.
+ * MUST only be used from `otDnsBrowseCallback`.
  *
  * The response may include multiple service instance records. @p aIndex can be used to iterate through the list. Index
  * zero gives the the first record. When we reach end of the list, `OT_ERROR_NOT_FOUND` is returned.
@@ -430,9 +430,9 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
                                               uint8_t                    aLabelBufferSize);
 
 /**
- * This function gets info for a service instance from a DNS browse (service instance enumeration) response.
+ * Gets info for a service instance from a DNS browse (service instance enumeration) response.
  *
- * This function MUST only be used from `otDnsBrowseCallback`.
+ * MUST only be used from `otDnsBrowseCallback`.
  *
  * A browse DNS response can include SRV, TXT, and AAAA records for the service instances that are enumerated. This is
  * a SHOULD and not a MUST requirement, and servers/resolvers are not required to provide this. This function attempts
@@ -462,9 +462,9 @@ otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
                                           otDnsServiceInfo          *aServiceInfo);
 
 /**
- * This function gets the host IPv6 address from a DNS browse (service instance enumeration) response.
+ * Gets the host IPv6 address from a DNS browse (service instance enumeration) response.
  *
- * This function MUST only be used from `otDnsBrowseCallback`.
+ * MUST only be used from `otDnsBrowseCallback`.
  *
  * The response can include zero or more IPv6 address records. @p aIndex can be used to iterate through the list of
  * addresses. Index zero gets the first address and so on. When we reach end of the list, `OT_ERROR_NOT_FOUND` is
@@ -489,7 +489,7 @@ otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
                                           uint32_t                  *aTtl);
 
 /**
- * This type is an opaque representation of a response to a service instance resolution DNS query.
+ * An opaque representation of a response to a service instance resolution DNS query.
  *
  * Pointers to instance of this type are provided from callback `otDnsAddressCallback`.
  *
@@ -497,7 +497,7 @@ otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
 typedef struct otDnsServiceResponse otDnsServiceResponse;
 
 /**
- * This function pointer is called when a DNS response is received for a service instance resolution query.
+ * Pointer is called when a DNS response is received for a service instance resolution query.
  *
  * Within this callback the user can use `otDnsServiceResponseGet{Item}()` functions along with the @p aResponse
  * pointer to get more info about the response.
@@ -515,9 +515,9 @@ typedef struct otDnsServiceResponse otDnsServiceResponse;
 typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
 
 /**
- * This function starts a DNS service instance resolution for a given service instance.
+ * Starts a DNS service instance resolution for a given service instance.
  *
- * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
+ * Is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
  * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
@@ -555,10 +555,10 @@ otError otDnsClientResolveService(otInstance             *aInstance,
                                   const otDnsQueryConfig *aConfig);
 
 /**
- * This function starts a DNS service instance resolution for a given service instance, with a potential follow-up
+ * Starts a DNS service instance resolution for a given service instance, with a potential follow-up
  * address resolution for the host name discovered for the service instance.
  *
- * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
+ * Is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
  * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
@@ -566,7 +566,7 @@ otError otDnsClientResolveService(otInstance             *aInstance,
  * `mServiceMode` in DNS config set to `OT_DNS_SERVICE_MODE_TXT` (i.e., querying for TXT record only) and will return
  * `OT_ERROR_INVALID_ARGS`.
  *
- * This function behaves similarly to `otDnsClientResolveService()` sending queries for SRV and TXT records. However,
+ * Behaves similarly to `otDnsClientResolveService()` sending queries for SRV and TXT records. However,
  * if the server/resolver does not provide AAAA/A records for the host name in the response to SRV query (in the
  * Additional Data section), it will perform host name resolution (sending an AAAA query) for the discovered host name
  * from the SRV record. The callback @p aCallback is invoked when responses for all queries are received (i.e., both
@@ -592,9 +592,9 @@ otError otDnsClientResolveServiceAndHostAddress(otInstance             *aInstanc
                                                 const otDnsQueryConfig *aConfig);
 
 /**
- * This function gets the service instance name associated with a DNS service instance resolution response.
+ * Gets the service instance name associated with a DNS service instance resolution response.
  *
- * This function MUST only be used from `otDnsServiceCallback`.
+ * MUST only be used from `otDnsServiceCallback`.
  *
  * @param[in]  aResponse         A pointer to the response.
  * @param[out] aLabelBuffer      A buffer to char array to output the service instance label (MUST NOT be NULL).
@@ -614,9 +614,9 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
                                            uint16_t                    aNameBufferSize);
 
 /**
- * This function gets info for a service instance from a DNS service instance resolution response.
+ * Gets info for a service instance from a DNS service instance resolution response.
  *
- * This function MUST only be used from a `otDnsServiceCallback` triggered from `otDnsClientResolveService()` or
+ * MUST only be used from a `otDnsServiceCallback` triggered from `otDnsClientResolveService()` or
  * `otDnsClientResolveServiceAndHostAddress()`.
  *
  * When this is is used from a `otDnsClientResolveService()` callback, the DNS response from server/resolver may
@@ -649,9 +649,9 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
 otError otDnsServiceResponseGetServiceInfo(const otDnsServiceResponse *aResponse, otDnsServiceInfo *aServiceInfo);
 
 /**
- * This function gets the host IPv6 address from a DNS service instance resolution response.
+ * Gets the host IPv6 address from a DNS service instance resolution response.
  *
- * This function MUST only be used from `otDnsServiceCallback`.
+ * MUST only be used from `otDnsServiceCallback`.
  *
  * The response can include zero or more IPv6 address records. @p aIndex can be used to iterate through the list of
  * addresses. Index zero gets the first address and so on. When we reach end of the list, `OT_ERROR_NOT_FOUND` is

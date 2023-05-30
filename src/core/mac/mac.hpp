@@ -88,32 +88,32 @@ constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
 /**
- * This type defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
+ * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
  *
  */
 typedef otHandleActiveScanResult ActiveScanHandler;
 
 /**
- * This type defines an Active Scan result.
+ * Defines an Active Scan result.
  *
  */
 typedef otActiveScanResult ActiveScanResult;
 
 /**
- * This type defines the function pointer which is called during an Energy Scan when the scan result for a channel is
+ * Defines the function pointer which is called during an Energy Scan when the scan result for a channel is
  * ready or when the scan completes.
  *
  */
 typedef otHandleEnergyScanResult EnergyScanHandler;
 
 /**
- * This type defines an Energy Scan result.
+ * Defines an Energy Scan result.
  *
  */
 typedef otEnergyScanResult EnergyScanResult;
 
 /**
- * This class implements the IEEE 802.15.4 MAC.
+ * Implements the IEEE 802.15.4 MAC.
  *
  */
 class Mac : public InstanceLocator, private NonCopyable
@@ -122,7 +122,7 @@ class Mac : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the MAC object.
+     * Initializes the MAC object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -130,7 +130,7 @@ public:
     explicit Mac(Instance &aInstance);
 
     /**
-     * This method starts an IEEE 802.15.4 Active Scan.
+     * Starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.
      * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel. Zero duration maps to
@@ -145,7 +145,7 @@ public:
     Error ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
-     * This method starts an IEEE 802.15.4 Energy Scan.
+     * Starts an IEEE 802.15.4 Energy Scan.
      *
      * @param[in]  aScanChannels     A bit vector indicating on which channels to scan. Zero is mapped to all channels.
      * @param[in]  aScanDuration     The time in milliseconds to spend scanning each channel. If the duration is set to
@@ -160,7 +160,7 @@ public:
     Error EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
 
     /**
-     * This method indicates the energy scan for the current channel is complete.
+     * Indicates the energy scan for the current channel is complete.
      *
      * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
      *
@@ -168,7 +168,7 @@ public:
     void EnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     /**
-     * This method indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
+     * Indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
      *
      * @retval TRUE   If IEEE 802.15.4 Beacon transmissions are enabled.
      * @retval FALSE  If IEEE 802.15.4 Beacon transmissions are not enabled.
@@ -177,7 +177,7 @@ public:
     bool IsBeaconEnabled(void) const { return mBeaconsEnabled; }
 
     /**
-     * This method enables/disables IEEE 802.15.4 Beacon transmissions.
+     * Enables/disables IEEE 802.15.4 Beacon transmissions.
      *
      * @param[in]  aEnabled  TRUE to enable IEEE 802.15.4 Beacon transmissions, FALSE otherwise.
      *
@@ -185,7 +185,7 @@ public:
     void SetBeaconEnabled(bool aEnabled) { mBeaconsEnabled = aEnabled; }
 
     /**
-     * This method indicates whether or not rx-on-when-idle is enabled.
+     * Indicates whether or not rx-on-when-idle is enabled.
      *
      * @retval TRUE   If rx-on-when-idle is enabled.
      * @retval FALSE  If rx-on-when-idle is not enabled.
@@ -193,7 +193,7 @@ public:
     bool GetRxOnWhenIdle(void) const { return mRxOnWhenIdle; }
 
     /**
-     * This method sets the rx-on-when-idle mode.
+     * Sets the rx-on-when-idle mode.
      *
      * @param[in]  aRxOnWhenIdle  The rx-on-when-idle mode.
      *
@@ -201,21 +201,21 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method requests a direct data frame transmission.
+     * Requests a direct data frame transmission.
      *
      */
     void RequestDirectFrameTransmission(void);
 
 #if OPENTHREAD_FTD
     /**
-     * This method requests an indirect data frame transmission.
+     * Requests an indirect data frame transmission.
      *
      */
     void RequestIndirectFrameTransmission(void);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
-     * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
+     * Requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
      * @param[in]  aDelay  Delay time for `Mac` to start a CSL tx, in units of milliseconds.
      *
@@ -226,7 +226,7 @@ public:
 #endif
 
     /**
-     * This method requests transmission of a data poll (MAC Data Request) frame.
+     * Requests transmission of a data poll (MAC Data Request) frame.
      *
      * @retval kErrorNone          Data poll transmission request is scheduled successfully.
      * @retval kErrorInvalidState  The MAC layer is not enabled.
@@ -235,7 +235,7 @@ public:
     Error RequestDataPollTransmission(void);
 
     /**
-     * This method returns a reference to the IEEE 802.15.4 Extended Address.
+     * Returns a reference to the IEEE 802.15.4 Extended Address.
      *
      * @returns A pointer to the IEEE 802.15.4 Extended Address.
      *
@@ -243,7 +243,7 @@ public:
     const ExtAddress &GetExtAddress(void) const { return mLinks.GetExtAddress(); }
 
     /**
-     * This method sets the IEEE 802.15.4 Extended Address.
+     * Sets the IEEE 802.15.4 Extended Address.
      *
      * @param[in]  aExtAddress  A reference to the IEEE 802.15.4 Extended Address.
      *
@@ -251,7 +251,7 @@ public:
     void SetExtAddress(const ExtAddress &aExtAddress) { mLinks.SetExtAddress(aExtAddress); }
 
     /**
-     * This method returns the IEEE 802.15.4 Short Address.
+     * Returns the IEEE 802.15.4 Short Address.
      *
      * @returns The IEEE 802.15.4 Short Address.
      *
@@ -259,7 +259,7 @@ public:
     ShortAddress GetShortAddress(void) const { return mLinks.GetShortAddress(); }
 
     /**
-     * This method sets the IEEE 802.15.4 Short Address.
+     * Sets the IEEE 802.15.4 Short Address.
      *
      * @param[in]  aShortAddress  The IEEE 802.15.4 Short Address.
      *
@@ -267,7 +267,7 @@ public:
     void SetShortAddress(ShortAddress aShortAddress) { mLinks.SetShortAddress(aShortAddress); }
 
     /**
-     * This method returns the IEEE 802.15.4 PAN Channel.
+     * Returns the IEEE 802.15.4 PAN Channel.
      *
      * @returns The IEEE 802.15.4 PAN Channel.
      *
@@ -275,7 +275,7 @@ public:
     uint8_t GetPanChannel(void) const { return mPanChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 PAN Channel.
+     * Sets the IEEE 802.15.4 PAN Channel.
      *
      * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
@@ -286,9 +286,9 @@ public:
     Error SetPanChannel(uint8_t aChannel);
 
     /**
-     * This method sets the temporary IEEE 802.15.4 radio channel.
+     * Sets the temporary IEEE 802.15.4 radio channel.
      *
-     * This method allows user to temporarily change the radio channel and use a different channel (during receive)
+     * Allows user to temporarily change the radio channel and use a different channel (during receive)
      * instead of the PAN channel (from `SetPanChannel()`). A call to `ClearTemporaryChannel()` would clear the
      * temporary channel and adopt the PAN channel again. The `SetTemporaryChannel()` can be used multiple times in row
      * (before a call to `ClearTemporaryChannel()`) to change the temporary channel.
@@ -302,13 +302,13 @@ public:
     Error SetTemporaryChannel(uint8_t aChannel);
 
     /**
-     * This method clears the use of a previously set temporary channel and adopts the PAN channel.
+     * Clears the use of a previously set temporary channel and adopts the PAN channel.
      *
      */
     void ClearTemporaryChannel(void);
 
     /**
-     * This method returns the supported channel mask.
+     * Returns the supported channel mask.
      *
      * @returns The supported channel mask.
      *
@@ -316,7 +316,7 @@ public:
     const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
 
     /**
-     * This method sets the supported channel mask
+     * Sets the supported channel mask
      *
      * @param[in] aMask   The supported channel mask.
      *
@@ -324,7 +324,7 @@ public:
     void SetSupportedChannelMask(const ChannelMask &aMask);
 
     /**
-     * This method returns the IEEE 802.15.4 PAN ID.
+     * Returns the IEEE 802.15.4 PAN ID.
      *
      * @returns The IEEE 802.15.4 PAN ID.
      *
@@ -332,7 +332,7 @@ public:
     PanId GetPanId(void) const { return mPanId; }
 
     /**
-     * This method sets the IEEE 802.15.4 PAN ID.
+     * Sets the IEEE 802.15.4 PAN ID.
      *
      * @param[in]  aPanId  The IEEE 802.15.4 PAN ID.
      *
@@ -340,7 +340,7 @@ public:
     void SetPanId(PanId aPanId);
 
     /**
-     * This method returns the maximum number of frame retries during direct transmission.
+     * Returns the maximum number of frame retries during direct transmission.
      *
      * @returns The maximum number of retries during direct transmission.
      *
@@ -348,7 +348,7 @@ public:
     uint8_t GetMaxFrameRetriesDirect(void) const { return mMaxFrameRetriesDirect; }
 
     /**
-     * This method sets the maximum number of frame retries during direct transmission.
+     * Sets the maximum number of frame retries during direct transmission.
      *
      * @param[in]  aMaxFrameRetriesDirect  The maximum number of retries during direct transmission.
      *
@@ -357,7 +357,7 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * This method returns the maximum number of frame retries during indirect transmission.
+     * Returns the maximum number of frame retries during indirect transmission.
      *
      * @returns The maximum number of retries during indirect transmission.
      *
@@ -365,7 +365,7 @@ public:
     uint8_t GetMaxFrameRetriesIndirect(void) const { return mMaxFrameRetriesIndirect; }
 
     /**
-     * This method sets the maximum number of frame retries during indirect transmission.
+     * Sets the maximum number of frame retries during indirect transmission.
      *
      * @param[in]  aMaxFrameRetriesIndirect  The maximum number of retries during indirect transmission.
      *
@@ -377,7 +377,7 @@ public:
 #endif
 
     /**
-     * This method is called to handle a received frame.
+     * Is called to handle a received frame.
      *
      * @param[in]  aFrame  A pointer to the received frame, or `nullptr` if the receive operation was aborted.
      * @param[in]  aError  kErrorNone when successfully received a frame,
@@ -387,7 +387,7 @@ public:
     void HandleReceivedFrame(RxFrame *aFrame, Error aError);
 
     /**
-     * This method records CCA status (success/failure) for a frame transmission attempt.
+     * Records CCA status (success/failure) for a frame transmission attempt.
      *
      * @param[in] aCcaSuccess   TRUE if the CCA succeeded, FALSE otherwise.
      * @param[in] aChannel      The channel on which CCA was performed.
@@ -396,7 +396,7 @@ public:
     void RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel);
 
     /**
-     * This method records the status of a frame transmission attempt, updating MAC counters.
+     * Records the status of a frame transmission attempt, updating MAC counters.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
@@ -419,7 +419,7 @@ public:
                                    bool           aWillRetx);
 
     /**
-     * This method is called to handle transmit events.
+     * Is called to handle transmit events.
      *
      * @param[in]  aFrame      The frame that was transmitted.
      * @param[in]  aAckFrame   A pointer to the ACK frame, `nullptr` if no ACK was received.
@@ -432,20 +432,20 @@ public:
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
     /**
-     * This method returns if an active scan is in progress.
+     * Returns if an active scan is in progress.
      *
      */
     bool IsActiveScanInProgress(void) const { return IsActiveOrPending(kOperationActiveScan); }
 
     /**
-     * This method returns if an energy scan is in progress.
+     * Returns if an energy scan is in progress.
      *
      */
     bool IsEnergyScanInProgress(void) const { return IsActiveOrPending(kOperationEnergyScan); }
 
 #if OPENTHREAD_FTD
     /**
-     * This method indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
+     * Indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
      *
      * @returns TRUE if in middle of an indirect transmission, FALSE otherwise.
      *
@@ -454,7 +454,7 @@ public:
 #endif
 
     /**
-     * This method returns if the MAC layer is in transmit state.
+     * Returns if the MAC layer is in transmit state.
      *
      * The MAC layer is in transmit state during CSMA/CA, CCA, transmission of Data, Beacon or Data Request frames and
      * receiving of ACK frames. The MAC layer is not in transmit state during transmission of ACK frames or Beacon
@@ -464,7 +464,7 @@ public:
     bool IsInTransmitState(void) const;
 
     /**
-     * This method registers a callback to provide received raw IEEE 802.15.4 frames.
+     * Registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
      *                               or `nullptr` to disable the callback.
@@ -477,7 +477,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not promiscuous mode is enabled at the link layer.
+     * Indicates whether or not promiscuous mode is enabled at the link layer.
      *
      * @retval true   Promiscuous mode is enabled.
      * @retval false  Promiscuous mode is not enabled.
@@ -486,7 +486,7 @@ public:
     bool IsPromiscuous(void) const { return mPromiscuous; }
 
     /**
-     * This method enables or disables the link layer promiscuous mode.
+     * Enables or disables the link layer promiscuous mode.
      *
      * Promiscuous mode keeps the receiver enabled, overriding the value of mRxOnWhenIdle.
      *
@@ -496,13 +496,13 @@ public:
     void SetPromiscuous(bool aPromiscuous);
 
     /**
-     * This method resets mac counters
+     * Resets mac counters
      *
      */
     void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
 
     /**
-     * This method returns the MAC counter.
+     * Returns the MAC counter.
      *
      * @returns A reference to the MAC counter.
      *
@@ -511,7 +511,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
     /**
-     * This method returns the MAC retry histogram for direct transmission.
+     * Returns the MAC retry histogram for direct transmission.
      *
      * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
      *
@@ -523,7 +523,7 @@ public:
 
 #if OPENTHREAD_FTD
     /**
-     * This method returns the MAC retry histogram for indirect transmission.
+     * Returns the MAC retry histogram for indirect transmission.
      *
      * @param[out]  aNumberOfEntries    A reference to where the size of returned histogram array is placed.
      *
@@ -535,14 +535,14 @@ public:
 #endif
 
     /**
-     * This method resets MAC retry histogram.
+     * Resets MAC retry histogram.
      *
      */
     void ResetRetrySuccessHistogram(void);
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
     /**
-     * This method returns the noise floor value (currently use the radio receive sensitivity value).
+     * Returns the noise floor value (currently use the radio receive sensitivity value).
      *
      * @returns The noise floor value in dBm.
      *
@@ -550,7 +550,7 @@ public:
     int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
 
     /**
-     * This method computes the link margin for a given a received signal strength value using noise floor.
+     * Computes the link margin for a given a received signal strength value using noise floor.
      *
      * @param[in] aRss The received signal strength in dBm.
      *
@@ -560,7 +560,7 @@ public:
     uint8_t ComputeLinkMargin(int8_t aRss) const;
 
     /**
-     * This method returns the current CCA (Clear Channel Assessment) failure rate.
+     * Returns the current CCA (Clear Channel Assessment) failure rate.
      *
      * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW`
      * frame transmissions.
@@ -571,7 +571,7 @@ public:
     uint16_t GetCcaFailureRate(void) const { return mCcaSuccessRateTracker.GetFailureRate(); }
 
     /**
-     * This method Starts/Stops the Link layer. It may only be used when the Netif Interface is down.
+     * Starts/Stops the Link layer. It may only be used when the Netif Interface is down.
      *
      * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
      *
@@ -579,7 +579,7 @@ public:
     void SetEnabled(bool aEnable) { mEnabled = aEnable; }
 
     /**
-     * This method indicates whether or not the link layer is enabled.
+     * Indicates whether or not the link layer is enabled.
      *
      * @retval true   Link layer is enabled.
      * @retval false  Link layer is not enabled.
@@ -588,14 +588,14 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method clears the Mode2Key stored in PSA ITS.
+     * Clears the Mode2Key stored in PSA ITS.
      *
      */
     void ClearMode2Key(void) { mMode2KeyMaterial.Clear(); }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method gets the CSL channel.
+     * Gets the CSL channel.
      *
      * @returns CSL channel.
      *
@@ -603,7 +603,7 @@ public:
     uint8_t GetCslChannel(void) const { return mCslChannel; }
 
     /**
-     * This method sets the CSL channel.
+     * Sets the CSL channel.
      *
      * @param[in]  aChannel  The CSL channel.
      *
@@ -611,13 +611,13 @@ public:
     void SetCslChannel(uint8_t aChannel);
 
     /**
-     * This method centralizes CSL state switching conditions evaluating, configuring SubMac accordingly.
+     * Centralizes CSL state switching conditions evaluating, configuring SubMac accordingly.
      *
      */
     void UpdateCsl(void);
 
     /**
-     * This method gets the CSL period.
+     * Gets the CSL period.
      *
      * @returns CSL period in units of 10 symbols.
      *
@@ -625,7 +625,7 @@ public:
     uint16_t GetCslPeriod(void) const { return mCslPeriod; }
 
     /**
-     * This method gets the CSL period.
+     * Gets the CSL period.
      *
      * @returns CSL period in milliseconds.
      *
@@ -633,7 +633,7 @@ public:
     uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
 
     /**
-     * This method sets the CSL period.
+     * Sets the CSL period.
      *
      * @param[in]  aPeriod  The CSL period in 10 symbols.
      *
@@ -641,7 +641,7 @@ public:
     void SetCslPeriod(uint16_t aPeriod);
 
     /**
-     * This method indicates whether CSL is started at the moment.
+     * Indicates whether CSL is started at the moment.
      *
      * @retval TRUE   If CSL is enabled.
      * @retval FALSE  If CSL is not enabled.
@@ -650,7 +650,7 @@ public:
     bool IsCslEnabled(void) const;
 
     /**
-     * This method indicates whether Link is capable of starting CSL.
+     * Indicates whether Link is capable of starting CSL.
      *
      * @retval TRUE   If Link is capable of starting CSL.
      * @retval FALSE  If link is not capable of starting CSL.
@@ -659,7 +659,7 @@ public:
     bool IsCslCapable(void) const;
 
     /**
-     * This method indicates whether the device is connected to a parent which supports CSL.
+     * Indicates whether the device is connected to a parent which supports CSL.
      *
      * @retval TRUE   If parent supports CSL.
      * @retval FALSE  If parent does not support CSL.
@@ -668,7 +668,7 @@ public:
     bool IsCslSupported(void) const;
 
     /**
-     * This method returns parent CSL accuracy (clock accuracy and uncertainty).
+     * Returns parent CSL accuracy (clock accuracy and uncertainty).
      *
      * @returns The parent CSL accuracy.
      *
@@ -676,7 +676,7 @@ public:
     const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
 
     /**
-     * This method sets parent CSL accuracy.
+     * Sets parent CSL accuracy.
      *
      * @param[in] aCslAccuracy  The parent CSL accuracy.
      *
@@ -690,7 +690,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
-     * This method enables/disables the 802.15.4 radio filter.
+     * Enables/disables the 802.15.4 radio filter.
      *
      * When radio filter is enabled, radio is put to sleep instead of receive (to ensure device does not receive any
      * frame and/or potentially send ack). Also the frame transmission requests return immediately without sending the
@@ -702,7 +702,7 @@ public:
     void SetRadioFilterEnabled(bool aFilterEnabled);
 
     /**
-     * This method indicates whether the 802.15.4 radio filter is enabled or not.
+     * Indicates whether the 802.15.4 radio filter is enabled or not.
      *
      * @retval TRUE   If the radio filter is enabled.
      * @retval FALSE  If the radio filter is disabled.

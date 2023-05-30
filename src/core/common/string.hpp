@@ -58,7 +58,7 @@ namespace ot {
  */
 
 /**
- * This enumeration represents comparison mode when matching strings.
+ * Represents comparison mode when matching strings.
  *
  */
 enum StringMatchMode : uint8_t
@@ -70,7 +70,7 @@ enum StringMatchMode : uint8_t
 static constexpr char kNullChar = '\0'; ///< null character.
 
 /**
- * This function returns the number of characters that precede the terminating null character.
+ * Returns the number of characters that precede the terminating null character.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
@@ -82,7 +82,7 @@ static constexpr char kNullChar = '\0'; ///< null character.
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 
 /**
- * This function finds the first occurrence of a given character in a null-terminated string.
+ * Finds the first occurrence of a given character in a null-terminated string.
  *
  * @param[in] aString     A pointer to the string.
  * @param[in] aChar       A char to search for in the string.
@@ -93,7 +93,7 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 const char *StringFind(const char *aString, char aChar);
 
 /**
- * This function finds the first occurrence of a given sub-string in a null-terminated string.
+ * Finds the first occurrence of a given sub-string in a null-terminated string.
  *
  * @param[in] aString     A pointer to the string.
  * @param[in] aSubString  A sub-string to search for.
@@ -106,7 +106,7 @@ const char *StringFind(const char *aString, char aChar);
 const char *StringFind(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether a null-terminated string starts with a given prefix string.
+ * Checks whether a null-terminated string starts with a given prefix string.
  *
  * @param[in] aString         A pointer to the string.
  * @param[in] aPrefixString   A prefix string.
@@ -119,7 +119,7 @@ const char *StringFind(const char *aString, const char *aSubString, StringMatchM
 bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether a null-terminated string ends with a given character.
+ * Checks whether a null-terminated string ends with a given character.
  *
  * @param[in] aString  A pointer to the string.
  * @param[in] aChar    A char to check.
@@ -131,7 +131,7 @@ bool StringStartsWith(const char *aString, const char *aPrefixString, StringMatc
 bool StringEndsWith(const char *aString, char aChar);
 
 /**
- * This function checks whether a null-terminated string ends with a given sub-string.
+ * Checks whether a null-terminated string ends with a given sub-string.
  *
  * @param[in] aString      A pointer to the string.
  * @param[in] aSubString   A sub-string to check against.
@@ -144,7 +144,7 @@ bool StringEndsWith(const char *aString, char aChar);
 bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function checks whether or not two null-terminated strings match.
+ * Checks whether or not two null-terminated strings match.
  *
  * @param[in] aFirstString   A pointer to the first string.
  * @param[in] aSecondString  A pointer to the second string.
@@ -157,7 +157,7 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
  *
  * If the string does not start with a digit, `kErrorParse` is returned.
  *
@@ -177,7 +177,7 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
 Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue);
 
 /**
- * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
  *
  * If the string does not start with a digit, `kErrorParse` is returned.
  *
@@ -196,7 +196,7 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue)
 Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 
 /**
- * This function converts all uppercase letter characters in a given string to lowercase.
+ * Converts all uppercase letter characters in a given string to lowercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
  *
@@ -204,7 +204,7 @@ Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 void StringConvertToLowercase(char *aString);
 
 /**
- * This function converts all lowercase letter characters in a given string to uppercase.
+ * Converts all lowercase letter characters in a given string to uppercase.
  *
  * @param[in,out] aString   A pointer to the string to convert.
  *
@@ -212,7 +212,7 @@ void StringConvertToLowercase(char *aString);
 void StringConvertToUppercase(char *aString);
 
 /**
- * This function converts an uppercase letter character to lowercase.
+ * Converts an uppercase letter character to lowercase.
  *
  * If @p aChar is uppercase letter it is converted lowercase. Otherwise, it remains unchanged.
  *
@@ -224,7 +224,7 @@ void StringConvertToUppercase(char *aString);
 char ToLowercase(char aChar);
 
 /**
- * This function converts a lowercase letter character to uppercase.
+ * Converts a lowercase letter character to uppercase.
  *
  * If @p aChar is lowercase letter it is converted uppercase. Otherwise, it remains unchanged.
  *
@@ -236,7 +236,7 @@ char ToLowercase(char aChar);
 char ToUppercase(char aChar);
 
 /**
- * This function coverts a boolean to "yes" or "no" string.
+ * Coverts a boolean to "yes" or "no" string.
  *
  * @param[in] aBool  A boolean value to convert.
  *
@@ -246,7 +246,7 @@ char ToUppercase(char aChar);
 const char *ToYesNo(bool aBool);
 
 /**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Validates whether a given byte sequence (string) follows UTF-8 encoding.
  * Control characters are not allowed.
  *
  * @param[in]  aString  A null-terminated byte sequence.
@@ -258,7 +258,7 @@ const char *ToYesNo(bool aBool);
 bool IsValidUtf8String(const char *aString);
 
 /**
- * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
+ * Validates whether a given byte sequence (string) follows UTF-8 encoding.
  * Control characters are not allowed.
  *
  * @param[in]  aString  A byte sequence.
@@ -291,14 +291,14 @@ inline constexpr bool AreStringsInOrder(const char *aFirst, const char *aSecond)
 }
 
 /**
- * This class implements writing to a string buffer.
+ * Implements writing to a string buffer.
  *
  */
 class StringWriter
 {
 public:
     /**
-     * This constructor initializes the object as cleared on the provided buffer.
+     * Initializes the object as cleared on the provided buffer.
      *
      * @param[in] aBuffer  A pointer to the char buffer to write into.
      * @param[in] aSize    The size of @p aBuffer.
@@ -307,7 +307,7 @@ public:
     StringWriter(char *aBuffer, uint16_t aSize);
 
     /**
-     * This method clears the string writer.
+     * Clears the string writer.
      *
      * @returns The string writer.
      *
@@ -315,7 +315,7 @@ public:
     StringWriter &Clear(void);
 
     /**
-     * This method returns whether the output is truncated.
+     * Returns whether the output is truncated.
      *
      * @note If the output is truncated, the buffer is still null-terminated.
      *
@@ -326,7 +326,7 @@ public:
     bool IsTruncated(void) const { return mLength >= mSize; }
 
     /**
-     * This method gets the length of the wanted string.
+     * Gets the length of the wanted string.
      *
      * Similar to `strlen()` the length does not include the null character at the end of the string.
      *
@@ -336,7 +336,7 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the size (number of chars) in the buffer.
+     * Returns the size (number of chars) in the buffer.
      *
      * @returns The size of the buffer.
      *
@@ -344,7 +344,7 @@ public:
     uint16_t GetSize(void) const { return mSize; }
 
     /**
-     * This method appends `printf()` style formatted data to the buffer.
+     * Appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] ...        Arguments for the format specification.
@@ -355,7 +355,7 @@ public:
     StringWriter &Append(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
-     * This method appends `printf()` style formatted data to the buffer.
+     * Appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] aArgs      Arguments for the format specification (as `va_list`).
@@ -366,7 +366,7 @@ public:
     StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
 
     /**
-     * This method appends an array of bytes in hex representation (using "%02x" style) to the buffer.
+     * Appends an array of bytes in hex representation (using "%02x" style) to the buffer.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
@@ -377,13 +377,13 @@ public:
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
-     * This method converts all uppercase letter characters in the string to lowercase.
+     * Converts all uppercase letter characters in the string to lowercase.
      *
      */
     void ConvertToLowercase(void) { StringConvertToLowercase(mBuffer); }
 
     /**
-     * This method converts all lowercase letter characters in the string to uppercase.
+     * Converts all lowercase letter characters in the string to uppercase.
      *
      */
     void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
@@ -395,7 +395,7 @@ private:
 };
 
 /**
- * This class defines a fixed-size string.
+ * Defines a fixed-size string.
  *
  */
 template <uint16_t kSize> class String : public StringWriter
@@ -404,7 +404,7 @@ template <uint16_t kSize> class String : public StringWriter
 
 public:
     /**
-     * This constructor initializes the string as empty.
+     * Initializes the string as empty.
      *
      */
     String(void)
@@ -413,7 +413,7 @@ public:
     }
 
     /**
-     * This method returns the string as a null-terminated C string.
+     * Returns the string as a null-terminated C string.
      *
      * @returns The null-terminated C string.
      *
@@ -425,7 +425,7 @@ private:
 };
 
 /**
- * This class provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
+ * Provides helper methods to convert from a set of `uint16_t` values (e.g., a non-sequential `enum`) to
  * string using binary search in a lookup table.
  *
  */
@@ -433,7 +433,7 @@ class Stringify : public BinarySearch
 {
 public:
     /**
-     * This class represents a entry in the lookup table.
+     * Represents a entry in the lookup table.
      *
      */
     class Entry
@@ -454,7 +454,7 @@ public:
     };
 
     /**
-     * This static method looks up a key in a given sorted table array (using binary search) and return the associated
+     * Looks up a key in a given sorted table array (using binary search) and return the associated
      * strings with the key.
      *
      * @note This method requires the array to be sorted, otherwise its behavior is undefined.

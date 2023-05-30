@@ -290,7 +290,7 @@ void otSysDeinit(void)
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
 /**
- * This function try selecting the given file descriptors in nonblocking mode.
+ * Try selecting the given file descriptors in nonblocking mode.
  *
  * @param[in,out]   aReadFdSet   A pointer to the read file descriptors.
  * @param[in,out]   aWriteFdSet  A pointer to the write file descriptors.

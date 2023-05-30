@@ -51,7 +51,7 @@
 namespace ot {
 
 /**
- * This class implements OpenThread Time Synchronization Service.
+ * Implements OpenThread Time Synchronization Service.
  *
  */
 class TimeSync : public InstanceLocator, private NonCopyable
@@ -60,7 +60,7 @@ class TimeSync : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration represents Network Time Status
+     * Represents Network Time Status
      *
      */
     enum Status : int8_t
@@ -71,7 +71,7 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     TimeSync(Instance &aInstance);
@@ -108,7 +108,7 @@ public:
 #endif
 
     /**
-     * This method gets the time synchronization sequence.
+     * Gets the time synchronization sequence.
      *
      * @returns The time synchronization sequence.
      *
@@ -116,7 +116,7 @@ public:
     uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
 
     /**
-     * This method gets the time offset to the Thread network time.
+     * Gets the time offset to the Thread network time.
      *
      * @returns The time offset to the Thread network time, in microseconds.
      *

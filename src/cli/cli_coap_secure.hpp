@@ -52,7 +52,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the CLI CoAP Secure server and client.
+ * Implements the CLI CoAP Secure server and client.
  *
  */
 class CoapSecure : private Output
@@ -70,9 +70,15 @@ public:
     CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs        An array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
+     *
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      *
      */
     otError Process(Arg aArgs[]);

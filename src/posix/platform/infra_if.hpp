@@ -46,14 +46,14 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class manages infrastructure network interface.
+ * Manages infrastructure network interface.
  *
  */
 class InfraNetif : public Mainloop::Source, private NonCopyable
 {
 public:
     /**
-     * This method updates the fd_set and timeout for mainloop.
+     * Updates the fd_set and timeout for mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      *
@@ -61,7 +61,7 @@ public:
     void Update(otSysMainloopContext &aContext) override;
 
     /**
-     * This method performs infrastructure network interface processing.
+     * Performs infrastructure network interface processing.
      *
      * @param[in]   aContext   A reference to the mainloop context.
      *
@@ -69,7 +69,7 @@ public:
     void Process(const otSysMainloopContext &aContext) override;
 
     /**
-     * This method initializes the infrastructure network interface.
+     * Initializes the infrastructure network interface.
      *
      * @note This method is called before OpenThread instance is created.
      *
@@ -79,7 +79,7 @@ public:
     void Init(const char *aIfName);
 
     /**
-     * This method sets up the infrastructure network interface.
+     * Sets up the infrastructure network interface.
      *
      * @note This method is called after OpenThread instance is created.
      *
@@ -87,7 +87,7 @@ public:
     void SetUp(void);
 
     /**
-     * This method tears down the infrastructure network interface.
+     * Tears down the infrastructure network interface.
      *
      * @note This method is called before OpenThread instance is destructed.
      *
@@ -95,7 +95,7 @@ public:
     void TearDown(void);
 
     /**
-     * This method deinitializes the infrastructure network interface.
+     * Deinitializes the infrastructure network interface.
      *
      * @note This method is called after OpenThread instance is destructed.
      *
@@ -103,13 +103,13 @@ public:
     void Deinit(void);
 
     /**
-     * This method checks whether the infrastructure network interface is running.
+     * Checks whether the infrastructure network interface is running.
      *
      */
     bool IsRunning(void) const;
 
     /**
-     * This method returns the ifr_flags of the infrastructure network interface.
+     * Returns the ifr_flags of the infrastructure network interface.
      *
      * @returns The ifr_flags of the infrastructure network interface.
      *
@@ -125,7 +125,7 @@ public:
     void CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const;
 
     /**
-     * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
+     * Sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
      *
      * See RFC 4861: https://tools.ietf.org/html/rfc4861.
      *
@@ -148,7 +148,7 @@ public:
                         uint16_t            aBufferLength);
 
     /**
-     * This method sends an asynchronous address lookup for the well-known host name "ipv4only.arpa"
+     * Sends an asynchronous address lookup for the well-known host name "ipv4only.arpa"
      * to discover the NAT64 prefix.
      *
      * @param[in]  aInfraIfIndex  The index of the infrastructure interface the address look-up is sent to.
@@ -160,7 +160,7 @@ public:
     otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
 
     /**
-     * This method gets the infrastructure network interface name.
+     * Gets the infrastructure network interface name.
      *
      * @returns The infrastructure network interface name, or `nullptr` if not specified.
      *
@@ -168,7 +168,7 @@ public:
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
     /**
-     * This function gets the infrastructure network interface singleton.
+     * Gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.
      *

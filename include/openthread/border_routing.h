@@ -73,7 +73,7 @@ extern "C" {
  */
 
 /**
- * This structure represents an iterator to iterate through the Border Router's discovered prefix table.
+ * Represents an iterator to iterate through the Border Router's discovered prefix table.
  *
  * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
  * accessed or used by caller.
@@ -89,7 +89,7 @@ typedef struct otBorderRoutingPrefixTableIterator
 } otBorderRoutingPrefixTableIterator;
 
 /**
- * This structure represents an entry from the discovered prefix table.
+ * Represents an entry from the discovered prefix table.
  *
  * The entries in the discovered table track the Prefix/Route Info Options in the received Router Advertisement messages
  * from other routers on infrastructure link.
@@ -107,7 +107,7 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
- * This enumeration represents the state of Border Routing Manager.
+ * Represents the state of Border Routing Manager.
  *
  */
 typedef enum
@@ -130,7 +130,7 @@ typedef enum
 } otBorderRoutingDhcp6PdState;
 
 /**
- * This method initializes the Border Routing Manager on given infrastructure interface.
+ * Initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
  *
@@ -174,7 +174,7 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
 
 /**
- * This function gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
+ * Gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
  * messages sent over the infrastructure link.
  *
  * The RIO preference is determined as follows:
@@ -190,7 +190,7 @@ otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
- * This function explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
+ * Explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
  * Advertisement messages sent over the infrastructure link.
  *
  * After a call to this function, BR will use the given preference for all its advertised RIOs. The preference can be
@@ -203,7 +203,7 @@ otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInsta
 void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
 
 /**
- * This function clears a previously set preference value for advertised Route Info Options.
+ * Clears a previously set preference value for advertised Route Info Options.
  *
  * After a call to this function, BR will use device's role to determine the RIO preference: Medium preference when
  * in router/leader role and low preference when in child role.
@@ -332,7 +332,7 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
                                              otRoutePreference *aPreference);
 
 /**
- * This function initializes an `otBorderRoutingPrefixTableIterator`.
+ * Initializes an `otBorderRoutingPrefixTableIterator`.
  *
  * An iterator MUST be initialized before it is used.
  *
@@ -348,7 +348,7 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
 void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator);
 
 /**
- * This function iterates over the entries in the Border Router's discovered prefix table.
+ * Iterates over the entries in the Border Router's discovered prefix table.
  *
  * @param[in]     aInstance    The OpenThread instance.
  * @param[in,out] aIterator    A pointer to the iterator.

@@ -48,7 +48,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class updates the target power table and calibrated power table to the RCP.
+ * Updates the target power table and calibrated power table to the RCP.
  *
  */
 class PowerUpdater

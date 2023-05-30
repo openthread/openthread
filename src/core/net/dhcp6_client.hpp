@@ -64,14 +64,14 @@ namespace Dhcp6 {
  */
 
 /**
- * This class implements DHCPv6 Client.
+ * Implements DHCPv6 Client.
  *
  */
 class Client : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -79,7 +79,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method update addresses that shall be automatically created using DHCP.
+     * Update addresses that shall be automatically created using DHCP.
      *
      *
      */

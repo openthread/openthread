@@ -58,7 +58,7 @@ namespace Mac {
  */
 
 /**
- * This class represents tx frames for different radio link types.
+ * Represents tx frames for different radio link types.
  *
  */
 class TxFrames : InstanceLocator
@@ -68,9 +68,9 @@ class TxFrames : InstanceLocator
 public:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
-     * This method gets the `TxFrame` for a given radio link type.
+     * Gets the `TxFrame` for a given radio link type.
      *
-     * This method also updates the selected radio types (from `GetSelectedRadioTypes()`) to include the @p aRadioType.
+     * Also updates the selected radio types (from `GetSelectedRadioTypes()`) to include the @p aRadioType.
      *
      * @param[in] aRadioType   A radio link type.
      *
@@ -80,9 +80,9 @@ public:
     TxFrame &GetTxFrame(RadioType aRadioType);
 
     /**
-     * This method gets the `TxFrame` with the smallest MTU size among a given set of radio types.
+     * Gets the `TxFrame` with the smallest MTU size among a given set of radio types.
      *
-     * This method also updates the selected radio types (from `GetSelectedRadioTypes()`) to include the set
+     * Also updates the selected radio types (from `GetSelectedRadioTypes()`) to include the set
      * @p aRadioTypes.
      *
      * @param[in] aRadioTypes   A set of radio link types.
@@ -93,9 +93,9 @@ public:
     TxFrame &GetTxFrame(RadioTypes aRadioTypes);
 
     /**
-     * This method gets the `TxFrame` for sending a broadcast frame.
+     * Gets the `TxFrame` for sending a broadcast frame.
      *
-     * This method also updates the selected radio type (from `GetSelectedRadioTypes()`) to include all radio types
+     * Also updates the selected radio type (from `GetSelectedRadioTypes()`) to include all radio types
      * (supported by device).
      *
      * The broadcast frame is the `TxFrame` with the smallest MTU size among all radio types.
@@ -106,7 +106,7 @@ public:
     TxFrame &GetBroadcastTxFrame(void);
 
     /**
-     * This method gets the selected radio types.
+     * Gets the selected radio types.
      *
      * This set specifies the radio links the frame should be sent over (in parallel). The set starts a empty after
      * method `Clear()` is called. It gets updated through calls to methods `GetTxFrame(aType)`,
@@ -118,7 +118,7 @@ public:
     RadioTypes GetSelectedRadioTypes(void) const { return mSelectedRadioTypes; }
 
     /**
-     * This method gets the required radio types.
+     * Gets the required radio types.
      *
      * This set specifies the radio links for which we expect the frame tx to be successful to consider the overall tx
      * successful. If the set is empty, successful tx over any radio link is sufficient for overall tx to be considered
@@ -132,7 +132,7 @@ public:
     RadioTypes GetRequiredRadioTypes(void) const { return mRequiredRadioTypes; }
 
     /**
-     * This method sets the required types.
+     * Sets the required types.
      *
      * Please see `GetRequiredRadioTypes()` for more details on how this set is used during tx.
      *
@@ -145,7 +145,7 @@ public:
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
-     * This method gets the tx frame.
+     * Gets the tx frame.
      *
      * @returns A reference to `TxFrame`.
      *
@@ -153,7 +153,7 @@ public:
     TxFrame &GetTxFrame(void) { return mTxFrame802154; }
 #elif OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method gets the tx frame.
+     * Gets the tx frame.
      *
      * @returns A reference to `TxFrame`.
      *
@@ -161,7 +161,7 @@ public:
     TxFrame &GetTxFrame(void) { return mTxFrameTrel; }
 #endif
     /**
-     * This method gets a tx frame for sending a broadcast frame.
+     * Gets a tx frame for sending a broadcast frame.
      *
      * @returns A reference to a `TxFrame` for broadcast.
      *
@@ -171,7 +171,7 @@ public:
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method clears all supported radio tx frames (sets the PSDU length to zero and clears flags).
+     * Clears all supported radio tx frames (sets the PSDU length to zero and clears flags).
      *
      */
     void Clear(void)
@@ -202,7 +202,7 @@ public:
     }
 
     /**
-     * This method sets the channel on all supported radio tx frames.
+     * Sets the channel on all supported radio tx frames.
      *
      * @param[in] aChannel  A channel.
      *
@@ -218,7 +218,7 @@ public:
     }
 
     /**
-     * This method sets the Sequence Number value on all supported radio tx frames.
+     * Sets the Sequence Number value on all supported radio tx frames.
      *
      * @param[in]  aSequence  The Sequence Number value.
      *
@@ -234,7 +234,7 @@ public:
     }
 
     /**
-     * This method sets the maximum number of the CSMA-CA backoffs on all supported radio tx
+     * Sets the maximum number of the CSMA-CA backoffs on all supported radio tx
      * frames.
      *
      * @param[in]  aMaxCsmaBackoffs  The maximum number of CSMA-CA backoffs.
@@ -251,7 +251,7 @@ public:
     }
 
     /**
-     * This method sets the maximum number of retries allowed after a transmission failure on all supported radio tx
+     * Sets the maximum number of retries allowed after a transmission failure on all supported radio tx
      * frames.
      *
      * @param[in]  aMaxFrameRetries  The maximum number of retries allowed after a transmission failure.
@@ -284,7 +284,7 @@ private:
 };
 
 /**
- * This class represents MAC radio links (multi radio).
+ * Represents MAC radio links (multi radio).
  *
  */
 class Links : public InstanceLocator
@@ -293,7 +293,7 @@ class Links : public InstanceLocator
 
 public:
     /**
-     * This constructor initializes the `Links` object.
+     * Initializes the `Links` object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -301,7 +301,7 @@ public:
     explicit Links(Instance &aInstance);
 
     /**
-     * This method sets the PAN ID.
+     * Sets the PAN ID.
      *
      * @param[in] aPanId  The PAN ID.
      *
@@ -317,7 +317,7 @@ public:
     }
 
     /**
-     * This method gets the MAC Short Address.
+     * Gets the MAC Short Address.
      *
      * @returns The MAC Short Address.
      *
@@ -333,7 +333,7 @@ public:
     }
 
     /**
-     * This method sets the MAC Short Address.
+     * Sets the MAC Short Address.
      *
      * @param[in] aShortAddress   A MAC Short Address.
      *
@@ -348,7 +348,7 @@ public:
     }
 
     /**
-     * This method gets the MAC Extended Address.
+     * Gets the MAC Extended Address.
      *
      * @returns The MAC Extended Address.
      *
@@ -364,7 +364,7 @@ public:
     }
 
     /**
-     * This method sets the MAC Extended Address.
+     * Sets the MAC Extended Address.
      *
      * @param[in] aExtAddress  A MAC Extended Address.
      *
@@ -382,7 +382,7 @@ public:
     }
 
     /**
-     * This method registers a callback to provide received packet capture for IEEE 802.15.4 frames.
+     * Registers a callback to provide received packet capture for IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame
      *                               or nullptr to disable the callback.
@@ -399,7 +399,7 @@ public:
     }
 
     /**
-     * This method indicates whether radio should stay in Receive or Sleep during CSMA backoff.
+     * Indicates whether radio should stay in Receive or Sleep during CSMA backoff.
      *
      * @param[in]  aRxOnWhenBackoff  TRUE to keep radio in Receive, FALSE to put to Sleep during CSMA backoff.
      *
@@ -413,7 +413,7 @@ public:
     }
 
     /**
-     * This method enables all radio links.
+     * Enables all radio links.
      *
      */
     void Enable(void)
@@ -427,7 +427,7 @@ public:
     }
 
     /**
-     * This method disables all radio links.
+     * Disables all radio links.
      *
      */
     void Disable(void)
@@ -441,7 +441,7 @@ public:
     }
 
     /**
-     * This method transitions all radio links to Sleep.
+     * Transitions all radio links to Sleep.
      *
      */
     void Sleep(void)
@@ -456,7 +456,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
-     * This method configures CSL parameters in all radios.
+     * Configures CSL parameters in all radios.
      *
      * @param[in]  aPeriod    The CSL period.
      * @param[in]  aChannel   The CSL channel.
@@ -482,7 +482,7 @@ public:
     }
 
     /**
-     * This method transitions all radios link to CSL sample state, given that a non-zero CSL period is configured.
+     * Transitions all radios link to CSL sample state, given that a non-zero CSL period is configured.
      *
      * CSL sample state is only applicable and used for 15.4 radio link. Other link are transitioned to sleep state
      * when CSL period is non-zero.
@@ -500,7 +500,7 @@ public:
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
-     * This method transitions all radio links to Receive.
+     * Transitions all radio links to Receive.
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
@@ -516,7 +516,7 @@ public:
     }
 
     /**
-     * This method gets the radio transmit frames.
+     * Gets the radio transmit frames.
      *
      * @returns The transmit frames.
      *
@@ -526,7 +526,7 @@ public:
 #if !OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method sends a prepared frame.
+     * Sends a prepared frame.
      *
      * The prepared frame is from `GetTxFrames()`. This method is available only in single radio link mode.
      *
@@ -544,7 +544,7 @@ public:
 #else // #if !OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method sends prepared frames over a given set of radio links.
+     * Sends prepared frames over a given set of radio links.
      *
      * The prepared frame must be from `GetTxFrames()`. This method is available only in multi radio link mode.
      *
@@ -557,7 +557,7 @@ public:
 #endif // !OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
-     * This method gets the number of transmit retries for the last transmitted frame.
+     * Gets the number of transmit retries for the last transmitted frame.
      *
      * @returns Number of transmit retries.
      *
@@ -573,7 +573,7 @@ public:
     }
 
     /**
-     * This method gets the most recent RSSI measurement from radio link.
+     * Gets the most recent RSSI measurement from radio link.
      *
      * @returns The RSSI in dBm when it is valid. `Radio::kInvalidRssi` when RSSI is invalid.
      *
@@ -589,7 +589,7 @@ public:
     }
 
     /**
-     * This method begins energy scan.
+     * Begins energy scan.
      *
      * @param[in] aScanChannel   The channel to perform the energy scan on.
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
@@ -614,7 +614,7 @@ public:
     }
 
     /**
-     * This method returns the noise floor value (currently use the radio receive sensitivity value).
+     * Returns the noise floor value (currently use the radio receive sensitivity value).
      *
      * @returns The noise floor value in dBm.
      *
@@ -630,7 +630,7 @@ public:
     }
 
     /**
-     * This methods gets a reference to the `SubMac` instance.
+     * Gets a reference to the `SubMac` instance.
      *
      * @returns A reference to the `SubMac` instance.
      *
@@ -638,7 +638,7 @@ public:
     SubMac &GetSubMac(void) { return mSubMac; }
 
     /**
-     * This methods gets a reference to the `SubMac` instance.
+     * Gets a reference to the `SubMac` instance.
      *
      * @returns A reference to the `SubMac` instance.
      *
@@ -646,7 +646,7 @@ public:
     const SubMac &GetSubMac(void) const { return mSubMac; }
 
     /**
-     * This method returns a reference to the current MAC key (for Key Mode 1) for a given Frame.
+     * Returns a reference to the current MAC key (for Key Mode 1) for a given Frame.
      *
      * @param[in] aFrame    The frame for which to get the MAC key.
      *
@@ -656,7 +656,7 @@ public:
     const KeyMaterial *GetCurrentMacKey(const Frame &aFrame) const;
 
     /**
-     * This method returns a reference to the temporary MAC key (for Key Mode 1) for a given Frame based on a given
+     * Returns a reference to the temporary MAC key (for Key Mode 1) for a given Frame based on a given
      * Key Sequence.
      *
      * @param[in] aFrame        The frame for which to get the MAC key.
@@ -669,7 +669,7 @@ public:
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method sets the current MAC frame counter value from the value from a `TxFrame`.
+     * Sets the current MAC frame counter value from the value from a `TxFrame`.
      *
      * @param[in] TxFrame  The `TxFrame` from which to get the counter value.
      *

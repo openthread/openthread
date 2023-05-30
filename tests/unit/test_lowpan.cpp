@@ -99,7 +99,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
 }
 
 /**
- * This function initializes Thread Interface.
+ * Initializes Thread Interface.
  *
  */
 static void Init(void)
@@ -134,7 +134,7 @@ static void Init(void)
 }
 
 /**
- * This function performs compression or/and decompression based on the given test vector.
+ * Performs compression or/and decompression based on the given test vector.
  *
  * @note Performing decompression and compression on the same LOWPAN_IPHC frame may give different result.
  *       This situation may occur when sender does not use the best possible compression,

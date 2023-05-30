@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This structure represents the result (value) for a Link Metrics query.
+ * Represents the result (value) for a Link Metrics query.
  *
  */
 typedef struct otLinkMetricsValues
@@ -70,7 +70,7 @@ typedef struct otLinkMetricsValues
 } otLinkMetricsValues;
 
 /**
- * This structure represents which frames are accounted in a Forward Tracking Series.
+ * Represents which frames are accounted in a Forward Tracking Series.
  *
  */
 typedef struct otLinkMetricsSeriesFlags
@@ -108,7 +108,7 @@ typedef enum otLinkMetricsStatus
 } otLinkMetricsStatus;
 
 /**
- * This function pointer is called when a Link Metrics report is received.
+ * Pointer is called when a Link Metrics report is received.
  *
  * @param[in]  aSource         A pointer to the source address.
  * @param[in]  aMetricsValues  A pointer to the Link Metrics values (the query result).
@@ -121,7 +121,7 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address        *aSource,
                                             uint8_t                    aStatus,
                                             void                      *aContext);
 /**
- * This function pointer is called when a Link Metrics Management Response is received.
+ * Pointer is called when a Link Metrics Management Response is received.
  *
  * @param[in]  aSource         A pointer to the source address.
  * @param[in]  aStatus         The status code in the response.
@@ -131,7 +131,7 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address        *aSource,
 typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource, uint8_t aStatus, void *aContext);
 
 /**
- * This function pointer is called when Enh-ACK Probing IE is received.
+ * Pointer is called when Enh-ACK Probing IE is received.
  *
  * @param[in] aShortAddress     The Mac short address of the Probing Subject.
  * @param[in] aExtAddress       A pointer to the Mac extended address of the Probing Subject.
@@ -145,7 +145,7 @@ typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(otShortAddress       
                                                            void                      *aContext);
 
 /**
- * This function sends an MLE Data Request to query Link Metrics.
+ * Sends an MLE Data Request to query Link Metrics.
  *
  * It could be either Single Probe or Forward Tracking Series.
  *
@@ -198,7 +198,7 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance                     
                                                  void                             *aCallbackContext);
 
 /**
- * This function sends an MLE Link Metrics Management Request to configure/clear an Enhanced-ACK Based Probing.
+ * Sends an MLE Link Metrics Management Request to configure/clear an Enhanced-ACK Based Probing.
  * This functionality requires OT_LINK_METRICS_INITIATOR feature enabled.
  *
  * @param[in] aInstance          A pointer to an OpenThread instance.

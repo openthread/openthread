@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the key types.
+ * Defines the key types.
  *
  */
 typedef enum
@@ -67,7 +67,7 @@ typedef enum
 } otCryptoKeyType;
 
 /**
- * This enumeration defines the key algorithms.
+ * Defines the key algorithms.
  *
  */
 typedef enum
@@ -79,7 +79,7 @@ typedef enum
 } otCryptoKeyAlgorithm;
 
 /**
- * This enumeration defines the key usage flags.
+ * Defines the key usage flags.
  *
  */
 enum
@@ -93,7 +93,7 @@ enum
 };
 
 /**
- * This enumeration defines the key storage types.
+ * Defines the key storage types.
  *
  */
 typedef enum
@@ -111,7 +111,7 @@ typedef uint32_t otCryptoKeyRef;
 /**
  * @struct otCryptoKey
  *
- * This structure represents the Key Material required for Crypto operations.
+ * Represents the Key Material required for Crypto operations.
  *
  */
 typedef struct otCryptoKey
@@ -124,7 +124,7 @@ typedef struct otCryptoKey
 /**
  * @struct otCryptoContext
  *
- * This structure stores the context object for platform APIs.
+ * Stores the context object for platform APIs.
  *
  */
 typedef struct otCryptoContext
@@ -142,7 +142,7 @@ typedef struct otCryptoContext
 /**
  * @struct otPlatCryptoSha256Hash
  *
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -152,7 +152,7 @@ struct otPlatCryptoSha256Hash
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a SHA-256 hash.
+ * Represents a SHA-256 hash.
  *
  */
 typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
@@ -166,7 +166,7 @@ typedef struct otPlatCryptoSha256Hash otPlatCryptoSha256Hash;
 /**
  * @struct otPlatCryptoEcdsaKeyPair
  *
- * This structure represents an ECDSA key pair (public and private keys).
+ * Represents an ECDSA key pair (public and private keys).
  *
  * The key pair is stored using Distinguished Encoding Rules (DER) format (per RFC 5915).
  *
@@ -186,7 +186,7 @@ typedef struct otPlatCryptoEcdsaKeyPair
 /**
  * @struct otPlatCryptoEcdsaPublicKey
  *
- * This struct represents a ECDSA public key.
+ * Represents a ECDSA public key.
  *
  * The public key is stored as a byte sequence representation of an uncompressed curve point (RFC 6605 - sec 4).
  *
@@ -208,7 +208,7 @@ typedef struct otPlatCryptoEcdsaPublicKey otPlatCryptoEcdsaPublicKey;
 /**
  * @struct otPlatCryptoEcdsaSignature
  *
- * This struct represents an ECDSA signature.
+ * Represents an ECDSA signature.
  *
  * The signature is encoded as the concatenated binary representation of two MPIs `r` and `s` which are calculated
  * during signing (RFC 6605 - section 4).
@@ -616,7 +616,7 @@ otError otPlatCryptoEcdsaGetPublicKey(const otPlatCryptoEcdsaKeyPair *aKeyPair, 
 /**
  * Calculate the ECDSA signature for a hashed message using the private key from the input context.
  *
- * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ * Uses the deterministic digital signature generation procedure from RFC 6979.
  *
  * @param[in]  aKeyPair           A pointer to an ECDSA key-pair structure where the key-pair is stored.
  * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation
@@ -656,7 +656,7 @@ otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
 /**
  * Calculate the ECDSA signature for a hashed message using the Key reference passed.
  *
- * This method uses the deterministic digital signature generation procedure from RFC 6979.
+ * Uses the deterministic digital signature generation procedure from RFC 6979.
  *
  * @param[in]  aKeyRef            Key Reference to the slot where the key-pair is stored.
  * @param[in]  aHash              A pointer to a SHA-256 hash structure where the hash value for signature calculation

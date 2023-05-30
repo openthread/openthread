@@ -47,7 +47,7 @@ class SerialNumber
 {
 public:
     /**
-     * This static method indicates whether or not a first serial number is strictly less than a second serial number.
+     * Indicates whether or not a first serial number is strictly less than a second serial number.
      *
      * The comparison takes into account the wrapping of serial number values (similar to RFC-1982). It is semantically
      * equivalent to `aFirst < aSecond`.
@@ -74,7 +74,7 @@ public:
     }
 
     /**
-     * This static method indicates whether or not a first serial number is strictly greater than a second serial
+     * Indicates whether or not a first serial number is strictly greater than a second serial
      * number.
      *
      * The comparison takes into account the wrapping of serial number values (similar to RFC-1982). It is semantically

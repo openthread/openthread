@@ -33,7 +33,7 @@ namespace ot {
 namespace Posix {
 
 /**
- * This function gets a setting from the persisted file.
+ * Gets a setting from the persisted file.
  *
  * @param[in]      aInstance     The OpenThread instance structure.
  * @param[in]      aKey          The key associated with the requested setting.
@@ -48,7 +48,7 @@ namespace Posix {
 otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength);
 
 /**
- * This function sets a setting in the persisted file.
+ * Sets a setting in the persisted file.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aKey          The key associated with the requested setting.
@@ -59,7 +59,7 @@ otError PlatformSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, ui
 void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
- * This function adds a setting to the persisted file.
+ * Adds a setting to the persisted file.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aKey          The key associated with the requested setting.
@@ -70,7 +70,7 @@ void PlatformSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aV
 void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
- * This function removes a setting either from swap file or persisted file.
+ * Removes a setting either from swap file or persisted file.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  * @param[in]  aKey       The key associated with the requested setting.
@@ -88,7 +88,7 @@ void PlatformSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aV
 otError PlatformSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex, int *aSwapFd);
 
 /**
- * This function gets the sensitive keys that should be stored in the secure area.
+ * Gets the sensitive keys that should be stored in the secure area.
  *
  * @param[in]   aInstance    The OpenThread instance structure.
  * @param[out]  aKeys        A pointer to where the pointer to the array containing sensitive keys should be written.

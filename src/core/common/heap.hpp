@@ -43,7 +43,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This function allocates memory from heap for an array of given number of object of certain size.
+ * Allocates memory from heap for an array of given number of object of certain size.
  *
  * @param[in] aCount   Number of objects.
  * @param[in] aSize    Size of each object.
@@ -54,7 +54,7 @@ namespace Heap {
 void *CAlloc(size_t aCount, size_t aSize);
 
 /**
- * This function frees a previously heap allocated buffer.
+ * Frees a previously heap allocated buffer.
  *
  * A heap allocated buffer MUST be freed only once.
  *

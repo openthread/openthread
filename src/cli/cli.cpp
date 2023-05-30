@@ -109,6 +109,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(aInstance, *this)
     , mNetworkData(aInstance, *this)
     , mUdp(aInstance, *this)
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    , mMacFilter(aInstance, *this)
+#endif
 #if OPENTHREAD_CLI_DNS_ENABLE
     , mDns(aInstance, *this)
 #endif
@@ -740,9 +743,8 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64InitAddressMappingIterator(GetInstancePtr(), &iterator);
         while (otNat64GetNextAddressMapping(GetInstancePtr(), &iterator, &mapping) == OT_ERROR_NONE)
         {
-            char               ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
-            char               ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
-            Uint64StringBuffer u64StringBuffer;
+            char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
+            char ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
 
             otIp6AddressToString(&mapping.mIp6, ip6AddressString, sizeof(ip6AddressString));
             otIp4AddressToString(&mapping.mIp4, ip4AddressString, sizeof(ip4AddressString));
@@ -752,36 +754,19 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
             OutputFormat("| %5lus ", ToUlong(mapping.mRemainingTimeMs / 1000));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Bytes, u64StringBuffer));
-
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mTotal);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "TCP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mTcp);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "UDP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mUdp);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "ICMP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mIcmp);
         }
     }
     /**
@@ -854,28 +839,16 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64GetErrorCounters(GetInstancePtr(), &errorCounters);
 
         OutputFormat("| %13s ", "Total");
-        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mTotal.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mTotal.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mTotal);
 
         OutputFormat("| %13s ", "TCP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mTcp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mTcp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mTcp);
 
         OutputFormat("| %13s ", "UDP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mUdp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mUdp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mUdp);
 
         OutputFormat("| %13s ", "ICMP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mIcmp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mIcmp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mIcmp);
 
         OutputTableHeader(kNat64CounterTableErrorSubHeader, kNat64CounterTableErrorSubHeaderColumns);
         for (uint8_t i = 0; i < OT_NAT64_DROP_REASON_COUNT; i++)
@@ -894,6 +867,19 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void Interpreter::OutputNat64Counters(const otNat64Counters &aCounters)
+{
+    Uint64StringBuffer u64StringBuffer;
+
+    OutputFormat("| %8s ", Uint64ToString(aCounters.m4To6Packets, u64StringBuffer));
+    OutputFormat("| %12s ", Uint64ToString(aCounters.m4To6Bytes, u64StringBuffer));
+    OutputFormat("| %8s ", Uint64ToString(aCounters.m6To4Packets, u64StringBuffer));
+    OutputLine("| %12s |", Uint64ToString(aCounters.m6To4Bytes, u64StringBuffer));
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -7098,253 +7084,8 @@ template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        PrintMacFilter();
-    }
-    else if (aArgs[0] == "addr")
-    {
-        error = ProcessMacFilterAddress(aArgs + 1);
-    }
-    else if (aArgs[0] == "rss")
-    {
-        error = ProcessMacFilterRss(aArgs + 1);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-    return error;
-}
-
-void Interpreter::PrintMacFilter(void)
-{
-    otMacFilterEntry    entry;
-    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-
-    OutputLine("Address Mode: %s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
-
-    while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-    {
-        OutputMacFilterEntry(entry);
-    }
-
-    iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    OutputLine("RssIn List:");
-
-    while (otLinkFilterGetNextRssIn(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-    {
-        uint8_t i = 0;
-
-        for (; i < OT_EXT_ADDRESS_SIZE; i++)
-        {
-            if (entry.mExtAddress.m8[i] != 0xff)
-            {
-                break;
-            }
-        }
-
-        if (i == OT_EXT_ADDRESS_SIZE)
-        {
-            OutputLine("Default rss : %d (lqi %u)", entry.mRssIn,
-                       otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-        }
-        else
-        {
-            OutputMacFilterEntry(entry);
-        }
-    }
-}
-
-otError Interpreter::ProcessMacFilterAddress(Arg aArgs[])
-{
-    otError      error = OT_ERROR_NONE;
-    otExtAddress extAddr;
-
-    if (aArgs[0].IsEmpty())
-    {
-        otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-        otMacFilterEntry    entry;
-
-        OutputLine("%s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
-
-        while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-        {
-            OutputMacFilterEntry(entry);
-        }
-    }
-    else if (aArgs[0] == "disable")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_DISABLED);
-    }
-    else if (aArgs[0] == "allowlist")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST);
-    }
-    else if (aArgs[0] == "denylist")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_DENYLIST);
-    }
-    else if (aArgs[0] == "add")
-    {
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-        error = otLinkFilterAddAddress(GetInstancePtr(), &extAddr);
-
-        VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
-
-        if (!aArgs[2].IsEmpty())
-        {
-            int8_t rss;
-
-            SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
-            SuccessOrExit(error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss));
-        }
-    }
-    else if (aArgs[0] == "remove")
-    {
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-        otLinkFilterRemoveAddress(GetInstancePtr(), &extAddr);
-    }
-    else if (aArgs[0] == "clear")
-    {
-        otLinkFilterClearAddresses(GetInstancePtr());
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-
-otError Interpreter::ProcessMacFilterRss(Arg aArgs[])
-{
-    otError             error = OT_ERROR_NONE;
-    otMacFilterEntry    entry;
-    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    otExtAddress        extAddr;
-    int8_t              rss;
-
-    if (aArgs[0].IsEmpty())
-    {
-        while (otLinkFilterGetNextRssIn(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-        {
-            uint8_t i = 0;
-
-            for (; i < OT_EXT_ADDRESS_SIZE; i++)
-            {
-                if (entry.mExtAddress.m8[i] != 0xff)
-                {
-                    break;
-                }
-            }
-
-            if (i == OT_EXT_ADDRESS_SIZE)
-            {
-                OutputLine("Default rss: %d (lqi %u)", entry.mRssIn,
-                           otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-            }
-            else
-            {
-                OutputMacFilterEntry(entry);
-            }
-        }
-    }
-    else if (aArgs[0] == "add-lqi")
-    {
-        uint8_t linkQuality;
-
-        SuccessOrExit(error = aArgs[2].ParseAsUint8(linkQuality));
-        VerifyOrExit(linkQuality <= 3, error = OT_ERROR_INVALID_ARGS);
-        rss = otLinkConvertLinkQualityToRss(GetInstancePtr(), linkQuality);
-
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterSetDefaultRssIn(GetInstancePtr(), rss);
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
-        }
-    }
-    else if (aArgs[0] == "add")
-    {
-        SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
-
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterSetDefaultRssIn(GetInstancePtr(), rss);
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
-        }
-    }
-    else if (aArgs[0] == "remove")
-    {
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterClearDefaultRssIn(GetInstancePtr());
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
-        }
-    }
-    else if (aArgs[0] == "clear")
-    {
-        otLinkFilterClearAllRssIn(GetInstancePtr());
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-
-void Interpreter::OutputMacFilterEntry(const otMacFilterEntry &aEntry)
-{
-    OutputExtAddress(aEntry.mExtAddress);
-
-    if (aEntry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-    {
-        OutputFormat(" : rss %d (lqi %d)", aEntry.mRssIn,
-                     otLinkConvertRssToLinkQuality(GetInstancePtr(), aEntry.mRssIn));
-    }
-
-    OutputNewLine();
-}
-
-const char *Interpreter::MacFilterAddressModeToString(otMacFilterAddressMode aMode)
-{
-    static const char *const kModeStrings[] = {
-        "Disabled",  // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
-        "Allowlist", // (1) OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST
-        "Denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
-    };
-
-    static_assert(0 == OT_MAC_FILTER_ADDRESS_MODE_DISABLED, "OT_MAC_FILTER_ADDRESS_MODE_DISABLED value is incorrect");
-    static_assert(1 == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, "OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST value is incorrect");
-    static_assert(2 == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST, "OT_MAC_FILTER_ADDRESS_MODE_DENYLIST value is incorrect");
-
-    return Stringify(aMode, kModeStrings);
-}
-
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[]) { return mMacFilter.Process(aArgs); }
+#endif
 
 template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 {

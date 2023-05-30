@@ -56,7 +56,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements Network Diagnostic TLV generation and parsing.
+ * Implements Network Diagnostic TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -117,7 +117,7 @@ public:
     static constexpr uint8_t kMaxThreadStackVersionLength = OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH;
 
     /**
-     * This method returns the Type value.
+     * Returns the Type value.
      *
      * @returns The Type value.
      *
@@ -125,7 +125,7 @@ public:
     Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
-     * This method sets the Type value.
+     * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      *
@@ -135,91 +135,91 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class defines Extended MAC Address TLV constants and types.
+ * Defines Extended MAC Address TLV constants and types.
  *
  */
 typedef SimpleTlvInfo<Tlv::kExtMacAddress, Mac::ExtAddress> ExtMacAddressTlv;
 
 /**
- * This class defines Address16 TLV constants and types.
+ * Defines Address16 TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kAddress16, uint16_t> Address16Tlv;
 
 /**
- * This class defines Mode TLV constants and types.
+ * Defines Mode TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMode, uint8_t> ModeTlv;
 
 /**
- * This class defines Timeout TLV constants and types.
+ * Defines Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kTimeout, uint32_t> TimeoutTlv;
 
 /**
- * This class defines Network Data TLV constants and types.
+ * Defines Network Data TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kNetworkData> NetworkDataTlv;
 
 /**
- * This class defines IPv6 Address List TLV constants and types.
+ * Defines IPv6 Address List TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kIp6AddressList> Ip6AddressListTlv;
 
 /**
- * This class defines Battery Level TLV constants and types.
+ * Defines Battery Level TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kBatteryLevel, uint8_t> BatteryLevelTlv;
 
 /**
- * This class defines Supply Voltage TLV constants and types.
+ * Defines Supply Voltage TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kSupplyVoltage, uint16_t> SupplyVoltageTlv;
 
 /**
- * This class defines Child Table TLV constants and types.
+ * Defines Child Table TLV constants and types.
  *
  */
 typedef TlvInfo<Tlv::kChildTable> ChildTableTlv;
 
 /**
- * This class defines Max Child Timeout TLV constants and types.
+ * Defines Max Child Timeout TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
 
 /**
- * This class defines Version TLV constants and types.
+ * Defines Version TLV constants and types.
  *
  */
 typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
 
 /**
- * This class defines Vendor Name TLV constants and types.
+ * Defines Vendor Name TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorName, Tlv::kMaxVendorNameLength> VendorNameTlv;
 
 /**
- * This class defines Vendor Model TLV constants and types.
+ * Defines Vendor Model TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorModel, Tlv::kMaxVendorModelLength> VendorModelTlv;
 
 /**
- * This class defines Vendor SW Version TLV constants and types.
+ * Defines Vendor SW Version TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> VendorSwVersionTlv;
 
 /**
- * This class defines Thread Stack Version TLV constants and types.
+ * Defines Thread Stack Version TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLength> ThreadStackVersionTlv;
@@ -227,7 +227,7 @@ typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLengt
 typedef otNetworkDiagConnectivity Connectivity; ///< Network Diagnostic Connectivity value.
 
 /**
- * This class implements Connectivity TLV generation and parsing.
+ * Implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -237,7 +237,7 @@ public:
     static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kConnectivity; ///< The TLV Type value.
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -247,7 +247,7 @@ public:
     }
 
     /**
-     * This method retrieves the `Connectivity` value.
+     * Retrieves the `Connectivity` value.
      *
      * @param[out] aConnectivity   A reference to `Connectivity` to populate.
      *
@@ -268,7 +268,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Route TLV generation and parsing.
+ * Implements Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -278,7 +278,7 @@ public:
     static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kRoute; ///< The TLV Type value.
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -289,7 +289,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Leader Data TLV generation and parsing.
+ * Implements Leader Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -299,7 +299,7 @@ public:
     static constexpr uint8_t kType = ot::NetworkDiagnostic::Tlv::kLeaderData; ///< The TLV Type value.
 
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -310,7 +310,7 @@ public:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Mac Counters TLV generation and parsing.
+ * Implements Mac Counters TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -318,7 +318,7 @@ class MacCountersTlv : public Tlv, public TlvInfo<Tlv::kMacCounters>
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -328,7 +328,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
@@ -337,7 +337,7 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the IfInUnknownProtos counter.
+     * Returns the IfInUnknownProtos counter.
      *
      * @returns The IfInUnknownProtos counter
      *
@@ -345,7 +345,7 @@ public:
     uint32_t GetIfInUnknownProtos(void) const { return HostSwap32(mIfInUnknownProtos); }
 
     /**
-     * This method sets the IfInUnknownProtos counter.
+     * Sets the IfInUnknownProtos counter.
      *
      * @param[in]  aIfInUnknownProtos The IfInUnknownProtos counter
      *
@@ -356,7 +356,7 @@ public:
     }
 
     /**
-     * This method returns the IfInErrors counter.
+     * Returns the IfInErrors counter.
      *
      * @returns The IfInErrors counter
      *
@@ -364,7 +364,7 @@ public:
     uint32_t GetIfInErrors(void) const { return HostSwap32(mIfInErrors); }
 
     /**
-     * This method sets the IfInErrors counter.
+     * Sets the IfInErrors counter.
      *
      * @param[in]  aIfInErrors The IfInErrors counter
      *
@@ -372,7 +372,7 @@ public:
     void SetIfInErrors(const uint32_t aIfInErrors) { mIfInErrors = HostSwap32(aIfInErrors); }
 
     /**
-     * This method returns the IfOutErrors counter.
+     * Returns the IfOutErrors counter.
      *
      * @returns The IfOutErrors counter
      *
@@ -380,7 +380,7 @@ public:
     uint32_t GetIfOutErrors(void) const { return HostSwap32(mIfOutErrors); }
 
     /**
-     * This method sets the IfOutErrors counter.
+     * Sets the IfOutErrors counter.
      *
      * @param[in]  aIfOutErrors The IfOutErrors counter.
      *
@@ -388,7 +388,7 @@ public:
     void SetIfOutErrors(const uint32_t aIfOutErrors) { mIfOutErrors = HostSwap32(aIfOutErrors); }
 
     /**
-     * This method returns the IfInUcastPkts counter.
+     * Returns the IfInUcastPkts counter.
      *
      * @returns The IfInUcastPkts counter
      *
@@ -396,14 +396,14 @@ public:
     uint32_t GetIfInUcastPkts(void) const { return HostSwap32(mIfInUcastPkts); }
 
     /**
-     * This method sets the IfInUcastPkts counter.
+     * Sets the IfInUcastPkts counter.
      *
      * @param[in]  aIfInUcastPkts The IfInUcastPkts counter.
      *
      */
     void SetIfInUcastPkts(const uint32_t aIfInUcastPkts) { mIfInUcastPkts = HostSwap32(aIfInUcastPkts); }
     /**
-     * This method returns the IfInBroadcastPkts counter.
+     * Returns the IfInBroadcastPkts counter.
      *
      * @returns The IfInBroadcastPkts counter
      *
@@ -411,7 +411,7 @@ public:
     uint32_t GetIfInBroadcastPkts(void) const { return HostSwap32(mIfInBroadcastPkts); }
 
     /**
-     * This method sets the IfInBroadcastPkts counter.
+     * Sets the IfInBroadcastPkts counter.
      *
      * @param[in]  aIfInBroadcastPkts The IfInBroadcastPkts counter.
      *
@@ -422,7 +422,7 @@ public:
     }
 
     /**
-     * This method returns the IfInDiscards counter.
+     * Returns the IfInDiscards counter.
      *
      * @returns The IfInDiscards counter
      *
@@ -430,7 +430,7 @@ public:
     uint32_t GetIfInDiscards(void) const { return HostSwap32(mIfInDiscards); }
 
     /**
-     * This method sets the IfInDiscards counter.
+     * Sets the IfInDiscards counter.
      *
      * @param[in]  aIfInDiscards The IfInDiscards counter.
      *
@@ -438,7 +438,7 @@ public:
     void SetIfInDiscards(const uint32_t aIfInDiscards) { mIfInDiscards = HostSwap32(aIfInDiscards); }
 
     /**
-     * This method returns the IfOutUcastPkts counter.
+     * Returns the IfOutUcastPkts counter.
      *
      * @returns The IfOutUcastPkts counter
      *
@@ -446,7 +446,7 @@ public:
     uint32_t GetIfOutUcastPkts(void) const { return HostSwap32(mIfOutUcastPkts); }
 
     /**
-     * This method sets the IfOutUcastPkts counter.
+     * Sets the IfOutUcastPkts counter.
      *
      * @param[in]  aIfOutUcastPkts The IfOutUcastPkts counter.
      *
@@ -454,7 +454,7 @@ public:
     void SetIfOutUcastPkts(const uint32_t aIfOutUcastPkts) { mIfOutUcastPkts = HostSwap32(aIfOutUcastPkts); }
 
     /**
-     * This method returns the IfOutBroadcastPkts counter.
+     * Returns the IfOutBroadcastPkts counter.
      *
      * @returns The IfOutBroadcastPkts counter
      *
@@ -462,7 +462,7 @@ public:
     uint32_t GetIfOutBroadcastPkts(void) const { return HostSwap32(mIfOutBroadcastPkts); }
 
     /**
-     * This method sets the IfOutBroadcastPkts counter.
+     * Sets the IfOutBroadcastPkts counter.
      *
      * @param[in]  aIfOutBroadcastPkts The IfOutBroadcastPkts counter.
      *
@@ -473,7 +473,7 @@ public:
     }
 
     /**
-     * This method returns the IfOutDiscards counter.
+     * Returns the IfOutDiscards counter.
      *
      * @returns The IfOutDiscards counter
      *
@@ -481,7 +481,7 @@ public:
     uint32_t GetIfOutDiscards(void) const { return HostSwap32(mIfOutDiscards); }
 
     /**
-     * This method sets the IfOutDiscards counter.
+     * Sets the IfOutDiscards counter.
      *
      * @param[in]  aIfOutDiscards The IfOutDiscards counter.
      *
@@ -501,7 +501,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Child Table Entry generation and parsing.
+ * Implements Child Table Entry generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -509,7 +509,7 @@ class ChildTableEntry : public Clearable<ChildTableEntry>
 {
 public:
     /**
-     * This method returns the Timeout value.
+     * Returns the Timeout value.
      *
      * @returns The Timeout value.
      *
@@ -517,7 +517,7 @@ public:
     uint8_t GetTimeout(void) const { return (GetTimeoutChildId() & kTimeoutMask) >> kTimeoutOffset; }
 
     /**
-     * This method sets the Timeout value.
+     * Sets the Timeout value.
      *
      * @param[in]  aTimeout  The Timeout value.
      *
@@ -528,7 +528,7 @@ public:
     }
 
     /**
-     * This method the Link Quality value.
+     * The Link Quality value.
      *
      * @returns The Link Quality value.
      *
@@ -539,7 +539,7 @@ public:
     }
 
     /**
-     * This method set the Link Quality value.
+     * Set the Link Quality value.
      *
      * @param[in] aLinkQuality  The Link Quality value.
      *
@@ -550,7 +550,7 @@ public:
     }
 
     /**
-     * This method returns the Child ID value.
+     * Returns the Child ID value.
      *
      * @returns The Child ID value.
      *
@@ -558,7 +558,7 @@ public:
     uint16_t GetChildId(void) const { return (GetTimeoutChildId() & kChildIdMask) >> kChildIdOffset; }
 
     /**
-     * This method sets the Child ID value.
+     * Sets the Child ID value.
      *
      * @param[in]  aChildId  The Child ID value.
      *
@@ -569,7 +569,7 @@ public:
     }
 
     /**
-     * This method returns the Device Mode
+     * Returns the Device Mode
      *
      * @returns The Device Mode
      *
@@ -577,7 +577,7 @@ public:
     Mle::DeviceMode GetMode(void) const { return Mle::DeviceMode(mMode); }
 
     /**
-     * This method sets the Device Mode.
+     * Sets the Device Mode.
      *
      * @param[in]  aMode  The Device Mode.
      *
@@ -606,7 +606,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Channel Pages TLV generation and parsing.
+ * Implements Channel Pages TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -614,7 +614,7 @@ class ChannelPagesTlv : public Tlv, public TlvInfo<Tlv::kChannelPages>
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)
@@ -624,7 +624,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * Indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
@@ -637,7 +637,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the list of Channel Pages.
+     * Returns a pointer to the list of Channel Pages.
      *
      * @returns A pointer to the list of Channel Pages.
      *
@@ -649,7 +649,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements IPv6 Address List TLV generation and parsing.
+ * Implements IPv6 Address List TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -657,7 +657,7 @@ class TypeListTlv : public Tlv, public TlvInfo<Tlv::kTypeList>
 {
 public:
     /**
-     * This method initializes the TLV.
+     * Initializes the TLV.
      *
      */
     void Init(void)

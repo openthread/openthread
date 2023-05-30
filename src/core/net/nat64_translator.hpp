@@ -57,7 +57,7 @@ enum State : uint8_t
 };
 
 /**
- * This function converts a `State` into a string.
+ * Converts a `State` into a string.
  *
  * @param[in]  aState     A state.
  *
@@ -69,7 +69,7 @@ const char *StateToString(State aState);
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
 /**
- * This class implements the NAT64 translator.
+ * Implements the NAT64 translator.
  *
  */
 class Translator : public InstanceLocator, private NonCopyable
@@ -153,7 +153,7 @@ public:
     };
 
     /**
-     * This constructor initializes the NAT64 translator.
+     * Initializes the NAT64 translator.
      *
      */
     explicit Translator(Instance &aInstance);
@@ -179,7 +179,7 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * This method translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
+     * Translates an IPv4 datagram to an IPv6 datagram and sends it via Thread interface.
      *
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
      * processing is complete, including when a value other than `kErrorNone` is returned.
@@ -253,7 +253,7 @@ public:
 
     /**
      * Sets the prefix of NAT64-mapped addresses in the thread network. The address mapping table will not be cleared.
-     * This function equals to `ClearNat64Prefix` when an empty prefix is provided.
+     * Equals to `ClearNat64Prefix` when an empty prefix is provided.
      *
      * @param[in] aNat64Prefix The prefix of the NAT64-mapped addresses.
      *

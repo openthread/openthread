@@ -52,7 +52,7 @@ namespace Crypto {
 namespace Storage {
 
 /**
- * This enumeration defines the key types.
+ * Defines the key types.
  *
  */
 enum KeyType : uint8_t
@@ -64,7 +64,7 @@ enum KeyType : uint8_t
 };
 
 /**
- * This enumeration defines the key algorithms.
+ * Defines the key algorithms.
  *
  */
 enum KeyAlgorithm : uint8_t
@@ -83,7 +83,7 @@ constexpr uint8_t kUsageSignHash   = OT_CRYPTO_KEY_USAGE_SIGN_HASH;   ///< Key U
 constexpr uint8_t kUsageVerifyHash = OT_CRYPTO_KEY_USAGE_VERIFY_HASH; ///< Key Usage: Verify Hash.
 
 /**
- * This enumeration defines the key storage types.
+ * Defines the key storage types.
  *
  */
 enum StorageType : uint8_t
@@ -201,7 +201,7 @@ void DestroyPersistentKeys(void);
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 /**
- * This class represents a crypto key.
+ * Represents a crypto key.
  *
  * The `Key` can represent a literal key (i.e., a pointer to a byte array containing the key along with a key length)
  * or a `KeyRef` (if `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled).
@@ -211,7 +211,7 @@ class Key : public otCryptoKey, public Clearable<Key>
 {
 public:
     /**
-     * This method sets the `Key` as a literal key from a given byte array and length.
+     * Sets the `Key` as a literal key from a given byte array and length.
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
      * @param[in] aKeyLength  The key length (number of bytes in @p aKeyBytes).
@@ -224,7 +224,7 @@ public:
     }
 
     /**
-     * This method gets the pointer to the bye array containing the key.
+     * Gets the pointer to the bye array containing the key.
      *
      * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
      * method returns `nullptr`.
@@ -235,7 +235,7 @@ public:
     const uint8_t *GetBytes(void) const { return mKey; }
 
     /**
-     * This method gets the key length (number of bytes).
+     * Gets the key length (number of bytes).
      *
      * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
      * method returns zero.
@@ -248,7 +248,7 @@ public:
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
-     * This method indicates whether or not the key is represented as a `KeyRef`.
+     * Indicates whether or not the key is represented as a `KeyRef`.
      *
      * @retval TRUE  The `Key` represents a `KeyRef`
      * @retval FALSE The `Key` represents a literal key.
@@ -257,9 +257,9 @@ public:
     bool IsKeyRef(void) const { return (mKey == nullptr); }
 
     /**
-     * This method gets the `KeyRef`.
+     * Gets the `KeyRef`.
      *
-     * This method MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
+     * MUST be used when `IsKeyRef()` returns `true`, otherwise its behavior is undefined.
      *
      * @returns The `KeyRef` associated with `Key`.
      *
@@ -267,7 +267,7 @@ public:
     Storage::KeyRef GetKeyRef(void) const { return mKeyRef; }
 
     /**
-     * This method sets the `Key` as a `KeyRef`.
+     * Sets the `Key` as a `KeyRef`.
      *
      * @param[in] aKeyRef   The `KeyRef` to set from.
      *
@@ -280,9 +280,9 @@ public:
     }
 
     /**
-     * This method extracts and return the literal key when the key is represented as a `KeyRef`
+     * Extracts and return the literal key when the key is represented as a `KeyRef`
      *
-     * This method MUST be used when `IsKeyRef()` returns `true`.
+     * MUST be used when `IsKeyRef()` returns `true`.
      *
      * @param[out]     aKeyBuffer  Pointer to a byte array buffer to place the extracted key.
      * @param[in,out]  aKeyLength  On input, the size of @p aKeyBuffer.
@@ -297,7 +297,7 @@ public:
 };
 
 /**
- * This class represents a literal key derived from a `Key`.
+ * Represents a literal key derived from a `Key`.
  *
  */
 class LiteralKey : public Clearable<LiteralKey>, private NonCopyable
@@ -306,7 +306,7 @@ public:
     static constexpr uint16_t kMaxSize = 32; ///< Maximum size of the key.
 
     /**
-     * This constructor initializes the `LiteralKey` from a given `Key`.
+     * Initializes the `LiteralKey` from a given `Key`.
      *
      * If the @p aKey is itself represents a literal key the same key buffer pointers are used. If the @p aKey is
      * a `KeyRef` then the literal key is extracted. In this case, the extracted key MUST be smaller than `kMaxSize`.
@@ -317,7 +317,7 @@ public:
     explicit LiteralKey(const Key &aKey);
 
     /*
-     * This method gets the pointer to the byte array containing the literal key.
+     * Gets the pointer to the byte array containing the literal key.
      *
      * @returns The pointer to the byte array containing the literal key.
      *
@@ -325,7 +325,7 @@ public:
     const uint8_t *GetBytes(void) const { return mKey; }
 
     /**
-     * This method gets the key length.
+     * Gets the key length.
      *
      * @returns The key length (number of bytes in the byte array from `GetBytes()`).
      *

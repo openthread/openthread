@@ -51,7 +51,7 @@ namespace NetworkData {
 class NetworkData;
 
 /**
- * This class implements the SVR_DATA.ntf transmission logic.
+ * Implements the SVR_DATA.ntf transmission logic.
  *
  */
 class Notifier : public InstanceLocator, private NonCopyable
@@ -71,7 +71,7 @@ public:
     /**
      * Call this method to inform the notifier that new server data is available.
      *
-     * This method posts a tasklet to sync new server data with leader so if there are multiple changes within the same
+     * Posts a tasklet to sync new server data with leader so if there are multiple changes within the same
      * flow of execution (multiple calls to this method) they are all synchronized together and included in the same
      * message to the leader.
      *
@@ -80,10 +80,10 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     /**
-     * This method indicates whether the device as border router is eligible for router role upgrade request using the
+     * Indicates whether the device as border router is eligible for router role upgrade request using the
      * status reason `kBorderRouterRequest`.
      *
-     * This method checks whether device is providing IP connectivity and that there are fewer than two border routers
+     * Checks whether device is providing IP connectivity and that there are fewer than two border routers
      * in network data acting as router.  Device is considered to provide external IP connectivity if at least one of
      * the below conditions hold:
      *
@@ -91,7 +91,7 @@ public:
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
      * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
-     * This method does not check the current role of device.
+     * Does not check the current role of device.
      *
      * @retval TRUE    Device is eligible to request router role upgrade as a border router.
      * @retval FALSE   Device is not eligible to request router role upgrade as a border router.

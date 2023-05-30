@@ -104,7 +104,7 @@ void otPlatDebugUart_vprintf(const char *fmt, va_list ap);
  * Platform specific write single byte to Debug Uart
  * This should not perform CR/LF mapping.
  *
- * This function MUST be implemented by the platform
+ * MUST be implemented by the platform
  *
  * @param[in] c   what to transmit
  */
@@ -114,7 +114,7 @@ void otPlatDebugUart_putchar_raw(int c);
  * Poll/test debug uart if a key has been pressed.
  * It would be common to a stub function that returns 0.
  *
- * This function MUST be implemented by the platform
+ * MUST be implemented by the platform
  *
  * @retval zero - nothing ready
  * @retval nonzero - otPlatDebugUart_getc() will succeed.
@@ -124,7 +124,7 @@ int otPlatDebugUart_kbhit(void);
 /**
  * Poll/Read a byte from the debug uart
  *
- * This function MUST be implemented by the platform
+ * MUST be implemented by the platform
  *
  * @retval (negative) no data available, see otPlatDebugUart_kbhit()
  * @retval (0x00..0x0ff) data byte value

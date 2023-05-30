@@ -34,7 +34,7 @@ namespace SpinelEncrypter {
 /**
  * Encrypts spinel frames before sending to AP/NCP.
  *
- * This method encrypts outbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
+ * Encrypts outbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
  *
  * @param[in,out] aFrameBuf Pointer to buffer containing the frame, also where the encrypted frame will be placed.
  * @param[in] aFrameSize Max number of bytes in frame buffer (max length of spinel frame + additional data for
@@ -48,7 +48,7 @@ bool EncryptOutbound(unsigned char *aFrameBuf, size_t aFrameSize, size_t *aFrame
 /**
  * Decrypts spinel frames received from AP/NCP.
  *
- * This method decrypts inbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
+ * Decrypts inbound frames in both directions, i.e. from AP to NCP and from NCP to AP.
  *
  * @param[in,out] aFrameBuf Pointer to buffer containing encrypted frame, also where the decrypted frame will be placed.
  * @param[in] aFrameSize Max number of bytes in frame buffer (max length of spinel frame + additional data for

@@ -40,7 +40,7 @@ namespace ot {
 namespace Hdlc {
 
 /**
- * This method updates an FCS.
+ * Updates an FCS.
  *
  * @param[in]  aFcs   The FCS to update.
  * @param[in]  aByte  The input byte value.

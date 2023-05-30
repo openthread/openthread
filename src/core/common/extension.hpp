@@ -59,9 +59,9 @@ namespace Extension {
  */
 
 /**
- * This class defines the base class for an OpenThread vendor Extension object.
+ * Defines the base class for an OpenThread vendor Extension object.
  *
- * This class is used by OpenThread core to interact with the extension module. Methods in this class are expected
+ * Is used by OpenThread core to interact with the extension module. Methods in this class are expected
  * to be implemented by the vendor extension module.
  *
  * Support for vendor extension can be enabled using `OPENTHREAD_ENABLE_VENDOR_EXTENSION` configuration option.
@@ -71,7 +71,7 @@ class ExtensionBase : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This static method initializes and gets a vendor extension instance.
+     * Initializes and gets a vendor extension instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -84,13 +84,13 @@ public:
     static ExtensionBase &Init(Instance &aInstance);
 
     /**
-     * This method notifies the extension object that OpenThread instance has been initialized.
+     * Notifies the extension object that OpenThread instance has been initialized.
      *
      */
     void SignalInstanceInit(void);
 
     /**
-     * This method notifies the extension object that NCP instance has been initialized.
+     * Notifies the extension object that NCP instance has been initialized.
      *
      * @param[in] aNcpInstance   A reference to the NCP object.
      *
@@ -98,7 +98,7 @@ public:
     void SignalNcpInit(Ncp::NcpBase &aNcpInstance);
 
     /**
-     * This method notifies the extension object of events from  OpenThread `Notifier`.
+     * Notifies the extension object of events from  OpenThread `Notifier`.
      *
      * @param[in] aEvents   The list of events emitted by `Notifier`.
      *
@@ -107,7 +107,7 @@ public:
 
 protected:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *

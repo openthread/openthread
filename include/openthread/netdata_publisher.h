@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This enumeration represents the events reported from the Publisher callbacks.
+ * Represents the events reported from the Publisher callbacks.
  *
  */
 typedef enum otNetDataPublisherEvent
@@ -65,7 +65,7 @@ typedef enum otNetDataPublisherEvent
 } otNetDataPublisherEvent;
 
 /**
- * This function pointer type defines the callback used to notify when a "DNS/SRP Service" entry is added to or removed
+ * Pointer type defines the callback used to notify when a "DNS/SRP Service" entry is added to or removed
  * from the Thread Network Data.
  *
  * On remove the callback is invoked independent of whether the entry is removed by `Publisher` (e.g., when there are
@@ -79,7 +79,7 @@ typedef enum otNetDataPublisherEvent
 typedef void (*otNetDataDnsSrpServicePublisherCallback)(otNetDataPublisherEvent aEvent, void *aContext);
 
 /**
- * This function pointer type defines the callback used to notify when a prefix (on-mesh or external route) entry is
+ * Pointer type defines the callback used to notify when a prefix (on-mesh or external route) entry is
  * added to or removed from the Thread Network Data.
  *
  * On remove the callback is invoked independent of whether the entry is removed by `Publisher` (e.g., when there are
@@ -95,9 +95,9 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
                                                  void                   *aContext);
 
 /**
- * This function requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
+ * Requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
  *
  * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
  * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
@@ -109,14 +109,14 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
 void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber);
 
 /**
- * This function requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+ * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
  *
  * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
  * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
  *
- * This function publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the Service
+ * Publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the Service
  * TLV data.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
@@ -127,9 +127,9 @@ void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequen
 void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort);
 
 /**
- * This function requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
+ * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
  *
  * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
  * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
@@ -145,9 +145,9 @@ void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Addr
 void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort);
 
 /**
- * This function indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
+ * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
@@ -158,12 +158,12 @@ void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uin
 bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance);
 
 /**
- * This function sets a callback for notifying when a published "DNS/SRP Service" is actually added to or removed from
+ * Sets a callback for notifying when a published "DNS/SRP Service" is actually added to or removed from
  * the Thread Network Data.
  *
  * A subsequent call to this function replaces any previously set callback function.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` to be enabled.
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aCallback        The callback function pointer (can be NULL if not needed).
@@ -186,9 +186,9 @@ void otNetDataSetDnsSrpServicePublisherCallback(otInstance                      
 void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 
 /**
- * This function requests an on-mesh prefix to be published in the Thread Network Data.
+ * Requests an on-mesh prefix to be published in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
  *
  * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
  *
@@ -213,9 +213,9 @@ void otNetDataUnpublishDnsSrpService(otInstance *aInstance);
 otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig);
 
 /**
- * This function requests an external route prefix to be published in the Thread Network Data.
+ * Requests an external route prefix to be published in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
  *
  * Only stable entries can be published (i.e.,`aConfig.mStable` MUST be TRUE).
  *
@@ -238,9 +238,9 @@ otError otNetDataPublishOnMeshPrefix(otInstance *aInstance, const otBorderRouter
 otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRouteConfig *aConfig);
 
 /**
- * This function replaces a previously published external route in the Thread Network Data.
+ * Replaces a previously published external route in the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
  *
  * If there is no previously published external route matching @p aPrefix, this function behaves similarly to
  * `otNetDataPublishExternalRoute()`, i.e., it will start the process of publishing @a aConfig as an external route in
@@ -274,10 +274,10 @@ otError otNetDataReplacePublishedExternalRoute(otInstance                  *aIns
                                                const otExternalRouteConfig *aConfig);
 
 /**
- * This function indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
+ * Indicates whether or not currently a published prefix entry (on-mesh or external route) is added to
  * the Thread Network Data.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aPrefix    A pointer to the prefix (MUST NOT be NULL).
@@ -289,12 +289,12 @@ otError otNetDataReplacePublishedExternalRoute(otInstance                  *aIns
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix);
 
 /**
- * This function sets a callback for notifying when a published prefix entry is actually added to or removed from
+ * Sets a callback for notifying when a published prefix entry is actually added to or removed from
  * the Thread Network Data.
  *
  * A subsequent call to this function replaces any previously set callback function.
  *
- * This function requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
+ * Requires the feature `OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE` to be enabled.
  *
  * @param[in] aInstance        A pointer to an OpenThread instance.
  * @param[in] aCallback        The callback function pointer (can be NULL if not needed).
