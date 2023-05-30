@@ -999,6 +999,9 @@ private:
     static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
+    static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+    static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
+
     using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
     using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;
 
