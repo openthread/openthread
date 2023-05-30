@@ -57,6 +57,8 @@ namespace ot {
 class Uptime : public InstanceLocator, private NonCopyable
 {
 public:
+    static constexpr uint16_t kStringSize = OT_UPTIME_STRING_SIZE; ///< Recommended string size to represent uptime.
+
     /**
      * Initializes an `Uptime` instance.
      *
