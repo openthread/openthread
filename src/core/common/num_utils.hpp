@@ -132,6 +132,27 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
 }
 
 /**
+ * This template function returns a clamped version of given integer to a `int8_t`.
+ *
+ * If @p aValue is smaller than min value of a `int8_t`, the min value of `int8_t` is returned.
+ *
+ * @tparam IntType    The value type (MUST be `int16_t`, `int32_t`, or `int64_t`).
+ *
+ * @param[in] aValue  The value to clamp.
+ *
+ * @returns The clamped version of @p aValue to `int8_t`.
+ *
+ */
+template <typename IntType> int8_t ClampToInt8L(IntType aValue)
+{
+    static_assert(TypeTraits::IsSame<IntType, int16_t>::kValue || TypeTraits::IsSame<IntType, int32_t>::kValue ||
+                      TypeTraits::IsSame<IntType, int64_t>::kValue,
+                  "IntType must be `int16_t, `int32_t`, or `int64_t`");
+
+    return static_cast<int8_t>(Max(aValue, static_cast<IntType>(NumericLimits<int8_t>::kMin)));
+}
+
+/**
  * This template function performs a three-way comparison between two values.
  *
  * @tparam Type   The value type.
