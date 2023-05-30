@@ -70,7 +70,7 @@ Translator::Translator(Instance &aInstance)
     , mState(State::kStateDisabled)
     , mMappingExpirerTimer(aInstance)
 {
-    Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&mNextMappingId), sizeof(mNextMappingId));
+    Random::NonCrypto::Fill(mNextMappingId);
 
     mNat64Prefix.Clear();
     mIp4Cidr.Clear();

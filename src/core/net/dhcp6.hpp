@@ -107,7 +107,12 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, kSize); }
+    Error GenerateRandom(void)
+    {
+        OT_UNUSED_VARIABLE(m8);
+
+        return Random::Crypto::Fill(*this);
+    }
 
 private:
     uint8_t m8[kSize];
