@@ -1702,12 +1702,8 @@ void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame
     if (Get<Mac::Mac>().IsCslEnabled())
     {
         IgnoreError(aFrame.AppendHeaderIeAt<Mac::CslIe>(index));
-        aFrame.mInfo.mTxInfo.mCslPresent = true;
-        iePresent                        = true;
-    }
-    else
-    {
-        aFrame.mInfo.mTxInfo.mCslPresent = false;
+        aFrame.SetCslIePresent(true);
+        iePresent = true;
     }
 #endif
 
