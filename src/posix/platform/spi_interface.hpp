@@ -42,8 +42,6 @@
 
 #include <openthread/openthread-system.h>
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
-
 #include "ncp/ncp_spi.hpp"
 
 namespace ot {
@@ -53,7 +51,7 @@ namespace Posix {
  * Defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
-class SpiInterface
+class SpiInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
@@ -256,5 +254,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 #endif // POSIX_APP_SPI_INTERFACE_HPP_
