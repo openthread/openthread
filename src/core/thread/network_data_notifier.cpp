@@ -39,6 +39,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/numeric_limits.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/tmf.hpp"
@@ -63,6 +64,11 @@ Notifier::Notifier(Instance &aInstance)
     , mDidRequestRouterRoleUpgrade(false)
     , mRouterRoleUpgradeTimeout(0)
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    , mLeaderOverrideEnabled(false)
+    , mFailedAttempts(0)
+    , mLeaderOverrideDelay(0)
+#endif
 {
 }
 
@@ -71,6 +77,10 @@ void Notifier::HandleServerDataUpdated(void)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     mDidRequestRouterRoleUpgrade = false;
     ScheduleRouterRoleUpgradeIfEligible();
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    ResetLeaderOverride();
 #endif
 
     mNextDelay = 0;
@@ -171,6 +181,9 @@ Error Notifier::UpdateInconsistentData(void)
     if (Get<Leader>().ContainsEntriesFrom(Get<Local>(), deviceRloc) &&
         Get<Local>().ContainsEntriesFrom(Get<Leader>(), deviceRloc))
     {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+        ResetLeaderOverride();
+#endif
         ExitNow(error = kErrorNotFound);
     }
 
@@ -181,6 +194,20 @@ Error Notifier::UpdateInconsistentData(void)
 
     SuccessOrExit(error = SendServerDataNotification(mOldRloc, &Get<Local>()));
     mOldRloc = deviceRloc;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    if (mFailedAttempts != NumericLimits<uint8_t>::kMax)
+    {
+        mFailedAttempts++;
+    }
+
+    if (ShouldOverrideLeaderRole() && (mLeaderOverrideDelay == 0))
+    {
+        mLeaderOverrideDelay = Random::NonCrypto::GetUint8InRange(kMinLeaderOverrideDelay, kMaxLeaderOverrideDelay);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kNetworkDataNotifier);
+        LogInfo("Scheduling leader override in %u sec", mLeaderOverrideDelay);
+    }
+#endif
 
 exit:
     return error;
@@ -244,6 +271,13 @@ void Notifier::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadPartitionIdChanged))
+    {
+        ResetLeaderOverride();
+    }
+#endif
+
     if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadRoleChanged | kEventThreadChildRemoved))
     {
         SynchronizeServerData();
@@ -286,7 +320,13 @@ void Notifier::SetNetDataFullCallback(NetDataCallback aCallback, void *aContext)
     mNetDataFullCallback.Set(aCallback, aContext);
 }
 
-void Notifier::HandleNetDataFull(void) { mNetDataFullCallback.InvokeIfSet(); }
+void Notifier::HandleNetDataFull(void)
+{
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    ResetLeaderOverride();
+#endif
+    mNetDataFullCallback.InvokeIfSet();
+}
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
@@ -346,7 +386,7 @@ exit:
     return;
 }
 
-void Notifier::HandleTimeTick(void)
+bool Notifier::HandleTimeTickForRoleUpgrade(void)
 {
     VerifyOrExit(mRouterRoleUpgradeTimeout > 0);
 
@@ -354,8 +394,6 @@ void Notifier::HandleTimeTick(void)
 
     if (mRouterRoleUpgradeTimeout == 0)
     {
-        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kNetworkDataNotifier);
-
         // Check that we are still eligible for requesting router role
         // upgrade (note that state can change since the last time we
         // checked and registered to receive time ticks).
@@ -367,11 +405,102 @@ void Notifier::HandleTimeTick(void)
             IgnoreError(Get<Mle::MleRouter>().BecomeRouter(ThreadStatusTlv::kBorderRouterRequest));
         }
     }
+
 exit:
-    return;
+    return (mRouterRoleUpgradeTimeout > 0);
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE &&
        // OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+
+void Notifier::SetLeaderOverrideEnabled(bool aEnabled)
+{
+    VerifyOrExit(aEnabled != mLeaderOverrideEnabled);
+
+    mLeaderOverrideEnabled = aEnabled;
+    ResetLeaderOverride();
+    LogInfo("Leader override mechanism %sabled", aEnabled ? "en" : "dis");
+
+exit:
+    return;
+}
+
+void Notifier::ResetLeaderOverride(void)
+{
+    if (mLeaderOverrideDelay > 0)
+    {
+        LogInfo("Canceling scheduled leader override");
+    }
+
+    mFailedAttempts      = 0;
+    mLeaderOverrideDelay = 0;
+}
+
+bool Notifier::ShouldOverrideLeaderRole(void) const
+{
+    bool shouldOverride = false;
+
+    VerifyOrExit(mLeaderOverrideEnabled);
+    VerifyOrExit(!Get<Mle::MleRouter>().IsLeader());
+    VerifyOrExit(mFailedAttempts >= kLeaderOverrideTriggerFailedAttempts);
+    VerifyOrExit(Get<Mle::MleRouter>().GetLeaderWeight() > Get<Mle::Mle>().GetLeaderData().GetWeighting());
+    shouldOverride = true;
+
+exit:
+    return shouldOverride;
+}
+
+bool Notifier::HandleTimeTickForLeaderOverride(void)
+{
+    VerifyOrExit(mLeaderOverrideDelay > 0);
+
+    mLeaderOverrideDelay--;
+
+    if (mLeaderOverrideDelay == 0)
+    {
+        if (ShouldOverrideLeaderRole())
+        {
+            LogInfo("Starting leader override");
+            IgnoreError(Get<Mle::MleRouter>().BecomeLeader());
+        }
+        else
+        {
+            LogInfo("Canceling leader override");
+        }
+    }
+
+exit:
+    return (mLeaderOverrideDelay > 0);
+}
+
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+
+#if OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER
+void Notifier::HandleTimeTick(void)
+{
+    bool continueRxingTicks = false;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    if (HandleTimeTickForRoleUpgrade())
+    {
+        continueRxingTicks = true;
+    }
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    if (HandleTimeTickForLeaderOverride())
+    {
+        continueRxingTicks = true;
+    }
+#endif
+
+    if (!continueRxingTicks)
+    {
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kNetworkDataNotifier);
+    }
+}
+#endif
 
 } // namespace NetworkData
 } // namespace ot

@@ -58,11 +58,13 @@ Done
 - [ifconfig](#ifconfig)
 - [instanceid](#instanceid)
 - [ipaddr](#ipaddr)
+- [ignorenetdatareg](#ignorenetdatareg)
 - [ipmaddr](#ipmaddr)
 - [joiner](README_JOINER.md)
 - [joinerport](#joinerport-port)
 - [keysequence](#keysequence-counter)
 - [leaderdata](#leaderdata)
+- [leaderoverride](#leaderoverride)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
 - [locate](#locate)
@@ -1502,6 +1504,45 @@ Show OpenThread instance identifier.
 Done
 ```
 
+### ignorenetdatareg
+
+Indicate whether or not leader test mode behavior to ignore Network Data registration is enabled.
+
+Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
+
+```bash
+> ignorenetdatareg
+Disabled
+```
+
+### ignorenetdatareg enable
+
+Enable leader test mode, which causes the leader to ignore Network Data registrations from any Border Router.
+
+Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
+
+This command is only intended for testing purposes. It configures the leader to misbehave by ignoring Network Data registrations (from received `SRV_DATA.ntf` messages) and not integrating the entries into the Thread Network Data.
+
+```bash
+> ignorenetdatareg enable
+Done
+
+> ignorenetdatareg
+Enabled
+Done
+```
+
+### ignorenetdatareg disable
+
+Disable leader test mode, which causes the leader to ignore Network Data registrations from any Border Router.
+
+Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
+
+```bash
+> ignorenetdatareg disable
+Done
+```
+
 ### ipaddr
 
 List all IPv6 addresses assigned to the Thread interface.
@@ -1708,6 +1749,52 @@ Weighting: 64
 Data Version: 109
 Stable Data Version: 211
 Leader Router ID: 60
+Done
+```
+
+### leaderoverride
+
+Indicate whether the leader override mechanism is enabled or disabled.
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE`.
+
+```bash
+> leaderoverride
+Disabled
+```
+
+### leaderoverride enable
+
+Enable the leader override mechanism.
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE`.
+
+When enabled, device acting as a border router (BR) monitors the following trigger conditions to start leader override:
+
+- The BR's leader weight is higher than the current partition's weight (as indicated in the current Leader Data).
+- The BR has pending local Network Data entries and has tried to register them with the leader at least 3 times, but failed each time.
+- Each attempt consisted of sending a SRV_DATA.ntf message to the leader, which was acknowledged but not integrated into the Thread Network Data within `DATA_RESUBMIT_DELAY` seconds (300 seconds).
+- The maximum size of the Thread Network Data has been such that the local Network Data entries would fit over the past period.
+
+If all of these conditions are met, the BR starts the leader override procedure by selecting a random delay between 1 and 30 seconds. If the trigger conditions still hold after the random delay, the BR starts a new partition as the leader.
+
+```bash
+> leaderoverride enable
+Done
+
+> leaderoverride
+Enabled
+Done
+```
+
+### leaderoverride disable
+
+Disable the leader override mechanism.
+
+Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE`.
+
+```bash
+> leaderoverride disable
 Done
 ```
 

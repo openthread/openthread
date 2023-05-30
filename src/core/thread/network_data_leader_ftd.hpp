@@ -180,6 +180,30 @@ public:
     bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * Enables or disables leader test mode, which causes the leader to ignore Network Data registrations from any
+     * Border Router.
+     *
+     * This method requires the `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration option to be set, and is only
+     * intended for testing purposes. It configures the leader to misbehave by ignoring Network Data registrations
+     * (from received `SRV_DATA.ntf` messages) and not integrating the entries into the Thread Network Data.
+     *
+     * @param[in]  aEnabled    TRUE to enable test behavior (ignore Network Data registration), FALSE to disable.
+     *
+     */
+    void SetIgnoreRegistration(bool aEnabled) { mIgnoreRegistration = aEnabled; }
+
+    /**
+     * Indicates whether or not test mode behavior to ignore Network Data registration is enabled.
+     *
+     * @retval TRUE    The test mode behavior (ignore Network Data registration) is enabled.
+     * @retval FALSE   The test mode behavior (ignore Network Data registration) is disabled.
+     *
+     */
+    bool GetIgnoreRegistration(void) const { return mIgnoreRegistration; }
+#endif
+
 private:
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
 
@@ -348,6 +372,10 @@ private:
     bool        mWaitingForNetDataSync;
     ContextIds  mContextIds;
     UpdateTimer mTimer;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mIgnoreRegistration;
+#endif
 };
 
 DeclareTmfHandler(Leader, kUriServerData);

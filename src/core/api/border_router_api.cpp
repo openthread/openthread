@@ -127,4 +127,17 @@ void otBorderRouterSetNetDataFullCallback(otInstance                       *aIns
 }
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+
+bool otBorderRouterIsLeaderOverrideEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Notifier>().IsLeaderOverrideEnabled();
+}
+
+void otBorderRouterSetLeaderOverrideEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().SetLeaderOverrideEnabled(aEnabled);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

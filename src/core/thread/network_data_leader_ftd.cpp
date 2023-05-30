@@ -66,6 +66,9 @@ Leader::Leader(Instance &aInstance)
     , mWaitingForNetDataSync(false)
     , mContextIds(aInstance)
     , mTimer(aInstance)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mIgnoreRegistration(false)
+#endif
 {
     Reset();
 }
@@ -169,6 +172,9 @@ template <> void Leader::HandleTmf<kUriServerData>(Coap::Message &aMessage, cons
     {
         VerifyOrExit(networkDataTlv.IsValid());
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (!mIgnoreRegistration)
+#endif
         {
             NetworkData networkData(GetInstance(), networkDataTlv.GetTlvs(), networkDataTlv.GetLength());
 

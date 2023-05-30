@@ -101,6 +101,7 @@ build_simulation()
         "-DOT_ECDSA=ON"
         "-DOT_EXTERNAL_HEAP=ON"
         "-DOT_HISTORY_TRACKER=ON"
+        "-DOT_LEADER_OVERRIDE=ON"
         "-DOT_MESSAGE_USE_HEAP=OFF"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"

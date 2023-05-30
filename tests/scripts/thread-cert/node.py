@@ -3530,6 +3530,36 @@ class NodeImpl:
         line = self._expect_command_output()[0]
         return [int(item) for item in line.split()]
 
+    def get_leader_override(self) -> bool:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('leaderoverride')
+        return self._expect_result(states)
+
+    def enable_leader_override(self):
+        cmd = 'leaderoverride enable'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def disable_leader_override(self):
+        cmd = 'leaderoverride disable'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def get_ignore_netdata_reg(self) -> bool:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('ignorenetdatareg')
+        return self._expect_result(states)
+
+    def enable_ignore_netdata_reg(self):
+        cmd = 'ignorenetdatareg enable'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def disable_ignore_netdata_reg(self):
+        cmd = 'ignorenetdatareg disable'
+        self.send_command(cmd)
+        self._expect_done()
+
 
 class Node(NodeImpl, OtCli):
     pass

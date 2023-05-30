@@ -74,13 +74,39 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+ *
+ * Define as 1 to enable the leader override feature.
+ *
+ * When leader override is enabled, device acting as a border router (BR) monitors the following trigger conditions to
+ * start leader override:
+ * - The BR's leader weight is higher than the current partition's weight (as indicated in the current Leader Data).
+ * - The BR has pending local Network Data entries and has tried to register them with the leader at least 3 times, but
+ *   failed each time.
+ * - Each attempt consisted of sending a SRV_DATA.ntf message to the leader, which was acknowledged but not integrated
+ *   into the Thread Network Data within `DATA_RESUBMIT_DELAY` seconds (300 seconds).
+ * - The maximum size of the Thread Network Data has been such that the local Network Data entries would fit over the
+ *   past period.
+ *
+ * If all of these conditions are met, the BR starts the leader override procedure by selecting a random delay between
+ * 1 and 30 seconds. If the trigger conditions still hold after the random delay, the BR starts a new partition as the
+ * leader.
+ *
+ * @sa otBorderRouterSetLeaderOverrideEnabled
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
  *
  * Define as 1 to enable mechanism to detect and signal when local or leader Network Data gets full.
  *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
 #endif
 
 #endif // CONFIG_BORDER_ROUTER_H_

@@ -198,6 +198,48 @@ void otBorderRouterSetNetDataFullCallback(otInstance                       *aIns
                                           void                             *aContext);
 
 /**
+ * Enables or disables the leader override mechanism.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE`.
+ *
+ * When enabled, device acting as a border router (BR) monitors the following trigger conditions to start leader
+ * override:
+ * - The BR's leader weight is higher than the current partition's weight (as indicated in the current Leader Data).
+ * - The BR has pending local Network Data entries and has tried to register them with the leader at least 3 times, but
+ *   failed each time.
+ * - Each attempt consisted of sending a SRV_DATA.ntf message to the leader, which was acknowledged but not integrated
+ *   into the Thread Network Data within `DATA_RESUBMIT_DELAY` seconds (300 seconds).
+ * - The maximum size of the Thread Network Data has been such that the local Network Data entries would fit over the
+ *   past period.
+ *
+ * If all of these conditions are met, the BR starts the leader override procedure by selecting a random delay between
+ * 1 and 30 seconds. If the trigger conditions still hold after the random delay, the BR starts a new partition as the
+ * leader.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aEnabled     TRUE to enable leader override mechanism, FALSE to disable.
+ *
+ * @sa otBorderRouterIsLeaderOverrideEnabled
+ *
+ */
+void otBorderRouterSetLeaderOverrideEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether or not leader override mechanism is enabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE`.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ *
+ * @retval TRUE  The leader override mechanism is enabled.
+ * @retval FALSE The leader override mechanism is disabled.
+ *
+ * @sa otBorderRouterSetLeaderOverrideEnabled
+ *
+ */
+bool otBorderRouterIsLeaderOverrideEnabled(otInstance *aInstance);
+
+/**
  * @}
  *
  */

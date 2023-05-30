@@ -2958,6 +2958,48 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+template <> otError Interpreter::Process<Cmd("ignorenetdatareg")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli ignorenetdatareg
+     * @code
+     * ignorenetdatareg
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetIgnoreNetDataRegistration
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otThreadGetIgnoreNetDataRegistration(GetInstancePtr()));
+    }
+    /**
+     * @cli ignorenetdatareg (enable,disable)
+     * @code
+     * ignorenetdatareg enable
+     * Done
+     * @endcode
+     * @cparam ignorenetdatareg [@ca{enable|disable}]
+     * @par api_copy
+     * otThreadSetIgnoreNetDataRegistration
+     */
+    else
+    {
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+        otThreadSetIgnoreNetDataRegistration(GetInstancePtr(), enable);
+    }
+
+exit:
+    return error;
+}
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -3408,6 +3450,48 @@ template <> otError Interpreter::Process<Cmd("partitionid")>(Arg aArgs[])
 
     return error;
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+template <> otError Interpreter::Process<Cmd("leaderoverride")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli leaderoverride
+     * @code
+     * leaderoverride
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRouterIsLeaderOverrideEnabled
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otBorderRouterIsLeaderOverrideEnabled(GetInstancePtr()));
+    }
+    /**
+     * @cli leaderoverride (enable,disable)
+     * @code
+     * leaderoverride enable
+     * Done
+     * @endcode
+     * @cparam leaderoverride [@ca{enable|disable}]
+     * @par api_copy
+     * otBorderRouterSetLeaderOverrideEnabled
+     */
+    else
+    {
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+        otBorderRouterSetLeaderOverrideEnabled(GetInstancePtr(), enable);
+    }
+
+exit:
+    return error;
+}
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
 
 /**
  * @cli leaderweight
@@ -7459,6 +7543,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("history"),
 #endif
         CmdEntry("ifconfig"),
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        CmdEntry("ignorenetdatareg"),
+#endif
         CmdEntry("instanceid"),
         CmdEntry("ipaddr"),
         CmdEntry("ipmaddr"),
@@ -7470,6 +7557,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
         CmdEntry("keysequence"),
         CmdEntry("leaderdata"),
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+        CmdEntry("leaderoverride"),
+#endif
 #if OPENTHREAD_FTD
         CmdEntry("leaderweight"),
 #endif
