@@ -243,7 +243,7 @@ Error BorderAgent::GetId(Id &aId)
 
     if (Get<Settings>().Read(id) != kErrorNone)
     {
-        Random::NonCrypto::FillBuffer(id.GetId().mId, sizeof(id));
+        Random::NonCrypto::Fill(id.GetId());
         SuccessOrExit(error = Get<Settings>().Save(id));
     }
 

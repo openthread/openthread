@@ -1114,7 +1114,7 @@ bool tcplp_sys_autobind(otInstance       *aInstance,
 uint32_t tcplp_sys_generate_isn()
 {
     uint32_t isn;
-    IgnoreError(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&isn), sizeof(isn)));
+    IgnoreError(Random::Crypto::Fill(isn));
     return isn;
 }
 
