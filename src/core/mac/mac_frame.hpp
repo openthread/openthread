@@ -1423,6 +1423,22 @@ public:
     }
 
     /**
+     * Indicates whether or not the frame contains the CSL IE.
+     *
+     * @retval TRUE   The frame contains the CSL IE.
+     * @retval FALSE  The frame does not contain the CSL IE.
+     *
+     */
+    bool IsCslIePresent(void) const { return mInfo.mTxInfo.mCslPresent; }
+
+    /**
+     * Sets the CSL IE present flag.
+     *
+     * @param[in]  aCslPresent  TRUE if the frame contains the CSL IE.
+     */
+    void SetCslIePresent(bool aCslPresent) { mInfo.mTxInfo.mCslPresent = aCslPresent; }
+
+    /**
      * Indicates whether or not the frame header is updated.
      *
      * @retval TRUE   The frame already has the header updated.
