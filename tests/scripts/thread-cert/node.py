@@ -414,6 +414,19 @@ class OtbrDocker:
         return self.call_dbus_method('io.openthread.BorderRouter', 'SetNat64Enabled', enable)
 
     @property
+    def nat64_cidr(self):
+        self.send_command('nat64 cidr')
+        cidr = self._expect_command_output()[0].strip()
+        return ipaddress.IPv4Network(cidr, strict=False)
+
+    @nat64_cidr.setter
+    def nat64_cidr(self, cidr: ipaddress.IPv4Network):
+        if not isinstance(cidr, ipaddress.IPv4Network):
+            raise ValueError("cidr is expected to be an instance of ipaddress.IPv4Network")
+        self.send_command(f'nat64 cidr {cidr}')
+        self._expect_done()
+
+    @property
     def nat64_state(self):
         state = self.get_dbus_property('Nat64State')
         return {'PrefixManager': state[0], 'Translator': state[1]}

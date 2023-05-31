@@ -49,7 +49,6 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/logging.h>
-#include <openthread/nat64.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
@@ -447,11 +446,6 @@ extern char gNetifName[IFNAMSIZ];
  *
  */
 extern unsigned int gNetifIndex;
-
-/**
- * The CIDR for NAT64
- */
-extern otIp4Cidr gNat64Cidr;
 
 /**
  * Initializes platform Backbone network.

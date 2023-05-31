@@ -156,7 +156,9 @@ extern int
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
-otIp4Cidr    gNat64Cidr;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static otIp4Cidr sActiveNat64Cidr;
+#endif
 
 const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
@@ -896,24 +898,55 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 }
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-void processNat64StateChange(otNat64State aNewState)
+static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
 {
-    // If the interface is not up and we are enabling NAT64, the route will be added when we bring up the route.
-    // Also, the route will be deleted by the kernel when we shutting down the interface.
-    // We should try to add route first, since otNat64SetEnabled never fails.
-    if (otIp6IsEnabled(gInstance))
+    bool res = true;
+
+    VerifyOrExit(aCidr1.mLength == aCidr2.mLength, res = false);
+
+    // The higher (32 - length) bits must be the same, host bits are ignored.
+    VerifyOrExit(((ntohl(aCidr1.mAddress.mFields.m32) ^ ntohl(aCidr2.mAddress.mFields.m32)) >> (32 - aCidr1.mLength)) ==
+                     0,
+                 res = false);
+
+exit:
+    return res;
+}
+
+static void processNat64StateChange(void)
+{
+    otIp4Cidr translatorCidr;
+
+    // Skip if NAT64 translator has not been configured with a CIDR.
+    SuccessOrExit(otNat64GetCidr(gInstance, &translatorCidr));
+
+    if (!isSameIp4Cidr(translatorCidr, sActiveNat64Cidr)) // Someone sets a new CIDR for NAT64.
     {
-        if (aNewState == OT_NAT64_STATE_ACTIVE)
+        char cidrString[OT_IP4_CIDR_STRING_SIZE];
+
+        if (sActiveNat64Cidr.mLength != 0)
         {
-            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
-            otLogInfoPlat("[netif] Adding route for NAT64");
+            DeleteIp4Route(sActiveNat64Cidr);
         }
-        else
-        {
-            DeleteIp4Route(gNat64Cidr);
-            otLogInfoPlat("[netif] Deleting route for NAT64");
-        }
+        sActiveNat64Cidr = translatorCidr;
+
+        otIp4CidrToString(&translatorCidr, cidrString, sizeof(cidrString));
+        otLogInfoPlat("[netif] NAT64 CIDR updated to %s.", cidrString);
     }
+
+    if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
+    {
+        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
+        otLogInfoPlat("[netif] Adding route for NAT64");
+    }
+    else if (sActiveNat64Cidr.mLength > 0) // Translator is not active.
+    {
+        DeleteIp4Route(sActiveNat64Cidr);
+        otLogInfoPlat("[netif] Deleting route for NAT64");
+    }
+
+exit:
+    return;
 }
 #endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
@@ -936,9 +969,9 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 #endif
     }
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (OT_CHANGED_NAT64_TRANSLATOR_STATE & aFlags)
+    if ((OT_CHANGED_NAT64_TRANSLATOR_STATE | OT_CHANGED_THREAD_NETIF_STATE) & aFlags)
     {
-        processNat64StateChange(otNat64GetTranslatorState(aInstance));
+        processNat64StateChange();
     }
 #endif
 }
@@ -1207,10 +1240,10 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp && gNat64Cidr.mLength > 0)
+    if (isUp && sActiveNat64Cidr.mLength > 0)
     {
-        SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        otLogInfoPlat("[netif] Succeeded to enable NAT64");
+        // Recover NAT64 route.
+        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
     }
 #endif
 
@@ -1886,6 +1919,22 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void nat64Init(void)
+{
+    otIp4Cidr cidr;
+
+    if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &cidr) == OT_ERROR_NONE && cidr.mLength != 0)
+    {
+        otNat64SetIp4Cidr(gInstance, &cidr);
+    }
+    else
+    {
+        otLogInfoPlat("[netif] No default NAT64 CIDR provided.");
+    }
+}
+#endif
+
 void platformNetifSetUp(void)
 {
     OT_ASSERT(gInstance != nullptr);
@@ -1904,6 +1953,9 @@ void platformNetifSetUp(void)
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    nat64Init();
 #endif
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     gResolver.Init();
