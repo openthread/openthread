@@ -148,13 +148,6 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 
     gNetifName[0] = '\0';
 
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &gNat64Cidr) != OT_ERROR_NONE)
-    {
-        gNat64Cidr.mLength = 0;
-    }
-#endif
-
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(aPlatformConfig);
 #endif

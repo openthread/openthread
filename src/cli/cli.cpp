@@ -681,25 +681,44 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 #endif
     }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    /**
-     * @cli nat64 cidr
-     * @code
-     * nat64 cidr
-     * 192.168.255.0/24
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otNat64GetCidr
-     *
-     */
     else if (aArgs[0] == "cidr")
     {
         otIp4Cidr cidr;
-        char      cidrString[OT_IP4_CIDR_STRING_SIZE];
 
-        SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
-        otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
-        OutputLine("%s", cidrString);
+        /**
+         * @cli nat64 cidr
+         * @code
+         * nat64 cidr
+         * 192.168.255.0/24
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otNat64GetCidr
+         *
+         */
+        if (aArgs[1].IsEmpty())
+        {
+            char cidrString[OT_IP4_CIDR_STRING_SIZE];
+
+            SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
+            otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
+            OutputLine("%s", cidrString);
+        }
+        /**
+         * @cli nat64 cidr <cidr>
+         * @code
+         * nat64 cidr 192.168.255.0/24
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otPlatNat64SetIp4Cidr
+         *
+         */
+        else
+        {
+            SuccessOrExit(error = otIp4CidrFromString(aArgs[1].GetCString(), &cidr));
+            error = otNat64SetIp4Cidr(GetInstancePtr(), &cidr);
+        }
     }
     /**
      * @cli nat64 mappings
