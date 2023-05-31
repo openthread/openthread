@@ -66,11 +66,9 @@ Error RssAverager::Add(int8_t aRss)
 
     VerifyOrExit(aRss != Radio::kInvalidRssi, error = kErrorInvalidArgs);
 
-    // Restrict the RSS value to the closed range [0, -128] so the RSS times precision multiple can fit in 11 bits.
-    if (aRss > 0)
-    {
-        aRss = 0;
-    }
+    // Restrict the RSS value to the closed range [-128, 0]
+    // so the RSS times precision multiple can fit in 11 bits.
+    aRss = Min<int8_t>(aRss, 0);
 
     // Multiply the RSS value by a precision multiple (currently -8).
 
