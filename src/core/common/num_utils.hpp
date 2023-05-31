@@ -132,7 +132,7 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
 }
 
 /**
- * This template function returns a clamped version of given integer to a `int8_t`.
+ * Returns a clamped version of given integer to a `int8_t`.
  *
  * If @p aValue is smaller than min value of a `int8_t`, the min value of `int8_t` is returned.
  * If @p aValue is larger than max value of a `int8_t`, the max value of `int8_t` is returned.
