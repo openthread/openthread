@@ -14,21 +14,7 @@
 To build OpenThread with `toranj` configuration, the `test/toranj/build.sh` script can be used:
 
 ```bash
-$ ./tests/toranj/build.sh cmake
-====================================================================================================
-Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake
-====================================================================================================
--- OpenThread Source Directory: /Users/abtink/GitHub/openthread
--- OpenThread CMake build type: Debug
--- Package Name: OPENTHREAD
-...
-
-```
-
-Or to build using autoconf/make we can use:
-
-```bash
-$ ./tests/toranj/build.sh cli
+$ ./tests/toranj/build.sh all
 ====================================================================================================
 Building OpenThread (NCP/CLI for FTD/MTD/RCP mode) with simulation platform using cmake
 ====================================================================================================

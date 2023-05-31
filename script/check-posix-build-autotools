@@ -42,15 +42,6 @@ build()
     if [[ $OSTYPE != "darwin"* ]]; then
         reset_source
         make -f src/posix/Makefile-posix RCP_RESTORATION_MAX_COUNT=2 RCP_BUS=spi
-
-        reset_source
-        ./tests/toranj/build.sh posix
-
-        reset_source
-        ./tests/toranj/build.sh posix-15.4+trel
-
-        reset_source
-        ./tests/toranj/build.sh posix-trel
     fi
 }
 
