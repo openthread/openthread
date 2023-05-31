@@ -812,7 +812,7 @@ int8_t ScaleRawValueToRssi(uint8_t aRawValue)
     value = DivideAndRoundToClosest<int32_t>(value, NumericLimits<uint8_t>::kMax);
     value += kMinRssi;
 
-    return ClampToInt8L(value);
+    return ClampToInt8(value);
 }
 
 } // namespace LinkMetrics
