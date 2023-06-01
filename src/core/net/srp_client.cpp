@@ -1054,10 +1054,7 @@ Error Client::AppendServiceInstructions(Message &aMessage, Info &aInfo)
     // In such a case, we end up using `mDefaultLease` but then we need
     // to make sure it is not greater than the selected `mKeyLease`.
 
-    if (mLease > mKeyLease)
-    {
-        mLease = mKeyLease;
-    }
+    mLease = Min(mLease, mKeyLease);
 
 exit:
     return error;
@@ -1844,11 +1841,7 @@ void Client::GrowRetryWaitInterval(void)
 {
     mRetryWaitInterval =
         mRetryWaitInterval / kRetryIntervalGrowthFactorDenominator * kRetryIntervalGrowthFactorNumerator;
-
-    if (mRetryWaitInterval > kMaxRetryWaitInterval)
-    {
-        mRetryWaitInterval = kMaxRetryWaitInterval;
-    }
+    mRetryWaitInterval = Min(mRetryWaitInterval, kMaxRetryWaitInterval);
 }
 
 uint32_t Client::DetermineLeaseInterval(uint32_t aInterval, uint32_t aDefaultInterval) const

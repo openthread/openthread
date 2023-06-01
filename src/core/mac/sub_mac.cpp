@@ -443,10 +443,7 @@ void SubMac::StartCsmaBackoff(void)
 
     VerifyOrExit(ShouldHandleCsmaBackOff(), BeginTransmit());
 
-    if (backoffExponent > kCsmaMaxBe)
-    {
-        backoffExponent = kCsmaMaxBe;
-    }
+    backoffExponent = Min(backoffExponent, kCsmaMaxBe);
 
     StartTimerForBackoff(backoffExponent);
 

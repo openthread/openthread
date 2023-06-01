@@ -781,12 +781,9 @@ exit:
 
 void Mle::SetTimeout(uint32_t aTimeout)
 {
-    VerifyOrExit(mTimeout != aTimeout);
+    aTimeout = Max(aTimeout, kMinTimeout);
 
-    if (aTimeout < kMinTimeout)
-    {
-        aTimeout = kMinTimeout;
-    }
+    VerifyOrExit(mTimeout != aTimeout);
 
     mTimeout = aTimeout;
 
@@ -1542,12 +1539,7 @@ bool Mle::PrepareAnnounceState(void)
     }
 
     mAnnounceDelay = kAnnounceTimeout / (channelMask.GetNumberOfChannels() + 1);
-
-    if (mAnnounceDelay < kMinAnnounceDelay)
-    {
-        mAnnounceDelay = kMinAnnounceDelay;
-    }
-
+    mAnnounceDelay = Max(mAnnounceDelay, kMinAnnounceDelay);
     shouldAnnounce = true;
 
 exit:
@@ -3153,14 +3145,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
     // Link Margin
     SuccessOrExit(error = Tlv::Find<LinkMarginTlv>(aRxInfo.mMessage, linkMarginFromTlv));
-
-    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(rss);
-
-    if (linkMargin > linkMarginFromTlv)
-    {
-        linkMargin = linkMarginFromTlv;
-    }
-
+    linkMargin  = Min(Get<Mac::Mac>().ComputeLinkMargin(rss), linkMarginFromTlv);
     linkQuality = LinkQualityForLinkMargin(linkMargin);
 
     // Connectivity
