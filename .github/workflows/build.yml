@@ -431,6 +431,7 @@ jobs:
 
   android-ndk:
     name: android-ndk
+    if: false # Skip the job (see https://github.com/openthread/openthread/issues/9122)
     runs-on: ubuntu-22.04
     container:
       image: openthread/environment
