@@ -152,9 +152,8 @@ void Leader::Update(void)
 
 void Leader::UpdateBackboneRouterPrimary(void)
 {
-    Config   config;
-    State    state;
-    uint32_t origMlrTimeout;
+    Config config;
+    State  state;
 
     Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 
@@ -195,17 +194,13 @@ void Leader::UpdateBackboneRouterPrimary(void)
     // Restrain the range of MLR timeout to be always valid
     if (config.mServer16 != Mac::kShortAddrInvalid)
     {
-        origMlrTimeout     = config.mMlrTimeout;
-        config.mMlrTimeout = config.mMlrTimeout < static_cast<uint32_t>(Mle::kMlrTimeoutMin)
-                                 ? static_cast<uint32_t>(Mle::kMlrTimeoutMin)
-                                 : config.mMlrTimeout;
-        config.mMlrTimeout = config.mMlrTimeout > static_cast<uint32_t>(Mle::kMlrTimeoutMax)
-                                 ? static_cast<uint32_t>(Mle::kMlrTimeoutMax)
-                                 : config.mMlrTimeout;
+        uint32_t origTimeout = config.mMlrTimeout;
 
-        if (config.mMlrTimeout != origMlrTimeout)
+        config.mMlrTimeout = Clamp(config.mMlrTimeout, Mle::kMlrTimeoutMin, Mle::kMlrTimeoutMax);
+
+        if (config.mMlrTimeout != origTimeout)
         {
-            LogNote("Leader MLR Timeout is normalized from %lu to %lu", ToUlong(origMlrTimeout),
+            LogNote("Leader MLR Timeout is normalized from %lu to %lu", ToUlong(origTimeout),
                     ToUlong(config.mMlrTimeout));
         }
     }
