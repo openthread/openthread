@@ -220,8 +220,8 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
  * Thread network if there isn't already an OMR prefix. This prefix can be reached
  * from the local Wi-Fi or Ethernet network.
  *
- * Note: The local generated OMR prefix is returned. When DHCPv6 PD is enabled, the
- * border router may publish the prefix from DHCPv6 PD.
+ * Note: When DHCPv6 PD is enabled, the border router may publish the prefix from
+ * DHCPv6 PD.
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.

@@ -3235,7 +3235,6 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
 
         entry.SetFrom(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
 
-        // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
         if (!IsValidPdPrefix(entry.GetPrefix()))
         {
             LogWarn("PdPrefixManager: Ignore invalid PIO entry %s", entry.GetPrefix().ToString().AsCString());

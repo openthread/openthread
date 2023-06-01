@@ -1071,6 +1071,7 @@ private:
 
         static bool IsValidPdPrefix(const Ip6::Prefix &aPrefix)
         {
+            // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
             return aPrefix.GetLength() != 0 && aPrefix.GetLength() <= kOmrPrefixLength && !aPrefix.IsLinkLocal() &&
                    !aPrefix.IsMulticast();
         }

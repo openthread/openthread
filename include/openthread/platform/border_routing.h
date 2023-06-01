@@ -52,7 +52,7 @@ extern "C" {
  *
  * When DHCPv6 PD is disabled, the message will be dropped silently.
  *
- * Note: RA messages should not be handled by Thread networks, while for many platforms, RA messages is the way of
+ * Note: RA messages will not be forwarded into Thread networks, while for many platforms, RA messages is the way of
  * distributing a prefix and other infomations to the downstream network. The typical usecase of this function is to
  * handle the router advertisement messages sent by the platform as a result of DHCPv6 Prefix Delegation.
  *
