@@ -637,9 +637,18 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
 
     def __dumpSyslog(self):
         cmd = self.extraParams.get('cmd-dump-otbr-log', 'grep "otbr-agent" /var/log/syslog')
-        output = self.bash_unwatched(cmd)
-        for line in output:
-            self.log('%s', line)
+        try:
+            #read split into smaller chunks as printing entire file kills the session sometimes
+            STEP = 20
+            self.bash('{cmd} > /tmp/jlog.txt'.format(cmd=cmd))
+            lines = int(self.bash('wc -l /tmp/jlog.txt')[0].split()[0])
+            for i in xrange(1, lines + 1, STEP):
+                output = self.bash_unwatched('sed -n "{start},{end}p" /tmp/jlog.txt'.format(start=i, end=i + STEP - 1))
+                for line in output:
+                    self.log('%s', line)
+            self.bash('rm /tmp/jlog.txt')
+        except:
+            self.log('Failed to collect syslog data.')
 
     @API
     def get_eth_addrs(self):
