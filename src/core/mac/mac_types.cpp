@@ -229,17 +229,11 @@ uint32_t LinkFrameCounters::GetMaximum(void) const
     uint32_t counter = 0;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (counter < m154Counter)
-    {
-        counter = m154Counter;
-    }
+    counter = Max(counter, m154Counter);
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    if (counter < mTrelCounter)
-    {
-        counter = mTrelCounter;
-    }
+    counter = Max(counter, mTrelCounter);
 #endif
 
     return counter;
