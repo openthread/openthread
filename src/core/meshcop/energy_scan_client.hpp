@@ -41,9 +41,11 @@
 #include <openthread/commissioner.h>
 
 #include "coap/coap.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -53,6 +55,8 @@ namespace ot {
  */
 class EnergyScanClient : public InstanceLocator
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the object.
@@ -79,19 +83,17 @@ public:
                     uint8_t                            aCount,
                     uint16_t                           aPeriod,
                     uint16_t                           aScanDuration,
-                    const Ip6::Address &               aAddress,
+                    const Ip6::Address                &aAddress,
                     otCommissionerEnergyReportCallback aCallback,
-                    void *                             aContext);
+                    void                              *aContext);
 
 private:
-    static void HandleReport(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleReport(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otCommissionerEnergyReportCallback mCallback;
-    void *                             mContext;
-
-    Coap::Resource mEnergyScan;
+    Callback<otCommissionerEnergyReportCallback> mCallback;
 };
+
+DeclareTmfHandler(EnergyScanClient, kUriEnergyReport);
 
 /**
  * @}

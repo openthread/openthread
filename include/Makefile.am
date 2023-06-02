@@ -68,6 +68,7 @@ openthread_headers                      = \
     openthread/link_metrics.h             \
     openthread/link_raw.h                 \
     openthread/logging.h                  \
+    openthread/mesh_diag.h                \
     openthread/message.h                  \
     openthread/multi_radio.h              \
     openthread/nat64.h                    \
@@ -102,6 +103,7 @@ ot_platform_headers                     = \
     openthread/platform/crypto.h          \
     openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \
+    openthread/platform/dns.h             \
     openthread/platform/dso_transport.h   \
     openthread/platform/entropy.h         \
     openthread/platform/flash.h           \

@@ -81,6 +81,36 @@ typedef enum
 } otDnsNat64Mode;
 
 /**
+ * This enumeration type represents the service resolution mode in an `otDnsQueryConfig`.
+ *
+ * This is only used during DNS client service resolution `otDnsClientResolveService()`. It determines which
+ * record types to query.
+ *
+ */
+typedef enum
+{
+    OT_DNS_SERVICE_MODE_UNSPECIFIED      = 0, ///< Mode is not specified. Use default service mode.
+    OT_DNS_SERVICE_MODE_SRV              = 1, ///< Query for SRV record only.
+    OT_DNS_SERVICE_MODE_TXT              = 2, ///< Query for TXT record only.
+    OT_DNS_SERVICE_MODE_SRV_TXT          = 3, ///< Query for both SRV and TXT records in same message.
+    OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE = 4, ///< Query in parallel for SRV and TXT using separate messages.
+    OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE = 5, ///< Query for TXT/SRV together first, if fails then query separately.
+} otDnsServiceMode;
+
+/**
+ * This enumeration type represents the DNS transport protocol in an `otDnsQueryConfig`.
+ *
+ * This `OT_DNS_TRANSPORT_TCP` is only supported when `OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE` is enabled.
+ *
+ */
+typedef enum
+{
+    OT_DNS_TRANSPORT_UNSPECIFIED = 0, /// DNS transport is unspecified.
+    OT_DNS_TRANSPORT_UDP         = 1, /// DNS query should be sent via UDP.
+    OT_DNS_TRANSPORT_TCP         = 2, /// DNS query should be sent via TCP.
+} otDnsTransportProto;
+
+/**
  * This structure represents a DNS query configuration.
  *
  * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
@@ -89,11 +119,13 @@ typedef enum
  */
 typedef struct otDnsQueryConfig
 {
-    otSockAddr         mServerSockAddr;  ///< Server address (IPv6 address/port). All zero or zero port for unspecified.
-    uint32_t           mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
-    uint8_t            mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
-    otDnsRecursionFlag mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
-    otDnsNat64Mode     mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
+    otSockAddr          mServerSockAddr;  ///< Server address (IPv6 addr/port). All zero or zero port for unspecified.
+    uint32_t            mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
+    uint8_t             mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
+    otDnsRecursionFlag  mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
+    otDnsNat64Mode      mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
+    otDnsServiceMode    mServiceMode;     ///< Determines which records to query during service resolution.
+    otDnsTransportProto mTransportProto;  ///< Select default transport protocol.
 } otDnsQueryConfig;
 
 /**
@@ -203,10 +235,10 @@ typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse 
  * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
  *
  */
-otError otDnsClientResolveAddress(otInstance *            aInstance,
-                                  const char *            aHostName,
+otError otDnsClientResolveAddress(otInstance             *aInstance,
+                                  const char             *aHostName,
                                   otDnsAddressCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig);
 
 /**
@@ -233,10 +265,10 @@ otError otDnsClientResolveAddress(otInstance *            aInstance,
  * @retval OT_ERROR_INVALID_STATE Cannot send query since Thread interface is not up.
  *
  */
-otError otDnsClientResolveIp4Address(otInstance *            aInstance,
-                                     const char *            aHostName,
+otError otDnsClientResolveIp4Address(otInstance             *aInstance,
+                                     const char             *aHostName,
                                      otDnsAddressCallback    aCallback,
-                                     void *                  aContext,
+                                     void                   *aContext,
                                      const otDnsQueryConfig *aConfig);
 
 /**
@@ -253,7 +285,7 @@ otError otDnsClientResolveIp4Address(otInstance *            aInstance,
  *
  */
 otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
-                                        char *                      aNameBuffer,
+                                        char                       *aNameBuffer,
                                         uint16_t                    aNameBufferSize);
 
 /**
@@ -279,8 +311,8 @@ otError otDnsAddressResponseGetHostName(const otDnsAddressResponse *aResponse,
  */
 otError otDnsAddressResponseGetAddress(const otDnsAddressResponse *aResponse,
                                        uint16_t                    aIndex,
-                                       otIp6Address *              aAddress,
-                                       uint32_t *                  aTtl);
+                                       otIp6Address               *aAddress,
+                                       uint32_t                   *aTtl);
 
 /**
  * This type is an opaque representation of a response to a browse (service instance enumeration) DNS query.
@@ -318,12 +350,13 @@ typedef struct otDnsServiceInfo
     uint16_t     mPort;               ///< Service port number.
     uint16_t     mPriority;           ///< Service priority.
     uint16_t     mWeight;             ///< Service weight.
-    char *       mHostNameBuffer;     ///< Buffer to output the service host name (can be NULL if not needed).
+    char        *mHostNameBuffer;     ///< Buffer to output the service host name (can be NULL if not needed).
     uint16_t     mHostNameBufferSize; ///< Size of `mHostNameBuffer`.
     otIp6Address mHostAddress;        ///< The host IPv6 address. Set to all zero if not available.
     uint32_t     mHostAddressTtl;     ///< The host address TTL.
-    uint8_t *    mTxtData;            ///< Buffer to output TXT data (can be NULL if not needed).
-    uint16_t     mTxtDataSize;        ///< On input, size of `mTxtData` buffer. On output `mTxtData` length.
+    uint8_t     *mTxtData;            ///< Buffer to output TXT data (can be NULL if not needed).
+    uint16_t     mTxtDataSize;        ///< On input, size of `mTxtData` buffer. On output number bytes written.
+    bool         mTxtDataTruncated;   ///< Indicates if TXT data could not fit in `mTxtDataSize` and was truncated.
     uint32_t     mTxtDataTtl;         ///< The TXT data TTL.
 } otDnsServiceInfo;
 
@@ -346,10 +379,10 @@ typedef struct otDnsServiceInfo
  * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
  *
  */
-otError otDnsClientBrowse(otInstance *            aInstance,
-                          const char *            aServiceName,
+otError otDnsClientBrowse(otInstance             *aInstance,
+                          const char             *aServiceName,
                           otDnsBrowseCallback     aCallback,
-                          void *                  aContext,
+                          void                   *aContext,
                           const otDnsQueryConfig *aConfig);
 
 /**
@@ -366,7 +399,7 @@ otError otDnsClientBrowse(otInstance *            aInstance,
  *
  */
 otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
-                                          char *                     aNameBuffer,
+                                          char                      *aNameBuffer,
                                           uint16_t                   aNameBufferSize);
 
 /**
@@ -393,7 +426,7 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
  */
 otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aResponse,
                                               uint16_t                   aIndex,
-                                              char *                     aLabelBuffer,
+                                              char                      *aLabelBuffer,
                                               uint8_t                    aLabelBufferSize);
 
 /**
@@ -401,13 +434,15 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  *
  * This function MUST only be used from `otDnsBrowseCallback`.
  *
- * A browse DNS response should include the SRV, TXT, and AAAA records for the service instances that are enumerated
- * (note that it is a SHOULD and not a MUST requirement). This function tries to retrieve this info for a given service
- * instance when available.
+ * A browse DNS response can include SRV, TXT, and AAAA records for the service instances that are enumerated. This is
+ * a SHOULD and not a MUST requirement, and servers/resolvers are not required to provide this. This function attempts
+ * to retrieve this info for a given service instance when available.
  *
- * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
+ * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned. In this case, no additional
+ *   records (no TXT and/or AAAA) are read.
  * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
  * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If TXT data length is greater than `mTxtDataSize`, it is read partially and `mTxtDataTruncated` is set to true.
  * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
  * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
  *   other addresses can be retrieved using `otDnsBrowseResponseGetHostAddress()`.
@@ -423,8 +458,8 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  *
  */
 otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
-                                          const char *               aInstanceLabel,
-                                          otDnsServiceInfo *         aServiceInfo);
+                                          const char                *aInstanceLabel,
+                                          otDnsServiceInfo          *aServiceInfo);
 
 /**
  * This function gets the host IPv6 address from a DNS browse (service instance enumeration) response.
@@ -448,10 +483,10 @@ otError otDnsBrowseResponseGetServiceInfo(const otDnsBrowseResponse *aResponse,
  *
  */
 otError otDnsBrowseResponseGetHostAddress(const otDnsBrowseResponse *aResponse,
-                                          const char *               aHostName,
+                                          const char                *aHostName,
                                           uint16_t                   aIndex,
-                                          otIp6Address *             aAddress,
-                                          uint32_t *                 aTtl);
+                                          otIp6Address              *aAddress,
+                                          uint32_t                  *aTtl);
 
 /**
  * This type is an opaque representation of a response to a service instance resolution DNS query.
@@ -488,6 +523,18 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
  * unspecified fields are then replaced by the values from the default config.
  *
+ * The function sends queries for SRV and/or TXT records for the given service instance. The `mServiceMode` field in
+ * `otDnsQueryConfig` determines which records to query (SRV only, TXT only, or both SRV and TXT) and how to perform
+ * the query (together in the same message, separately in parallel, or in optimized mode where client will try in the
+ * same message first and then separately if it fails to get a response).
+ *
+ * The SRV record provides information about service port, priority, and weight along with the host name associated
+ * with the service instance. This function DOES NOT perform address resolution for the host name discovered from SRV
+ * record. The server/resolver may provide AAAA/A record(s) for the host name in the Additional Data section of the
+ * response to SRV/TXT query and this information can be retrieved using `otDnsServiceResponseGetServiceInfo()` in
+ * `otDnsServiceCallback`. Users of this API MUST NOT assume that host address will always be available from
+ * `otDnsServiceResponseGetServiceInfo()`.
+ *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInstanceLabel     The service instance label.
  * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
@@ -500,11 +547,11 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  * @retval OT_ERROR_INVALID_ARGS  @p aInstanceLabel is NULL.
  *
  */
-otError otDnsClientResolveService(otInstance *            aInstance,
-                                  const char *            aInstanceLabel,
-                                  const char *            aServiceName,
+otError otDnsClientResolveService(otInstance             *aInstance,
+                                  const char             *aInstanceLabel,
+                                  const char             *aServiceName,
                                   otDnsServiceCallback    aCallback,
-                                  void *                  aContext,
+                                  void                   *aContext,
                                   const otDnsQueryConfig *aConfig);
 
 /**
@@ -524,9 +571,9 @@ otError otDnsClientResolveService(otInstance *            aInstance,
  *
  */
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,
-                                           char *                      aLabelBuffer,
+                                           char                       *aLabelBuffer,
                                            uint8_t                     aLabelBufferSize,
-                                           char *                      aNameBuffer,
+                                           char                       *aNameBuffer,
                                            uint16_t                    aNameBufferSize);
 
 /**
@@ -534,9 +581,18 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
  *
  * This function MUST only be used from `otDnsServiceCallback`.
  *
- * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
- * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
+ * A service resolution DNS response may include AAAA records in its Additional Data section for host name associated
+ * with the service instance that is resolved. This is a SHOULD and not a MUST requirement so servers/resolvers are
+ * not required to provide this. This function attempts to retrieve AAAA record(s) if included in the response. If it
+ * is not included `mHostAddress` is set to all zero (unspecified address). If the caller wants to resolve the host
+ * address it can call `otDnsClientResolveAddress()` with the host name to start an address resolution query.
+ *
+ * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated.
+ * - If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned unless the query config for this query
+ *   used `OT_DNS_SERVICE_MODE_TXT` for `mServiceMode` (meaning the request was only for TXT record). In this case, we
+ *   still try to parse the SRV record from Additional Data Section of response (in case server provided the info).
  * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If TXT data length is greater than `mTxtDataSize`, it is read partially and `mTxtDataTruncated` is set to true.
  * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
  * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
  *   other addresses can be retrieved using `otDnsServiceResponseGetHostAddress()`.
@@ -545,7 +601,7 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
  * @param[out] aServiceInfo       A `ServiceInfo` to output the service instance information (MUST NOT be NULL).
  *
  * @retval OT_ERROR_NONE          The service instance info was read. @p aServiceInfo is updated.
- * @retval OT_ERROR_NOT_FOUND     Could not find a matching SRV record in @p aResponse.
+ * @retval OT_ERROR_NOT_FOUND     Could not find a required record in @p aResponse.
  * @retval OT_ERROR_NO_BUFS       The host name and/or TXT data could not fit in the given buffers.
  * @retval OT_ERROR_PARSE         Could not parse the records in the @p aResponse.
  *
@@ -574,10 +630,10 @@ otError otDnsServiceResponseGetServiceInfo(const otDnsServiceResponse *aResponse
  *
  */
 otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse,
-                                           const char *                aHostName,
+                                           const char                 *aHostName,
                                            uint16_t                    aIndex,
-                                           otIp6Address *              aAddress,
-                                           uint32_t *                  aTtl);
+                                           otIp6Address               *aAddress,
+                                           uint32_t                   *aTtl);
 
 /**
  * @}

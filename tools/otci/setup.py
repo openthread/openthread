@@ -46,5 +46,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['pySerial', 'paramiko', 'pyspinel'],
+    install_requires=['pySerial', 'paramiko', 'pyspinel', 'adb-shell'],
 )

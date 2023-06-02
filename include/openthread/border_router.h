@@ -105,9 +105,9 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
  * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
  *
  */
-otError otBorderRouterGetNextOnMeshPrefix(otInstance *           aInstance,
+otError otBorderRouterGetNextOnMeshPrefix(otInstance            *aInstance,
                                           otNetworkDataIterator *aIterator,
-                                          otBorderRouterConfig * aConfig);
+                                          otBorderRouterConfig  *aConfig);
 
 /**
  * Add an external route configuration to the local network data.
@@ -150,7 +150,7 @@ otError otBorderRouterRemoveRoute(otInstance *aInstance, const otIp6Prefix *aPre
  * @retval OT_ERROR_NOT_FOUND  No subsequent external route entry exists in the Thread Network Data.
  *
  */
-otError otBorderRouterGetNextRoute(otInstance *           aInstance,
+otError otBorderRouterGetNextRoute(otInstance            *aInstance,
                                    otNetworkDataIterator *aIterator,
                                    otExternalRouteConfig *aConfig);
 

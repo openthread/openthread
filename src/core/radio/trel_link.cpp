@@ -51,8 +51,8 @@ Link::Link(Instance &aInstance)
     , mRxChannel(0)
     , mPanId(Mac::kPanIdBroadcast)
     , mTxPacketNumber(0)
-    , mTxTasklet(aInstance, HandleTxTasklet)
-    , mTimer(aInstance, HandleTimer)
+    , mTxTasklet(aInstance)
+    , mTimer(aInstance)
     , mInterface(aInstance)
 {
     memset(&mTxFrame, 0, sizeof(mTxFrame));
@@ -70,10 +70,7 @@ Link::Link(Instance &aInstance)
     mTimer.Start(kAckWaitWindow);
 }
 
-void Link::AfterInit(void)
-{
-    mInterface.Init();
-}
+void Link::AfterInit(void) { mInterface.Init(); }
 
 void Link::Enable(void)
 {
@@ -116,15 +113,7 @@ void Link::Send(void)
     mTxTasklet.Post();
 }
 
-void Link::HandleTxTasklet(Tasklet &aTasklet)
-{
-    aTasklet.Get<Link>().HandleTxTasklet();
-}
-
-void Link::HandleTxTasklet(void)
-{
-    BeginTransmit();
-}
+void Link::HandleTxTasklet(void) { BeginTransmit(); }
 
 void Link::BeginTransmit(void)
 {
@@ -132,9 +121,9 @@ void Link::BeginTransmit(void)
     Mac::PanId    destPanId;
     Header::Type  type;
     Packet        txPacket;
-    Neighbor *    neighbor   = nullptr;
-    Mac::RxFrame *ackFrame   = nullptr;
-    bool          isDisovery = false;
+    Neighbor     *neighbor    = nullptr;
+    Mac::RxFrame *ackFrame    = nullptr;
+    bool          isDiscovery = false;
 
     VerifyOrExit(mState == kStateTransmit);
 
@@ -181,14 +170,14 @@ void Link::BeginTransmit(void)
 
         if (!mTxFrame.GetSecurityEnabled())
         {
-            isDisovery = true;
+            isDiscovery = true;
         }
         else
         {
             uint8_t keyIdMode;
 
             IgnoreError(mTxFrame.GetKeyIdMode(keyIdMode));
-            isDisovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
+            isDiscovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
         }
     }
 
@@ -223,15 +212,15 @@ void Link::BeginTransmit(void)
 
     LogDebg("BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(), txPacket.GetPayloadLength());
 
-    VerifyOrExit(mInterface.Send(txPacket, isDisovery) == kErrorNone, InvokeSendDone(kErrorAbort));
+    VerifyOrExit(mInterface.Send(txPacket, isDiscovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
     if (mTxFrame.GetAckRequest())
     {
-        uint16_t fcf = Mac::Frame::kFcfFrameAck;
+        uint16_t fcf = Mac::Frame::kTypeAck;
 
         if (!Get<Mle::MleRouter>().IsRxOnWhenIdle())
         {
-            fcf |= Mac::Frame::kFcfFramePending;
+            fcf |= kFcfFramePending;
         }
 
         // Prepare the ack frame (FCF followed by sequence number)
@@ -245,7 +234,7 @@ void Link::BeginTransmit(void)
         mRxFrame.mRadioType = Mac::kRadioTypeTrel;
 #endif
         mRxFrame.mInfo.mRxInfo.mTimestamp             = 0;
-        mRxFrame.mInfo.mRxInfo.mRssi                  = OT_RADIO_RSSI_INVALID;
+        mRxFrame.mInfo.mRxInfo.mRssi                  = Radio::kInvalidRssi;
         mRxFrame.mInfo.mRxInfo.mLqi                   = OT_RADIO_LQI_NONE;
         mRxFrame.mInfo.mRxInfo.mAckedWithFramePending = false;
 
@@ -266,11 +255,6 @@ void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
     Get<Mac::Mac>().HandleTransmitDone(mTxFrame, aAckFrame, aError);
 }
 
-void Link::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Link>().HandleTimer();
-}
-
 void Link::HandleTimer(void)
 {
     mTimer.Start(kAckWaitWindow);
@@ -281,7 +265,7 @@ void Link::HandleTimer(void)
         HandleTimer(child);
     }
 
-    for (Router &router : Get<RouterTable>().Iterate())
+    for (Router &router : Get<RouterTable>())
     {
         HandleTimer(router);
     }
@@ -401,7 +385,7 @@ void Link::HandleAck(Packet &aAckPacket)
 {
     Error        ackError;
     Mac::Address srcAddress;
-    Neighbor *   neighbor;
+    Neighbor    *neighbor;
     uint32_t     ackNumber;
 
     LogDebg("HandleAck() [%s]", aAckPacket.GetHeader().ToString().AsCString());

@@ -110,10 +110,7 @@ namespace NonCrypto {
  * @returns    A random `uint32_t` value.
  *
  */
-inline uint32_t GetUint32(void)
-{
-    return Manager::NonCryptoGetUint32();
-}
+inline uint32_t GetUint32(void) { return Manager::NonCryptoGetUint32(); }
 
 /**
  * This function generates and returns a random byte.
@@ -121,10 +118,7 @@ inline uint32_t GetUint32(void)
  * @returns A random `uint8_t` value.
  *
  */
-inline uint8_t GetUint8(void)
-{
-    return static_cast<uint8_t>(GetUint32() & 0xff);
-}
+inline uint8_t GetUint8(void) { return static_cast<uint8_t>(GetUint32() & 0xff); }
 
 /**
  * This function generates and returns a random `uint16_t` value.
@@ -132,10 +126,7 @@ inline uint8_t GetUint8(void)
  * @returns A random `uint16_t` value.
  *
  */
-inline uint16_t GetUint16(void)
-{
-    return static_cast<uint16_t>(GetUint32() & 0xffff);
-}
+inline uint16_t GetUint16(void) { return static_cast<uint16_t>(GetUint32() & 0xffff); }
 
 /**
  * This function generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
@@ -209,10 +200,7 @@ namespace Crypto {
  * @retval kErrorNone    Successfully filled buffer with random values.
  *
  */
-inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize)
-{
-    return Manager::CryptoFillBuffer(aBuffer, aSize);
-}
+inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize) { return Manager::CryptoFillBuffer(aBuffer, aSize); }
 
 } // namespace Crypto
 

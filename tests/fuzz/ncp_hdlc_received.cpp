@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -35,12 +33,15 @@
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/ncp.h>
+#include <openthread/srp_server.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+#include "common/time.hpp"
 
 static int HdlcSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
@@ -50,12 +51,27 @@ static int HdlcSend(const uint8_t *aBuf, uint16_t aBufLength)
     return aBufLength;
 }
 
+void AdvanceTime(otInstance *aInstance, uint32_t aDuration)
+{
+    uint32_t time = otPlatAlarmMilliGetNow() + aDuration;
+
+    while (ot::TimeMilli(otPlatAlarmMilliGetNow()) <= ot::TimeMilli(time))
+    {
+        while (otTaskletsArePending(aInstance))
+        {
+            otTaskletsProcess(aInstance);
+        }
+
+        FuzzerPlatformProcess(aInstance);
+    }
+}
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
     otInstance *instance = nullptr;
-    uint8_t *   buf      = nullptr;
+    uint8_t    *buf      = nullptr;
 
     VerifyOrExit(size <= 65536);
 
@@ -66,25 +82,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     IgnoreError(otLinkSetPanId(instance, panId));
     IgnoreError(otIp6SetEnabled(instance, true));
     IgnoreError(otThreadSetEnabled(instance, true));
+    otSrpServerSetEnabled(instance, true);
     IgnoreError(otThreadBecomeLeader(instance));
 
+    AdvanceTime(instance, 10000);
+
     buf = static_cast<uint8_t *>(malloc(size));
-
     memcpy(buf, data, size);
-
     otNcpHdlcReceive(buf, static_cast<uint16_t>(size));
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
+    AdvanceTime(instance, 10000);
 
 exit:
 

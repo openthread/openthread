@@ -46,7 +46,7 @@ Uptime::Uptime(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mStartTime(TimerMilli::GetNow())
     , mOverflowCount(0)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
 {
     mTimer.FireAt(mStartTime + kTimerInterval);
 }
@@ -85,12 +85,7 @@ void Uptime::GetUptime(char *aBuffer, uint16_t aSize) const
 {
     StringWriter writer(aBuffer, aSize);
 
-    UptimeToString(GetUptime(), writer);
-}
-
-void Uptime::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Uptime>().HandleTimer();
+    UptimeToString(GetUptime(), writer, /* aIncludeMsec */ true);
 }
 
 void Uptime::HandleTimer(void)
@@ -103,7 +98,7 @@ void Uptime::HandleTimer(void)
     mTimer.FireAt(mTimer.GetFireTime() + kTimerInterval);
 }
 
-static uint32_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
+static uint16_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
 {
     // Returns the quotient of division `aDividend / aDivisor` and updates
     // `aDividend` to returns the remainder
@@ -112,20 +107,20 @@ static uint32_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
 
     aDividend -= quotient * aDivisor;
 
-    return quotient;
+    return static_cast<uint16_t>(quotient);
 }
 
-void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
+void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter, bool aIncludeMsec)
 {
     uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;
-    uint32_t hours;
-    uint32_t minutes;
-    uint32_t seconds;
+    uint16_t hours;
+    uint16_t minutes;
+    uint16_t seconds;
 
     if (days > 0)
     {
-        aWriter.Append("%lud.", days);
+        aWriter.Append("%lud.", static_cast<unsigned long>(days));
         aUptime -= days * Time::kOneDayInMsec;
     }
 
@@ -134,7 +129,12 @@ void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
     minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
     seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
 
-    aWriter.Append("%02u:%02u:%02u.%03u", hours, minutes, seconds, remainder);
+    aWriter.Append("%02u:%02u:%02u", hours, minutes, seconds);
+
+    if (aIncludeMsec)
+    {
+        aWriter.Append(".%03u", static_cast<uint16_t>(remainder));
+    }
 }
 
 } // namespace ot

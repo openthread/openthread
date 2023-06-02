@@ -35,7 +35,10 @@
 
 #include <openthread/config.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/diag.h>
 #include <openthread/platform/radio.h>
+
+#include "utils/code_utils.h"
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
@@ -45,25 +48,23 @@
  */
 static bool sDiagMode = false;
 
-void otPlatDiagModeSet(bool aMode)
+enum
 {
-    sDiagMode = aMode;
-}
+    SIM_GPIO = 0,
+};
 
-bool otPlatDiagModeGet()
-{
-    return sDiagMode;
-}
+static otGpioMode sGpioMode  = OT_GPIO_MODE_INPUT;
+static bool       sGpioValue = false;
+static uint8_t    sRawPowerSetting[OPENTHREAD_CONFIG_POWER_CALIBRATION_RAW_POWER_SETTING_SIZE];
+static uint16_t   sRawPowerSettingLength = 0;
 
-void otPlatDiagChannelSet(uint8_t aChannel)
-{
-    OT_UNUSED_VARIABLE(aChannel);
-}
+void otPlatDiagModeSet(bool aMode) { sDiagMode = aMode; }
 
-void otPlatDiagTxPowerSet(int8_t aTxPower)
-{
-    OT_UNUSED_VARIABLE(aTxPower);
-}
+bool otPlatDiagModeGet(void) { return sDiagMode; }
+
+void otPlatDiagChannelSet(uint8_t aChannel) { OT_UNUSED_VARIABLE(aChannel); }
+
+void otPlatDiagTxPowerSet(int8_t aTxPower) { OT_UNUSED_VARIABLE(aTxPower); }
 
 void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
@@ -72,9 +73,107 @@ void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otErro
     OT_UNUSED_VARIABLE(aError);
 }
 
-void otPlatDiagAlarmCallback(otInstance *aInstance)
+void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
+
+otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(aGpio == SIM_GPIO, error = OT_ERROR_INVALID_ARGS);
+    sGpioValue = aValue;
+
+exit:
+    return error;
 }
 
+otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
+{
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION((aGpio == SIM_GPIO) && (aValue != NULL), error = OT_ERROR_INVALID_ARGS);
+    *aValue = sGpioValue;
+
+exit:
+    return error;
+}
+
+otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode)
+{
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(aGpio == SIM_GPIO, error = OT_ERROR_INVALID_ARGS);
+    sGpioMode = aMode;
+
+exit:
+    return error;
+}
+
+otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
+{
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION((aGpio == SIM_GPIO) && (aMode != NULL), error = OT_ERROR_INVALID_ARGS);
+    *aMode = sGpioMode;
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
+                                          const uint8_t *aRawPowerSetting,
+                                          uint16_t       aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION((aRawPowerSetting != NULL) && (aRawPowerSettingLength <= sizeof(sRawPowerSetting)),
+                    error = OT_ERROR_INVALID_ARGS);
+    memcpy(sRawPowerSetting, aRawPowerSetting, aRawPowerSettingLength);
+    sRawPowerSettingLength = aRawPowerSettingLength;
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
+                                          uint8_t    *aRawPowerSetting,
+                                          uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION((aRawPowerSetting != NULL) && (aRawPowerSettingLength != NULL), error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION((sRawPowerSettingLength != 0), error = OT_ERROR_NOT_FOUND);
+    otEXPECT_ACTION((sRawPowerSettingLength <= *aRawPowerSettingLength), error = OT_ERROR_INVALID_ARGS);
+
+    memcpy(aRawPowerSetting, sRawPowerSetting, sRawPowerSettingLength);
+    *aRawPowerSettingLength = sRawPowerSettingLength;
+
+exit:
+    return error;
+}
+
+otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NONE;
+}
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

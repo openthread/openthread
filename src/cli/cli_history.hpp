@@ -50,7 +50,7 @@ namespace Cli {
  * This class implements the History Tracker CLI interpreter.
  *
  */
-class History : private OutputWrapper
+class History : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -58,11 +58,12 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit History(Output &aOutput)
-        : OutputWrapper(aOutput)
+    History(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+        : Output(aInstance, aOutputImplementer)
     {
     }
 

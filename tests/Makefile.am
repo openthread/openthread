@@ -31,8 +31,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    unit                                  \
-    scripts                               \
     fuzz                                  \
     $(NULL)
 
@@ -41,49 +39,8 @@ DIST_SUBDIRS                            = \
 SUBDIRS                                 = \
     $(NULL)
 
-SUBDIRS                                += \
-    unit                                  \
-    $(NULL)
-
-if OPENTHREAD_POSIX
-if OPENTHREAD_ENABLE_CLI
-SUBDIRS                                += \
-    scripts                               \
-    $(NULL)
-endif
-endif
-
 if OPENTHREAD_ENABLE_FUZZ_TARGETS
 SUBDIRS                                += fuzz
 endif
-
-if OPENTHREAD_BUILD_TESTS
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                             = $(wildcard *.gcda *.gcno)
-
-if OPENTHREAD_BUILD_COVERAGE_REPORTS
-# The bundle should positively be qualified with the absolute build
-# path. Otherwise, VPATH will get auto-prefixed to it if there is
-# already such a directory in the non-colocated source tree.
-
-OPENTHREAD_COVERAGE_BUNDLE             = ${abs_builddir}/${PACKAGE}${NL_COVERAGE_BUNDLE_SUFFIX}
-OPENTHREAD_COVERAGE_INFO               = ${OPENTHREAD_COVERAGE_BUNDLE}/${PACKAGE}${NL_COVERAGE_INFO_SUFFIX}
-
-$(OPENTHREAD_COVERAGE_BUNDLE):
-	$(call create-directory)
-
-$(OPENTHREAD_COVERAGE_INFO): check | $(dir $(OPENTHREAD_COVERAGE_INFO))
-	$(call generate-coverage-report,${top_builddir})
-
-coverage-local: $(OPENTHREAD_COVERAGE_INFO)
-
-clean-local: clean-local-coverage
-
-.PHONY: clean-local-coverage
-clean-local-coverage:
-	-$(AM_V_at)rm -rf $(OPENTHREAD_COVERAGE_BUNDLE)
-endif # OPENTHREAD_BUILD_COVERAGE_REPORTS
-endif # OPENTHREAD_BUILD_COVERAGE
-endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

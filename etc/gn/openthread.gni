@@ -84,6 +84,9 @@ if (openthread_enable_core_config_args) {
     # Enable border agent support
     openthread_config_border_agent_enable = false
 
+    # Enable border agent ID
+    openthread_config_border_agent_id_enable = false
+
     # Enable border router support
     openthread_config_border_router_enable = false
 
@@ -174,8 +177,8 @@ if (openthread_enable_core_config_args) {
     # Enable MLE long routes extension (experimental, breaks Thread conformance]
     openthread_config_mle_long_routes_enable = false
 
-    # Enable TMF network diagnostics on MTDs
-    openthread_config_tmf_network_diag_mtd_enable = false
+    # Enable TMF network diagnostics client
+    openthread_config_tmf_netdiag_client_enable = false
 
     # Enable multiple instances
     openthread_config_multiple_instance_enable = false

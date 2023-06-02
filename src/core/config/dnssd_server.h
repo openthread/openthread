@@ -75,4 +75,15 @@
 #define OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT 6000
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+ *
+ * Define to 1 to enable upstream forwarding support. The platform MUST implement `otPlatDnsStartUpstreamQuery` and
+ * `otPlatDnsCancelUpstreamQuery`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#define OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE 0
+#endif
+
 #endif // CONFIG_DNSSD_SERVER_H_

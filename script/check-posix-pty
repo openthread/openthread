@@ -112,7 +112,8 @@ do_check()
     $RADIO_NCP_PATH 1 >"$RADIO_PTY" <"$RADIO_PTY" &
 
     # Cover setting a valid network interface name.
-    readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    VALID_NETIF_NAME="wan$(date +%H%M%S)"
+    readonly VALID_NETIF_NAME
 
     RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
@@ -140,7 +141,8 @@ do_check()
         # sleep a while for daemon ready
         sleep 2
 
-        readonly OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH=640
+        OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH=640
+        readonly OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
         local -r kMaxStringLength="$((OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH - 1))"
 
         # verify success if command length doesn't exceed the limit
@@ -160,7 +162,8 @@ do_check()
 
         # Cover setting a too long(max is 15 characters) network interface name.
         # Expect exit code to be 2(OT_EXIT_INVALID_ARGUMENTS).
-        readonly INVALID_NETIF_NAME="wan0123456789123"
+        INVALID_NETIF_NAME="wan0123456789123"
+        readonly INVALID_NETIF_NAME
         sudo "${OT_CLI}" -I "${INVALID_NETIF_NAME}" -n "${RADIO_URL}" || test $? = 2
 
         OT_CLI_CMD="$PWD/build/posix/src/posix/ot-cli ${RADIO_URL}"

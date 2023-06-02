@@ -101,7 +101,7 @@ verify(node.get(wpan.WPAN_CHANNEL_MANAGER_AUTO_SELECT_ENABLED) == 'true')
 node.reset()
 
 start_time = time.time()
-wait_time = 20
+wait_time = 50
 
 while node.get(wpan.WPAN_STATE) != wpan.STATE_ASSOCIATED:
     if time.time() - start_time > wait_time:

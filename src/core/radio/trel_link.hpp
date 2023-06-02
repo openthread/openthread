@@ -153,6 +153,7 @@ private:
     static constexpr uint16_t k154AckFrameSize = 3 + kFcsSize;
     static constexpr int8_t   kRxRssi          = -20; // The RSSI value used for received frames on TREL radio link.
     static constexpr uint32_t kAckWaitWindow   = 750; // (in msec)
+    static constexpr uint16_t kFcfFramePending = 1 << 4;
 
     enum State : uint8_t
     {
@@ -173,21 +174,20 @@ private:
     void ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError);
     void HandleTimer(Neighbor &aNeighbor);
     void HandleNotifierEvents(Events aEvents);
-
-    static void HandleTxTasklet(Tasklet &aTasklet);
-    void        HandleTxTasklet(void);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTxTasklet(void);
+    void HandleTimer(void);
 
     static const char *StateToString(State aState);
+
+    using TxTasklet    = TaskletIn<Link, &Link::HandleTxTasklet>;
+    using TimeoutTimer = TimerMilliIn<Link, &Link::HandleTimer>;
 
     State        mState;
     uint8_t      mRxChannel;
     Mac::PanId   mPanId;
     uint32_t     mTxPacketNumber;
-    Tasklet      mTxTasklet;
-    TimerMilli   mTimer;
+    TxTasklet    mTxTasklet;
+    TimeoutTimer mTimer;
     Interface    mInterface;
     Mac::RxFrame mRxFrame;
     Mac::TxFrame mTxFrame;

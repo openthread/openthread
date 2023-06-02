@@ -126,39 +126,9 @@ public:
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
      *
      */
-    void RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
+    void RegisterPeekPokeDelegates(otNcpDelegateAllowPeekPoke aAllowPeekDelegate,
                                    otNcpDelegateAllowPeekPoke aAllowPokeDelegate);
 #endif
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    /**
-     * This callback is invoked by the legacy stack to notify that a new
-     * legacy node did join the network.
-     *
-     * @param[in]   aExtAddr    The extended address of the joined node.
-     *
-     */
-    void HandleLegacyNodeDidJoin(const otExtAddress *aExtAddr);
-
-    /**
-     * This callback is invoked by the legacy stack to notify that the
-     * legacy ULA prefix has changed.
-     *
-     * param[in]    aUlaPrefix  The changed ULA prefix.
-     *
-     */
-    void HandleDidReceiveNewLegacyUlaPrefix(const uint8_t *aUlaPrefix);
-
-    /**
-     * This method registers a set of legacy handlers with NCP.
-     *
-     * @param[in] aHandlers    A pointer to a handler struct.
-     *
-     */
-    void RegisterLegacyHandlers(const otNcpLegacyHandlers *aHandlers);
-#endif
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
      * This method is called by the framer whenever a framing error is detected.
@@ -237,7 +207,7 @@ protected:
     otError WritePropertyValueInsertedRemovedFrame(uint8_t           aHeader,
                                                    unsigned int      aResponseCommand,
                                                    spinel_prop_key_t aPropKey,
-                                                   const uint8_t *   aValuePtr,
+                                                   const uint8_t    *aValuePtr,
                                                    uint16_t          aValueLen);
 
     otError SendQueuedResponses(void);
@@ -262,10 +232,10 @@ protected:
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
 
-    static void HandleFrameRemovedFromNcpBuffer(void *                   aContext,
+    static void HandleFrameRemovedFromNcpBuffer(void                    *aContext,
                                                 Spinel::Buffer::FrameTag aFrameTag,
                                                 Spinel::Buffer::Priority aPriority,
-                                                Spinel::Buffer *         aNcpBuffer);
+                                                Spinel::Buffer          *aNcpBuffer);
     void        HandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     otError EncodeChannelMask(uint32_t aChannelMask);
@@ -277,7 +247,7 @@ protected:
     static void LinkRawReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError);
     void        LinkRawReceiveDone(otRadioFrame *aFrame, otError aError);
 
-    static void LinkRawTransmitDone(otInstance *  aInstance,
+    static void LinkRawTransmitDone(otInstance   *aInstance,
                                     otRadioFrame *aFrame,
                                     otRadioFrame *aAckFrame,
                                     otError       aError);
@@ -302,8 +272,10 @@ protected:
     static void HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry);
     void        HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo &aEntry);
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     static void HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext);
     void        HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo);
+#endif
 #endif
 
     static void HandleDatagramFromStack(otMessage *aMessage, void *aContext);
@@ -325,7 +297,7 @@ protected:
     static void HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                     const uint8_t *aEnergyData,
                                                     uint8_t        aLength,
-                                                    void *         aContext);
+                                                    void          *aContext);
     void        HandleCommissionerEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyData, uint8_t aLength);
 
     static void HandleCommissionerPanIdConflict_Jump(uint16_t aPanId, uint32_t aChannelMask, void *aContext);
@@ -338,12 +310,12 @@ protected:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    static void HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
+    static void HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
                                              const otLinkMetricsValues *aMetricsValues,
                                              uint8_t                    aStatus,
-                                             void *                     aContext);
+                                             void                      *aContext);
 
-    void HandleLinkMetricsReport(const otIp6Address *       aSource,
+    void HandleLinkMetricsReport(const otIp6Address        *aSource,
                                  const otLinkMetricsValues *aMetricsValues,
                                  uint8_t                    aStatus);
 
@@ -352,16 +324,16 @@ protected:
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus);
 
     static void HandleLinkMetricsEnhAckProbingIeReport_Jump(otShortAddress             aShortAddress,
-                                                            const otExtAddress *       aExtAddress,
+                                                            const otExtAddress        *aExtAddress,
                                                             const otLinkMetricsValues *aMetricsValues,
-                                                            void *                     aContext);
+                                                            void                      *aContext);
 
     void HandleLinkMetricsEnhAckProbingIeReport(otShortAddress             aShortAddress,
-                                                const otExtAddress *       aExtAddress,
+                                                const otExtAddress        *aExtAddress,
                                                 const otLinkMetricsValues *aMetricsValues);
 #endif
 
-    static void HandleMlrRegResult_Jump(void *              aContext,
+    static void HandleMlrRegResult_Jump(void               *aContext,
                                         otError             aError,
                                         uint8_t             aMlrStatus,
                                         const otIp6Address *aFailedAddresses,
@@ -374,9 +346,9 @@ protected:
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
-                                     const uint8_t **      aTlvs             = nullptr,
-                                     uint8_t *             aTlvsLength       = nullptr,
-                                     const otIp6Address ** aDestIpAddress    = nullptr,
+                                     const uint8_t       **aTlvs             = nullptr,
+                                     uint8_t              *aTlvsLength       = nullptr,
+                                     const otIp6Address  **aDestIpAddress    = nullptr,
                                      bool                  aAllowEmptyValues = false);
 
     otError EncodeNeighborInfo(const otNeighborInfo &aNeighborInfo);
@@ -393,11 +365,11 @@ protected:
 #endif
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    static void HandleUdpForwardStream(otMessage *   aMessage,
+    static void HandleUdpForwardStream(otMessage    *aMessage,
                                        uint16_t      aPeerPort,
                                        otIp6Address *aPeerAddr,
                                        uint16_t      aSockPort,
-                                       void *        aContext);
+                                       void         *aContext);
     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
 #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -485,14 +457,6 @@ protected:
 
     void ResetCounters(void);
 
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    void StartLegacy(void);
-    void StopLegacy(void);
-#else
-    void StartLegacy(void) {}
-    void StopLegacy(void) {}
-#endif
-
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
     static unsigned int ConvertLogRegion(otLogRegion aLogRegion);
 
@@ -563,10 +527,10 @@ protected:
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
 
 protected:
-    static NcpBase *       sNcpInstance;
+    static NcpBase        *sNcpInstance;
     static spinel_status_t ThreadErrorToSpinelStatus(otError aError);
     static uint8_t         LinkFlagsToFlagByte(bool aRxOnWhenIdle, bool aDeviceType, bool aNetworkData);
-    Instance *             mInstance;
+    Instance              *mInstance;
     Spinel::Buffer         mTxFrameBuffer;
     Spinel::Encoder        mEncoder;
     Spinel::Decoder        mDecoder;
@@ -651,23 +615,17 @@ protected:
 
     static void HandleSrpClientCallback(otError                    aError,
                                         const otSrpClientHostInfo *aHostInfo,
-                                        const otSrpClientService * aServices,
-                                        const otSrpClientService * aRemovedServices,
-                                        void *                     aContext);
+                                        const otSrpClientService  *aServices,
+                                        const otSrpClientService  *aRemovedServices,
+                                        void                      *aContext);
     void        HandleSrpClientCallback(otError                    aError,
                                         const otSrpClientHostInfo *aHostInfo,
-                                        const otSrpClientService * aServices,
-                                        const otSrpClientService * aRemovedServices);
+                                        const otSrpClientService  *aServices,
+                                        const otSrpClientService  *aRemovedServices);
 
     bool mSrpClientCallbackEnabled;
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
-#if OPENTHREAD_CONFIG_LEGACY_ENABLE
-    const otNcpLegacyHandlers *mLegacyHandlers;
-    uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];
-    otExtAddress               mLegacyLastJoinedNode;
-    bool                       mLegacyNodeDidJoin;
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     uint32_t mFramingErrorCounter;          // Number of improperly formed received spinel frames.

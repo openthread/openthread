@@ -52,9 +52,9 @@ extern "C" {
 typedef struct otCliCommand
 {
     const char *mName; ///< A pointer to the command string.
-    void (*mCommand)(void *  aContext,
-                     uint8_t aArgsLength,
-                     char *  aArgs[]); ///< A function pointer to process the command.
+    otError (*mCommand)(void   *aContext,
+                        uint8_t aArgsLength,
+                        char   *aArgs[]); ///< A function pointer to process the command.
 } otCliCommand;
 
 /**
@@ -104,8 +104,10 @@ void otCliInputLine(char *aBuf);
  * @param[in]  aLength        @p aUserCommands length.
  * @param[in]  aContext       @p The context passed to the handler.
  *
+ * @retval OT_ERROR_NONE    Successfully updated command table with commands from @p aUserCommands.
+ * @retval OT_ERROR_FAILED  Maximum number of command entries have already been set.
  */
-void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
+otError otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext);
 
 /**
  * Write a number of bytes to the CLI console as a hex string.

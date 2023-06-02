@@ -37,6 +37,9 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
+#include "net/ip4_types.hpp"
+#include "net/ip6_headers.hpp"
+#include "thread/network_data_leader.hpp"
 #include "utils/slaac_address.hpp"
 
 using namespace ot;
@@ -65,10 +68,7 @@ exit:
     return error;
 }
 
-bool otIp6IsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<ThreadNetif>().IsUp();
-}
+bool otIp6IsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<ThreadNetif>().IsUp(); }
 
 const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
 {
@@ -133,7 +133,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
     return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage),
-                                                         !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+                                                         OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)
@@ -141,14 +141,13 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
     return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(0, Message::Settings::From(aSettings));
 }
 
-otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
-                                     const uint8_t *          aData,
+otMessage *otIp6NewMessageFromBuffer(otInstance              *aInstance,
+                                     const uint8_t           *aData,
                                      uint16_t                 aDataLength,
                                      const otMessageSettings *aSettings)
 {
-    return (aSettings != nullptr)
-               ? AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(aData, aDataLength, AsCoreType(aSettings))
-               : AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessage(aData, aDataLength);
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().NewMessageFromData(aData, aDataLength,
+                                                                    Message::Settings::From(aSettings));
 }
 
 otError otIp6AddUnsecurePort(otInstance *aInstance, uint16_t aPort)
@@ -168,6 +167,8 @@ void otIp6RemoveAllUnsecurePorts(otInstance *aInstance)
 
 const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntries)
 {
+    AssertPointerIsNotNull(aNumEntries);
+
     return AsCoreType(aInstance).Get<Ip6::Filter>().GetUnsecurePorts(*aNumEntries);
 }
 
@@ -186,53 +187,56 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
     return AsCoreType(aAddress).FromString(aString);
 }
 
+otError otIp6PrefixFromString(const char *aString, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aPrefix).FromString(aString);
+}
+
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aAddress).ToString(aBuffer, aSize);
 }
 
 void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aSockAddr).ToString(aBuffer, aSize);
 }
 
 void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
 {
+    AssertPointerIsNotNull(aBuffer);
+
     AsCoreType(aPrefix).ToString(aBuffer, aSize);
 }
 
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
-    OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
-
     return AsCoreType(aFirst).PrefixMatch(AsCoreType(aSecond));
 }
 
-bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
+void otIp6GetPrefix(const otIp6Address *aAddress, uint8_t aLength, otIp6Prefix *aPrefix)
 {
-    return AsCoreType(aAddress).IsUnspecified();
+    AsCoreType(aAddress).GetPrefix(aLength, AsCoreType(aPrefix));
 }
+
+bool otIp6IsAddressUnspecified(const otIp6Address *aAddress) { return AsCoreType(aAddress).IsUnspecified(); }
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
-    Error                             error = kErrorNone;
-    const Ip6::Netif::UnicastAddress *netifAddr;
-
-    netifAddr = AsCoreType(aInstance).Get<Ip6::Ip6>().SelectSourceAddress(AsCoreType(aMessageInfo));
-    VerifyOrExit(netifAddr != nullptr, error = kErrorNotFound);
-    aMessageInfo->mSockAddr = netifAddr->GetAddress();
-
-exit:
-    return error;
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().SelectSourceAddress(AsCoreType(aMessageInfo));
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-otError otIp6RegisterMulticastListeners(otInstance *                            aInstance,
-                                        const otIp6Address *                    aAddresses,
+otError otIp6RegisterMulticastListeners(otInstance                             *aInstance,
+                                        const otIp6Address                     *aAddresses,
                                         uint8_t                                 aAddressNum,
-                                        const uint32_t *                        aTimeout,
+                                        const uint32_t                         *aTimeout,
                                         otIp6RegisterMulticastListenersCallback aCallback,
-                                        void *                                  aContext)
+                                        void                                   *aContext)
 {
     return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(aAddresses, aAddressNum, aTimeout,
                                                                               aCallback, aContext);
@@ -241,10 +245,7 @@ otError otIp6RegisterMulticastListeners(otInstance *                            
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
-bool otIp6IsSlaacEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Utils::Slaac>().IsEnabled();
-}
+bool otIp6IsSlaacEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Utils::Slaac>().IsEnabled(); }
 
 void otIp6SetSlaacEnabled(otInstance *aInstance, bool aEnabled)
 {
@@ -276,7 +277,16 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 
 #endif
 
-const char *otIp6ProtoToString(uint8_t aIpProto)
+const char *otIp6ProtoToString(uint8_t aIpProto) { return Ip6::Ip6::IpProtoToString(aIpProto); }
+
+#if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
+const otBorderRoutingCounters *otIp6GetBorderRoutingCounters(otInstance *aInstance)
 {
-    return Ip6::Ip6::IpProtoToString(aIpProto);
+    return &AsCoreType(aInstance).Get<Ip6::Ip6>().GetBorderRoutingCounters();
 }
+
+void otIp6ResetBorderRoutingCounters(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().ResetBorderRoutingCounters();
+}
+#endif

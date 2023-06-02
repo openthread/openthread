@@ -37,6 +37,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/num_utils.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
 
@@ -53,26 +54,26 @@ RegisterLogModule("Settings");
 
 void SettingsBase::NetworkInfo::Log(Action aAction) const
 {
-    LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%hu, keyseq:0x%x, ...",
+    LogInfo("%s NetworkInfo {rloc:0x%04x, extaddr:%s, role:%s, mode:0x%02x, version:%u, keyseq:0x%lx, ...",
             ActionToString(aAction), GetRloc16(), GetExtAddress().ToString().AsCString(),
-            Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
-            GetKeySequence());
+            Mle::RoleToString(static_cast<Mle::DeviceRole>(GetRole())), GetDeviceMode(), GetVersion(),
+            ToUlong(GetKeySequence()));
 
-    LogInfo("... pid:0x%x, mlecntr:0x%x, maccntr:0x%x, mliid:%s}", GetPreviousPartitionId(), GetMleFrameCounter(),
-            GetMacFrameCounter(), GetMeshLocalIid().ToString().AsCString());
+    LogInfo("... pid:0x%lx, mlecntr:0x%lx, maccntr:0x%lx, mliid:%s}", ToUlong(GetPreviousPartitionId()),
+            ToUlong(GetMleFrameCounter()), ToUlong(GetMacFrameCounter()), GetMeshLocalIid().ToString().AsCString());
 }
 
 void SettingsBase::ParentInfo::Log(Action aAction) const
 {
-    LogInfo("%s ParentInfo {extaddr:%s, version:%hu}", ActionToString(aAction), GetExtAddress().ToString().AsCString(),
+    LogInfo("%s ParentInfo {extaddr:%s, version:%u}", ActionToString(aAction), GetExtAddress().ToString().AsCString(),
             GetVersion());
 }
 
 #if OPENTHREAD_FTD
 void SettingsBase::ChildInfo::Log(Action aAction) const
 {
-    LogInfo("%s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", ActionToString(aAction),
-            GetRloc16(), GetExtAddress().ToString().AsCString(), GetTimeout(), GetMode(), GetVersion());
+    LogInfo("%s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%lu, mode:0x%02x, version:%u}", ActionToString(aAction),
+            GetRloc16(), GetExtAddress().ToString().AsCString(), ToUlong(GetTimeout()), GetMode(), GetVersion());
 }
 #endif
 
@@ -104,6 +105,28 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
     LogInfo("%s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
 }
 #endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+Error SettingsBase::BorderAgentId::SetId(const uint8_t *aId, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength == sizeof(mId), error = kErrorInvalidArgs);
+    memcpy(mId, aId, aLength);
+
+exit:
+    return error;
+}
+
+void SettingsBase::BorderAgentId::Log(Action aAction) const
+{
+    char         buffer[sizeof(BorderAgentId) * 2 + 1];
+    StringWriter sw(buffer, sizeof(buffer));
+
+    sw.AppendHexBytes(GetId(), sizeof(BorderAgentId));
+    LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), buffer);
+}
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -156,6 +179,8 @@ const char *SettingsBase::KeyToString(Key aKey)
         "SrpServerInfo",     // (13) kKeySrpServerInfo
         "",                  // (14) Removed (previously NAT64 prefix)
         "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
+        "BrOnLinkPrefixes",  // (16) kKeyBrOnLinkPrefixes
+        "BorderAgentId"      // (17) kKeyBorderAgentId
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -169,8 +194,10 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
     static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
+    static_assert(16 == kKeyBrOnLinkPrefixes, "kKeyBrOnLinkPrefixes is incorrect");
+    static_assert(17 == kKeyBorderAgentId, "kKeyBorderAgentId is incorrect");
 
-    static_assert(kLastKey == kKeyBrUlaPrefix, "kLastKey is not valid");
+    static_assert(kLastKey == kKeyBorderAgentId, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -190,15 +217,9 @@ const uint16_t Settings::kSensitiveKeys[] = {
     SettingsBase::kKeySrpEcdsaKey,
 };
 
-void Settings::Init(void)
-{
-    Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys));
-}
+void Settings::Init(void) { Get<SettingsDriver>().Init(kSensitiveKeys, GetArrayLength(kSensitiveKeys)); }
 
-void Settings::Deinit(void)
-{
-    Get<SettingsDriver>().Deinit();
-}
+void Settings::Deinit(void) { Get<SettingsDriver>().Deinit(); }
 
 void Settings::Wipe(void)
 {
@@ -307,6 +328,80 @@ exit:
     mIsDone = (error != kErrorNone);
 }
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+Error Settings::AddOrUpdateBrOnLinkPrefix(const BrOnLinkPrefix &aBrOnLinkPrefix)
+{
+    Error          error = kErrorNone;
+    int            index = 0;
+    BrOnLinkPrefix brPrefix;
+    bool           didUpdate = false;
+
+    while (ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone)
+    {
+        if (brPrefix.GetPrefix() == aBrOnLinkPrefix.GetPrefix())
+        {
+            if (brPrefix.GetLifetime() == aBrOnLinkPrefix.GetLifetime())
+            {
+                // Existing entry fully matches `aBrOnLinkPrefix`.
+                // No need to make any changes.
+                ExitNow();
+            }
+
+            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            didUpdate = true;
+            break;
+        }
+
+        index++;
+    }
+
+    SuccessOrExit(error = Get<SettingsDriver>().Add(kKeyBrOnLinkPrefixes, &aBrOnLinkPrefix, sizeof(BrOnLinkPrefix)));
+    brPrefix.Log(didUpdate ? "Updated" : "Added");
+
+exit:
+    return error;
+}
+
+Error Settings::RemoveBrOnLinkPrefix(const Ip6::Prefix &aPrefix)
+{
+    Error          error = kErrorNotFound;
+    BrOnLinkPrefix brPrefix;
+
+    for (int index = 0; ReadBrOnLinkPrefix(index, brPrefix) == kErrorNone; index++)
+    {
+        if (brPrefix.GetPrefix() == aPrefix)
+        {
+            SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes, index));
+            brPrefix.Log("Removed");
+            break;
+        }
+    }
+
+exit:
+    return error;
+}
+
+Error Settings::DeleteAllBrOnLinkPrefixes(void) { return Get<SettingsDriver>().Delete(kKeyBrOnLinkPrefixes); }
+
+Error Settings::ReadBrOnLinkPrefix(int aIndex, BrOnLinkPrefix &aBrOnLinkPrefix)
+{
+    uint16_t length = sizeof(BrOnLinkPrefix);
+
+    aBrOnLinkPrefix.Init();
+
+    return Get<SettingsDriver>().Get(kKeyBrOnLinkPrefixes, aIndex, &aBrOnLinkPrefix, &length);
+}
+
+void Settings::BrOnLinkPrefix::Log(const char *aActionText) const
+{
+    OT_UNUSED_VARIABLE(aActionText);
+
+    LogInfo("%s %s entry {prefix:%s,lifetime:%lu}", aActionText, KeyToString(kKeyBrOnLinkPrefixes),
+            GetPrefix().ToString().AsCString(), ToUlong(GetLifetime()));
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 Error Settings::ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const
 {
@@ -444,6 +539,12 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         case kKeySrpServerInfo:
             reinterpret_cast<const SrpServerInfo *>(aValue)->Log(aAction);
+            break;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+        case kKeyBorderAgentId:
+            reinterpret_cast<const BorderAgentId *>(aValue)->Log(aAction);
             break;
 #endif
 

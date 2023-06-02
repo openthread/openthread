@@ -60,7 +60,7 @@ static constexpr uint16_t kSkipRetainCountCheck = 0xffff;
 
 template <typename PointerType>
 void VerifyPointer(const PointerType &aPointer,
-                   const TestObject * aObject,
+                   const TestObject  *aObject,
                    uint16_t           aRetainCount = kSkipRetainCountCheck)
 {
     if (aObject == nullptr)

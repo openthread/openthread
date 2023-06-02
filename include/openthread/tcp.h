@@ -63,7 +63,7 @@ extern "C" {
 typedef struct otLinkedBuffer
 {
     struct otLinkedBuffer *mNext;   ///< Pointer to the next linked buffer in the chain, or NULL if it is the end.
-    const uint8_t *        mData;   ///< Pointer to data referenced by this linked buffer.
+    const uint8_t         *mData;   ///< Pointer to data referenced by this linked buffer.
     size_t                 mLength; ///< Length of this linked buffer (number of bytes).
 } otLinkedBuffer;
 
@@ -249,7 +249,7 @@ struct otTcpEndpoint
     } mTcb;
 
     struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
-    void *                mContext; ///< A pointer to application-specific context
+    void                 *mContext; ///< A pointer to application-specific context
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
@@ -279,7 +279,7 @@ typedef struct otTcpEndpointInitializeArgs
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
-    void * mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
+    void  *mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
     size_t mReceiveBufferSize; ///< Size of memory provided to the system for the TCP receive buffer
 } otTcpEndpointInitializeArgs;
 
@@ -294,7 +294,7 @@ typedef struct otTcpEndpointInitializeArgs
  * select a smaller buffer size.
  *
  */
-#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2599
+#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2598
 
 /**
  * @def OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS
@@ -306,7 +306,7 @@ typedef struct otTcpEndpointInitializeArgs
  * so), then it may be advisable to select a large buffer size manually.
  *
  */
-#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4158
+#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4157
 
 /**
  * Initializes a TCP endpoint.
@@ -325,8 +325,8 @@ typedef struct otTcpEndpointInitializeArgs
  * @retval OT_ERROR_FAILED  Failed to open the TCP endpoint.
  *
  */
-otError otTcpEndpointInitialize(otInstance *                       aInstance,
-                                otTcpEndpoint *                    aEndpoint,
+otError otTcpEndpointInitialize(otInstance                        *aInstance,
+                                otTcpEndpoint                     *aEndpoint,
                                 const otTcpEndpointInitializeArgs *aArgs);
 
 /**
@@ -401,11 +401,11 @@ enum
 /**
  * Records the remote host and port for this connection.
  *
- * By default TCP Fast Open is used. This means that this function merely
- * records the remote host and port, and that the TCP connection establishment
- * handshake only happens on the first call to otTcpSendByReference(). TCP Fast
- * Open can be explicitly disabled using @p aFlags, in which case the TCP
- * connection establishment handshake is initiated immediately.
+ * Caller must wait for `otTcpEstablished` callback indicating that TCP
+ * connection establishment handshake is done before it can start sending data
+ * e.g., calling `otTcpSendByReference()`.
+ *
+ * The TCP Fast Open is not yet supported and @p aFlags is ignored.
  *
  * @param[in]  aEndpoint  A pointer to the TCP endpoint structure to connect.
  * @param[in]  aSockName  The IP address and port of the host to which to connect.
@@ -624,9 +624,9 @@ typedef enum otTcpIncomingConnectionAction
  * @returns  Description of how to handle the incoming connection.
  *
  */
-typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener *   aListener,
+typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener    *aListener,
                                                           const otSockAddr *aPeer,
-                                                          otTcpEndpoint **  aAcceptInto);
+                                                          otTcpEndpoint   **aAcceptInto);
 
 /**
  * This callback indicates that the TCP connection is now ready for two-way
@@ -670,11 +670,11 @@ struct otTcpListener
     union
     {
         uint8_t mSize[OT_TCP_LISTENER_TCB_SIZE_BASE + OT_TCP_LISTENER_TCB_NUM_PTR * sizeof(void *)];
-        void *  mAlign;
+        void   *mAlign;
     } mTcbListen;
 
     struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
-    void *                mContext; ///< A pointer to application-specific context
+    void                 *mContext; ///< A pointer to application-specific context
 
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
@@ -709,8 +709,8 @@ typedef struct otTcpListenerInitializeArgs
  * @retval OT_ERROR_FAILED  Failed to open the TCP listener.
  *
  */
-otError otTcpListenerInitialize(otInstance *                       aInstance,
-                                otTcpListener *                    aListener,
+otError otTcpListenerInitialize(otInstance                        *aInstance,
+                                otTcpListener                     *aListener,
                                 const otTcpListenerInitializeArgs *aArgs);
 
 /**

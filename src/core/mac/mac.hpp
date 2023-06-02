@@ -71,8 +71,9 @@ class Neighbor;
 
 namespace Mac {
 
-constexpr uint32_t kDataPollTimeout = 100; ///< Timeout for receiving Data Frame (in msec).
-constexpr uint32_t kSleepDelay      = 300; ///< Max sleep delay when frame is pending (in msec).
+constexpr uint32_t kDataPollTimeout =
+    OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT; ///< Timeout for receiving Data Frame (in msec).
+constexpr uint32_t kSleepDelay = 300;        ///< Max sleep delay when frame is pending (in msec)
 
 constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
 
@@ -412,7 +413,7 @@ public:
      *
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   const RxFrame *aAckFrame,
+                                   RxFrame       *aAckFrame,
                                    Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);
@@ -546,7 +547,17 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void) { return mLinks.GetNoiseFloor(); }
+    int8_t GetNoiseFloor(void) const { return mLinks.GetNoiseFloor(); }
+
+    /**
+     * This method computes the link margin for a given a received signal strength value using noise floor.
+     *
+     * @param[in] aRss The received signal strength in dBm.
+     *
+     * @returns The link margin for @p aRss in dB based on noise floor.
+     *
+     */
+    uint8_t ComputeLinkMargin(int8_t aRss) const;
 
     /**
      * This method returns the current CCA (Clear Channel Assessment) failure rate.
@@ -575,6 +586,12 @@ public:
      *
      */
     bool IsEnabled(void) const { return mEnabled; }
+
+    /**
+     * This method clears the Mode2Key stored in PSA ITS.
+     *
+     */
+    void ClearMode2Key(void) { mMode2KeyMaterial.Clear(); }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -606,6 +623,14 @@ public:
      *
      */
     uint16_t GetCslPeriod(void) const { return mCslPeriod; }
+
+    /**
+     * This method gets the CSL period.
+     *
+     * @returns CSL period in milliseconds.
+     *
+     */
+    uint32_t GetCslPeriodMs(void) const { return mCslPeriod * kUsPerTenSymbols / 1000; }
 
     /**
      * This method sets the CSL period.
@@ -643,42 +668,24 @@ public:
     bool IsCslSupported(void) const;
 
     /**
-     * This method returns CSL parent clock accuracy, in ± ppm.
+     * This method returns parent CSL accuracy (clock accuracy and uncertainty).
      *
-     * @retval CSL parent clock accuracy, in ± ppm.
+     * @returns The parent CSL accuracy.
      *
      */
-    uint8_t GetCslParentClockAccuracy(void) const { return mLinks.GetSubMac().GetCslParentClockAccuracy(); }
+    const CslAccuracy &GetCslParentAccuracy(void) const { return mLinks.GetSubMac().GetCslParentAccuracy(); }
 
     /**
-     * This method sets CSL parent clock accuracy, in ± ppm.
+     * This method sets parent CSL accuracy.
      *
-     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     * @param[in] aCslAccuracy  The parent CSL accuracy.
      *
      */
-    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy)
+    void SetCslParentAccuracy(const CslAccuracy &aCslAccuracy)
     {
-        mLinks.GetSubMac().SetCslParentClockAccuracy(aCslParentAccuracy);
+        mLinks.GetSubMac().SetCslParentAccuracy(aCslAccuracy);
     }
 
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @retval CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    uint8_t GetCslParentUncertainty(void) const { return mLinks.GetSubMac().GetCslParentUncertainty(); }
-
-    /**
-     * This method returns CSL parent uncertainty, in ±10 us units.
-     *
-     * @param[in] aCslParentUncert  CSL parent uncertainty, in ±10 us units.
-     *
-     */
-    void SetCslParentUncertainty(uint8_t aCslParentUncert)
-    {
-        mLinks.GetSubMac().SetCslParentUncertainty(aCslParentUncert);
-    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -705,7 +712,6 @@ public:
 #endif
 
 private:
-    static constexpr int8_t   kInvalidRssiValue  = SubMac::kInvalidRssiValue;
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
     enum Operation : uint8_t
@@ -768,10 +774,7 @@ private:
     bool     IsJoinable(void) const;
     void     BeginTransmit(void);
     bool     HandleMacCommand(RxFrame &aFrame);
-
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
-    static void HandleOperationTask(Tasklet &aTasklet);
+    void     HandleTimer(void);
 
     void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
     Error UpdateScanChannel(void);
@@ -792,10 +795,13 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
     static const char *OperationToString(Operation aOperation);
+
+    using OperationTask = TaskletIn<Mac, &Mac::PerformNextOperation>;
+    using MacTimer      = TimerMilliIn<Mac, &Mac::HandleTimer>;
 
     static const otExtAddress sMode2ExtAddress;
 
@@ -843,8 +849,8 @@ private:
     void *mScanHandlerContext;
 
     Links              mLinks;
-    Tasklet            mOperationTask;
-    TimerMilli         mTimer;
+    OperationTask      mOperationTask;
+    MacTimer           mTimer;
     otMacCounters      mCounters;
     uint32_t           mKeyIdMode2FrameCounter;
     SuccessRateTracker mCcaSuccessRateTracker;

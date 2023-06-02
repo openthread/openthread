@@ -38,12 +38,12 @@
 
 // crypto key storage stubs
 
-otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
+otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,
                               int                  aKeyUsage,
                               otCryptoKeyStorage   aKeyPersistence,
-                              const uint8_t *      aKey,
+                              const uint8_t       *aKey,
                               size_t               aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyRef);

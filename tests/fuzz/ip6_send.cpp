@@ -26,27 +26,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
-
 #include <stddef.h>
 
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 #include <openthread/message.h>
+#include <openthread/srp_server.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
+#include <openthread/platform/alarm-milli.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+#include "common/time.hpp"
+
+void AdvanceTime(otInstance *aInstance, uint32_t aDuration)
+{
+    uint32_t time = otPlatAlarmMilliGetNow() + aDuration;
+
+    while (ot::TimeMilli(otPlatAlarmMilliGetNow()) <= ot::TimeMilli(time))
+    {
+        while (otTaskletsArePending(aInstance))
+        {
+            otTaskletsProcess(aInstance);
+        }
+
+        FuzzerPlatformProcess(aInstance);
+    }
+}
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance *      instance = nullptr;
-    otMessage *       message  = nullptr;
+    otInstance       *instance = nullptr;
+    otMessage        *message  = nullptr;
     otError           error    = OT_ERROR_NONE;
     otMessageSettings settings;
 
@@ -58,7 +74,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     IgnoreError(otLinkSetPanId(instance, panId));
     IgnoreError(otIp6SetEnabled(instance, true));
     IgnoreError(otThreadSetEnabled(instance, true));
+    otSrpServerSetEnabled(instance, true);
     IgnoreError(otThreadBecomeLeader(instance));
+
+    AdvanceTime(instance, 10000);
 
     settings.mLinkSecurityEnabled = (data[0] & 0x1) != 0;
     settings.mPriority            = OT_MESSAGE_PRIORITY_NORMAL;
@@ -75,15 +94,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
+    AdvanceTime(instance, 10000);
 
 exit:
 

@@ -109,13 +109,23 @@ Establishes a connection with the specified peer.
 
 If the connection establishment is successful, the resulting TCP connection is associated with the example TCP endpoint.
 
-- ip: the peer's IPv6 address.
+- ip: the peer's IP address.
 - port: the peer's TCP port.
 
 ```bash
 > tcp connect fe80:0:0:0:a8df:580a:860:ffa4 30000
 Done
 TCP: Connection established
+```
+
+The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+
+> Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
+
+```bash
+> tcp connect 172.17.0.1 1234
+Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+Done
 ```
 
 ### deinit
@@ -147,14 +157,19 @@ stoplistening
 Done
 ```
 
-### init [\<size\>]
+### init [\<mode\>]&nbsp;[\<size\>]
 
 Initializes the example TCP listener and the example TCP endpoint.
 
+- mode: this specifies the buffering strategy and whether to use TLS. The possible values are "linked", "circular" (default), and "tls".
 - size: the size of the receive buffer to associate with the example TCP endpoint. If left unspecified, the maximum size is used.
 
+If "tls" is used, then the TLS protocol will be used for the connection (on top of TCP). When communicating over TCP between two nodes, either both should use TLS or neither should (a non-TLS endpoint cannot communicate with a TLS endpoint). The first two options, "linked" and "circular", specify that TLS should not be used and specify a buffering strategy to use with TCP; two endpoints of a TCP connection may use different buffering strategies.
+
+The behaviors of "linked" and "circular" buffering are identical, but the option is provided so that users of TCP can inspect the code to see an example of using the two buffering strategies.
+
 ```bash
-> tcp init
+> tcp init tls
 Done
 ```
 

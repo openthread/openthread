@@ -47,15 +47,9 @@ Sha256::Sha256(void)
     SuccessOrAssert(otPlatCryptoSha256Init(&mContext));
 }
 
-Sha256::~Sha256(void)
-{
-    SuccessOrAssert(otPlatCryptoSha256Deinit(&mContext));
-}
+Sha256::~Sha256(void) { SuccessOrAssert(otPlatCryptoSha256Deinit(&mContext)); }
 
-void Sha256::Start(void)
-{
-    SuccessOrAssert(otPlatCryptoSha256Start(&mContext));
-}
+void Sha256::Start(void) { SuccessOrAssert(otPlatCryptoSha256Start(&mContext)); }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
@@ -75,10 +69,7 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
     }
 }
 
-void Sha256::Finish(Hash &aHash)
-{
-    SuccessOrAssert(otPlatCryptoSha256Finish(&mContext, aHash.m8, Hash::kSize));
-}
+void Sha256::Finish(Hash &aHash) { SuccessOrAssert(otPlatCryptoSha256Finish(&mContext, aHash.m8, Hash::kSize)); }
 
 } // namespace Crypto
 } // namespace ot

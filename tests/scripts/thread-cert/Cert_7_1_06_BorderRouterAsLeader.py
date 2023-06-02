@@ -143,7 +143,7 @@ class Cert_7_1_6_BorderRouterAsLeader(thread_cert.TestCase):
         self.simulator.go(720)
 
         self.nodes[ROUTER_1].start()
-        self.simulator.go(config.ROUTER_STARTUP_DELAY)
+        self.simulator.go(config.ROUTER_RESET_DELAY)
         self.assertEqual(self.nodes[ROUTER_1].get_state(), 'router')
         self.collect_rloc16s()
 

@@ -276,7 +276,6 @@ private:
     void        StartDatasetUpdate(void);
     static void HandleDatasetUpdateDone(Error aError, void *aContext);
     void        HandleDatasetUpdateDone(Error aError);
-    static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
     void        StartAutoSelectTimer(void);
 
@@ -285,12 +284,14 @@ private:
     bool  ShouldAttemptChannelChange(void);
 #endif
 
+    using ManagerTimer = TimerMilliIn<ChannelManager, &ChannelManager::HandleTimer>;
+
     Mac::ChannelMask mSupportedChannelMask;
     Mac::ChannelMask mFavoredChannelMask;
     uint16_t         mDelay;
     uint8_t          mChannel;
     State            mState;
-    TimerMilli       mTimer;
+    ManagerTimer     mTimer;
     uint32_t         mAutoSelectInterval;
     bool             mAutoSelectEnabled;
     uint16_t         mCcaFailureRateThreshold;

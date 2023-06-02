@@ -62,8 +62,8 @@ public:
      *
      */
     VendorInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                    void *                                        aCallbackContext,
-                    Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                    void                                         *aCallbackContext,
+                    Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -119,10 +119,10 @@ public:
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
      *
-     * @param[inout] aReadFdSet   A reference to the read file descriptors.
-     * @param[inout] aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout] aMaxFd       A reference to the max file descriptor.
-     * @param[inout] aTimeout     A reference to the timeout.
+     * @param[in,out] aReadFdSet   A reference to the read file descriptors.
+     * @param[in,out] aWriteFdSet  A reference to the write file descriptors.
+     * @param[in,out] aMaxFd       A reference to the max file descriptor.
+     * @param[in,out] aTimeout     A reference to the timeout.
      *
      */
     void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
@@ -144,19 +144,13 @@ public:
     uint32_t GetBusSpeed(void) const;
 
     /**
-     * This method is called when RCP failure detected and resets internal states of the interface.
+     * This method hardware resets the RCP.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      *
      */
-    void OnRcpReset(void);
-
-    /**
-     * This method is called when RCP is reset to recreate the connection with it.
-     *
-     * @retval OT_ERROR_NONE    Reset the connection successfully.
-     * @retval OT_ERROR_FAILED  Failed to reset the connection.
-     *
-     */
-    otError ResetConnection(void);
+    otError HardwareReset(void);
 
     /**
      * This method returns the RCP interface metrics.

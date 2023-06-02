@@ -43,10 +43,10 @@
 
 using namespace ot;
 
-otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
+otError otDatasetUpdaterRequestUpdate(otInstance                 *aInstance,
                                       const otOperationalDataset *aDataset,
                                       otDatasetUpdaterCallback    aCallback,
-                                      void *                      aContext)
+                                      void                       *aContext)
 {
     return AsCoreType(aInstance).Get<MeshCoP::DatasetUpdater>().RequestUpdate(AsCoreType(aDataset), aCallback,
                                                                               aContext);

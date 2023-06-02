@@ -51,8 +51,8 @@
 OT_TOOL_WEAK
 otError otPlatDiagProcess(otInstance *aInstance,
                           uint8_t     aArgsLength,
-                          char *      aArgs[],
-                          char *      aOutput,
+                          char       *aArgs[],
+                          char       *aOutput,
                           size_t      aOutputMaxLen)
 {
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -70,8 +70,16 @@ namespace FactoryDiags {
 #if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 
 const struct Diags::Command Diags::sCommands[] = {
-    {"channel", &Diags::ProcessChannel}, {"echo", &Diags::ProcessEcho}, {"power", &Diags::ProcessPower},
-    {"start", &Diags::ProcessStart},     {"stop", &Diags::ProcessStop},
+    {"channel", &Diags::ProcessChannel},
+    {"cw", &Diags::ProcessContinuousWave},
+    {"echo", &Diags::ProcessEcho},
+    {"gpio", &Diags::ProcessGpio},
+    {"power", &Diags::ProcessPower},
+    {"powersettings", &Diags::ProcessPowerSettings},
+    {"rawpowersetting", &Diags::ProcessRawPowerSetting},
+    {"start", &Diags::ProcessStart},
+    {"stop", &Diags::ProcessStop},
+    {"stream", &Diags::ProcessStream},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -129,8 +137,7 @@ Error Diags::ProcessEcho(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
         uint32_t      number;
 
         SuccessOrExit(error = ParseLong(aArgs[1], value));
-        number = static_cast<uint32_t>(value);
-        number = (number < outputMaxLen) ? number : outputMaxLen;
+        number = Min(static_cast<uint32_t>(value), outputMaxLen);
 
         for (i = 0; i < number; i++)
         {
@@ -173,17 +180,24 @@ Error Diags::ProcessStop(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
     return kErrorNone;
 }
 
-extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
-{
-    otPlatDiagAlarmCallback(aInstance);
-}
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { otPlatDiagAlarmCallback(aInstance); }
 
 #else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 // For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_CLI
 const struct Diags::Command Diags::sCommands[] = {
-    {"channel", &Diags::ProcessChannel}, {"power", &Diags::ProcessPower}, {"radio", &Diags::ProcessRadio},
-    {"repeat", &Diags::ProcessRepeat},   {"send", &Diags::ProcessSend},   {"start", &Diags::ProcessStart},
-    {"stats", &Diags::ProcessStats},     {"stop", &Diags::ProcessStop},
+    {"channel", &Diags::ProcessChannel},
+    {"cw", &Diags::ProcessContinuousWave},
+    {"gpio", &Diags::ProcessGpio},
+    {"power", &Diags::ProcessPower},
+    {"powersettings", &Diags::ProcessPowerSettings},
+    {"rawpowersetting", &Diags::ProcessRawPowerSetting},
+    {"radio", &Diags::ProcessRadio},
+    {"repeat", &Diags::ProcessRepeat},
+    {"send", &Diags::ProcessSend},
+    {"start", &Diags::ProcessStart},
+    {"stats", &Diags::ProcessStats},
+    {"stop", &Diags::ProcessStop},
+    {"stream", &Diags::ProcessStream},
 };
 
 Diags::Diags(Instance &aInstance)
@@ -475,10 +489,7 @@ exit:
     return error;
 }
 
-extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Diags>().AlarmFired();
-}
+extern "C" void otPlatDiagAlarmFired(otInstance *aInstance) { AsCoreType(aInstance).Get<Diags>().AlarmFired(); }
 
 void Diags::AlarmFired(void)
 {
@@ -543,6 +554,212 @@ exit:
 
 #endif // OPENTHREAD_RADIO
 
+Error Diags::ProcessContinuousWave(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error error = kErrorInvalidArgs;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
+    VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
+
+    if (strcmp(aArgs[0], "start") == 0)
+    {
+        SuccessOrExit(error = otPlatDiagRadioTransmitCarrier(&GetInstance(), true));
+    }
+    else if (strcmp(aArgs[0], "stop") == 0)
+    {
+        SuccessOrExit(error = otPlatDiagRadioTransmitCarrier(&GetInstance(), false));
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+Error Diags::ProcessStream(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error error = kErrorInvalidArgs;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
+    VerifyOrExit(aArgsLength > 0, error = kErrorInvalidArgs);
+
+    if (strcmp(aArgs[0], "start") == 0)
+    {
+        error = otPlatDiagRadioTransmitStream(&GetInstance(), true);
+    }
+    else if (strcmp(aArgs[0], "stop") == 0)
+    {
+        error = otPlatDiagRadioTransmitStream(&GetInstance(), false);
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+Error Diags::GetPowerSettings(uint8_t aChannel, PowerSettings &aPowerSettings)
+{
+    aPowerSettings.mRawPowerSetting.mLength = RawPowerSetting::kMaxDataSize;
+    return otPlatDiagRadioGetPowerSettings(&GetInstance(), aChannel, &aPowerSettings.mTargetPower,
+                                           &aPowerSettings.mActualPower, aPowerSettings.mRawPowerSetting.mData,
+                                           &aPowerSettings.mRawPowerSetting.mLength);
+}
+
+Error Diags::ProcessPowerSettings(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error         error = kErrorInvalidArgs;
+    uint8_t       channel;
+    PowerSettings powerSettings;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
+
+    if (aArgsLength == 0)
+    {
+        bool          isPrePowerSettingsValid = false;
+        uint8_t       preChannel              = 0;
+        PowerSettings prePowerSettings;
+        int           n;
+
+        n = snprintf(aOutput, aOutputMaxLen,
+                     "| StartCh | EndCh | TargetPower | ActualPower | RawPowerSetting |\r\n"
+                     "+---------+-------+-------------+-------------+-----------------+\r\n");
+        VerifyOrExit((n > 0) && (n < static_cast<int>(aOutputMaxLen)), error = kErrorNoBufs);
+        aOutput += n;
+        aOutputMaxLen -= static_cast<size_t>(n);
+
+        for (channel = Radio::kChannelMin; channel <= Radio::kChannelMax + 1; channel++)
+        {
+            error = (channel == Radio::kChannelMax + 1) ? kErrorNotFound : GetPowerSettings(channel, powerSettings);
+
+            if (isPrePowerSettingsValid && ((powerSettings != prePowerSettings) || (error != kErrorNone)))
+            {
+                n = snprintf(aOutput, aOutputMaxLen, "| %7u | %5u | %11d | %11d | %15s |\r\n", preChannel, channel - 1,
+                             prePowerSettings.mTargetPower, prePowerSettings.mActualPower,
+                             prePowerSettings.mRawPowerSetting.ToString().AsCString());
+                VerifyOrExit((n > 0) && (n < static_cast<int>(aOutputMaxLen)), error = kErrorNoBufs);
+                aOutput += n;
+                aOutputMaxLen -= static_cast<size_t>(n);
+                isPrePowerSettingsValid = false;
+            }
+
+            if ((error == kErrorNone) && (!isPrePowerSettingsValid))
+            {
+                preChannel              = channel;
+                prePowerSettings        = powerSettings;
+                isPrePowerSettingsValid = true;
+            }
+        }
+
+        error = kErrorNone;
+    }
+    else if (aArgsLength == 1)
+    {
+        SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(aArgs[0], channel));
+        VerifyOrExit(channel >= Radio::kChannelMin && channel <= Radio::kChannelMax, error = kErrorInvalidArgs);
+
+        SuccessOrExit(error = GetPowerSettings(channel, powerSettings));
+        snprintf(aOutput, aOutputMaxLen,
+                 "TargetPower(0.01dBm): %d\r\nActualPower(0.01dBm): %d\r\nRawPowerSetting: %s\r\n",
+                 powerSettings.mTargetPower, powerSettings.mActualPower,
+                 powerSettings.mRawPowerSetting.ToString().AsCString());
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+Error Diags::GetRawPowerSetting(RawPowerSetting &aRawPowerSetting)
+{
+    aRawPowerSetting.mLength = RawPowerSetting::kMaxDataSize;
+    return otPlatDiagRadioGetRawPowerSetting(&GetInstance(), aRawPowerSetting.mData, &aRawPowerSetting.mLength);
+}
+
+Error Diags::ProcessRawPowerSetting(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error           error = kErrorInvalidArgs;
+    RawPowerSetting setting;
+
+    VerifyOrExit(otPlatDiagModeGet(), error = kErrorInvalidState);
+
+    if (aArgsLength == 0)
+    {
+        SuccessOrExit(error = GetRawPowerSetting(setting));
+        snprintf(aOutput, aOutputMaxLen, "%s\r\n", setting.ToString().AsCString());
+    }
+    else if (strcmp(aArgs[0], "enable") == 0)
+    {
+        SuccessOrExit(error = otPlatDiagRadioRawPowerSettingEnable(&GetInstance(), true));
+    }
+    else if (strcmp(aArgs[0], "disable") == 0)
+    {
+        SuccessOrExit(error = otPlatDiagRadioRawPowerSettingEnable(&GetInstance(), false));
+    }
+    else
+    {
+        setting.mLength = RawPowerSetting::kMaxDataSize;
+        SuccessOrExit(error = Utils::CmdLineParser::ParseAsHexString(aArgs[0], setting.mLength, setting.mData));
+        SuccessOrExit(error = otPlatDiagRadioSetRawPowerSetting(&GetInstance(), setting.mData, setting.mLength));
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
+Error Diags::ProcessGpio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+{
+    Error      error = kErrorInvalidArgs;
+    long       value;
+    uint32_t   gpio;
+    bool       level;
+    otGpioMode mode;
+
+    if ((aArgsLength == 2) && (strcmp(aArgs[0], "get") == 0))
+    {
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+        SuccessOrExit(error = otPlatDiagGpioGet(gpio, &level));
+        snprintf(aOutput, aOutputMaxLen, "%d\r\n", level);
+    }
+    else if ((aArgsLength == 3) && (strcmp(aArgs[0], "set") == 0))
+    {
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+        SuccessOrExit(error = ParseBool(aArgs[2], level));
+        SuccessOrExit(error = otPlatDiagGpioSet(gpio, level));
+    }
+    else if ((aArgsLength >= 2) && (strcmp(aArgs[0], "mode") == 0))
+    {
+        SuccessOrExit(error = ParseLong(aArgs[1], value));
+        gpio = static_cast<uint32_t>(value);
+
+        if (aArgsLength == 2)
+        {
+            SuccessOrExit(error = otPlatDiagGpioGetMode(gpio, &mode));
+            if (mode == OT_GPIO_MODE_INPUT)
+            {
+                snprintf(aOutput, aOutputMaxLen, "in\r\n");
+            }
+            else if (mode == OT_GPIO_MODE_OUTPUT)
+            {
+                snprintf(aOutput, aOutputMaxLen, "out\r\n");
+            }
+        }
+        else if ((aArgsLength == 3) && (strcmp(aArgs[2], "in") == 0))
+        {
+            SuccessOrExit(error = otPlatDiagGpioSetMode(gpio, OT_GPIO_MODE_INPUT));
+        }
+        else if ((aArgsLength == 3) && (strcmp(aArgs[2], "out") == 0))
+        {
+            SuccessOrExit(error = otPlatDiagGpioSetMode(gpio, OT_GPIO_MODE_OUTPUT));
+        }
+    }
+
+exit:
+    AppendErrorResult(error, aOutput, aOutputMaxLen);
+    return error;
+}
+
 void Diags::AppendErrorResult(Error aError, char *aOutput, size_t aOutputMaxLen)
 {
     if (aError != kErrorNone)
@@ -558,6 +775,19 @@ Error Diags::ParseLong(char *aString, long &aLong)
     return (*endptr == '\0') ? kErrorNone : kErrorParse;
 }
 
+Error Diags::ParseBool(char *aString, bool &aBool)
+{
+    Error error;
+    long  value;
+
+    SuccessOrExit(error = ParseLong(aString, value));
+    VerifyOrExit((value == 0) || (value == 1), error = kErrorParse);
+    aBool = static_cast<bool>(value);
+
+exit:
+    return error;
+}
+
 Error Diags::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[])
 {
     Error                     error;
@@ -571,13 +801,13 @@ exit:
     return error;
 }
 
-void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
+Error Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     constexpr uint16_t kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE;
 
     Error   error = kErrorNone;
     char    buffer[kMaxCommandBuffer];
-    char *  args[kMaxArgs];
+    char   *args[kMaxArgs];
     uint8_t argCount = 0;
 
     VerifyOrExit(StringLength(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = kErrorNoBufs);
@@ -591,7 +821,7 @@ exit:
     {
     case kErrorNone:
         aOutput[0] = '\0'; // In case there is no output.
-        IgnoreError(ProcessCmd(argCount, &args[0], aOutput, aOutputMaxLen));
+        error      = ProcessCmd(argCount, &args[0], aOutput, aOutputMaxLen);
         break;
 
     case kErrorNoBufs:
@@ -606,6 +836,8 @@ exit:
         snprintf(aOutput, aOutputMaxLen, "failed to parse command string\r\n");
         break;
     }
+
+    return error;
 }
 
 Error Diags::ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
@@ -655,12 +887,103 @@ exit:
     return error;
 }
 
-bool Diags::IsEnabled(void)
-{
-    return otPlatDiagModeGet();
-}
+bool Diags::IsEnabled(void) { return otPlatDiagModeGet(); }
 
 } // namespace FactoryDiags
 } // namespace ot
 
+OT_TOOL_WEAK otError otPlatDiagGpioSet(uint32_t aGpio, bool aValue)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aValue);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioGet(uint32_t aGpio, bool *aValue)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aValue);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioSetMode(uint32_t aGpio, otGpioMode aMode)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aMode);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagGpioGetMode(uint32_t aGpio, otGpioMode *aMode)
+{
+    OT_UNUSED_VARIABLE(aGpio);
+    OT_UNUSED_VARIABLE(aMode);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioSetRawPowerSetting(otInstance    *aInstance,
+                                                       const uint8_t *aRawPowerSetting,
+                                                       uint16_t       aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aRawPowerSetting);
+    OT_UNUSED_VARIABLE(aRawPowerSettingLength);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioGetRawPowerSetting(otInstance *aInstance,
+                                                       uint8_t    *aRawPowerSetting,
+                                                       uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aRawPowerSetting);
+    OT_UNUSED_VARIABLE(aRawPowerSettingLength);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioRawPowerSettingEnable(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioTransmitCarrier(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioTransmitStream(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK otError otPlatDiagRadioGetPowerSettings(otInstance *aInstance,
+                                                     uint8_t     aChannel,
+                                                     int16_t    *aTargetPower,
+                                                     int16_t    *aActualPower,
+                                                     uint8_t    *aRawPowerSetting,
+                                                     uint16_t   *aRawPowerSettingLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aChannel);
+    OT_UNUSED_VARIABLE(aTargetPower);
+    OT_UNUSED_VARIABLE(aActualPower);
+    OT_UNUSED_VARIABLE(aRawPowerSetting);
+    OT_UNUSED_VARIABLE(aRawPowerSettingLength);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE

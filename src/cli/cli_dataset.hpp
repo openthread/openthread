@@ -49,13 +49,13 @@ namespace Cli {
  * This class implements the Dataset CLI interpreter.
  *
  */
-class Dataset : private OutputWrapper
+class Dataset : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
 
-    explicit Dataset(Output &aOutput)
-        : OutputWrapper(aOutput)
+    Dataset(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+        : Output(aInstance, aOutputImplementer)
     {
     }
 
@@ -72,7 +72,7 @@ private:
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
-    otError Print(otOperationalDataset &aDataset);
+    otError Print(otOperationalDatasetTlvs &aDatasetTlvs);
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
     otError     ProcessUpdater(Arg aArgs[]);
@@ -83,7 +83,7 @@ private:
     void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
     otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs);
 
-    static otOperationalDataset sDataset;
+    static otOperationalDatasetTlvs sDatasetTlvs;
 };
 
 } // namespace Cli

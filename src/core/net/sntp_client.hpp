@@ -440,7 +440,7 @@ public:
 private:
     uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
     otSntpResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
-    void *                mResponseContext;     ///< A pointer to arbitrary context information.
+    void                 *mResponseContext;     ///< A pointer to arbitrary context information.
     TimeMilli             mTransmissionTime;    ///< Time when the timer should shoot for this message.
     Ip6::Address          mSourceAddress;       ///< IPv6 address of the message source.
     Ip6::Address          mDestinationAddress;  ///< IPv6 address of the message destination.
@@ -524,16 +524,17 @@ private:
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
     void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
-    static void HandleRetransmissionTimer(Timer &aTimer);
-    void        HandleRetransmissionTimer(void);
+    void HandleRetransmissionTimer(void);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    using RetxTimer = TimerMilliIn<Client, &Client::HandleRetransmissionTimer>;
+
     Ip6::Udp::Socket mSocket;
 
     MessageQueue mPendingQueries;
-    TimerMilli   mRetransmissionTimer;
+    RetxTimer    mRetransmissionTimer;
 
     uint32_t mUnixEra;
 };

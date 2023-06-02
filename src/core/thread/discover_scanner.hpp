@@ -36,8 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "mac/mac.hpp"
@@ -126,9 +128,9 @@ public:
                    Mac::PanId              aPanId,
                    bool                    aJoiner,
                    bool                    aEnableFiltering,
-                   const FilterIndexes *   aFilterIndexes,
+                   const FilterIndexes    *aFilterIndexes,
                    Handler                 aCallback,
-                   void *                  aContext);
+                   void                   *aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery Scan is currently in progress.
@@ -169,22 +171,25 @@ private:
     // Methods used from `Mle`
     void HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const;
 
-    void        HandleDiscoverComplete(void);
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleDiscoverComplete(void);
+    void HandleScanDoneTask(void);
+    void HandleTimer(void);
 
-    Handler          mHandler;
-    void *           mHandlerContext;
-    TimerMilli       mTimer;
-    FilterIndexes    mFilterIndexes;
-    Mac::ChannelMask mScanChannels;
-    State            mState;
-    uint32_t         mOui;
-    uint8_t          mScanChannel;
-    uint8_t          mAdvDataLength;
-    uint8_t          mAdvData[MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength];
-    bool             mEnableFiltering : 1;
-    bool             mShouldRestorePanId : 1;
+    using ScanTimer    = TimerMilliIn<DiscoverScanner, &DiscoverScanner::HandleTimer>;
+    using ScanDoneTask = TaskletIn<DiscoverScanner, &DiscoverScanner::HandleScanDoneTask>;
+
+    Callback<Handler> mCallback;
+    ScanDoneTask      mScanDoneTask;
+    ScanTimer         mTimer;
+    FilterIndexes     mFilterIndexes;
+    Mac::ChannelMask  mScanChannels;
+    State             mState;
+    uint32_t          mOui;
+    uint8_t           mScanChannel;
+    uint8_t           mAdvDataLength;
+    uint8_t           mAdvData[MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength];
+    bool              mEnableFiltering : 1;
+    bool              mShouldRestorePanId : 1;
 };
 
 } // namespace Mle

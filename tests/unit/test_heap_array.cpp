@@ -182,7 +182,7 @@ void TestHeapArrayOfUint16(void)
 {
     Heap::Array<uint16_t, 2> array;
     Heap::Array<uint16_t, 2> array2;
-    uint16_t *               entry;
+    uint16_t                *entry;
 
     printf("\n\n====================================================================================\n");
     printf("TestHeapArrayOfUint16\n\n");
@@ -348,7 +348,7 @@ void TestHeapArray(void)
     {
         Heap::Array<Entry, 2> array;
         Heap::Array<Entry, 2> array2;
-        Entry *               entry;
+        Entry                *entry;
 
         printf("------------------------------------------------------------------------------------\n");
         printf("After constructor\n");

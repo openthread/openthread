@@ -39,27 +39,15 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 setup_default_network
 
-send "ifconfig up\n"
-expect_line "Done"
-
-send "thread start\n"
-expect_line "Done"
-
-wait_for "state" "leader"
-expect_line "Done"
+attach
 
 set extaddr1 [get_extaddr]
 
 spawn_node 2 cli
 setup_default_network
 
-send "ifconfig up\n"
-expect_line "Done"
+attach "router"
 
-send "thread start\n"
-expect_line "Done"
-
-wait_for "state" "router"
 sleep 3
 
 spawn_node 3 cli
@@ -71,13 +59,8 @@ expect_line "Done"
 send "macfilter addr denylist\n"
 expect_line "Done"
 
-send "ifconfig up\n"
-expect_line "Done"
+attach "router"
 
-send "thread start\n"
-expect_line "Done"
-
-wait_for "state" "router"
 sleep 4
 
 set extaddr3 [get_extaddr]
@@ -94,13 +77,7 @@ expect_line "Done"
 send "macfilter addr allowlist\n"
 expect_line "Done"
 
-send "ifconfig up\n"
-expect_line "Done"
-
-send "thread start\n"
-expect_line "Done"
-
-wait_for "state" "child"
+attach "child"
 
 set mleid4 [get_ipaddr "mleid"]
 

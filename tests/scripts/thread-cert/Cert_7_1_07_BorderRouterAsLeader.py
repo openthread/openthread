@@ -158,7 +158,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
 
         # Wait for Router_2 reattachment and network data propagation
         # ADVERTISEMENT_I_MAX + DEFAULT_CHILD_TIMEOUT + ATTACH_DELAY + Extra
-        self.simulator.go(60)
+        self.simulator.go(120)
         self.assertEqual(self.nodes[ROUTER_2].get_state(), 'router')
         self.collect_ipaddrs()
         self.collect_rloc16s()

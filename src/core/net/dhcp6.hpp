@@ -480,7 +480,7 @@ class IaAddress : public Option
 {
 public:
     static constexpr uint32_t kDefaultPreferredLifetime = 0xffffffffU; ///< Default preferred lifetime.
-    static constexpr uint32_t kDefaultValidLiftetime    = 0xffffffffU; ///< Default valid lifetime.
+    static constexpr uint32_t kDefaultValidLifetime     = 0xffffffffU; ///< Default valid lifetime.
 
     /**
      * This method initializes the DHCPv6 Option.

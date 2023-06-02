@@ -38,7 +38,7 @@ install_packages_pretty_format()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 || echo 'WARNING: could not install clang-format-9 and clang-tidy-9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 || echo 'WARNING: could not install clang-format-14 and clang-tidy-14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
     python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
@@ -46,8 +46,8 @@ install_packages_pretty_format()
     # add mdv for local size report
     python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
 
-    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
-    command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
+    # add shfmt for shell pretty
+    command -v shfmt || sudo apt-get install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
 }
 
 install_packages_apt()
@@ -66,7 +66,7 @@ install_packages_apt()
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     elif [ "$PLATFORM" = "Ubuntu" ]; then
-        sudo apt-get --no-install-recommends install -y ca-certificates wget
+        sudo apt-get --no-install-recommends install -y bzip2 ca-certificates wget
         (cd /tmp \
             && wget --tries 4 --no-check-certificate --quiet -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
             && sudo tar xjf gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 -C /opt \
@@ -111,11 +111,14 @@ install_packages_brew()
     echo 'Installing pretty tools useful for code contributions...'
 
     # add clang-format for pretty
-    CLANG_FORMAT_VERSION="clang-format version 9"
-    command -v clang-format-9 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
-        brew install llvm@9
-        sudo ln -s "$(brew --prefix llvm@9)/bin/clang-format" /usr/local/bin/clang-format-9
-    } || echo 'WARNING: could not install llvm@9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+    CLANG_FORMAT_VERSION="clang-format version 14"
+    command -v clang-format-14 || (command -v clang-format && (clang-format --version | grep -q "${CLANG_FORMAT_VERSION}")) || {
+        brew install llvm@14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-format" /usr/local/bin/clang-format-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-tidy" /usr/local/bin/clang-tidy-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/clang-apply-replacements" /usr/local/bin/clang-apply-replacements-14
+        sudo ln -s "$(brew --prefix llvm@14)/bin/run-clang-tidy" /usr/local/bin/run-clang-tidy-14
+    } || echo 'WARNING: could not install llvm@14, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'

@@ -40,13 +40,11 @@ print('Starting \'{}\''.format(test_name))
 # -----------------------------------------------------------------------------------------------------------------------
 # Creating `cli.Nodes` instances
 
-speedup = 4
+speedup = 10
 cli.Node.set_time_speedup_factor(speedup)
 
 node1 = cli.Node()
 node2 = cli.Node()
-
-WAIT_TIME = 5
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test implementation
@@ -71,6 +69,20 @@ node2.interface_down()
 node2.join(node1, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
 verify(node2.get_state() == 'child')
 verify(node2.get_mode() == '-')
+
+node2.interface_down()
+
+# Create a poor link between child and parent using MAC fixed RSSI
+# filter and make sure child can still attach.
+
+node1.cli('macfilter rss add * -99')
+node2.cli('macfilter rss add * -99')
+
+node2.join(node1, cli.JOIN_TYPE_END_DEVICE)
+verify(node2.get_state() == 'child')
+verify(node2.get_mode() == 'rn')
+
+verify(len(node1.get_child_table()) == 1)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished

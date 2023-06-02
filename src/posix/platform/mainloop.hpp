@@ -66,7 +66,7 @@ public:
     virtual void Process(const otSysMainloopContext &aContext) = 0;
 
     /**
-     * This method marks desturctor virtual method.
+     * This method marks destructor virtual method.
      *
      */
     virtual ~Source() = default;
@@ -117,7 +117,7 @@ public:
     /**
      * This function returns the Mainloop singleton.
      *
-     * @returns A refernce to the Mainloop singleton.
+     * @returns A reference to the Mainloop singleton.
      *
      */
     static Manager &Get(void);

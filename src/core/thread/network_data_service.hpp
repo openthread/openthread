@@ -258,6 +258,7 @@ public:
     {
         Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
         Origin        mOrigin;   ///< The origin of the socket address (whether from service or server data).
+        uint16_t      mRloc16;   ///< The BR RLOC16 adding the entry (only used when `mOrigin == kFromServerData`).
     };
 
     /**
@@ -404,7 +405,7 @@ public:
 
     private:
         const ServiceTlv *mServiceTlv;
-        const ServerTlv * mServerSubTlv;
+        const ServerTlv  *mServerSubTlv;
     };
 
     /**
@@ -422,7 +423,7 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a constant service data
+     * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format with a non-empty and potentially non-const server data format (provided as input parameter).
      *
      * The template type `ServiceType` has the following requirements:
@@ -449,7 +450,7 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
+     * This version of `Add<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service data
      * format (provided as input parameter) with an empty server data.
      *
      * The template type `ServiceType` has the following requirements:
@@ -494,8 +495,8 @@ public:
     /**
      * This method removes a Thread Service entry from the local Thread Network Data.
      *
-     * This version of `Remove<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
-     * format (provided as input parameter).
+     * This version of `Remove<ServiceType>()` is intended for use with a `ServiceType` that has a non-const service
+     * data format (provided as input parameter).
      *
      * The template type `ServiceType` has the following requirements:
      *   - It MUST define nested type `ServiceType::ServiceData` representing the service data (and its format).
@@ -543,7 +544,7 @@ public:
      * @param[out]  aConfig      The Primary Backbone Router configuration.
      *
      */
-    void GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const;
+    void GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const;
 #endif
 
     /**
@@ -604,13 +605,13 @@ private:
     Error GetServiceId(const void *aServiceData,
                        uint8_t     aServiceDataLength,
                        bool        aServerStable,
-                       uint8_t &   aServiceId) const;
+                       uint8_t    &aServiceId) const;
     Error IterateToNextServer(Iterator &aIterator) const;
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    bool IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+    bool IsBackboneRouterPreferredTo(const ServerTlv                  &aServerTlv,
                                      const BackboneRouter::ServerData &aServerData,
-                                     const ServerTlv &                 aOtherServerTlv,
+                                     const ServerTlv                  &aOtherServerTlv,
                                      const BackboneRouter::ServerData &aOtherServerData) const;
 #endif
 };

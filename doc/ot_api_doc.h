@@ -53,7 +53,7 @@
  * @defgroup api-net                  IPv6 Networking
  * @{
  *
- * @defgroup api-dns                  DNSv6
+ * @defgroup api-dns                  DNS
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
@@ -109,6 +109,7 @@
  * @brief This module includes functions for all Thread roles.
  * @defgroup api-joiner               Joiner
  * @defgroup api-operational-dataset  Operational Dataset
+ * @brief Includes functions for the Operational Dataset API.
  * @defgroup api-thread-router        Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
  * @defgroup api-server               Server
@@ -138,6 +139,7 @@
  * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
  * @defgroup api-logging              Logging - Thread Stack
+ * @defgroup api-mesh-diag            Mesh Diagnostics
  * @defgroup api-ncp                  Network Co-Processor
  * @defgroup api-network-time         Network Time Synchronization
  * @defgroup api-random-group         Random Number Generator
@@ -166,6 +168,7 @@
  *
  * @defgroup plat-alarm               Alarm
  * @defgroup plat-crypto              Crypto - Platform
+ * @defgroup plat-dns                 DNS - Platform
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
  * @defgroup plat-logging             Logging - Platform

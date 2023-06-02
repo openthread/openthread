@@ -71,17 +71,21 @@ class SnifferTransport(object):
         """
         raise NotImplementedError
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
         """ Receive data sent by other node.
 
         Args:
             bufsize (int): size of buffer for incoming data.
+            timeout (float | None): socket timeout.
 
         Returns:
             A tuple contains data and node id.
 
             For example:
             (bytearray([0x00, 0x01...], 1)
+
+        Raises:
+            socket.timeout: when receiving the packets times out.
         """
         raise NotImplementedError
 
@@ -99,12 +103,6 @@ class SnifferSocketTransport(SnifferTransport):
 
     def __init__(self):
         self._socket = None
-
-    def __del__(self):
-        if not self.is_opened:
-            return
-
-        self.close()
 
     def _nodeid_to_port(self, nodeid: int):
         return self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NETWORK_SIZE + 1)) + nodeid
@@ -145,7 +143,8 @@ class SnifferSocketTransport(SnifferTransport):
 
         return self._socket.sendto(data, address)
 
-    def recv(self, bufsize):
+    def recv(self, bufsize, timeout):
+        self._socket.settimeout(timeout)
         data, address = self._socket.recvfrom(bufsize)
 
         nodeid = self._port_to_nodeid(address[1])

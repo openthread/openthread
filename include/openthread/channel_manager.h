@@ -55,12 +55,12 @@ extern "C" {
  */
 
 /**
- * This function requests a Thread network channel change.
+ * Requests a Thread network channel change.
  *
- * The network switches to the given channel after a specified delay (see otChannelManagerSetDelay()). The channel
+ * The network switches to the given channel after a specified delay (see #otChannelManagerSetDelay()). The channel
  * change is performed by updating the Pending Operational Dataset.
  *
- * A subsequent call to this function will cancel an ongoing previously requested channel change.
+ * A subsequent call will cancel an ongoing previously requested channel change.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aChannel           The new channel for the Thread network.
@@ -87,9 +87,9 @@ uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance);
 uint16_t otChannelManagerGetDelay(otInstance *aInstance);
 
 /**
- * This function sets the delay (in seconds) used for a channel change.
+ * Sets the delay (in seconds) used for a channel change.
  *
- * The delay should preferably be longer than maximum data poll interval used by all sleepy-end-devices within the
+ * The delay should preferably be longer than the maximum data poll interval used by all sleepy-end-devices within the
  * Thread network.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
@@ -105,7 +105,7 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  * This function requests that `ChannelManager` checks and selects a new channel and starts a channel change.
  *
  * Unlike the `otChannelManagerRequestChannelChange()` where the channel must be given as a parameter, this function
- * asks the `ChannelManager` to select a channel by itself (based of collected channel quality info).
+ * asks the `ChannelManager` to select a channel by itself (based on collected channel quality info).
  *
  * Once called, the Channel Manager will perform the following 3 steps:
  *
@@ -132,7 +132,7 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);
 
 /**
- * This function enables/disables the auto-channel-selection functionality.
+ * Enables or disables the auto-channel-selection functionality.
  *
  * When enabled, `ChannelManager` will periodically invoke a `RequestChannelSelect(false)`. The period interval
  * can be set by `SetAutoChannelSelectionInterval()`.
@@ -154,7 +154,7 @@ void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool 
 bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance);
 
 /**
- * This function sets the period interval (in seconds) used by auto-channel-selection functionality.
+ * Sets the period interval (in seconds) used by auto-channel-selection functionality.
  *
  * @param[in] aInstance   A pointer to an OpenThread instance.
  * @param[in] aInterval   The interval in seconds.
@@ -176,7 +176,7 @@ otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, u
 uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance);
 
 /**
- * This function gets the supported channel mask.
+ * Gets the supported channel mask.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
@@ -186,7 +186,7 @@ uint32_t otChannelManagerGetAutoChannelSelectionInterval(otInstance *aInstance);
 uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance);
 
 /**
- * This function sets the supported channel mask.
+ * Sets the supported channel mask.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aChannelMask  A channel mask.
@@ -195,7 +195,7 @@ uint32_t otChannelManagerGetSupportedChannels(otInstance *aInstance);
 void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
- * This function gets the favored channel mask.
+ * Gets the favored channel mask.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
@@ -205,7 +205,7 @@ void otChannelManagerSetSupportedChannels(otInstance *aInstance, uint32_t aChann
 uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance);
 
 /**
- * This function sets the favored channel mask.
+ * Sets the favored channel mask.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aChannelMask  A channel mask.
@@ -214,7 +214,7 @@ uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance);
 void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
- * This function gets the CCA failure rate threshold
+ * Gets the CCA failure rate threshold.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  *
@@ -224,7 +224,7 @@ void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannel
 uint16_t otChannelManagerGetCcaFailureRateThreshold(otInstance *aInstance);
 
 /**
- * This function sets the CCA failure rate threshold
+ * Sets the CCA failure rate threshold.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aThreshold    A CCA failure rate threshold. Value 0 maps to 0% and 0xffff maps to 100%.

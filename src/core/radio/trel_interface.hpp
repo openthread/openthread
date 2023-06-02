@@ -134,7 +134,7 @@ public:
         {
         public:
             bool                 IsRemoved(void) const { return mRemoved; }
-            const uint8_t *      GetTxtData(void) const { return mTxtData; }
+            const uint8_t       *GetTxtData(void) const { return mTxtData; }
             uint16_t             GetTxtLength(void) const { return mTxtLength; }
             const Ip6::SockAddr &GetSockAddr(void) const { return static_cast<const Ip6::SockAddr &>(mSockAddr); }
         };
@@ -150,6 +150,13 @@ public:
      *
      */
     typedef otTrelPeerIterator PeerIterator;
+
+    /**
+     * This method enables or disables the TREL interface.
+     *
+     * @param[in] aEnable A boolean to enable/disable the TREL interface.
+     */
+    void SetEnabled(bool aEnable);
 
     /**
      * This method enables the TREL interface.
@@ -242,21 +249,22 @@ private:
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength);
     void HandleDiscoveredPeerInfo(const Peer::Info &aInfo);
 
-    static void HandleRegisterServiceTask(Tasklet &aTasklet);
-    void        RegisterService(void);
-    Error       ParsePeerInfoTxtData(const Peer::Info &      aInfo,
-                                     Mac::ExtAddress &       aExtAddress,
-                                     MeshCoP::ExtendedPanId &aExtPanId) const;
-    Peer *      GetNewPeerEntry(void);
-    void        RemovePeerEntry(Peer &aEntry);
+    void  RegisterService(void);
+    Error ParsePeerInfoTxtData(const Peer::Info       &aInfo,
+                               Mac::ExtAddress        &aExtAddress,
+                               MeshCoP::ExtendedPanId &aExtPanId) const;
+    Peer *GetNewPeerEntry(void);
+    void  RemovePeerEntry(Peer &aEntry);
 
-    bool      mInitialized : 1;
-    bool      mEnabled : 1;
-    bool      mFiltered : 1;
-    Tasklet   mRegisterServiceTask;
-    uint16_t  mUdpPort;
-    Packet    mRxPacket;
-    PeerTable mPeerTable;
+    using RegisterServiceTask = TaskletIn<Interface, &Interface::RegisterService>;
+
+    bool                mInitialized : 1;
+    bool                mEnabled : 1;
+    bool                mFiltered : 1;
+    RegisterServiceTask mRegisterServiceTask;
+    uint16_t            mUdpPort;
+    Packet              mRxPacket;
+    PeerTable           mPeerTable;
 };
 
 } // namespace Trel

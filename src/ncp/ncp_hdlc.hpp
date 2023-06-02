@@ -122,15 +122,15 @@ private:
 
     static void           EncodeAndSend(Tasklet &aTasklet);
     static void           HandleFrame(void *aContext, otError aError);
-    static void           HandleFrameAddedToNcpBuffer(void *                   aContext,
+    static void           HandleFrameAddedToNcpBuffer(void                    *aContext,
                                                       Spinel::Buffer::FrameTag aTag,
                                                       Spinel::Buffer::Priority aPriority,
-                                                      Spinel::Buffer *         aBuffer);
+                                                      Spinel::Buffer          *aBuffer);
     otNcpHdlcSendCallback mSendCallback;
 
+    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;
-    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
     HdlcTxState                          mState;
     uint8_t                              mByte;
     Hdlc::FrameBuffer<kRxBufferSize>     mRxBuffer;

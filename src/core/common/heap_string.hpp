@@ -175,7 +175,7 @@ public:
      */
     bool operator==(const String &aString) const { return (*this == aString.AsCString()); }
 
-    String(const String &) = delete;
+    String(const String &)            = delete;
     String &operator=(const String &) = delete;
 
 private:

@@ -85,8 +85,8 @@ typedef struct otMultiRadioNeighborInfo
  * @retval OT_ERROR_NOT_FOUND   Could not find a neighbor with @p aExtAddress.
  *
  */
-otError otMultiRadioGetNeighborInfo(otInstance *              aInstance,
-                                    const otExtAddress *      aExtAddress,
+otError otMultiRadioGetNeighborInfo(otInstance               *aInstance,
+                                    const otExtAddress       *aExtAddress,
                                     otMultiRadioNeighborInfo *aNeighborInfo);
 
 /**

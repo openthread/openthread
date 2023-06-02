@@ -56,21 +56,28 @@ def bash(cmd: str, check=True, stdout=None):
     subprocess.run(cmd, shell=True, check=check, stdout=stdout)
 
 
-def run_cert(job_id: int, port_offset: int, script: str):
+def run_cert(job_id: int, port_offset: int, script: str, run_directory: str):
+    if not os.access(script, os.X_OK):
+        logging.warning('Skip test %s, not executable', script)
+        return
+
     try:
         test_name = os.path.splitext(os.path.basename(script))[0] + '_' + str(job_id)
-        logfile = f'{test_name}.log'
+        logfile = f'{run_directory}/{test_name}.log' if run_directory else f'{test_name}.log'
         env = os.environ.copy()
         env['PORT_OFFSET'] = str(port_offset)
         env['TEST_NAME'] = test_name
+        env['PYTHONPATH'] = os.path.dirname(os.path.abspath(__file__))
 
         try:
             print(f'Running {test_name}')
             with open(logfile, 'wt') as output:
-                subprocess.check_call(["python3", script],
+                abs_script = os.path.abspath(script)
+                subprocess.check_call(abs_script,
                                       stdout=output,
                                       stderr=output,
                                       stdin=subprocess.DEVNULL,
+                                      cwd=run_directory,
                                       env=env)
         except subprocess.CalledProcessError:
             bash(f'cat {logfile} 1>&2')
@@ -107,10 +114,12 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--multiply', type=int, default=1, help='run each test for multiple times')
+    parser.add_argument('--run-directory', type=str, default=None, help='run each test in the specified directory')
     parser.add_argument("scripts", nargs='+', type=str, help='specify Backbone test scripts')
 
     args = parser.parse_args()
     logging.info("Max jobs: %d", MAX_JOBS)
+    logging.info("Run directory: %s", args.run_directory or '.')
     logging.info("Multiply: %d", args.multiply)
     logging.info("Test scripts: %d", len(args.scripts))
     return args
@@ -141,7 +150,7 @@ class PortOffsetPool:
         self._pool.put_nowait(port_offset)
 
 
-def run_tests(scripts: List[str], multiply: int = 1):
+def run_tests(scripts: List[str], multiply: int = 1, run_directory: str = None):
     script_fail_count = Counter()
     script_succ_count = Counter()
 
@@ -168,7 +177,7 @@ def run_tests(scripts: List[str], multiply: int = 1):
     for script, i in script_ids:
         port_offset = port_offset_pool.allocate()
         pool.apply_async(
-            run_cert, [i, port_offset, script],
+            run_cert, [i, port_offset, script, run_directory],
             callback=lambda ret, port_offset=port_offset, script=script: pass_callback(port_offset, script),
             error_callback=lambda err, port_offset=port_offset, script=script: error_callback(
                 port_offset, script, err))
@@ -189,7 +198,7 @@ def main():
         setup_backbone_env()
 
     try:
-        fail_count = run_tests(args.scripts, args.multiply)
+        fail_count = run_tests(args.scripts, args.multiply, args.run_directory)
         exit(fail_count)
     finally:
         if has_backbone_tests:

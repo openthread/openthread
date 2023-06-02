@@ -506,12 +506,12 @@ public:
     // loop iteration over the array elements and should not be used
     // directly.
 
-    Type *      begin(void) { return (mLength > 0) ? mArray : nullptr; }
-    Type *      end(void) { return (mLength > 0) ? &mArray[mLength] : nullptr; }
+    Type       *begin(void) { return (mLength > 0) ? mArray : nullptr; }
+    Type       *end(void) { return (mLength > 0) ? &mArray[mLength] : nullptr; }
     const Type *begin(void) const { return (mLength > 0) ? mArray : nullptr; }
     const Type *end(void) const { return (mLength > 0) ? &mArray[mLength] : nullptr; }
 
-    Array(const Array &) = delete;
+    Array(const Array &)            = delete;
     Array &operator=(const Array &) = delete;
 
 private:
@@ -538,7 +538,7 @@ private:
         return error;
     }
 
-    Type *    mArray;
+    Type     *mArray;
     IndexType mLength;
     IndexType mCapacity;
 };

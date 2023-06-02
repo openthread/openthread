@@ -54,15 +54,9 @@ static int            s_out_fd;
 static struct termios original_stdin_termios;
 static struct termios original_stdout_termios;
 
-static void restore_stdin_termios(void)
-{
-    tcsetattr(s_in_fd, TCSAFLUSH, &original_stdin_termios);
-}
+static void restore_stdin_termios(void) { tcsetattr(s_in_fd, TCSAFLUSH, &original_stdin_termios); }
 
-static void restore_stdout_termios(void)
-{
-    tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios);
-}
+static void restore_stdout_termios(void) { tcsetattr(s_out_fd, TCSAFLUSH, &original_stdout_termios); }
 
 void platformUartRestore(void)
 {
@@ -241,8 +235,8 @@ void platformUartProcess(void)
     ssize_t       rval;
     const int     error_flags = POLLERR | POLLNVAL | POLLHUP;
     struct pollfd pollfd[]    = {
-        {s_in_fd, POLLIN | error_flags, 0},
-        {s_out_fd, POLLOUT | error_flags, 0},
+           {s_in_fd, POLLIN | error_flags, 0},
+           {s_out_fd, POLLOUT | error_flags, 0},
     };
 
     errno = 0;

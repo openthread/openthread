@@ -88,8 +88,8 @@ constexpr Entry::Type kBetaType  = Entry::Type::kBeta;
 void VerifyLinkedListContent(const LinkedList<Entry> *aList, ...)
 {
     va_list      args;
-    Entry *      argEntry;
-    Entry *      argPrev = nullptr;
+    Entry       *argEntry;
+    Entry       *argPrev = nullptr;
     const Entry *prev;
     uint16_t     unusedId = 100;
 
@@ -134,7 +134,7 @@ void TestLinkedList(void)
 {
     Entry             a("a", 1, kAlphaType), b("b", 2, kAlphaType), c("c", 3, kBetaType);
     Entry             d("d", 4, kBetaType), e("e", 5, kAlphaType), f("f", 6, kBetaType);
-    Entry *           prev;
+    Entry            *prev;
     LinkedList<Entry> list;
     LinkedList<Entry> removedList;
 

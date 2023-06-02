@@ -61,8 +61,10 @@ set(COMMON_SOURCES
     api/link_metrics_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
+    api/mesh_diag_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
+    api/nat64_api.cpp
     api/netdata_api.cpp
     api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
@@ -77,6 +79,7 @@ set(COMMON_SOURCES
     api/srp_server_api.cpp
     api/tasklet_api.cpp
     api/tcp_api.cpp
+    api/tcp_ext_api.cpp
     api/thread_api.cpp
     api/thread_ftd_api.cpp
     api/trel_api.cpp
@@ -106,6 +109,7 @@ set(COMMON_SOURCES
     common/log.cpp
     common/message.cpp
     common/notifier.cpp
+    common/preference.cpp
     common/random.cpp
     common/settings.cpp
     common/string.cpp
@@ -118,12 +122,9 @@ set(COMMON_SOURCES
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/crypto_platform.cpp
-    crypto/ecdsa.cpp
-    crypto/ecdsa_tinycrypt.cpp
     crypto/hkdf_sha256.cpp
     crypto/hmac_sha256.cpp
     crypto/mbedtls.cpp
-    crypto/pbkdf2_cmac.cpp
     crypto/sha256.cpp
     crypto/storage.cpp
     diags/factory_diags.cpp
@@ -162,6 +163,7 @@ set(COMMON_SOURCES
     net/dhcp6_server.cpp
     net/dns_client.cpp
     net/dns_dso.cpp
+    net/dns_platform.cpp
     net/dns_types.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
@@ -171,6 +173,7 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
     net/netif.cpp
@@ -179,6 +182,7 @@ set(COMMON_SOURCES
     net/srp_client.cpp
     net/srp_server.cpp
     net/tcp6.cpp
+    net/tcp6_ext.cpp
     net/udp6.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
@@ -190,6 +194,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/anycast_locator.cpp
+    thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
@@ -198,6 +203,7 @@ set(COMMON_SOURCES
     thread/indirect_sender.cpp
     thread/key_manager.cpp
     thread/link_metrics.cpp
+    thread/link_metrics_types.cpp
     thread/link_quality.cpp
     thread/lowpan.cpp
     thread/mesh_forwarder.cpp
@@ -205,6 +211,7 @@ set(COMMON_SOURCES
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
     thread/mle_router.cpp
+    thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
     thread/neighbor_table.cpp
@@ -229,14 +236,15 @@ set(COMMON_SOURCES
     thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
-    utils/child_supervision.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/history_tracker.cpp
     utils/jam_detector.cpp
+    utils/mesh_diag.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
     utils/ping_sender.cpp
+    utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
 )
@@ -251,6 +259,7 @@ set(RADIO_COMMON_SOURCES
     api/tasklet_api.cpp
     common/binary_search.cpp
     common/error.cpp
+    common/frame_builder.cpp
     common/instance.cpp
     common/log.cpp
     common/random.cpp
@@ -273,6 +282,7 @@ set(RADIO_COMMON_SOURCES
     radio/radio_platform.cpp
     thread/link_quality.cpp
     utils/parse_cmdline.cpp
+    utils/power_calibration.cpp
 )
 
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")

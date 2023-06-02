@@ -130,10 +130,10 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         # Each BR should independently register an external route for the on-link prefix
         # and OMR prefix in another Thread Network.
-        self.assertTrue(len(br1.get_netdata_non_nat64_prefixes()) == 2)
-        self.assertTrue(len(router1.get_netdata_non_nat64_prefixes()) == 2)
-        self.assertTrue(len(br2.get_netdata_non_nat64_prefixes()) == 2)
-        self.assertTrue(len(router2.get_netdata_non_nat64_prefixes()) == 2)
+        self.assertTrue(len(br1.get_netdata_non_nat64_prefixes()) == 1)
+        self.assertTrue(len(router1.get_netdata_non_nat64_prefixes()) == 1)
+        self.assertTrue(len(br2.get_netdata_non_nat64_prefixes()) == 1)
+        self.assertTrue(len(router2.get_netdata_non_nat64_prefixes()) == 1)
 
         br1_external_routes = br1.get_routes()
         br2_external_routes = br2.get_routes()
@@ -146,7 +146,21 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
 
         self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.verify_border_routing_counters(br1, {'inbound_unicast': 1, 'outbound_unicast': 1})
+        self.verify_border_routing_counters(br2, {'inbound_unicast': 1, 'outbound_unicast': 1})
         self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.verify_border_routing_counters(br1, {'inbound_unicast': 1, 'outbound_unicast': 1})
+        self.verify_border_routing_counters(br2, {'inbound_unicast': 1, 'outbound_unicast': 1})
+        self.assertGreater(br1.get_border_routing_counters()['ra_rx'], 0)
+        self.assertGreater(br1.get_border_routing_counters()['ra_tx_success'], 0)
+        self.assertGreater(br1.get_border_routing_counters()['rs_tx_success'], 0)
+
+    def verify_border_routing_counters(self, br, expect_delta):
+        delta_counters = br.read_border_routing_counters_delta()
+        self.assertEqual(set(delta_counters.keys()), set(expect_delta.keys()))
+        for key in delta_counters:
+            self.assertEqual(delta_counters[key][0], expect_delta[key])
+            self.assertGreater(delta_counters[key][1], 0)
 
 
 if __name__ == '__main__':

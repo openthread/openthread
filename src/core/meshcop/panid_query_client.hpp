@@ -40,10 +40,11 @@
 
 #include <openthread/commissioner.h>
 
-#include "coap/coap.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -53,6 +54,8 @@ namespace ot {
  */
 class PanIdQueryClient : public InstanceLocator
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the object.
@@ -75,19 +78,17 @@ public:
      */
     Error SendQuery(uint16_t                            aPanId,
                     uint32_t                            aChannelMask,
-                    const Ip6::Address &                aAddress,
+                    const Ip6::Address                 &aAddress,
                     otCommissionerPanIdConflictCallback aCallback,
-                    void *                              aContext);
+                    void                               *aContext);
 
 private:
-    static void HandleConflict(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleConflict(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    otCommissionerPanIdConflictCallback mCallback;
-    void *                              mContext;
-
-    Coap::Resource mPanIdQuery;
+    Callback<otCommissionerPanIdConflictCallback> mCallback;
 };
+
+DeclareTmfHandler(PanIdQueryClient, kUriPanIdConflict);
 
 /**
  * @}

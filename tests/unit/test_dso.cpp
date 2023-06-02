@@ -35,6 +35,7 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/instance.hpp"
+#include "common/time.hpp"
 #include "net/dns_dso.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
@@ -51,10 +52,7 @@ static otInstance *sInstance;
     printf("%02u:%02u:%02u.%03u " OT_FIRST_ARG(__VA_ARGS__) "\n", (sNow / 36000000), (sNow / 60000) % 60, \
            (sNow / 1000) % 60, sNow % 1000 OT_REST_ARGS(__VA_ARGS__))
 
-void otPlatAlarmMilliStop(otInstance *)
-{
-    sAlarmOn = false;
-}
+void otPlatAlarmMilliStop(otInstance *) { sAlarmOn = false; }
 
 void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 {
@@ -65,10 +63,7 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
         (sAlarmTime - sNow) / 1000, (sAlarmTime - sNow) % 1000);
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return sNow;
-}
+uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 } // extern "C"
 
@@ -78,7 +73,7 @@ void AdvanceTime(uint32_t aDuration)
 
     Log(" AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
 
-    while (sAlarmTime <= time)
+    while (ot::TimeMilli(sAlarmTime) <= ot::TimeMilli(time))
     {
         sNow = sAlarmTime;
         otPlatAlarmMilliFired(sInstance);
@@ -117,8 +112,8 @@ class Connection : public Dso::Connection
     friend void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage);
 
 public:
-    explicit Connection(Instance &           aInstance,
-                        const char *         aName,
+    explicit Connection(Instance            &aInstance,
+                        const char          *aName,
                         const Ip6::SockAddr &aLocalSockAddr,
                         const Ip6::SockAddr &aPeerSockAddr)
         : Dso::Connection(aInstance, aPeerSockAddr, sCallbacks)
@@ -128,7 +123,7 @@ public:
         ClearTestFlags();
     }
 
-    const char *         GetName(void) const { return mName; }
+    const char          *GetName(void) const { return mName; }
     const Ip6::SockAddr &GetLocalSockAddr(void) const { return mLocalSockAddr; }
 
     void ClearTestFlags(void)
@@ -246,7 +241,7 @@ private:
     }
 
     Error ProcessResponseMessage(const Dns::Header &aHeader,
-                                 const Message &    aMessage,
+                                 const Message     &aMessage,
                                  Dso::Tlv::Type     aResponseTlvType,
                                  Dso::Tlv::Type     aRequestTlvType)
     {
@@ -288,22 +283,22 @@ private:
 
     static Error ProcessRequestMessage(Dso::Connection &aConnection,
                                        MessageId        aMessageId,
-                                       const Message &  aMessage,
+                                       const Message   &aMessage,
                                        Dso::Tlv::Type   aPrimaryTlvType)
     {
         return static_cast<Connection &>(aConnection).ProcessRequestMessage(aMessageId, aMessage, aPrimaryTlvType);
     }
 
     static Error ProcessUnidirectionalMessage(Dso::Connection &aConnection,
-                                              const Message &  aMessage,
+                                              const Message   &aMessage,
                                               Dso::Tlv::Type   aPrimaryTlvType)
     {
         return static_cast<Connection &>(aConnection).ProcessUnidirectionalMessage(aMessage, aPrimaryTlvType);
     }
 
-    static Error ProcessResponseMessage(Dso::Connection &  aConnection,
+    static Error ProcessResponseMessage(Dso::Connection   &aConnection,
                                         const Dns::Header &aHeader,
-                                        const Message &    aMessage,
+                                        const Message     &aMessage,
                                         Dso::Tlv::Type     aResponseTlvType,
                                         Dso::Tlv::Type     aRequestTlvType)
     {
@@ -311,7 +306,7 @@ private:
             .ProcessResponseMessage(aHeader, aMessage, aResponseTlvType, aRequestTlvType);
     }
 
-    const char *          mName;
+    const char           *mName;
     Ip6::SockAddr         mLocalSockAddr;
     bool                  mDidGetConnectedSignal;
     bool                  mDidGetSessionEstablishedSignal;
@@ -379,8 +374,8 @@ void otPlatDsoEnableListening(otInstance *, bool aEnable)
 
 void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr)
 {
-    Connection &         conn         = *static_cast<Connection *>(aConnection);
-    Connection *         peerConn     = nullptr;
+    Connection          &conn         = *static_cast<Connection *>(aConnection);
+    Connection          *peerConn     = nullptr;
     const Ip6::SockAddr &peerSockAddr = AsCoreType(aPeerSockAddr);
 
     Log(" otPlatDsoConnect(%s, aPeer:0x%04x)", conn.GetName(), peerSockAddr.GetPort());
@@ -544,12 +539,12 @@ void TestDso(void)
     static constexpr uint32_t kRetryDelayInterval  = TimeMilli::SecToMsec(3600);
     static constexpr uint32_t kLongResponseTimeout = Dso::kResponseTimeout + TimeMilli::SecToMsec(17);
 
-    Instance &            instance = *static_cast<Instance *>(testInitInstance());
+    Instance             &instance = *static_cast<Instance *>(testInitInstance());
     Ip6::SockAddr         serverSockAddr(kPortA);
     Ip6::SockAddr         clientSockAddr(kPortB);
     Connection            serverConn(instance, "serverConn", serverSockAddr, clientSockAddr);
     Connection            clientConn(instance, "clinetConn", clientSockAddr, serverSockAddr);
-    Message *             message;
+    Message              *message;
     Dso::Tlv              tlv;
     Connection::MessageId messageId;
 

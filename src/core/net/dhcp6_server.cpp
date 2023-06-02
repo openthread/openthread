@@ -145,10 +145,7 @@ exit:
     return;
 }
 
-void Server::Stop(void)
-{
-    IgnoreError(mSocket.Close());
-}
+void Server::Stop(void) { IgnoreError(mSocket.Close()); }
 
 void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {
@@ -333,16 +330,16 @@ exit:
     return error;
 }
 
-Error Server::SendReply(const Ip6::Address & aDst,
+Error Server::SendReply(const Ip6::Address  &aDst,
                         const TransactionId &aTransactionId,
-                        ClientIdentifier &   aClientId,
-                        IaNa &               aIaNa)
+                        ClientIdentifier    &aClientId,
+                        IaNa                &aIaNa)
 {
     Error            error = kErrorNone;
     Ip6::MessageInfo messageInfo;
-    Message *        message;
+    Message         *message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = mSocket.NewMessage()) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
     SuccessOrExit(error = AppendServerIdentifier(*message));
     SuccessOrExit(error = AppendClientIdentifier(*message, aClientId));
@@ -473,7 +470,7 @@ Error Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, Clien
     option.GetAddress().SetPrefix(aPrefix.mFields.m8, OT_IP6_PREFIX_BITSIZE);
     option.GetAddress().GetIid().SetFromExtAddress(aClientId.GetDuidLinkLayerAddress());
     option.SetPreferredLifetime(IaAddress::kDefaultPreferredLifetime);
-    option.SetValidLifetime(IaAddress::kDefaultValidLiftetime);
+    option.SetValidLifetime(IaAddress::kDefaultValidLifetime);
     SuccessOrExit(error = aMessage.Append(option));
 
 exit:

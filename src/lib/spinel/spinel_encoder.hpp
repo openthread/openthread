@@ -123,7 +123,7 @@ public:
     /**
      * This method overwrites the property key with `LAST_STATUS` in a property update command frame.
      *
-     * This method should be only used after a successful `BeginFrame(aHeader, aCommand, aPropertKey)`, otherwise, its
+     * This method should be only used after a successful `BeginFrame(aHeader, aCommand, aPropertyKey)`, otherwise, its
      * behavior is undefined.
      *
      * This method moves the write position back to saved position by `BeginFrame()` and replaces the property key
@@ -683,7 +683,7 @@ private:
         kMaxNestedStructs     = 4,  ///< Maximum number of nested structs.
     };
 
-    Spinel::Buffer &              mNcpBuffer;
+    Spinel::Buffer               &mNcpBuffer;
     Spinel::Buffer::WritePosition mStructPosition[kMaxNestedStructs];
     uint8_t                       mNumOpenStructs;
 

@@ -44,7 +44,9 @@ using namespace ot;
 
 otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
 {
-    return AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime);
+    AssertPointerIsNotNull(aNetworkTime);
+
+    return MapEnum(AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime));
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
