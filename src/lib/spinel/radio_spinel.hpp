@@ -648,10 +648,12 @@ public:
     /**
      * This method sets the current MAC Frame Counter value.
      *
-     * @param[in]   aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in] aMacFrameCounter  The MAC Frame Counter value.
+     * @param[in] aSetIfLarger      If `true`, set only if the new value is larger than the current value.
+     *                              If `false`, set the new value independent of the current value.
      *
      */
-    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+    otError SetMacFrameCounter(uint32_t aMacFrameCounter, bool aSetIfLarger);
 
     /**
      * This method sets the radio region code.
@@ -699,7 +701,7 @@ public:
      */
     otError ConfigureEnhAckProbing(otLinkMetrics        aLinkMetrics,
                                    const otShortAddress aShortAddress,
-                                   const otExtAddress & aExtAddress);
+                                   const otExtAddress  &aExtAddress);
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -727,14 +729,16 @@ public:
     /**
      * This method checks whether the spinel interface is radio-only.
      *
-     * @param[out] aSupportsRcpApiVersion   A reference to a boolean variable to update whether the list of spinel
-     *                                      capabilities include `SPINEL_CAP_RCP_API_VERSION`.
+     * @param[out] aSupportsRcpApiVersion          A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_API_VERSION`.
+     * @param[out] aSupportsRcpMinHostApiVersion   A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_MIN_HOST_API_VERSION`.
      *
      * @retval  TRUE    The radio chip is in radio-only mode.
      * @retval  FALSE   Otherwise.
      *
      */
-    bool IsRcp(bool &aSupportsRcpApiVersion);
+    bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
     /**
      * This method checks whether there is pending frame in the buffer.
@@ -820,9 +824,9 @@ public:
      *
      */
     otError GetWithParam(spinel_prop_key_t aKey,
-                         const uint8_t *   aParam,
+                         const uint8_t    *aParam,
                          spinel_size_t     aParamSize,
-                         const char *      aFormat,
+                         const char       *aFormat,
                          ...);
 
     /**
@@ -886,6 +890,55 @@ public:
      */
     const otRadioSpinelMetrics *GetRadioSpinelMetrics(void) const { return &mRadioSpinelMetrics; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    /**
+     * Add a calibrated power of the specified channel to the power calibration table.
+     *
+     * @param[in] aChannel                The radio channel.
+     * @param[in] aActualPower            The actual power in 0.01dBm.
+     * @param[in] aRawPowerSetting        A pointer to the raw power setting byte array.
+     * @param[in] aRawPowerSettingLength  The length of the @p aRawPowerSetting.
+     *
+     * @retval  OT_ERROR_NONE              Successfully added the calibrated power to the power calibration table.
+     * @retval  OT_ERROR_NO_BUFS           No available entry in the power calibration table.
+     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel, @p aActualPower or @p aRawPowerSetting is invalid.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError AddCalibratedPower(uint8_t        aChannel,
+                               int16_t        aActualPower,
+                               const uint8_t *aRawPowerSetting,
+                               uint16_t       aRawPowerSettingLength);
+
+    /**
+     * Clear all calibrated powers from the power calibration table.
+     *
+     * @retval  OT_ERROR_NONE              Successfully cleared all calibrated powers from the power calibration table.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   This feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError ClearCalibratedPowers(void);
+
+    /**
+     * Set the target power for the given channel.
+     *
+     * @param[in]  aChannel      The radio channel.
+     * @param[in]  aTargetPower  The target power in 0.01dBm. Passing `INT16_MAX` will disable this channel.
+     *
+     * @retval  OT_ERROR_NONE              Successfully set the target power.
+     * @retval  OT_ERROR_INVALID_ARGS      The @p aChannel or @p aTargetPower is invalid..
+     * @retval  OT_ERROR_NOT_IMPLEMENTED   The feature is not implemented.
+     * @retval  OT_ERROR_BUSY              Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT  Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
+#endif
+
 private:
     enum
     {
@@ -909,9 +962,10 @@ private:
 
     static void HandleReceivedFrame(void *aContext);
 
+    void    ResetRcp(bool aResetRadio);
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
-    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
+    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsMinHostRcpApiVersion);
 
     /**
      * This method triggers a state transfer of the state machine.
@@ -930,26 +984,26 @@ private:
 
     otError RequestV(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, va_list aArgs);
     otError Request(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, ...);
-    otError RequestWithPropertyFormat(const char *      aPropertyFormat,
+    otError RequestWithPropertyFormat(const char       *aPropertyFormat,
                                       uint32_t          aCommand,
                                       spinel_prop_key_t aKey,
-                                      const char *      aFormat,
+                                      const char       *aFormat,
                                       ...);
-    otError RequestWithPropertyFormatV(const char *      aPropertyFormat,
+    otError RequestWithPropertyFormatV(const char       *aPropertyFormat,
                                        uint32_t          aCommand,
                                        spinel_prop_key_t aKey,
-                                       const char *      aFormat,
+                                       const char       *aFormat,
                                        va_list           aArgs);
     otError RequestWithExpectedCommandV(uint32_t          aExpectedCommand,
                                         uint32_t          aCommand,
                                         spinel_prop_key_t aKey,
-                                        const char *      aFormat,
+                                        const char       *aFormat,
                                         va_list           aArgs);
-    otError WaitResponse(void);
+    otError WaitResponse(bool aHandleRcpTimeout = true);
     otError SendCommand(uint32_t          aCommand,
                         spinel_prop_key_t aKey,
                         spinel_tid_t      aTid,
-                        const char *      aFormat,
+                        const char       *aFormat,
                         va_list           aArgs);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
     otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
@@ -996,6 +1050,9 @@ private:
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
     }
 
+    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
+    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
+
     otInstance *mInstance;
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;
@@ -1007,7 +1064,7 @@ private:
     spinel_tid_t      mTxRadioTid;      ///< The transaction id used to send a radio frame.
     spinel_tid_t      mWaitingTid;      ///< The transaction id of current transaction.
     spinel_prop_key_t mWaitingKey;      ///< The property key of current transaction.
-    const char *      mPropertyFormat;  ///< The spinel property format of current transaction.
+    const char       *mPropertyFormat;  ///< The spinel property format of current transaction.
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
@@ -1070,13 +1127,13 @@ private:
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     bool   mDiagMode;
-    char * mDiagOutput;
+    char  *mDiagOutput;
     size_t mDiagOutputMaxLen;
 #endif
 
     uint64_t mTxRadioEndUs;
     uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
-    int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
+    uint64_t mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 
     MaxPowerTable mMaxPowerTable;
 

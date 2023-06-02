@@ -51,27 +51,31 @@ void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t a
 {
     HmacSha256 hmac;
 
-    OT_ASSERT((aKey != nullptr) && (aBuf != nullptr) && (aHash != nullptr));
+    AssertPointerIsNotNull(aBuf);
 
     hmac.Start(AsCoreType(aKey));
     hmac.Update(aBuf, aBufLength);
-    hmac.Finish(ot::AsCoreType(aHash));
+    hmac.Finish(AsCoreType(aHash));
 }
 
 void otCryptoAesCcm(const otCryptoKey *aKey,
                     uint8_t            aTagLength,
-                    const void *       aNonce,
+                    const void        *aNonce,
                     uint8_t            aNonceLength,
-                    const void *       aHeader,
+                    const void        *aHeader,
                     uint32_t           aHeaderLength,
-                    void *             aPlainText,
-                    void *             aCipherText,
+                    void              *aPlainText,
+                    void              *aCipherText,
                     uint32_t           aLength,
                     bool               aEncrypt,
-                    void *             aTag)
+                    void              *aTag)
 {
     AesCcm aesCcm;
-    OT_ASSERT((aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) && (aTag != nullptr));
+
+    AssertPointerIsNotNull(aNonce);
+    AssertPointerIsNotNull(aPlainText);
+    AssertPointerIsNotNull(aCipherText);
+    AssertPointerIsNotNull(aTag);
 
     aesCcm.SetKey(AsCoreType(aKey));
     aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
@@ -85,17 +89,3 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
     aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt);
     aesCcm.Finalize(aTag);
 }
-
-#if OPENTHREAD_CONFIG_ECDSA_ENABLE
-
-otError otCryptoEcdsaSign(uint8_t *      aOutput,
-                          uint16_t *     aOutputLength,
-                          const uint8_t *aInputHash,
-                          uint16_t       aInputHashLength,
-                          const uint8_t *aPrivateKey,
-                          uint16_t       aPrivateKeyLength)
-{
-    return Ecdsa::Sign(aOutput, *aOutputLength, aInputHash, aInputHashLength, aPrivateKey, aPrivateKeyLength);
-}
-
-#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE

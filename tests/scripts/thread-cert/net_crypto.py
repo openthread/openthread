@@ -33,8 +33,6 @@ import struct
 
 from binascii import hexlify
 
-from Crypto.Cipher import AES
-
 
 class CryptoEngine:
     """ Class responsible for encryption and decryption of data. """
@@ -64,6 +62,8 @@ class CryptoEngine:
         """
         key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(message_info)
 
+        from Crypto.Cipher import AES
+
         cipher = AES.new(key, AES.MODE_CCM, nonce, mac_len=self.mic_length)
         cipher.update(auth_data)
 
@@ -82,6 +82,8 @@ class CryptoEngine:
 
         """
         key, nonce, auth_data = self._crypto_material_creator.create_key_and_nonce_and_authenticated_data(message_info)
+
+        from Crypto.Cipher import AES
 
         cipher = AES.new(key, AES.MODE_CCM, nonce, mac_len=self.mic_length)
         cipher.update(auth_data)

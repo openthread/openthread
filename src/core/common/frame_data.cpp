@@ -38,10 +38,7 @@
 
 namespace ot {
 
-Error FrameData::ReadUint8(uint8_t &aUint8)
-{
-    return ReadBytes(&aUint8, sizeof(uint8_t));
-}
+Error FrameData::ReadUint8(uint8_t &aUint8) { return ReadBytes(&aUint8, sizeof(uint8_t)); }
 
 Error FrameData::ReadBigEndianUint16(uint16_t &aUint16)
 {
@@ -99,9 +96,6 @@ exit:
     return error;
 }
 
-void FrameData::SkipOver(uint16_t aLength)
-{
-    Init(GetBytes() + aLength, GetLength() - aLength);
-}
+void FrameData::SkipOver(uint16_t aLength) { Init(GetBytes() + aLength, GetLength() - aLength); }
 
 } // namespace ot

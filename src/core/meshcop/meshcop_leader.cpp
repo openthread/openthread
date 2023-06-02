@@ -57,22 +57,13 @@ RegisterLogModule("MeshCoPLeader");
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mPetition(UriPath::kLeaderPetition, Leader::HandlePetition, this)
-    , mKeepAlive(UriPath::kLeaderKeepAlive, Leader::HandleKeepAlive, this)
-    , mTimer(aInstance, HandleTimer)
+    , mTimer(aInstance)
     , mDelayTimerMinimal(DelayTimerTlv::kDelayTimerMinimal)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
-    Get<Tmf::Agent>().AddResource(mPetition);
-    Get<Tmf::Agent>().AddResource(mKeepAlive);
 }
 
-void Leader::HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandlePetition(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -80,7 +71,7 @@ void Leader::HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMe
     CommissionerIdTlv commissionerId;
     StateTlv::State   state = StateTlv::kReject;
 
-    LogInfo("received petition");
+    LogInfo("Received %s", UriToString<kUriLeaderPetition>());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
@@ -121,7 +112,7 @@ exit:
     SendPetitionResponse(aMessage, aMessageInfo, state);
 }
 
-void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
+void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   StateTlv::State         aState)
 {
@@ -145,26 +136,21 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent petition response");
+    LogInfo("Sent %s response", UriToString<kUriLeaderPetition>());
 
 exit:
     FreeMessageOnError(message, error);
     LogError("send petition response", error);
 }
 
-void Leader::HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    static_cast<Leader *>(aContext)->HandleKeepAlive(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
-}
-
-void Leader::HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     uint8_t                state;
     uint16_t               sessionId;
     BorderAgentLocatorTlv *borderAgentLocator;
     StateTlv::State        responseState;
 
-    LogInfo("received keep alive");
+    LogInfo("Received %s", UriToString<kUriLeaderKeepAlive>());
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
@@ -202,7 +188,7 @@ exit:
     return;
 }
 
-void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
+void Leader::SendKeepAliveResponse(const Coap::Message    &aRequest,
                                    const Ip6::MessageInfo &aMessageInfo,
                                    StateTlv::State         aState)
 {
@@ -216,7 +202,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent keep alive response");
+    LogInfo("Sent %s response", UriToString<kUriLeaderKeepAlive>());
 
 exit:
     FreeMessageOnError(message, error);
@@ -227,15 +213,15 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
     Error            error = kErrorNone;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message *  message;
+    Coap::Message   *message;
 
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kDatasetChanged);
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriDatasetChanged);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     messageInfo.SetSockAddrToRlocPeerAddrTo(aAddress);
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent dataset changed");
+    LogInfo("Sent %s", UriToString<kUriDatasetChanged>());
 
 exit:
     FreeMessageOnError(message, error);
@@ -253,15 +239,7 @@ exit:
     return error;
 }
 
-uint32_t Leader::GetDelayTimerMinimal(void) const
-{
-    return mDelayTimerMinimal;
-}
-
-void Leader::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Leader>().HandleTimer();
-}
+uint32_t Leader::GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
 
 void Leader::HandleTimer(void)
 {

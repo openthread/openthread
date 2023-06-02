@@ -97,8 +97,8 @@ public:
         TimeMilli GetCslLastHeard(void) const { return mCslLastHeard; }
         void      SetCslLastHeard(TimeMilli aCslLastHeard) { mCslLastHeard = aCslLastHeard; }
 
-        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimstamp; }
-        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimstamp = aLastRxTimestamp; }
+        uint64_t GetLastRxTimestamp(void) const { return mLastRxTimestamp; }
+        void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
         uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
@@ -108,7 +108,7 @@ public:
         uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
         uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
         TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
-        uint64_t  mLastRxTimstamp;      ///< Time when last frame containing CSL IE was received, in microseconds.
+        uint64_t  mLastRxTimestamp;     ///< Time when last frame containing CSL IE was received, in microseconds.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
@@ -160,7 +160,7 @@ public:
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
                                     Error               aError,
-                                    Child &             aChild);
+                                    Child              &aChild);
     };
     /**
      * This constructor initializes the CSL tx scheduler object.
@@ -187,10 +187,13 @@ public:
     void Clear(void);
 
 private:
+    // Guard time in usec to add when checking delay while preparing the CSL frame for tx.
+    static constexpr uint32_t kFramePreparationGuardInterval = 1500;
+
     void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const;
+    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx, uint32_t aAheadUs) const;
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
@@ -199,8 +202,8 @@ private:
     void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
 
     uint32_t                mCslFrameRequestAheadUs;
-    Child *                 mCslTxChild;
-    Message *               mCslTxMessage;
+    Child                  *mCslTxChild;
+    Message                *mCslTxMessage;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
 };

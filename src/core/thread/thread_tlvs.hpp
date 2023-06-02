@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
+#include "meshcop/network_name.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
@@ -136,7 +137,7 @@ typedef UintTlvInfo<ThreadTlv::kTimeout, uint32_t> ThreadTimeoutTlv;
  * This class defines Network Name TLV constants and types.
  *
  */
-typedef TlvInfo<ThreadTlv::kNetworkName> ThreadNetworkNameTlv;
+typedef StringTlvInfo<ThreadTlv::kNetworkName, MeshCoP::NetworkName::kMaxSize> ThreadNetworkNameTlv;
 
 /**
  * This class defines Commissioner Session ID TLV constants and types.
@@ -247,6 +248,14 @@ public:
      *
      */
     const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
+
+    /**
+     * This method gets the Assigned Router ID Mask.
+     *
+     * @returns The Assigned Router ID Mask.
+     *
+     */
+    Mle::RouterIdSet &GetAssignedRouterIdMask(void) { return mAssignedRouterIdMask; }
 
     /**
      * This method sets the Assigned Router ID Mask.

@@ -83,7 +83,7 @@ Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLengt
 Error Manager::GetServiceId(const void *aServiceData,
                             uint8_t     aServiceDataLength,
                             bool        aServerStable,
-                            uint8_t &   aServiceId) const
+                            uint8_t    &aServiceId) const
 {
     ServiceData serviceData;
 
@@ -94,11 +94,11 @@ Error Manager::GetServiceId(const void *aServiceData,
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
+void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::Config &aConfig) const
 {
-    const ServerTlv *                 rvalServerTlv  = nullptr;
+    const ServerTlv                  *rvalServerTlv  = nullptr;
     const BackboneRouter::ServerData *rvalServerData = nullptr;
-    const ServiceTlv *                serviceTlv     = nullptr;
+    const ServiceTlv                 *serviceTlv     = nullptr;
     ServiceData                       serviceData;
 
     serviceData.Init(&BackboneRouter::kServiceData, BackboneRouter::kServiceDataMinSize);
@@ -146,13 +146,13 @@ exit:
     return;
 }
 
-bool Manager::IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+bool Manager::IsBackboneRouterPreferredTo(const ServerTlv                  &aServerTlv,
                                           const BackboneRouter::ServerData &aServerData,
-                                          const ServerTlv &                 aOtherServerTlv,
+                                          const ServerTlv                  &aOtherServerTlv,
                                           const BackboneRouter::ServerData &aOtherServerData) const
 {
     bool     isPreferred;
-    uint16_t leaderRloc16 = Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
+    uint16_t leaderRloc16 = Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
 
     VerifyOrExit(aServerTlv.GetServer16() != leaderRloc16, isPreferred = true);
     VerifyOrExit(aOtherServerTlv.GetServer16() != leaderRloc16, isPreferred = false);
@@ -183,7 +183,7 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info
 
     tlv->GetServiceData(serviceData);
     aInfo.mAnycastAddress.SetToAnycastLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
-                                              Mle::Mle::ServiceAlocFromId(tlv->GetServiceId()));
+                                              Mle::ServiceAlocFromId(tlv->GetServiceId()));
     aInfo.mSequenceNumber =
         reinterpret_cast<const DnsSrpAnycast::ServiceData *>(serviceData.GetBytes())->GetSequenceNumber();
 
@@ -288,6 +288,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 aInfo.mSockAddr.SetAddress(serverData->GetAddress());
                 aInfo.mSockAddr.SetPort(serverData->GetPort());
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
+                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
 
@@ -300,6 +301,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                                                                  aIterator.mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
+                aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();
             }
         }
@@ -322,6 +324,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
             aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
             aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
             aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
+            aInfo.mRloc16 = Mle::kInvalidRloc16;
             ExitNow();
         }
 

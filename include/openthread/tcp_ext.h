@@ -88,10 +88,10 @@ extern "C" {
  */
 typedef struct otTcpCircularSendBuffer
 {
-    const uint8_t *mDataBuffer;   ///< Pointer to data in the circular send buffer
-    size_t         mCapacity;     ///< Length of the circular send buffer
-    size_t         mStartIndex;   ///< Index of the first valid byte in the send buffer
-    size_t         mCapacityUsed; ///< Number of bytes stored in the send buffer
+    uint8_t *mDataBuffer;   ///< Pointer to data in the circular send buffer
+    size_t   mCapacity;     ///< Length of the circular send buffer
+    size_t   mStartIndex;   ///< Index of the first valid byte in the send buffer
+    size_t   mCapacityUsed; ///< Number of bytes stored in the send buffer
 
     otLinkedBuffer mSendLinks[2];
     uint8_t        mFirstSendLinkIndex;
@@ -106,6 +106,15 @@ typedef struct otTcpCircularSendBuffer
  *                              the memory pointed to by @p aDataBuffer .
  */
 void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, void *aDataBuffer, size_t aCapacity);
+
+/**
+ * This enumeration defines flags passed to @p otTcpCircularSendBufferWrite.
+ *
+ */
+enum
+{
+    OT_TCP_CIRCULAR_SEND_BUFFER_WRITE_MORE_TO_COME = 1 << 0,
+};
 
 /**
  * Sends out data on a TCP endpoint, using the provided TCP circular send
@@ -136,15 +145,17 @@ void otTcpCircularSendBufferInitialize(otTcpCircularSendBuffer *aSendBuffer, voi
  * @param[in]   aLength      The length of the data pointed to by @p aData to copy into the TCP circular send buffer.
  * @param[out]  aWritten     Populated with the amount of data copied into the send buffer, which might be less than
  *                           @p aLength if the send buffer reaches capacity.
+ * @param[in]   aFlags       Flags specifying options for this operation (see enumeration above).
  *
- * @returns OT_ERROR_NONE    Successfully copied data into the send buffer and sent it on the TCP endpoint.
- * @returns OT_ERROR_FAILED  Failed to send out data on the TCP endpoint.
+ * @retval OT_ERROR_NONE    Successfully copied data into the send buffer and sent it on the TCP endpoint.
+ * @retval OT_ERROR_FAILED  Failed to send out data on the TCP endpoint.
  */
-otError otTcpCircularSendBufferWrite(otTcpEndpoint *          aEndpoint,
+otError otTcpCircularSendBufferWrite(otTcpEndpoint           *aEndpoint,
                                      otTcpCircularSendBuffer *aSendBuffer,
-                                     void *                   aData,
+                                     const void              *aData,
                                      size_t                   aLength,
-                                     size_t *                 aWritten);
+                                     size_t                  *aWritten,
+                                     uint32_t                 aFlags);
 
 /**
  * Performs circular-send-buffer-specific handling in the otTcpForwardProgress
@@ -173,9 +184,9 @@ void otTcpCircularSendBufferHandleForwardProgress(otTcpCircularSendBuffer *aSend
  *
  * @param[in]  aSendBuffer  A pointer to the TCP circular send buffer whose amount of free space to return.
  *
- * @return The amount of free space in the send buffer.
+ * @returns The amount of free space in the send buffer.
  */
-size_t otTcpCircularSendBufferFreeSpace(otTcpCircularSendBuffer *aSendBuffer);
+size_t otTcpCircularSendBufferGetFreeSpace(const otTcpCircularSendBuffer *aSendBuffer);
 
 /**
  * Forcibly discards all data in the circular send buffer.
@@ -203,6 +214,37 @@ void otTcpCircularSendBufferForceDiscardAll(otTcpCircularSendBuffer *aSendBuffer
  * @retval OT_ERROR_BUSY    Circular buffer contains data and cannot be deinitialized.
  */
 otError otTcpCircularSendBufferDeinitialize(otTcpCircularSendBuffer *aSendBuffer);
+
+/**
+ * Context structure to use with mbedtls_ssl_set_bio.
+ */
+typedef struct otTcpEndpointAndCircularSendBuffer
+{
+    otTcpEndpoint           *mEndpoint;
+    otTcpCircularSendBuffer *mSendBuffer;
+} otTcpEndpointAndCircularSendBuffer;
+
+/**
+ * Non-blocking send callback to pass to mbedtls_ssl_set_bio.
+ *
+ * @param[in]  aCtx  A pointer to an otTcpEndpointAndCircularSendBuffer.
+ * @param[in]  aBuf  The data to add to the send buffer.
+ * @param[in]  aLen  The amount of data to add to the send buffer.
+ *
+ * @returns The number of bytes sent, or an mbedtls error code.
+ */
+int otTcpMbedTlsSslSendCallback(void *aCtx, const unsigned char *aBuf, size_t aLen);
+
+/**
+ * Non-blocking receive callback to pass to mbedtls_ssl_set_bio.
+ *
+ * @param[in]   aCtx  A pointer to an otTcpEndpointAndCircularSendBuffer.
+ * @param[out]  aBuf  The buffer into which to receive data.
+ * @param[in]   aLen  The maximum amount of data that can be received.
+ *
+ * @returns The number of bytes received, or an mbedtls error code.
+ */
+int otTcpMbedTlsSslRecvCallback(void *aCtx, unsigned char *aBuf, size_t aLen);
 
 /**
  * @}

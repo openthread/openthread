@@ -70,8 +70,8 @@ extern "C" {
  */
 otError otDiagProcessCmd(otInstance *aInstance,
                          uint8_t     aArgsLength,
-                         char *      aArgs[],
-                         char *      aOutput,
+                         char       *aArgs[],
+                         char       *aOutput,
                          size_t      aOutputMaxLen);
 
 /**
@@ -85,8 +85,13 @@ otError otDiagProcessCmd(otInstance *aInstance,
  * @param[out]  aOutput         The diagnostics execution result.
  * @param[in]   aOutputMaxLen   The output buffer size.
  *
+ * @retval  OT_ERROR_NONE               The command is successfully process.
+ * @retval  OT_ERROR_INVALID_ARGS       The command is supported but invalid arguments provided.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED    The command is not supported.
+ * @retval  OT_ERROR_NO_BUFS            The command string is too long.
+ *
  */
-void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen);
+otError otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen);
 
 /**
  * This function indicates whether or not the factory diagnostics mode is enabled.

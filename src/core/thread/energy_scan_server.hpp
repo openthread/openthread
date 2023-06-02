@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -44,6 +43,7 @@
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -54,6 +54,7 @@ namespace ot {
 class EnergyScanServer : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -63,37 +64,34 @@ public:
     explicit EnergyScanServer(Instance &aInstance);
 
 private:
-    static constexpr uint32_t kScanDelay   = 1000; ///< SCAN_DELAY (milliseconds)
-    static constexpr uint32_t kReportDelay = 500;  ///< Delay before sending a report (milliseconds)
+    static constexpr uint32_t kScanDelay   = 1000; // SCAN_DELAY (milliseconds)
+    static constexpr uint32_t kReportDelay = 500;  // Delay before sending a report (milliseconds)
 
-    static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext);
     void        HandleScanResult(Mac::EnergyScanResult *aResult);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void HandleNotifierEvents(Events aEvents);
 
     void SendReport(void);
 
-    Ip6::Address mCommissioner;
-    uint32_t     mChannelMask;
-    uint32_t     mChannelMaskCurrent;
-    uint16_t     mPeriod;
-    uint16_t     mScanDuration;
-    uint8_t      mCount;
-    bool         mActive;
+    using ScanTimer = TimerMilliIn<EnergyScanServer, &EnergyScanServer::HandleTimer>;
 
-    int8_t  mScanResults[OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS];
-    uint8_t mScanResultsLength;
-
-    TimerMilli mTimer;
-
-    Coap::Resource mEnergyScan;
+    Ip6::Address   mCommissioner;
+    uint32_t       mChannelMask;
+    uint32_t       mChannelMaskCurrent;
+    uint16_t       mPeriod;
+    uint16_t       mScanDuration;
+    uint8_t        mCount;
+    uint8_t        mNumScanResults;
+    Coap::Message *mReportMessage;
+    ScanTimer      mTimer;
 };
+
+DeclareTmfHandler(EnergyScanServer, kUriEnergyScan);
 
 /**
  * @}

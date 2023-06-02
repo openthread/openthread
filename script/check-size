@@ -29,10 +29,17 @@
 
 set -euo pipefail
 
-readonly OT_TMP_DIR=/tmp/ot-size-report
-readonly OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
-readonly OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
-readonly OT_REPORT_FILE=/tmp/size_report
+OT_TMP_DIR=/tmp/ot-size-report
+readonly OT_TMP_DIR
+
+OT_SHA_NEW=${GITHUB_SHA:-$(git rev-parse HEAD)}
+readonly OT_SHA_NEW
+
+OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
+readonly OT_SHA_OLD
+
+OT_REPORT_FILE=/tmp/size_report
+readonly OT_REPORT_FILE
 
 setup_arm_gcc_7()
 {
@@ -119,7 +126,6 @@ size_nrf52840_version()
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_CHANNEL_MANAGER=ON"
         "-DOT_CHANNEL_MONITOR=ON"
-        "-DOT_CHILD_SUPERVISION=ON"
         "-DOT_COAP=ON"
         "-DOT_COAPS=ON"
         "-DOT_COMMISSIONER=ON"
@@ -136,7 +142,6 @@ size_nrf52840_version()
         "-DOT_LINK_RAW=ON"
         "-DOT_MAC_FILTER=ON"
         "-DOT_MESSAGE_USE_HEAP=ON"
-        "-DOT_MTD_NETDIAG=ON"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"
         "-DOT_SERVICE=ON"

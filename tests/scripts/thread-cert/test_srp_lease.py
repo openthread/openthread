@@ -137,7 +137,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.check_host_and_service(server, client)
 
         #
-        # 4. Clear the first service, shorten the lease time and register a second service.
+        # 4. Clear the first service, lengthen the lease time and register a second service.
         #    Verify that the lease time of the first service is not affected by new SRP
         #    registrations.
         #
@@ -156,7 +156,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(len(server.srp_server_get_hosts()), 1)
 
         #
-        # 5. Clear the second service, lengthen the lease time and register a third service.
+        # 5. Clear the second service, shorten the lease time and register a third service.
         #    Verify that the lease time of the second service is not affected by new SRP
         #    registrations.
         #
@@ -173,6 +173,19 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.simulator.go(KEY_LEASE - LEASE + 2)
         self.assertEqual(len(server.srp_server_get_services()), 2)
         self.assertEqual(len(server.srp_server_get_hosts()), 1)
+
+        #
+        # 6. Clear the third service. The host and services should expire in lease time.
+        #    Verify that the second service and the third service are removed when their host
+        #    expires.
+        #
+        client.srp_client_clear_service('my-service3', '_ipps._tcp')
+        self.simulator.go(LEASE + 2)
+        self.assertEqual(len(server.srp_server_get_services()), 2)
+        self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'true')
+        self.assertEqual(server.srp_server_get_service('my-service3', '_ipps._tcp')['deleted'], 'true')
+        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+        self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
 
     def check_host_and_service(self, server, client):
         """Check that we have properly registered host and service instance.

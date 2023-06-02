@@ -112,7 +112,6 @@ otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExt
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
 
-    OT_ASSERT(aExtAddress != nullptr);
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetExtAddress(AsCoreType(aExtAddress));
@@ -128,10 +127,7 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     AsCoreType(aInstance).Get<Radio>().GetIeeeEui64(AsCoreType(aEui64));
 }
 
-otPanId otLinkGetPanId(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId();
-}
+otPanId otLinkGetPanId(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetPanId(); }
 
 otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
 {
@@ -206,15 +202,11 @@ void otLinkFilterSetAddressMode(otInstance *aInstance, otMacFilterAddressMode aM
 
 otError otLinkFilterAddAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     return AsCoreType(aInstance).Get<Mac::Filter>().AddAddress(AsCoreType(aExtAddress));
 }
 
 void otLinkFilterRemoveAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     AsCoreType(aInstance).Get<Mac::Filter>().RemoveAddress(AsCoreType(aExtAddress));
 }
 
@@ -225,22 +217,19 @@ void otLinkFilterClearAddresses(otInstance *aInstance)
 
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    OT_ASSERT(aIterator != nullptr && aEntry != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
 
     return AsCoreType(aInstance).Get<Mac::Filter>().GetNextAddress(*aIterator, *aEntry);
 }
 
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     return AsCoreType(aInstance).Get<Mac::Filter>().AddRssIn(AsCoreType(aExtAddress), aRss);
 }
 
 void otLinkFilterRemoveRssIn(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    OT_ASSERT(aExtAddress != nullptr);
-
     AsCoreType(aInstance).Get<Mac::Filter>().RemoveRssIn(AsCoreType(aExtAddress));
 }
 
@@ -254,14 +243,12 @@ void otLinkFilterClearDefaultRssIn(otInstance *aInstance)
     AsCoreType(aInstance).Get<Mac::Filter>().ClearDefaultRssIn();
 }
 
-void otLinkFilterClearAllRssIn(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mac::Filter>().ClearAllRssIn();
-}
+void otLinkFilterClearAllRssIn(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Filter>().ClearAllRssIn(); }
 
 otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry)
 {
-    OT_ASSERT(aIterator != nullptr && aEntry != nullptr);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aEntry);
 
     return AsCoreType(aInstance).Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
@@ -282,24 +269,28 @@ bool otLinkIsRadioFilterEnabled(otInstance *aInstance)
 
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
 {
-    return LinkQualityInfo::ConvertRssToLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(), aRss);
+    return LinkQualityForLinkMargin(AsCoreType(aInstance).Get<Mac::Mac>().ComputeLinkMargin(aRss));
 }
 
 int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality)
 {
-    return LinkQualityInfo::ConvertLinkQualityToRss(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
-                                                    static_cast<LinkQuality>(aLinkQuality));
+    return GetTypicalRssForLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
+                                       static_cast<LinkQuality>(aLinkQuality));
 }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
 {
+    AssertPointerIsNotNull(aNumberOfEntries);
+
     return AsCoreType(aInstance).Get<Mac::Mac>().GetDirectRetrySuccessHistogram(*aNumberOfEntries);
 }
 
 const uint32_t *otLinkGetTxIndirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)
 {
     const uint32_t *histogram = nullptr;
+
+    AssertPointerIsNotNull(aNumberOfEntries);
 
 #if OPENTHREAD_FTD
     histogram = AsCoreType(aInstance).Get<Mac::Mac>().GetIndirectRetrySuccessHistogram(*aNumberOfEntries);
@@ -322,10 +313,7 @@ void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallba
     AsCoreType(aInstance).Get<Mac::Mac>().SetPcapCallback(aPcapCallback, aCallbackContext);
 }
 
-bool otLinkIsPromiscuous(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsPromiscuous();
-}
+bool otLinkIsPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsPromiscuous(); }
 
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
 {
@@ -355,26 +343,20 @@ exit:
     return error;
 }
 
-bool otLinkIsEnabled(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled();
-}
+bool otLinkIsEnabled(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().IsEnabled(); }
 
 const otMacCounters *otLinkGetCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mac::Mac>().GetCounters();
 }
 
-void otLinkResetCounters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters();
-}
+void otLinkResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mac::Mac>().ResetCounters(); }
 
-otError otLinkActiveScan(otInstance *             aInstance,
+otError otLinkActiveScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleActiveScanResult aCallback,
-                         void *                   aCallbackContext)
+                         void                    *aCallbackContext)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().ActiveScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
@@ -384,11 +366,11 @@ bool otLinkIsActiveScanInProgress(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mac::Mac>().IsActiveScanInProgress();
 }
 
-otError otLinkEnergyScan(otInstance *             aInstance,
+otError otLinkEnergyScan(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aScanDuration,
                          otHandleEnergyScanResult aCallback,
-                         void *                   aCallbackContext)
+                         void                    *aCallbackContext)
 {
     return AsCoreType(aInstance).Get<Mac::Mac>().EnergyScan(aScanChannels, aScanDuration, aCallback, aCallbackContext);
 }
@@ -409,10 +391,7 @@ uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint8_t otLinkCslGetChannel(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel();
-}
+uint8_t otLinkCslGetChannel(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslChannel(); }
 
 otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
@@ -426,10 +405,7 @@ exit:
     return error;
 }
 
-uint16_t otLinkCslGetPeriod(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod();
-}
+uint16_t otLinkCslGetPeriod(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mac::Mac>().GetCslPeriod(); }
 
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
 {

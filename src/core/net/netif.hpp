@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
@@ -305,7 +306,7 @@ public:
                 Iterator end(void) { return Iterator(mNetif, Iterator::kEndIterator); }
 
             private:
-                const Netif &       mNetif;
+                const Netif        &mNetif;
                 Address::TypeFilter mFilter;
             };
 
@@ -322,7 +323,7 @@ public:
             void AdvanceFrom(const MulticastAddress *aAddr);
             void Advance(void) { AdvanceFrom(mItem->GetNext()); }
 
-            const Netif &       mNetif;
+            const Netif        &mNetif;
             Address::TypeFilter mFilter;
         };
 
@@ -367,7 +368,10 @@ public:
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    void SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackContext);
+    void SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackContext)
+    {
+        mAddressCallback.Set(aCallback, aCallbackContext);
+    }
 
     /**
      * This method returns the linked list of unicast addresses.
@@ -644,12 +648,15 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
+    void SignalMulticastAddressChange(AddressEvent            aAddressEvent,
+                                      const MulticastAddress *aStart,
+                                      const MulticastAddress *aEnd);
+
     LinkedList<UnicastAddress>   mUnicastAddresses;
     LinkedList<MulticastAddress> mMulticastAddresses;
     bool                         mMulticastPromiscuous;
 
-    otIp6AddressCallback mAddressCallback;
-    void *               mAddressCallbackContext;
+    Callback<otIp6AddressCallback> mAddressCallback;
 
     Pool<UnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>           mExtUnicastAddressPool;
     Pool<ExternalMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;

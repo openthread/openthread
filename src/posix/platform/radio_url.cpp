@@ -63,8 +63,7 @@ const char *otSysGetRadioUrlHelpString(void)
     "    spi-small-packet=[n]          Specify the smallest packet we can receive in a single transaction.\n"  \
     "                                  (larger packets will require two transactions). Default value is 32.\n"
 
-#else
-
+#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #define OT_RADIO_URL_HELP_BUS                                                                        \
     "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"   \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
@@ -75,6 +74,14 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
     "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
     "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"
+
+#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
+
+#ifndef OT_VENDOR_RADIO_URL_HELP_BUS
+#define OT_VENDOR_RADIO_URL_HELP_BUS "\n"
+#endif // OT_VENDOR_RADIO_URL_HELP_BUS
+
+#define OT_RADIO_URL_HELP_BUS OT_VENDOR_RADIO_URL_HELP_BUS
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 

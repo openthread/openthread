@@ -39,9 +39,7 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include <openthread/channel_manager.h>
 #endif
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 #include <openthread/child_supervision.h>
-#endif
 #include <openthread/dataset.h>
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
@@ -87,6 +85,7 @@ exit:
 // MARK: Property/Status Changed
 // ----------------------------------------------------------------------------
 
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
 void NcpBase::HandleParentResponseInfo(otThreadParentResponseInfo *aInfo, void *aContext)
 {
     VerifyOrExit(aInfo && aContext);
@@ -118,6 +117,7 @@ void NcpBase::HandleParentResponseInfo(const otThreadParentResponseInfo &aInfo)
 exit:
     return;
 }
+#endif
 
 void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntry)
 {
@@ -366,9 +366,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DUA_ID>(void)
     }
     else
     {
-        for (size_t i = 0; i < sizeof(otIp6InterfaceIdentifier); i++)
+        for (uint8_t i : iid->mFields.m8)
         {
-            SuccessOrExit(error = mEncoder.WriteUint8(iid->mFields.m8[i]));
+            SuccessOrExit(error = mEncoder.WriteUint8(i));
         }
     }
 
@@ -388,9 +388,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DUA_ID>(void)
     {
         otIp6InterfaceIdentifier iid;
 
-        for (size_t i = 0; i < sizeof(otIp6InterfaceIdentifier); i++)
+        for (uint8_t &i : iid.mFields.m8)
         {
-            SuccessOrExit(error = mDecoder.ReadUint8(iid.mFields.m8[i]));
+            SuccessOrExit(error = mDecoder.ReadUint8(i));
         }
 
         SuccessOrExit(error = otThreadSetFixedDuaInterfaceIdentifier(mInstance, &iid));
@@ -763,7 +763,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_MESHCOP_COMMISSION
     bool                withDiscerner = false;
     const otExtAddress *eui64;
     uint32_t            timeout;
-    const char *        psk;
+    const char         *psk;
 
     SuccessOrExit(error = mDecoder.OpenStruct());
 
@@ -912,7 +912,7 @@ exit:
 void NcpBase::HandleCommissionerEnergyReport_Jump(uint32_t       aChannelMask,
                                                   const uint8_t *aEnergyData,
                                                   uint8_t        aLength,
-                                                  void *         aContext)
+                                                  void          *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleCommissionerEnergyReport(aChannelMask, aEnergyData, aLength);
 }
@@ -997,7 +997,7 @@ exit:
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MESHCOP_COMMISSIONER_MGMT_SET>(void)
 {
     otError                error = OT_ERROR_NONE;
-    const uint8_t *        tlvs;
+    const uint8_t         *tlvs;
     uint16_t               length;
     otCommissioningDataset dataset;
 
@@ -1014,8 +1014,8 @@ exit:
 otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC(uint8_t aHeader)
 {
     otError        error = OT_ERROR_NONE;
-    const char *   passPhrase;
-    const char *   networkName;
+    const char    *passPhrase;
+    const char    *networkName;
     const uint8_t *extPanIdData;
     uint16_t       length;
     otPskc         pskc;
@@ -1072,7 +1072,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_JOINERS>(vo
 {
     otError             error         = OT_ERROR_NONE;
     const otExtAddress *eui64         = nullptr;
-    const char *        pskd          = nullptr;
+    const char         *pskd          = nullptr;
     uint32_t            joinerTimeout = 0;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(pskd));
@@ -1223,8 +1223,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHILD_SUPERVISION_INTERVAL>(void)
 {
     return mEncoder.WriteUint16(otChildSupervisionGetInterval(mInstance));
@@ -1241,8 +1239,6 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_CHILD_SUPERVISION_INT
 exit:
     return error;
 }
-
-#endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 

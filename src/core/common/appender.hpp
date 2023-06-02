@@ -142,7 +142,7 @@ public:
      * @returns The `Message` instance associated with `Appender`.
      *
      */
-    Message &GetMessage(void) { return *mShared.mMessage.mMessage; }
+    Message &GetMessage(void) const { return *mShared.mMessage.mMessage; }
 
     /**
      * This method returns a pointer to the start of the data buffer associated with `Appender`.
@@ -152,7 +152,7 @@ public:
      * @returns A pointer to the start of the data buffer associated with `Appender`.
      *
      */
-    uint8_t *GetBufferStart(void) { return AsNonConst(mShared.mFrameBuilder.GetBytes()); }
+    uint8_t *GetBufferStart(void) const { return AsNonConst(mShared.mFrameBuilder.GetBytes()); }
 
     /**
      * This method gets the data buffer associated with `Appender` as a `Data`.
@@ -162,7 +162,7 @@ public:
      * @pram[out] aData  A reference to a `Data` to output the data buffer.
      *
      */
-    void GetAsData(Data<kWithUint16Length> &aData);
+    void GetAsData(Data<kWithUint16Length> &aData) const;
 
 private:
     Type mType;

@@ -30,16 +30,30 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
-setup_two_nodes
+spawn_node 2 "cli"
+spawn_node 1 "cli"
+setup_leader
+setup_node 2 "rnd" "router"
 
 switch_node 1
-send "tcp init\n"
+send "tcp init circular\n"
 expect_line "Done"
 
 switch_node 2
-send "tcp init\n"
+send "tcp init linked\n"
 expect_line "Done"
 set addr_2 [get_ipaddr mleid]
+send "tcp listen :: 30000\n"
+expect_line "Done"
+send "tcp stoplistening\n"
+expect_line "Done"
+
+switch_node 1
+send "tcp connect $addr_2 30000\n"
+expect_line "Done"
+expect "TCP: Connection refused"
+
+switch_node 2
 send "tcp listen :: 30000\n"
 expect_line "Done"
 

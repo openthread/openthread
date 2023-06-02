@@ -287,8 +287,16 @@ typedef struct otMessageQueueInfo
  */
 typedef struct otBufferInfo
 {
-    uint16_t           mTotalBuffers;         ///< The total number of buffers in the messages pool (0xffff if unknown).
-    uint16_t           mFreeBuffers;          ///< The number of free buffers (0xffff if unknown).
+    uint16_t mTotalBuffers; ///< The total number of buffers in the messages pool (0xffff if unknown).
+    uint16_t mFreeBuffers;  ///< The number of free buffers (0xffff if unknown).
+
+    /**
+     * The maximum number of used buffers at the same time since OT stack initialization or last call to
+     * `otMessageResetBufferInfo()`.
+     *
+     */
+    uint16_t mMaxUsedBuffers;
+
     otMessageQueueInfo m6loSendQueue;         ///< Info about 6LoWPAN send queue.
     otMessageQueueInfo m6loReassemblyQueue;   ///< Info about 6LoWPAN reassembly queue.
     otMessageQueueInfo mIp6Queue;             ///< Info about IPv6 send queue.
@@ -368,6 +376,16 @@ otMessage *otMessageQueueGetNext(otMessageQueue *aQueue, const otMessage *aMessa
  *
  */
 void otMessageGetBufferInfo(otInstance *aInstance, otBufferInfo *aBufferInfo);
+
+/**
+ * Reset the Message Buffer information counter tracking the maximum number buffers in use at the same time.
+ *
+ * This resets `mMaxUsedBuffers` in `otBufferInfo`.
+ *
+ * @param[in]   aInstance    A pointer to the OpenThread instance.
+ *
+ */
+void otMessageResetBufferInfo(otInstance *aInstance);
 
 /**
  * @}

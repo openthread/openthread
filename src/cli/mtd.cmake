@@ -46,5 +46,6 @@ target_link_libraries(openthread-cli-mtd
         openthread-mtd
     PRIVATE
         ${OT_MBEDTLS}
+        ot-config-mtd
         ot-config
 )

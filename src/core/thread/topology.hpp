@@ -47,6 +47,7 @@
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
 #include "radio/radio.hpp"
@@ -59,6 +60,7 @@
 #include "thread/mle_types.hpp"
 #include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
+#include "thread/version.hpp"
 
 namespace ot {
 
@@ -223,7 +225,7 @@ public:
      * @param[in]  aState  The state value.
      *
      */
-    void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
+    void SetState(State aState);
 
     /**
      * This method indicates whether the neighbor is in the Invalid state.
@@ -363,10 +365,12 @@ public:
     NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
-     * This method sets all bytes of the Extended Address to zero.
+     * This method returns the Extended Address.
+     *
+     * @returns A const reference to the Extended Address.
      *
      */
-    void ClearExtAddress(void) { memset(&mMacAddr, 0, sizeof(mMacAddr)); }
+    const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
 
     /**
      * This method returns the Extended Address.
@@ -374,7 +378,7 @@ public:
      * @returns A reference to the Extended Address.
      *
      */
-    const Mac::ExtAddress &GetExtAddress(void) const { return mMacAddr; }
+    Mac::ExtAddress &GetExtAddress(void) { return mMacAddr; }
 
     /**
      * This method sets the Extended Address.
@@ -539,7 +543,7 @@ public:
      * This method MUST be used only when the tag is set (and not cleared). Otherwise its behavior is undefined.
      *
      * The tag value compassion follows the Serial Number Arithmetic logic from RFC-1982. It is semantically equivalent
-     * to `LastRxFragementTag > aTag`.
+     * to `LastRxFragmentTag > aTag`.
      *
      * @param[in] aTag   A tag value to compare against.
      *
@@ -557,7 +561,7 @@ public:
      * @returns TRUE if neighbors is Thread 1.1, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_1; }
+    bool IsThreadVersion1p1(void) const { return mState != kStateInvalid && mVersion == kThreadVersion1p1; }
 
     /**
      * This method indicates whether or not neighbor is Thread 1.2 or higher..
@@ -565,7 +569,7 @@ public:
      * @returns TRUE if neighbor is Thread 1.2 or higher, FALSE otherwise.
      *
      */
-    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2; }
+    bool IsThreadVersion1p2OrHigher(void) const { return mState != kStateInvalid && mVersion >= kThreadVersion1p2; }
 
     /**
      * This method indicates whether Thread version supports CSL.
@@ -583,14 +587,14 @@ public:
      */
     bool IsEnhancedKeepAliveSupported(void) const
     {
-        return mState != kStateInvalid && mVersion >= OT_THREAD_VERSION_1_2;
+        return (mState != kStateInvalid) && (mVersion >= kThreadVersion1p2);
     }
 
     /**
      * This method gets the device MLE version.
      *
      */
-    uint8_t GetVersion(void) const { return mVersion; }
+    uint16_t GetVersion(void) const { return mVersion; }
 
     /**
      * This method sets the device MLE version.
@@ -598,7 +602,7 @@ public:
      * @param[in]  aVersion  The device MLE version.
      *
      */
-    void SetVersion(uint8_t aVersion) { mVersion = aVersion; }
+    void SetVersion(uint16_t aVersion) { mVersion = aVersion; }
 
     /**
      * This method gets the number of consecutive link failures.
@@ -637,6 +641,14 @@ public:
     const LinkQualityInfo &GetLinkInfo(void) const { return mLinkInfo; }
 
     /**
+     * This method gets the link quality in value.
+     *
+     * @returns The link quality in value.
+     *
+     */
+    LinkQuality GetLinkQualityIn(void) const { return GetLinkInfo().GetLinkQuality(); }
+
+    /**
      * This method generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
@@ -657,6 +669,16 @@ public:
      *
      */
     uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    /**
+     * This method returns the connection time (in seconds) of the neighbor (seconds since entering `kStateValid`).
+     *
+     * @returns The connection time (in seconds), zero if device is not currently in `kStateValid`.
+     *
+     */
+    uint32_t GetConnectionTime(void) const;
+#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -816,7 +838,7 @@ private:
 #else
     uint8_t mLinkFailures; ///< Consecutive link failure count
 #endif
-    uint8_t         mVersion;  ///< The MLE version
+    uint16_t        mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     // A list of Link Metrics Forward Tracking Series that is being
@@ -828,6 +850,9 @@ private:
     // Subject (this neighbor). Note that this device is the Initiator
     // and this neighbor is the Subject.
     LinkMetrics::Metrics mEnhAckProbingMetrics;
+#endif
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    uint32_t mConnectionStart;
 #endif
 };
 
@@ -970,7 +995,7 @@ public:
          * @returns A reference to the `Ip6::Address` entry currently pointed by the iterator.
          *
          */
-        const Ip6::Address &operator*(void)const { return *GetAddress(); }
+        const Ip6::Address &operator*(void) const { return *GetAddress(); }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two `Iterator` instances are equal.
@@ -1001,7 +1026,7 @@ public:
 
         void Update(void);
 
-        const Child &            mChild;
+        const Child             &mChild;
         Ip6::Address::TypeFilter mFilter;
         Index                    mIndex;
         Ip6::Address             mMeshLocalAddress;
@@ -1201,7 +1226,21 @@ public:
      */
     void SetRequestTlv(uint8_t aIndex, uint8_t aType) { mRequestTlvs[aIndex] = aType; }
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+    /**
+     * This method returns the supervision interval (in seconds).
+     *
+     * @returns The supervision interval (in seconds).
+     *
+     */
+    uint16_t GetSupervisionInterval(void) const { return mSupervisionInterval; }
+
+    /**
+     * This method sets the supervision interval.
+     *
+     * @param[in] aInterval  The supervision interval (in seconds).
+     *
+     */
+    void SetSupervisionInterval(uint16_t aInterval) { mSupervisionInterval = aInterval; }
 
     /**
      * This method increments the number of seconds since last supervision of the child.
@@ -1223,13 +1262,11 @@ public:
      */
     void ResetSecondsSinceLastSupervision(void) { mSecondsSinceSupervision = 0; }
 
-#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method returns MLR state of an IPv6 multicast address.
      *
-     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
      * @param[in] aAddress  The IPv6 multicast address.
      *
@@ -1241,7 +1278,7 @@ public:
     /**
      * This method sets MLR state of an IPv6 multicast address.
      *
-     * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
+     * @note The @p aAddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
      * @param[in] aAddress  The IPv6 multicast address.
      * @param[in] aState    The target MLR state.
@@ -1301,7 +1338,7 @@ private:
         AddressIterator end(void) { return AddressIterator(mChild, AddressIterator::kEndIterator); }
 
     private:
-        const Child &            mChild;
+        const Child             &mChild;
         Ip6::Address::TypeFilter mFilter;
     };
 
@@ -1322,14 +1359,15 @@ private:
         uint8_t mAttachChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
     };
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-    uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
-#endif
+    uint16_t mSupervisionInterval;     // Supervision interval for the child (in sec).
+    uint16_t mSecondsSinceSupervision; // Number of seconds since last supervision of the child.
 
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
 
 #endif // OPENTHREAD_FTD
+
+class Parent;
 
 /**
  * This class represents a Thread Router
@@ -1352,6 +1390,14 @@ public:
          *
          */
         void SetFrom(const Router &aRouter);
+
+        /**
+         * This method sets the `Info` instance from a given `Parent`.
+         *
+         * @param[in] aParent   A parent.
+         *
+         */
+        void SetFrom(const Parent &aParent);
     };
 
     /**
@@ -1360,14 +1406,7 @@ public:
      * @param[in] aInstance  A reference to OpenThread instance.
      *
      */
-    void Init(Instance &aInstance)
-    {
-        Neighbor::Init(aInstance);
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslUncertainty(kCslWorstUncertainty);
-#endif
-    }
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
 
     /**
      * This method clears the router entry.
@@ -1376,20 +1415,18 @@ public:
     void Clear(void);
 
     /**
+     * This method sets the `Router` entry from a `Parent`
+     *
+     */
+    void SetFrom(const Parent &aParent);
+
+    /**
      * This method gets the router ID of the next hop to this router.
      *
      * @returns The router ID of the next hop to this router.
      *
      */
     uint8_t GetNextHop(void) const { return mNextHop; }
-
-    /**
-     * This method sets the router ID of the next hop to this router.
-     *
-     * @param[in]  aRouterId  The router ID of the next hop to this router.
-     *
-     */
-    void SetNextHop(uint8_t aRouterId) { mNextHop = aRouterId; }
 
     /**
      * This method gets the link quality out value for this router.
@@ -1408,6 +1445,14 @@ public:
     void SetLinkQualityOut(LinkQuality aLinkQuality) { mLinkQualityOut = aLinkQuality; }
 
     /**
+     * This method gets the two-way link quality value (minimum of link quality in and out).
+     *
+     * @returns The two-way link quality value.
+     *
+     */
+    LinkQuality GetTwoWayLinkQuality(void) const;
+
+    /**
      * This method get the route cost to this router.
      *
      * @returns The route cost to this router.
@@ -1416,46 +1461,25 @@ public:
     uint8_t GetCost(void) const { return mCost; }
 
     /**
-     * This method sets the router cost to this router.
+     * This method sets the next hop and cost to this router.
      *
-     * @param[in]  aCost  The router cost to this router.
+     * @param[in]  aNextHop  The Router ID of the next hop to this router.
+     * @param[in]  aCost     The cost to this router.
      *
-     */
-    void SetCost(uint8_t aCost) { mCost = aCost; }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * This method get the CSL clock accuracy of this router.
-     *
-     * @returns The CSL clock accuracy of this router.
+     * @retval TRUE   If there was a change, i.e., @p aNextHop or @p aCost were different from their previous values.
+     * @retval FALSE  If no change to next hop and cost values (new values are the same as before).
      *
      */
-    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
+    bool SetNextHopAndCost(uint8_t aNextHop, uint8_t aCost);
 
     /**
-     * This method sets the CSL clock accuracy of this router.
+     * This method sets the next hop to this router as invalid and clears the cost.
      *
-     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
-     *
-     */
-    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
-
-    /**
-     * This method get the CSL clock uncertainty of this router.
-     *
-     * @returns The CSL clock uncertainty of this router.
+     * @retval TRUE   If there was a change (next hop was valid before).
+     * @retval FALSE  No change to next hop (next hop was invalid before).
      *
      */
-    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
-
-    /**
-     * This method sets the CSL clock uncertainty of this router.
-     *
-     * @param[in]  aCslUncertainty  The CSL clock uncertainty of this router.
-     *
-     */
-    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
-#endif
+    bool SetNextHopToInvalid(void);
 
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
@@ -1466,9 +1490,73 @@ private:
 #else
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
+};
+
+/**
+ * This class represent parent of a child node.
+ *
+ */
+class Parent : public Router
+{
+public:
+    /**
+     * This method initializes the `Parent`.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy; ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslUncertainty;   ///< Scheduling uncertainty, in units of 10 us.
+        mCslAccuracy.Init();
+#endif
+    }
+
+    /**
+     * This method clears the parent entry.
+     *
+     */
+    void Clear(void);
+
+    /**
+     * This method gets route cost from parent to leader.
+     *
+     * @returns The route cost from parent to leader
+     *
+     */
+    uint8_t GetLeaderCost(void) const { return mLeaderCost; }
+
+    /**
+     * This method sets route cost from parent to leader.
+     *
+     * @param[in] aLaderConst  The route cost.
+     *
+     */
+    void SetLeaderCost(uint8_t aLeaderCost) { mLeaderCost = aLeaderCost; }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method gets the CSL accuracy (clock accuracy and uncertainty).
+     *
+     * @returns The CSL accuracy.
+     *
+     */
+    const Mac::CslAccuracy &GetCslAccuracy(void) const { return mCslAccuracy; }
+
+    /**
+     * This method sets CSL accuracy.
+     *
+     * @param[in] aCslAccuracy  The CSL accuracy.
+     *
+     */
+    void SetCslAccuracy(const Mac::CslAccuracy &aCslAccuracy) { mCslAccuracy = aCslAccuracy; }
+#endif
+
+private:
+    uint8_t mLeaderCost;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Mac::CslAccuracy mCslAccuracy; // CSL accuracy (clock accuracy in ppm and uncertainty).
 #endif
 };
 

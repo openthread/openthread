@@ -32,12 +32,14 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
+readonly OT_BUILDDIR
 
 main()
 {
     local builddir
     local options=(
+        "-DBUILD_TESTING=OFF"
         "-DCMAKE_BUILD_TYPE=Release"
         "-DOT_COVERAGE=OFF"
         "-DOT_LOG_LEVEL=INFO"

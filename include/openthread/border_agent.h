@@ -52,6 +52,12 @@ extern "C" {
  */
 
 /**
+ * The length of Border Agent/Router ID in bytes.
+ *
+ */
+#define OT_BORDER_AGENT_ID_LENGTH (16)
+
+/**
  * This enumeration defines the Border Agent state.
  *
  */
@@ -81,6 +87,24 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
  *
  */
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
+
+/**
+ * Gets the randomly generated Border Agent ID.
+ *
+ * The ID is saved in persistent storage and survives reboots. The typical use case of the ID is to
+ * be published in the MeshCoP mDNS service as the `id` TXT value for the client to identify this
+ * Border Router/Agent device.
+ *
+ * @param[in]    aInstance  A pointer to an OpenThread instance.
+ * @param[out]   aId        A pointer to buffer to receive the ID.
+ * @param[inout] aLength    Specifies the length of `aId` when used as input and receives the length
+ *                          actual ID data copied to `aId` when used as output.
+ *
+ * @retval OT_ERROR_INVALID_ARGS  If value of `aLength` if smaller than `OT_BORDER_AGENT_ID_LENGTH`.
+ * @retval OT_ERROR_NONE          If successfully retrieved the Border Agent ID.
+ *
+ */
+otError otBorderAgentGetId(otInstance *aInstance, uint8_t *aId, uint16_t *aLength);
 
 /**
  * @}

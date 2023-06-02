@@ -31,8 +31,13 @@ add_library(openthread-rcp)
 target_compile_definitions(openthread-rcp PRIVATE
     OPENTHREAD_RADIO=1
     OPENTHREAD_RADIO_CLI=0
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
 )
+
+if (OT_NCP_SPI)
+    target_compile_definitions(openthread-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=0)
+else()
+    target_compile_definitions(openthread-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
+endif()
 
 target_compile_options(openthread-rcp PRIVATE
     ${OT_CFLAGS}
@@ -47,7 +52,11 @@ target_link_libraries(openthread-rcp
     PUBLIC
         openthread-radio
     PRIVATE
-        openthread-hdlc
         openthread-spinel-rcp
+        ot-config-radio
         ot-config
 )
+
+if(NOT OT_NCP_SPI)
+    target_link_libraries(openthread-rcp PRIVATE openthread-hdlc)
+endif()

@@ -94,7 +94,7 @@ otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig
  * @sa otServerRegister
  *
  */
-otError otServerRemoveService(otInstance *   aInstance,
+otError otServerRemoveService(otInstance    *aInstance,
                               uint32_t       aEnterpriseNumber,
                               const uint8_t *aServiceData,
                               uint8_t        aServiceDataLength);

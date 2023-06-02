@@ -34,13 +34,9 @@
 #include <openthread/platform/memory.h>
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    return calloc(aNum, aSize);
-}
+extern "C" {
+void *otPlatCAlloc(size_t aNum, size_t aSize) { return calloc(aNum, aSize); }
 
-void otPlatFree(void *aPtr)
-{
-    free(aPtr);
-}
+void otPlatFree(void *aPtr) { free(aPtr); }
+} // extern "C"
 #endif

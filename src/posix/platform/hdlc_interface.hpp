@@ -61,8 +61,8 @@ public:
      *
      */
     HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void *                                        aCallbackContext,
-                  Spinel::SpinelInterface::RxFrameBuffer &      aFrameBuffer);
+                  void                                         *aCallbackContext,
+                  Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -158,16 +158,13 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method is called when RCP failure detected and resets internal states of the interface.
+     * This method hardware resets the RCP.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
      *
      */
-    void OnRcpReset(void);
-
-    /**
-     * This method is called when RCP is reset to recreate the connection with it.
-     *
-     */
-    otError ResetConnection(void);
+    otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     /**
      * This method returns the RCP interface metrics.
@@ -178,6 +175,12 @@ public:
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
 private:
+    /**
+     * This method is called when RCP is reset to recreate the connection with it.
+     *
+     */
+    otError ResetConnection(void);
+
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
@@ -258,8 +261,8 @@ private:
     };
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                        mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
+    void                                         *mReceiveFrameContext;
+    Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
 
     int             mSockFd;
     uint32_t        mBaudRate;

@@ -82,7 +82,7 @@ public:
      * This constructor initializes the pool.
      *
      * This constructor version requires the `Type` class to provide method `void Init(Instance &)` to initialize
-     * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstaceLocatorInit()`.
+     * each `Type` entry object. This can be realized by the `Type` class inheriting from `InstanceLocatorInit()`.
      *
      * @param[in] aInstance   A reference to the OpenThread instance.
      *

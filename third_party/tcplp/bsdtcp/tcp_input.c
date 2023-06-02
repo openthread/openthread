@@ -241,8 +241,12 @@ cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type)
 		tp->t_dupacks = 0;
 		tp->t_bytes_acked = 0;
 		EXIT_RECOVERY(tp->t_flags);
+		/*
+		 * samkumar: I added the cast to uint64_t below to fix an OpenThread
+		 * code scanning alert relating to integer overflow in multiplication.
+		 */
 		tp->snd_ssthresh = max(2, min(tp->snd_wnd, tp->snd_cwnd) / 2 /
-		    tp->t_maxseg) * tp->t_maxseg;
+		    tp->t_maxseg) * ((uint64_t) tp->t_maxseg);
 		tp->snd_cwnd = tp->t_maxseg;
 
 		/*
@@ -766,13 +770,14 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		 */
 
 		tcp_dooptions(&to, optp, optlen, TO_SYN);
-		tp = tcplp_sys_accept_ready(tpl, &ip6->ip6_dst, th->th_sport); // Try to allocate an active socket to accept into
+		tp = tcplp_sys_accept_ready(tpl, &ip6->ip6_src, th->th_sport); // Try to allocate an active socket to accept into
 		if (tp == NULL) {
 			/* If we couldn't allocate, just ignore the SYN. */
 			return IPPROTO_DONE;
 		}
 		if (tp == (struct tcpcb *) -1) {
 			rstreason = ECONNREFUSED;
+			tp = NULL;
 			goto dropwithreset;
 		}
 		tcp_state_change(tp, TCPS_SYN_RECEIVED);
@@ -2012,9 +2017,14 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					tp->snd_nxt = th->th_ack;
 					tp->snd_cwnd = tp->t_maxseg;
 					(void) tcp_output(tp);
+					/*
+					 * samkumar: I added casts to uint64_t below to
+					 * fix an OpenThread code scanning alert relating
+					 * to integer overflow in multiplication.
+					 */
 					tp->snd_cwnd = tp->snd_ssthresh +
-					     tp->t_maxseg *
-					     (tp->t_dupacks - tp->snd_limited);
+					     ((uint64_t) tp->t_maxseg) *
+					     ((uint64_t) (tp->t_dupacks - tp->snd_limited));
 #ifdef INSTRUMENT_TCP
 					tcplp_sys_log("TCP SET_cwnd %d", (int) tp->snd_cwnd);
 #endif

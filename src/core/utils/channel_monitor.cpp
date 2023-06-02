@@ -64,7 +64,7 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMaskIndex(0)
     , mSampleCount(0)
-    , mTimer(aInstance, ChannelMonitor::HandleTimer)
+    , mTimer(aInstance)
 {
     memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 }
@@ -114,11 +114,6 @@ exit:
     return occupancy;
 }
 
-void ChannelMonitor::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<ChannelMonitor>().HandleTimer();
-}
-
 void ChannelMonitor::HandleTimer(void)
 {
     IgnoreError(Get<Mac::Mac>().EnergyScan(mScanChannelMasks[mChannelMaskIndex], 0,
@@ -158,7 +153,7 @@ void ChannelMonitor::HandleEnergyScanResult(Mac::EnergyScanResult *aResult)
 
         LogDebg("channel: %d, rssi:%d", aResult->mChannel, aResult->mMaxRssi);
 
-        if (aResult->mMaxRssi != OT_RADIO_RSSI_INVALID)
+        if (aResult->mMaxRssi != Radio::kInvalidRssi)
         {
             newValue = (aResult->mMaxRssi >= kRssiThreshold) ? kMaxOccupancy : 0;
         }
@@ -200,7 +195,7 @@ void ChannelMonitor::LogResults(void)
         logString.Append("%02x ", channel >> 8);
     }
 
-    LogInfo("%u [%s]", mSampleCount, logString.AsCString());
+    LogInfo("%lu [%s]", ToUlong(mSampleCount), logString.AsCString());
 #endif
 }
 

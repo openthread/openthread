@@ -191,7 +191,7 @@ public:
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
                                     Error               aError,
-                                    Child &             aChild);
+                                    Child              &aChild);
 
         /**
          * This callback method notifies that a requested frame change from `RequestFrameChange()` is processed.
@@ -282,7 +282,7 @@ private:
     // indicates no active indirect tx). `mFrameContext` tracks the
     // context for the prepared frame for the current indirect tx.
 
-    Child *                 mIndirectTxChild;
+    Child                  *mIndirectTxChild;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
 };

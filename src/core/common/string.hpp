@@ -43,6 +43,7 @@
 #include "common/binary_search.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/num_utils.hpp"
 
 namespace ot {
 
@@ -143,7 +144,7 @@ bool StringEndsWith(const char *aString, char aChar);
 bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode aMode = kStringExactMatch);
 
 /**
- * This method checks whether or not two null-terminated strings match.
+ * This function checks whether or not two null-terminated strings match.
  *
  * @param[in] aFirstString   A pointer to the first string.
  * @param[in] aSecondString  A pointer to the second string.
@@ -154,6 +155,45 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
  *
  */
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ *
+ * If the string does not start with a digit, `kErrorParse` is returned.
+ *
+ * All the digit characters in the string are parsed until reaching a non-digit character. The pointer `aString` is
+ * updated to point to the first non-digit character after the parsed digits.
+ *
+ * If the parsed number value is larger than @p aMaxValue, `kErrorParse` is returned.
+ *
+ * @param[in,out] aString    A reference to a pointer to string to parse.
+ * @param[out]    aUint8     A reference to return the parsed value.
+ * @param[in]     aMaxValue  Maximum allowed value for the parsed number.
+ *
+ * @retval kErrorNone   Successfully parsed the number from string. @p aString and @p aUint8 are updated.
+ * @retval kErrorParse  Failed to parse the number from @p aString, or parsed number is larger than @p aMaxValue.
+ *
+ */
+Error StringParseUint8(const char *&aString, uint8_t &aUint8, uint8_t aMaxValue);
+
+/**
+ * This function parses a decimal number from a string as `uint8_t` and skips over the parsed characters.
+ *
+ * If the string does not start with a digit, `kErrorParse` is returned.
+ *
+ * All the digit characters in the string are parsed until reaching a non-digit character. The pointer `aString` is
+ * updated to point to the first non-digit character after the parsed digits.
+ *
+ * If the parsed number value is larger than maximum `uint8_t` value, `kErrorParse` is returned.
+ *
+ * @param[in,out] aString    A reference to a pointer to string to parse.
+ * @param[out]    aUint8     A reference to return the parsed value.
+ *
+ * @retval kErrorNone   Successfully parsed the number from string. @p aString and @p aUint8 are updated.
+ * @retval kErrorParse  Failed to parse the number from @p aString, or parsed number is out of range.
+ *
+ */
+Error StringParseUint8(const char *&aString, uint8_t &aUint8);
 
 /**
  * This function converts all uppercase letter characters in a given string to lowercase.
@@ -312,7 +352,7 @@ public:
      * @returns The string writer.
      *
      */
-    StringWriter &Append(const char *aFormat, ...);
+    StringWriter &Append(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method appends `printf()` style formatted data to the buffer.
@@ -349,7 +389,7 @@ public:
     void ConvertToUppercase(void) { StringConvertToUppercase(mBuffer); }
 
 private:
-    char *         mBuffer;
+    char          *mBuffer;
     uint16_t       mLength;
     const uint16_t mSize;
 };
@@ -405,7 +445,7 @@ public:
         const char *mString; ///< The associated string.
 
     private:
-        int Compare(uint16_t aKey) const { return (aKey == mKey) ? 0 : ((aKey > mKey) ? 1 : -1); }
+        int Compare(uint16_t aKey) const { return ThreeWayCompare(aKey, mKey); }
 
         constexpr static bool AreInOrder(const Entry &aFirst, const Entry &aSecond)
         {

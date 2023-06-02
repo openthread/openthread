@@ -40,6 +40,8 @@
 #include "common/as_core_type.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
+#include "common/uptime.hpp"
+#include "thread/version.hpp"
 
 using namespace ot;
 
@@ -61,7 +63,7 @@ const otExtendedPanId *otThreadGetExtendedPanId(otInstance *aInstance)
 otError otThreadSetExtendedPanId(otInstance *aInstance, const otExtendedPanId *aExtendedPanId)
 {
     Error                         error    = kErrorNone;
-    Instance &                    instance = AsCoreType(aInstance);
+    Instance                     &instance = AsCoreType(aInstance);
     const MeshCoP::ExtendedPanId &extPanId = AsCoreType(aExtendedPanId);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
@@ -77,8 +79,6 @@ exit:
 
 otError otThreadGetLeaderRloc(otInstance *aInstance, otIp6Address *aLeaderRloc)
 {
-    OT_ASSERT(aLeaderRloc != nullptr);
-
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderAddress(AsCoreType(aLeaderRloc));
 }
 
@@ -112,8 +112,6 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;
     Instance &instance = AsCoreType(aInstance);
-
-    OT_ASSERT(aKey != nullptr);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
@@ -205,6 +203,12 @@ otError otThreadSetNetworkName(otInstance *aInstance, const char *aNetworkName)
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
+#if !OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME
+    // Thread interfaces support a zero length name internally for backwards compatibility, but new names
+    // must be at least one valid character long.
+    VerifyOrExit(nullptr != aNetworkName && aNetworkName[0] != '\0', error = kErrorInvalidArgs);
+#endif
+
     error = AsCoreType(aInstance).Get<MeshCoP::NetworkNameManager>().SetNetworkName(aNetworkName);
     AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Clear();
     AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Clear();
@@ -250,7 +254,7 @@ otError otThreadSetFixedDuaInterfaceIdentifier(otInstance *aInstance, const otIp
 
 const otIp6InterfaceIdentifier *otThreadGetFixedDuaInterfaceIdentifier(otInstance *aInstance)
 {
-    Instance &                      instance = AsCoreType(aInstance);
+    Instance                       &instance = AsCoreType(aInstance);
     const otIp6InterfaceIdentifier *iid      = nullptr;
 
     if (instance.Get<DuaManager>().IsFixedDuaInterfaceIdentifierSet())
@@ -289,14 +293,11 @@ otError otThreadBecomeDetached(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeDetached();
 }
 
-otError otThreadBecomeChild(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild();
-}
+otError otThreadBecomeChild(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().BecomeChild(); }
 
 otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterator *aIterator, otNeighborInfo *aInfo)
 {
-    OT_ASSERT((aInfo != nullptr) && (aIterator != nullptr));
+    AssertPointerIsNotNull(aIterator);
 
     return AsCoreType(aInstance).Get<NeighborTable>().GetNextNeighborInfo(*aIterator, AsCoreType(aInfo));
 }
@@ -306,16 +307,13 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
     return MapEnum(AsCoreType(aInstance).Get<Mle::MleRouter>().GetRole());
 }
 
-const char *otThreadDeviceRoleToString(otDeviceRole aRole)
-{
-    return Mle::Mle::RoleToString(MapEnum(aRole));
-}
+const char *otThreadDeviceRoleToString(otDeviceRole aRole) { return Mle::RoleToString(MapEnum(aRole)); }
 
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aLeaderData != nullptr);
+    AssertPointerIsNotNull(aLeaderData);
 
     VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsAttached(), error = kErrorDetached);
     *aLeaderData = AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData();
@@ -339,51 +337,22 @@ uint32_t otThreadGetPartitionId(otInstance *aInstance)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetPartitionId();
 }
 
-uint16_t otThreadGetRloc16(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetRloc16();
-}
+uint16_t otThreadGetRloc16(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().GetRloc16(); }
 
 otError otThreadGetParentInfo(otInstance *aInstance, otRouterInfo *aParentInfo)
 {
-    Error   error = kErrorNone;
-    Router *parent;
-
-    OT_ASSERT(aParentInfo != nullptr);
-
-    // Reference device needs get the original parent's info even after the node state changed.
-#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsChild(), error = kErrorInvalidState);
-#endif
-
-    parent = &AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent();
-
-    aParentInfo->mExtAddress     = parent->GetExtAddress();
-    aParentInfo->mRloc16         = parent->GetRloc16();
-    aParentInfo->mRouterId       = Mle::Mle::RouterIdFromRloc16(parent->GetRloc16());
-    aParentInfo->mNextHop        = parent->GetNextHop();
-    aParentInfo->mPathCost       = parent->GetCost();
-    aParentInfo->mLinkQualityIn  = parent->GetLinkInfo().GetLinkQuality();
-    aParentInfo->mLinkQualityOut = parent->GetLinkQualityOut();
-    aParentInfo->mAge            = static_cast<uint8_t>(Time::MsecToSec(TimerMilli::GetNow() - parent->GetLastHeard()));
-    aParentInfo->mAllocated      = true;
-    aParentInfo->mLinkEstablished = parent->IsStateValid();
-
-#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-exit:
-#endif
-    return error;
+    return AsCoreType(aInstance).Get<Mle::Mle>().GetParentInfo(AsCoreType(aParentInfo));
 }
 
 otError otThreadGetParentAverageRssi(otInstance *aInstance, int8_t *aParentRssi)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aParentRssi != nullptr);
+    AssertPointerIsNotNull(aParentRssi);
 
     *aParentRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetAverageRss();
 
-    VerifyOrExit(*aParentRssi != OT_RADIO_RSSI_INVALID, error = kErrorFailed);
+    VerifyOrExit(*aParentRssi != Radio::kInvalidRssi, error = kErrorFailed);
 
 exit:
     return error;
@@ -393,14 +362,19 @@ otError otThreadGetParentLastRssi(otInstance *aInstance, int8_t *aLastRssi)
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aLastRssi != nullptr);
+    AssertPointerIsNotNull(aLastRssi);
 
     *aLastRssi = AsCoreType(aInstance).Get<Mle::MleRouter>().GetParent().GetLinkInfo().GetLastRss();
 
-    VerifyOrExit(*aLastRssi != OT_RADIO_RSSI_INVALID, error = kErrorFailed);
+    VerifyOrExit(*aLastRssi != Radio::kInvalidRssi, error = kErrorFailed);
 
 exit:
     return error;
+}
+
+otError otThreadSearchForBetterParent(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::Mle>().SearchForBetterParent();
 }
 
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
@@ -419,30 +393,24 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
     return error;
 }
 
-uint16_t otThreadGetVersion(void)
-{
-    return OPENTHREAD_CONFIG_THREAD_VERSION;
-}
+uint16_t otThreadGetVersion(void) { return kThreadVersion; }
 
-bool otThreadIsSingleton(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton();
-}
+bool otThreadIsSingleton(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton(); }
 
-otError otThreadDiscover(otInstance *             aInstance,
+otError otThreadDiscover(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
                          uint16_t                 aPanId,
                          bool                     aJoiner,
                          bool                     aEnableEui64Filtering,
                          otHandleActiveScanResult aCallback,
-                         void *                   aCallbackContext)
+                         void                    *aCallbackContext)
 {
     return AsCoreType(aInstance).Get<Mle::DiscoverScanner>().Discover(
         Mac::ChannelMask(aScanChannels), aPanId, aJoiner, aEnableEui64Filtering,
         /* aFilterIndexes (use hash of factory EUI64) */ nullptr, aCallback, aCallbackContext);
 }
 
-otError otThreadSetJoinerAdvertisement(otInstance *   aInstance,
+otError otThreadSetJoinerAdvertisement(otInstance    *aInstance,
                                        uint32_t       aOui,
                                        const uint8_t *aAdvData,
                                        uint8_t        aAdvDataLength)
@@ -460,33 +428,29 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
     return &AsCoreType(aInstance).Get<MeshForwarder>().GetCounters();
 }
 
-void otThreadResetIp6Counters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<MeshForwarder>().ResetCounters();
-}
+void otThreadResetIp6Counters(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshForwarder>().ResetCounters(); }
 
 const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetCounters();
 }
 
-void otThreadResetMleCounters(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters();
-}
+void otThreadResetMleCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Mle::MleRouter>().ResetCounters(); }
 
-void otThreadRegisterParentResponseCallback(otInstance *                   aInstance,
+#if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+void otThreadRegisterParentResponseCallback(otInstance                    *aInstance,
                                             otThreadParentResponseCallback aCallback,
-                                            void *                         aContext)
+                                            void                          *aContext)
 {
     AsCoreType(aInstance).Get<Mle::MleRouter>().RegisterParentResponseStatsCallback(aCallback, aContext);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
-otError otThreadLocateAnycastDestination(otInstance *                   aInstance,
-                                         const otIp6Address *           aAnycastAddress,
+otError otThreadLocateAnycastDestination(otInstance                    *aInstance,
+                                         const otIp6Address            *aAnycastAddress,
                                          otThreadAnycastLocatorCallback aCallback,
-                                         void *                         aContext)
+                                         void                          *aContext)
 {
     return AsCoreType(aInstance).Get<AnycastLocator>().Locate(AsCoreType(aAnycastAddress), aCallback, aContext);
 }
@@ -503,3 +467,12 @@ otError otThreadDetachGracefully(otInstance *aInstance, otDetachGracefullyCallba
 }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+void otConvertDurationInSecondsToString(uint32_t aDuration, char *aBuffer, uint16_t aSize)
+{
+    StringWriter writer(aBuffer, aSize);
+
+    Uptime::UptimeToString(Uptime::SecToMsec(aDuration), writer, /* aIncludeMsec */ false);
+}
+#endif

@@ -38,13 +38,13 @@
 
 #if OPENTHREAD_FTD
 
-#include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/udp6.hpp"
 #include "thread/mle.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -66,6 +66,8 @@ public:
 
 class Leader : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This constructor initializes the Leader object.
@@ -111,34 +113,34 @@ public:
 private:
     static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
-    static void HandlePetition(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandlePetition(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        SendPetitionResponse(const Coap::Message &   aRequest,
-                                     const Ip6::MessageInfo &aMessageInfo,
-                                     StateTlv::State         aState);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleKeepAlive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleKeepAlive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void        SendKeepAliveResponse(const Coap::Message &   aRequest,
-                                      const Ip6::MessageInfo &aMessageInfo,
-                                      StateTlv::State         aState);
+    void SendPetitionResponse(const Coap::Message    &aRequest,
+                              const Ip6::MessageInfo &aMessageInfo,
+                              StateTlv::State         aState);
+
+    void SendKeepAliveResponse(const Coap::Message    &aRequest,
+                               const Ip6::MessageInfo &aMessageInfo,
+                               StateTlv::State         aState);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
     void ResignCommissioner(void);
 
-    Coap::Resource mPetition;
-    Coap::Resource mKeepAlive;
-    TimerMilli     mTimer;
+    using LeaderTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+
+    LeaderTimer mTimer;
 
     uint32_t mDelayTimerMinimal;
 
     CommissionerIdTlv mCommissionerId;
     uint16_t          mSessionId;
 };
+
+DeclareTmfHandler(Leader, kUriLeaderPetition);
+DeclareTmfHandler(Leader, kUriLeaderKeepAlive);
 
 } // namespace MeshCoP
 } // namespace ot

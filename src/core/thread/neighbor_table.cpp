@@ -136,7 +136,7 @@ Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatc
 
 Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
-    Neighbor *   neighbor = nullptr;
+    Neighbor    *neighbor = nullptr;
     Mac::Address macAddress;
 
     if (aIp6Address.IsLinkLocal())
@@ -172,7 +172,7 @@ Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddres
     Neighbor *neighbor = nullptr;
 
     VerifyOrExit(Get<Mle::Mle>().IsChild());
-    neighbor = Get<RouterTable>().GetNeighbor(aMacAddress);
+    neighbor = Get<RouterTable>().FindNeighbor(aMacAddress);
 
 exit:
     return neighbor;
@@ -213,7 +213,7 @@ Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neig
 
     for (index = -aIterator; index <= Mle::kMaxRouterId; index++)
     {
-        Router *router = Get<RouterTable>().GetRouter(static_cast<uint8_t>(index));
+        Router *router = Get<RouterTable>().FindRouterById(static_cast<uint8_t>(index));
 
         if (router != nullptr && router->IsStateValid())
         {
@@ -271,6 +271,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         case kChildRemoved:
         case kChildModeChanged:
 #if OPENTHREAD_FTD
+            OT_ASSERT(Get<ChildTable>().Contains(aNeighbor));
             static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<const Child &>(aNeighbor));
 #endif
             break;

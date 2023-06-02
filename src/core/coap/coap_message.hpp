@@ -47,6 +47,7 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 
@@ -208,13 +209,13 @@ public:
      *
      * @param[in]  aType              The Type value.
      * @param[in]  aCode              The Code value.
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     * @param[in]  aUri               The URI.
      *
      * @retval kErrorNone         Successfully appended the option.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    Error Init(Type aType, Code aCode, const char *aUriPath);
+    Error Init(Type aType, Code aCode, Uri aUri);
 
     /**
      * This method initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
@@ -222,13 +223,13 @@ public:
      *
      * @param[in]  aDestination       The message destination IPv6 address used to determine the CoAP type,
      *                                `kTypeNonConfirmable` if multicast address, `kTypeConfirmable` otherwise.
-     * @param[in]  aUriPath           A pointer to a null-terminated string.
+     * @param[in]  aUri               The URI.
      *
      * @retval kErrorNone         Successfully appended the option.
      * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    Error InitAsPost(const Ip6::Address &aDestination, const char *aUriPath);
+    Error InitAsPost(const Ip6::Address &aDestination, Uri aUri);
 
     /**
      * This method writes header to the message. This must be called before sending the message.
@@ -633,7 +634,7 @@ public:
     void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
 
     /**
-     * This method sets the More Blocks falg in the message HelpData.
+     * This method sets the More Blocks flag in the message HelpData.
      *
      * @param[in]   aMoreBlocks    TRUE or FALSE.
      *
@@ -944,14 +945,14 @@ private:
         Message *operator->(void) { return static_cast<Message *>(ot::Message::Iterator::operator->()); }
     };
 
-    static_assert(sizeof(HelpData) <= sizeof(Ip6::Header) + sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::OptionMpl) +
+    static_assert(sizeof(HelpData) <= sizeof(Ip6::Header) + sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::MplOption) +
                                           sizeof(Ip6::Udp::Header),
                   "HelpData size exceeds the size of the reserved region in the message");
 
     const HelpData &GetHelpData(void) const
     {
         static_assert(sizeof(HelpData) + kHelpDataAlignment <= kHeadBufferDataSize,
-                      "Insufficient buffer size for CoAP processing!");
+                      "Insufficient buffer size for CoAP processing! Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
         return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
     }
@@ -1240,10 +1241,7 @@ DefineMapEnum(otCoapCode, Coap::Code);
  * @returns A reference to `Coap::Message` matching @p aMessage.
  *
  */
-inline Coap::Message &AsCoapMessage(otMessage *aMessage)
-{
-    return *static_cast<Coap::Message *>(aMessage);
-}
+inline Coap::Message &AsCoapMessage(otMessage *aMessage) { return *static_cast<Coap::Message *>(aMessage); }
 
 /**
  * This method casts an `otMessage` pointer to a `Coap::Message` reference.
@@ -1253,10 +1251,7 @@ inline Coap::Message &AsCoapMessage(otMessage *aMessage)
  * @returns A reference to `Coap::Message` matching @p aMessage.
  *
  */
-inline Coap::Message *AsCoapMessagePtr(otMessage *aMessage)
-{
-    return static_cast<Coap::Message *>(aMessage);
-}
+inline Coap::Message *AsCoapMessagePtr(otMessage *aMessage) { return static_cast<Coap::Message *>(aMessage); }
 
 /**
  * This method casts an `otMessage` pointer to a `Coap::Message` pointer.

@@ -33,7 +33,7 @@
 
 #include "platform-posix.h"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
 #ifdef __APPLE__
 #define __APPLE_USE_RFC_3542
@@ -41,10 +41,12 @@
 
 #include <errno.h>
 #include <ifaddrs.h>
+#include <netdb.h>
 // clang-format off
 #include <netinet/in.h>
 #include <netinet/icmp6.h>
 // clang-format on
+#include <signal.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -90,20 +92,32 @@ exit:
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
+                                 const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
     return ot::Posix::InfraNetif::Get().SendIcmp6Nd(aInfraIfIndex, *aDestAddress, aBuffer, aBufferLength);
 }
 
-bool platformInfraIfIsRunning(void)
+otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 {
-    return ot::Posix::InfraNetif::Get().IsRunning();
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+    return ot::Posix::InfraNetif::Get().DiscoverNat64Prefix(aInfraIfIndex);
+#else
+    return OT_ERROR_DROP;
+#endif
 }
 
-const char *otSysGetInfraNetifName(void)
+bool platformInfraIfIsRunning(void) { return ot::Posix::InfraNetif::Get().IsRunning(); }
+
+const char *otSysGetInfraNetifName(void) { return ot::Posix::InfraNetif::Get().GetNetifName(); }
+
+uint32_t otSysGetInfraNetifFlags(void) { return ot::Posix::InfraNetif::Get().GetFlags(); }
+
+void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters)
 {
-    return ot::Posix::InfraNetif::Get().GetNetifName();
+    ot::Posix::InfraNetif::Get().CountAddresses(*aAddressCounters);
 }
 
 namespace ot {
@@ -123,10 +137,11 @@ int CreateIcmp6Socket(void)
     sock = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
-    // Only accept router advertisements and solicitations.
+    // Only accept Router Advertisements, Router Solicitations and Neighbor Advertisements.
     ICMP6_FILTER_SETBLOCKALL(&filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_SOLICIT, &filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_ADVERT, &filter);
+    ICMP6_FILTER_SETPASS(ND_NEIGHBOR_ADVERT, &filter);
 
     rval = setsockopt(sock, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
@@ -155,6 +170,15 @@ int CreateIcmp6Socket(void)
     return sock;
 }
 
+bool IsAddressLinkLocal(const in6_addr &aAddress)
+{
+    return ((aAddress.s6_addr[0] & 0xff) == 0xfe) && ((aAddress.s6_addr[1] & 0xc0) == 0x80);
+}
+
+bool IsAddressUniqueLocal(const in6_addr &aAddress) { return (aAddress.s6_addr[0] & 0xfe) == 0xfc; }
+
+bool IsAddressGlobalUnicast(const in6_addr &aAddress) { return (aAddress.s6_addr[0] & 0xe0) == 0x20; }
+
 // Create a net-link socket that subscribes to link & addresses events.
 int CreateNetLinkSocket(void)
 {
@@ -179,7 +203,7 @@ int CreateNetLinkSocket(void)
 
 otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
                                 const otIp6Address &aDestAddress,
-                                const uint8_t *     aBuffer,
+                                const uint8_t      *aBuffer,
                                 uint16_t            aBufferLength)
 {
     otError error = OT_ERROR_NONE;
@@ -190,7 +214,7 @@ otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
     int                 hopLimit = 255;
     uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo)) + CMSG_SPACE(sizeof(hopLimit))];
     struct msghdr       msgHeader;
-    struct cmsghdr *    cmsgPointer;
+    struct cmsghdr     *cmsgPointer;
     ssize_t             rval;
     struct sockaddr_in6 dest;
 
@@ -251,7 +275,9 @@ exit:
     return error;
 }
 
-bool InfraNetif::IsRunning(void) const
+bool InfraNetif::IsRunning(void) const { return (GetFlags() & IFF_RUNNING) && HasLinkLocalAddress(); }
+
+uint32_t InfraNetif::GetFlags(void) const
 {
     int          sock;
     struct ifreq ifReq;
@@ -269,7 +295,42 @@ bool InfraNetif::IsRunning(void) const
 
     close(sock);
 
-    return (ifReq.ifr_flags & IFF_RUNNING) && HasLinkLocalAddress();
+    return static_cast<uint32_t>(ifReq.ifr_flags);
+}
+
+void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const
+{
+    struct ifaddrs *ifAddrs = nullptr;
+
+    aAddressCounters.mLinkLocalAddresses     = 0;
+    aAddressCounters.mUniqueLocalAddresses   = 0;
+    aAddressCounters.mGlobalUnicastAddresses = 0;
+
+    if (getifaddrs(&ifAddrs) < 0)
+    {
+        otLogWarnPlat("failed to get netif addresses: %s", strerror(errno));
+        ExitNow();
+    }
+
+    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
+    {
+        in6_addr *in6Addr;
+
+        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr->sa_family != AF_INET6)
+        {
+            continue;
+        }
+
+        in6Addr = &(reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr)->sin6_addr);
+        aAddressCounters.mLinkLocalAddresses += IsAddressLinkLocal(*in6Addr);
+        aAddressCounters.mUniqueLocalAddresses += IsAddressUniqueLocal(*in6Addr);
+        aAddressCounters.mGlobalUnicastAddresses += IsAddressGlobalUnicast(*in6Addr);
+    }
+
+    freeifaddrs(ifAddrs);
+
+exit:
+    return;
 }
 
 bool InfraNetif::HasLinkLocalAddress(void) const
@@ -515,6 +576,135 @@ exit:
     }
 }
 
+#if OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+const char         InfraNetif::kWellKnownIpv4OnlyName[]   = "ipv4only.arpa";
+const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress1 = {{{192, 0, 0, 170}}};
+const otIp4Address InfraNetif::kWellKnownIpv4OnlyAddress2 = {{{192, 0, 0, 171}}};
+const uint8_t      InfraNetif::kValidNat64PrefixLength[]  = {96, 64, 56, 48, 40, 32};
+
+void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
+{
+    struct gaicb    *req = (struct gaicb *)sv.sival_ptr;
+    struct addrinfo *res = (struct addrinfo *)req->ar_result;
+
+    otIp6Prefix prefix = {};
+
+    VerifyOrExit((char *)req->ar_name == kWellKnownIpv4OnlyName);
+
+    otLogInfoPlat("Handling host address response for %s", kWellKnownIpv4OnlyName);
+
+    // We extract the first valid NAT64 prefix from the address look-up response.
+    for (struct addrinfo *rp = res; rp != NULL && prefix.mLength == 0; rp = rp->ai_next)
+    {
+        struct sockaddr_in6 *ip6Addr;
+        otIp6Address         ip6Address;
+
+        if (rp->ai_family != AF_INET6)
+        {
+            continue;
+        }
+
+        ip6Addr = reinterpret_cast<sockaddr_in6 *>(rp->ai_addr);
+        memcpy(&ip6Address.mFields.m8, &ip6Addr->sin6_addr.s6_addr, OT_IP6_ADDRESS_SIZE);
+        for (uint8_t length : kValidNat64PrefixLength)
+        {
+            otIp4Address ip4Address;
+
+            otIp4ExtractFromIp6Address(length, &ip6Address, &ip4Address);
+            if (otIp4IsAddressEqual(&ip4Address, &kWellKnownIpv4OnlyAddress1) ||
+                otIp4IsAddressEqual(&ip4Address, &kWellKnownIpv4OnlyAddress2))
+            {
+                // We check that the well-known IPv4 address is present only once in the IPv6 address.
+                // In case another instance of the value is found for another prefix length, we ignore this address
+                // and search for the other well-known IPv4 address (per RFC 7050 section 3).
+                bool foundDuplicate = false;
+
+                for (uint8_t dupLength : kValidNat64PrefixLength)
+                {
+                    otIp4Address dupIp4Address;
+
+                    if (dupLength == length)
+                    {
+                        continue;
+                    }
+
+                    otIp4ExtractFromIp6Address(dupLength, &ip6Address, &dupIp4Address);
+                    if (otIp4IsAddressEqual(&dupIp4Address, &ip4Address))
+                    {
+                        foundDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (!foundDuplicate)
+                {
+                    otIp6GetPrefix(&ip6Address, length, &prefix);
+                    break;
+                }
+            }
+
+            if (prefix.mLength != 0)
+            {
+                break;
+            }
+        }
+    }
+
+    otPlatInfraIfDiscoverNat64PrefixDone(gInstance, Get().mInfraIfIndex, &prefix);
+
+exit:
+    freeaddrinfo(res);
+    freeaddrinfo((struct addrinfo *)req->ar_request);
+    free(req);
+}
+
+otError InfraNetif::DiscoverNat64Prefix(uint32_t aInfraIfIndex)
+{
+    otError          error = OT_ERROR_NONE;
+    struct addrinfo *hints = nullptr;
+    struct gaicb    *reqs[1];
+    struct sigevent  sig;
+    int              status;
+
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
+    hints = (struct addrinfo *)malloc(sizeof(struct addrinfo));
+    VerifyOrExit(hints != nullptr, error = OT_ERROR_NO_BUFS);
+    memset(hints, 0, sizeof(struct addrinfo));
+    hints->ai_family   = AF_INET6;
+    hints->ai_socktype = SOCK_STREAM;
+
+    reqs[0] = (struct gaicb *)malloc(sizeof(struct gaicb));
+    VerifyOrExit(reqs[0] != nullptr, error = OT_ERROR_NO_BUFS);
+    memset(reqs[0], 0, sizeof(struct gaicb));
+    reqs[0]->ar_name    = kWellKnownIpv4OnlyName;
+    reqs[0]->ar_request = hints;
+
+    memset(&sig, 0, sizeof(struct sigevent));
+    sig.sigev_notify          = SIGEV_THREAD;
+    sig.sigev_value.sival_ptr = reqs[0];
+    sig.sigev_notify_function = &InfraNetif::DiscoverNat64PrefixDone;
+
+    status = getaddrinfo_a(GAI_NOWAIT, reqs, 1, &sig);
+
+    if (status != 0)
+    {
+        otLogNotePlat("getaddrinfo_a failed: %s", gai_strerror(status));
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+    otLogInfoPlat("getaddrinfo_a requested for %s", kWellKnownIpv4OnlyName);
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        if (hints)
+        {
+            freeaddrinfo(hints);
+        }
+        free(reqs[0]);
+    }
+    return error;
+}
+#endif // OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE
+
 void InfraNetif::Process(const otSysMainloopContext &aContext)
 {
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
@@ -543,4 +733,4 @@ InfraNetif &InfraNetif::Get(void)
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE

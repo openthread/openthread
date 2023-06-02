@@ -108,8 +108,7 @@ class ManualMulticastAddressConfig(thread_cert.TestCase):
         # packet back to Host.
         # TD receives the MPL packet containing an encapsulated ping packet to
         # MA1, sent by Host, and unicasts a ping response packet back to Host.
-        pkts.filter_eth_src(vars['TD_ETH']) \
-            .filter_ipv6_dst(_pkt.ipv6.src) \
+        pkts.filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 

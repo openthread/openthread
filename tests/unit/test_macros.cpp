@@ -30,55 +30,25 @@
 
 #include "common/arg_macros.hpp"
 
-static constexpr uint8_t NumberOfArgs(void)
-{
-    return 0;
-}
+static constexpr uint8_t NumberOfArgs(void) { return 0; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t)
-{
-    return 1;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t) { return 1; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t)
-{
-    return 2;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t) { return 2; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t)
-{
-    return 3;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t) { return 3; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t)
-{
-    return 4;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t) { return 4; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t)
-{
-    return 5;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) { return 5; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t)
-{
-    return 6;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) { return 6; }
 
-static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t)
-{
-    return 7;
-}
+static constexpr uint8_t NumberOfArgs(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t) { return 7; }
 
-int Sum(int aFirst)
-{
-    return aFirst;
-}
+int Sum(int aFirst) { return aFirst; }
 
-template <typename... Args> int Sum(int aFirst, Args... aArgs)
-{
-    return aFirst + Sum(aArgs...);
-}
+template <typename... Args> int Sum(int aFirst, Args... aArgs) { return aFirst + Sum(aArgs...); }
 
 void TestMacros(void)
 {

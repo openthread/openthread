@@ -77,10 +77,7 @@ bool Timer::DoesFireBefore(const Timer &aSecondTimer, Time aNow) const
     return retval;
 }
 
-void TimerMilli::Start(uint32_t aDelay)
-{
-    StartAt(GetNow(), aDelay);
-}
+void TimerMilli::Start(uint32_t aDelay) { StartAt(GetNow(), aDelay); }
 
 void TimerMilli::StartAt(TimeMilli aStartTime, uint32_t aDelay)
 {
@@ -102,15 +99,9 @@ void TimerMilli::FireAtIfEarlier(TimeMilli aFireTime)
     }
 }
 
-void TimerMilli::Stop(void)
-{
-    Get<Scheduler>().Remove(*this);
-}
+void TimerMilli::Stop(void) { Get<Scheduler>().Remove(*this); }
 
-void TimerMilli::RemoveAll(Instance &aInstance)
-{
-    aInstance.Get<Scheduler>().RemoveAll();
-}
+void TimerMilli::RemoveAll(Instance &aInstance) { aInstance.Get<Scheduler>().RemoveAll(); }
 
 void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 {
@@ -168,7 +159,7 @@ void Timer::Scheduler::SetAlarm(const AlarmApi &aAlarmApi)
     }
     else
     {
-        Timer *  timer = mTimerList.GetHead();
+        Timer   *timer = mTimerList.GetHead();
         Time     now(aAlarmApi.AlarmGetNow());
         uint32_t remaining;
 
@@ -228,10 +219,7 @@ const Timer::Scheduler::AlarmApi TimerMicro::Scheduler::sAlarmMicroApi = {
     &otPlatAlarmMicroGetNow,
 };
 
-void TimerMicro::Start(uint32_t aDelay)
-{
-    StartAt(GetNow(), aDelay);
-}
+void TimerMicro::Start(uint32_t aDelay) { StartAt(GetNow(), aDelay); }
 
 void TimerMicro::StartAt(TimeMicro aStartTime, uint32_t aDelay)
 {
@@ -245,15 +233,9 @@ void TimerMicro::FireAt(TimeMicro aFireTime)
     Get<Scheduler>().Add(*this);
 }
 
-void TimerMicro::Stop(void)
-{
-    Get<Scheduler>().Remove(*this);
-}
+void TimerMicro::Stop(void) { Get<Scheduler>().Remove(*this); }
 
-void TimerMicro::RemoveAll(Instance &aInstance)
-{
-    aInstance.Get<Scheduler>().RemoveAll();
-}
+void TimerMicro::RemoveAll(Instance &aInstance) { aInstance.Get<Scheduler>().RemoveAll(); }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
 {

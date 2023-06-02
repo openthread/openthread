@@ -40,27 +40,15 @@ namespace Heap {
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
-void *CAlloc(size_t aCount, size_t aSize)
-{
-    return otPlatCAlloc(aCount, aSize);
-}
+void *CAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
 
-void Free(void *aPointer)
-{
-    otPlatFree(aPointer);
-}
+void Free(void *aPointer) { otPlatFree(aPointer); }
 
 #else
 
-void *CAlloc(size_t aCount, size_t aSize)
-{
-    return Instance::GetHeap().CAlloc(aCount, aSize);
-}
+void *CAlloc(size_t aCount, size_t aSize) { return Instance::GetHeap().CAlloc(aCount, aSize); }
 
-void Free(void *aPointer)
-{
-    Instance::GetHeap().Free(aPointer);
-}
+void Free(void *aPointer) { Instance::GetHeap().Free(aPointer); }
 
 #endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 

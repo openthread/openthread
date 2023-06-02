@@ -28,7 +28,7 @@ If built successfully, the binary should be found at: `build/posix/src/posix/ot-
 
 ### Simulation
 
-OpenThread provides an implemenation on the simulation platform which enables running a simulated transceiver on the host.
+OpenThread provides an implementation on the simulation platform which enables running a simulated transceiver on the host.
 
 #### Build
 
@@ -77,19 +77,25 @@ To build and program the device with RCP application, complete the following ste
 
    ```sh
    rm -rf build
-   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_THREAD_VERSION=1.2
+   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB
    ```
 
    b. For nRF52840 Development Kit
 
    ```sh
    rm -rf build
-   script/build nrf52840 UART_trans -DOT_THREAD_VERSION=1.2
+   script/build nrf52840 UART_trans
    ```
 
    This creates an RCP image at `build/bin/ot-rcp`.
 
-5. Depending on the hardware platform, complete the following steps to program the device:
+5. Generate the HEX image:
+
+   ```sh
+   arm-none-eabi-objcopy -O ihex build/bin/ot-rcp build/bin/ot-rcp.hex
+   ```
+
+6. Depending on the hardware platform, complete the following steps to program the device:
 
    a. nRF52840 Dongle (USB transport)
 
@@ -131,28 +137,6 @@ To build and program the device with RCP application, complete the following ste
 
 ```sh
 ./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
-```
-
-### CC2538
-
-#### Build
-
-```
-./script/cmake-build cc2538 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
-```
-
-#### Flash
-
-```sh
-arm-none-eabi-objcopy -O ihex build/cc2538/examples/apps/ncp/ot-rcp ot-rcp.bin
-# see https://github.com/JelmerT/cc2538-bsl
-python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
-```
-
-#### Run
-
-```sh
-./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
 ## Daemon Mode

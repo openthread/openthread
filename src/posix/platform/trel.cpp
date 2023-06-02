@@ -85,8 +85,8 @@ static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
     static char    string[1600];
 
     uint16_t num = 0;
-    char *   cur = &string[0];
-    char *   end = &string[sizeof(string) - 1];
+    char    *cur = &string[0];
+    char    *end = &string[sizeof(string) - 1];
 
     cur += snprintf(cur, (uint16_t)(end - cur), "[(len:%d) ", aLength);
     VerifyOrExit(cur < end);
@@ -449,8 +449,8 @@ exit:
     return;
 }
 
-void otPlatTrelSend(otInstance *      aInstance,
-                    const uint8_t *   aUdpPayload,
+void otPlatTrelSend(otInstance       *aInstance,
+                    const uint8_t    *aUdpPayload,
                     uint16_t          aUdpPayloadLen,
                     const otSockAddr *aDestSockAddr)
 {

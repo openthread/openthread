@@ -34,6 +34,7 @@
 #include "thread/tmf.hpp"
 
 #include "common/locator_getters.hpp"
+#include "net/ip6_types.hpp"
 
 namespace ot {
 namespace Tmf {
@@ -41,10 +42,7 @@ namespace Tmf {
 //----------------------------------------------------------------------------------------------------------------------
 // MessageInfo
 
-void MessageInfo::SetSockAddrToRloc(void)
-{
-    SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-}
+void MessageInfo::SetSockAddrToRloc(void) { SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16()); }
 
 Error MessageInfo::SetSockAddrToRlocPeerAddrToLeaderAloc(void)
 {
@@ -80,9 +78,118 @@ void MessageInfo::SetSockAddrToRlocPeerAddrTo(const Ip6::Address &aPeerAddress)
 //----------------------------------------------------------------------------------------------------------------------
 // Agent
 
-Error Agent::Start(void)
+Agent::Agent(Instance &aInstance)
+    : Coap::Coap(aInstance)
 {
-    return Coap::Start(kUdpPort, OT_NETIF_THREAD);
+    SetInterceptor(&Filter, this);
+    SetResourceHandler(&HandleResource);
+}
+
+Error Agent::Start(void) { return Coap::Start(kUdpPort, Ip6::kNetifThread); }
+
+template <> void Agent::HandleTmf<kUriRelayRx>(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
+    Get<MeshCoP::Commissioner>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().HandleTmf<kUriRelayRx>(aMessage, aMessageInfo);
+#endif
+}
+
+bool Agent::HandleResource(CoapBase               &aCoapBase,
+                           const char             *aUriPath,
+                           Message                &aMessage,
+                           const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<Agent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+}
+
+bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    bool didHandle = true;
+    Uri  uri       = UriFromPath(aUriPath);
+
+#define Case(kUri, Type)                                     \
+    case kUri:                                               \
+        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+        break
+
+    switch (uri)
+    {
+        Case(kUriAddressError, AddressResolver);
+        Case(kUriEnergyScan, EnergyScanServer);
+        Case(kUriActiveGet, MeshCoP::ActiveDatasetManager);
+        Case(kUriPendingGet, MeshCoP::PendingDatasetManager);
+        Case(kUriPanIdQuery, PanIdQueryServer);
+
+#if OPENTHREAD_FTD
+        Case(kUriAddressQuery, AddressResolver);
+        Case(kUriAddressNotify, AddressResolver);
+        Case(kUriAddressSolicit, Mle::MleRouter);
+        Case(kUriAddressRelease, Mle::MleRouter);
+        Case(kUriActiveSet, MeshCoP::ActiveDatasetManager);
+        Case(kUriPendingSet, MeshCoP::PendingDatasetManager);
+        Case(kUriLeaderPetition, MeshCoP::Leader);
+        Case(kUriLeaderKeepAlive, MeshCoP::Leader);
+        Case(kUriServerData, NetworkData::Leader);
+        Case(kUriCommissionerGet, NetworkData::Leader);
+        Case(kUriCommissionerSet, NetworkData::Leader);
+        Case(kUriAnnounceBegin, AnnounceBeginServer);
+        Case(kUriRelayTx, MeshCoP::JoinerRouter);
+#endif
+
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+        Case(kUriJoinerEntrust, MeshCoP::Joiner);
+#endif
+
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+        Case(kUriPanIdConflict, PanIdQueryClient);
+        Case(kUriEnergyReport, EnergyScanClient);
+        Case(kUriDatasetChanged, MeshCoP::Commissioner);
+        // kUriRelayRx is handled below
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE)
+        Case(kUriRelayRx, Agent);
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+        Case(kUriDuaRegistrationNotify, DuaManager);
+#endif
+
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+        Case(kUriAnycastLocate, AnycastLocator);
+#endif
+
+        Case(kUriDiagnosticGetRequest, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticGetQuery, NetworkDiagnostic::Server);
+        Case(kUriDiagnosticReset, NetworkDiagnostic::Server);
+
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+        Case(kUriDiagnosticGetAnswer, NetworkDiagnostic::Client);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+        Case(kUriMlr, BackboneRouter::Manager);
+#endif
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+        Case(kUriDuaRegistrationRequest, BackboneRouter::Manager);
+#endif
+#endif
+
+    default:
+        didHandle = false;
+        break;
+    }
+
+#undef Case
+
+    return didHandle;
 }
 
 Error Agent::Filter(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
@@ -116,6 +223,113 @@ bool Agent::IsTmfMessage(const Ip6::Address &aSourceAddress, const Ip6::Address 
 exit:
     return isTmf;
 }
+
+uint8_t Agent::PriorityToDscp(Message::Priority aPriority)
+{
+    uint8_t dscp = Ip6::kDscpTmfNormalPriority;
+
+    switch (aPriority)
+    {
+    case Message::kPriorityNet:
+        dscp = Ip6::kDscpTmfNetPriority;
+        break;
+
+    case Message::kPriorityHigh:
+    case Message::kPriorityNormal:
+        break;
+
+    case Message::kPriorityLow:
+        dscp = Ip6::kDscpTmfLowPriority;
+        break;
+    }
+
+    return dscp;
+}
+
+Message::Priority Agent::DscpToPriority(uint8_t aDscp)
+{
+    Message::Priority priority = Message::kPriorityNet;
+
+    // If the sender does not use TMF specific DSCP value, we use
+    // `kPriorityNet`. This ensures that senders that do not use the
+    // new value (older firmware) experience the same behavior as
+    // before where all TMF message were treated as `kPriorityNet`.
+
+    switch (aDscp)
+    {
+    case Ip6::kDscpTmfNetPriority:
+    default:
+        break;
+    case Ip6::kDscpTmfNormalPriority:
+        priority = Message::kPriorityNormal;
+        break;
+    case Ip6::kDscpTmfLowPriority:
+        priority = Message::kPriorityLow;
+        break;
+    }
+
+    return priority;
+}
+
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
+SecureAgent::SecureAgent(Instance &aInstance)
+    : Coap::CoapSecure(aInstance)
+{
+    SetResourceHandler(&HandleResource);
+}
+
+bool SecureAgent::HandleResource(CoapBase               &aCoapBase,
+                                 const char             *aUriPath,
+                                 Message                &aMessage,
+                                 const Ip6::MessageInfo &aMessageInfo)
+{
+    return static_cast<SecureAgent &>(aCoapBase).HandleResource(aUriPath, aMessage, aMessageInfo);
+}
+
+bool SecureAgent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+{
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    bool didHandle = true;
+    Uri  uri       = UriFromPath(aUriPath);
+
+#define Case(kUri, Type)                                     \
+    case kUri:                                               \
+        Get<Type>().HandleTmf<kUri>(aMessage, aMessageInfo); \
+        break
+
+    switch (uri)
+    {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+        Case(kUriJoinerFinalize, MeshCoP::Commissioner);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+        Case(kUriCommissionerPetition, MeshCoP::BorderAgent);
+        Case(kUriCommissionerKeepAlive, MeshCoP::BorderAgent);
+        Case(kUriRelayTx, MeshCoP::BorderAgent);
+        Case(kUriCommissionerGet, MeshCoP::BorderAgent);
+        Case(kUriCommissionerSet, MeshCoP::BorderAgent);
+        Case(kUriActiveGet, MeshCoP::BorderAgent);
+        Case(kUriActiveSet, MeshCoP::BorderAgent);
+        Case(kUriPendingGet, MeshCoP::BorderAgent);
+        Case(kUriPendingSet, MeshCoP::BorderAgent);
+        Case(kUriProxyTx, MeshCoP::BorderAgent);
+#endif
+
+    default:
+        didHandle = false;
+        break;
+    }
+
+#undef Case
+
+    return didHandle;
+}
+
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
 
 } // namespace Tmf
 } // namespace ot

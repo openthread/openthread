@@ -38,14 +38,7 @@ set timeout 1
 send "panid 0xface\n"
 expect_line "Done"
 
-send "ifconfig up\n"
-expect_line "Done"
-
-send "thread start\n"
-expect_line "Done"
-
-wait_for "state" "leader"
-expect_line "Done"
+attach
 
 send "udp open\n"
 expect_line "Done"

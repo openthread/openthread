@@ -41,7 +41,7 @@ namespace Crypto {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 {
-    Error  error;
+    Error  error = kErrorNone;
     size_t readKeyLength;
 
     OT_ASSERT(IsKeyRef());
@@ -54,6 +54,17 @@ Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 
 exit:
     return error;
+}
+
+void Storage::DestroyPersistentKeys(void)
+{
+    DestroyKey(kNetworkKeyRef);
+    DestroyKey(kPskcRef);
+    DestroyKey(kActiveDatasetNetworkKeyRef);
+    DestroyKey(kActiveDatasetPskcRef);
+    DestroyKey(kPendingDatasetNetworkKeyRef);
+    DestroyKey(kPendingDatasetPskcRef);
+    DestroyKey(kEcdsaRef);
 }
 #endif
 

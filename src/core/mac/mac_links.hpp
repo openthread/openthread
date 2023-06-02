@@ -41,6 +41,7 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "mac/sub_mac.hpp"
+#include "radio/radio.hpp"
 #include "radio/trel_link.hpp"
 
 namespace ot {
@@ -291,8 +292,6 @@ class Links : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    static const int8_t kInvalidRssiValue = SubMac::kInvalidRssiValue; ///< Invalid RSSI value.
-
     /**
      * This constructor initializes the `Links` object.
      *
@@ -576,7 +575,7 @@ public:
     /**
      * This method gets the most recent RSSI measurement from radio link.
      *
-     * @returns The RSSI in dBm when it is valid. `kInvalidRssiValue` when RSSI is invalid.
+     * @returns The RSSI in dBm when it is valid. `Radio::kInvalidRssi` when RSSI is invalid.
      *
      */
     int8_t GetRssi(void) const
@@ -585,7 +584,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
             mSubMac.GetRssi();
 #else
-            kInvalidRssiValue;
+            Radio::kInvalidRssi;
 #endif
     }
 
@@ -620,7 +619,7 @@ public:
      * @returns The noise floor value in dBm.
      *
      */
-    int8_t GetNoiseFloor(void)
+    int8_t GetNoiseFloor(void) const
     {
         return
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -682,7 +681,7 @@ public:
 #endif
 
 private:
-    static constexpr int8_t kDefaultNoiseFloor = -100;
+    static constexpr int8_t kDefaultNoiseFloor = Radio::kDefaultReceiveSensitivity;
 
     SubMac mSubMac;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

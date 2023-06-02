@@ -64,15 +64,25 @@
 
 set -euo pipefail
 
-readonly OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
-readonly OT_EXCLUDE_DIRS=(third_party doc/site)
+OT_BUILD_JOBS=$(getconf _NPROCESSORS_ONLN)
+readonly OT_BUILD_JOBS
 
-readonly OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
-readonly OT_MARKDOWN_SOURCES=('*.md')
-readonly OT_PYTHON_SOURCES=('*.py')
+OT_EXCLUDE_DIRS=(third_party doc/site)
+readonly OT_EXCLUDE_DIRS
 
-readonly OT_CLANG_TIDY_FIX_DIRS=('examples' 'include' 'src' 'tests')
-readonly OT_CLANG_TIDY_BUILD_OPTS=(
+OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
+readonly OT_CLANG_SOURCES
+
+OT_MARKDOWN_SOURCES=('*.md')
+readonly OT_MARKDOWN_SOURCES
+
+OT_PYTHON_SOURCES=('*.py')
+readonly OT_PYTHON_SOURCES
+
+OT_CLANG_TIDY_FIX_DIRS=('examples' 'include' 'src' 'tests')
+readonly OT_CLANG_TIDY_FIX_DIRS
+
+OT_CLANG_TIDY_BUILD_OPTS=(
     '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'
     '-DOT_ANYCAST_LOCATOR=ON'
     '-DOT_APP_RCP=OFF'
@@ -83,10 +93,8 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_BORDER_AGENT=ON'
     '-DOT_BORDER_ROUTER=ON'
     '-DOT_BORDER_ROUTING=ON'
-    '-DOT_BORDER_ROUTING_NAT64=ON'
     '-DOT_CHANNEL_MANAGER=ON'
     '-DOT_CHANNEL_MONITOR=ON'
-    '-DOT_CHILD_SUPERVISION=ON'
     '-DOT_COAP=ON'
     '-DOT_COAP_BLOCK=ON'
     '-DOT_COAP_OBSERVE=ON'
@@ -99,6 +107,7 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_DIAGNOSTIC=ON'
     '-DOT_DNS_CLIENT=ON'
     '-DOT_DNS_DSO=ON'
+    '-DOT_DNS_UPSTREAM_QUERY=ON'
     '-DOT_DNSSD_SERVER=ON'
     '-DOT_DUA=ON'
     '-DOT_MLR=ON'
@@ -107,13 +116,15 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_IP6_FRAGM=ON'
     '-DOT_JAM_DETECTION=ON'
     '-DOT_JOINER=ON'
-    '-DOT_LEGACY=ON'
     '-DOT_LINK_RAW=ON'
     '-DOT_LINK_METRICS_INITIATOR=ON'
     '-DOT_LINK_METRICS_SUBJECT=ON'
     '-DOT_MAC_FILTER=ON'
-    '-DOT_MTD_NETDIAG=ON'
+    '-DOT_MESH_DIAG=ON'
+    '-DOT_NAT64_BORDER_ROUTING=ON'
+    '-DOT_NAT64_TRANSLATOR=ON'
     '-DOT_NETDATA_PUBLISHER=ON'
+    '-DOT_NETDIAG_CLIENT=ON'
     '-DOT_PING_SENDER=ON'
     '-DOT_REFERENCE_DEVICE=ON'
     '-DOT_SERVICE=ON'
@@ -128,12 +139,14 @@ readonly OT_CLANG_TIDY_BUILD_OPTS=(
     '-DOT_COMPILE_WARNING_AS_ERROR=ON'
     '-DOT_UPTIME=ON'
 )
+readonly OT_CLANG_TIDY_BUILD_OPTS
 
-readonly OT_CLANG_TIDY_CHECKS="\
+OT_CLANG_TIDY_CHECKS="\
 -*,\
 google-explicit-constructor,\
 google-readability-casting,\
 misc-unused-using-decls,\
+modernize-loop-convert,\
 modernize-use-bool-literals,\
 modernize-use-equals-default,\
 modernize-use-equals-delete,\
@@ -142,12 +155,12 @@ readability-avoid-const-params-in-decls,\
 readability-else-after-return,\
 readability-inconsistent-declaration-parameter-name,\
 readability-make-member-function-const,\
+readability-redundant-control-flow,\
 readability-redundant-member-init,\
 readability-simplify-boolean-expr,\
 readability-static-accessed-through-instance,\
 "
-
-#performance-for-range-copy\
+readonly OT_CLANG_TIDY_CHECKS
 
 do_clang_format()
 {

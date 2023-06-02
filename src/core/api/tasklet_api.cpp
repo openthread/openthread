@@ -60,6 +60,4 @@ exit:
     return retval;
 }
 
-OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
-{
-}
+OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}

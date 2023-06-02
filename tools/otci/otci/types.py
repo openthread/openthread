@@ -28,6 +28,7 @@
 #
 import ipaddress
 from collections import namedtuple
+from enum import IntEnum
 
 
 class ChildId(int):
@@ -52,7 +53,7 @@ class PartitionId(int):
     pass
 
 
-class NetifIdentifier(int):
+class NetifIdentifier(IntEnum):
     """Represents a network interface identifier."""
     UNSPECIFIED = 0
     THERAD = 1

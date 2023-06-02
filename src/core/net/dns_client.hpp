@@ -61,6 +61,10 @@
 
 #endif
 
+#if !OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+#error "OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE requires OPENTHREAD_CONFIG_TCP_ENABLE"
+#endif
+
 /**
  * This struct represents an opaque (and empty) type for a response to an address resolution DNS query.
  *
@@ -136,10 +140,35 @@ public:
         enum Nat64Mode : uint8_t
         {
             kNat64Unspecified = OT_DNS_NAT64_UNSPECIFIED, ///< NAT64 mode is not specified. Use default NAT64 mode.
-            kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation
+            kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation.
             kNat64Disallow    = OT_DNS_NAT64_DISALLOW,    ///< Disallow NAT64 address translation.
         };
 #endif
+
+        /**
+         * This enumeration type represents the service resolution mode.
+         *
+         */
+        enum ServiceMode : uint8_t
+        {
+            kServiceModeUnspecified    = OT_DNS_SERVICE_MODE_UNSPECIFIED,      ///< Unspecified. Use default.
+            kServiceModeSrv            = OT_DNS_SERVICE_MODE_SRV,              ///< SRV record only.
+            kServiceModeTxt            = OT_DNS_SERVICE_MODE_TXT,              ///< TXT record only.
+            kServiceModeSrvTxt         = OT_DNS_SERVICE_MODE_SRV_TXT,          ///< SRV and TXT same msg.
+            kServiceModeSrvTxtSeparate = OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE, ///< SRV and TXT separate msgs.
+            kServiceModeSrvTxtOptimize = OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE, ///< Same msg first, if fail separate.
+        };
+
+        /**
+         * This enumeration type represents the DNS transport protocol selection.
+         *
+         */
+        enum TransportProto : uint8_t
+        {
+            kDnsTransportUnspecified = OT_DNS_TRANSPORT_UNSPECIFIED, /// Dns transport is unspecified.
+            kDnsTransportUdp         = OT_DNS_TRANSPORT_UDP,         /// Dns query should be sent via UDP.
+            kDnsTransportTcp         = OT_DNS_TRANSPORT_TCP,         /// Dns query should be sent via TCP.
+        };
 
         /**
          * This is the default constructor for `QueryConfig` object.
@@ -191,12 +220,31 @@ public:
          */
         Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
 #endif
+        /**
+         * This method gets the service resolution mode.
+         *
+         * @returns The service resolution mode.
+         *
+         */
+        ServiceMode GetServiceMode(void) const { return static_cast<ServiceMode>(mServiceMode); }
+
+        /**
+         * This method gets the transport protocol.
+         *
+         * @returns The transport protocol.
+         *
+         */
+        TransportProto GetTransportProto(void) const { return static_cast<TransportProto>(mTransportProto); };
 
     private:
         static constexpr uint32_t kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT;
         static constexpr uint16_t kDefaultServerPort      = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT;
         static constexpr uint8_t  kDefaultMaxTxAttempts   = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS;
         static constexpr bool kDefaultRecursionDesired    = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG;
+        static constexpr ServiceMode kDefaultServiceMode =
+            static_cast<ServiceMode>(OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVICE_MODE);
+
+        static_assert(kDefaultServiceMode != kServiceModeUnspecified, "Invalid default service mode");
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         static constexpr bool kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED;
@@ -216,11 +264,16 @@ public:
         void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
         void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
         void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
+        void SetServiceMode(ServiceMode aMode) { mServiceMode = static_cast<otDnsServiceMode>(aMode); }
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
 #endif
+        void SetTransportProto(TransportProto aTransportProto)
+        {
+            mTransportProto = static_cast<otDnsTransportProto>(aTransportProto);
+        }
 
-        void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
+        void SetFrom(const QueryConfig *aConfig, const QueryConfig &aDefaultConfig);
     };
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -257,21 +310,25 @@ public:
         void  SelectSection(Section aSection, uint16_t &aOffset, uint16_t &aNumRecord) const;
         Error CheckForHostNameAlias(Section aSection, Name &aHostName) const;
         Error FindHostAddress(Section       aSection,
-                              const Name &  aHostName,
+                              const Name   &aHostName,
                               uint16_t      aIndex,
                               Ip6::Address &aAddress,
-                              uint32_t &    aTtl) const;
+                              uint32_t     &aTtl) const;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
         Error FindARecord(Section aSection, const Name &aHostName, uint16_t aIndex, ARecord &aARecord) const;
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        Error FindServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
+        void  InitServiceInfo(ServiceInfo &aServiceInfo) const;
+        Error ReadServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
+        Error ReadTxtRecord(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
 #endif
+        void PopulateFrom(const Message &aMessage);
 
-        Instance *     mInstance;              // The OpenThread instance.
-        Query *        mQuery;                 // The associated query.
+        Instance      *mInstance;              // The OpenThread instance.
+        Query         *mQuery;                 // The associated query.
         const Message *mMessage;               // The response message.
+        Response      *mNext;                  // The next response when we have related queries.
         uint16_t       mAnswerOffset;          // Answer section offset in `mMessage`.
         uint16_t       mAnswerRecordCount;     // Number of records in answer section.
         uint16_t       mAdditionalOffset;      // Additional data section offset in `mMessage`.
@@ -486,9 +543,9 @@ public:
          * @retval kErrorNoBufs  Either the label or name does not fit in the given buffers.
          *
          */
-        Error GetServiceName(char *   aLabelBuffer,
+        Error GetServiceName(char    *aLabelBuffer,
                              uint8_t  aLabelBufferSize,
-                             char *   aNameBuffer,
+                             char    *aNameBuffer,
                              uint16_t aNameBufferSize) const;
 
         /**
@@ -604,9 +661,9 @@ public:
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up.
      *
      */
-    Error ResolveAddress(const char *       aHostName,
+    Error ResolveAddress(const char        *aHostName,
                          AddressCallback    aCallback,
-                         void *             aContext,
+                         void              *aContext,
                          const QueryConfig *aConfig = nullptr);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -631,9 +688,9 @@ public:
      * @retval kErrorInvalidState   Cannot send query since Thread interface is not up, or there is no NAT64 prefix.
      *
      */
-    Error ResolveIp4Address(const char *       aHostName,
+    Error ResolveIp4Address(const char        *aHostName,
                             AddressCallback    aCallback,
-                            void *             aContext,
+                            void              *aContext,
                             const QueryConfig *aConfig = nullptr);
 #endif
 
@@ -655,9 +712,9 @@ public:
      * @retval kErrorNoBufs     Insufficient buffer to prepare and send query.
      *
      */
-    Error Browse(const char *       aServiceName,
+    Error Browse(const char        *aServiceName,
                  BrowseCallback     aCallback,
-                 void *             aContext,
+                 void              *aContext,
                  const QueryConfig *aConfig = nullptr);
 
     /**
@@ -678,11 +735,11 @@ public:
      * @retval kErrorInvalidArgs  @p aInstanceLabel is `nullptr`.
      *
      */
-    Error ResolveService(const char *         aInstanceLabel,
-                         const char *         aServiceName,
+    Error ResolveService(const char          *aInstanceLabel,
+                         const char          *aServiceName,
                          otDnsServiceCallback aCallback,
-                         void *               aContext,
-                         const QueryConfig *  aConfig = nullptr);
+                         void                *aContext,
+                         const QueryConfig   *aConfig = nullptr);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -694,10 +751,23 @@ private:
         kIp4AddressQuery, // IPv4 Address resolution
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        kBrowseQuery,  // Browse (service instance enumeration).
-        kServiceQuery, // Service instance resolution.
+        kBrowseQuery,        // Browse (service instance enumeration).
+        kServiceQuerySrvTxt, // Service instance resolution both SRV and TXT records.
+        kServiceQuerySrv,    // Service instance resolution SRV record only.
+        kServiceQueryTxt,    // Service instance resolution TXT record only.
 #endif
+        kNoQuery,
     };
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    enum TcpState : uint8_t
+    {
+        kTcpUninitialized = 0,
+        kTcpConnecting,
+        kTcpConnectedIdle,
+        kTcpConnectedSending,
+    };
+#endif
 
     union Callback
     {
@@ -717,43 +787,75 @@ private:
         QueryType   mQueryType;
         uint16_t    mMessageId;
         Callback    mCallback;
-        void *      mCallbackContext;
+        void       *mCallbackContext;
         TimeMilli   mRetransmissionTime;
         QueryConfig mConfig;
         uint8_t     mTransmissionCount;
+        Query      *mMainQuery;
+        Query      *mNextQuery;
+        Message    *mSavedResponse;
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
     static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
-    Error       StartQuery(QueryInfo &        aInfo,
-                           const QueryConfig *aConfig,
-                           const char *       aLabel,
-                           const char *       aName,
-                           void *             aContext);
+    Error       StartQuery(QueryInfo &aInfo, const char *aLabel, const char *aName, QueryType aSecondType = kNoQuery);
     Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
-    void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
+    Query      &FindMainQuery(Query &aQuery);
+    Error       SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
-    void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
-    static void GetCallback(const Query &aQuery, Callback &aCallback, void *&aContext);
+    void        FinalizeQuery(Response &Response, Error aError);
+    static void GetQueryTypeAndCallback(const Query &aQuery, QueryType &aType, Callback &aCallback, void *&aContext);
     Error       AppendNameFromQuery(const Query &aQuery, Message &aMessage);
-    Query *     FindQueryById(uint16_t aMessageId);
+    Query      *FindQueryById(uint16_t aMessageId);
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMsgInfo);
-    void        ProcessResponse(const Message &aMessage);
-    Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);
-    static void HandleTimer(Timer &aTimer);
+    void        ProcessResponse(const Message &aResponseMessage);
+    Error       ParseResponse(const Message &aResponseMessage, Query *&aQuery, Error &aResponseError);
+    bool        CanFinalizeQuery(Query &aQuery);
+    void        SaveQueryResponse(Query &aQuery, const Message &aResponseMessage);
+    Query      *PopulateResponse(Response &aResponse, Query &aQuery, const Message &aResponseMessage);
+    void        PrepareResponseAndFinalize(Query &aQuery, const Message &aResponseMessage, Response *aPrevResponse);
     void        HandleTimer(void);
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
+    Error ReplaceWithIp4Query(Query &aQuery);
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    Error ReplaceWithSeparateSrvTxtQueries(Query &aQuery);
+#endif
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     void UpdateDefaultConfigAddress(void);
 #endif
 
-    static const uint8_t   kQuestionCount[];
-    static const uint16_t *kQuestionRecordTypes[];
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
+    static void HandleTcpSendDoneCallback(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    static void HandleTcpDisconnectedCallback(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+    static void HandleTcpReceiveAvailableCallback(otTcpEndpoint *aEndpoint,
+                                                  size_t         aBytesAvailable,
+                                                  bool           aEndOfStream,
+                                                  size_t         aBytesRemaining);
+
+    void  HandleTcpEstablished(otTcpEndpoint *aEndpoint);
+    void  HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData);
+    void  HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
+    void  HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
+                                    size_t         aBytesAvailable,
+                                    bool           aEndOfStream,
+                                    size_t         aBytesRemaining);
+    Error InitTcpSocket(void);
+    Error ReadFromLinkBuffer(const otLinkedBuffer *&aLinkedBuffer,
+                             size_t                &aOffset,
+                             Message               &aMessage,
+                             uint16_t               aLength);
+    void  PrepareTcpMessage(Message &aMessage);
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+
+    static const uint8_t         kQuestionCount[];
+    static const uint16_t *const kQuestionRecordTypes[];
 
     static const uint16_t kIp6AddressQueryRecordTypes[];
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -764,10 +866,25 @@ private:
     static const uint16_t kServiceQueryRecordTypes[];
 #endif
 
+    static constexpr uint16_t kUdpQueryMaxSize = 512;
+
+    using RetryTimer = TimerMilliIn<Client, &Client::HandleTimer>;
+
     Ip6::Udp::Socket mSocket;
-    QueryList        mQueries;
-    TimerMilli       mTimer;
-    QueryConfig      mDefaultConfig;
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
+    Ip6::Tcp::Endpoint mEndpoint;
+
+    otLinkedBuffer mSendLink;
+    uint8_t        mSendBufferBytes[OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE];
+    uint8_t        mReceiveBufferBytes[OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE];
+
+    TcpState mTcpState;
+#endif
+
+    QueryList   mMainQueries;
+    RetryTimer  mTimer;
+    QueryConfig mDefaultConfig;
 #if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
     bool mUserDidSetDefaultAddress;
 #endif

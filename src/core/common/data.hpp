@@ -44,6 +44,7 @@
 #include "common/const_cast.hpp"
 #include "common/equatable.hpp"
 #include "common/error.hpp"
+#include "common/num_utils.hpp"
 #include "common/type_traits.hpp"
 
 namespace ot {
@@ -360,7 +361,7 @@ public:
     {
         Error error = (mLength >= aLength) ? kErrorNone : kErrorNoBufs;
 
-        mLength = OT_MIN(mLength, aLength);
+        mLength = Min(mLength, aLength);
         memcpy(AsNonConst(mBuffer), aBuffer, mLength);
 
         return error;

@@ -89,7 +89,13 @@ enum IpDscpCs : uint8_t
     kDscpCs5    = 40,   ///< Class selector codepoint 40
     kDscpCs6    = 48,   ///< Class selector codepoint 48
     kDscpCs7    = 56,   ///< Class selector codepoint 56
-    kDscpCsMask = 0x38, ///< Class selector mask
+    kDscpCsMask = 0x38, ///< Class selector mask (0b111000)
+
+    // DSCP values to use within Thread mesh (from local codepoint space 0bxxxx11 [RFC 2474 - section 6]).
+
+    kDscpTmfNetPriority    = 0x07, ///< TMF network priority (0b000111).
+    kDscpTmfNormalPriority = 0x0f, ///< TMF normal priority  (0b001111).
+    kDscpTmfLowPriority    = 0x17, ///< TMF low priority     (0b010111).
 };
 
 /**

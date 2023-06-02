@@ -267,6 +267,18 @@ public:
     Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
+     * This method gets the next 6LoWPAN Context ID info in the Thread Network Data.
+     *
+     * @param[in,out]  aIterator     A reference to the Network Data iterator.
+     * @param[out]     aContextInfo  A reference to where the retrieved 6LoWPAN Context ID information will be placed.
+     *
+     * @retval kErrorNone      Successfully found the next 6LoWPAN Context ID info.
+     * @retval kErrorNotFound  No subsequent 6LoWPAN Context info exists in the partition's Network Data.
+     *
+     */
+    Error GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const;
+
+    /**
      * This method indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
      *
      * @param[in]  aPrefix   The on mesh prefix config to check.
@@ -465,7 +477,7 @@ protected:
      * @returns A pointer to the next matching Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextService(const ServiceTlv * aPrevServiceTlv,
+    const ServiceTlv *FindNextService(const ServiceTlv  *aPrevServiceTlv,
                                       uint32_t           aEnterpriseNumber,
                                       const ServiceData &aServiceData,
                                       ServiceMatchMode   aServiceMatchMode) const;
@@ -484,26 +496,9 @@ protected:
      * @returns A pointer to the next matching Thread Service TLV if one is found or `nullptr` if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
+    const ServiceTlv *FindNextThreadService(const ServiceTlv  *aPrevServiceTlv,
                                             const ServiceData &aServiceData,
                                             ServiceMatchMode   aServiceMatchMode) const;
-
-    /**
-     * This method sends a Server Data Notification message to the Leader.
-     *
-     * @param[in]  aRloc16            The old RLOC16 value that was previously registered.
-     * @param[in]  aAppendNetDataTlv  Indicates whether or not to append Thread Network Data TLV to the message.
-     * @param[in]  aHandler           A function pointer that is called when the transaction ends.
-     * @param[in]  aContext           A pointer to arbitrary context information.
-     *
-     * @retval kErrorNone     Successfully enqueued the notification message.
-     * @retval kErrorNoBufs   Insufficient message buffers to generate the notification message.
-     *
-     */
-    Error SendServerDataNotification(uint16_t              aRloc16,
-                                     bool                  aAppendNetDataTlv,
-                                     Coap::ResponseHandler aHandler,
-                                     void *                aContext) const;
 
 private:
     class NetworkDataIterator
@@ -532,7 +527,7 @@ private:
                                                             GetSubTlvOffset());
         }
 
-        void AdvaceSubTlv(const NetworkDataTlv *aSubTlvs)
+        void AdvanceSubTlv(const NetworkDataTlv *aSubTlvs)
         {
             SaveSubTlvOffset(GetSubTlv(aSubTlvs)->GetNext(), aSubTlvs);
             SetEntryIndex(0);
@@ -571,14 +566,15 @@ private:
 
     struct Config
     {
-        OnMeshPrefixConfig * mOnMeshPrefix;
+        OnMeshPrefixConfig  *mOnMeshPrefix;
         ExternalRouteConfig *mExternalRoute;
-        ServiceConfig *      mService;
+        ServiceConfig       *mService;
+        LowpanContextInfo   *mLowpanContext;
     };
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
-    static bool MatchService(const ServiceTlv & aServiceTlv,
+    static bool MatchService(const ServiceTlv  &aServiceTlv,
                              uint32_t           aEnterpriseNumber,
                              const ServiceData &aServiceData,
                              ServiceMatchMode   aServiceMatchMode);

@@ -112,15 +112,15 @@ typedef void otDnssdQuery;
  */
 typedef struct otDnssdServiceInstanceInfo
 {
-    const char *        mFullName;   ///< Full instance name (e.g. "OpenThread._ipps._tcp.default.service.arpa.").
-    const char *        mHostName;   ///< Host name (e.g. "ot-host.default.service.arpa.").
+    const char         *mFullName;   ///< Full instance name (e.g. "OpenThread._ipps._tcp.default.service.arpa.").
+    const char         *mHostName;   ///< Host name (e.g. "ot-host.default.service.arpa.").
     uint8_t             mAddressNum; ///< Number of host IPv6 addresses.
     const otIp6Address *mAddresses;  ///< Host IPv6 addresses.
     uint16_t            mPort;       ///< Service port.
     uint16_t            mPriority;   ///< Service priority.
     uint16_t            mWeight;     ///< Service weight.
     uint16_t            mTxtLength;  ///< Service TXT RDATA length.
-    const uint8_t *     mTxtData;    ///< Service TXT RDATA.
+    const uint8_t      *mTxtData;    ///< Service TXT RDATA.
     uint32_t            mTtl;        ///< Service TTL (in seconds).
 } otDnssdServiceInstanceInfo;
 
@@ -177,10 +177,10 @@ typedef struct otDnssdCounters
  * @param[in] aContext      A pointer to the application-specific context.
  *
  */
-void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
+void otDnssdQuerySetCallbacks(otInstance                     *aInstance,
                               otDnssdQuerySubscribeCallback   aSubscribe,
                               otDnssdQueryUnsubscribeCallback aUnsubscribe,
-                              void *                          aContext);
+                              void                           *aContext);
 
 /**
  * This function notifies a discovered service instance.
@@ -195,8 +195,8 @@ void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
  * @param[in] aInstanceInfo     A pointer to the discovered service instance information.
  *
  */
-void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aInstance,
-                                                 const char *                aServiceFullName,
+void otDnssdQueryHandleDiscoveredServiceInstance(otInstance                 *aInstance,
+                                                 const char                 *aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo);
 /**
  * This function notifies a discovered host.
@@ -244,6 +244,35 @@ otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*a
  *
  */
 const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance);
+
+/**
+ * Enable or disable forwarding DNS queries to platform DNS upstream API.
+ *
+ * Available when `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
+ *
+ * @sa otPlatDnsStartUpstreamQuery
+ * @sa otPlatDnsCancelUpstreamQuery
+ * @sa otPlatDnsUpstreamQueryDone
+ *
+ */
+void otDnssdUpstreamQuerySetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Returns whether the DNSSD server will forward DNS queries to the platform DNS upstream API.
+ *
+ * Available when `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE` is enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @retval     TRUE       If the DNSSD server will forward DNS queries.
+ * @retval     FALSE      If the DNSSD server will not forward DNS queries.
+ *
+ * @sa otDnssdUpstreamQuerySetEnabled
+ *
+ */
+bool otDnssdUpstreamQueryIsEnabled(otInstance *aInstance);
 
 /**
  * @}

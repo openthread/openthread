@@ -150,7 +150,7 @@ static OT_DEFINE_ALIGNED_VAR(sNcpVendorRaw, sizeof(NcpVendorUart), uint64_t);
 extern "C" void otAppNcpInit(otInstance *aInstance)
 {
     NcpVendorUart *ncpVendor = nullptr;
-    ot::Instance * instance  = static_cast<ot::Instance *>(aInstance);
+    ot::Instance  *instance  = static_cast<ot::Instance *>(aInstance);
 
     ncpVendor = new (&sNcpVendorRaw) NcpVendorUart(instance);
 

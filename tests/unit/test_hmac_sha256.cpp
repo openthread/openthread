@@ -72,7 +72,7 @@ void TestSha256(void)
 
     struct TestCase
     {
-        const char *       mData; // (null-terminated string).
+        const char        *mData; // (null-terminated string).
         otCryptoSha256Hash mHash;
     };
 
@@ -85,9 +85,9 @@ void TestSha256(void)
 
     printf("TestSha256\n");
 
-    Instance *   instance = testInitInstance();
+    Instance    *instance = testInitInstance();
     MessagePool *messagePool;
-    Message *    message;
+    Message     *message;
     uint16_t     offsets[GetArrayLength(kTestCases)];
     uint8_t      index;
 
@@ -142,7 +142,7 @@ void TestHmacSha256(void)
     struct TestCase
     {
         otCryptoKey        mKey;
-        const void *       mData;
+        const void        *mData;
         uint16_t           mDataLength;
         otCryptoSha256Hash mHash;
     };
@@ -226,9 +226,9 @@ void TestHmacSha256(void)
         {{&kKey5[0], sizeof(kKey5), 0}, kData5, sizeof(kData5) - 1, kHash5},
     };
 
-    Instance *   instance = testInitInstance();
+    Instance    *instance = testInitInstance();
     MessagePool *messagePool;
-    Message *    message;
+    Message     *message;
     uint16_t     offsets[GetArrayLength(kTestCases)];
     uint8_t      index;
 

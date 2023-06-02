@@ -1,0 +1,214 @@
+#!/usr/bin/expect -f
+#
+#  Copyright (c) 2022, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
+
+spawn_node 1
+spawn_node 2
+
+switch_node 1
+send "diag start\n"
+expect "start diagnostics mode"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag channel 11\n"
+expect "set channel to 11"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag stats clear\n"
+expect "stats cleared"
+expect_line "Done"
+
+switch_node 2
+
+send "diag start\n"
+expect "start diagnostics mode"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag channel 11\n"
+expect "set channel to 11"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag stats clear\n"
+expect "stats cleared"
+expect_line "Done"
+
+send "diag send 10 100\n"
+expect "sending 0xa packet(s), length 0x64"
+expect "status 0x00"
+expect_line "Done"
+
+sleep 2
+
+send "diag stats\n"
+expect "received packets: 0"
+expect "sent packets: 10"
+expect "first received packet: rssi=0, lqi=0"
+expect "last received packet: rssi=0, lqi=0"
+expect_line "Done"
+
+switch_node 1
+
+send "diag stats\n"
+expect "received packets: 10"
+expect "sent packets: 0"
+expect "first received packet: rssi=-20, lqi=0"
+expect "last received packet: rssi=-20, lqi=0"
+expect_line "Done"
+
+send "diag stats clear\n"
+expect "stats cleared"
+expect_line "Done"
+
+switch_node 2
+
+send "diag repeat 20 100\n"
+expect "sending packets of length 0x64 at the delay of 0x14 ms"
+expect "status 0x00"
+expect_line "Done"
+sleep 1
+send "diag repeat stop\n"
+expect "repeated packet transmission is stopped"
+expect "status 0x00"
+expect_line "Done"
+
+switch_node 1
+
+send "diag stats\n"
+expect -r {received packets: \d+}
+expect "sent packets: 0"
+expect "first received packet: rssi=-20, lqi=0"
+expect "last received packet: rssi=-20, lqi=0"
+expect_line "Done"
+
+send "diag stats clear\n"
+expect "stats cleared"
+expect_line "Done"
+
+dispose_all
+
+
+spawn_node 1
+
+send "diag start\n"
+expect "start diagnostics mode"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag channel 11\n"
+expect "set channel to 11"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag power 10\n"
+expect "set tx power to 10 dBm"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag radio sleep\n"
+expect "set radio from receive to sleep"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag radio state\n"
+expect "sleep"
+expect_line "Done"
+
+send "diag radio receive\n"
+expect "set radio from sleep to receive on channel 11"
+expect "status 0x00"
+expect_line "Done"
+
+send "diag radio state\n"
+expect "receive"
+expect_line "Done"
+
+send "diag gpio set 0 1\n"
+expect_line "Done"
+
+send "diag gpio get 0\n"
+expect "1"
+expect_line "Done"
+
+send "diag gpio mode 0 in\n"
+expect_line "Done"
+
+send "diag gpio mode 0\n"
+expect "in"
+expect_line "Done"
+
+send "diag gpio mode 0 out\n"
+expect_line "Done"
+
+send "diag gpio mode 0\n"
+expect "out"
+expect_line "Done"
+
+send "diag cw start\n"
+expect_line "Done"
+
+send "diag cw stop\n"
+expect_line "Done"
+
+send "diag stream start\n"
+expect_line "Done"
+
+send "diag stream stop\n"
+expect_line "Done"
+
+send "diag rawpowersetting 112233\n"
+expect_line "Done"
+
+send "diag rawpowersetting\n"
+expect "112233"
+expect_line "Done"
+
+send "diag rawpowersetting enable\n"
+expect_line "Done"
+
+send "diag rawpowersetting disable\n"
+expect_line "Done"
+
+send "diag invalid_commad\n"
+expect "Error 35: InvalidCommand"
+
+send "diag stop\n"
+expect_line "Done"
+
+send "diag channel\n"
+expect "failed"
+expect "status 0xd"
+expect "Error 13: InvalidState"
+
+dispose_all

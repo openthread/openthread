@@ -625,14 +625,14 @@ private:
     const uint16_t mBufferLength; // Length of the buffer.
 
     BufferCallback mFrameAddedCallback;   // Callback to signal when a new frame is added
-    void *         mFrameAddedContext;    // Context passed to `mFrameAddedCallback`.
+    void          *mFrameAddedContext;    // Context passed to `mFrameAddedCallback`.
     BufferCallback mFrameRemovedCallback; // Callback to signal when a frame is removed.
-    void *         mFrameRemovedContext;  // Context passed to `mFrameRemovedCallback`.
+    void          *mFrameRemovedContext;  // Context passed to `mFrameRemovedCallback`.
 
     Direction mWriteDirection;             // Direction (priority) for current frame being read.
-    uint8_t * mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
-    uint8_t * mWriteSegmentHead;           // Pointer to start of current segment in the frame being written.
-    uint8_t * mWriteSegmentTail;           // Pointer to end of current segment in the frame being written.
+    uint8_t  *mWriteFrameStart[kNumPrios]; // Pointer to start of current frame being written.
+    uint8_t  *mWriteSegmentHead;           // Pointer to start of current segment in the frame being written.
+    uint8_t  *mWriteSegmentTail;           // Pointer to end of current segment in the frame being written.
     FrameTag  mWriteFrameTag;              // Tag associated with last successfully written frame.
 
     Direction mReadDirection;   // Direction (priority) for current frame being read.
@@ -647,10 +647,10 @@ private:
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     otMessageQueue mWriteFrameMessageQueue;                // Message queue for the current frame being written.
     otMessageQueue mMessageQueue[kNumPrios];               // Main message queues.
-    otMessage *    mReadMessage;                           // Current Message in the frame being read.
+    otMessage     *mReadMessage;                           // Current Message in the frame being read.
     uint16_t       mReadMessageOffset;                     // Offset within current message being read.
     uint8_t        mMessageBuffer[kMessageReadBufferSize]; // Buffer to hold part of current message being read.
-    uint8_t *      mReadMessageTail;                       // Pointer to end of current part in mMessageBuffer.
+    uint8_t       *mReadMessageTail;                       // Pointer to end of current part in mMessageBuffer.
 #endif
 };
 

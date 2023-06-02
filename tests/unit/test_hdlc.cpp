@@ -58,7 +58,7 @@ static const uint8_t sMottoText[]      = "Think good thoughts, say good words, d
 static const uint8_t sHexText[]        = "0123456789abcdef";
 static const uint8_t sSkipText[]       = "Skip text";
 static const uint8_t sHdlcSpecials[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
-                                        kFlagSequence, kEscapeSequence, kFlagSpecial};
+                                          kFlagSequence, kEscapeSequence, kFlagSpecial};
 
 otError WriteToBuffer(const uint8_t *aText, Hdlc::FrameWritePointer &aWritePointer)
 {
@@ -126,8 +126,8 @@ void TestHdlcFrameBuffer(void)
 void TestHdlcMultiFrameBuffer(void)
 {
     Hdlc::MultiFrameBuffer<kBufferSize> frameBuffer;
-    uint8_t *                           frame    = nullptr;
-    uint8_t *                           newFrame = nullptr;
+    uint8_t                            *frame    = nullptr;
+    uint8_t                            *newFrame = nullptr;
     uint16_t                            length;
     uint16_t                            newLength;
 
@@ -454,7 +454,7 @@ void TestEncoderDecoder(void)
     DecoderContext                      decoderContext;
     Hdlc::Encoder                       encoder(encoderBuffer);
     Hdlc::Decoder                       decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
-    uint8_t *                           frame;
+    uint8_t                            *frame;
     uint16_t                            length;
     uint8_t                             badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
 
@@ -591,10 +591,7 @@ void TestEncoderDecoder(void)
     printf(" -- PASS\n");
 }
 
-uint32_t GetRandom(uint32_t max)
-{
-    return static_cast<uint32_t>(rand()) % max;
-}
+uint32_t GetRandom(uint32_t max) { return static_cast<uint32_t>(rand()) % max; }
 
 void TestFuzzEncoderDecoder(void)
 {

@@ -795,7 +795,7 @@ public:
      * @retval kErrorParse   Could not read or parse the dataset from @p aMessage.
      *
      */
-    Error ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    Error ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method sets the Dataset using an existing Dataset.

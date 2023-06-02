@@ -33,7 +33,7 @@ from typing import Union, Collection, Any, Pattern
 def match_line(line: str, expect_line: Union[str, Pattern, Collection[Any]]) -> bool:
     """Checks if a line is expected (matched by one of the given patterns)."""
     if isinstance(expect_line, Pattern):
-        match = expect_line.match(line)
+        match = expect_line.match(line) is not None
     elif isinstance(expect_line, str):
         match = (line == expect_line)
     else:

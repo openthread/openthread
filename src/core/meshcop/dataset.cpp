@@ -83,7 +83,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     SuccessOrExit(error = Random::Crypto::FillBuffer(mExtendedPanId.m8, sizeof(mExtendedPanId.m8)));
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
-    snprintf(mNetworkName.m8, sizeof(mNetworkName), "OpenThread-%04x", mPanId);
+    snprintf(mNetworkName.m8, sizeof(mNetworkName), "%s-%04x", NetworkName::kNetworkNameInit, mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
     mComponents.mIsNetworkKeyPresent      = true;
@@ -162,10 +162,7 @@ Dataset::Dataset(void)
     memset(mTlvs, 0, sizeof(mTlvs));
 }
 
-void Dataset::Clear(void)
-{
-    mLength = 0;
-}
+void Dataset::Clear(void) { mLength = 0; }
 
 bool Dataset::IsValid(void) const
 {
@@ -182,10 +179,7 @@ exit:
     return rval;
 }
 
-const Tlv *Dataset::GetTlv(Tlv::Type aType) const
-{
-    return Tlv::FindTlv(mTlvs, mLength, aType);
-}
+const Tlv *Dataset::GetTlv(Tlv::Type aType) const { return Tlv::FindTlv(mTlvs, mLength, aType); }
 
 void Dataset::ConvertTo(Info &aDatasetInfo) const
 {
@@ -402,7 +396,7 @@ Error Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
     Error    error          = kErrorNone;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv *    old            = GetTlv(aType);
+    Tlv     *old            = GetTlv(aType);
     Tlv      tlv;
 
     if (old != nullptr)
@@ -431,14 +425,13 @@ exit:
     return error;
 }
 
-Error Dataset::SetTlv(const Tlv &aTlv)
-{
-    return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
-}
+Error Dataset::SetTlv(const Tlv &aTlv) { return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength()); }
 
-Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error error = kErrorParse;
+
+    VerifyOrExit(aLength <= kMaxSize);
 
     SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
@@ -521,7 +514,7 @@ void Dataset::RemoveTlv(Tlv *aTlv)
 
 Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated) const
 {
-    Mac::Mac &  mac        = aInstance.Get<Mac::Mac>();
+    Mac::Mac   &mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
     Error       error      = kErrorNone;
 
@@ -610,10 +603,7 @@ void Dataset::ConvertToActive(void)
     RemoveTlv(Tlv::kDelayTimer);
 }
 
-const char *Dataset::TypeToString(Type aType)
-{
-    return (aType == kActive) ? "Active" : "Pending";
-}
+const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }
 
 } // namespace MeshCoP
 } // namespace ot

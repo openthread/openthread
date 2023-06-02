@@ -145,7 +145,7 @@ exit:
     }
     else
     {
-        otLogInfoPlat("Session socket is ready", strerror(errno));
+        otLogInfoPlat("Session socket is ready");
     }
 }
 
@@ -341,7 +341,6 @@ void Daemon::Process(const otSysMainloopContext &aContext)
         if (rval > 0)
         {
             buffer[rval] = '\0';
-            otLogInfoPlat("> %s", reinterpret_cast<const char *>(buffer));
             otCliInputLine(reinterpret_cast<char *>(buffer));
         }
         else

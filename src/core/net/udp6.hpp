@@ -40,6 +40,7 @@
 #include <openthread/platform/udp.h>
 
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -64,6 +65,17 @@ class Udp;
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
 #error "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE and OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE must not both be set."
 #endif
+
+/**
+ * This enumeration defines the network interface identifiers.
+ *
+ */
+enum NetifIdentifier : uint8_t
+{
+    kNetifUnspecified = OT_NETIF_UNSPECIFIED, ///< Unspecified network interface.
+    kNetifThread      = OT_NETIF_THREAD,      ///< The Thread interface.
+    kNetifBackbone    = OT_NETIF_BACKBONE,    ///< The Backbone interface.
+};
 
 /**
  * This class implements core UDP message handling.
@@ -150,6 +162,24 @@ public:
         explicit Socket(Instance &aInstance);
 
         /**
+         * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+         *
+         * @returns A pointer to the message or `nullptr` if no buffers are available.
+         *
+         */
+        Message *NewMessage(void);
+
+        /**
+         * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+         *
+         * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+         *
+         * @returns A pointer to the message or `nullptr` if no buffers are available.
+         *
+         */
+        Message *NewMessage(uint16_t aReserved);
+
+        /**
          * This method returns a new UDP message with sufficient header space reserved.
          *
          * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
@@ -158,7 +188,7 @@ public:
          * @returns A pointer to the message or `nullptr` if no buffers are available.
          *
          */
-        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+        Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
         /**
          * This method opens the UDP socket.
@@ -191,7 +221,7 @@ public:
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
+        Error Bind(const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier = kNetifThread);
 
         /**
          * This method binds the UDP socket.
@@ -203,7 +233,7 @@ public:
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
+        Error Bind(uint16_t aPort, NetifIdentifier aNetifIdentifier = kNetifThread);
 
         /**
          * This method binds the UDP socket.
@@ -269,7 +299,7 @@ public:
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         /**
-         * This method configures the UDP socket to join a mutlicast group on a Host network interface.
+         * This method configures the UDP socket to join a multicast group on a Host network interface.
          *
          * @param[in]  aNetifIdentifier     The network interface identifier.
          * @param[in]  aAddress             The multicast group address.
@@ -278,7 +308,7 @@ public:
          * @retval  kErrorFailed  Failed to join the multicast group.
          *
          */
-        Error JoinNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+        Error JoinNetifMulticastGroup(NetifIdentifier aNetifIdentifier, const Address &aAddress);
 
         /**
          * This method configures the UDP socket to leave a multicast group on a Host network interface.
@@ -290,7 +320,7 @@ public:
          * @retval  kErrorFailed Failed to leave the multicast group.
          *
          */
-        Error LeaveNetifMulticastGroup(otNetifIdentifier aNetifIdentifier, const Address &aAddress);
+        Error LeaveNetifMulticastGroup(NetifIdentifier aNetifIdentifier, const Address &aAddress);
 #endif
     };
 
@@ -474,7 +504,7 @@ public:
      * @retval kErrorFailed          Failed to bind UDP Socket.
      *
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, NetifIdentifier aNetifIdentifier);
 
     /**
      * This method connects a UDP socket.
@@ -522,6 +552,24 @@ public:
     uint16_t GetEphemeralPort(void);
 
     /**
+     * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     *
+     */
+    Message *NewMessage(void);
+
+    /**
+     * This method returns a new UDP message with default settings (link security enabled and `kPriorityNormal`)
+     *
+     * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
+     *
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
+     *
+     */
+    Message *NewMessage(uint16_t aReserved);
+
+    /**
      * This method returns a new UDP message with sufficient header space reserved.
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the UDP header.
@@ -530,7 +578,7 @@ public:
      * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings = Message::Settings::GetDefault());
+    Message *NewMessage(uint16_t aReserved, const Message::Settings &aSettings);
 
     /**
      * This method sends an IPv6 datagram.
@@ -582,11 +630,7 @@ public:
      * @param[in]   aContext    A pointer to arbitrary context information.
      *
      */
-    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext)
-    {
-        mUdpForwarder        = aForwarder;
-        mUdpForwarderContext = aContext;
-    }
+    void SetUdpForwarder(otUdpForwarder aForwarder, void *aContext) { mUdpForwarder.Set(aForwarder, aContext); }
 #endif
 
     /**
@@ -641,8 +685,7 @@ private:
     SocketHandle *mPrevBackboneSockets;
 #endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
-    void *         mUdpForwarderContext;
-    otUdpForwarder mUdpForwarder;
+    Callback<otUdpForwarder> mUdpForwarder;
 #endif
 };
 
@@ -655,6 +698,7 @@ private:
 
 DefineCoreType(otUdpSocket, Ip6::Udp::SocketHandle);
 DefineCoreType(otUdpReceiver, Ip6::Udp::Receiver);
+DefineMapEnum(otNetifIdentifier, Ip6::NetifIdentifier);
 
 } // namespace ot
 

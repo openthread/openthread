@@ -87,10 +87,7 @@ uint64_t otPlatTimeGet(void)
 }
 #endif // !OPENTHREAD_POSIX_VIRTUAL_TIME
 
-static uint64_t platformAlarmGetNow(void)
-{
-    return otPlatTimeGet() * sSpeedUpFactor;
-}
+static uint64_t platformAlarmGetNow(void) { return otPlatTimeGet() * sSpeedUpFactor; }
 
 void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
 {
@@ -131,10 +128,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor, int aRealTimeSignal)
     }
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
-{
-    return (uint32_t)(platformAlarmGetNow() / US_PER_MS);
-}
+uint32_t otPlatAlarmMilliGetNow(void) { return (uint32_t)(platformAlarmGetNow() / US_PER_MS); }
 
 void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
@@ -152,10 +146,7 @@ void otPlatAlarmMilliStop(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-uint32_t otPlatAlarmMicroGetNow(void)
-{
-    return static_cast<uint32_t>(platformAlarmGetNow());
-}
+uint32_t otPlatAlarmMicroGetNow(void) { return static_cast<uint32_t>(platformAlarmGetNow()); }
 
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {

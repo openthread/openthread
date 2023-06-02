@@ -43,7 +43,16 @@ target_link_libraries(ot-rcp PRIVATE
     openthread-radio
     ${OT_PLATFORM_LIB_RCP}
     openthread-rcp
+    ot-config-radio
     ot-config
 )
+
+if(OT_LINKER_MAP)
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+        target_link_libraries(ot-rcp PRIVATE -Wl,-map,ot-rcp.map)
+    else()
+        target_link_libraries(ot-rcp PRIVATE -Wl,-Map=ot-rcp.map)
+    endif()
+endif()
 
 install(TARGETS ot-rcp DESTINATION bin)
