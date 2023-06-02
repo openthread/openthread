@@ -58,6 +58,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
 #include "cli/cli_commissioner.hpp"
 #include "cli/cli_dataset.hpp"
@@ -108,6 +109,7 @@ class Interpreter : public OutputImplementer, public Output
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Br;
+    friend class Bbr;
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
@@ -547,6 +549,10 @@ private:
 
 #if OPENTHREAD_CLI_DNS_ENABLE
     Dns mDns;
+#endif
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    Bbr mBbr;
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
