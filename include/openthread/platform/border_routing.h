@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 /**
- * Handles ICMP6 RA messages received on platform network interface.
+ * Handles ICMP6 RA messages received on the Thread interface on the platform.
  *
  * The `aMessage` should point to a buffer of a valid ICMPv6 message (without IP headers) with router advertisement as
  * the value of type field of the message.
