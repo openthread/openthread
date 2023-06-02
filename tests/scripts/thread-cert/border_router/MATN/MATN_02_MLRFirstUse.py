@@ -97,7 +97,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         host = self.nodes[HOST]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 

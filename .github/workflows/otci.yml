@@ -61,7 +61,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        make -f examples/Makefile-simulation THREAD_VERSION=1.2 DUA=1 MLR=1 BACKBONE_ROUTER=1 CSL_RECEIVER=1
+        make -f examples/Makefile-simulation THREAD_VERSION=1.3 DUA=1 MLR=1 BACKBONE_ROUTER=1 CSL_RECEIVER=1
     - name: Install OTCI Python Library
       run: |
         (cd tools/otci && python3 setup.py install --user)

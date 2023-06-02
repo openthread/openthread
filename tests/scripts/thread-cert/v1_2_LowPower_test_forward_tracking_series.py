@@ -35,6 +35,7 @@ from pktverify import consts
 from pktverify.null_field import nullField
 from pktverify.packet_verifier import PacketVerifier
 
+import config
 import thread_cert
 
 LEADER = 1
@@ -63,7 +64,7 @@ class LowPower_test_ForwardTrackingSeries(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[CHILD].start()

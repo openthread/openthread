@@ -174,13 +174,11 @@ void EnergyScanServer::SendReport(void)
     Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     MeshCoP::EnergyListTlv  energyList;
-    Ip6::MessageInfo        messageInfo;
+    Tmf::MessageInfo        messageInfo(GetInstance());
     Coap::Message *         message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kEnergyReport));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kEnergyReport);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);
@@ -191,9 +189,8 @@ void EnergyScanServer::SendReport(void)
     SuccessOrExit(error = message->Append(energyList));
     SuccessOrExit(error = message->AppendBytes(mScanResults, mScanResultsLength));
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerAddr(mCommissioner);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
+
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     LogInfo("sent scan results");

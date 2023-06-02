@@ -80,14 +80,14 @@ class TestBorderRouterAsFed(thread_cert.TestCase):
         self.simulator.go(5)
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', leader.get_state())
 
         br.start()
         self.simulator.go(5)
         self.assertEqual('child', br.get_state())
 
-        self.simulator.go(10)
+        self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.assertEqual('child', br.get_state())
 
         # Leader can ping to/from the Host on infra link.

@@ -93,13 +93,13 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 5):
             self.nodes[i].start()
 
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
 
         for i in range(2, 5):
             self.assertEqual(self.nodes[i].get_state(), 'router')
@@ -107,7 +107,7 @@ class Cert_5_1_08_RouterAttachConnectivity(thread_cert.TestCase):
         self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
 
         self.nodes[ROUTER4].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER4].get_state(), 'router')
 
     def verify(self, pv):

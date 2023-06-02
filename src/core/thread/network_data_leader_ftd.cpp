@@ -60,6 +60,7 @@ RegisterLogModule("NetworkData");
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
+    , mWaitingForNetDataSync(false)
     , mTimer(aInstance, Leader::HandleTimer)
     , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
     , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
@@ -77,8 +78,15 @@ void Leader::Reset(void)
     mContextIdReuseDelay = kContextIdReuseDelay;
 }
 
-void Leader::Start(void)
+void Leader::Start(Mle::LeaderStartMode aStartMode)
 {
+    mWaitingForNetDataSync = (aStartMode == Mle::kRestoringLeaderRoleAfterReset);
+
+    if (mWaitingForNetDataSync)
+    {
+        mTimer.Start(kMaxNetDataSyncWait);
+    }
+
     Get<Tmf::Agent>().AddResource(mServerData);
     Get<Tmf::Agent>().AddResource(mCommissioningDataGet);
     Get<Tmf::Agent>().AddResource(mCommissioningDataSet);
@@ -145,6 +153,8 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
     uint16_t             rloc16;
 
     LogInfo("Received network data registration");
+
+    VerifyOrExit(!mWaitingForNetDataSync);
 
     VerifyOrExit(aMessageInfo.GetPeerAddr().GetIid().IsRoutingLocator());
 
@@ -307,10 +317,8 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     uint8_t *             data   = nullptr;
     uint8_t               length = 0;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     commDataTlv = GetCommissioningData();
 
@@ -361,10 +369,8 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
 
@@ -1300,10 +1306,15 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     }
 }
 
-void Leader::UpdateContextsAfterReset(void)
+void Leader::HandleNetworkDataRestoredAfterReset(void)
 {
     const PrefixTlv *prefix;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
+
+    mWaitingForNetDataSync = false;
+
+    // Synchronize internal 6LoWPAN Context ID Set with the
+    // recently obtained Network Data.
 
     while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
@@ -1336,6 +1347,13 @@ void Leader::HandleTimer(void)
 {
     bool contextsWaiting = false;
 
+    if (mWaitingForNetDataSync)
+    {
+        LogInfo("Timed out waiting for netdata on restoring leader role after reset");
+        IgnoreError(Get<Mle::MleRouter>().BecomeDetached());
+        ExitNow();
+    }
+
     for (uint8_t i = 0; i < kNumContextIds; i++)
     {
         if (mContextLastUsed[i].GetValue() == 0)
@@ -1357,6 +1375,9 @@ void Leader::HandleTimer(void)
     {
         mTimer.Start(kStateUpdatePeriod);
     }
+
+exit:
+    return;
 }
 
 Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext)
@@ -1381,6 +1402,45 @@ Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aCon
 exit:
     return error;
 }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix)
+{
+    PrefixTlv *prefixTlv;
+    bool       contains = false;
+
+    VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
+
+    prefixTlv = FindPrefix(aPrefix);
+    VerifyOrExit(prefixTlv != nullptr);
+
+    for (int i = 0; i < 2; i++)
+    {
+        const BorderRouterTlv *borderRouter = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
+
+        if (borderRouter == nullptr)
+        {
+            continue;
+        }
+
+        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+             entry                          = entry->GetNext())
+        {
+            OnMeshPrefixConfig config;
+
+            config.SetFrom(*prefixTlv, *borderRouter, *entry);
+
+            if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
+            {
+                ExitNow(contains = true);
+            }
+        }
+    }
+
+exit:
+    return contains;
+}
+#endif
 
 } // namespace NetworkData
 } // namespace ot

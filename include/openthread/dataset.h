@@ -214,6 +214,17 @@ typedef struct otOperationalDatasetComponents
 } otOperationalDatasetComponents;
 
 /**
+ * This structure represents a Thread Dataset timestamp component.
+ *
+ */
+typedef struct otTimestamp
+{
+    uint64_t mSeconds;
+    uint16_t mTicks;
+    bool     mAuthoritative;
+} otTimestamp;
+
+/**
  * This structure represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponets` structure specifies which components are present in the Dataset.
@@ -221,8 +232,8 @@ typedef struct otOperationalDatasetComponents
  */
 typedef struct otOperationalDataset
 {
-    uint64_t                       mActiveTimestamp;  ///< Active Timestamp
-    uint64_t                       mPendingTimestamp; ///< Pending Timestamp
+    otTimestamp                    mActiveTimestamp;  ///< Active Timestamp
+    otTimestamp                    mPendingTimestamp; ///< Pending Timestamp
     otNetworkKey                   mNetworkKey;       ///< Network Key
     otNetworkName                  mNetworkName;      ///< Network Name
     otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID

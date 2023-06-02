@@ -1309,43 +1309,29 @@ exit:
 
 bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const
 {
-    OT_UNUSED_VARIABLE(aFromHost);
+    bool shouldForward = false;
 
-    bool rval = false;
-
-    if (aMessageInfo.GetSockAddr().IsMulticast())
+    if (aMessageInfo.GetSockAddr().IsMulticast() || aMessageInfo.GetSockAddr().IsLinkLocal())
     {
-        // multicast
-        ExitNow(rval = true);
-    }
-    else if (aMessageInfo.GetSockAddr().IsLinkLocal())
-    {
-        // on-link link-local address
-        ExitNow(rval = true);
+        shouldForward = true;
     }
     else if (IsOnLink(aMessageInfo.GetSockAddr()))
     {
-        // on-link global address
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        ExitNow(rval = (aFromHost ||
-                        !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr())));
+        shouldForward =
+            (aFromHost || !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr()));
 #else
-        ExitNow(rval = true);
+        OT_UNUSED_VARIABLE(aFromHost);
+        shouldForward = true;
 #endif
     }
     else if (Get<ThreadNetif>().RouteLookup(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), nullptr) ==
              kErrorNone)
     {
-        // route
-        ExitNow(rval = true);
-    }
-    else
-    {
-        ExitNow(rval = false);
+        shouldForward = true;
     }
 
-exit:
-    return rval;
+    return shouldForward;
 }
 
 const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
@@ -1508,6 +1494,172 @@ const char *Ip6::EcnToString(Ecn aEcn)
 }
 
 // LCOV_EXCL_STOP
+
+//---------------------------------------------------------------------------------------------------------------------
+// Headers
+
+Error Headers::ParseFrom(const Message &aMessage)
+{
+    Error error = kErrorParse;
+
+    Clear();
+
+    SuccessOrExit(mIp6Header.ParseFrom(aMessage));
+
+    switch (mIp6Header.GetNextHeader())
+    {
+    case kProtoUdp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mUdp));
+        break;
+    case kProtoTcp:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mTcp));
+        break;
+    case kProtoIcmp6:
+        SuccessOrExit(aMessage.Read(sizeof(Header), mHeader.mIcmp));
+        break;
+    default:
+        break;
+    }
+
+    error = kErrorNone;
+
+exit:
+    return error;
+}
+
+Error Headers::DecompressFrom(const Message &     aMessage,
+                              uint16_t            aOffset,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest)
+{
+    static constexpr uint16_t kReadLength = Lowpan::FragmentHeader::kSubsequentFragmentHeaderSize + sizeof(Headers);
+
+    uint8_t   frameBuffer[kReadLength];
+    uint16_t  frameLength;
+    FrameData frameData;
+
+    frameLength = aMessage.ReadBytes(aOffset, frameBuffer, sizeof(frameBuffer));
+    frameData.Init(frameBuffer, frameLength);
+
+    return DecompressFrom(frameData, aMacSource, aMacDest, aMessage.GetInstance());
+}
+
+Error Headers::DecompressFrom(const FrameData &   aFrameData,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              Instance &          aInstance)
+{
+    Error                  error     = kErrorNone;
+    FrameData              frameData = aFrameData;
+    Lowpan::FragmentHeader fragmentHeader;
+    bool                   nextHeaderCompressed;
+
+    if (fragmentHeader.ParseFrom(frameData) == kErrorNone)
+    {
+        // Only the first fragment header is followed by a LOWPAN_IPHC header
+        VerifyOrExit(fragmentHeader.GetDatagramOffset() == 0, error = kErrorNotFound);
+    }
+
+    VerifyOrExit(Lowpan::Lowpan::IsLowpanHc(frameData), error = kErrorNotFound);
+
+    SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressBaseHeader(mIp6Header, nextHeaderCompressed,
+                                                                               aMacSource, aMacDest, frameData));
+
+    switch (mIp6Header.GetNextHeader())
+    {
+    case kProtoUdp:
+        if (nextHeaderCompressed)
+        {
+            SuccessOrExit(error = aInstance.Get<Lowpan::Lowpan>().DecompressUdpHeader(mHeader.mUdp, frameData));
+        }
+        else
+        {
+            SuccessOrExit(error = frameData.Read(mHeader.mUdp));
+        }
+        break;
+
+    case kProtoTcp:
+        SuccessOrExit(error = frameData.Read(mHeader.mTcp));
+        break;
+
+    case kProtoIcmp6:
+        SuccessOrExit(error = frameData.Read(mHeader.mIcmp));
+        break;
+
+    default:
+        break;
+    }
+
+exit:
+    return error;
+}
+
+uint16_t Headers::GetSourcePort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetSourcePort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetSourcePort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+uint16_t Headers::GetDestinationPort(void) const
+{
+    uint16_t port = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        port = mHeader.mUdp.GetDestinationPort();
+        break;
+
+    case kProtoTcp:
+        port = mHeader.mTcp.GetDestinationPort();
+        break;
+
+    default:
+        break;
+    }
+
+    return port;
+}
+
+uint16_t Headers::GetChecksum(void) const
+{
+    uint16_t checksum = 0;
+
+    switch (GetIpProto())
+    {
+    case kProtoUdp:
+        checksum = mHeader.mUdp.GetChecksum();
+        break;
+
+    case kProtoTcp:
+        checksum = mHeader.mTcp.GetChecksum();
+        break;
+
+    case kProtoIcmp6:
+        checksum = mHeader.mIcmp.GetChecksum();
+        break;
+
+    default:
+        break;
+    }
+
+    return checksum;
+}
 
 } // namespace Ip6
 } // namespace ot

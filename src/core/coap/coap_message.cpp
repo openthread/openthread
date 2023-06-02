@@ -79,26 +79,6 @@ exit:
     return error;
 }
 
-void Message::InitAsConfirmablePost(void)
-{
-    Init(kTypeConfirmable, kCodePost);
-}
-
-void Message::InitAsNonConfirmablePost(void)
-{
-    Init(kTypeNonConfirmable, kCodePost);
-}
-
-Error Message::InitAsConfirmablePost(const char *aUriPath)
-{
-    return Init(kTypeConfirmable, kCodePost, aUriPath);
-}
-
-Error Message::InitAsNonConfirmablePost(const char *aUriPath)
-{
-    return Init(kTypeNonConfirmable, kCodePost, aUriPath);
-}
-
 Error Message::InitAsPost(const Ip6::Address &aDestination, const char *aUriPath)
 {
     return Init(aDestination.IsMulticast() ? kTypeNonConfirmable : kTypeConfirmable, kCodePost, aUriPath);

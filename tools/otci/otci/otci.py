@@ -976,7 +976,7 @@ class OTCI(object):
                     info['addresses'] = list(map(Ip6Addr, v.split(', ')))
                 elif k == 'subtypes':
                     info[k] = list() if v == '(null)' else list(v.split(','))
-                elif k in ('port', 'weight', 'priority'):
+                elif k in ('port', 'weight', 'priority', 'ttl'):
                     info[k] = int(v)
                 elif k in ('host',):
                     info[k] = v

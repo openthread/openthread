@@ -114,13 +114,11 @@ void PanIdQueryServer::SendConflict(void)
 {
     Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
-    Ip6::MessageInfo        messageInfo;
+    Tmf::MessageInfo        messageInfo(GetInstance());
     Coap::Message *         message;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kPanIdConflict));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kPanIdConflict);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     channelMask.Init();
     channelMask.SetChannelMask(mChannelMask);
@@ -128,9 +126,8 @@ void PanIdQueryServer::SendConflict(void)
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, mPanId));
 
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerAddr(mCommissioner);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddrToRlocPeerAddrTo(mCommissioner);
+
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     LogInfo("sent panid conflict");

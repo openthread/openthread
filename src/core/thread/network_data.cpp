@@ -640,14 +640,12 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
                                               Coap::ResponseHandler aHandler,
                                               void *                aContext) const
 {
-    Error            error   = kErrorNone;
-    Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Error            error = kErrorNone;
+    Coap::Message *  message;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kServerData);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aAppendNetDataTlv)
     {
@@ -663,9 +661,7 @@ Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
-    IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     LogInfo("Sent server data notification");
@@ -816,6 +812,35 @@ uint8_t NetworkData::CountBorderRouters(RoleFilter aRoleFilter) const
     SuccessOrAssert(FindBorderRouters(aRoleFilter, rlocs, rlocsLength));
 
     return rlocsLength;
+}
+
+bool NetworkData::ContainsBorderRouterWithRloc(uint16_t aRloc16) const
+{
+    bool                contains = false;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig route;
+    OnMeshPrefixConfig  prefix;
+
+    while (GetNextExternalRoute(iterator, route) == kErrorNone)
+    {
+        if (route.mRloc16 == aRloc16)
+        {
+            ExitNow(contains = true);
+        }
+    }
+
+    iterator = kIteratorInit;
+
+    while (GetNextOnMeshPrefix(iterator, prefix) == kErrorNone)
+    {
+        if ((prefix.mRloc16 == aRloc16) && prefix.mOnMesh && (prefix.mDefaultRoute || prefix.mDp))
+        {
+            ExitNow(contains = true);
+        }
+    }
+
+exit:
+    return contains;
 }
 
 } // namespace NetworkData

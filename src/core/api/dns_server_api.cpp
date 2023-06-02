@@ -81,4 +81,9 @@ otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*a
     return MapEnum(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
 }
 
+const otDnssdCounters *otDnssdGetCounters(otInstance *aInstance)
+{
+    return &AsCoreType(aInstance).Get<Dns::ServiceDiscovery::Server>().GetCounters();
+}
+
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

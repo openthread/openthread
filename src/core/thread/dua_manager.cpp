@@ -424,7 +424,7 @@ void DuaManager::PerformNextRegistration(void)
     Error            error   = kErrorNone;
     Mle::MleRouter & mle     = Get<Mle::MleRouter>();
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
     Ip6::Address     dua;
 
     VerifyOrExit(mle.IsAttached(), error = kErrorInvalidState);
@@ -455,10 +455,8 @@ void DuaManager::PerformNextRegistration(void)
     }
 
     // Prepare DUA.req
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationRequest));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kDuaRegistrationRequest);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0)
@@ -517,8 +515,7 @@ void DuaManager::PerformNextRegistration(void)
                                                       Get<BackboneRouter::Leader>().GetServer16());
     }
 
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetSockAddrToRloc();
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DuaManager::HandleDuaResponse, this));
 
@@ -726,20 +723,16 @@ void DuaManager::SendAddressNotification(Ip6::Address &             aAddress,
                                          const Child &              aChild)
 {
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
     Error            error;
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDuaRegistrationNotify));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(UriPath::kDuaRegistrationNotify);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = Tlv::Append<ThreadStatusTlv>(*message, aStatus));
     SuccessOrExit(error = Tlv::Append<ThreadTargetTlv>(*message, aAddress));
 
-    messageInfo.GetPeerAddr().SetToRoutingLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), aChild.GetRloc16());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
-    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetSockAddrToRlocPeerAddrTo(aChild.GetRloc16());
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 

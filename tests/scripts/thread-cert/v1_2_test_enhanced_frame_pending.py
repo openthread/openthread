@@ -46,6 +46,7 @@ import unittest
 import pexpect
 
 import thread_cert
+import config
 import common
 
 LEADER = 1
@@ -74,7 +75,7 @@ class SED_EnhancedFramePending(thread_cert.TestCase):
 
         # 1 - Set up topology
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[SED_1].start()

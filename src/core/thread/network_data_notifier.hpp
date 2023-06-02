@@ -42,6 +42,8 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "common/tasklet.hpp"
+#include "common/time_ticker.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -53,6 +55,7 @@ namespace NetworkData {
 class Notifier : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class ot::TimeTicker;
 
 public:
     /**
@@ -66,13 +69,40 @@ public:
     /**
      * Call this method to inform the notifier that new server data is available.
      *
+     * This method posts a tasklet to sync new server data with leader so if there are multiple changes within the same
+     * flow of execution (multiple calls to this method) they are all synchronized together and included in the same
+     * message to the leader.
+     *
      */
     void HandleServerDataUpdated(void);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    /**
+     * This method indicates whether the device as border router is eligible for router role upgrade request using the
+     * status reason `kBorderRouterRequest`.
+     *
+     * This method checks whether device is providing IP connectivity and that there are fewer than two border routers
+     * in network data acting as router.  Device is considered to provide external IP connectivity if at least one of
+     * the below conditions hold:
+     *
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (domain and on-mesh flags set).
+     *
+     * This method does not check the current role of device.
+     *
+     * @retval TRUE    Device is eligible to request router role upgrade as a border router.
+     * @retval FALSE   Device is not eligible to request router role upgrade as a border router.
+     *
+     */
+    bool IsEligibleForRouterRoleUpgradeAsBorderRouter(void) const;
+#endif
+
 private:
-    static constexpr uint32_t kDelayNoBufs                = 1000;   // in msec
-    static constexpr uint32_t kDelayRemoveStaleChildren   = 5000;   // in msec
-    static constexpr uint32_t kDelaySynchronizeServerData = 300000; // in msec
+    static constexpr uint32_t kDelayNoBufs                 = 1000;   // in msec
+    static constexpr uint32_t kDelayRemoveStaleChildren    = 5000;   // in msec
+    static constexpr uint32_t kDelaySynchronizeServerData  = 300000; // in msec
+    static constexpr uint8_t  kRouterRoleUpgradeMaxTimeout = 10;     // in sec
 
     void HandleNotifierEvents(Events aEvents);
 
@@ -85,11 +115,23 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);
 
+    static void HandleSynchronizeDataTask(Tasklet &aTasklet);
+
     void SynchronizeServerData(void);
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    void ScheduleRouterRoleUpgradeIfEligible(void);
+    void HandleTimeTick(void);
+#endif
 
     TimerMilli mTimer;
+    Tasklet    mSynchronizeDataTask;
     uint32_t   mNextDelay;
-    bool       mWaitingForResponse;
+    bool       mWaitingForResponse : 1;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+    bool    mDidRequestRouterRoleUpgrade : 1;
+    uint8_t mRouterRoleUpgradeTimeout;
+#endif
 };
 
 } // namespace NetworkData

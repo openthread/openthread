@@ -90,6 +90,7 @@ private:
     otError ProcessHost(Arg aArgs[]);
     otError ProcessService(Arg aArgs[]);
     otError ProcessSeqNum(Arg aArgs[]);
+    otError ProcessTtl(Arg aArgs[]);
     otError ProcessHelp(Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
@@ -100,6 +101,7 @@ private:
         {"help", &SrpServer::ProcessHelp},         {"host", &SrpServer::ProcessHost},
         {"lease", &SrpServer::ProcessLease},       {"seqnum", &SrpServer::ProcessSeqNum},
         {"service", &SrpServer::ProcessService},   {"state", &SrpServer::ProcessState},
+        {"ttl", &SrpServer::ProcessTtl},
     };
 
     static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");

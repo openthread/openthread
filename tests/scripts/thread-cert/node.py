@@ -441,7 +441,7 @@ class OtCli:
         cmd = './ot-cli-%s' % (mode)
 
         # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_CLI_PATH
-        if self.version == '1.2' and mode == 'mtd' and 'top_builddir' in os.environ:
+        if self.version != '1.1' and mode == 'mtd' and 'top_builddir' in os.environ:
             srcdir = os.environ['top_builddir']
             cmd = '%s/examples/apps/cli/ot-cli-%s %d' % (srcdir, mode, nodeid)
 
@@ -449,11 +449,11 @@ class OtCli:
         elif self.version == self.env_version:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if self.version == '1.2' and self.is_bbr:
-                if 'OT_CLI_PATH_1_2_BBR' in os.environ:
-                    cmd = os.environ['OT_CLI_PATH_1_2_BBR']
-                elif 'top_builddir_1_2_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_2_bbr']
+            if self.version != '1.1' and self.is_bbr:
+                if 'OT_CLI_PATH_BBR' in os.environ:
+                    cmd = os.environ['OT_CLI_PATH_BBR']
+                elif 'top_builddir_1_3_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_3_bbr']
                     cmd = '%s/examples/apps/cli/ot-cli-%s' % (srcdir, mode)
 
             # Load Thread device of the testing environment version (may be 1.1 or 1.2)
@@ -518,14 +518,14 @@ class OtCli:
 
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
-            if self.version == '1.2' and self.is_bbr:
-                if 'OT_NCP_PATH_1_2_BBR' in os.environ:
+            if self.version != '1.1' and self.is_bbr:
+                if 'OT_NCP_PATH_1_3_BBR' in os.environ:
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
-                        os.environ['OT_NCP_PATH_1_2_BBR'],
+                        os.environ['OT_NCP_PATH_1_3_BBR'],
                         args,
                     )
-                elif 'top_builddir_1_2_bbr' in os.environ:
-                    srcdir = os.environ['top_builddir_1_2_bbr']
+                elif 'top_builddir_1_3_bbr' in os.environ:
+                    srcdir = os.environ['top_builddir_1_3_bbr']
                     cmd = '%s/examples/apps/ncp/ot-ncp-%s' % (srcdir, mode)
                     cmd = 'spinel-cli.py -p "%s%s" -n' % (
                         cmd,
@@ -614,7 +614,7 @@ class NodeImpl:
 
         super().__init__(nodeid, **kwargs)
 
-        self.set_extpanid(config.EXTENDED_PANID)
+        self.set_mesh_local_prefix(config.MESH_LOCAL_PREFIX)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
     def _expect(self, pattern, timeout=-1, *args, **kwargs):
@@ -815,6 +815,30 @@ class NodeImpl:
         self.send_command('thread stop')
         self._expect_done()
 
+    def detach(self, is_async=False):
+        cmd = 'detach'
+        if is_async:
+            cmd += ' async'
+
+        self.send_command(cmd)
+
+        if is_async:
+            self._expect_done()
+            return
+
+        end = self.simulator.now() + 4
+        while True:
+            self.simulator.go(1)
+            try:
+                self._expect_done(timeout=0.1)
+                return
+            except (pexpect.TIMEOUT, socket.timeout):
+                if self.simulator.now() > end:
+                    raise
+
+    def expect_finished_detaching(self):
+        self._expect('Finished detaching')
+
     def commissioner_start(self):
         cmd = 'commissioner start'
         self.send_command(cmd)
@@ -929,6 +953,10 @@ class NodeImpl:
         self.send_command(f'srp server lease {min_lease} {max_lease} {min_key_lease} {max_key_lease}')
         self._expect_done()
 
+    def srp_server_set_ttl_range(self, min_ttl, max_ttl):
+        self.send_command(f'srp server ttl {min_ttl} {max_ttl}')
+        self._expect_done()
+
     def srp_server_get_hosts(self):
         """Returns the host list on the SRP server as a list of property
            dictionary.
@@ -989,6 +1017,7 @@ class NodeImpl:
                'port': '12345',
                'priority': '0',
                'weight': '0',
+               'ttl': '7200',
                'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
@@ -1015,8 +1044,8 @@ class NodeImpl:
                 service_list.append(service)
                 continue
 
-            # 'subtypes', port', 'priority', 'weight'
-            for i in range(0, 4):
+            # 'subtypes', port', 'priority', 'weight', 'ttl'
+            for i in range(0, 5):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1117,6 +1146,10 @@ class NodeImpl:
         self.send_command(f'srp client host clear')
         self._expect_done()
 
+    def srp_client_enable_auto_host_address(self):
+        self.send_command(f'srp client host address auto')
+        self._expect_done()
+
     def srp_client_set_host_address(self, *addrs: str):
         self.send_command(f'srp client host address {" ".join(addrs)}')
         self._expect_done()
@@ -1153,6 +1186,16 @@ class NodeImpl:
 
     def srp_client_get_lease_interval(self) -> int:
         cmd = 'srp client leaseinterval'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
+    def srp_client_set_ttl(self, ttl: int):
+        cmd = f'srp client ttl {ttl}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_ttl(self) -> int:
+        cmd = 'srp client ttl'
         self.send_command(cmd)
         return int(self._expect_result('\d+'))
 
@@ -1416,6 +1459,14 @@ class NodeImpl:
     def get_extpanid(self):
         self.send_command('extpanid')
         return self._expect_result('[0-9a-fA-F]{16}')
+
+    def get_mesh_local_prefix(self):
+        self.send_command('prefix meshlocal')
+        return self._expect_command_output()[0]
+
+    def set_mesh_local_prefix(self, mesh_local_prefix):
+        self.send_command('prefix meshlocal %s' % mesh_local_prefix)
+        self._expect_done()
 
     def get_joiner_id(self):
         self.send_command('joiner id')
@@ -1912,8 +1963,13 @@ class NodeImpl:
         return self._expect_command_output()[0]
 
     def get_netdata_omr_prefixes(self):
-        prefixes = [prefix.split(' ')[0] for prefix in self.get_prefixes()]
-        return prefixes
+        omr_prefixes = []
+        for prefix in self.get_prefixes():
+            prefix, flags = prefix.split()[:2]
+            if 'a' in flags and 'o' in flags and 's' in flags and 'D' not in flags:
+                omr_prefixes.append(prefix)
+
+        return omr_prefixes
 
     def get_br_on_link_prefix(self):
         cmd = 'br onlinkprefix'
@@ -2145,7 +2201,13 @@ class NodeImpl:
         return result
 
     def reset(self):
-        self.send_command('reset', expect_command_echo=False)
+        self._reset('reset')
+
+    def factory_reset(self):
+        self._reset('factoryreset')
+
+    def _reset(self, cmd):
+        self.send_command(cmd, expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
         # Send a "version" command and drain the CLI output after reset
         self.send_command('version', expect_command_echo=False)

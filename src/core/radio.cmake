@@ -47,8 +47,12 @@ if(OT_VENDOR_EXTENSION)
   target_sources(openthread-radio PRIVATE ${OT_VENDOR_EXTENSION})
 endif()
 
+if(NOT DEFINED OT_MBEDTLS_RCP)
+    set(OT_MBEDTLS_RCP ${OT_MBEDTLS})
+endif()
+
 target_link_libraries(openthread-radio
     PRIVATE
-        ${OT_MBEDTLS}
+        ${OT_MBEDTLS_RCP}
         ot-config
 )

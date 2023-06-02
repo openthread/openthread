@@ -39,6 +39,7 @@
 
 #include <string.h>
 
+#include <openthread/dataset.h>
 #include <openthread/platform/toolchain.h>
 
 #include "common/clearable.hpp"
@@ -59,6 +60,18 @@ OT_TOOL_PACKED_BEGIN
 class Timestamp : public Clearable<Timestamp>
 {
 public:
+    /**
+     * This method converts the timestamp to `otTimestamp`.
+     *
+     */
+    void ConvertTo(otTimestamp &aTimestamp) const;
+
+    /**
+     * This method sets the timestamp from `otTimestamp`.
+     *
+     */
+    void SetFromTimestamp(const otTimestamp &aTimestamp);
+
     /**
      * This method returns the Seconds value.
      *
@@ -128,6 +141,15 @@ public:
     void AdvanceRandomTicks(void);
 
     /**
+     * This method indicates whether the timestamp indicates an MLE Orphan Announce message.
+     *
+     * @retval TRUE   The timestamp indicates an Orphan Announce message.
+     * @retval FALSE  If the timestamp does not indicate an Orphan Announce message.
+     *
+     */
+    bool IsOrphanTimestamp(void) const { return GetSeconds() == 0 && GetTicks() == 0 && GetAuthoritative(); }
+
+    /**
      * This static method compares two timestamps.
      *
      * Either one or both @p aFirst or @p aSecond can be `nullptr`. A non-null timestamp is considered greater than
@@ -142,6 +164,19 @@ public:
      *
      */
     static int Compare(const Timestamp *aFirst, const Timestamp *aSecond);
+
+    /**
+     * This static method compares two timestamps.
+     *
+     * @param[in]  aFirst   A reference to the first timestamp to compare.
+     * @param[in]  aSecond  A reference to the second timestamp to compare.
+     *
+     * @retval -1  if @p aFirst is less than @p aSecond (`aFirst < aSecond`).
+     * @retval  0  if @p aFirst is equal to @p aSecond (`aFirst == aSecond`).
+     * @retval  1  if @p aFirst is greater than @p aSecond (`aFirst > aSecond`).
+     *
+     */
+    static int Compare(const Timestamp &aFirst, const Timestamp &aSecond);
 
 private:
     static constexpr uint8_t  kTicksOffset         = 1;

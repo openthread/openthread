@@ -81,26 +81,21 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
 {
     Error                 error;
     Coap::Message *       message = nullptr;
-    Ip6::MessageInfo      messageInfo;
+    Tmf::MessageInfo      messageInfo(GetInstance());
     otCoapResponseHandler handler = nullptr;
-
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     if (aDestination.IsMulticast())
     {
-        SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kDiagnosticGetQuery));
+        message = Get<Tmf::Agent>().NewNonConfirmablePostMessage(UriPath::kDiagnosticGetQuery);
         messageInfo.SetMulticastLoop(true);
     }
     else
     {
         handler = &NetworkDiagnostic::HandleDiagnosticGetResponse;
-        SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetRequest));
+        message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetRequest);
     }
 
-    if (aCount > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aCount > 0)
     {
@@ -113,11 +108,10 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, handler, this));
 
@@ -467,7 +461,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     Error                error   = kErrorNone;
     Coap::Message *      message = nullptr;
     NetworkDiagnosticTlv networkDiagnosticTlv;
-    Ip6::MessageInfo     messageInfo;
+    Tmf::MessageInfo     messageInfo(GetInstance());
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorDrop);
 
@@ -486,26 +480,19 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         }
     }
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticGetAnswer);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetAnswer));
-
-    if (networkDiagnosticTlv.GetLength() > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
-
-    if (aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast())
+    if (aMessageInfo.GetPeerAddr().IsLinkLocal())
     {
         messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetLinkLocalAddress());
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -540,10 +527,8 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kErrorParse);
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->SetDefaultResponseHeader(aMessage));
-    SuccessOrExit(error = message->SetPayloadMarker());
+    message = Get<Tmf::Agent>().NewResponseMessage(aMessage);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
@@ -561,16 +546,10 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
 {
     Error            error;
     Coap::Message *  message = nullptr;
-    Ip6::MessageInfo messageInfo;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
-    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
-
-    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticReset));
-
-    if (aCount > 0)
-    {
-        SuccessOrExit(error = message->SetPayloadMarker());
-    }
+    message = Get<Tmf::Agent>().NewConfirmablePostMessage(UriPath::kDiagnosticReset);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     if (aCount > 0)
     {
@@ -583,11 +562,10 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     }
     else
     {
-        messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+        messageInfo.SetSockAddrToRloc();
     }
 
     messageInfo.SetPeerAddr(aDestination);
-    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 

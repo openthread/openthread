@@ -154,85 +154,6 @@ void TestMacAddress(void)
     testFreeInstance(instance);
 }
 
-void CompareNetworkName(const Mac::NetworkName &aNetworkName, const char *aNameString)
-{
-    uint8_t len = static_cast<uint8_t>(strlen(aNameString));
-
-    VerifyOrQuit(strcmp(aNetworkName.GetAsCString(), aNameString) == 0);
-
-    VerifyOrQuit(aNetworkName.GetAsData().GetLength() == len);
-    VerifyOrQuit(memcmp(aNetworkName.GetAsData().GetBuffer(), aNameString, len) == 0);
-}
-
-void TestMacNetworkName(void)
-{
-    const char kEmptyName[]   = "";
-    const char kName1[]       = "network";
-    const char kName2[]       = "network-name";
-    const char kLongName[]    = "0123456789abcdef";
-    const char kTooLongName[] = "0123456789abcdef0";
-
-    char             buffer[sizeof(kTooLongName) + 2];
-    uint8_t          len;
-    Mac::NetworkName networkName;
-    Mac::NetworkName networkName2;
-
-    CompareNetworkName(networkName, kEmptyName);
-
-    SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))));
-    CompareNetworkName(networkName, kName1);
-
-    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))) == kErrorAlready, "failed to detect duplicate");
-    CompareNetworkName(networkName, kName1);
-
-    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1) - 1)) == kErrorAlready,
-                 "failed to detect duplicate");
-
-    SuccessOrQuit(networkName.Set(Mac::NameData(kName2, sizeof(kName2))));
-    CompareNetworkName(networkName, kName2);
-
-    VerifyOrQuit(networkName.Set(Mac::NameData(kEmptyName, 0)) == kErrorInvalidArgs);
-
-    SuccessOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName))));
-    CompareNetworkName(networkName, kLongName);
-
-    VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == kErrorAlready,
-                 "failed to detect duplicate");
-
-    VerifyOrQuit(networkName.Set(kEmptyName) == kErrorInvalidArgs);
-
-    SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))));
-
-    VerifyOrQuit(networkName.Set(Mac::NameData(kTooLongName, sizeof(kTooLongName))) == kErrorInvalidArgs,
-                 "accepted an invalid (too long) name");
-
-    CompareNetworkName(networkName, kName1);
-
-    memset(buffer, 'a', sizeof(buffer));
-    len = networkName.GetAsData().CopyTo(buffer, 1);
-    VerifyOrQuit(len == 1, "NameData::CopyTo() failed");
-    VerifyOrQuit(buffer[0] == kName1[0], "NameData::CopyTo() failed");
-    VerifyOrQuit(buffer[1] == 'a', "NameData::CopyTo() failed");
-
-    memset(buffer, 'a', sizeof(buffer));
-    len = networkName.GetAsData().CopyTo(buffer, sizeof(kName1) - 1);
-    VerifyOrQuit(len == sizeof(kName1) - 1, "NameData::CopyTo() failed");
-    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NameData::CopyTo() failed");
-    VerifyOrQuit(buffer[sizeof(kName1)] == 'a', "NameData::CopyTo() failed");
-
-    memset(buffer, 'a', sizeof(buffer));
-    len = networkName.GetAsData().CopyTo(buffer, sizeof(buffer));
-    VerifyOrQuit(len == sizeof(kName1) - 1, "NameData::CopyTo() failed");
-    VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NameData::CopyTo() failed");
-    VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NameData::CopyTo() failed");
-
-    SuccessOrQuit(networkName2.Set(Mac::NameData(kName1, sizeof(kName1))));
-    VerifyOrQuit(networkName == networkName2);
-
-    SuccessOrQuit(networkName2.Set(kName2));
-    VerifyOrQuit(networkName != networkName2);
-}
-
 void TestMacHeader(void)
 {
     static const struct
@@ -650,7 +571,6 @@ void TestMacFrameAckGeneration(void)
 int main(void)
 {
     ot::TestMacAddress();
-    ot::TestMacNetworkName();
     ot::TestMacHeader();
     ot::TestMacChannelMask();
     ot::TestMacFrameApi();

@@ -146,15 +146,15 @@ const char *SettingsBase::KeyToString(Key aKey)
         "NetworkInfo",       // (3)  kKeyNetworkInfo
         "ParentInfo",        // (4)  kKeyParentInfo
         "ChildInfo",         // (5)  kKeyChildInfo
-        "",                  // (6)  kKeyReserved
+        "",                  // (6)  Removed (previously auto-start).
         "SlaacIidSecretKey", // (7)  kKeySlaacIidSecretKey
         "DadInfo",           // (8)  kKeyDadInfo
-        "LegacyOmrPrefix",   // (9)  kKeyLegacyOmrPrefix
-        "OnLinkPrefix",      // (10) kKeyOnLinkPrefix
+        "",                  // (9)  Removed (previously OMR prefix).
+        "",                  // (10) Removed (previously on-link prefix).
         "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
         "SrpClientInfo",     // (12) kKeySrpClientInfo
         "SrpServerInfo",     // (13) kKeySrpServerInfo
-        "LegacyNat64Prefix", // (14) kKeyLegacyNat64Prefix
+        "",                  // (14) Removed (previously NAT64 prefix)
         "BrUlaPrefix",       // (15) kKeyBrUlaPrefix
     };
 
@@ -163,15 +163,11 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(3 == kKeyNetworkInfo, "kKeyNetworkInfo value is incorrect");
     static_assert(4 == kKeyParentInfo, "kKeyParentInfo value is incorrect");
     static_assert(5 == kKeyChildInfo, "kKeyChildInfo value is incorrect");
-    static_assert(6 == kKeyReserved, "kKeyReserved value is incorrect");
     static_assert(7 == kKeySlaacIidSecretKey, "kKeySlaacIidSecretKey value is incorrect");
     static_assert(8 == kKeyDadInfo, "kKeyDadInfo value is incorrect");
-    static_assert(9 == kKeyLegacyOmrPrefix, "kKeyLegacyOmrPrefix value is incorrect");
-    static_assert(10 == kKeyOnLinkPrefix, "kKeyOnLinkPrefix value is incorrect");
     static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
     static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
-    static_assert(14 == kKeyLegacyNat64Prefix, "kKeyLegacyNat64Prefix value is incorrect");
     static_assert(15 == kKeyBrUlaPrefix, "kKeyBrUlaPrefix value is incorrect");
 
     static_assert(kLastKey == kKeyBrUlaPrefix, "kLastKey is not valid");
@@ -210,9 +206,14 @@ void Settings::Wipe(void)
     LogInfo("Wiped all info");
 }
 
-Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
+Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    return (aType == MeshCoP::Dataset::kActive) ? kKeyActiveDataset : kKeyPendingDataset;
+}
+
+Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
+{
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetSize());
 
     Log(kActionSave, error, key);
@@ -220,13 +221,12 @@ Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &a
     return error;
 }
 
-Error Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
+Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
 {
     Error    error  = kErrorNone;
     uint16_t length = MeshCoP::Dataset::kMaxSize;
 
-    SuccessOrExit(error = Get<SettingsDriver>().Get(aIsActive ? kKeyActiveDataset : kKeyPendingDataset,
-                                                    aDataset.GetBytes(), &length));
+    SuccessOrExit(error = Get<SettingsDriver>().Get(KeyForDatasetType(aType), aDataset.GetBytes(), &length));
     VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
 
     aDataset.SetSize(length);
@@ -235,9 +235,9 @@ exit:
     return error;
 }
 
-Error Settings::DeleteOperationalDataset(bool aIsActive)
+Error Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 {
-    Key   key   = (aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
@@ -431,9 +431,6 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
         case kKeyBrUlaPrefix:
-        case kKeyLegacyOmrPrefix:
-        case kKeyOnLinkPrefix:
-        case kKeyLegacyNat64Prefix:
             LogPrefix(aAction, aKey, *reinterpret_cast<const Ip6::Prefix *>(aValue));
             break;
 #endif

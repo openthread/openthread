@@ -30,6 +30,7 @@ import ipaddress
 import typing
 import unittest
 
+import config
 import thread_cert
 
 # Test description:
@@ -83,14 +84,14 @@ class TestDnssd(thread_cert.TestCase):
         # Start the server & client devices.
 
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
         server.srp_server_set_enabled(True)
 
         client1.start()
         client2.start()
         client3.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client1.get_state(), 'router')
         self.assertEqual(client2.get_state(), 'router')
         self.assertEqual(client3.get_state(), 'router')
