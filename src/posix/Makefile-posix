@@ -44,7 +44,6 @@ COAPS                                ?= 1
 COMMISSIONER                         ?= 1
 CHANNEL_MANAGER                      ?= 1
 CHANNEL_MONITOR                      ?= 1
-CHILD_SUPERVISION                    ?= 1
 DAEMON                               ?= 0
 DATASET_UPDATER                      ?= 1
 DHCP6_CLIENT                         ?= 1
@@ -58,14 +57,13 @@ HISTORY_TRACKER                      ?= 1
 IP6_FRAGM                            ?= 1
 JAM_DETECTION                        ?= 1
 JOINER                               ?= 1
-LEGACY                               ?= 1
 LINK_RAW                             ?= 0
 LOG_OUTPUT                           ?= PLATFORM_DEFINED
 MAC_FILTER                           ?= 1
 MAX_POWER_TABLE                      ?= 1
-MTD_NETDIAG                          ?= 1
 NEIGHBOR_DISCOVERY_AGENT             ?= 1
 NETDATA_PUBLISHER                    ?= 1
+NETDIAG_CLIENT                       ?= 1
 PING_SENDER                          ?= 1
 READLINE                             ?= readline
 REFERENCE_DEVICE                     ?= 1
@@ -145,6 +143,7 @@ CXXFLAGS                       += \
 
 LDFLAGS                        += \
     $(COMMONCFLAGS)               \
+    -rdynamic                     \
     $(NULL)
 
 TopSourceDir                   := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))../..

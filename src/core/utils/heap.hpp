@@ -209,7 +209,7 @@ public:
      */
     bool IsClean(void) const
     {
-        Heap &       self  = *AsNonConst(this);
+        Heap        &self  = *AsNonConst(this);
         const Block &super = self.BlockSuper();
         const Block &first = self.BlockRight(super);
         return super.GetNext() == self.BlockOffset(first) && first.GetSize() == kFirstBlockSize;
@@ -227,7 +227,7 @@ public:
     size_t GetFreeSize(void) const { return mMemory.mFreeSize; }
 
 private:
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_TLS_ENABLE || OPENTHREAD_CONFIG_DTLS_ENABLE
     static constexpr uint16_t kMemorySize = OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE;
 #else
     static constexpr uint16_t kMemorySize = OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS;

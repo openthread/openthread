@@ -34,6 +34,7 @@
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 #include "coap/coap.hpp"
+#include "common/callback.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
 
@@ -101,8 +102,7 @@ public:
      */
     void SetConnectedCallback(ConnectedCallback aCallback, void *aContext)
     {
-        mConnectedCallback = aCallback;
-        mConnectedContext  = aContext;
+        mConnectedCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -267,8 +267,7 @@ public:
      */
     void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
     {
-        mConnectedCallback = aCallback;
-        mConnectedContext  = aContext;
+        mConnectedCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -301,9 +300,9 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &                   aMessage,
+    Error SendMessage(Message                    &aMessage,
                       ResponseHandler             aHandler      = nullptr,
-                      void *                      aContext      = nullptr,
+                      void                       *aContext      = nullptr,
                       otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 
@@ -326,10 +325,10 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &                   aMessage,
-                      const Ip6::MessageInfo &    aMessageInfo,
+    Error SendMessage(Message                    &aMessage,
+                      const Ip6::MessageInfo     &aMessageInfo,
                       ResponseHandler             aHandler      = nullptr,
-                      void *                      aContext      = nullptr,
+                      void                       *aContext      = nullptr,
                       otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
                       otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -368,10 +367,10 @@ public:
      * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    Error SendMessage(Message &               aMessage,
+    Error SendMessage(Message                &aMessage,
                       const Ip6::MessageInfo &aMessageInfo,
                       ResponseHandler         aHandler = nullptr,
-                      void *                  aContext = nullptr);
+                      void                   *aContext = nullptr);
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -410,11 +409,10 @@ private:
     static void HandleTransmit(Tasklet &aTasklet);
     void        HandleTransmit(void);
 
-    MeshCoP::Dtls     mDtls;
-    ConnectedCallback mConnectedCallback;
-    void *            mConnectedContext;
-    ot::MessageQueue  mTransmitQueue;
-    TaskletContext    mTransmitTask;
+    MeshCoP::Dtls               mDtls;
+    Callback<ConnectedCallback> mConnectedCallback;
+    ot::MessageQueue            mTransmitQueue;
+    TaskletContext              mTransmitTask;
 };
 
 } // namespace Coap

@@ -38,6 +38,7 @@
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/preference.hpp"
 #include "common/tlvs.hpp"
 #include "meshcop/timestamp.hpp"
 #include "net/ip6_address.hpp"
@@ -102,6 +103,7 @@ public:
         kActiveDataset         = 24, ///< Active Operational Dataset TLV
         kPendingDataset        = 25, ///< Pending Operational Dataset TLV
         kDiscovery             = 26, ///< Thread Discovery TLV
+        kSupervisionInterval   = 27, ///< Supervision Interval TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
         kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
@@ -231,6 +233,12 @@ typedef SimpleTlvInfo<Tlv::kActiveTimestamp, MeshCoP::Timestamp> ActiveTimestamp
 typedef SimpleTlvInfo<Tlv::kPendingTimestamp, MeshCoP::Timestamp> PendingTimestampTlv;
 
 /**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kSupervisionInterval, uint16_t> SupervisionIntervalTlv;
+
+/**
  * This class defines CSL Timeout TLV constants and types.
  *
  */
@@ -256,13 +264,7 @@ public:
      * This method initializes the TLV.
      *
      */
-    void Init(void)
-    {
-        SetType(kRoute);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        mRouterIdMask.Clear();
-        memset(mRouteData, 0, sizeof(mRouteData));
-    }
+    void Init(void);
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -271,7 +273,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask); }
+    bool IsValid(void) const;
 
     /**
      * This method returns the Router ID Sequence value.
@@ -315,6 +317,15 @@ public:
     bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
 
     /**
+     * This method indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
+     *
+     * @retval TRUE   It is a singleton.
+     * @retval FALSE  It is not a singleton.
+     *
+     */
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
+
+    /**
      * This method returns the Route Data Length value.
      *
      * @returns The Route Data Length value.
@@ -341,18 +352,6 @@ public:
     uint8_t GetRouteCost(uint8_t aRouterIndex) const { return mRouteData[aRouterIndex] & kRouteCostMask; }
 
     /**
-     * This method sets the Route Cost value for a given Router index.
-     *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aRouteCost    The Route Cost value.
-     *
-     */
-    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
-    {
-        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kRouteCostMask) | aRouteCost;
-    }
-
-    /**
      * This method returns the Link Quality In value for a given Router index.
      *
      * @param[in]  aRouterIndex  The Router index.
@@ -363,19 +362,6 @@ public:
     LinkQuality GetLinkQualityIn(uint8_t aRouterIndex) const
     {
         return static_cast<LinkQuality>((mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset);
-    }
-
-    /**
-     * This method sets the Link Quality In value for a given Router index.
-     *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
-     *
-     */
-    void SetLinkQualityIn(uint8_t aRouterIndex, LinkQuality aLinkQuality)
-    {
-        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityInMask) |
-                                   ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
     }
 
     /**
@@ -392,16 +378,19 @@ public:
     }
 
     /**
-     * This method sets the Link Quality Out value for a given Router index.
+     * This method sets the Route Data (Link Quality In/Out and Route Cost) for a given Router index.
      *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
+     * @param[in]  aRouterIndex    The Router index.
+     * @param[in]  aLinkQualityIn  The Link Quality In value.
+     * @param[in]  aLinkQualityOut The Link Quality Out value.
+     * @param[in]  aRouteCost      The Route Cost value.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
+    void SetRouteData(uint8_t aRouterIndex, LinkQuality aLinkQualityIn, LinkQuality aLinkQualityOut, uint8_t aRouteCost)
     {
-        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityOutMask) |
-                                   ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
+        mRouteData[aRouterIndex] = (((aLinkQualityIn << kLinkQualityInOffset) & kLinkQualityInMask) |
+                                    ((aLinkQualityOut << kLinkQualityOutOffset) & kLinkQualityOutMask) |
+                                    ((aRouteCost << kRouteCostOffset) & kRouteCostMask));
     }
 
 private:
@@ -488,6 +477,15 @@ public:
     bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
 
     /**
+     * This method indicates whether the `RouteTlv` is a singleton, i.e., only one router is allocated.
+     *
+     * @retval TRUE   It is a singleton.
+     * @retval FALSE  It is not a singleton.
+     *
+     */
+    bool IsSingleton(void) const { return IsValid() && (mRouterIdMask.GetNumberOfAllocatedIds() <= 1); }
+
+    /**
      * This method sets the Router ID bit.
      *
      * @param[in]  aRouterId  The Router ID bit to set.
@@ -539,30 +537,6 @@ public:
     }
 
     /**
-     * This method sets the Route Cost value for a given Router index.
-     *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aRouteCost    The Route Cost value.
-     *
-     */
-    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
-    {
-        if (aRouterIndex & 1)
-        {
-            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = aRouteCost;
-        }
-        else
-        {
-            mRouteData[aRouterIndex + aRouterIndex / 2] =
-                (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
-                ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
-            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = static_cast<uint8_t>(
-                (mRouteData[aRouterIndex + aRouterIndex / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
-                ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
-        }
-    }
-
-    /**
      * This method returns the Link Quality In value for a given Router index.
      *
      * @param[in]  aRouterIndex  The Router index.
@@ -570,26 +544,12 @@ public:
      * @returns The Link Quality In value for a given Router index.
      *
      */
-    uint8_t GetLinkQualityIn(uint8_t aRouterIndex) const
+    LinkQuality GetLinkQualityIn(uint8_t aRouterIndex) const
     {
         int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        return (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityInMask >> offset)) >>
-               (kLinkQualityInOffset - offset);
-    }
-
-    /**
-     * This method sets the Link Quality In value for a given Router index.
-     *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
-     *
-     */
-    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
-    {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterIndex + aRouterIndex / 2] =
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityInMask >> offset)) |
-            ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
+        return static_cast<LinkQuality>(
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityInMask >> offset)) >>
+            (kLinkQualityInOffset - offset));
     }
 
     /**
@@ -609,18 +569,19 @@ public:
     }
 
     /**
-     * This method sets the Link Quality Out value for a given Router index.
+     * This method sets the Route Data (Link Quality In/Out and Route Cost) for a given Router index.
      *
-     * @param[in]  aRouterIndex  The Router index.
-     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
+     * @param[in]  aRouterIndex    The Router index.
+     * @param[in]  aLinkQualityIn  The Link Quality In value.
+     * @param[in]  aLinkQualityOut The Link Quality Out value.
+     * @param[in]  aRouteCost      The Route Cost value.
      *
      */
-    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
+    void SetRouteData(uint8_t aRouterIndex, LinkQuality aLinkQualityIn, LinkQuality aLinkQualityOut, uint8_t aRouteCost)
     {
-        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
-        mRouteData[aRouterIndex + aRouterIndex / 2] =
-            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityOutMask >> offset)) |
-            ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
+        SetLinkQualityIn(aRouterIndex, aLinkQualityIn);
+        SetLinkQualityOut(aRouterIndex, aLinkQualityOut);
+        SetRouteCost(aRouterIndex, aRouteCost);
     }
 
 private:
@@ -631,6 +592,39 @@ private:
     static constexpr uint8_t kRouteCostOffset      = 0;
     static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
     static constexpr uint8_t kOddEntryOffset       = 4;
+
+    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
+    {
+        if (aRouterIndex & 1)
+        {
+            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = aRouteCost;
+        }
+        else
+        {
+            mRouteData[aRouterIndex + aRouterIndex / 2] =
+                (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
+                ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
+            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = static_cast<uint8_t>(
+                (mRouteData[aRouterIndex + aRouterIndex / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
+                ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
+        }
+    }
+
+    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        mRouteData[aRouterIndex + aRouterIndex / 2] =
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityInMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
+    }
+
+    void SetLinkQualityOut(uint8_t aRouterIndex, LinkQuality aLinkQuality)
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        mRouteData[aRouterIndex + aRouterIndex / 2] =
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityOutMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
+    }
 
     uint8_t     mRouterIdSequence;
     RouterIdSet mRouterIdMask;
@@ -783,10 +777,7 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const
-    {
-        return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset;
-    }
+    int8_t GetParentPriority(void) const;
 
     /**
      * This method sets the Parent Priority value.
@@ -794,10 +785,7 @@ public:
      * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    void SetParentPriority(int8_t aParentPriority)
-    {
-        mParentPriority = (static_cast<uint8_t>(aParentPriority) << kParentPriorityOffset) & kParentPriorityMask;
-    }
+    void SetParentPriority(int8_t aParentPriority);
 
     /**
      * This method returns the Link Quality 3 value.
@@ -846,6 +834,17 @@ public:
      *
      */
     void SetLinkQuality1(uint8_t aLinkQuality) { mLinkQuality1 = aLinkQuality; }
+
+    /**
+     * This method increments the Link Quality N field in TLV for a given Link Quality N (1,2,3).
+     *
+     * The Link Quality N field specifies the number of neighboring router devices with which the sender shares a link
+     * of quality N.
+     *
+     * @param[in] aLinkQuality  The Link Quality N (1,2,3) field to update.
+     *
+     */
+    void IncrementLinkQuality(LinkQuality aLinkQuality);
 
     /**
      * This method sets the Active Routers value.
@@ -946,10 +945,10 @@ public:
     void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
 
 private:
-    static constexpr uint8_t kParentPriorityOffset = 6;
-    static constexpr uint8_t kParentPriorityMask   = 3 << kParentPriorityOffset;
+    static constexpr uint8_t kFlagsParentPriorityOffset = 6;
+    static constexpr uint8_t kFlagsParentPriorityMask   = (3 << kFlagsParentPriorityOffset);
 
-    uint8_t  mParentPriority;
+    uint8_t  mFlags;
     uint8_t  mLinkQuality3;
     uint8_t  mLinkQuality2;
     uint8_t  mLinkQuality1;
@@ -976,96 +975,57 @@ struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
 };
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class provides constants and methods for generation and parsing of Address Registration TLV.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class AddressRegistrationEntry
+class AddressRegistrationTlv : public TlvInfo<Tlv::kAddressRegistration>
 {
 public:
     /**
-     * This method returns the IPv6 address or IID length.
-     *
-     * @returns The IPv6 address length if the Compressed bit is clear, or the IID length if the Compressed bit is
-     *          set.
+     * This constant defines the control byte to use in an uncompressed entry where the full IPv6 address is included in
+     * the TLV.
      *
      */
-    uint8_t GetLength(void) const { return sizeof(mControl) + (IsCompressed() ? sizeof(mIid) : sizeof(mIp6Address)); }
+    static constexpr uint8_t kControlByteUncompressed = 0;
 
     /**
-     * This method indicates whether or not the Compressed flag is set.
+     * This static method returns the control byte to use in a compressed entry where the 64-prefix is replaced with a
+     * 6LoWPAN context identifier.
      *
-     * @retval TRUE   If the Compressed flag is set.
-     * @retval FALSE  If the Compressed flag is not set.
+     * @param[in] aContextId   The 6LoWPAN context ID.
+     *
+     * @returns The control byte associated with compressed entry with @p aContextId.
      *
      */
-    bool IsCompressed(void) const { return (mControl & kCompressed) != 0; }
+    static uint8_t ControlByteFor(uint8_t aContextId) { return kCompressed | (aContextId & kContextIdMask); }
 
     /**
-     * This method sets the Uncompressed flag.
+     * This static method indicates whether or not an address entry is using compressed format.
+     *
+     * @param[in] aControlByte  The control byte (the first byte in the entry).
+     *
+     * @retval TRUE   If the entry uses compressed format.
+     * @retval FALSE  If the entry uses uncompressed format.
      *
      */
-    void SetUncompressed(void) { mControl = 0; }
+    static bool IsEntryCompressed(uint8_t aControlByte) { return (aControlByte & kCompressed); }
 
     /**
-     * This method returns the Context ID for the compressed form.
+     * This static method gets the context ID in a compressed entry.
      *
-     * @returns The Context ID value.
+     * @param[in] aControlByte  The control byte (the first byte in the entry).
+     *
+     * @returns The 6LoWPAN context ID.
      *
      */
-    uint8_t GetContextId(void) const { return mControl & kCidMask; }
+    static uint8_t GetContextId(uint8_t aControlByte) { return (aControlByte & kContextIdMask); }
 
-    /**
-     * This method sets the Context ID value.
-     *
-     * @param[in]  aContextId  The Context ID value.
-     *
-     */
-    void SetContextId(uint8_t aContextId) { mControl = kCompressed | aContextId; }
-
-    /**
-     * This method returns the IID value.
-     *
-     * @returns The IID value.
-     *
-     */
-    const Ip6::InterfaceIdentifier &GetIid(void) const { return mIid; }
-
-    /**
-     * This method sets the IID value.
-     *
-     * @param[in]  aIid  The IID value.
-     *
-     */
-    void SetIid(const Ip6::InterfaceIdentifier &aIid) { mIid = aIid; }
-
-    /**
-     * This method returns the IPv6 Address value.
-     *
-     * @returns The IPv6 Address value.
-     *
-     */
-    const Ip6::Address &GetIp6Address(void) const { return mIp6Address; }
-
-    /**
-     * This method sets the IPv6 Address value.
-     *
-     * @param[in]  aAddress  A reference to the IPv6 Address value.
-     *
-     */
-    void SetIp6Address(const Ip6::Address &aAddress) { mIp6Address = aAddress; }
+    AddressRegistrationTlv(void) = delete;
 
 private:
-    static constexpr uint8_t kCompressed = 1 << 7;
-    static constexpr uint8_t kCidMask    = 0xf;
-
-    uint8_t mControl;
-    union
-    {
-        Ip6::InterfaceIdentifier mIid;
-        Ip6::Address             mIp6Address;
-    } OT_TOOL_PACKED_FIELD;
-} OT_TOOL_PACKED_END;
+    static constexpr uint8_t kCompressed    = 1 << 7;
+    static constexpr uint8_t kContextIdMask = 0xf;
+};
 
 /**
  * This class implements Channel TLV generation and parsing.
@@ -1230,7 +1190,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Channel Page value.
@@ -1291,12 +1251,21 @@ public:
     }
 
     /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
      * This method returns the CSL Clock Accuracy value.
      *
      * @returns The CSL Clock Accuracy value.
      *
      */
-    uint8_t GetCslClockAccuracy(void) { return mCslClockAccuracy; }
+    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
 
     /**
      * This method sets the CSL Clock Accuracy value.
@@ -1307,12 +1276,12 @@ public:
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
 
     /**
-     * This method returns the Clock Accuracy value.
+     * This method returns the Clock Uncertainty value.
      *
-     * @returns The Clock Accuracy value.
+     * @returns The Clock Uncertainty value.
      *
      */
-    uint8_t GetCslUncertainty(void) { return mCslUncertainty; }
+    uint8_t GetCslUncertainty(void) const { return mCslUncertainty; }
 
     /**
      * This method sets the CSL Uncertainty value.

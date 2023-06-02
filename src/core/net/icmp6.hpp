@@ -92,6 +92,8 @@ public:
             kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
             kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
             kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
+            kTypeNeighborSolicit  = OT_ICMP6_TYPE_NEIGHBOR_SOLICIT,  ///< Neighbor Solicitation
+            kTypeNeighborAdvert   = OT_ICMP6_TYPE_NEIGHBOR_ADVERT,   ///< Neighbor Advertisement
         };
 
         /**
@@ -240,12 +242,10 @@ public:
     /**
      * This method returns a new ICMP message with sufficient header space reserved.
      *
-     * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
-     *
      * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
-    Message *NewMessage(uint16_t aReserved);
+    Message *NewMessage(void);
 
     /**
      * This method registers ICMPv6 handler.

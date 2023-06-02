@@ -42,7 +42,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 10
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
 #endif
 
 /**
@@ -107,6 +107,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+ *
+ * Define as 1 to allow address resolution of on-mesh addresses using Thread Network Data DNS/SRP Service entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES
+#define OPENTHREAD_CONFIG_TMF_ALLOW_ADDRESS_RESOLUTION_USING_NET_DATA_SERVICES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY
  *
  * Minimum Delay Timer value for a Pending Operational Dataset (in ms).
@@ -163,13 +173,16 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+ * @def OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
  *
- * Define to 1 to enable TMF network diagnostics on MTDs.
+ * Define to 1 to enable TMF network diagnostics client.
+ *
+ * The network diagnostic client add API to send diagnostic requests and queries to other node and process the response.
+ * It is enabled by default on Border Routers.
  *
  */
-#ifndef OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-#define OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+#define OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif
 
 /**
@@ -215,7 +228,7 @@
 /**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
  *
- * This setting configures the Multicast Listener Registration parent proxing in Thread 1.2.
+ * This setting configures the Multicast Listener Registration parent proxying in Thread 1.2.
  *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE

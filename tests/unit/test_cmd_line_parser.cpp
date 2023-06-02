@@ -252,7 +252,7 @@ void TestParsingHexStrings(void)
     uint8_t        buffer[sizeof(kEvenParsedArray)];
     uint8_t        buf3[3];
     uint16_t       len;
-    const char *   string;
+    const char    *string;
     const uint8_t *bufPtr;
 
     // Verify `ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)`

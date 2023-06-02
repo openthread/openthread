@@ -114,6 +114,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         br1.srp_server_set_enabled(True)
+        br1.dns_upstream_query_state = False
 
         br2.stop_mdns_service()
         br2.stop_otbr_service()
@@ -141,6 +142,7 @@ class TestDnssdServerOnMultiBr(thread_cert.TestCase):
         br2.start()
 
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        br2.dns_upstream_query_state = False
 
         br2_addr = br2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
 

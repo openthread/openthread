@@ -38,7 +38,7 @@ import sys
 import time
 import traceback
 import unittest
-from typing import Optional, Callable, Union, Any
+from typing import Optional, Callable, Union, Mapping, Any
 
 import config
 import debug
@@ -592,3 +592,16 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         else:
             raise Exception("Route between node %d and %d is not established" % (node1, node2))
+
+    def assertDictIncludes(self, actual: Mapping[str, str], expected: Mapping[str, str]):
+        """ Asserts the `actual` dict includes the `expected` dict.
+
+        Args:
+            actual: A dict for checking.
+            expected: The expected items that the actual dict should contains.
+        """
+        for k, v in expected.items():
+            if k not in actual:
+                raise AssertionError(f"key {k} is not found in first dict")
+            if v != actual[k]:
+                raise AssertionError(f"{repr(actual[k])} != {repr(v)} for key {k}")

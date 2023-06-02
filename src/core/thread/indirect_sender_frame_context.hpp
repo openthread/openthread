@@ -31,8 +31,8 @@
  *   This file includes definitions of frame context used for indirect transmission.
  */
 
-#ifndef INDIRECT_SENDER_FRAME_CONTETX_HPP_
-#define INDIRECT_SENDER_FRAME_CONTETX_HPP_
+#ifndef INDIRECT_SENDER_FRAME_CONTEXT_HPP_
+#define INDIRECT_SENDER_FRAME_CONTEXT_HPP_
 
 #include "openthread-core-config.h"
 
@@ -87,4 +87,4 @@ public:
 
 } // namespace ot
 
-#endif // INDIRECT_SENDER_FRAME_CONTETX_HPP_
+#endif // INDIRECT_SENDER_FRAME_CONTEXT_HPP_

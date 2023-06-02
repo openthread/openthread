@@ -50,8 +50,8 @@ class VendorInterfaceImpl
 {
 public:
     explicit VendorInterfaceImpl(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void *                                aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                                 void                                 *aCallbackContext,
+                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
         : mReceiveFrameCallback(aCallback)
         , mReceiveFrameContext(aCallbackContext)
         , mRxFrameBuffer(aFrameBuffer)
@@ -65,8 +65,8 @@ public:
 
 private:
     SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void *                                mReceiveFrameContext;
-    SpinelInterface::RxFrameBuffer &      mRxFrameBuffer;
+    void                                 *mReceiveFrameContext;
+    SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
 };
 
 // ----------------------------------------------------------------------------
@@ -76,17 +76,14 @@ private:
 static OT_DEFINE_ALIGNED_VAR(sVendorInterfaceImplRaw, sizeof(VendorInterfaceImpl), uint64_t);
 
 VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void *                                aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer &      aFrameBuffer)
+                                 void                                 *aCallbackContext,
+                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
 {
     new (&sVendorInterfaceImplRaw) VendorInterfaceImpl(aCallback, aCallbackContext, aFrameBuffer);
     OT_UNUSED_VARIABLE(sVendorInterfaceImplRaw);
 }
 
-VendorInterface::~VendorInterface(void)
-{
-    Deinit();
-}
+VendorInterface::~VendorInterface(void) { Deinit(); }
 
 otError VendorInterface::Init(const Url::Url &aRadioUrl)
 {
@@ -102,14 +99,13 @@ void VendorInterface::Deinit(void)
     // TODO: Implement vendor code here.
 }
 
-uint32_t VendorInterface::GetBusSpeed(void) const
-{
-    return 1000000;
-}
+uint32_t VendorInterface::GetBusSpeed(void) const { return 1000000; }
 
-void VendorInterface::OnRcpReset(void)
+otError VendorInterface::HardwareReset(void)
 {
     // TODO: Implement vendor code here.
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
@@ -143,13 +139,6 @@ otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     OT_UNUSED_VARIABLE(aFrame);
     OT_UNUSED_VARIABLE(aLength);
 
-    // TODO: Implement vendor code here.
-
-    return OT_ERROR_NONE;
-}
-
-otError VendorInterface::ResetConnection(void)
-{
     // TODO: Implement vendor code here.
 
     return OT_ERROR_NONE;

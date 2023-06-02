@@ -41,6 +41,8 @@
 #include "common/log.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
+#include "thread/tmf.hpp"
+#include "thread/uri_paths.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -49,9 +51,10 @@ RegisterLogModule("NetworkData");
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, HandleTimer)
-    , mSynchronizeDataTask(aInstance, HandleSynchronizeDataTask)
+    , mTimer(aInstance)
+    , mSynchronizeDataTask(aInstance)
     , mNextDelay(0)
+    , mOldRloc(Mac::kShortAddrInvalid)
     , mWaitingForResponse(false)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     , mDidRequestRouterRoleUpgrade(false)
@@ -71,11 +74,6 @@ void Notifier::HandleServerDataUpdated(void)
     mSynchronizeDataTask.Post();
 }
 
-void Notifier::HandleSynchronizeDataTask(Tasklet &aTasklet)
-{
-    aTasklet.Get<Notifier>().SynchronizeServerData();
-}
-
 void Notifier::SynchronizeServerData(void)
 {
     Error error = kErrorNotFound;
@@ -86,13 +84,13 @@ void Notifier::SynchronizeServerData(void)
 
 #if OPENTHREAD_FTD
     mNextDelay = kDelayRemoveStaleChildren;
-    error      = Get<Leader>().RemoveStaleChildEntries(&Notifier::HandleCoapResponse, this);
+    error      = RemoveStaleChildEntries();
     VerifyOrExit(error == kErrorNotFound);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mNextDelay = kDelaySynchronizeServerData;
-    error      = Get<Local>().UpdateInconsistentServerData(&Notifier::HandleCoapResponse, this);
+    error      = UpdateInconsistentData();
     VerifyOrExit(error == kErrorNotFound);
 #endif
 
@@ -114,8 +112,110 @@ exit:
         break;
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
+}
+
+#if OPENTHREAD_FTD
+Error Notifier::RemoveStaleChildEntries(void)
+{
+    // Check if there is any stale child entry in network data and send
+    // a "Server Data" notification to leader to remove it.
+    //
+    // - `kErrorNone` when a stale child entry was found and successfully
+    //    sent a "Server Data" notification to leader.
+    // - `kErrorNoBufs` if could not allocate message to send message.
+    // - `kErrorNotFound` if no stale child entries were found.
+
+    Error    error    = kErrorNotFound;
+    Iterator iterator = kIteratorInit;
+    uint16_t rloc16;
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
+
+    while (Get<Leader>().GetNextServer(iterator, rloc16) == kErrorNone)
+    {
+        if (!Mle::IsActiveRouter(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
+            Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
+        {
+            error = SendServerDataNotification(rloc16);
+            ExitNow();
+        }
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+Error Notifier::UpdateInconsistentData(void)
+{
+    Error    error      = kErrorNone;
+    uint16_t deviceRloc = Get<Mle::MleRouter>().GetRloc16();
+
+#if OPENTHREAD_FTD
+    // Don't send this Server Data Notification if the device is going
+    // to upgrade to Router.
+
+    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouterSoon())
+    {
+        ExitNow(error = kErrorInvalidState);
+    }
+#endif
+
+    Get<Local>().UpdateRloc();
+
+    if (Get<Leader>().ContainsEntriesFrom(Get<Local>(), deviceRloc) &&
+        Get<Local>().ContainsEntriesFrom(Get<Leader>(), deviceRloc))
+    {
+        ExitNow(error = kErrorNotFound);
+    }
+
+    if (mOldRloc == deviceRloc)
+    {
+        mOldRloc = Mac::kShortAddrInvalid;
+    }
+
+    SuccessOrExit(error = SendServerDataNotification(mOldRloc, &Get<Local>()));
+    mOldRloc = deviceRloc;
+
+exit:
+    return error;
+}
+#endif // #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+Error Notifier::SendServerDataNotification(uint16_t aOldRloc16, const NetworkData *aNetworkData)
+{
+    Error            error = kErrorNone;
+    Coap::Message   *message;
+    Tmf::MessageInfo messageInfo(GetInstance());
+
+    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriServerData);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+
+    if (aNetworkData != nullptr)
+    {
+        ThreadTlv tlv;
+
+        tlv.SetType(ThreadTlv::kThreadNetworkData);
+        tlv.SetLength(aNetworkData->GetLength());
+        SuccessOrExit(error = message->Append(tlv));
+        SuccessOrExit(error = message->AppendBytes(aNetworkData->GetBytes(), aNetworkData->GetLength()));
+    }
+
+    if (aOldRloc16 != Mac::kShortAddrInvalid)
+    {
+        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aOldRloc16));
+    }
+
+    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, this));
+
+    LogInfo("Sent %s", UriToString<kUriServerData>());
+
+exit:
+    FreeMessageOnError(message, error);
+    return error;
 }
 
 void Notifier::HandleNotifierEvents(Events aEvents)
@@ -143,15 +243,7 @@ void Notifier::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void Notifier::HandleTimer(Timer &aTimer)
-{
-    aTimer.Get<Notifier>().HandleTimer();
-}
-
-void Notifier::HandleTimer(void)
-{
-    SynchronizeServerData();
-}
+void Notifier::HandleTimer(void) { SynchronizeServerData(); }
 
 void Notifier::HandleCoapResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
 {
@@ -178,7 +270,6 @@ void Notifier::HandleCoapResponse(Error aResult)
 
     default:
         OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
     }
 }
 

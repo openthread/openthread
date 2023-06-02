@@ -62,15 +62,13 @@ TimeSync::TimeSync(Instance &aInstance)
 #endif
     , mLastTimeSyncReceived(0)
     , mNetworkTimeOffset(0)
-    , mTimeSyncCallback(nullptr)
-    , mTimeSyncCallbackContext(nullptr)
-    , mTimer(aInstance, HandleTimeout)
-    , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
+    , mTimer(aInstance)
+    , mCurrentStatus(kUnsynchronized)
 {
     CheckAndHandleChanges(false);
 }
 
-otNetworkTimeStatus TimeSync::GetTime(uint64_t &aNetworkTime) const
+TimeSync::Status TimeSync::GetTime(uint64_t &aNetworkTime) const
 {
     aNetworkTime = static_cast<uint64_t>(static_cast<int64_t>(otPlatTimeGet()) + mNetworkTimeOffset);
 
@@ -140,13 +138,7 @@ void TimeSync::IncrementTimeSyncSeq(void)
     }
 }
 
-void TimeSync::NotifyTimeSyncCallback(void)
-{
-    if (mTimeSyncCallback != nullptr)
-    {
-        mTimeSyncCallback(mTimeSyncCallbackContext);
-    }
-}
+void TimeSync::NotifyTimeSyncCallback(void) { mTimeSyncCallback.InvokeIfSet(); }
 
 #if OPENTHREAD_FTD
 void TimeSync::ProcessTimeSync(void)
@@ -189,7 +181,7 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
         mTimeSyncSeq      = OT_TIME_SYNC_INVALID_SEQ;
         mTimeSyncRequired = false;
 
-        // Network time status will become OT_NETWORK_TIME_UNSYNCHRONIZED because no network time has yet been received
+        // Network time status will become kUnsychronized because no network time has yet been received
         // on the new partition.
         mLastTimeSyncReceived.SetValue(0);
 
@@ -204,21 +196,13 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
     }
 }
 
-void TimeSync::HandleTimeout(void)
-{
-    CheckAndHandleChanges(false);
-}
-
-void TimeSync::HandleTimeout(Timer &aTimer)
-{
-    aTimer.Get<TimeSync>().HandleTimeout();
-}
+void TimeSync::HandleTimeout(void) { CheckAndHandleChanges(false); }
 
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
 {
-    otNetworkTimeStatus networkTimeStatus       = OT_NETWORK_TIME_SYNCHRONIZED;
-    const uint32_t      resyncNeededThresholdMs = 2 * Time::SecToMsec(mTimeSyncPeriod);
-    const uint32_t      timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
+    Status         networkTimeStatus       = kSynchronized;
+    const uint32_t resyncNeededThresholdMs = 2 * Time::SecToMsec(mTimeSyncPeriod);
+    const uint32_t timeSyncLastSyncMs      = TimerMilli::GetNow() - mLastTimeSyncReceived;
 
     mTimer.Stop();
 
@@ -226,7 +210,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
     {
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:
-        networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
+        networkTimeStatus = kUnsynchronized;
         LogInfo("Time sync status UNSYNCHRONIZED as role:DISABLED/DETACHED");
         break;
 
@@ -235,15 +219,15 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
         if (mLastTimeSyncReceived.GetValue() == 0)
         {
             // Haven't yet received any time sync
-            networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
+            networkTimeStatus = kUnsynchronized;
             LogInfo("Time sync status UNSYNCHRONIZED as mLastTimeSyncReceived:0");
         }
         else if (timeSyncLastSyncMs > resyncNeededThresholdMs)
         {
             // The device hasn’t received time sync for more than two periods time.
-            networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
-            LogInfo("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%u > resyncNeededThresholdMs:%u",
-                    timeSyncLastSyncMs, resyncNeededThresholdMs);
+            networkTimeStatus = kResyncNeeded;
+            LogInfo("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%lu > resyncNeededThresholdMs:%lu",
+                    ToUlong(timeSyncLastSyncMs), ToUlong(resyncNeededThresholdMs));
         }
         else
         {

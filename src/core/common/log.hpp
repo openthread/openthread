@@ -107,7 +107,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  ...   Arguments for the format specification.
  *
  */
-#define LogCrit(...) Logger::Log<kLogLevelCrit, kLogModuleName>(__VA_ARGS__)
+#define LogCrit(...) Logger::LogAtLevel<kLogLevelCrit>(kLogModuleName, __VA_ARGS__)
 #else
 #define LogCrit(...)
 #endif
@@ -119,7 +119,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  ...   Arguments for the format specification.
  *
  */
-#define LogWarn(...) Logger::Log<kLogLevelWarn, kLogModuleName>(__VA_ARGS__)
+#define LogWarn(...) Logger::LogAtLevel<kLogLevelWarn>(kLogModuleName, __VA_ARGS__)
 #else
 #define LogWarn(...)
 #endif
@@ -131,7 +131,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  ...   Arguments for the format specification.
  *
  */
-#define LogNote(...) Logger::Log<kLogLevelNote, kLogModuleName>(__VA_ARGS__)
+#define LogNote(...) Logger::LogAtLevel<kLogLevelNote>(kLogModuleName, __VA_ARGS__)
 #else
 #define LogNote(...)
 #endif
@@ -143,7 +143,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  ...   Arguments for the format specification.
  *
  */
-#define LogInfo(...) Logger::Log<kLogLevelInfo, kLogModuleName>(__VA_ARGS__)
+#define LogInfo(...) Logger::LogAtLevel<kLogLevelInfo>(kLogModuleName, __VA_ARGS__)
 #else
 #define LogInfo(...)
 #endif
@@ -155,7 +155,7 @@ constexpr uint8_t kMaxLogModuleNameLength = 14; ///< Maximum module name length
  * @param[in]  ...   Arguments for the format specification.
  *
  */
-#define LogDebg(...) Logger::Log<kLogLevelDebg, kLogModuleName>(__VA_ARGS__)
+#define LogDebg(...) Logger::LogAtLevel<kLogLevelDebg>(kLogModuleName, __VA_ARGS__)
 #else
 #define LogDebg(...)
 #endif
@@ -305,15 +305,13 @@ class Logger
     // and instead the logging macros should be used.
 
 public:
-    template <LogLevel kLogLevel, const char *kModuleName, typename... Args>
-    static void Log(const char *aFormat, Args... aArgs)
-    {
-        LogAtLevel<kLogLevel>(kModuleName, aFormat, aArgs...);
-    }
+    static void LogInModule(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, ...)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
-    static void LogInModule(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, ...);
+    template <LogLevel kLogLevel>
+    static void LogAtLevel(const char *aModuleName, const char *aFormat, ...)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
-    template <LogLevel kLogLevel> static void LogAtLevel(const char *aModuleName, const char *aFormat, ...);
     static void LogVarArgs(const char *aModuleName, LogLevel aLogLevel, const char *aFormat, va_list aArgs);
 
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP

@@ -34,7 +34,6 @@ BIG_ENDIAN                ?= 0
 BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
-BORDER_ROUTING_NAT64	  ?= 0
 COAP                      ?= 0
 COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
@@ -43,7 +42,6 @@ COMMISSIONER              ?= 0
 COVERAGE                  ?= 0
 CHANNEL_MANAGER           ?= 0
 CHANNEL_MONITOR           ?= 0
-CHILD_SUPERVISION         ?= 0
 DATASET_UPDATER           ?= 0
 DEBUG                     ?= 0
 DHCP6_CLIENT              ?= 0
@@ -53,6 +51,7 @@ DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
 DNS_DSO                   ?= 0
+DNS_UPSTREAM_QUERY        ?= 0
 DNSSD_SERVER              ?= 0
 DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
@@ -62,19 +61,22 @@ HISTORY_TRACKER           ?= 0
 IP6_FRAGM                 ?= 0
 JAM_DETECTION             ?= 0
 JOINER                    ?= 0
-LEGACY                    ?= 0
 ifeq ($(REFERENCE_DEVICE),1)
 LOG_OUTPUT                ?= APP
 endif
 LINK_RAW                  ?= 0
 MAC_FILTER                ?= 0
+MESH_DIAG                 ?= 0
 MESSAGE_USE_HEAP          ?= 0
 MLE_LONG_ROUTES           ?= 0
 MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
+NAT64_BORDER_ROUTING      ?= 0
+NAT64_TRANSLATOR          ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
 NETDATA_PUBLISHER         ?= 0
+NETDIAG_CLIENT            ?= 0
 OTNS                      ?= 0
 PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
@@ -86,6 +88,7 @@ SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
 SRP_CLIENT                ?= 0
 SRP_SERVER                ?= 0
+TCP                       ?= 0
 THREAD_VERSION            ?= 1.3
 TIME_SYNC                 ?= 0
 TREL                      ?= 0
@@ -117,8 +120,12 @@ ifeq ($(BORDER_ROUTING),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1
 endif
 
-ifeq ($(BORDER_ROUTING_NAT64),1)
-COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE=1
+ifeq ($(NAT64_BORDER_ROUTING),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE=1
+endif
+
+ifeq ($(NAT64_TRANSLATOR),1)
+COMMONCFLAGS		       += -DOPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE=1
 endif
 
 ifeq ($(COAP),1)
@@ -151,10 +158,6 @@ endif
 
 ifeq ($(CHANNEL_MONITOR),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1
-endif
-
-ifeq ($(CHILD_SUPERVISION),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
 endif
 
 ifeq ($(CSL_RECEIVER),1)
@@ -207,6 +210,10 @@ ifeq ($(DNS_DSO),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1
 endif
 
+ifeq ($(DNS_UPSTREAM_QUERY), 1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE=1
+endif
+
 ifeq ($(DNSSD_SERVER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1
 endif
@@ -243,10 +250,6 @@ ifeq ($(JOINER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_JOINER_ENABLE=1
 endif
 
-ifeq ($(LEGACY),1)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LEGACY_ENABLE=1
-endif
-
 ifeq ($(LINK_RAW),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1
 endif
@@ -267,6 +270,10 @@ ifeq ($(MAC_FILTER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1
 endif
 
+ifeq ($(MESH_DIAG),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MESH_DIAG_ENABLE=1
+endif
+
 ifeq ($(MESSAGE_USE_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1
 endif
@@ -280,6 +287,9 @@ ifeq ($(MLR),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MLR_ENABLE=1
 endif
 
+# This config is removed but we still check and add the
+# `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE` so to
+# get an error during build if `MTD_NETDIAG` is used.
 ifeq ($(MTD_NETDIAG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1
 endif
@@ -294,6 +304,10 @@ endif
 
 ifeq ($(NETDATA_PUBLISHER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE=1
+endif
+
+ifeq ($(NETDIAG_CLIENT),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=1
 endif
 
 ifeq ($(PING_SENDER),1)
@@ -329,12 +343,18 @@ ifeq ($(SRP_SERVER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1
 endif
 
+ifeq ($(TCP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TCP_ENABLE=1
+endif
+
 ifeq ($(THREAD_VERSION),1.1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=2
 else ifeq ($(THREAD_VERSION),1.2)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=3
 else ifeq ($(THREAD_VERSION),1.3)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=4
+else ifeq ($(THREAD_VERSION),1.3.1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=5
 endif
 
 ifeq ($(TIME_SYNC),1)

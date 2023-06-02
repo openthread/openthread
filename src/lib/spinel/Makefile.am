@@ -99,18 +99,6 @@ libopenthread_spinel_rcp_a_SOURCES                = \
 
 if OPENTHREAD_BUILD_TESTS
 
-check_PROGRAMS                                    = spinel-test
-spinel_test_SOURCES                               = spinel.c
-spinel_test_CFLAGS                                = \
-    $(COMMON_CPPFLAGS)                              \
-    -DSPINEL_SELF_TEST=1                            \
-    -D_GNU_SOURCE                                   \
-    -I$(top_srcdir)/src/core                        \
-    -I$(top_srcdir)/include                         \
-    $(NULL)
-
-TESTS                                             = spinel-test
-
 install-headers: install-includeHEADERS
 
 if OPENTHREAD_BUILD_COVERAGE

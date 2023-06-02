@@ -38,9 +38,9 @@ set extaddr [get_extaddr]
 
 switch_node 1
 send "neighbor table\n"
-expect "| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |"
-expect "+------+--------+-----+----------+-----------+-+-+-+------------------+"
-expect -re "\\| +C +\\| 0x$rloc \\| +\\d+ \\| +-?\\d+ \\| +-?\\d+ \\|1\\|0\\|0\\| $extaddr \\|"
+expect "| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     | Version |"
+expect "+------+--------+-----+----------+-----------+-+-+-+------------------+---------+"
+expect -re "\\| +C +\\| 0x$rloc \\| +\\d+ \\| +-?\\d+ \\| +-?\\d+ \\|1\\|0\\|0\\| $extaddr \\| +\\d+ \\|"
 expect_line "Done"
 send "neighbor list\n"
 expect "0x$rloc"

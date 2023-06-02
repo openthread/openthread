@@ -65,7 +65,23 @@
  * Selects if, and where the LOG output goes to.
  *
  */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+ *
+ * Define as 1 for CLI to emit its command input string and the resulting output to the logs.
+ *
+ */
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+ *
+ * Defines the log level to use when CLI emits its command input/output to the logs.
+ *
+ */
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_INFO
 
 /**
  * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
@@ -74,5 +90,13 @@
  *
  */
 #define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+ *
+ * Enable the external heap.
+ *
+ */
+#define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 1
 
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */

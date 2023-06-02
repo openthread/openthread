@@ -42,6 +42,13 @@
 
 using namespace ot;
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+otError otBorderAgentGetId(otInstance *aInstance, uint8_t *aId, uint16_t *aLength)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetId(aId, *aLength);
+}
+#endif
+
 otBorderAgentState otBorderAgentGetState(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetState());

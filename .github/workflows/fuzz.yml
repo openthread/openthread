@@ -27,24 +27,41 @@
 #
 
 name: CIFuzz
-on: [pull_request]
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
  Fuzzing:
    runs-on: ubuntu-20.04
    steps:
+   - name: Harden Runner
+     uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+     with:
+       egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
    - name: Build Fuzzers
-     uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+     uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@c0e4bb8d15a68b7f8cc731ea75523e48a2301bcf # master
      with:
        oss-fuzz-project-name: 'openthread'
        dry-run: false
    - name: Run Fuzzers
-     uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+     uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@c0e4bb8d15a68b7f8cc731ea75523e48a2301bcf # master
      with:
        oss-fuzz-project-name: 'openthread'
        fuzz-seconds: 1800
        dry-run: false
    - name: Upload Crash
-     uses: actions/upload-artifact@v1
+     uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
      if: failure()
      with:
        name: artifacts

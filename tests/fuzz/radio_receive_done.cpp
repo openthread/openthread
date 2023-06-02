@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -37,18 +35,35 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+#include "common/time.hpp"
+
+void AdvanceTime(otInstance *aInstance, uint32_t aDuration)
+{
+    uint32_t time = otPlatAlarmMilliGetNow() + aDuration;
+
+    while (ot::TimeMilli(otPlatAlarmMilliGetNow()) <= ot::TimeMilli(time))
+    {
+        while (otTaskletsArePending(aInstance))
+        {
+            otTaskletsProcess(aInstance);
+        }
+
+        FuzzerPlatformProcess(aInstance);
+    }
+}
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     const otPanId panId = 0xdead;
 
-    otInstance * instance = nullptr;
+    otInstance  *instance = nullptr;
     otRadioFrame frame;
-    uint8_t *    buf = nullptr;
+    uint8_t     *buf = nullptr;
 
     VerifyOrExit(size <= OT_RADIO_FRAME_MAX_SIZE);
 
@@ -60,28 +75,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     IgnoreError(otThreadSetEnabled(instance, true));
     IgnoreError(otThreadBecomeLeader(instance));
 
-    buf = static_cast<uint8_t *>(malloc(size));
+    AdvanceTime(instance, 10000);
 
+    buf = static_cast<uint8_t *>(malloc(size));
     memset(&frame, 0, sizeof(frame));
     frame.mPsdu    = buf;
     frame.mChannel = 11;
     frame.mLength  = static_cast<uint8_t>(size);
-
     memcpy(buf, data, frame.mLength);
 
     otPlatRadioReceiveDone(instance, &frame, OT_ERROR_NONE);
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
+    AdvanceTime(instance, 10000);
 
 exit:
 

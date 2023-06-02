@@ -38,7 +38,9 @@
 #include <string.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/nat64.h>
 
 namespace ot {
 namespace Utils {
@@ -183,6 +185,18 @@ otError ParseAsBool(const char *aString, bool &aBool);
 otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 
 /**
+ * This function parses a string as an IPv4 address.
+ *
+ * @param[in]  aString   The string to parse.
+ * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
+ *
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid IPv4 address.
+ *
+ */
+otError ParseAsIp4Address(const char *aString, otIp4Address &aAddress);
+
+/**
  * This function parses a string as an IPv6 prefix.
  *
  * The string is parsed as `{IPv6Address}/{PrefixLength}`.
@@ -277,7 +291,7 @@ otError ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
  * @param[out]    aBuffer    A pointer to a buffer to output the parsed byte sequence.
  *
  * @retval kErrorNone        The string was parsed successfully to the end of string.
- * @retval kErrorPedning     The string segment was parsed successfully, but there are additional bytes remaining
+ * @retval kErrorPending     The string segment was parsed successfully, but there are additional bytes remaining
  *                           to be parsed.
  * @retval kErrorInvalidArgs The string does not contain valid format hex digits.
  *
@@ -486,6 +500,20 @@ public:
     }
 
     /**
+     * This method parses the argument as an IPv4 address.
+     *
+     * @param[out] aAddress  A reference to an `otIp4Address` to output the parsed IPv4 address.
+     *
+     * @retval kErrorNone         The argument was parsed successfully.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid IPv4 address.
+     *
+     */
+    otError ParseAsIp4Address(otIp4Address &aAddress) const
+    {
+        return CmdLineParser::ParseAsIp4Address(mString, aAddress);
+    }
+
+    /**
      * This method parses the argument as an IPv6 prefix.
      *
      * The string is parsed as `{IPv6Address}/{PrefixLength}`.
@@ -629,57 +657,32 @@ template <uint8_t kLength> inline otError ParseCmd(char *aCommandString, Arg (&a
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Specializations of `Arg::ParseAs<Type>()` method.
 
-template <> inline otError Arg::ParseAs(uint8_t &aValue) const
-{
-    return ParseAsUint8(aValue);
-}
+template <> inline otError Arg::ParseAs(uint8_t &aValue) const { return ParseAsUint8(aValue); }
 
-template <> inline otError Arg::ParseAs(uint16_t &aValue) const
-{
-    return ParseAsUint16(aValue);
-}
+template <> inline otError Arg::ParseAs(uint16_t &aValue) const { return ParseAsUint16(aValue); }
 
-template <> inline otError Arg::ParseAs(uint32_t &aValue) const
-{
-    return ParseAsUint32(aValue);
-}
+template <> inline otError Arg::ParseAs(uint32_t &aValue) const { return ParseAsUint32(aValue); }
 
-template <> inline otError Arg::ParseAs(uint64_t &aValue) const
-{
-    return ParseAsUint64(aValue);
-}
+template <> inline otError Arg::ParseAs(uint64_t &aValue) const { return ParseAsUint64(aValue); }
 
-template <> inline otError Arg::ParseAs(bool &aValue) const
-{
-    return ParseAsBool(aValue);
-}
+template <> inline otError Arg::ParseAs(bool &aValue) const { return ParseAsBool(aValue); }
 
-template <> inline otError Arg::ParseAs(int8_t &aValue) const
-{
-    return ParseAsInt8(aValue);
-}
+template <> inline otError Arg::ParseAs(int8_t &aValue) const { return ParseAsInt8(aValue); }
 
-template <> inline otError Arg::ParseAs(int16_t &aValue) const
-{
-    return ParseAsInt16(aValue);
-}
+template <> inline otError Arg::ParseAs(int16_t &aValue) const { return ParseAsInt16(aValue); }
 
-template <> inline otError Arg::ParseAs(int32_t &aValue) const
+template <> inline otError Arg::ParseAs(int32_t &aValue) const { return ParseAsInt32(aValue); }
+
+template <> inline otError Arg::ParseAs(const char *&aValue) const
 {
-    return ParseAsInt32(aValue);
+    return IsEmpty() ? OT_ERROR_INVALID_ARGS : (aValue = GetCString(), OT_ERROR_NONE);
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-template <> inline otError Arg::ParseAs(otIp6Address &aValue) const
-{
-    return ParseAsIp6Address(aValue);
-}
+template <> inline otError Arg::ParseAs(otIp6Address &aValue) const { return ParseAsIp6Address(aValue); }
 
-template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const
-{
-    return ParseAsIp6Prefix(aValue);
-}
+template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const { return ParseAsIp6Prefix(aValue); }
 
 #endif
 

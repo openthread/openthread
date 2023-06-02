@@ -40,10 +40,10 @@
 
 #include <openthread/joiner.h>
 
-#include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/as_core_type.hpp"
+#include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
@@ -53,6 +53,7 @@
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/discover_scanner.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -60,6 +61,8 @@ namespace MeshCoP {
 
 class Joiner : public InstanceLocator, private NonCopyable
 {
+    friend class Tmf::Agent;
+
 public:
     /**
      * This enumeration type defines the Joiner State.
@@ -100,14 +103,14 @@ public:
      * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
-    Error Start(const char *     aPskd,
-                const char *     aProvisioningUrl,
-                const char *     aVendorName,
-                const char *     aVendorModel,
-                const char *     aVendorSwVersion,
-                const char *     aVendorData,
+    Error Start(const char      *aPskd,
+                const char      *aProvisioningUrl,
+                const char      *aVendorName,
+                const char      *aVendorModel,
+                const char      *aVendorSwVersion,
+                const char      *aVendorData,
                 otJoinerCallback aCallback,
-                void *           aContext);
+                void            *aContext);
 
     /**
      * This method stops the Joiner service.
@@ -182,7 +185,7 @@ private:
     static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
 
     static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
-    static constexpr uint32_t kReponseTimeout        = 4000; ///< Max wait time to receive response (in msec).
+    static constexpr uint32_t kResponseTimeout       = 4000; ///< Max wait time to receive response (in msec).
 
     struct JoinerRouter
     {
@@ -199,17 +202,15 @@ private:
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
     void        HandleSecureCoapClientConnect(bool aConnected);
 
-    static void HandleJoinerFinalizeResponse(void *               aContext,
-                                             otMessage *          aMessage,
+    static void HandleJoinerFinalizeResponse(void                *aContext,
+                                             otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
     void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
 
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
@@ -232,22 +233,24 @@ private:
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
 #endif
 
+    using JoinerTimer = TimerMilliIn<Joiner, &Joiner::HandleTimer>;
+
     Mac::ExtAddress mId;
     JoinerDiscerner mDiscerner;
 
     State mState;
 
-    otJoinerCallback mCallback;
-    void *           mContext;
+    Callback<otJoinerCallback> mCallback;
 
     JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
     uint16_t     mJoinerRouterIndex;
 
     Coap::Message *mFinalizeMessage;
 
-    TimerMilli     mTimer;
-    Coap::Resource mJoinerEntrust;
+    JoinerTimer mTimer;
 };
+
+DeclareTmfHandler(Joiner, kUriJoinerEntrust);
 
 } // namespace MeshCoP
 

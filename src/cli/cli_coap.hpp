@@ -49,7 +49,7 @@ namespace Cli {
  * This class implements the CLI CoAP server and client.
  *
  */
-class Coap : private OutputWrapper
+class Coap : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -57,10 +57,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit Coap(Output &aOutput);
+    Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -105,8 +106,8 @@ private:
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    static void HandleNotificationResponse(void *               aContext,
-                                           otMessage *          aMessage,
+    static void HandleNotificationResponse(void                *aContext,
+                                           otMessage           *aMessage,
                                            const otMessageInfo *aMessageInfo,
                                            otError              aError);
     void        HandleNotificationResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
@@ -117,7 +118,7 @@ private:
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-    static otError BlockwiseReceiveHook(void *         aContext,
+    static otError BlockwiseReceiveHook(void          *aContext,
                                         const uint8_t *aBlock,
                                         uint32_t       aPosition,
                                         uint16_t       aBlockLength,
@@ -128,11 +129,11 @@ private:
                                         uint16_t       aBlockLength,
                                         bool           aMore,
                                         uint32_t       aTotalLength);
-    static otError BlockwiseTransmitHook(void *    aContext,
-                                         uint8_t * aBlock,
+    static otError BlockwiseTransmitHook(void     *aContext,
+                                         uint8_t  *aBlock,
                                          uint32_t  aPosition,
                                          uint16_t *aBlockLength,
-                                         bool *    aMore);
+                                         bool     *aMore);
     otError        BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore);
 #endif
 

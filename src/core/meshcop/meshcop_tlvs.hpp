@@ -44,6 +44,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "common/tlvs.hpp"
 #include "mac/mac_types.hpp"
@@ -118,6 +119,17 @@ public:
         kDiscoveryResponse       = OT_MESHCOP_TLV_DISCOVERYRESPONSE,        ///< Discovery Response TLV
         kJoinerAdvertisement     = OT_MESHCOP_TLV_JOINERADVERTISEMENT,      ///< Joiner Advertisement TLV
     };
+
+    /**
+     * Max length of Provisioning URL TLV.
+     *
+     */
+    static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
+
+    static constexpr uint8_t kMaxVendorNameLength      = 32; ///< Max length of Vendor Name TLV.
+    static constexpr uint8_t kMaxVendorModelLength     = 32; ///< Max length of Vendor Model TLV.
+    static constexpr uint8_t kMaxVendorSwVersionLength = 16; ///< Max length of Vendor SW Version TLV.
+    static constexpr uint8_t kMaxVendorDataLength      = 64; ///< Max length of Vendor Data TLV.
 
     /**
      * This method returns the Type value.
@@ -1060,28 +1072,10 @@ private:
  * This class implements State TLV generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class StateTlv : public Tlv, public UintTlvInfo<Tlv::kState, uint8_t>
+class StateTlv : public UintTlvInfo<Tlv::kState, uint8_t>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kState);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    StateTlv(void) = delete;
 
     /**
      * State values.
@@ -1093,26 +1087,7 @@ public:
         kPending = 0,    ///< Pending
         kAccept  = 1,    ///< Accept
     };
-
-    /**
-     * This method returns the State value.
-     *
-     * @returns The State value.
-     *
-     */
-    State GetState(void) const { return static_cast<State>(mState); }
-
-    /**
-     * This method sets the State value.
-     *
-     * @param[in]  aState  The State value.
-     *
-     */
-    void SetState(State aState) { mState = static_cast<uint8_t>(aState); }
-
-private:
-    uint8_t mState;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements Joiner UDP Port TLV generation and parsing.
@@ -1557,328 +1532,58 @@ public:
      *
      */
     bool IsValid(void) const { return true; }
+
+    /**
+     * This method returns a pointer to the start of energy measurement list.
+     *
+     * @returns A pointer to the start start of energy energy measurement list.
+     *
+     */
+    const uint8_t *GetEnergyList(void) const { return mEnergyList; }
+
+    /**
+     * This method returns the length of energy measurement list.
+     *
+     * @returns The length of energy measurement list.
+     *
+     */
+    uint8_t GetEnergyListLength(void) const { return Min(kMaxListLength, GetLength()); }
+
+private:
+    static constexpr uint8_t kMaxListLength = OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS;
+
+    uint8_t mEnergyList[kMaxListLength];
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Provisioning URL TLV generation and parsing.
+ * This class defines Provisioning TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ProvisioningUrlTlv : public Tlv, public TlvInfo<Tlv::kProvisioningUrl>
-{
-public:
-    /**
-     * Maximum number of chars in the Provisioning URL string.
-     *
-     */
-    static constexpr uint16_t kMaxLength = OT_PROVISIONING_URL_MAX_SIZE;
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kProvisioningUrl);
-        SetLength(0);
-    }
-
-    /*
-     * This method returns the Provisioning URL length.
-     *
-     * @returns The Provisioning URL length.
-     *
-     */
-    uint8_t GetProvisioningUrlLength(void) const
-    {
-        return GetLength() <= sizeof(mProvisioningUrl) ? GetLength() : sizeof(mProvisioningUrl);
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const
-    {
-        return GetType() == kProvisioningUrl && mProvisioningUrl[GetProvisioningUrlLength()] == '\0';
-    }
-
-    /**
-     * This method returns the Provisioning URL value.
-     *
-     * @returns The Provisioning URL value.
-     *
-     */
-    const char *GetProvisioningUrl(void) const { return mProvisioningUrl; }
-
-    /**
-     * This method sets the Provisioning URL value.
-     *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL value.
-     *
-     */
-    void SetProvisioningUrl(const char *aProvisioningUrl)
-    {
-        uint16_t len = aProvisioningUrl ? StringLength(aProvisioningUrl, kMaxLength) : 0;
-
-        SetLength(static_cast<uint8_t>(len));
-
-        if (len > 0)
-        {
-            memcpy(mProvisioningUrl, aProvisioningUrl, len);
-        }
-    }
-
-private:
-    char mProvisioningUrl[kMaxLength];
-} OT_TOOL_PACKED_END;
+typedef StringTlvInfo<Tlv::kProvisioningUrl, Tlv::kMaxProvisioningUrlLength> ProvisioningUrlTlv;
 
 /**
- * This class implements Vendor Name TLV generation and parsing.
+ * This class defines Vendor Name TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class VendorNameTlv : public Tlv, public TlvInfo<Tlv::kVendorName>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVendorName);
-        SetLength(0);
-    }
-
-    /**
-     * This method returns the Vendor Name length.
-     *
-     * @returns The Vendor Name length.
-     *
-     */
-    uint8_t GetVendorNameLength(void) const
-    {
-        return GetLength() <= sizeof(mVendorName) ? GetLength() : sizeof(mVendorName);
-    }
-
-    /**
-     * This method returns the Vendor Name value.
-     *
-     * @returns The Vendor Name value.
-     *
-     */
-    const char *GetVendorName(void) const { return mVendorName; }
-
-    /**
-     * This method sets the Vendor Name value.
-     *
-     * @param[in]  aVendorName  A pointer to the Vendor Name value.
-     *
-     */
-    void SetVendorName(const char *aVendorName)
-    {
-        uint16_t len = (aVendorName == nullptr) ? 0 : StringLength(aVendorName, sizeof(mVendorName));
-
-        SetLength(static_cast<uint8_t>(len));
-
-        if (len > 0)
-        {
-            memcpy(mVendorName, aVendorName, len);
-        }
-    }
-
-private:
-    static constexpr uint8_t kMaxLength = 32;
-
-    char mVendorName[kMaxLength];
-} OT_TOOL_PACKED_END;
+typedef StringTlvInfo<Tlv::kVendorName, Tlv::kMaxVendorNameLength> VendorNameTlv;
 
 /**
- * This class implements Vendor Model TLV generation and parsing.
+ * This class defines Vendor Model TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class VendorModelTlv : public Tlv, public TlvInfo<Tlv::kVendorModel>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVendorModel);
-        SetLength(0);
-    }
-
-    /**
-     * This method returns the Vendor Model length.
-     *
-     * @returns The Vendor Model length.
-     *
-     */
-    uint8_t GetVendorModelLength(void) const
-    {
-        return GetLength() <= sizeof(mVendorModel) ? GetLength() : sizeof(mVendorModel);
-    }
-
-    /**
-     * This method returns the Vendor Model value.
-     *
-     * @returns The Vendor Model value.
-     *
-     */
-    const char *GetVendorModel(void) const { return mVendorModel; }
-
-    /**
-     * This method sets the Vendor Model value.
-     *
-     * @param[in]  aVendorModel  A pointer to the Vendor Model value.
-     *
-     */
-    void SetVendorModel(const char *aVendorModel)
-    {
-        uint16_t len = (aVendorModel == nullptr) ? 0 : StringLength(aVendorModel, sizeof(mVendorModel));
-
-        SetLength(static_cast<uint8_t>(len));
-
-        if (len > 0)
-        {
-            memcpy(mVendorModel, aVendorModel, len);
-        }
-    }
-
-private:
-    static constexpr uint8_t kMaxLength = 32;
-
-    char mVendorModel[kMaxLength];
-} OT_TOOL_PACKED_END;
+typedef StringTlvInfo<Tlv::kVendorModel, Tlv::kMaxVendorModelLength> VendorModelTlv;
 
 /**
- * This class implements Vendor SW Version TLV generation and parsing.
+ * This class defines Vendor SW Version TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class VendorSwVersionTlv : public Tlv, public TlvInfo<Tlv::kVendorSwVersion>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVendorSwVersion);
-        SetLength(0);
-    }
-
-    /**
-     * This method returns the Vendor SW Version length.
-     *
-     * @returns The Vendor SW Version length.
-     *
-     */
-    uint8_t GetVendorSwVersionLength(void) const
-    {
-        return GetLength() <= sizeof(mVendorSwVersion) ? GetLength() : sizeof(mVendorSwVersion);
-    }
-
-    /**
-     * This method returns the Vendor SW Version value.
-     *
-     * @returns The Vendor SW Version value.
-     *
-     */
-    const char *GetVendorSwVersion(void) const { return mVendorSwVersion; }
-
-    /**
-     * This method sets the Vendor SW Version value.
-     *
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version value.
-     *
-     */
-    void SetVendorSwVersion(const char *aVendorSwVersion)
-    {
-        uint16_t len = (aVendorSwVersion == nullptr) ? 0 : StringLength(aVendorSwVersion, sizeof(mVendorSwVersion));
-
-        SetLength(static_cast<uint8_t>(len));
-
-        if (len > 0)
-        {
-            memcpy(mVendorSwVersion, aVendorSwVersion, len);
-        }
-    }
-
-private:
-    static constexpr uint8_t kMaxLength = 16;
-
-    char mVendorSwVersion[kMaxLength];
-} OT_TOOL_PACKED_END;
+typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> VendorSwVersionTlv;
 
 /**
- * This class implements Vendor Data TLV generation and parsing.
+ * This class defines Vendor Data TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class VendorDataTlv : public Tlv, public TlvInfo<Tlv::kVendorData>
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kVendorData);
-        SetLength(0);
-    }
-
-    /**
-     * This method returns the Vendor Data length.
-     *
-     * @returns The Vendor Data length.
-     *
-     */
-    uint8_t GetVendorDataLength(void) const
-    {
-        return GetLength() <= sizeof(mVendorData) ? GetLength() : sizeof(mVendorData);
-    }
-
-    /**
-     * This method returns the Vendor Data value.
-     *
-     * @returns The Vendor Data value.
-     *
-     */
-    const char *GetVendorData(void) const { return mVendorData; }
-
-    /**
-     * This method sets the Vendor Data value.
-     *
-     * @param[in]  aVendorData  A pointer to the Vendor Data value.
-     *
-     */
-    void SetVendorData(const char *aVendorData)
-    {
-        uint16_t len = (aVendorData == nullptr) ? 0 : StringLength(aVendorData, sizeof(mVendorData));
-
-        SetLength(static_cast<uint8_t>(len));
-
-        if (len > 0)
-        {
-            memcpy(mVendorData, aVendorData, len);
-        }
-    }
-
-private:
-    static constexpr uint8_t kMaxLength = 64;
-
-    char mVendorData[kMaxLength];
-} OT_TOOL_PACKED_END;
+typedef StringTlvInfo<Tlv::kVendorData, Tlv::kMaxVendorDataLength> VendorDataTlv;
 
 /**
  * This class implements Vendor Stack Version TLV generation and parsing.
@@ -2029,32 +1734,19 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements UDP Encapsulation TLV generation and parsing.
+ * This class defines UDP Encapsulation TLV types and constants.
+ *
+ */
+typedef TlvInfo<MeshCoP::Tlv::kUdpEncapsulation> UdpEncapsulationTlv;
+
+/**
+ * This class represents UDP Encapsulation TLV value header (source and destination ports).
  *
  */
 OT_TOOL_PACKED_BEGIN
-class UdpEncapsulationTlv : public ExtendedTlv, public TlvInfo<MeshCoP::Tlv::kUdpEncapsulation>
+class UdpEncapsulationTlvHeader
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(MeshCoP::Tlv::kUdpEncapsulation);
-        SetLength(sizeof(*this) - sizeof(ExtendedTlv));
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ExtendedTlv); }
-
     /**
      * This method returns the source port.
      *
@@ -2087,25 +1779,10 @@ public:
      */
     void SetDestinationPort(uint16_t aDestinationPort) { mDestinationPort = HostSwap16(aDestinationPort); }
 
-    /**
-     * This method returns the calculated UDP length.
-     *
-     * @returns The calculated UDP length.
-     *
-     */
-    uint16_t GetUdpLength(void) const { return GetLength() - sizeof(mSourcePort) - sizeof(mDestinationPort); }
-
-    /**
-     * This method updates the UDP length.
-     *
-     * @param[in]   aLength     The length of UDP payload in bytes.
-     *
-     */
-    void SetUdpLength(uint16_t aLength) { SetLength(sizeof(mSourcePort) + sizeof(mDestinationPort) + aLength); }
-
 private:
     uint16_t mSourcePort;
     uint16_t mDestinationPort;
+    // Followed by the UDP Payload.
 } OT_TOOL_PACKED_END;
 
 /**

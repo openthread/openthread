@@ -28,17 +28,22 @@
 
 name: Docker
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
 
 jobs:
-
-  cancel-previous-runs:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/main'"
 
   buildx:
     name: buildx-${{ matrix.docker_name }}
@@ -49,7 +54,12 @@ jobs:
         include:
           - docker_name: environment
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
 
@@ -63,17 +73,17 @@ jobs:
 
         TAGS="--tag ${DOCKER_IMAGE}:${VERSION}"
 
-        echo ::set-output name=docker_image::${DOCKER_IMAGE}
-        echo ::set-output name=version::${VERSION}
-        echo ::set-output name=buildx_args::--platform ${DOCKER_PLATFORMS} \
+        echo "docker_image=${DOCKER_IMAGE}" >> $GITHUB_OUTPUT
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "buildx_args=--platform ${DOCKER_PLATFORMS} \
           --build-arg OT_GIT_REF=${{ github.sha }} \
           --build-arg VERSION=${VERSION} \
           --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
           --build-arg VCS_REF=${GITHUB_SHA::8} \
-          ${TAGS} --file ${DOCKER_FILE} .
+          ${TAGS} --file ${DOCKER_FILE} ." >> $GITHUB_OUTPUT
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c # v2.5.0
 
     - name: Docker Buildx (build)
       run: |
@@ -81,7 +91,7 @@ jobs:
 
     - name: Login to DockerHub
       if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      uses: docker/login-action@v1
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}

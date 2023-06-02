@@ -178,8 +178,8 @@ void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint
  * @param[in] aDestSockAddr    The destination socket address.
  *
  */
-void otPlatTrelSend(otInstance *      aInstance,
-                    const uint8_t *   aUdpPayload,
+void otPlatTrelSend(otInstance       *aInstance,
+                    const uint8_t    *aUdpPayload,
                     uint16_t          aUdpPayloadLen,
                     const otSockAddr *aDestSockAddr);
 

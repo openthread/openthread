@@ -9,11 +9,16 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag](#diag)
 - [diag start](#diag-start)
 - [diag channel](#diag-channel)
+- [diag cw](#diag-cw-start)
+- [diag stream](#diag-stream-start)
 - [diag power](#diag-power)
+- [diag powersettings](#diag-powersettings)
 - [diag send](#diag-send-packets-length)
 - [diag repeat](#diag-repeat-delay-length)
 - [diag radio](#diag-radio-sleep)
+- [diag rawpowersetting](#diag-rawpowersetting)
 - [diag stats](#diag-stats)
+- [diag gpio](#diag-gpio-get-gpio)
 - [diag stop](#diag-stop)
 
 ### diag
@@ -54,6 +59,42 @@ set channel to 11
 status 0x00
 ```
 
+### diag cw start
+
+Start transmitting continuous carrier wave.
+
+```bash
+> diag cw start
+Done
+```
+
+### diag cw stop
+
+Stop transmitting continuous carrier wave.
+
+```bash
+> diag cw stop
+Done
+```
+
+### diag stream start
+
+Start transmitting a stream of characters.
+
+```bash
+> diag stream start
+Done
+```
+
+### diag stream stop
+
+Stop transmitting a stream of characters.
+
+```bash
+> diag stream stop
+Done
+```
+
 ### diag power
 
 Get the tx power value(dBm) for diagnostics module.
@@ -71,6 +112,35 @@ Set the tx power value(dBm) for diagnostics module.
 > diag power -10
 set tx power to -10 dBm
 status 0x00
+```
+
+### diag powersettings
+
+Show the currently used power settings table.
+
+- Note: The unit of `TargetPower` and `ActualPower` is 0.01dBm.
+
+```bash
+> diag powersettings
+| StartCh | EndCh | TargetPower | ActualPower | RawPowerSetting |
++---------+-------+-------------+-------------+-----------------+
+|      11 |    14 |        1700 |        1000 |          223344 |
+|      15 |    24 |        2000 |        1900 |          112233 |
+|      25 |    25 |        1600 |        1000 |          223344 |
+|      26 |    26 |        1600 |        1500 |          334455 |
+Done
+```
+
+### diag powersettings \<channel\>
+
+Show the currently used power settings for the given channel.
+
+```bash
+> diag powersettings 11
+TargetPower(0.01dBm): 1700
+ActualPower(0.01dBm): 1000
+RawPowerSetting: 223344
+Done
 ```
 
 ### diag send \<packets\> \<length\>
@@ -136,6 +206,43 @@ Return the state of the radio.
 sleep
 ```
 
+### diag rawpowersetting
+
+Show the raw power setting for diagnostics module.
+
+```bash
+> diag rawpowersetting
+112233
+Done
+```
+
+### diag rawpowersetting \<settings\>
+
+Set the raw power setting for diagnostics module.
+
+```bash
+> diag rawpowersetting 112233
+Done
+```
+
+### diag rawpowersetting enable
+
+Enable the platform layer to use the value set by the command `diag rawpowersetting \<settings\>`.
+
+```bash
+> diag rawpowersetting enable
+Done
+```
+
+### diag rawpowersetting disable
+
+Disable the platform layer to use the value set by the command `diag rawpowersetting \<settings\>`.
+
+```bash
+> diag rawpowersetting disable
+Done
+```
+
 ### diag stats
 
 Print statistics during diagnostics mode.
@@ -155,6 +262,55 @@ Clear statistics during diagnostics mode.
 ```bash
 > diag stats clear
 stats cleared
+```
+
+### diag gpio get \<gpio\>
+
+Get the gpio value.
+
+```bash
+> diag gpio get 0
+1
+Done
+```
+
+### diag gpio set \<gpio\> \<value\>
+
+Set the gpio value.
+
+The parameter `value` has to be `0` or `1`.
+
+```bash
+> diag gpio set 0 1
+Done
+```
+
+### diag gpio mode \<gpio\>
+
+Get the gpio mode.
+
+```bash
+> diag gpio mode 1
+in
+Done
+```
+
+### diag gpio mode \<gpio\> in
+
+Sets the given gpio to the input mode without pull resistor.
+
+```bash
+> diag gpio mode 1 in
+Done
+```
+
+### diag gpio mode \<gpio\> out
+
+Sets the given gpio to the output mode.
+
+```bash
+> diag gpio mode 1 out
+Done
 ```
 
 ### diag stop

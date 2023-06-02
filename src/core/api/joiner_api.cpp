@@ -43,24 +43,21 @@
 
 using namespace ot;
 
-otError otJoinerStart(otInstance *     aInstance,
-                      const char *     aPskd,
-                      const char *     aProvisioningUrl,
-                      const char *     aVendorName,
-                      const char *     aVendorModel,
-                      const char *     aVendorSwVersion,
-                      const char *     aVendorData,
+otError otJoinerStart(otInstance      *aInstance,
+                      const char      *aPskd,
+                      const char      *aProvisioningUrl,
+                      const char      *aVendorName,
+                      const char      *aVendorModel,
+                      const char      *aVendorSwVersion,
+                      const char      *aVendorData,
                       otJoinerCallback aCallback,
-                      void *           aContext)
+                      void            *aContext)
 {
     return AsCoreType(aInstance).Get<MeshCoP::Joiner>().Start(aPskd, aProvisioningUrl, aVendorName, aVendorModel,
                                                               aVendorSwVersion, aVendorData, aCallback, aContext);
 }
 
-void otJoinerStop(otInstance *aInstance)
-{
-    AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop();
-}
+void otJoinerStop(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshCoP::Joiner>().Stop(); }
 
 otJoinerState otJoinerGetState(otInstance *aInstance)
 {

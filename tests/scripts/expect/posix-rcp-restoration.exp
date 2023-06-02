@@ -251,12 +251,7 @@ try {
     puts "While energy scanning"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
-    send "ifconfig up\n"
-    expect_line "Done"
-    send "thread start\n"
-    expect_line "Done"
-    wait_for "state" "leader"
-    expect_line "Done"
+    attach
 
     send "scan energy 100\n"
     expect "| Ch | RSSI |"

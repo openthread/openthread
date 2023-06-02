@@ -49,7 +49,7 @@ namespace Cli {
  * This class implements the Commissioner CLI interpreter.
  *
  */
-class Commissioner : private OutputWrapper
+class Commissioner : private Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -57,11 +57,12 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutput The CLI console output context
+     * @param[in]  aInstance            The OpenThread Instance.
+     * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    explicit Commissioner(Output &aOutput)
-        : OutputWrapper(aOutput)
+    Commissioner(otInstance *aInstance, OutputImplementer &aOutputImplementer)
+        : Output(aInstance, aOutputImplementer)
     {
     }
 
@@ -87,17 +88,17 @@ private:
     void        HandleStateChanged(otCommissionerState aState);
 
     static void HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                  const otJoinerInfo *      aJoinerInfo,
-                                  const otExtAddress *      aJoinerId,
-                                  void *                    aContext);
+                                  const otJoinerInfo       *aJoinerInfo,
+                                  const otExtAddress       *aJoinerId,
+                                  void                     *aContext);
     void        HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
-                                  const otJoinerInfo *      aJoinerInfo,
-                                  const otExtAddress *      aJoinerId);
+                                  const otJoinerInfo       *aJoinerInfo,
+                                  const otExtAddress       *aJoinerId);
 
     static void HandleEnergyReport(uint32_t       aChannelMask,
                                    const uint8_t *aEnergyList,
                                    uint8_t        aEnergyListLength,
-                                   void *         aContext);
+                                   void          *aContext);
     void        HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength);
 
     static void HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext);

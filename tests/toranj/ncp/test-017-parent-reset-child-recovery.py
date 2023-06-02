@@ -148,7 +148,7 @@ def check_parent_is_associated():
     verify(parent.is_associated())
 
 
-wpan.verify_within(check_parent_is_associated, 10)
+wpan.verify_within(check_parent_is_associated, 40)
 
 # Verify that all the children are recovered and present in the parent's
 # child table again.

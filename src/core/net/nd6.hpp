@@ -156,7 +156,7 @@ private:
     private:
         static const Option *Next(const Option *aOption);
         void                 Advance(void);
-        const Option *       Validate(const Option *aOption) const;
+        const Option        *Validate(const Option *aOption) const;
 
         const Option *mOption;
         const Option *mEnd;
@@ -175,6 +175,8 @@ private:
 OT_TOOL_PACKED_BEGIN
 class PrefixInfoOption : public Option, private Clearable<PrefixInfoOption>
 {
+    friend class Clearable<PrefixInfoOption>;
+
 public:
     static constexpr Type kType = kTypePrefixInfo; ///< Prefix Information Option Type.
 
@@ -330,6 +332,8 @@ static_assert(sizeof(PrefixInfoOption) == 32, "invalid PrefixInfoOption structur
 OT_TOOL_PACKED_BEGIN
 class RouteInfoOption : public Option, private Clearable<RouteInfoOption>
 {
+    friend class Clearable<RouteInfoOption>;
+
 public:
     static constexpr uint16_t kMinSize = kLengthUnit;    ///< Minimum size (in bytes) of a Route Info Option
     static constexpr Type     kType    = kTypeRouteInfo; ///< Route Information Option Type.
@@ -442,7 +446,7 @@ private:
     static constexpr uint8_t kPreferenceOffset = 3;
     static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
 
-    uint8_t *      GetPrefixBytes(void) { return AsNonConst(AsConst(this)->GetPrefixBytes()); }
+    uint8_t       *GetPrefixBytes(void) { return AsNonConst(AsConst(this)->GetPrefixBytes()); }
     const uint8_t *GetPrefixBytes(void) const { return reinterpret_cast<const uint8_t *>(this) + sizeof(*this); }
 
     uint8_t  mPrefixLength;  // The prefix length in bits.
@@ -470,6 +474,8 @@ public:
     OT_TOOL_PACKED_BEGIN
     class Header : public Equatable<Header>, private Clearable<Header>
     {
+        friend class Clearable<Header>;
+
     public:
         /**
          * This constructor initializes the Router Advertisement message with
@@ -663,7 +669,7 @@ public:
 private:
     const uint8_t *GetOptionStart(void) const { return (mData.GetBytes() + sizeof(Header)); }
     const uint8_t *GetDataEnd(void) const { return mData.GetBytes() + mData.GetLength(); }
-    Option *       AppendOption(uint16_t aOptionSize);
+    Option        *AppendOption(uint16_t aOptionSize);
 
     Data<kWithUint16Length> mData;
     uint16_t                mMaxLength;
@@ -691,6 +697,190 @@ private:
 } OT_TOOL_PACKED_END;
 
 static_assert(sizeof(RouterSolicitMessage) == 8, "invalid RouterSolicitMessage structure");
+
+/**
+ * This class represents a Neighbor Solicitation (NS) message.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NeighborSolicitMessage : public Clearable<NeighborSolicitMessage>
+{
+public:
+    /**
+     * This constructor initializes the Neighbor Solicitation message.
+     *
+     */
+    NeighborSolicitMessage(void);
+
+    /**
+     * This method indicates whether the Neighbor Solicitation message is valid (proper Type and Code).
+     *
+     * @retval TRUE  If the message is valid.
+     * @retval FALSE If the message is not valid.
+     *
+     */
+    bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborSolicit) && (mCode == 0); }
+
+    /**
+     * This method gets the Target Address field.
+     *
+     * @returns The Target Address.
+     *
+     */
+    const Address &GetTargetAddress(void) const { return mTargetAddress; }
+
+    /**
+     * This method sets the Target Address field.
+     *
+     * @param[in] aTargetAddress  The Target Address.
+     *
+     */
+    void SetTargetAddress(const Address &aTargetAddress) { mTargetAddress = aTargetAddress; }
+
+private:
+    // Neighbor Solicitation Message (RFC 4861)
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |     Code      |          Checksum             |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                           Reserved                            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  +                                                               +
+    //  |                                                               |
+    //  +                       Target Address                          +
+    //  |                                                               |
+    //  +                                                               +
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |   Options ...
+    //  +-+-+-+-+-+-+-+-+-+-+-+-
+
+    uint8_t  mType;
+    uint8_t  mCode;
+    uint16_t mChecksum;
+    uint32_t mReserved;
+    Address  mTargetAddress;
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(NeighborSolicitMessage) == 24, "Invalid NeighborSolicitMessage definition");
+
+/**
+ * This class represents a Neighbor Advertisement (NA) message.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NeighborAdvertMessage : public Clearable<NeighborAdvertMessage>
+{
+public:
+    NeighborAdvertMessage(void);
+
+    /**
+     * This method indicates whether the Neighbor Advertisement message is valid (proper Type and Code).
+     *
+     * @retval TRUE  If the message is valid.
+     * @retval FALSE If the message is not valid.
+     *
+     */
+    bool IsValid(void) const { return (mType == Icmp::Header::kTypeNeighborAdvert) && (mCode == 0); }
+
+    /**
+     * This method indicates whether or not the Router Flag is set in the NA message.
+     *
+     * @retval TRUE   The Router Flag is set.
+     * @retval FALSE  The Router Flag is not set.
+     *
+     */
+    bool IsRouterFlagSet(void) const { return (mFlags & kRouterFlag) != 0; }
+
+    /**
+     * This method sets the Router Flag in the NA message.
+     *
+     */
+    void SetRouterFlag(void) { mFlags |= kRouterFlag; }
+
+    /**
+     * This method indicates whether or not the Solicited Flag is set in the NA message.
+     *
+     * @retval TRUE   The Solicited Flag is set.
+     * @retval FALSE  The Solicited Flag is not set.
+     *
+     */
+    bool IsSolicitedFlagSet(void) const { return (mFlags & kSolicitedFlag) != 0; }
+
+    /**
+     * This method sets the Solicited Flag in the NA message.
+     *
+     */
+    void SetSolicitedFlag(void) { mFlags |= kSolicitedFlag; }
+
+    /**
+     * This method indicates whether or not the Override Flag is set in the NA message.
+     *
+     * @retval TRUE   The Override Flag is set.
+     * @retval FALSE  The Override Flag is not set.
+     *
+     */
+    bool IsOverrideFlagSet(void) const { return (mFlags & kOverrideFlag) != 0; }
+
+    /**
+     * This method sets the Override Flag in the NA message.
+     *
+     */
+    void SetOverrideFlag(void) { mFlags |= kOverrideFlag; }
+
+    /**
+     * This method gets the Target Address field.
+     *
+     * @returns The Target Address.
+     *
+     */
+    const Address &GetTargetAddress(void) const { return mTargetAddress; }
+
+    /**
+     * This method sets the Target Address field.
+     *
+     * @param[in] aTargetAddress  The Target Address.
+     *
+     */
+    void SetTargetAddress(const Address &aTargetAddress) { mTargetAddress = aTargetAddress; }
+
+private:
+    // Neighbor Advertisement Message (RFC 4861)
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |     Code      |          Checksum             |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |R|S|O|                     Reserved                            |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |                                                               |
+    //  +                                                               +
+    //  |                                                               |
+    //  +                       Target Address                          +
+    //  |                                                               |
+    //  +                                                               +
+    //  |                                                               |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |   Options ...
+    //  +-+-+-+-+-+-+-+-+-+-+-+-
+
+    static constexpr uint8_t kRouterFlag    = (1 << 7);
+    static constexpr uint8_t kSolicitedFlag = (1 << 6);
+    static constexpr uint8_t kOverrideFlag  = (1 << 5);
+
+    uint8_t  mType;
+    uint8_t  mCode;
+    uint16_t mChecksum;
+    uint8_t  mFlags;
+    uint8_t  mReserved[3];
+    Address  mTargetAddress;
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(NeighborAdvertMessage) == 24, "Invalid NeighborAdvertMessage definition");
 
 } // namespace Nd
 } // namespace Ip6

@@ -344,28 +344,8 @@ class Cert_5_2_4_REEDUpgrade(thread_cert.TestCase):
             must_next()
 
         # Step 10: REED Sends a Link Request Message.
-        #          The Link Request Message MUST be multicast and contain
-        #          the following TLVs:
-        #              - Challenge TLV
-        #              - Leader Data TLV
-        #              - Source Address TLV
-        #              - TLV Request TLV: Link Margin
-        #              - Version TLV
-
-        with pkts.save_index():
-            pkts.filter_wpan_src64(REED).\
-                filter_LLARMA().\
-                filter_mle_cmd(MLE_LINK_REQUEST).\
-                filter(lambda p: {
-                                 CHALLENGE_TLV,
-                                 LEADER_DATA_TLV,
-                                 SOURCE_ADDRESS_TLV,
-                                 VERSION_TLV,
-                                 TLV_REQUEST_TLV,
-                                 LINK_MARGIN_TLV
-                                 } <= set(p.mle.tlv.type)
-                       ).\
-                must_next()
+        # This step is skipped due to change that new router no
+        # longer send multicast Link Request.
 
         # Step 11: The REED MLE Child ID Response MUST be properly
         #          formatted with MED_1’s new 16-bit address.

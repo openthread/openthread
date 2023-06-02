@@ -39,6 +39,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator.hpp"
+#include "common/tasklet.hpp"
 
 namespace ot {
 
@@ -48,6 +49,26 @@ inline Type &GetProvider<InstanceGetProvider>::Get(void) const
 {
     return static_cast<const InstanceGetProvider *>(this)->GetInstance().template Get<Type>();
 }
+
+template <typename Owner, void (Owner::*HandleTaskletPtr)(void)>
+void TaskletIn<Owner, HandleTaskletPtr>::HandleTasklet(Tasklet &aTasklet)
+{
+    (aTasklet.Get<Owner>().*HandleTaskletPtr)();
+}
+
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMilliIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+template <typename Owner, void (Owner::*HandleTimertPtr)(void)>
+void TimerMicroIn<Owner, HandleTimertPtr>::HandleTimer(Timer &aTimer)
+{
+    (aTimer.Get<Owner>().*HandleTimertPtr)();
+}
+#endif
 
 } // namespace ot
 

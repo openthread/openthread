@@ -47,15 +47,9 @@ otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAdd
     return AsCoreType(aInstance).Get<Srp::Client>().Start(AsCoreType(aServerSockAddr));
 }
 
-void otSrpClientStop(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Srp::Client>().Stop();
-}
+void otSrpClientStop(otInstance *aInstance) { return AsCoreType(aInstance).Get<Srp::Client>().Stop(); }
 
-bool otSrpClientIsRunning(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Srp::Client>().IsRunning();
-}
+bool otSrpClientIsRunning(otInstance *aInstance) { return AsCoreType(aInstance).Get<Srp::Client>().IsRunning(); }
 
 const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance)
 {
@@ -84,10 +78,7 @@ bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance)
 }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
-uint32_t otSrpClientGetTtl(otInstance *aInstance)
-{
-    return AsCoreType(aInstance).Get<Srp::Client>().GetTtl();
-}
+uint32_t otSrpClientGetTtl(otInstance *aInstance) { return AsCoreType(aInstance).Get<Srp::Client>().GetTtl(); }
 
 void otSrpClientSetTtl(otInstance *aInstance, uint32_t aTtl)
 {

@@ -45,6 +45,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+ *
+ * Define OpenThread diagnostic mode output buffer size in bytes
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE 500
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
  *
  * Define to enable platform region logging.
@@ -297,6 +307,26 @@
  */
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES
 #define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES 20
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+ *
+ * Define as 1 to enable assert check of pointer-type API input parameters against null.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL
+#define OPENTHREAD_CONFIG_ASSERT_CHECK_API_POINTER_PARAM_FOR_NULL 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+ *
+ * Define as 1 to enable platform power calibration support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE 1
 #endif
 
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_

@@ -88,6 +88,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES
+ *
+ * The maximum number of user CLI command lists that can be registered by the interpreter.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES
+#define OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
  *
  * Define as 1 for CLI to emit its command input string and the resulting output to the logs.
@@ -99,6 +109,18 @@
 #ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
 #define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE \
     (OPENTHREAD_POSIX && (OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_APP))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+ *
+ * Defines the log level to use when CLI emits its command input/output to the logs.
+ *
+ * This is used only when `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_DEBG
 #endif
 
 /**
@@ -124,6 +146,32 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
 #define OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE
+ *
+ * Specifies the max TXT record data length to use when performing DNS queries.
+ *
+ * If the service TXT record data length is greater than the specified value, it will be read partially (up to the given
+ * size) and output as a sequence of raw hex bytes `[{hex-bytes}...]`
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE
+#define OPENTHREAD_CONFIG_CLI_TXT_RECORD_MAX_SIZE 512
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+ *
+ * Define as 1 to have CLI register an IPv6 receive callback using `otIp6SetReceiveCallback()`.
+ *
+ * This is intended for testing only. Receive callback should be registered for the `otIp6GetBorderRoutingCounters()`
+ * to count the messages being passed to the callback.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
+#define OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK 0
 #endif
 
 #endif // CONFIG_CLI_H_

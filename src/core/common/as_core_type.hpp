@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include "common/debug.hpp"
+
 namespace ot {
 
 /**
@@ -63,6 +65,8 @@ template <typename FromType> struct CoreType;
  */
 template <typename Type> typename CoreType<Type>::Type &AsCoreType(Type *aObject)
 {
+    AssertPointerIsNotNull(aObject);
+
     return *static_cast<typename CoreType<Type>::Type *>(aObject);
 }
 
@@ -78,6 +82,8 @@ template <typename Type> typename CoreType<Type>::Type &AsCoreType(Type *aObject
  */
 template <typename Type> const typename CoreType<Type>::Type &AsCoreType(const Type *aObject)
 {
+    AssertPointerIsNotNull(aObject);
+
     return *static_cast<const typename CoreType<Type>::Type *>(aObject);
 }
 

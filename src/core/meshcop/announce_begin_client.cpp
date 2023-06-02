@@ -63,12 +63,12 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message *         message = nullptr;
+    Coap::Message          *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kAnnounceBegin));
+    SuccessOrExit(error = message->InitAsPost(aAddress, kUriAnnounceBegin));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(
@@ -85,7 +85,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
-    LogInfo("sent announce begin query");
+    LogInfo("Sent %s", UriToString<kUriAnnounceBegin>());
 
 exit:
     FreeMessageOnError(message, error);

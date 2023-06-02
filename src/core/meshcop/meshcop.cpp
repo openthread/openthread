@@ -37,7 +37,6 @@
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
 #include "common/string.hpp"
-#include "crypto/pbkdf2_cmac.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -174,11 +173,12 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
     }
     else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
     {
-        string.Append("0x%08x", static_cast<uint32_t>(mValue));
+        string.Append("0x%08lx", ToUlong(static_cast<uint32_t>(mValue)));
     }
     else
     {
-        string.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
+        string.Append("0x%lx-%08lx", ToUlong(static_cast<uint32_t>(mValue >> 32)),
+                      ToUlong(static_cast<uint32_t>(mValue)));
     }
 
     string.Append("/len:%d", mLength);
@@ -316,14 +316,14 @@ exit:
 }
 
 #if OPENTHREAD_FTD
-Error GeneratePskc(const char *         aPassPhrase,
-                   const NetworkName &  aNetworkName,
+Error GeneratePskc(const char          *aPassPhrase,
+                   const NetworkName   &aNetworkName,
                    const ExtendedPanId &aExtPanId,
-                   Pskc &               aPskc)
+                   Pskc                &aPskc)
 {
     Error      error        = kErrorNone;
     const char saltPrefix[] = "Thread";
-    uint8_t    salt[Crypto::Pbkdf2::kMaxSaltLength];
+    uint8_t    salt[OT_CRYPTO_PBDKF2_MAX_SALT_SIZE];
     uint16_t   saltLen = 0;
     uint16_t   passphraseLen;
     uint8_t    networkNameLen;
@@ -348,8 +348,8 @@ Error GeneratePskc(const char *         aPassPhrase,
     memcpy(salt + saltLen, aNetworkName.GetAsCString(), networkNameLen);
     saltLen += networkNameLen;
 
-    Crypto::Pbkdf2::GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
-                                OT_PSKC_MAX_SIZE, aPskc.m8);
+    otPlatCryptoPbkdf2GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
+                                  OT_PSKC_MAX_SIZE, aPskc.m8);
 
 exit:
     return error;

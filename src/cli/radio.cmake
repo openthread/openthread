@@ -55,5 +55,6 @@ target_link_libraries(openthread-cli-radio
         openthread-radio
     PRIVATE
         ${OT_MBEDTLS_RCP}
+        ot-config-radio
         ot-config
 )

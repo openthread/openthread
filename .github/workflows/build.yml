@@ -28,28 +28,38 @@
 
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
 
-  cancel-previous-runs:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: rokroskar/workflow-run-cleanup-action@master
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/main'"
-
   pretty:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 shellcheck
+        sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
     - name: Check
@@ -59,23 +69,39 @@ jobs:
   markdown-lint-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
       with:
         use-verbose-mode: 'yes'
         max-depth: 3
 
   cmake-version:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
-        sudo pip3 install --system -U cmake==3.10.3
+        sudo apt-get --no-install-recommends install -y build-essential ninja-build libreadline-dev libncurses-dev
+        sudo apt-get remove cmake
+        sudo apt-get purge --auto-remove cmake
+        wget http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+        tar xf cmake-3.10.3.tar.gz
+        cd cmake-3.10.3
+        ./configure
+        sudo make install
         cmake --version | grep 3.10.3
-        sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
     - name: Build
       run: |
         OT_NODE_TYPE=rcp ./script/test build
@@ -97,7 +123,12 @@ jobs:
       CC: ${{ matrix.compiler_c }}
       CXX: ${{ matrix.compiler_cpp }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
@@ -109,33 +140,43 @@ jobs:
         script/test package
 
   scan-build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-tools-9 ninja-build
+        sudo apt-get --no-install-recommends install -y clang-tools-14 ninja-build
     - name: Run
       run: |
         script/check-scan-build
 
   mbedtls3-build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
         rm -rf third_party/mbedtls/repo
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.1.0
+        ref: v3.2.1
         path: third_party/mbedtls/repo
     - name: Build
       run: |
@@ -143,7 +184,7 @@ jobs:
 
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -163,37 +204,63 @@ jobs:
           - gcc_ver: 9
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/RC2.1/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
             gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
+          - gcc_ver: 10
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
+            gcc_extract_dir: gcc-arm-none-eabi-10.3-2021.10
+          - gcc_ver: 11
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/11.3.rel1/binrel/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_extract_dir: arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi
+          - gcc_ver: 12
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_extract_dir: arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         cd /tmp
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
-        tar xjf gcc-arm.tar.bz2
-        # use the minimal required cmake version
-        sudo pip3 install --system -U cmake==3.10.3
+        sudo apt-get --no-install-recommends install -y build-essential lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm
+        tar xf gcc-arm
+        sudo apt-get remove cmake
+        sudo apt-get purge --auto-remove cmake
+        wget http://www.cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+        tar xf cmake-3.10.3.tar.gz
+        cd cmake-3.10.3
+        ./configure
+        sudo make install
         cmake --version | grep 3.10.3
     - name: Build
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
         script/check-arm-build
 
   gcc:
     name: gcc-${{ matrix.gcc_ver }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        gcc_ver: [5, 6, 7, 8, 9, 10, 11]
+        gcc_ver: [9, 10, 11, 12]
     env:
       CC: gcc-${{ matrix.gcc_ver }}
       CXX: g++-${{ matrix.gcc_ver }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
@@ -216,12 +283,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["6.0", "7", "8", "9", "10", "11", "12", "13"]
+        clang_ver: ["9", "10", "11", "12", "13"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
         with:
           submodules: true
       - name: Bootstrap
@@ -246,7 +318,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clang_ver: ["6.0", "7", "8", "9", "10", "11", "12", "13"]
+        clang_ver: ["9", "10", "11", "12", "13"]
     env:
       CC: clang-${{ matrix.clang_ver }}
       CXX: clang++-${{ matrix.clang_ver }}
@@ -254,7 +326,12 @@ jobs:
       CXXFLAGS: -m32 -Wconversion
       LDFLAGS: -m32
     steps:
-      - uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
         with:
           submodules: true
       - name: Bootstrap
@@ -277,7 +354,12 @@ jobs:
   gn:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
@@ -308,27 +390,52 @@ jobs:
       CC: ${{ matrix.CC }}
       CXX: ${{ matrix.CXX }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
-        rm -f '/usr/local/bin/2to3'
         brew update
-        brew install automake m4 ninja
-        [ ${{ matrix.CC }} != clang ] || brew install llvm
+        brew install automake m4
+        wget --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
+        unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
         export PATH=$(brew --prefix m4)/bin:$PATH
         script/check-posix-build
         script/check-simulation-build
 
-  android:
-    runs-on: ubuntu-20.04
+  android-ndk:
+    name: android-ndk
+    runs-on: ubuntu-22.04
+    container:
+      image: openthread/environment
     steps:
-    - uses: actions/checkout@v2
+    - name: Harden Runner
+      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
       with:
         submodules: true
+    - name: Install unzip
+      run: apt update && apt install -y unzip
+    - name: Setup NDK
+      id: setup-ndk
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r25c
+        local-cache: true
+
     - name: Build
+      env:
+        NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
       run: |
-        docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build
+        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-daemon ot-ctl" script/cmake-build android-ndk
+        rm -rf build/ && OT_CMAKE_NINJA_TARGET="ot-cli" script/cmake-build android-ndk

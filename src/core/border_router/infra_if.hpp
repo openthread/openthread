@@ -125,7 +125,7 @@ public:
      * @retval FALSE  The infrastructure interface does not have @p aAddress.
      *
      */
-    bool HasAddress(const Ip6::Address &aAddress);
+    bool HasAddress(const Ip6::Address &aAddress) const;
 
     /**
      * This method sends an ICMPv6 Neighbor Discovery packet on the infrastructure interface.
@@ -139,7 +139,7 @@ public:
      * @retval kErrorFailed  Failed to send the ICMPv6 message.
      *
      */
-    Error Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination);
+    Error Send(const Icmp6Packet &aPacket, const Ip6::Address &aDestination) const;
 
     /**
      * This method processes a received ICMPv6 Neighbor Discovery packet from an infrastructure interface.
@@ -150,6 +150,26 @@ public:
      *
      */
     void HandledReceived(uint32_t aIfIndex, const Ip6::Address &aSource, const Icmp6Packet &aPacket);
+
+    /**
+     * This method sends a request to discover the NAT64 prefix on the infrastructure interface.
+     *
+     * @note  This method MUST be used when interface is initialized.
+     *
+     * @retval  kErrorNone    Successfully request NAT64 prefix discovery.
+     * @retval  kErrorFailed  Failed to request NAT64 prefix discovery.
+     *
+     */
+    Error DiscoverNat64Prefix(void) const;
+
+    /**
+     * This method processes the discovered NAT64 prefix.
+     *
+     * @param[in]  aIfIndex    The infrastructure interface index on which the host address is received.
+     * @param[in]  aPrefix     The NAT64 prefix on the infrastructure link.
+     *
+     */
+    void DiscoverNat64PrefixDone(uint32_t aIfIndex, const Ip6::Prefix &aPrefix);
 
     /**
      * This method handles infrastructure interface state changes.

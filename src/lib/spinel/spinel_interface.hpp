@@ -36,6 +36,7 @@
 #define POSIX_APP_SPINEL_INTERFACE_HPP_
 
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/spinel.h"
 
 namespace ot {
 namespace Spinel {
@@ -58,6 +59,23 @@ public:
     typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
 
     typedef void (*ReceiveFrameCallback)(void *aContext);
+
+    /**
+     * This method indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
+     *
+     * @param[in] aFrame   A pointer to buffer containing the spinel frame.
+     * @param[in] aLength  The length (number of bytes) in the frame.
+     *
+     * @retval true  If the frame is a Spinel SPINEL_CMD_RESET frame.
+     * @retval false If the frame is not a Spinel SPINEL_CMD_RESET frame.
+     *
+     */
+    static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
+    {
+        static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
+        return (aLength >= sizeof(kSpinelResetCommand)) &&
+               (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
+    }
 };
 } // namespace Spinel
 } // namespace ot

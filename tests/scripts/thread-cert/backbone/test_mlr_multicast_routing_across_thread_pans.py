@@ -143,12 +143,24 @@ class TestMlr(thread_cert.TestCase):
         self.collect_ipaddrs()
         self.collect_rloc16s()
 
-        # ping MA1 from Host could get replied from R1 and R2
+        # ping MA1 from Host could generate a reply from R1 and R2
         self.assertTrue(self.nodes[HOST].ping(MA1, backbone=True, ttl=5))
         self.simulator.go(WAIT_REDUNDANCE)
+        self.verify_border_routing_counters(self.nodes[PBBR1], {'inbound_multicast': 1, 'outbound_unicast': 1})
+        self.verify_border_routing_counters(self.nodes[PBBR2], {'inbound_multicast': 1, 'outbound_unicast': 1})
 
-        # ping MA2 from R1 could get replied from Host and R2
+        # ping MA2 from R1 could generate a reply from Host and R2
         self.assertTrue(self.nodes[ROUTER1].ping(MA2))
+        self.simulator.go(WAIT_REDUNDANCE)
+        self.verify_border_routing_counters(self.nodes[PBBR1], {'inbound_unicast': 2, 'outbound_multicast': 1})
+        self.verify_border_routing_counters(self.nodes[PBBR2], {'inbound_multicast': 1, 'outbound_unicast': 1})
+
+        # ping MA2 from R1's MLE-ID shouldn't generate a reply from Host or R2
+        self.assertFalse(self.nodes[ROUTER1].ping(MA2, interface=self.nodes[ROUTER1].get_mleid()))
+        self.simulator.go(WAIT_REDUNDANCE)
+
+        # ping MA2 from R1's LLA shouldn't generate a reply from Host or R2
+        self.assertFalse(self.nodes[ROUTER1].ping(MA2, interface=self.nodes[ROUTER1].get_linklocal()))
         self.simulator.go(WAIT_REDUNDANCE)
 
     def verify(self, pv: PacketVerifier):
@@ -210,6 +222,35 @@ class TestMlr(thread_cert.TestCase):
         # ROUTER2 should send ping reply back to ROUTER1
         pkts.filter_wpan_src64(ROUTER2).filter_ipv6_src_dst(
             ROUTER2_DUA, ROUTER1_DUA).filter_ping_reply(identifier=ping_ma2.icmpv6.echo.identifier).must_next()
+
+        #
+        # Verify pinging MA2 from R1's MLE-ID will not be forwarded to the Backbone link
+        #
+
+        # ROUTER1 should send the multicast ping request
+        ping_ma2_2 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC16).filter_ping_request(
+            identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
+
+        # PBBR1 shouldn't forward the multicast ping request to the Backbone link
+        pkts.filter_eth_src(PBBR1_ETH).filter_ping_request(ping_ma2_2.icmpv6.echo.identifier).must_not_next()
+
+        #
+        # Verify pinging MA2 from R1's Link-Local address will not be forwarded to the Backbone link
+        #
+
+        # ROUTER1 should send the multicast ping request
+        ping_ma2_3 = pkts.filter_wpan_src64(ROUTER1).filter_AMPLFMA(mpl_seed_id=ROUTER1_RLOC16).filter_ping_request(
+            identifier=ping_ma2.icmpv6.echo.identifier + 1).must_next()
+
+        # PBBR1 shouldn't forward the multicast ping request to the Backbone link
+        pkts.filter_eth_src(PBBR1_ETH).filter_ping_request(ping_ma2_3.icmpv6.echo.identifier).must_not_next()
+
+    def verify_border_routing_counters(self, br, expect_delta):
+        delta_counters = br.read_border_routing_counters_delta()
+        self.assertEqual(set(delta_counters.keys()), set(expect_delta.keys()))
+        for key in delta_counters:
+            self.assertGreaterEqual(delta_counters[key][0], expect_delta[key])
+            self.assertGreater(delta_counters[key][1], 0)
 
 
 if __name__ == '__main__':

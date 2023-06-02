@@ -197,9 +197,8 @@ class Cert_5_5_5_SplitMergeREED(thread_cert.TestCase):
             lambda p: {NL_MAC_EXTENDED_ADDRESS_TLV, NL_STATUS_TLV} <= set(p.coap.tlv.type))
 
         # Step 7: DUT send a Multicast Link Request
-        pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_LINK_REQUEST).must_next().must_verify(lambda p: {
-            VERSION_TLV, TLV_REQUEST_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, CHALLENGE_TLV, LINK_MARGIN_TLV
-        } <= set(p.mle.tlv.type))
+        # Step 7 is skipped since new router no longer sends
+        # multicast Link Request.
 
         # Step 8: DUT send Child ID Response to Router_1
         reed_pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(lambda p: p.wpan.dst64 == ROUTER_1)

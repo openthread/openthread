@@ -140,7 +140,7 @@ protected:
 
     Handler mHandler;
     Time    mFireTime;
-    Timer * mNext;
+    Timer  *mNext;
 };
 
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance);
@@ -244,6 +244,33 @@ public:
 
 protected:
     static void RemoveAll(Instance &aInstance);
+};
+
+/**
+ * This template class defines a timer owned by a specific type and using a method on owner type as the callback.
+ *
+ * @tparam Owner              The type of the owner of this timer.
+ * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.
+ *
+ * The `Owner` MUST be a type that is accessible using `InstanceLocator::Get<Owner>()`.
+ *
+ */
+template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMilliIn : public TimerMilli
+{
+public:
+    /**
+     * This constructor initializes the timer.
+     *
+     * @param[in]  aInstance   The OpenThread instance.
+     *
+     */
+    explicit TimerMilliIn(Instance &aInstance)
+        : TimerMilli(aInstance, HandleTimer)
+    {
+    }
+
+private:
+    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
 };
 
 /**
@@ -379,6 +406,34 @@ public:
 protected:
     static void RemoveAll(Instance &aInstance);
 };
+
+/**
+ * This template class defines a timer owned by a specific type and using a method on owner type as the callback.
+ *
+ * @tparam Owner              The type of the owner of this timer.
+ * @tparam HandleTimerPtr     A pointer to a non-static member method of `Owner` to use as timer handler.
+ *
+ * The `Owner` MUST be a type that is accessible using `InstanceLocator::Get<Owner>()`.
+ *
+ */
+template <typename Owner, void (Owner::*HandleTimerPtr)(void)> class TimerMicroIn : public TimerMicro
+{
+public:
+    /**
+     * This constructor initializes the timer.
+     *
+     * @param[in]  aInstance   The OpenThread instance.
+     *
+     */
+    explicit TimerMicroIn(Instance &aInstance)
+        : TimerMicro(aInstance, HandleTimer)
+    {
+    }
+
+private:
+    static void HandleTimer(Timer &aTimer); // Implemented in `locator_getters.hpp`
+};
+
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**

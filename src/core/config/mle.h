@@ -89,6 +89,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
+ *
+ * Specifies the default value for `mLeaderWeightAdjustment` in `otDeviceProperties`. MUST be from -16 up to +16.
+ *
+ * This value is used to adjust the calculated Leader Weight from `otDeviceProperties`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
+#define OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
  *
  * Enable setting steering data out of band.
@@ -257,7 +269,19 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
-#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 0
+#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+ *
+ * Define as 1 to support `otThreadRegisterParentResponseCallback()` API which registers a callback to notify user
+ * of received Parent Response message(s) during attach. This API is mainly intended for debugging and therefore is
+ * disabled by default.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
+#define OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE 0
 #endif
 
 /**

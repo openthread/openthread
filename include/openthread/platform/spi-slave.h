@@ -79,7 +79,7 @@ extern "C" {
  * @returns  TRUE if after this call returns the platform should invoke the process callback `aProcessCallback`,
  *           FALSE if there is nothing to process and no need to invoke the process callback.
  */
-typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void *   aContext,
+typedef bool (*otPlatSpiSlaveTransactionCompleteCallback)(void    *aContext,
                                                           uint8_t *aOutputBuf,
                                                           uint16_t aOutputBufLen,
                                                           uint8_t *aInputBuf,
@@ -115,7 +115,7 @@ typedef void (*otPlatSpiSlaveTransactionProcessCallback)(void *aContext);
  */
 otError otPlatSpiSlaveEnable(otPlatSpiSlaveTransactionCompleteCallback aCompleteCallback,
                              otPlatSpiSlaveTransactionProcessCallback  aProcessCallback,
-                             void *                                    aContext);
+                             void                                     *aContext);
 
 /**
  * Shutdown and disable the SPI slave interface.

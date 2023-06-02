@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package sniffer;
+
+// Sniffer simulation
+service Sniffer {
+    // Start the sniffer
+    rpc Start(StartRequest) returns (StartResponse) {}
+
+    // Transfer the capture file
+    rpc TransferPcapng(TransferPcapngRequest) returns (stream TransferPcapngResponse) {}
+
+    // Let the sniffer sniff these nodes only
+    rpc FilterNodes(FilterNodesRequest) returns (FilterNodesResponse) {}
+
+    // Stop the sniffer
+    rpc Stop(StopRequest) returns (StopResponse) {}
+}
+
+// Possible Status which the RPCs may return
+enum Status {
+    // Default value which is unused
+    STATUS_UNSPECIFIED = 0;
+
+    // Everything goes well
+    OK = 1;
+
+    // Unable to run the specified RPC currently
+    OPERATION_ERROR = 2;
+
+    // The parameters passed to the RPC is erroneous
+    VALUE_ERROR = 3;
+}
+
+message StartRequest {
+    // Specify the channel that the sniffer is going to sniff
+    int32 channel = 1;
+
+    // Specify whether to include Ethernet packets between OTBR and infra
+    bool includeEthernet = 2;
+}
+
+message StartResponse {
+    Status status = 1;
+}
+
+message TransferPcapngRequest {
+}
+
+message TransferPcapngResponse {
+    bytes content = 1;
+}
+
+message FilterNodesRequest {
+    repeated int32 nodeids = 1;
+}
+
+message FilterNodesResponse {
+    Status status = 1;
+}
+
+message StopRequest {
+}
+
+message StopResponse {
+    Status status = 1;
+}

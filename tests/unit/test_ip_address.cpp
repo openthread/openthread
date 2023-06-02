@@ -29,6 +29,7 @@
 #include <limits.h>
 
 #include "common/encoding.hpp"
+#include "common/string.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_address.hpp"
 
@@ -36,7 +37,7 @@
 
 template <typename AddressType> struct TestVector
 {
-    const char *  mString;
+    const char   *mString;
     const uint8_t mAddr[sizeof(AddressType)];
     ot::Error     mError;
 };
@@ -166,6 +167,56 @@ void TestIp6AddressFromString(void)
     {
         checkAddressFromString(&testVector);
     }
+
+    // Validate parsing all test vectors now as an IPv6 prefix.
+
+    for (Ip6AddressTestVector &testVector : testVectors)
+    {
+        constexpr uint16_t kMaxString = 80;
+
+        ot::Ip6::Prefix prefix;
+        char            string[kMaxString];
+        uint16_t        length;
+
+        length = ot::StringLength(testVector.mString, kMaxString);
+        memcpy(string, testVector.mString, length);
+        VerifyOrQuit(length + sizeof("/128") <= kMaxString);
+        strcpy(&string[length], "/128");
+
+        printf("%s\n", string);
+
+        VerifyOrQuit(prefix.FromString(string) == testVector.mError);
+
+        if (testVector.mError == ot::kErrorNone)
+        {
+            VerifyOrQuit(memcmp(prefix.GetBytes(), testVector.mAddr, sizeof(ot::Ip6::Address)) == 0);
+            VerifyOrQuit(prefix.GetLength() == 128);
+        }
+    }
+}
+
+void TestIp6PrefixFromString(void)
+{
+    ot::Ip6::Prefix prefix;
+
+    SuccessOrQuit(prefix.FromString("::/128"));
+    VerifyOrQuit(prefix.GetLength() == 128);
+
+    SuccessOrQuit(prefix.FromString("::/0128"));
+    VerifyOrQuit(prefix.GetLength() == 128);
+
+    SuccessOrQuit(prefix.FromString("::/5"));
+    VerifyOrQuit(prefix.GetLength() == 5);
+
+    SuccessOrQuit(prefix.FromString("::/0"));
+    VerifyOrQuit(prefix.GetLength() == 0);
+
+    VerifyOrQuit(prefix.FromString("::") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/129") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString(":: /12") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/a1") == ot::kErrorParse);
+    VerifyOrQuit(prefix.FromString("::/12 ") == ot::kErrorParse);
 }
 
 void TestIp4AddressFromString(void)
@@ -194,6 +245,78 @@ void TestIp4AddressFromString(void)
     }
 }
 
+struct CidrTestVector
+{
+    const char   *mString;
+    const uint8_t mAddr[sizeof(otIp4Address)];
+    const uint8_t mLength;
+    ot::Error     mError;
+};
+
+static void checkCidrFromString(CidrTestVector *aTestVector)
+{
+    ot::Error     error;
+    ot::Ip4::Cidr cidr;
+
+    cidr.Clear();
+
+    error = cidr.FromString(aTestVector->mString);
+
+    printf("%-42s -> %-42s\n", aTestVector->mString,
+           (error == ot::kErrorNone) ? cidr.ToString().AsCString() : "(parse error)");
+
+    VerifyOrQuit(error == aTestVector->mError, "Address::FromString returned unexpected error code");
+
+    if (error == ot::kErrorNone)
+    {
+        VerifyOrQuit(0 == memcmp(cidr.GetBytes(), aTestVector->mAddr, sizeof(aTestVector->mAddr)),
+                     "Cidr::FromString parsing failed");
+        VerifyOrQuit(cidr.mLength == aTestVector->mLength, "Cidr::FromString parsing failed");
+    }
+}
+
+void TestIp4CidrFromString(void)
+{
+    CidrTestVector testVectors[] = {
+        {"0.0.0.0/0", {0, 0, 0, 0}, 0, ot::kErrorNone},
+        {"255.255.255.255/32", {255, 255, 255, 255}, 32, ot::kErrorNone},
+        {"127.0.0.1/8", {127, 0, 0, 1}, 8, ot::kErrorNone},
+        {"1.2.3.4/24", {1, 2, 3, 4}, 24, ot::kErrorNone},
+        {"001.002.003.004/20", {1, 2, 3, 4}, 20, ot::kErrorNone},
+        {"00000127.000.000.000001/8", {127, 0, 0, 1}, 8, ot::kErrorNone},
+        // Valid suffix, invalid address
+        {"123.231.0.256/4", {0}, 0, ot::kErrorParse},    // Invalid byte value.
+        {"100123.231.0.256/4", {0}, 0, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33/4", {0}, 0, ot::kErrorParse},          // Too few bytes.
+        {"1.22.33.44.5/4", {0}, 0, ot::kErrorParse},     // Too many bytes.
+        {"a.b.c.d/4", {0}, 0, ot::kErrorParse},          // Wrong digit char.
+        {"123.23.45 .12/4", {0}, 0, ot::kErrorParse},    // Extra space.
+        {"./4", {0}, 0, ot::kErrorParse},                // Invalid.
+        // valid address, invalid suffix
+        {"1.2.3.4/33", {0}, 0, ot::kErrorParse},       // Prefix length too large
+        {"1.2.3.4/12345678", {0}, 0, ot::kErrorParse}, // Prefix length too large?
+        {"1.2.3.4/12a", {0}, 0, ot::kErrorParse},      // Extra char after prefix length.
+        {"1.2.3.4/-1", {0}, 0, ot::kErrorParse},       // Not even a non-negative integer.
+        {"1.2.3.4/3.14", {0}, 0, ot::kErrorParse},     // Not even a integer.
+        {"1.2.3.4/abcd", {0}, 0, ot::kErrorParse},     // Not even a number.
+        {"1.2.3.4/", {0}, 0, ot::kErrorParse},         // Where is the suffix?
+        {"1.2.3.4", {0}, 0, ot::kErrorParse},          // Where is the suffix?
+        // invalid address and invalid suffix
+        {"123.231.0.256/41", {0}, 0, ot::kErrorParse},     // Invalid byte value.
+        {"100123.231.0.256/abc", {0}, 0, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33", {0}, 0, ot::kErrorParse},              // Too few bytes.
+        {"1.22.33.44.5/36", {0}, 0, ot::kErrorParse},      // Too many bytes.
+        {"a.b.c.d/99", {0}, 0, ot::kErrorParse},           // Wrong digit char.
+        {"123.23.45 .12", {0}, 0, ot::kErrorParse},        // Extra space.
+        {".", {0}, 0, ot::kErrorParse},                    // Invalid.
+    };
+
+    for (CidrTestVector &testVector : testVectors)
+    {
+        checkCidrFromString(&testVector);
+    }
+}
+
 bool CheckPrefix(const ot::Ip6::Address &aAddress, const uint8_t *aPrefix, uint8_t aPrefixLength)
 {
     // Check the first aPrefixLength bits of aAddress to match the given aPrefix.
@@ -206,6 +329,27 @@ bool CheckPrefix(const ot::Ip6::Address &aAddress, const uint8_t *aPrefix, uint8
         uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
 
         if ((aAddress.mFields.m8[index] & mask) != (aPrefix[index] & mask))
+        {
+            matches = false;
+            break;
+        }
+    }
+
+    return matches;
+}
+
+bool CheckPrefixInIid(const ot::Ip6::InterfaceIdentifier &aIid, const uint8_t *aPrefix, uint8_t aPrefixLength)
+{
+    // Check the IID to contain the prefix bits (applicable when prefix length is longer than 64).
+
+    bool matches = true;
+
+    for (uint8_t bit = 64; bit < aPrefixLength; bit++)
+    {
+        uint8_t index = bit / CHAR_BIT;
+        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+
+        if ((aIid.mFields.m8[index - 8] & mask) != (aPrefix[index] & mask))
         {
             matches = false;
             break;
@@ -248,6 +392,7 @@ void TestIp6AddressSetPrefix(void)
     ot::Ip6::Address address;
     ot::Ip6::Address allZeroAddress;
     ot::Ip6::Address allOneAddress;
+    ot::Ip6::Prefix  ip6Prefix;
 
     allZeroAddress.Clear();
     memset(&allOneAddress, 0xff, sizeof(allOneAddress));
@@ -259,18 +404,33 @@ void TestIp6AddressSetPrefix(void)
 
         for (uint8_t prefixLength = 0; prefixLength <= sizeof(ot::Ip6::Address) * CHAR_BIT; prefixLength++)
         {
+            ip6Prefix.Clear();
+            ip6Prefix.Set(prefix, prefixLength);
+
             address = allZeroAddress;
-            address.SetPrefix(prefix, prefixLength);
+            address.SetPrefix(ip6Prefix);
             printf("   prefix-len:%-3d --> %s\n", prefixLength, address.ToString().AsCString());
             VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
             VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
                          "SetPrefix changed bits beyond the prefix length");
 
             address = allOneAddress;
-            address.SetPrefix(prefix, prefixLength);
+            address.SetPrefix(ip6Prefix);
             VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
             VerifyOrQuit(CheckInterfaceId(address, allOneAddress, prefixLength),
                          "SetPrefix changed bits beyond the prefix length");
+
+            address = allZeroAddress;
+            address.GetIid().ApplyPrefix(ip6Prefix);
+            VerifyOrQuit(CheckPrefixInIid(address.GetIid(), prefix, prefixLength), "IID is not correct");
+            VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
+                         "Iid:ApplyPrefrix() changed bits beyond the prefix length");
+
+            address = allOneAddress;
+            address.GetIid().ApplyPrefix(ip6Prefix);
+            VerifyOrQuit(CheckPrefixInIid(address.GetIid(), prefix, prefixLength), "IID is not correct");
+            VerifyOrQuit(CheckInterfaceId(address, allOneAddress, prefixLength),
+                         "Iid:ApplyPrefrix() changed bits beyond the prefix length");
         }
     }
 }
@@ -395,6 +555,30 @@ void TestIp6Prefix(void)
             VerifyOrQuit(!(testCase.mPrefixB < testCase.mPrefixA));
         }
     }
+
+    // `IsLinkLocal()` - should contain `fe80::/10`.
+    VerifyOrQuit(PrefixFrom("fe80::", 10).IsLinkLocal());
+    VerifyOrQuit(PrefixFrom("fe80::", 11).IsLinkLocal());
+    VerifyOrQuit(PrefixFrom("fea0::", 16).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fe80::", 9).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("ff80::", 10).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fe00::", 10).IsLinkLocal());
+    VerifyOrQuit(!PrefixFrom("fec0::", 10).IsLinkLocal());
+
+    // `IsMulticast()` - should contain `ff00::/8`.
+    VerifyOrQuit(PrefixFrom("ff00::", 8).IsMulticast());
+    VerifyOrQuit(PrefixFrom("ff80::", 9).IsMulticast());
+    VerifyOrQuit(PrefixFrom("ffff::", 16).IsMulticast());
+    VerifyOrQuit(!PrefixFrom("ff00::", 7).IsMulticast());
+    VerifyOrQuit(!PrefixFrom("fe00::", 8).IsMulticast());
+
+    // `IsUniqueLocal()` - should contain `fc00::/7`.
+    VerifyOrQuit(PrefixFrom("fc00::", 7).IsUniqueLocal());
+    VerifyOrQuit(PrefixFrom("fd00::", 8).IsUniqueLocal());
+    VerifyOrQuit(PrefixFrom("fc10::", 16).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("fc00::", 6).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("f800::", 7).IsUniqueLocal());
+    VerifyOrQuit(!PrefixFrom("fe00::", 7).IsUniqueLocal());
 }
 
 void TestIp4Ip6Translation(void)
@@ -406,7 +590,7 @@ void TestIp4Ip6Translation(void)
         const char *mIp6Address; // Expected IPv6 address (with embedded IPv4 "192.0.2.33").
     };
 
-    // The test cases are from RFC 6502 - section 2.4
+    // The test cases are from RFC 6052 - section 2.4
 
     const TestCase kTestCases[] = {
         {"2001:db8::", 32, "2001:db8:c000:221::"},
@@ -468,10 +652,10 @@ void TestIp4Cidr(void)
     using ot::Encoding::BigEndian::HostSwap32;
     struct TestCase
     {
-        const char *   mNetwork;
+        const char    *mNetwork;
         const uint8_t  mLength;
         const uint32_t mHost;
-        const char *   mOutcome;
+        const char    *mOutcome;
     };
 
     const TestCase kTestCases[] = {
@@ -519,9 +703,11 @@ int main(void)
     TestIp6AddressSetPrefix();
     TestIp4AddressFromString();
     TestIp6AddressFromString();
+    TestIp6PrefixFromString();
     TestIp6Prefix();
     TestIp4Ip6Translation();
     TestIp4Cidr();
+    TestIp4CidrFromString();
     printf("All tests passed\n");
     return 0;
 }

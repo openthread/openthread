@@ -36,55 +36,128 @@
 
 #include "openthread-core-config.h"
 
+#include "common/error.hpp"
+
 namespace ot {
 
 /**
- *
- * This structure contains Thread URI Path string definitions.
+ * This enumeration represents Thread URIs.
  *
  */
-struct UriPath
+enum Uri : uint8_t
 {
-    static const char kAddressQuery[];           ///< The URI Path for Address Query ("a/aq").
-    static const char kAddressNotify[];          ///< The URI Path for Address Notify ("a/an").
-    static const char kAddressError[];           ///< The URI Path for Address Error ("a/ae").
-    static const char kAddressRelease[];         ///< The URI Path for Address Release ("a/ar").
-    static const char kAddressSolicit[];         ///< The URI Path for Address Solicit ("a/as").
-    static const char kAnycastLocate[];          ///< The URI Path for Anycast Locate ("a/yl")
-    static const char kActiveGet[];              ///< The URI Path for MGMT_ACTIVE_GE ("c/ag")T
-    static const char kActiveSet[];              ///< The URI Path for MGMT_ACTIVE_SET ("c/as").
-    static const char kDatasetChanged[];         ///< The URI Path for MGMT_DATASET_CHANGED ("c/dc").
-    static const char kEnergyScan[];             ///< The URI Path for Energy Scan ("c/es").
-    static const char kEnergyReport[];           ///< The URI Path for Energy Report ("c/er").
-    static const char kPendingGet[];             ///< The URI Path for MGMT_PENDING_GET ("c/pg").
-    static const char kPendingSet[];             ///< The URI Path for MGMT_PENDING_SET ("c/ps").
-    static const char kServerData[];             ///< The URI Path for Server Data Registration ("a/sd").
-    static const char kAnnounceBegin[];          ///< The URI Path for Announce Begin ("c/ab").
-    static const char kProxyRx[];                ///< The URI Path for Proxy RX ("c/ur").
-    static const char kProxyTx[];                ///< The URI Path for Proxy TX ("c/ut").
-    static const char kRelayRx[];                ///< The URI Path for Relay RX ("c/rx").
-    static const char kRelayTx[];                ///< The URI Path for Relay TX ("c/tx").
-    static const char kJoinerFinalize[];         ///< The URI Path for Joiner Finalize ("c/jf").
-    static const char kJoinerEntrust[];          ///< The URI Path for Joiner Entrust ("c/je").
-    static const char kLeaderPetition[];         ///< The URI Path for Leader Petition ("c/lp").
-    static const char kLeaderKeepAlive[];        ///< The URI Path for Leader Keep Alive ("c/la").
-    static const char kPanIdConflict[];          ///< The URI Path for PAN ID Conflict ("c/pc").
-    static const char kPanIdQuery[];             ///< The URI Path for PAN ID Query ("c/pq").
-    static const char kCommissionerGet[];        ///< The URI Path for MGMT_COMMISSIONER_GET ("c/cg").
-    static const char kCommissionerKeepAlive[];  ///< The URI Path for Commissioner Keep Alive ("c/ca").
-    static const char kCommissionerPetition[];   ///< The URI Path for Commissioner Petition ("c/cp").
-    static const char kCommissionerSet[];        ///< The URI Path for MGMT_COMMISSIONER_SET ("c/cs").
-    static const char kDiagnosticGetRequest[];   ///< The URI Path for Network Diagnostic Get Request ("d/dg").
-    static const char kDiagnosticGetQuery[];     ///< The URI Path for Network Diagnostic Get Query ("d/dq").
-    static const char kDiagnosticGetAnswer[];    ///< The URI Path for Network Diagnostic Get Answer ("d/da").
-    static const char kDiagnosticReset[];        ///< The URI Path for Network Diagnostic Reset ("d/dr").
-    static const char kMlr[];                    ///< The URI Path for Multicast Listener Registration ("n/mr").
-    static const char kDuaRegistrationRequest[]; ///< The URI Path for DUA Registration Request ("n/dr").
-    static const char kDuaRegistrationNotify[];  ///< The URI Path for DUA Registration Notification ("n/dn").
-    static const char kBackboneQuery[];          ///< The URI Path for Backbone Query ("b/bq").
-    static const char kBackboneAnswer[];         ///< The URI Path for Backbone Answer / Backbone Notification ("b/ba").
-    static const char kBackboneMlr[];            ///< The URI Path for Backbone Multicast Listener Report ("b/bmr").
+    kUriAddressError,           ///< Address Error ("a/ae")
+    kUriAddressNotify,          ///< Address Notify ("a/an")
+    kUriAddressQuery,           ///< Address Query ("a/aq")
+    kUriAddressRelease,         ///< Address Release ("a/ar")
+    kUriAddressSolicit,         ///< Address Solicit ("a/as")
+    kUriServerData,             ///< Server Data Registration ("a/sd")
+    kUriAnycastLocate,          ///< Anycast Locate ("a/yl")
+    kUriBackboneAnswer,         ///< Backbone Answer / Backbone Notification ("b/ba")
+    kUriBackboneMlr,            ///< Backbone Multicast Listener Report ("b/bmr")
+    kUriBackboneQuery,          ///< Backbone Query ("b/bq")
+    kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
+    kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
+    kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
+    kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
+    kUriCommissionerPetition,   ///< Commissioner Petition ("c/cp")
+    kUriCommissionerSet,        ///< MGMT_COMMISSIONER_SET ("c/cs")
+    kUriDatasetChanged,         ///< MGMT_DATASET_CHANGED ("c/dc")
+    kUriEnergyReport,           ///< Energy Report ("c/er")
+    kUriEnergyScan,             ///< Energy Scan ("c/es")
+    kUriJoinerEntrust,          ///< Joiner Entrust  ("c/je")
+    kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
+    kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
+    kUriLeaderPetition,         ///< Leader Petition ("c/lp")
+    kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
+    kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
+    kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
+    kUriPendingSet,             ///< MGMT_PENDING_SET ("c/ps")
+    kUriRelayRx,                ///< Relay RX ("c/rx")
+    kUriRelayTx,                ///< Relay TX ("c/tx")
+    kUriProxyRx,                ///< Proxy RX ("c/ur")
+    kUriProxyTx,                ///< Proxy TX ("c/ut")
+    kUriDiagnosticGetAnswer,    ///< Network Diagnostic Get Answer ("d/da")
+    kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
+    kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
+    kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
+    kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
+    kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
+    kUriUnknown,                ///< Unknown URI
 };
+
+/**
+ * This function returns URI path string for a given URI.
+ *
+ * @param[in] aUri   A URI.
+ *
+ * @returns The path string for @p aUri.
+ *
+ */
+const char *PathForUri(Uri aUri);
+
+/**
+ * This function looks up the URI from a given path string.
+ *
+ * @param[in] aPath    A path string.
+ *
+ * @returns The URI associated with @p aPath or `kUriUnknown` if no match is found.
+ *
+ */
+Uri UriFromPath(const char *aPath);
+
+/**
+ * This template function converts a given URI to a human-readable string.
+ *
+ * @tparam kUri   The URI to convert to string.
+ *
+ * @returns The string representation of @p kUri.
+ *
+ */
+template <Uri kUri> const char *UriToString(void);
+
+// Declaring specializations of `UriToString` for every `Uri`
+template <> const char *UriToString<kUriAddressError>(void);
+template <> const char *UriToString<kUriAddressNotify>(void);
+template <> const char *UriToString<kUriAddressQuery>(void);
+template <> const char *UriToString<kUriAddressRelease>(void);
+template <> const char *UriToString<kUriAddressSolicit>(void);
+template <> const char *UriToString<kUriServerData>(void);
+template <> const char *UriToString<kUriAnycastLocate>(void);
+template <> const char *UriToString<kUriBackboneAnswer>(void);
+template <> const char *UriToString<kUriBackboneMlr>(void);
+template <> const char *UriToString<kUriBackboneQuery>(void);
+template <> const char *UriToString<kUriAnnounceBegin>(void);
+template <> const char *UriToString<kUriActiveGet>(void);
+template <> const char *UriToString<kUriActiveSet>(void);
+template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
+template <> const char *UriToString<kUriCommissionerGet>(void);
+template <> const char *UriToString<kUriCommissionerPetition>(void);
+template <> const char *UriToString<kUriCommissionerSet>(void);
+template <> const char *UriToString<kUriDatasetChanged>(void);
+template <> const char *UriToString<kUriEnergyReport>(void);
+template <> const char *UriToString<kUriEnergyScan>(void);
+template <> const char *UriToString<kUriJoinerEntrust>(void);
+template <> const char *UriToString<kUriJoinerFinalize>(void);
+template <> const char *UriToString<kUriLeaderKeepAlive>(void);
+template <> const char *UriToString<kUriLeaderPetition>(void);
+template <> const char *UriToString<kUriPanIdConflict>(void);
+template <> const char *UriToString<kUriPendingGet>(void);
+template <> const char *UriToString<kUriPanIdQuery>(void);
+template <> const char *UriToString<kUriPendingSet>(void);
+template <> const char *UriToString<kUriRelayRx>(void);
+template <> const char *UriToString<kUriRelayTx>(void);
+template <> const char *UriToString<kUriProxyRx>(void);
+template <> const char *UriToString<kUriProxyTx>(void);
+template <> const char *UriToString<kUriDiagnosticGetAnswer>(void);
+template <> const char *UriToString<kUriDiagnosticGetRequest>(void);
+template <> const char *UriToString<kUriDiagnosticGetQuery>(void);
+template <> const char *UriToString<kUriDiagnosticReset>(void);
+template <> const char *UriToString<kUriDuaRegistrationNotify>(void);
+template <> const char *UriToString<kUriDuaRegistrationRequest>(void);
+template <> const char *UriToString<kUriMlr>(void);
 
 } // namespace ot
 

@@ -43,6 +43,7 @@
 #include "cli_config.h"
 
 #include "common/binary_search.hpp"
+#include "common/num_utils.hpp"
 #include "common/string.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -68,11 +69,51 @@ constexpr static CommandId Cmd(const char *aString)
     return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
 }
 
+class Output;
+
 /**
- * This class is the base class for `Output` and `OutputWrapper` providing common helper methods.
+ * This class implements the basic output functions.
  *
  */
-class OutputBase
+class OutputImplementer
+{
+    friend class Output;
+
+public:
+    /**
+     * This constructor initializes the `OutputImplementer` object.
+     *
+     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
+     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
+     *
+     */
+    OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext);
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
+#else
+    void SetEmittingCommandOutput(bool) {}
+#endif
+
+private:
+    static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
+
+    void OutputV(const char *aFormat, va_list aArguments);
+
+    otCliOutputCallback mCallback;
+    void               *mCallbackContext;
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    char     mOutputString[kInputOutputLogStringSize];
+    uint16_t mOutputLength;
+    bool     mEmittingCommandOutput;
+#endif
+};
+
+/**
+ * This class provides CLI output helper methods.
+ *
+ */
+class Output
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg; ///< An argument
@@ -141,26 +182,18 @@ public:
         return (static_cast<uint16_t>(aEnum) < kLength) ? aTable[static_cast<uint16_t>(aEnum)] : aNotFound;
     }
 
-protected:
-    OutputBase(void) = default;
-};
-
-/**
- * This class provides CLI output helper methods.
- *
- */
-class Output : public OutputBase
-{
-public:
     /**
      * This constructor initializes the `Output` object.
      *
      * @param[in] aInstance           A pointer to OpenThread instance.
-     * @param[in] aCallback           A pointer to an `otCliOutputCallback` to deliver strings to the CLI console.
-     * @param[in] aCallbackContext    An arbitrary context to pass in when invoking @p aCallback.
+     * @param[in] aImplementer        An `OutputImplementer`.
      *
      */
-    Output(otInstance *aInstance, otCliOutputCallback aCallback, void *aCallbackContext);
+    Output(otInstance *aInstance, OutputImplementer &aImplementer)
+        : mInstance(aInstance)
+        , mImplementer(aImplementer)
+    {
+    }
 
     /**
      * This method returns the pointer to OpenThread instance.
@@ -171,13 +204,35 @@ public:
     otInstance *GetInstancePtr(void) { return mInstance; }
 
     /**
+     * This structure represents a buffer which is used when converting a `uint64` value to string in decimal format.
+     *
+     */
+    struct Uint64StringBuffer
+    {
+        static constexpr uint16_t kSize = 21; ///< Size of a buffer
+
+        char mChars[kSize]; ///< Char array (do not access the array directly).
+    };
+
+    /**
+     * This static method converts a `uint64_t` value to a decimal format string.
+     *
+     * @param[in] aUint64  The `uint64_t` value to convert.
+     * @param[in] aBuffer  A buffer to allocate the string from.
+     *
+     * @returns A pointer to the start of the string (null-terminated) representation of @p aUint64.
+     *
+     */
+    static const char *Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer);
+
+    /**
      * This method delivers a formatted output string to the CLI console.
      *
      * @param[in]  aFormat  A pointer to the format string.
      * @param[in]  ...      A variable list of arguments to format.
      *
      */
-    void OutputFormat(const char *aFormat, ...);
+    void OutputFormat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it prepends a given number
@@ -188,7 +243,7 @@ public:
      * @param[in]  ...           A variable list of arguments to format.
      *
      */
-    void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...);
+    void OutputFormat(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it also appends newline "\r\n").
@@ -197,7 +252,7 @@ public:
      * @param[in]  ...      A variable list of arguments to format.
      *
      */
-    void OutputLine(const char *aFormat, ...);
+    void OutputLine(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
     /**
      * This method delivers a formatted output string to the CLI console (to which it prepends a given number
@@ -208,7 +263,13 @@ public:
      * @param[in]  ...           A variable list of arguments to format.
      *
      */
-    void OutputLine(uint8_t aIndentSize, const char *aFormat, ...);
+    void OutputLine(uint8_t aIndentSize, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
+
+    /**
+     * This method delivered newline "\r\n" to the CLI console.
+     *
+     */
+    void OutputNewLine(void);
 
     /**
      * This method outputs a given number of space chars to the CLI console.
@@ -279,6 +340,22 @@ public:
      *
      */
     void OutputExtAddressLine(const otExtAddress &aExtAddress) { OutputBytesLine(aExtAddress.m8); }
+
+    /**
+     * This method outputs a `uint64_t` value in decimal format.
+     *
+     * @param[in] aUint64   The `uint64_t` value to output.
+     *
+     */
+    void OutputUint64(uint64_t aUint64);
+
+    /**
+     * This method outputs a `uint64_t` value in decimal format and at the end it also outputs newline "\r\n".
+     *
+     * @param[in] aUint64   The `uint64_t` value to output.
+     *
+     */
+    void OutputUint64Line(uint64_t aUint64);
 
     /**
      * This method outputs "Enabled" or "Disabled" status to the CLI console (it also appends newline "\r\n").
@@ -363,6 +440,32 @@ public:
      */
     void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
 
+    /**
+     * This structure represents a buffer which is used when converting an encoded rate value to percentage string.
+     *
+     */
+    struct PercentageStringBuffer
+    {
+        static constexpr uint16_t kSize = 7; ///< Size of a buffer
+
+        char mChars[kSize]; ///< Char array (do not access the array directly).
+    };
+
+    /**
+     * This static method converts an encoded value to a percentage representation.
+     *
+     * The encoded @p aValue is assumed to be linearly scaled such that `0` maps to 0% and `0xffff` maps to 100%.
+     *
+     * The resulting string provides two decimal accuracy, e.g., "100.00", "0.00", "75.37".
+     *
+     * @param[in] aValue   The encoded percentage value to convert.
+     * @param[in] aBuffer  A buffer to allocate the string from.
+     *
+     * @returns A pointer to the start of the string (null-terminated) representation of @p aValue.
+     *
+     */
+    static const char *PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer);
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
@@ -429,10 +532,8 @@ protected:
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);
-    void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
 #else
     void LogInput(const Arg *) {}
-    void SetEmittingCommandOutput(bool) {}
 #endif
 
 private:
@@ -441,96 +542,8 @@ private:
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);
 
-    otInstance *        mInstance;
-    otCliOutputCallback mCallback;
-    void *              mCallbackContext;
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    char     mOutputString[kInputOutputLogStringSize];
-    uint16_t mOutputLength;
-    bool     mEmittingCommandOutput;
-#endif
-};
-
-class OutputWrapper : public OutputBase
-{
-protected:
-    explicit OutputWrapper(Output &aOutput)
-        : mOutput(aOutput)
-    {
-    }
-
-    otInstance *GetInstancePtr(void) { return mOutput.GetInstancePtr(); }
-
-    template <typename... Args> void OutputFormat(const char *aFormat, Args... aArgs)
-    {
-        mOutput.OutputFormat(aFormat, aArgs...);
-    }
-
-    template <typename... Args> void OutputFormat(uint8_t aIndentSize, const char *aFormat, Args... aArgs)
-    {
-        mOutput.OutputFormat(aIndentSize, aFormat, aArgs...);
-    }
-
-    template <typename... Args> void OutputLine(const char *aFormat, Args... aArgs)
-    {
-        return mOutput.OutputLine(aFormat, aArgs...);
-    }
-
-    template <typename... Args> void OutputLine(uint8_t aIndentSize, const char *aFormat, Args... aArgs)
-    {
-        return mOutput.OutputLine(aIndentSize, aFormat, aArgs...);
-    }
-
-    template <uint8_t kBytesLength> void OutputBytes(const uint8_t (&aBytes)[kBytesLength])
-    {
-        mOutput.OutputBytes(aBytes, kBytesLength);
-    }
-
-    template <uint8_t kBytesLength> void OutputBytesLine(const uint8_t (&aBytes)[kBytesLength])
-    {
-        mOutput.OutputBytesLine(aBytes, kBytesLength);
-    }
-
-    void OutputSpaces(uint8_t aCount) { return mOutput.OutputSpaces(aCount); }
-    void OutputBytes(const uint8_t *aBytes, uint16_t aLength) { return mOutput.OutputBytes(aBytes, aLength); }
-    void OutputBytesLine(const uint8_t *aBytes, uint16_t aLength) { return mOutput.OutputBytesLine(aBytes, aLength); }
-    void OutputExtAddress(const otExtAddress &aExtAddress) { mOutput.OutputExtAddress(aExtAddress); }
-    void OutputExtAddressLine(const otExtAddress &aExtAddress) { mOutput.OutputExtAddressLine(aExtAddress); }
-    void OutputEnabledDisabledStatus(bool aEnabled) { mOutput.OutputEnabledDisabledStatus(aEnabled); }
-
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
-    void OutputIp6Address(const otIp6Address &aAddress) { mOutput.OutputIp6Address(aAddress); }
-    void OutputIp6AddressLine(const otIp6Address &aAddress) { mOutput.OutputIp6AddressLine(aAddress); }
-    void OutputIp6Prefix(const otIp6Prefix &aPrefix) { mOutput.OutputIp6Prefix(aPrefix); }
-    void OutputIp6PrefixLine(const otIp6Prefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
-    void OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6Prefix(aPrefix); }
-    void OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix) { mOutput.OutputIp6PrefixLine(aPrefix); }
-    void OutputSockAddr(const otSockAddr &aSockAddr) { mOutput.OutputSockAddr(aSockAddr); }
-    void OutputSockAddrLine(const otSockAddr &aSockAddr) { mOutput.OutputSockAddrLine(aSockAddr); }
-    void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
-    {
-        mOutput.OutputDnsTxtData(aTxtData, aTxtDataLength);
-    }
-#endif
-
-    template <uint8_t kTableNumColumns>
-    void OutputTableHeader(const char *const (&aTitles)[kTableNumColumns], const uint8_t (&aWidths)[kTableNumColumns])
-    {
-        mOutput.OutputTableHeader(aTitles, aWidths);
-    }
-
-    template <uint8_t kTableNumColumns> void OutputTableSeparator(const uint8_t (&aWidths)[kTableNumColumns])
-    {
-        mOutput.OutputTableSeparator(aWidths);
-    }
-
-    template <typename Cli, uint16_t kLength> void OutputCommandTable(const CommandEntry<Cli> (&aCommandTable)[kLength])
-    {
-        mOutput.OutputCommandTable(aCommandTable);
-    }
-
-private:
-    Output &mOutput;
+    otInstance        *mInstance;
+    OutputImplementer &mImplementer;
 };
 
 } // namespace Cli

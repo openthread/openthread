@@ -95,7 +95,7 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
 #if __SANITIZE_ADDRESS__ == 0
 
-    FILE * file = nullptr;
+    FILE  *file = nullptr;
     size_t readLength;
 
     VerifyOrExit(aOutput && aOutputLength, error = OT_ERROR_INVALID_ARGS);

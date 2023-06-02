@@ -70,7 +70,7 @@ typedef struct otUdpReceiver
 {
     struct otUdpReceiver *mNext;    ///< A pointer to the next UDP receiver (internal use only).
     otUdpHandler          mHandler; ///< A function pointer to the receiver callback.
-    void *                mContext; ///< A pointer to application-specific context.
+    void                 *mContext; ///< A pointer to application-specific context.
 } otUdpReceiver;
 
 /**
@@ -125,8 +125,8 @@ typedef struct otUdpSocket
     otSockAddr          mSockName; ///< The local IPv6 socket address.
     otSockAddr          mPeerName; ///< The peer IPv6 socket address.
     otUdpReceive        mHandler;  ///< A function pointer to the application callback.
-    void *              mContext;  ///< A pointer to application-specific context.
-    void *              mHandle;   ///< A handle to platform's UDP.
+    void               *mContext;  ///< A pointer to application-specific context.
+    void               *mHandle;   ///< A handle to platform's UDP.
     struct otUdpSocket *mNext;     ///< A pointer to the next UDP socket (internal use only).
 } otUdpSocket;
 
@@ -278,11 +278,11 @@ otUdpSocket *otUdpGetSockets(otInstance *aInstance);
  * @param[in]  aContext   A pointer to application-specific context.
  *
  */
-typedef void (*otUdpForwarder)(otMessage *   aMessage,
+typedef void (*otUdpForwarder)(otMessage    *aMessage,
                                uint16_t      aPeerPort,
                                otIp6Address *aPeerAddr,
                                uint16_t      aSockPort,
-                               void *        aContext);
+                               void         *aContext);
 
 /**
  * Set UDP forward callback to deliver UDP packets to host.
@@ -306,8 +306,8 @@ void otUdpForwardSetForwarder(otInstance *aInstance, otUdpForwarder aForwarder, 
  * @warning No matter the call success or fail, the message is freed.
  *
  */
-void otUdpForwardReceive(otInstance *        aInstance,
-                         otMessage *         aMessage,
+void otUdpForwardReceive(otInstance         *aInstance,
+                         otMessage          *aMessage,
                          uint16_t            aPeerPort,
                          const otIp6Address *aPeerAddr,
                          uint16_t            aSockPort);

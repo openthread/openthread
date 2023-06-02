@@ -80,7 +80,7 @@ public:
      * @param[in] aIpProto      The Internet Protocol value.
      *
      */
-    static void UpdateMessageChecksum(Message &           aMessage,
+    static void UpdateMessageChecksum(Message            &aMessage,
                                       const Ip6::Address &aSource,
                                       const Ip6::Address &aDestination,
                                       uint8_t             aIpProto);
@@ -96,7 +96,7 @@ public:
      * @param[in] aIpProto      The Internet Protocol value.
      *
      */
-    static void UpdateMessageChecksum(Message &           aMessage,
+    static void UpdateMessageChecksum(Message            &aMessage,
                                       const Ip4::Address &aSource,
                                       const Ip4::Address &aDestination,
                                       uint8_t             aIpProto);
@@ -124,11 +124,11 @@ private:
     void     Calculate(const Ip6::Address &aSource,
                        const Ip6::Address &aDestination,
                        uint8_t             aIpProto,
-                       const Message &     aMessage);
+                       const Message      &aMessage);
     void     Calculate(const Ip4::Address &aSource,
                        const Ip4::Address &aDestination,
                        uint8_t             aIpProto,
-                       const Message &     aMessage);
+                       const Message      &aMessage);
 
     static constexpr uint16_t kValidRxChecksum = 0xffff;
 

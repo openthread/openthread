@@ -38,8 +38,8 @@
 
 #include <openthread/thread_ftd.h>
 
-#include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
+#include "common/callback.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "common/trickle_timer.hpp"
@@ -52,6 +52,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
+#include "thread/tmf.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -77,6 +78,7 @@ class MleRouter : public Mle
     friend class Mle;
     friend class ot::Instance;
     friend class ot::TimeTicker;
+    friend class Tmf::Agent;
 
 public:
     /**
@@ -117,7 +119,7 @@ public:
      * @retval FALSE  It is a child or is not a single router in the network.
      *
      */
-    bool IsSingleton(void);
+    bool IsSingleton(void) const;
 
     /**
      * This method generates an Address Solicit request for a Router ID.
@@ -142,6 +144,22 @@ public:
     Error BecomeLeader(void);
 
     /**
+     * This method gets the device properties which are used to determine the Leader Weight.
+     *
+     * @returns The current device properties.
+     *
+     */
+    const DeviceProperties &GetDeviceProperties(void) const { return mDeviceProperties; }
+
+    /**
+     * This method sets the device properties which are then used to determine and set the Leader Weight.
+     *
+     * @param[in]  aDeviceProperties    The device properties.
+     *
+     */
+    void SetDeviceProperties(const DeviceProperties &aDeviceProperties);
+
+    /**
      * This method returns the Leader Weighting value for this Thread interface.
      *
      * @returns The Leader Weighting value for this Thread interface.
@@ -151,6 +169,9 @@ public:
 
     /**
      * This method sets the Leader Weighting value for this Thread interface.
+     *
+     * This method directly sets the Leader Weight to the new value replacing its previous value (which may have been
+     * determined from a previous call to `SetDeviceProperties()`).
      *
      * @param[in]  aWeight  The Leader Weighting value.
      *
@@ -220,7 +241,7 @@ public:
      * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
      *
      */
-    uint16_t GetNextHop(uint16_t aDestination);
+    uint16_t GetNextHop(uint16_t aDestination) { return mRouterTable.GetNextHop(aDestination); }
 
     /**
      * This method returns the NETWORK_ID_TIMEOUT value.
@@ -237,36 +258,6 @@ public:
      *
      */
     void SetNetworkIdTimeout(uint8_t aTimeout) { mNetworkIdTimeout = aTimeout; }
-
-    /**
-     * This method returns the route cost to a RLOC16.
-     *
-     * @param[in]  aRloc16  The RLOC16 of the destination.
-     *
-     * @returns The route cost to a RLOC16.
-     *
-     */
-    uint8_t GetRouteCost(uint16_t aRloc16) const;
-
-    /**
-     * This method returns the link cost to the given Router.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @returns The link cost to the Router.
-     *
-     */
-    uint8_t GetLinkCost(uint8_t aRouterId);
-
-    /**
-     * This method returns the minimum cost to the given router.
-     *
-     * @param[in]  aRloc16  The short address of the given router.
-     *
-     * @returns The minimum cost to the given router (via direct link or forwarding).
-     *
-     */
-    uint8_t GetCost(uint16_t aRloc16);
 
     /**
      * This method returns the ROUTER_SELECTION_JITTER value.
@@ -323,6 +314,24 @@ public:
      *
      */
     void SetRouterDowngradeThreshold(uint8_t aThreshold) { mRouterDowngradeThreshold = aThreshold; }
+
+    /**
+     * This method returns the MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @returns The MLE_CHILD_ROUTER_LINKS value.
+     *
+     */
+    uint8_t GetChildRouterLinks(void) const { return mChildRouterLinks; }
+
+    /**
+     * This method sets the MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @param[in]  aChildRouterLinks  The MLE_CHILD_ROUTER_LINKS value.
+     *
+     * @retval kErrorNone          Successfully set the value.
+     * @retval kErrorInvalidState  Thread protocols are enabled.
+     */
+    Error SetChildRouterLinks(uint8_t aChildRouterLinks);
 
     /**
      * This method returns if the REED is expected to become Router soon.
@@ -419,14 +428,6 @@ public:
     void FillConnectivityTlv(ConnectivityTlv &aTlv);
 
     /**
-     * This method fills an RouteTlv.
-     *
-     * @param[out]  aTlv  A reference to the tlv to be filled.
-     *
-     */
-    void FillRouteTlv(RouteTlv &aTlv, Neighbor *aNeighbor = nullptr);
-
-    /**
      * This method generates an MLE Child Update Request message to be sent to the parent.
      *
      * @retval kErrorNone     Successfully generated an MLE Child Update Request message.
@@ -490,8 +491,7 @@ public:
      */
     void SetDiscoveryRequestCallback(otThreadDiscoveryRequestCallback aCallback, void *aContext)
     {
-        mDiscoveryRequestCallback        = aCallback;
-        mDiscoveryRequestCallbackContext = aContext;
+        mDiscoveryRequestCallback.Set(aCallback, aContext);
     }
 
     /**
@@ -499,16 +499,6 @@ public:
      *
      */
     void ResetAdvertiseInterval(void);
-
-    /**
-     * This static method converts link quality to route cost.
-     *
-     * @param[in]  aLinkQuality  The link quality.
-     *
-     * @returns The link cost corresponding to @p aLinkQuality.
-     *
-     */
-    static uint8_t LinkQualityToCost(uint8_t aLinkQuality);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -570,24 +560,25 @@ public:
     void SetThreadVersionCheckEnabled(bool aEnabled) { mThreadVersionCheckEnabled = aEnabled; }
 #endif
 
-    /**
-     * This function sends an Address Release.
-     *
-     * @param[in] aResponseHandler        A pointer to a function that is called upon response reception or time-out.
-     * @param[in] aResponseHandlerContext A pointer to callback application-specific context.
-     *
-     */
-    void SendAddressRelease(Coap::ResponseHandler aResponseHandler = nullptr, void *aResponseHandlerContext = nullptr);
-
 private:
-    static constexpr uint16_t kDiscoveryMaxJitter            = 250;  // Max jitter delay Discovery Responses (in msec).
-    static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
-    static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
+    static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
+    static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
+    static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
     // Network Data).
     static constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
+
+    static constexpr uint8_t kLinkRequestMinMargin    = OPENTHREAD_CONFIG_MLE_LINK_REQUEST_MARGIN_MIN;
+    static constexpr uint8_t kPartitionMergeMinMargin = OPENTHREAD_CONFIG_MLE_PARTITION_MERGE_MARGIN_MIN;
+    static constexpr uint8_t kChildRouterLinks        = OPENTHREAD_CONFIG_MLE_CHILD_ROUTER_LINKS;
+    static constexpr uint8_t kMaxChildIpAddresses     = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
+
+    static constexpr uint8_t kMinCriticalChildrenCount = 6;
+
+    static constexpr uint16_t kChildSupervisionDefaultIntervalForOlderVersion =
+        OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL;
 
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
@@ -595,7 +586,7 @@ private:
     void  HandleLinkAccept(RxInfo &aRxInfo);
     Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
     void  HandleLinkAcceptAndRequest(RxInfo &aRxInfo);
-    Error HandleAdvertisement(RxInfo &aRxInfo);
+    Error HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, const LeaderData &aLeaderData);
     void  HandleParentRequest(RxInfo &aRxInfo);
     void  HandleChildIdRequest(RxInfo &aRxInfo);
     void  HandleChildUpdateRequest(RxInfo &aRxInfo);
@@ -607,62 +598,57 @@ private:
     void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
-    Error ProcessRouteTlv(RxInfo &aRxInfo);
-    Error ProcessRouteTlv(RxInfo &aRxInfo, RouteTlv &aRouteTlv);
+    Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
+    Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
+
     void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
-    void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
+    void  SendAddressSolicitResponse(const Coap::Message    &aRequest,
                                      ThreadStatusTlv::Status aResponseStatus,
-                                     const Router *          aRouter,
+                                     const Router           *aRouter,
                                      const Ip6::MessageInfo &aMessageInfo);
+    void  SendAddressRelease(void);
     void  SendAdvertisement(void);
     Error SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
-                         Neighbor *              aNeighbor,
-                         const RequestedTlvs &   aRequestedTlvs,
-                         const Challenge &       aChallenge);
+                         Neighbor               *aNeighbor,
+                         const TlvList          &aRequestedTlvList,
+                         const Challenge        &aChallenge);
     void  SendParentResponse(Child *aChild, const Challenge &aChallenge, bool aRoutersOnlyRequest);
     Error SendChildIdResponse(Child &aChild);
     Error SendChildUpdateRequest(Child &aChild);
-    void  SendChildUpdateResponse(Child *                 aChild,
+    void  SendChildUpdateResponse(Child                  *aChild,
                                   const Ip6::MessageInfo &aMessageInfo,
-                                  const uint8_t *         aTlvs,
-                                  uint8_t                 aTlvsLength,
-                                  const Challenge &       aChallenge);
+                                  const TlvList          &aTlvList,
+                                  const Challenge        &aChallenge);
     void  SendDataResponse(const Ip6::Address &aDestination,
-                           const uint8_t *     aTlvs,
-                           uint8_t             aTlvsLength,
+                           const TlvList      &aTlvList,
                            uint16_t            aDelay,
-                           const Message *     aRequestMessage = nullptr);
+                           const Message      *aRequestMessage = nullptr);
     Error SendDiscoveryResponse(const Ip6::Address &aDestination, const Message &aDiscoverRequestMessage);
     void  SetStateRouter(uint16_t aRloc16);
     void  SetStateLeader(uint16_t aRloc16, LeaderStartMode aStartMode);
+    void  SetStateRouterOrLeader(DeviceRole aRole, uint16_t aRloc16, LeaderStartMode aStartMode);
     void  StopLeader(void);
     void  SynchronizeChildNetworkData(void);
-    Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, Child &aChild);
-    void  UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId);
-    bool  UpdateLinkQualityOut(const RouteTlv &aRoute, Router &aNeighbor, bool &aResetAdvInterval);
+    Error ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild);
+    Error UpdateChildAddresses(const Message &aMessage, uint16_t aOffset, uint16_t aLength, Child &aChild);
     bool  HasNeighborWithGoodLinkQuality(void) const;
 
-    static void HandleAddressSolicitResponse(void *               aContext,
-                                             otMessage *          aMessage,
+    static void HandleAddressSolicitResponse(void                *aContext,
+                                             otMessage           *aMessage,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult);
     void HandleAddressSolicitResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
-    static void HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    static void HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void        HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static bool IsSingleton(const RouteTlv &aRouteTlv);
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void HandlePartitionChange(void);
 
     void SetChildStateToValid(Child &aChild);
     bool HasChildren(void);
     void RemoveChildren(void);
-    bool HasMinDowngradeNeighborRouters(void);
-    bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
-    bool HasSmallNumberOfChildren(void);
+    bool ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) const;
+    bool NeighborHasComparableConnectivity(const RouteTlv &aRouteTlv, uint8_t aNeighborId) const;
 
     static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
     void        HandleAdvertiseTrickleTimer(void);
@@ -670,8 +656,7 @@ private:
 
     TrickleTimer mAdvertiseTrickleTimer;
 
-    Coap::Resource mAddressSolicit;
-    Coap::Resource mAddressRelease;
+    DeviceProperties mDeviceProperties;
 
     ChildTable  mChildTable;
     RouterTable mRouterTable;
@@ -704,7 +689,7 @@ private:
     uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
     uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
 
-    uint8_t mLinkRequestDelay;
+    uint8_t mChildRouterLinks;
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -718,9 +703,11 @@ private:
     MeshCoP::SteeringData mSteeringData;
 #endif
 
-    otThreadDiscoveryRequestCallback mDiscoveryRequestCallback;
-    void *                           mDiscoveryRequestCallbackContext;
+    Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 };
+
+DeclareTmfHandler(MleRouter, kUriAddressSolicit);
+DeclareTmfHandler(MleRouter, kUriAddressRelease);
 
 #endif // OPENTHREAD_FTD
 
@@ -740,8 +727,6 @@ public:
     bool IsSingleton(void) const { return false; }
 
     uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
-
-    uint8_t GetCost(uint16_t) { return 0; }
 
     Error RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
     void  RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }

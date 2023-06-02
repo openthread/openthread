@@ -41,6 +41,7 @@
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/new.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "net/dns_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -85,24 +86,19 @@ static Dns::UpdateHeader::Response ErrorToDnsResponseCode(Error aError)
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mServiceUpdateHandler(nullptr)
-    , mServiceUpdateHandlerContext(nullptr)
-    , mLeaseTimer(aInstance, HandleLeaseTimer)
-    , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
+    , mLeaseTimer(aInstance)
+    , mOutstandingUpdatesTimer(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mPort(kUdpPortMin)
     , mState(kStateDisabled)
     , mAddressMode(kDefaultAddressMode)
     , mAnycastSequenceNumber(0)
     , mHasRegisteredAnyService(false)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mAutoEnable(false)
+#endif
 {
     IgnoreError(SetDomain(kDefaultDomain));
-}
-
-void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
-{
-    mServiceUpdateHandler        = aServiceHandler;
-    mServiceUpdateHandlerContext = aServiceHandlerContext;
 }
 
 Error Server::SetAddressMode(AddressMode aMode)
@@ -133,40 +129,70 @@ exit:
 
 void Server::SetEnabled(bool aEnabled)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    mAutoEnable = false;
+#endif
+
     if (aEnabled)
     {
-        VerifyOrExit(mState == kStateDisabled);
-        mState = kStateStopped;
-
-        // Request publishing of "DNS/SRP Address Service" entry in the
-        // Thread Network Data based of `mAddressMode`. Then wait for
-        // callback `HandleNetDataPublisherEntryChange()` from the
-        // `Publisher` to start the SRP server.
-
-        switch (mAddressMode)
-        {
-        case kAddressModeUnicast:
-            SelectPort();
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
-            break;
-
-        case kAddressModeAnycast:
-            mPort = kAnycastAddressModePort;
-            Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
-            break;
-        }
+        Enable();
     }
     else
     {
-        VerifyOrExit(mState != kStateDisabled);
-        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
-        Stop();
-        mState = kStateDisabled;
+        Disable();
+    }
+}
+
+void Server::Enable(void)
+{
+    VerifyOrExit(mState == kStateDisabled);
+    mState = kStateStopped;
+
+    // Request publishing of "DNS/SRP Address Service" entry in the
+    // Thread Network Data based of `mAddressMode`. Then wait for
+    // callback `HandleNetDataPublisherEntryChange()` from the
+    // `Publisher` to start the SRP server.
+
+    switch (mAddressMode)
+    {
+    case kAddressModeUnicast:
+        SelectPort();
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        break;
+
+    case kAddressModeAnycast:
+        mPort = kAnycastAddressModePort;
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+        break;
     }
 
 exit:
     return;
 }
+
+void Server::Disable(void)
+{
+    VerifyOrExit(mState != kStateDisabled);
+    Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+    Stop();
+    mState = kStateDisabled;
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void Server::SetAutoEnableMode(bool aEnabled)
+{
+    VerifyOrExit(mAutoEnable != aEnabled);
+    mAutoEnable = aEnabled;
+
+    Get<BorderRouter::RoutingManager>().HandleSrpServerAutoEnableMode();
+
+exit:
+    return;
+}
+#endif
 
 Server::TtlConfig::TtlConfig(void)
 {
@@ -189,7 +215,7 @@ uint32_t Server::TtlConfig::GrantTtl(uint32_t aLease, uint32_t aTtl) const
 {
     OT_ASSERT(mMinTtl <= mMaxTtl);
 
-    return OT_MAX(mMinTtl, OT_MIN(OT_MIN(mMaxTtl, aLease), aTtl));
+    return Clamp(Min(aTtl, aLease), mMinTtl, mMaxTtl);
 }
 
 Server::LeaseConfig::LeaseConfig(void)
@@ -222,14 +248,14 @@ uint32_t Server::LeaseConfig::GrantLease(uint32_t aLease) const
 {
     OT_ASSERT(mMinLease <= mMaxLease);
 
-    return (aLease == 0) ? 0 : OT_MAX(mMinLease, OT_MIN(mMaxLease, aLease));
+    return (aLease == 0) ? 0 : Clamp(aLease, mMinLease, mMaxLease);
 }
 
 uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
 {
     OT_ASSERT(mMinKeyLease <= mMaxKeyLease);
 
-    return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
+    return (aKeyLease == 0) ? 0 : Clamp(aKeyLease, mMinKeyLease, mMaxKeyLease);
 }
 
 Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
@@ -308,12 +334,12 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyS
         LogInfo("Fully remove host %s", aHost->GetFullName());
     }
 
-    if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
+    if (aNotifyServiceHandler && mServiceUpdateHandler.IsSet())
     {
         uint32_t updateId = AllocateId();
 
-        LogInfo("SRP update handler is notified (updatedId = %u)", updateId);
-        mServiceUpdateHandler(updateId, aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
+        mServiceUpdateHandler.Invoke(updateId, aHost, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
         // host/service update result. Because removing a host should fail
@@ -372,13 +398,14 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
     }
     else
     {
-        LogInfo("Delayed SRP host update result, the SRP update has been committed (updateId = %u)", aId);
+        LogInfo("Delayed SRP host update result, the SRP update has been committed (updateId = %lu)", ToUlong(aId));
     }
 }
 
 void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
 {
-    LogInfo("Handler result of SRP update (id = %u) is received: %s", aUpdate->GetId(), ErrorToString(aError));
+    LogInfo("Handler result of SRP update (id = %lu) is received: %s", ToUlong(aUpdate->GetId()),
+            ErrorToString(aError));
 
     IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
     CommitSrpUpdate(aError, *aUpdate);
@@ -408,26 +435,26 @@ void Server::CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata)
 }
 
 void Server::CommitSrpUpdate(Error                    aError,
-                             Host &                   aHost,
+                             Host                    &aHost,
                              const Dns::UpdateHeader &aDnsHeader,
-                             const Ip6::MessageInfo * aMessageInfo,
-                             const TtlConfig &        aTtlConfig,
-                             const LeaseConfig &      aLeaseConfig)
+                             const Ip6::MessageInfo  *aMessageInfo,
+                             const TtlConfig         &aTtlConfig,
+                             const LeaseConfig       &aLeaseConfig)
 {
-    Host *   existingHost;
-    uint32_t hostLease;
-    uint32_t hostKeyLease;
-    uint32_t grantedLease;
-    uint32_t grantedKeyLease;
+    Host    *existingHost;
     uint32_t grantedTtl;
-    bool     shouldFreeHost = true;
+    uint32_t hostLease       = 0;
+    uint32_t hostKeyLease    = 0;
+    uint32_t grantedLease    = 0;
+    uint32_t grantedKeyLease = 0;
+    bool     shouldFreeHost  = true;
 
     SuccessOrExit(aError);
 
     hostLease       = aHost.GetLease();
     hostKeyLease    = aHost.GetKeyLease();
     grantedLease    = aLeaseConfig.GrantLease(hostLease);
-    grantedKeyLease = aLeaseConfig.GrantKeyLease(hostKeyLease);
+    grantedKeyLease = aHost.ShouldUseShortLeaseOption() ? grantedLease : aLeaseConfig.GrantKeyLease(hostKeyLease);
     grantedTtl      = aTtlConfig.GrantTtl(grantedLease, aHost.GetTtl());
 
     aHost.SetLease(grantedLease);
@@ -496,7 +523,7 @@ exit:
     {
         if (aError == kErrorNone && !(grantedLease == hostLease && grantedKeyLease == hostKeyLease))
         {
-            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, *aMessageInfo);
+            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, aHost.ShouldUseShortLeaseOption(), *aMessageInfo);
         }
         else
         {
@@ -564,7 +591,7 @@ void Server::PrepareSocket(void)
 
     VerifyOrExit(!mSocket.IsOpen());
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    error = mSocket.Bind(mPort, OT_NETIF_THREAD);
+    error = mSocket.Bind(mPort, Ip6::kNetifThread);
 
 exit:
     if (error != kErrorNone)
@@ -700,7 +727,7 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
 
     if (FindOutstandingUpdate(aMetadata) != nullptr)
     {
-        LogInfo("Drop duplicated SRP update request: MessageId=%hu", aMetadata.mDnsHeader.GetMessageId());
+        LogInfo("Drop duplicated SRP update request: MessageId=%u", aMetadata.mDnsHeader.GetMessageId());
 
         // Silently drop duplicate requests.
         // This could rarely happen, because the outstanding SRP update timer should
@@ -793,11 +820,11 @@ exit:
     return error;
 }
 
-Error Server::ProcessHostDescriptionInstruction(Host &                 aHost,
-                                                const Message &        aMessage,
+Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
+                                                const Message         &aMessage,
                                                 const MessageMetadata &aMetadata) const
 {
-    Error    error;
+    Error    error  = kErrorNone;
     uint16_t offset = aMetadata.mOffset;
 
     OT_ASSERT(aHost.GetFullName() == nullptr);
@@ -879,8 +906,8 @@ exit:
     return error;
 }
 
-Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
-                                                  const Message &        aMessage,
+Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
+                                                  const Message         &aMessage,
                                                   const MessageMetadata &aMetadata) const
 {
     Error    error  = kErrorNone;
@@ -891,8 +918,8 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         char           serviceName[Dns::Name::kMaxNameSize];
         char           instanceName[Dns::Name::kMaxNameSize];
         Dns::PtrRecord ptrRecord;
-        const char *   subServiceName;
-        Service *      service;
+        const char    *subServiceName;
+        Service       *service;
         bool           isSubType;
 
         SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, serviceName, sizeof(serviceName)));
@@ -930,10 +957,8 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                 aHost,
         }
 
         // Verify that instance name and service name are related.
-
-        VerifyOrExit(
-            StringEndsWith(instanceName, isSubType ? subServiceName : serviceName, kStringCaseInsensitiveMatch),
-            error = kErrorFailed);
+        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName, isSubType ? subServiceName : serviceName),
+                     error = kErrorFailed);
 
         // Ensure the same service does not exist already.
         VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);
@@ -959,8 +984,8 @@ exit:
     return error;
 }
 
-Error Server::ProcessServiceDescriptionInstructions(Host &           aHost,
-                                                    const Message &  aMessage,
+Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
+                                                    const Message   &aMessage,
                                                     MessageMetadata &aMetadata) const
 {
     Error    error  = kErrorNone;
@@ -1091,14 +1116,17 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
 
     SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
     SuccessOrExit(error = aMessage.Read(offset, optRecord));
-    SuccessOrExit(error = aMessage.Read(offset + sizeof(optRecord), leaseOption));
-    VerifyOrExit(leaseOption.IsValid(), error = kErrorFailed);
-    VerifyOrExit(optRecord.GetSize() == sizeof(optRecord) + sizeof(leaseOption), error = kErrorParse);
+
+    SuccessOrExit(error = leaseOption.ReadFrom(aMessage, offset + sizeof(optRecord), optRecord.GetLength()));
 
     offset += optRecord.GetSize();
 
     aHost->SetLease(leaseOption.GetLeaseInterval());
     aHost->SetKeyLease(leaseOption.GetKeyLeaseInterval());
+
+    // If the client included the short variant of Lease Option,
+    // server must also use the short variant in its response.
+    aHost->SetUseShortLeaseOption(leaseOption.IsShortVariant());
 
     if (aHost->GetLease() > 0)
     {
@@ -1150,12 +1178,12 @@ exit:
 }
 
 Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
-                              const Message &               aMessage,
+                              const Message                &aMessage,
                               Dns::UpdateHeader             aDnsHeader,
                               uint16_t                      aSigOffset,
                               uint16_t                      aSigRdataOffset,
                               uint16_t                      aSigRdataLength,
-                              const char *                  aSignerName) const
+                              const char                   *aSignerName) const
 {
     Error                          error;
     uint16_t                       offset = aMessage.GetOffset();
@@ -1163,7 +1191,7 @@ Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
     Crypto::Sha256                 sha256;
     Crypto::Sha256::Hash           hash;
     Crypto::Ecdsa::P256::Signature signature;
-    Message *                      signerNameMessage = nullptr;
+    Message                       *signerNameMessage = nullptr;
 
     VerifyOrExit(aSigRdataLength >= Crypto::Ecdsa::P256::Signature::kSize, error = kErrorInvalidArgs);
 
@@ -1174,7 +1202,7 @@ Error Server::VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
 
     // The uncompressed (canonical) form of the signer name should be used for signature
     // verification. See https://tools.ietf.org/html/rfc2931#section-3.1 for details.
-    signerNameMessage = Get<Ip6::Udp>().NewMessage(0);
+    signerNameMessage = Get<Ip6::Udp>().NewMessage();
     VerifyOrExit(signerNameMessage != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = Dns::Name::AppendName(aSignerName, *signerNameMessage));
     sha256.Update(*signerNameMessage, signerNameMessage->GetOffset(), signerNameMessage->GetLength());
@@ -1297,7 +1325,50 @@ exit:
 
 void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const MessageMetadata &aMetadata)
 {
-    if ((aError == kErrorNone) && (mServiceUpdateHandler != nullptr))
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    if (aError == kErrorNone)
+    {
+        uint8_t             numAddrs;
+        const Ip6::Address *addrs;
+
+        LogInfo("Processed DNS update info");
+        LogInfo("    Host:%s", aHost.GetFullName());
+        LogInfo("    Lease:%lu, key-lease:%lu, ttl:%lu", ToUlong(aHost.GetLease()), ToUlong(aHost.GetKeyLease()),
+                ToUlong(aHost.GetTtl()));
+
+        addrs = aHost.GetAddresses(numAddrs);
+
+        if (numAddrs == 0)
+        {
+            LogInfo("    No host address");
+        }
+        else
+        {
+            LogInfo("    %d host address(es):", numAddrs);
+
+            for (; numAddrs > 0; addrs++, numAddrs--)
+            {
+                LogInfo("      %s", addrs->ToString().AsCString());
+            }
+        }
+
+        for (const Service &service : aHost.GetServices())
+        {
+            char subLabel[Dns::Name::kMaxLabelSize];
+
+            IgnoreError(service.GetServiceSubTypeLabel(subLabel, sizeof(subLabel)));
+
+            LogInfo("    %s service '%s'%s%s", service.IsDeleted() ? "Deleting" : "Adding", service.GetInstanceName(),
+                    service.IsSubType() ? " subtype:" : "", subLabel);
+        }
+    }
+    else
+    {
+        LogInfo("Error %s processing received DNS update", ErrorToString(aError));
+    }
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
+    if ((aError == kErrorNone) && mServiceUpdateHandler.IsSet())
     {
         UpdateMetadata *update = UpdateMetadata::Allocate(GetInstance(), aHost, aMetadata);
 
@@ -1306,8 +1377,8 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
             mOutstandingUpdates.Push(*update);
             mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
 
-            LogInfo("SRP update handler is notified (updatedId = %u)", update->GetId());
-            mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+            LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(update->GetId()));
+            mServiceUpdateHandler.Invoke(update->GetId(), &aHost, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
             ExitNow();
         }
 
@@ -1320,15 +1391,15 @@ exit:
     return;
 }
 
-void Server::SendResponse(const Dns::UpdateHeader &   aHeader,
+void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
                           Dns::UpdateHeader::Response aResponseCode,
-                          const Ip6::MessageInfo &    aMessageInfo)
+                          const Ip6::MessageInfo     &aMessageInfo)
 {
     Error             error;
-    Message *         response = nullptr;
+    Message          *response = nullptr;
     Dns::UpdateHeader header;
 
-    response = GetSocket().NewMessage(0);
+    response = GetSocket().NewMessage();
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     header.SetMessageId(aHeader.GetMessageId());
@@ -1361,15 +1432,17 @@ exit:
 void Server::SendResponse(const Dns::UpdateHeader &aHeader,
                           uint32_t                 aLease,
                           uint32_t                 aKeyLease,
-                          const Ip6::MessageInfo & aMessageInfo)
+                          bool                     mUseShortLeaseOption,
+                          const Ip6::MessageInfo  &aMessageInfo)
 {
     Error             error;
-    Message *         response = nullptr;
+    Message          *response = nullptr;
     Dns::UpdateHeader header;
     Dns::OptRecord    optRecord;
     Dns::LeaseOption  leaseOption;
+    uint16_t          optionSize;
 
-    response = GetSocket().NewMessage(0);
+    response = GetSocket().NewMessage();
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     header.SetMessageId(aHeader.GetMessageId());
@@ -1385,17 +1458,25 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     optRecord.Init();
     optRecord.SetUdpPayloadSize(kUdpPayloadSize);
     optRecord.SetDnsSecurityFlag();
-    optRecord.SetLength(sizeof(Dns::LeaseOption));
-    SuccessOrExit(error = response->Append(optRecord));
 
-    leaseOption.Init();
-    leaseOption.SetLeaseInterval(aLease);
-    leaseOption.SetKeyLeaseInterval(aKeyLease);
-    SuccessOrExit(error = response->Append(leaseOption));
+    if (mUseShortLeaseOption)
+    {
+        leaseOption.InitAsShortVariant(aLease);
+    }
+    else
+    {
+        leaseOption.InitAsLongVariant(aLease, aKeyLease);
+    }
+
+    optionSize = static_cast<uint16_t>(leaseOption.GetSize());
+    optRecord.SetLength(optionSize);
+
+    SuccessOrExit(error = response->Append(optRecord));
+    SuccessOrExit(error = response->AppendBytes(&leaseOption, optionSize));
 
     SuccessOrExit(error = GetSocket().SendTo(*response, aMessageInfo));
 
-    LogInfo("Send success response with granted lease: %u and key lease: %u", aLease, aKeyLease);
+    LogInfo("Send success response with granted lease: %lu and key lease: %lu", ToUlong(aLease), ToUlong(aKeyLease));
 
     UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
@@ -1427,10 +1508,10 @@ Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessage
     return ProcessMessage(aMessage, TimerMilli::GetNow(), mTtlConfig, mLeaseConfig, &aMessageInfo);
 }
 
-Error Server::ProcessMessage(Message &               aMessage,
+Error Server::ProcessMessage(Message                &aMessage,
                              TimeMilli               aRxTime,
-                             const TtlConfig &       aTtlConfig,
-                             const LeaseConfig &     aLeaseConfig,
+                             const TtlConfig        &aTtlConfig,
+                             const LeaseConfig      &aLeaseConfig,
                              const Ip6::MessageInfo *aMessageInfo)
 {
     Error           error;
@@ -1454,16 +1535,11 @@ exit:
     return error;
 }
 
-void Server::HandleLeaseTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleLeaseTimer();
-}
-
 void Server::HandleLeaseTimer(void)
 {
     TimeMilli now                = TimerMilli::GetNow();
     TimeMilli earliestExpireTime = now.GetDistantFuture();
-    Host *    nextHost;
+    Host     *nextHost;
 
     for (Host *host = mHosts.GetHead(); host != nullptr; host = nextHost)
     {
@@ -1482,7 +1558,7 @@ void Server::HandleLeaseTimer(void)
 
             Service *next;
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
 
             // Check if any service instance name expired.
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
@@ -1498,7 +1574,7 @@ void Server::HandleLeaseTimer(void)
                 }
                 else
                 {
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
             }
         }
@@ -1515,7 +1591,7 @@ void Server::HandleLeaseTimer(void)
 
             RemoveHost(host, kRetainName, kNotifyServiceHandler);
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
         }
         else
         {
@@ -1525,7 +1601,7 @@ void Server::HandleLeaseTimer(void)
 
             OT_ASSERT(!host->IsDeleted());
 
-            earliestExpireTime = OT_MIN(earliestExpireTime, host->GetExpireTime());
+            earliestExpireTime = Min(earliestExpireTime, host->GetExpireTime());
 
             for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
             {
@@ -1539,7 +1615,7 @@ void Server::HandleLeaseTimer(void)
                 else if (service->mIsDeleted)
                 {
                     // The service has been deleted but the name retains.
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
                 else if (service->GetExpireTime() <= now)
                 {
@@ -1547,11 +1623,11 @@ void Server::HandleLeaseTimer(void)
 
                     // The service is expired, delete it.
                     host->RemoveService(service, kRetainName, kNotifyServiceHandler);
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetKeyExpireTime());
                 }
                 else
                 {
-                    earliestExpireTime = OT_MIN(earliestExpireTime, service->GetExpireTime());
+                    earliestExpireTime = Min(earliestExpireTime, service->GetExpireTime());
                 }
             }
         }
@@ -1562,7 +1638,7 @@ void Server::HandleLeaseTimer(void)
         OT_ASSERT(earliestExpireTime >= now);
         if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
         {
-            LogInfo("Lease timer is scheduled for %u seconds", Time::MsecToSec(earliestExpireTime - now));
+            LogInfo("Lease timer is scheduled for %lu seconds", ToUlong(Time::MsecToSec(earliestExpireTime - now)));
             mLeaseTimer.StartAt(earliestExpireTime, 0);
         }
     }
@@ -1573,16 +1649,11 @@ void Server::HandleLeaseTimer(void)
     }
 }
 
-void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
-{
-    aTimer.Get<Server>().HandleOutstandingUpdatesTimer();
-}
-
 void Server::HandleOutstandingUpdatesTimer(void)
 {
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
-        LogInfo("Outstanding service update timeout (updateId = %u)", mOutstandingUpdates.GetTail()->GetId());
+        LogInfo("Outstanding service update timeout (updateId = %lu)", ToUlong(mOutstandingUpdates.GetTail()->GetId()));
         HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), kErrorResponseTimeout);
     }
 }
@@ -1686,13 +1757,22 @@ TimeMilli Server::Service::GetKeyExpireTime(void) const
 void Server::Service::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!mIsDeleted)
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 bool Server::Service::MatchesInstanceName(const char *aInstanceName) const
@@ -1741,7 +1821,7 @@ void Server::Service::Log(Action aAction) const
         "Update existing",           // (1) kUpdateExisting
         "Remove but retain name of", // (2) kRemoveButRetainName
         "Fully remove",              // (3) kFullyRemove
-        "LEASE expired for ",        // (4) kLeaseExpired
+        "LEASE expired for",         // (4) kLeaseExpired
         "KEY LEASE expired for",     // (5) kKeyLeaseExpired
     };
 
@@ -1768,9 +1848,7 @@ void Server::Service::Log(Action aAction) const
     }
 }
 #else
-void Server::Service::Log(Action) const
-{
-}
+void Server::Service::Log(Action) const {}
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1848,10 +1926,7 @@ Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     mKeyRecord.Clear();
 }
 
-Server::Host::~Host(void)
-{
-    FreeAllServices();
-}
+Server::Host::~Host(void) { FreeAllServices(); }
 
 Error Server::Host::SetFullName(const char *aFullName)
 {
@@ -1892,21 +1967,27 @@ TimeMilli Server::Host::GetExpireTime(void) const
     return mUpdateTime + Time::SecToMsec(mLease);
 }
 
-TimeMilli Server::Host::GetKeyExpireTime(void) const
-{
-    return mUpdateTime + Time::SecToMsec(mKeyLease);
-}
+TimeMilli Server::Host::GetKeyExpireTime(void) const { return mUpdateTime + Time::SecToMsec(mKeyLease); }
 
 void Server::Host::GetLeaseInfo(LeaseInfo &aLeaseInfo) const
 {
     TimeMilli now           = TimerMilli::GetNow();
-    TimeMilli expireTime    = GetExpireTime();
     TimeMilli keyExpireTime = GetKeyExpireTime();
 
     aLeaseInfo.mLease             = Time::SecToMsec(GetLease());
     aLeaseInfo.mKeyLease          = Time::SecToMsec(GetKeyLease());
-    aLeaseInfo.mRemainingLease    = (now <= expireTime) ? (expireTime - now) : 0;
     aLeaseInfo.mRemainingKeyLease = (now <= keyExpireTime) ? (keyExpireTime - now) : 0;
+
+    if (!IsDeleted())
+    {
+        TimeMilli expireTime = GetExpireTime();
+
+        aLeaseInfo.mRemainingLease = (now <= expireTime) ? (expireTime - now) : 0;
+    }
+    else
+    {
+        aLeaseInfo.mRemainingLease = 0;
+    }
 }
 
 Error Server::Host::ProcessTtl(uint32_t aTtl)
@@ -1931,8 +2012,8 @@ exit:
 
 const Server::Service *Server::Host::FindNextService(const Service *aPrevService,
                                                      Service::Flags aFlags,
-                                                     const char *   aServiceName,
-                                                     const char *   aInstanceName) const
+                                                     const char    *aServiceName,
+                                                     const char    *aInstanceName) const
 {
     const Service *service = (aPrevService == nullptr) ? GetServices().GetHead() : aPrevService->GetNext();
 
@@ -1964,7 +2045,7 @@ Server::Service *Server::Host::AddNewService(const char *aServiceName,
                                              bool        aIsSubType,
                                              TimeMilli   aUpdateTime)
 {
-    Service *                       service = nullptr;
+    Service                        *service = nullptr;
     RetainPtr<Service::Description> desc(FindServiceDescription(aInstanceName));
 
     if (desc == nullptr)
@@ -1992,12 +2073,12 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
 
     aService->Log(aRetainName ? Service::kRemoveButRetainName : Service::kFullyRemove);
 
-    if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
+    if (aNotifyServiceHandler && server.mServiceUpdateHandler.IsSet())
     {
         uint32_t updateId = server.AllocateId();
 
-        LogInfo("SRP update handler is notified (updatedId = %u)", updateId);
-        server.mServiceUpdateHandler(updateId, this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
+        LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
+        server.mServiceUpdateHandler.Invoke(updateId, this, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.
         // Because removing a service should fail only when there is system
@@ -2042,10 +2123,7 @@ void Server::Host::FreeAllServices(void)
     }
 }
 
-void Server::Host::ClearResources(void)
-{
-    mAddresses.Free();
-}
+void Server::Host::ClearResources(void) { mAddresses.Free(); }
 
 Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 {
@@ -2071,7 +2149,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
         if (service.mIsDeleted)
         {
-            // `RemoveService()` does nothing if `exitsingService` is `nullptr`.
+            // `RemoveService()` does nothing if `existingService` is `nullptr`.
             RemoveService(existingService, kRetainName, kDoNotNotifyServiceHandler);
             continue;
         }

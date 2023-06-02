@@ -43,6 +43,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/num_utils.hpp"
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
 #include "net/socket.hpp"
@@ -305,7 +306,7 @@ public:
              * @retval kErrorAbort     Fatal error (misbehavior by peer). This triggers aborting of the connection.
              *
              */
-            typedef Error (&ProcessRequestMessage)(Connection &   aConnection,
+            typedef Error (&ProcessRequestMessage)(Connection    &aConnection,
                                                    MessageId      aMessageId,
                                                    const Message &aMessage,
                                                    Tlv::Type      aPrimaryTlvType);
@@ -328,7 +329,7 @@ public:
              *                        @p aPrimaryTlvType is not known in a unidirectional message, it is a fatal error.
              *
              */
-            typedef Error (&ProcessUnidirectionalMessage)(Connection &   aConnection,
+            typedef Error (&ProcessUnidirectionalMessage)(Connection    &aConnection,
                                                           const Message &aMessage,
                                                           Tlv::Type      aPrimaryTlvType);
 
@@ -358,9 +359,9 @@ public:
              * @retval kErrorAbort    Fatal error (misbehavior by peer). This triggers aborting of the connection.
              *
              */
-            typedef Error (&ProcessResponseMessage)(Connection &       aConnection,
+            typedef Error (&ProcessResponseMessage)(Connection        &aConnection,
                                                     const Dns::Header &aHeader,
-                                                    const Message &    aMessage,
+                                                    const Message     &aMessage,
                                                     Tlv::Type          aResponseTlvType,
                                                     Tlv::Type          aRequestTlvType);
             /**
@@ -411,9 +412,9 @@ public:
          * @param[in] aKeepAliveInterval  The Keep Alive timeout interval (in msec).
          *
          */
-        Connection(Instance &           aInstance,
+        Connection(Instance            &aInstance,
                    const Ip6::SockAddr &aPeerSockAddr,
-                   Callbacks &          aCallbacks,
+                   Callbacks           &aCallbacks,
                    uint32_t             aInactivityTimeout = kDefaultTimeout,
                    uint32_t             aKeepAliveInterval = kDefaultTimeout);
 
@@ -547,7 +548,7 @@ public:
          * @retval  kErrorNoBufs    Failed to allocate new buffer to prepare the message (append header or padding).
          *
          */
-        Error SendRequestMessage(Message &  aMessage,
+        Error SendRequestMessage(Message   &aMessage,
                                  MessageId &aMessageId,
                                  uint32_t   aResponseTimeout = kResponseTimeout);
 
@@ -773,7 +774,7 @@ public:
                 // If it is not infinite, limit the interval to `kMaxInterval`.
                 // The max limit ensures that even twice the interval is less
                 // than max OpenThread timer duration.
-                return (aInterval == kInfinite) ? aInterval : OT_MIN(aInterval, kMaxInterval);
+                return (aInterval == kInfinite) ? aInterval : Min(aInterval, kMaxInterval);
             }
 
             uint32_t  mInterval;
@@ -791,15 +792,15 @@ public:
         void MarkAsDisconnected(void);
 
         Error SendKeepAliveMessage(MessageType aMessageType, MessageId aResponseId);
-        Error SendMessage(Message &             aMessage,
+        Error SendMessage(Message              &aMessage,
                           MessageType           aMessageType,
-                          MessageId &           aMessageId,
+                          MessageId            &aMessageId,
                           Dns::Header::Response aResponseCode    = Dns::Header::kResponseSuccess,
                           uint32_t              aResponseTimeout = kResponseTimeout);
         void  HandleReceive(Message &aMessage);
         Error ReadPrimaryTlv(const Message &aMessage, Tlv::Type &aPrimaryTlvType) const;
         Error ProcessRequestOrUnidirectionalMessage(const Dns::Header &aHeader,
-                                                    const Message &    aMessage,
+                                                    const Message     &aMessage,
                                                     Tlv::Type          aPrimaryTlvType);
         Error ProcessResponseMessage(const Dns::Header &aHeader, const Message &aMessage, Tlv::Type aPrimaryTlvType);
         Error ProcessKeepAliveMessage(const Dns::Header &aHeader, const Message &aMessage);
@@ -819,8 +820,8 @@ public:
         static const char *MessageTypeToString(MessageType aMessageType);
         static const char *DisconnectReasonToString(DisconnectReason aReason);
 
-        Connection *          mNext;
-        Callbacks &           mCallbacks;
+        Connection           *mNext;
+        Callbacks            &mCallbacks;
         Ip6::SockAddr         mPeerSockAddr;
         State                 mState;
         MessageId             mNextMessageId;
@@ -952,13 +953,14 @@ private:
 
     Connection *AcceptConnection(const Ip6::SockAddr &aPeerSockAddr);
 
-    static void HandleTimer(Timer &aTimer);
-    void        HandleTimer(void);
+    void HandleTimer(void);
+
+    using DsoTimer = TimerMilliIn<Dso, &Dso::HandleTimer>;
 
     AcceptHandler          mAcceptHandler;
     LinkedList<Connection> mClientConnections;
     LinkedList<Connection> mServerConnections;
-    TimerMilli             mTimer;
+    DsoTimer               mTimer;
 };
 
 } // namespace Dns

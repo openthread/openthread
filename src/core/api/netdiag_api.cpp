@@ -33,8 +33,6 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-
 #include <openthread/netdiag.h>
 
 #include "common/as_core_type.hpp"
@@ -42,31 +40,68 @@
 
 using namespace ot;
 
-otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
+#if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagIterator *aIterator,
-                                     otNetworkDiagTlv *     aNetworkDiagTlv)
+                                     otNetworkDiagTlv      *aNetworkDiagTlv)
 {
-    return NetworkDiagnostic::NetworkDiagnostic::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aNetworkDiagTlv);
+
+    return NetworkDiagnostic::Client::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
 }
 
-otError otThreadSendDiagnosticGet(otInstance *                   aInstance,
-                                  const otIp6Address *           aDestination,
+otError otThreadSendDiagnosticGet(otInstance                    *aInstance,
+                                  const otIp6Address            *aDestination,
                                   const uint8_t                  aTlvTypes[],
                                   uint8_t                        aCount,
                                   otReceiveDiagnosticGetCallback aCallback,
-                                  void *                         aCallbackContext)
+                                  void                          *aCallbackContext)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticGet(
         AsCoreType(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
 }
 
-otError otThreadSendDiagnosticReset(otInstance *        aInstance,
+otError otThreadSendDiagnosticReset(otInstance         *aInstance,
                                     const otIp6Address *aDestination,
                                     const uint8_t       aTlvTypes[],
                                     uint8_t             aCount)
 {
-    return AsCoreType(aInstance).Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
-        AsCoreType(aDestination), aTlvTypes, aCount);
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Client>().SendDiagnosticReset(AsCoreType(aDestination),
+                                                                                      aTlvTypes, aCount);
 }
 
-#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
+
+const char *otThreadGetVendorName(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorName();
+}
+
+const char *otThreadGetVendorModel(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorModel();
+}
+
+const char *otThreadGetVendorSwVersion(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().GetVendorSwVersion();
+}
+
+#if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+otError otThreadSetVendorName(otInstance *aInstance, const char *aVendorName)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorName(aVendorName);
+}
+
+otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorModel(aVendorModel);
+}
+
+otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion)
+{
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::Server>().SetVendorSwVersion(aVendorSwVersion);
+}
+#endif

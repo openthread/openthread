@@ -125,6 +125,41 @@ template <typename TypeOnTrue, typename TypeOnFalse> struct Conditional<true, Ty
     typedef TypeOnTrue Type;
 };
 
+/**
+ * This type determines the return type of a given function pointer type.
+ *
+ * It provides member type named `Type` which gives the return type of `HandlerType` function pointer.
+ *
+ * For example, `ReturnTypeOf<Error (*)(void *aContext)>::Type` would be `Error`.
+ *
+ * @tparam HandlerType   The function pointer type.
+ *
+ */
+template <typename HandlerType> struct ReturnTypeOf;
+
+template <typename RetType, typename... Args> struct ReturnTypeOf<RetType (*)(Args...)>
+{
+    typedef RetType Type; ///< The return type.
+};
+
+/**
+ * This type determines the type of the first argument of a given function pointer type.
+ *
+ * It provides member type named `Type` which gives the first argument type of `HandlerType` function pointer.
+ *
+ * For example, `ReturnTypeOf<Error (*)(void *aContext)>::Type` would be `void *`.
+ *
+ * @tparam HandlerType   The function pointer type.
+ *
+ */
+template <typename HandlerType> struct FirstArgTypeOf;
+
+template <typename RetType, typename FirstArgType, typename... Args>
+struct FirstArgTypeOf<RetType (*)(FirstArgType, Args...)>
+{
+    typedef FirstArgType Type; ///< The first argument type.
+};
+
 } // namespace TypeTraits
 } // namespace ot
 

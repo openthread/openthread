@@ -48,8 +48,17 @@ target_link_libraries(ot-cli-radio PRIVATE
     ${OT_PLATFORM_LIB_RCP}
     openthread-cli-radio
     ${OT_MBEDTLS_RCP}
+    ot-config-radio
     ot-config
 )
+
+if(OT_LINKER_MAP)
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+        target_link_libraries(ot-cli-radio PRIVATE -Wl,-map,ot-cli-radio.map)
+    else()
+        target_link_libraries(ot-cli-radio PRIVATE -Wl,-Map=ot-cli-radio.map)
+    endif()
+endif()
 
 install(TARGETS ot-cli-radio
     DESTINATION bin

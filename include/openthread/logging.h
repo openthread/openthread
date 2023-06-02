@@ -86,7 +86,7 @@ otError otLoggingSetLevel(otLogLevel aLogLevel);
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-void otLogCritPlat(const char *aFormat, ...);
+void otLogCritPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * This function emits a log message at warning log level.
@@ -98,7 +98,7 @@ void otLogCritPlat(const char *aFormat, ...);
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-void otLogWarnPlat(const char *aFormat, ...);
+void otLogWarnPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * This function emits a log message at note log level.
@@ -110,7 +110,7 @@ void otLogWarnPlat(const char *aFormat, ...);
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-void otLogNotePlat(const char *aFormat, ...);
+void otLogNotePlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * This function emits a log message at info log level.
@@ -122,7 +122,7 @@ void otLogNotePlat(const char *aFormat, ...);
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-void otLogInfoPlat(const char *aFormat, ...);
+void otLogInfoPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * This function emits a log message at debug log level.
@@ -134,7 +134,7 @@ void otLogInfoPlat(const char *aFormat, ...);
  * @param[in]  ...      Arguments for the format specification.
  *
  */
-void otLogDebgPlat(const char *aFormat, ...);
+void otLogDebgPlat(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
 
 /**
  * This function generates a memory dump at critical log level.
@@ -212,7 +212,7 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
  * @param[in]  ...       Arguments for the format specification.
  *
  */
-void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...);
+void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
 /**
  * @}

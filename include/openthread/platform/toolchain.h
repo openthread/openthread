@@ -110,6 +110,24 @@ extern "C" {
  *
  */
 
+/**
+ * @def OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK
+ *
+ * This macro specifies that a function or method takes `printf` style arguments and should be type-checked against
+ * a format string.
+ *
+ * This macro must be added after the function/method declaration. For example:
+ *
+ *    `void MyPrintf(void *aObject, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);`
+ *
+ * The two argument index values indicate format string and first argument to check against it. They start at index 1
+ * for the first parameter in a function and at index 2 for the first parameter in a method.
+ *
+ * @param[in] aFmtIndex    The argument index of the format string.
+ * @param[in] aStartIndex  The argument index of the first argument to check against the format string.
+ *
+ */
+
 // =========== TOOLCHAIN SELECTION : START ===========
 
 #if defined(__GNUC__) || defined(__clang__) || defined(__CC_ARM) || defined(__TI_ARM__)
@@ -122,6 +140,9 @@ extern "C" {
 #define OT_TOOL_PACKED_END __attribute__((packed))
 #define OT_TOOL_WEAK __attribute__((weak))
 
+#define OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(aFmtIndex, aStartIndex) \
+    __attribute__((format(printf, aFmtIndex, aStartIndex)))
+
 #elif defined(__ICCARM__) || defined(__ICC8051__)
 
 // http://supp.iar.com/FilesPublic/UPDINFO/004916/arm/doc/EWARM_DevelopmentGuide.ENU.pdf
@@ -133,6 +154,8 @@ extern "C" {
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK __weak
 
+#define OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(aFmtIndex, aStartIndex)
+
 #elif defined(__SDCC)
 
 // Structures are packed by default in sdcc, as it primarily targets 8-bit MCUs.
@@ -141,6 +164,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
+
+#define OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(aFmtIndex, aStartIndex)
 
 #else
 
@@ -152,6 +177,8 @@ extern "C" {
 #define OT_TOOL_PACKED_FIELD
 #define OT_TOOL_PACKED_END
 #define OT_TOOL_WEAK
+
+#define OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(aFmtIndex, aStartIndex)
 
 #endif
 
