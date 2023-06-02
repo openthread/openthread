@@ -385,7 +385,10 @@ class Node(object):
         if self._verbose:
             _log('$ Node{}.wpanctl(\'{}\')'.format(self._index, cmd), new_line=False)
 
-        result = subprocess.check_output(self._wpanctl_cmd + cmd, shell=True, stderr=subprocess.STDOUT)
+        result = subprocess.check_output(self._wpanctl_cmd + cmd,
+                                         shell=True,
+                                         stderr=subprocess.STDOUT,
+                                         encoding='utf8')
 
         if len(result) >= 1 and result[-1] == '\n':  # remove the last char if it is '\n',
             result = result[:-1]
@@ -707,6 +710,7 @@ class Node(object):
             msg = ''.join(random.choice(all_chars) for _ in range(data))
         else:
             msg = data
+        msg = msg.encode('utf-8')
 
         return AsyncSender(self, src_addr, src_port, dst_addr, dst_port, msg, count, mcast_hops)
 
@@ -791,7 +795,7 @@ class AsyncSender(asyncore.dispatcher):
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, node.interface_name + '\0')
+        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, str(node.interface_name + '\0').encode('utf-8'))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         # Set the IPV6_MULTICAST_HOPS
@@ -853,7 +857,7 @@ class AsyncSender(asyncore.dispatcher):
         return True
 
     def handle_write(self):
-        sent_len = self.sendto(self._tx_buffer, self._dst_sock_addr)
+        sent_len = self.socket.sendto(self._tx_buffer, self._dst_sock_addr)
 
         if self._node._verbose:
             if sent_len < 30:
@@ -914,7 +918,7 @@ class AsyncReceiver(asyncore.dispatcher):
 
         # Create a socket, bind it to the node's interface
         sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, node.interface_name + '\0')
+        sock.setsockopt(socket.SOL_SOCKET, _SO_BINDTODEVICE, str(node.interface_name + '\0').encode('utf-8'))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         # Bind the socket to any IPv6 address with the given local port
@@ -967,7 +971,7 @@ class AsyncReceiver(asyncore.dispatcher):
         return False
 
     def handle_read(self):
-        (msg, src_sock_addr) = self.recvfrom(AsyncReceiver._MAX_RECV_SIZE)
+        (msg, src_sock_addr) = self.socket.recvfrom(AsyncReceiver._MAX_RECV_SIZE)
         src_addr = src_sock_addr[0]
         src_port = src_sock_addr[1]
 

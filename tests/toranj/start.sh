@@ -55,7 +55,7 @@ run()
 {
     counter=0
     while true; do
-        if sudo -E "${python_app}" "$1"; then
+        if sudo -E "$1"; then
             cleanup
             return
         fi
@@ -87,7 +87,7 @@ install_wpantund()
 
     sudo add-apt-repository universe
     sudo apt-get update
-    sudo apt-get --no-install-recommends install -y libboost-all-dev python2
+    sudo apt-get --no-install-recommends install -y libboost-all-dev
 
     git clone --depth=1 --branch=master https://github.com/openthread/wpantund.git || die "wpandtund clone"
     cd wpantund || die "cd wpantund failed"
@@ -133,11 +133,9 @@ fi
 
 if [ "$TORANJ_CLI" = 1 ]; then
     app_name="cli"
-    python_app="python3"
     log_file_name="ot-logs"
 else
     app_name="ncp"
-    python_app="python2"
     log_file_name="wpantund-logs"
 fi
 
