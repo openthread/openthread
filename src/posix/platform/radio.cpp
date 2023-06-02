@@ -88,7 +88,6 @@ Radio::Radio(const char *aUrl)
 void Radio::Init(void)
 {
     bool        resetRadio             = (mRadioUrl.GetValue("no-reset") == nullptr);
-    bool        restoreDataset         = (mRadioUrl.GetValue("ncp-dataset") != nullptr);
     bool        skipCompatibilityCheck = (mRadioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
     const char *parameterValue;
     const char *region;
@@ -110,7 +109,7 @@ void Radio::Init(void)
 #endif
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(mRadioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
+    sRadioSpinel.Init(resetRadio, skipCompatibilityCheck);
 
     parameterValue = mRadioUrl.GetValue("fem-lnagain");
     if (parameterValue != nullptr)
