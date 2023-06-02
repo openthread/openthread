@@ -145,9 +145,10 @@ uint32_t HalInterface::GetBusSpeed(void) const
     return kBusSpeed;
 }
 
-void HalInterface::OnRcpReset(void)
+otError HalInterface::HardwareReset(void)
 {
     mThreadChip->reset();
+    return OT_ERROR_NONE;
 }
 
 void HalInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
