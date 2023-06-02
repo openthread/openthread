@@ -196,7 +196,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     {
         uint32_t origTimeout = config.mMlrTimeout;
 
-        config.mMlrTimeout = Clamp(config.mMlrTimeout, Mle::kMlrTimeoutMin, Mle::kMlrTimeoutMax);
+        config.mMlrTimeout = Clamp(config.mMlrTimeout, kMinMlrTimeout, kMaxMlrTimeout);
 
         if (config.mMlrTimeout != origTimeout)
         {

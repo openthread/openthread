@@ -54,6 +54,18 @@ namespace BackboneRouter {
 
 typedef otBackboneRouterConfig Config;
 
+constexpr uint16_t kDefaultRegistrationDelay  = 5;                 ///< Default registration delay (in sec).
+constexpr uint32_t kDefaultMlrTimeout         = 3600;              ///< Default MLR Timeout (in sec).
+constexpr uint32_t kMinMlrTimeout             = 300;               ///< Minimum MLR Timeout (in sec).
+constexpr uint32_t kMaxMlrTimeout             = 0x7fffffff / 1000; ///< Max MLR Timeout (in sec ~ about 24 days.
+constexpr uint8_t  kDefaultRegistrationJitter = 5;                 ///< Default registration jitter (in sec).
+constexpr uint8_t  kParentAggregateDelay      = 5;                 ///< Parent Aggregate Delay (in sec).
+
+static_assert(kDefaultMlrTimeout >= kMinMlrTimeout && kDefaultMlrTimeout <= kMaxMlrTimeout,
+              "kDefaultMlrTimeout is not in valid range");
+static_assert(kMaxMlrTimeout * 1000 > kMaxMlrTimeout, "SecToMsec(kMaxMlrTimeout) will overflow");
+static_assert(kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
+
 /**
  * Implements the basic Primary Backbone Router service operations.
  *
