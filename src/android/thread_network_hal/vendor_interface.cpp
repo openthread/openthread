@@ -81,11 +81,6 @@ uint32_t VendorInterface::GetBusSpeed(void) const
     return sHalInterface->GetBusSpeed();
 }
 
-void VendorInterface::OnRcpReset(void)
-{
-    sHalInterface->OnRcpReset();
-}
-
 void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
 {
     sHalInterface->UpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
@@ -106,9 +101,14 @@ otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     return sHalInterface->SendFrame(aFrame, aLength);
 }
 
-otError VendorInterface::ResetConnection(void)
+otError VendorInterface::HardwareReset(void)
 {
-    return sHalInterface->ResetConnection();
+    return sHalInterface->HardwareReset();
+}
+
+const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
+{
+    return nullptr;
 }
 } // namespace Posix
 } // namespace ot
