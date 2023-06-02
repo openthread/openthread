@@ -1478,10 +1478,13 @@ void RoutingManager::DiscoveredPrefixTable::RemoveOrDeprecateEntriesFromInactive
 
         for (Entry &entry : router.mEntries)
         {
-            if (entry.IsOnLinkPrefix() && !entry.IsDeprecated())
+            if (entry.IsOnLinkPrefix())
             {
-                entry.ClearPreferredLifetime();
-                SignalTableChanged();
+                if (!entry.IsDeprecated())
+                {
+                    entry.ClearPreferredLifetime();
+                    SignalTableChanged();
+                }
             }
             else
             {
