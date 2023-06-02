@@ -30,6 +30,8 @@
 import os
 import unittest
 import sys
+
+import config
 import thread_cert
 
 # Test description:
@@ -74,7 +76,7 @@ class TestHistoryTracker(thread_cert.TestCase):
         # is updated correctly.
 
         leader.start()
-        self.simulator.go(SHORT_WAIT)
+        self.simulator.go(SHORT_WAIT * 2)
         self.assertEqual(leader.get_state(), 'leader')
 
         netinfo = leader.history_netinfo()
@@ -126,7 +128,7 @@ class TestHistoryTracker(thread_cert.TestCase):
         # Start leader and child
 
         leader.start()
-        self.simulator.go(SHORT_WAIT)
+        self.simulator.go(SHORT_WAIT * 2)
         self.assertEqual(leader.get_state(), 'leader')
 
         child.start()

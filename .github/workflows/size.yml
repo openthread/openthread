@@ -48,7 +48,7 @@ jobs:
       if: "github.event_name == 'push'"
       run: |
         python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install mdv
+        python3 -m pip install git+https://github.com/axiros/terminal_markdown_viewer.git
     - name: Run
       env:
         OT_BASE_BRANCH: "${{ github.base_ref }}"

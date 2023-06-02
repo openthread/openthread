@@ -70,6 +70,7 @@ namespace ot {
 
 namespace Crypto {
 
+class AesCcm;
 class Sha256;
 class HmacSha256;
 
@@ -257,11 +258,12 @@ static_assert(sizeof(Buffer) >= kBufferSize, "Buffer size if not valid");
  * This class represents a message.
  *
  */
-class Message : public otMessage, public Buffer
+class Message : public otMessage, public Buffer, public GetProvider<Message>
 {
     friend class Checksum;
     friend class Crypto::HmacSha256;
     friend class Crypto::Sha256;
+    friend class Crypto::AesCcm;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -407,6 +409,14 @@ public:
     private:
         static const otMessageSettings kDefault;
     };
+
+    /**
+     * This method returns a reference to the OpenThread Instance which owns the `Message`.
+     *
+     * @returns A reference to the `Instance`.
+     *
+     */
+    Instance &GetInstance(void) const;
 
     /**
      * This method frees this message buffer.
@@ -653,6 +663,24 @@ public:
     }
 
     /**
+     * This method appends bytes from a given `Data` instance to the end of the message.
+     *
+     * On success, this method grows the message by the size of the appended data.
+     *
+     * @tparam    kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
+     *
+     * @param[in] aData      A reference to `Data` to append to the message.
+     *
+     * @retval kErrorNone    Successfully appended the bytes from @p aData.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+    template <DataLengthType kDataLengthType> Error AppendData(const Data<kDataLengthType> &aData)
+    {
+        return AppendBytes(aData.GetBytes(), aData.GetLength());
+    }
+
+    /**
      * This method reads bytes from the message.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
@@ -795,6 +823,23 @@ public:
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         WriteBytes(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method writes bytes from a given `Data` instance to the message.
+     *
+     * This method will not resize the message. The given data to write MUST fit within the existing message buffer
+     * (from the given offset @p aOffset up to the message's length).
+     *
+     * @tparam     kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
+     *
+     * @param[in]  aOffset    Byte offset within the message to begin writing.
+     * @param[in]  aData      The `Data` to write to the message.
+     *
+     */
+    template <DataLengthType kDataLengthType> void WriteData(uint16_t aOffset, const Data<kDataLengthType> &aData)
+    {
+        WriteBytes(aOffset, aData.GetBytes(), aData.GetLength());
     }
 
     /**
@@ -1345,6 +1390,8 @@ class MessageQueue : public otMessageQueue
     friend class PriorityQueue;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
      * should be added in the queue.
@@ -1418,13 +1465,17 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
+     * This method gets the information about number of messages and buffers in the queue.
      *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
+     * This method updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
+     * variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method (e.g.,
+     * clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues to add
+     * up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to `Info` structure to update.ni
      *
      */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used
@@ -1454,6 +1505,8 @@ class PriorityQueue : private Clearable<PriorityQueue>
     friend class MessagePool;
 
 public:
+    typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
+
     /**
      * This constructor initializes the priority queue.
      *
@@ -1532,16 +1585,7 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the number of messages and buffers enqueued.
-     *
-     * @param[out]  aMessageCount  Returns the number of messages enqueued.
-     * @param[out]  aBufferCount   Returns the number of buffers enqueued.
-     *
-     */
-    void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
-
-    /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
@@ -1549,12 +1593,25 @@ public:
     Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
     /**
-     * This method returns the tail of the list (last message in the list)
+     * This method returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
      */
     const Message *GetTail(void) const;
+
+    /**
+     * This method gets the information about number of messages and buffers in the priority queue.
+     *
+     * This method updates `aInfo` array and adds number of message/buffers in the message queue to the corresponding
+     * member variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method
+     * (e.g., clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues
+     * to add up the number of messages/buffers on different queues.
+     *
+     * @param[out] aInfo  A reference to an `Info` structure to update.
+     *
+     */
+    void GetInfo(Info &aInfo) const;
 
     // The following methods are intended to support range-based `for`
     // loop iteration over the queue entries and should not be used
@@ -1625,7 +1682,7 @@ public:
     /**
      * This method returns the number of free buffers.
      *
-     * @returns The number of free buffers.
+     * @returns The number of free buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
      */
     uint16_t GetFreeBufferCount(void) const;
@@ -1633,7 +1690,7 @@ public:
     /**
      * This method returns the total number of buffers.
      *
-     * @returns The total number of buffers.
+     * @returns The total number of buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
      */
     uint16_t GetTotalBufferCount(void) const;
@@ -1648,6 +1705,11 @@ private:
     Pool<Buffer, kNumBuffers> mBufferPool;
 #endif
 };
+
+inline Instance &Message::GetInstance(void) const
+{
+    return GetMessagePool()->GetInstance();
+}
 
 /**
  * @}

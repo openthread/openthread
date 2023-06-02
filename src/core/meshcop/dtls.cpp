@@ -176,10 +176,10 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 {
     switch (mState)
     {
-    case MeshCoP::Dtls::kStateClosed:
+    case Dtls::kStateClosed:
         ExitNow();
 
-    case MeshCoP::Dtls::kStateOpen:
+    case Dtls::kStateOpen:
         IgnoreError(mSocket.Connect(Ip6::SockAddr(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort())));
 
         mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
@@ -204,7 +204,7 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
     }
 
 #ifdef MBEDTLS_SSL_SRV_C
-    if (mState == MeshCoP::Dtls::kStateConnecting)
+    if (mState == Dtls::kStateConnecting)
     {
         IgnoreError(SetClientId(mMessageInfo.GetPeerAddr().mFields.m8, sizeof(mMessageInfo.GetPeerAddr().mFields)));
     }

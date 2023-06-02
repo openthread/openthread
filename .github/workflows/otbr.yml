@@ -46,7 +46,7 @@ jobs:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
       PACKET_VERIFICATION: 1
-      THREAD_VERSION: 1.2
+      THREAD_VERSION: 1.3
       INTER_OP: 1
       COVERAGE: 1
       MULTIPLY: 1
@@ -60,55 +60,35 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Get Border Router Test ID
-      id: unique_action_id
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "/tmp/otbr_unique_action_id"
-        echo ::set-output  name=id::${GITHUB_WORKFLOW}-${GITHUB_JOB}-${GITHUB_RUN_ID}-$(cd /tmp/otbr_unique_action_id/ && git rev-parse HEAD)
-    - name: Check cached result
-      id: check_cache_result
-      uses: actions/cache@v2
-      with:
-        path: |
-          _test_complete_
-        key: "_test_complete_${{ steps.unique_action_id.outputs.id }}"
     - name: Build OTBR Docker
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test build
     - name: Get Thread-Wireshark
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test get_thread_wireshark
     - name: Run
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
-        name: cov-thread-1-2-backbone-docker
+        name: cov-thread-1-3-backbone-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ failure() }}
       with:
-        name: thread-1-2-backbone-results
+        name: thread-1-3-backbone-results
         path: |
           *.pcap
           *.json
@@ -116,18 +96,12 @@ jobs:
           coredump_*
           otbr-agent_*
     - name: Generate Coverage
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
-        name: cov-thread-1-2-backbone
+        name: cov-thread-1-3-backbone
         path: tmp/coverage.info
-    - name: Cache test result
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
-      run: |
-        mkdir _test_complete_
 
   thread-border-router:
     runs-on: ubuntu-20.04
@@ -139,33 +113,50 @@ jobs:
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
+            nat64: 0
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
+            nat64: 0
             description: ""
           - otbr_mdns: "mDNSResponder"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/MATN/*.py
             packet_verification: 1
+            nat64: 0
             description: "MATN"
+          - otbr_mdns: "mDNSResponder"
+            otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/LowPower/*.py
+            packet_verification: 1
+            nat64: 0
+            description: "LowPower"
+          - otbr_mdns: "mDNSResponder"
+            otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/nat64/*.py
+            packet_verification: 1
+            nat64: 1
+            description: "nat64"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 1
+            nat64: 0
             description: ""
           - otbr_mdns: "avahi"
             otbr_trel: 1
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
             packet_verification: 2
+            nat64: 0
             description: ""
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
       PACKET_VERIFICATION: ${{ matrix.packet_verification }}
-      THREAD_VERSION: 1.2
+      THREAD_VERSION: 1.3
       INTER_OP: 1
       COVERAGE: 1
       MULTIPLY: 1
@@ -173,57 +164,38 @@ jobs:
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       BORDER_ROUTING: 1
+      NAT64: ${{ matrix.nat64 }}
       MAX_JOBS: 3
     steps:
     - uses: actions/checkout@v2
-    - name: Get Border Router Test ID
-      id: unique_action_id
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      run: |
-        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "/tmp/otbr_unique_action_id"
-        echo ::set-output  name=id::${GITHUB_WORKFLOW}-${GITHUB_JOB}-${GITHUB_RUN_ID}-$(cd /tmp/otbr_unique_action_id/ && git rev-parse HEAD)-${{matrix.otbr_mdns}}-trel${{matrix.otbr_trel}}
-    - name: Check cached result
-      id: check_cache_result
-      uses: actions/cache@v2
-      with:
-        path: |
-          _test_complete_
-        key: "_test_complete_${{ steps.unique_action_id.outputs.id }}"
     - name: Build OTBR Docker
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         TREL: ${{ matrix.otbr_trel }}
       run: |
         ./script/test build_otbr_docker
     - name: Bootstrap
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test build
     - name: Get Thread-Wireshark
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test get_thread_wireshark
     - name: Run
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-border-router-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && steps.check_cache_result.outputs.cache-hit != 'true' }}
+      if: ${{ failure() }}
       with:
         name: thread-border-router-results
         path: |
@@ -233,18 +205,12 @@ jobs:
           coredump_*
           otbr-agent_*
     - name: Generate Coverage
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
       with:
         name: cov-thread-border-router
         path: tmp/coverage.info
-    - name: Cache test result
-      if: ${{ success() && steps.check_cache_result.outputs.cache-hit != 'true' }}
-      run: |
-        mkdir _test_complete_
 
   upload-coverage:
     needs:
@@ -267,14 +233,13 @@ jobs:
         script/test combine_coverage
     - name: Upload Coverage
       continue-on-error: true
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
         files: final.info
         fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage
-    if: always()
     runs-on: ubuntu-20.04
     steps:
     - uses: geekyeggo/delete-artifact@1-glob-support

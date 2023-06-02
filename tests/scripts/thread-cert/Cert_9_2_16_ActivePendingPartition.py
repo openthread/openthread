@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_ADVERTISEMENT, MLE_PARENT_REQUEST, MLE_CHILD_ID_RESPONSE, MLE_CHILD_ID_REQUEST, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, TLV_REQUEST_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, ADDRESS_REGISTRATION_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -99,17 +100,17 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
@@ -121,7 +122,7 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
         self.simulator.go(5)
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[ROUTER2].reset()
@@ -141,7 +142,7 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
         self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.assertEqual(self.nodes[COMMISSIONER].get_network_name(), NETWORK_NAME_FINAL)

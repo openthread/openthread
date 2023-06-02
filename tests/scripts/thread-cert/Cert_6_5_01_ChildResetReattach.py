@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -58,7 +59,7 @@ class Cert_6_5_1_ChildResetReattach(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ED].start()

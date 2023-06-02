@@ -83,11 +83,11 @@ class Cert_6_2_1_NewPartition_Base(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[MTD].start()
@@ -95,7 +95,7 @@ class Cert_6_2_1_NewPartition_Base(thread_cert.TestCase):
         self.assertEqual(self.nodes[MTD].get_state(), 'child')
 
         self.nodes[LEADER].stop()
-        self.simulator.go(140)
+        self.simulator.go(150)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'leader')
         self.assertEqual(self.nodes[MTD].get_state(), 'child')
 

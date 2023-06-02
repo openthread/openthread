@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import ipv6
 import thread_cert
 
@@ -54,11 +55,11 @@ class TestIPv6SourceSelection(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         leader_aloc = self.nodes[LEADER].get_addr_leader_aloc()

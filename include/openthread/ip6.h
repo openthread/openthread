@@ -781,6 +781,8 @@ typedef void (*otIp6RegisterMulticastListenersCallback)(void *              aCon
                                                         const otIp6Address *aFailedAddresses,
                                                         uint8_t             aFailedAddressNum);
 
+#define OT_IP6_MAX_MLR_ADDRESSES 15 ///< Max number of IPv6 addresses supported by Multicast Listener Registration.
+
 /**
  * This function registers Multicast Listeners to Primary Backbone Router.
  *

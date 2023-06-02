@@ -29,6 +29,7 @@
 #include "platform-simulation.h"
 
 #include <errno.h>
+#include <sys/time.h>
 
 #include <openthread/dataset.h>
 #include <openthread/link.h>
@@ -46,6 +47,9 @@
 
 // The IPv4 group for receiving packets of radio simulation
 #define OT_RADIO_GROUP "224.0.0.116"
+
+#define MS_PER_S 1000
+#define US_PER_MS 1000
 
 enum
 {
@@ -74,6 +78,10 @@ static int      sRxFd       = -1;
 static uint16_t sPortOffset = 0;
 static uint16_t sPort       = 0;
 #endif
+
+static int8_t   sEnergyScanResult  = OT_RADIO_RSSI_INVALID;
+static bool     sEnergyScanning    = false;
+static uint32_t sEnergyScanEndTime = 0;
 
 enum
 {
@@ -155,6 +163,13 @@ static otMacKeyMaterial sPrevKey;
 static otMacKeyMaterial sCurrKey;
 static otMacKeyMaterial sNextKey;
 static otRadioKeyType   sKeyType;
+
+static int8_t GetRssi(uint16_t aChannel);
+
+static bool IsTimeAfterOrEqual(uint32_t aTimeA, uint32_t aTimeB)
+{
+    return (aTimeA - aTimeB) < (1U << 31);
+}
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -493,20 +508,23 @@ otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
 int8_t otPlatRadioGetRssi(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-
     assert(aInstance != NULL);
 
-    int8_t   rssi    = SIM_LOW_RSSI_SAMPLE;
-    uint8_t  channel = sReceiveFrame.mChannel;
+    return GetRssi(sReceiveFrame.mChannel);
+}
+
+static int8_t GetRssi(uint16_t aChannel)
+{
+    int8_t   rssi = SIM_LOW_RSSI_SAMPLE;
     uint32_t probabilityThreshold;
 
-    otEXPECT((SIM_RADIO_CHANNEL_MIN <= channel) && channel <= (SIM_RADIO_CHANNEL_MAX));
+    otEXPECT((SIM_RADIO_CHANNEL_MIN <= aChannel) && aChannel <= (SIM_RADIO_CHANNEL_MAX));
 
     // To emulate a simple interference model, we return either a high or
     // a low  RSSI value with a fixed probability per each channel. The
     // probability is increased per channel by a constant.
 
-    probabilityThreshold = (channel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
+    probabilityThreshold = (aChannel - SIM_RADIO_CHANNEL_MIN) * SIM_HIGH_RSSI_PROB_INC_PER_CHANNEL;
 
     if (otRandomNonCryptoGetUint16() < (probabilityThreshold * 0xffff / 100))
     {
@@ -736,7 +754,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
     radioReceive(aInstance);
 }
 #else
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd)
+void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
     if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sTxWait))
     {
@@ -755,6 +773,25 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
         if (aMaxFd != NULL && *aMaxFd < sTxFd)
         {
             *aMaxFd = sTxFd;
+        }
+    }
+
+    if (sEnergyScanning)
+    {
+        struct timeval tv  = {0, 0};
+        uint32_t       now = otPlatAlarmMilliGetNow();
+
+        if (IsTimeAfterOrEqual(sEnergyScanEndTime, now))
+        {
+            uint32_t remaining = sEnergyScanEndTime - now;
+
+            tv.tv_sec  = remaining / MS_PER_S;
+            tv.tv_usec = (remaining % MS_PER_S) * US_PER_MS;
+        }
+
+        if (timercmp(&tv, aTimeout, <))
+        {
+            *aTimeout = tv;
         }
     }
 }
@@ -811,10 +848,15 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
         }
     }
 #endif
-
     if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
+    }
+
+    if (sEnergyScanning && IsTimeAfterOrEqual(otPlatAlarmMilliGetNow(), sEnergyScanEndTime))
+    {
+        sEnergyScanning = false;
+        otPlatRadioEnergyScanDone(aInstance, sEnergyScanResult);
     }
 }
 
@@ -982,13 +1024,22 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aScanChannel);
-    OT_UNUSED_VARIABLE(aScanDuration);
+
+    otError error = OT_ERROR_NONE;
 
     assert(aInstance != NULL);
     assert(aScanChannel >= SIM_RADIO_CHANNEL_MIN && aScanChannel <= SIM_RADIO_CHANNEL_MAX);
     assert(aScanDuration > 0);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otEXPECT_ACTION((gRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN), error = OT_ERROR_NOT_IMPLEMENTED);
+    otEXPECT_ACTION(!sEnergyScanning, error = OT_ERROR_BUSY);
+
+    sEnergyScanResult  = GetRssi(aScanChannel);
+    sEnergyScanning    = true;
+    sEnergyScanEndTime = otPlatAlarmMilliGetNow() + aScanDuration;
+
+exit:
+    return error;
 }
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)

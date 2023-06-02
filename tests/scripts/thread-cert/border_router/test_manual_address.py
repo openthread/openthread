@@ -28,6 +28,8 @@
 #
 
 import unittest
+
+import config
 import thread_cert
 
 # Test description:
@@ -69,12 +71,12 @@ class ManualAddressConfig(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 
         router.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         # Add prefix

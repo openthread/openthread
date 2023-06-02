@@ -200,6 +200,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 128
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
  *
  * Define as 1 for a child to inform its previous parent when it attaches to a new parent.

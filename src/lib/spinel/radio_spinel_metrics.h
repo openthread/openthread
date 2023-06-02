@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2022, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,69 +28,31 @@
 
 /**
  * @file
- *   This file implements IPv4 address related functionality.
+ * @brief
+ *   This file includes the definitions of the radio spinel metrics.
  */
 
-#include "ip4_address.hpp"
+#ifndef RADIO_SPINEL_METRICS_H_
+#define RADIO_SPINEL_METRICS_H_
 
-#include "common/code_utils.hpp"
-#include "common/numeric_limits.hpp"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace ot {
-namespace Ip4 {
-
-Error Address::FromString(const char *aString)
+/**
+ * This structure represents the radio spinel metrics.
+ *
+ */
+typedef struct otRadioSpinelMetrics
 {
-    constexpr char kSeperatorChar = '.';
-    constexpr char kNullChar      = '\0';
+    uint32_t mRcpTimeoutCount;         ///< The number of RCP timeouts.
+    uint32_t mRcpUnexpectedResetCount; ///< The number of RCP unexcepted resets.
+    uint32_t mRcpRestorationCount;     ///< The number of RCP restorations.
+    uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
+} otRadioSpinelMetrics;
 
-    Error error = kErrorParse;
+#ifdef __cplusplus
+} // end of extern "C"
+#endif
 
-    for (uint8_t index = 0;; index++)
-    {
-        uint16_t value         = 0;
-        uint8_t  hasFirstDigit = false;
-
-        for (char digitChar = *aString;; ++aString, digitChar = *aString)
-        {
-            if ((digitChar < '0') || (digitChar > '9'))
-            {
-                break;
-            }
-
-            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::kMax);
-            hasFirstDigit = true;
-        }
-
-        VerifyOrExit(hasFirstDigit);
-
-        mBytes[index] = static_cast<uint8_t>(value);
-
-        if (index == sizeof(Address) - 1)
-        {
-            break;
-        }
-
-        VerifyOrExit(*aString == kSeperatorChar);
-        aString++;
-    }
-
-    VerifyOrExit(*aString == kNullChar);
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
-Address::InfoString Address::ToString(void) const
-{
-    InfoString string;
-
-    string.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
-
-    return string;
-}
-
-} // namespace Ip4
-} // namespace ot
+#endif // RADIO_SPINEL_METRICS_H_

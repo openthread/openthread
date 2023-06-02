@@ -100,7 +100,7 @@ install_packages_brew()
 
     # add ARM toolchain
     brew tap ArmMbed/homebrew-formulae
-    brew install arm-none-eabi-gcc
+    brew install armmbed/formulae/arm-none-eabi-gcc
 
     # check for gcc for simulation
     if ! command -v gcc; then

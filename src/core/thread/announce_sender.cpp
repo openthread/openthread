@@ -252,7 +252,7 @@ void AnnounceSender::HandleActiveDatasetChanged(void)
 {
     Mac::ChannelMask channelMask;
 
-    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    SuccessOrExit(Get<MeshCoP::ActiveDatasetManager>().GetChannelMask(channelMask));
     VerifyOrExit(!channelMask.IsEmpty());
 
     VerifyOrExit(channelMask != GetChannelMask());

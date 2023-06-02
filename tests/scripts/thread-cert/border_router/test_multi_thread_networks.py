@@ -93,19 +93,19 @@ class MultiThreadNetworks(thread_cert.TestCase):
         router2 = self.nodes[ROUTER2]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router1.get_state())
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br2.get_state())
 
         router2.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router2.get_state())
 
         # Wait for network to stabilize

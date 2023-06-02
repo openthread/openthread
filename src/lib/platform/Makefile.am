@@ -40,4 +40,8 @@ libopenthread_platform_a_SOURCES            = \
     exit_code.h                               \
     $(NULL)
 
+noinst_HEADERS                              = \
+    reset_util.h                              \
+    $(NULL)
+
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

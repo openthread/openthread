@@ -29,6 +29,7 @@
 import re
 import unittest
 
+import config
 import thread_cert
 from config import MESH_LOCAL_PREFIX_REGEX_PATTERN, ROUTING_LOCATOR_REGEX_PATTERN
 from pktverify.packet_verifier import PacketVerifier
@@ -75,17 +76,17 @@ class TestPing(thread_cert.TestCase):
         router = self.nodes[ROUTER]
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', leader.get_state())
 
         pbbr.enable_backbone_router()
         pbbr.start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', pbbr.get_state())
         self.assertTrue(pbbr.is_primary_backbone_router)
 
         router.start()
-        self.simulator.go(10)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router.get_state())
 
         for node in (leader, pbbr):

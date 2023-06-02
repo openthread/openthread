@@ -59,6 +59,38 @@ extern uint64_t gInstanceRaw[];
  */
 
 /**
+ * This template class implements `Get<Type>()` method for different `Type` objects belonging to the OpenThread
+ * instance.
+ *
+ * Users of this class MUST follow CRTP-style inheritance, i.e., the class `Class` itself should publicly inherit
+ * from `GetProvider<Class>`.
+ *
+ * @tparam InstanceGetProvider   The template sub-lass used in CRTP style inheritance.
+ *                               `InstanceGetProvider` MUST provide a method with the following signature:
+ *                               `Instance &GetInstance(void) const`
+ *
+ */
+template <class InstanceGetProvider> class GetProvider
+{
+public:
+    /**
+     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
+     *
+     * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
+     *
+     * Note that any `Type` for which the `Get<Type>` is defined MUST be uniquely accessible from the OpenThread
+     * `Instance` through the member variable property hierarchy.
+     *
+     * @returns A reference to the `Type` object of the instance.
+     *
+     */
+    template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
+
+protected:
+    GetProvider(void) = default;
+};
+
+/**
  * This class implements a locator for an OpenThread Instance object.
  *
  * The `InstanceLocator` is used as base class of almost all other OpenThread classes. It provides a way for an object
@@ -69,7 +101,7 @@ extern uint64_t gInstanceRaw[];
  * single-instance case, this class becomes an empty base class.
  *
  */
-class InstanceLocator
+class InstanceLocator : public GetProvider<InstanceLocator>
 {
     friend class InstanceLocatorInit;
 
@@ -85,19 +117,6 @@ public:
 #else
     Instance &GetInstance(void) const { return *reinterpret_cast<Instance *>(&gInstanceRaw); }
 #endif
-
-    /**
-     * This template method returns a reference to a given `Type` object belonging to the OpenThread instance.
-     *
-     * For example, `Get<MeshForwarder>()` returns a reference to the `MeshForwarder` object of the instance.
-     *
-     * Note that any `Type` for which the `Get<Type>` is defined MUST be uniquely accessible from the OpenThread
-     * `Instance` through the member variable property hierarchy.
-     *
-     * @returns A reference to the `Type` object of the instance.
-     *
-     */
-    template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
 
 protected:
     /**

@@ -188,7 +188,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         self.nodes[BBR_1].set_backbone_router(seqno=seq_num, reg_delay=BBR_REREGISTRATION_DELAY)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(WAIT_TIME * 2)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'leader')
         self.nodes[BBR_1].enable_backbone_router()
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE

@@ -156,6 +156,16 @@ typedef enum otSrpServerAddressMode
 } otSrpServerAddressMode;
 
 /**
+ * This structure includes SRP server TTL configurations.
+ *
+ */
+typedef struct otSrpServerTtlConfig
+{
+    uint32_t mMinTtl; ///< The minimum TTL in seconds.
+    uint32_t mMaxTtl; ///< The maximum TTL in seconds.
+} otSrpServerTtlConfig;
+
+/**
  * This structure includes SRP server LEASE and KEY-LEASE configurations.
  *
  */
@@ -166,6 +176,32 @@ typedef struct otSrpServerLeaseConfig
     uint32_t mMinKeyLease; ///< The minimum KEY-LEASE interval in seconds.
     uint32_t mMaxKeyLease; ///< The maximum KEY-LEASE interval in seconds.
 } otSrpServerLeaseConfig;
+
+/**
+ * This structure includes SRP server lease information of a host/service.
+ *
+ */
+typedef struct otSrpServerLeaseInfo
+{
+    uint32_t mLease;             ///< The lease time of a host/service in milliseconds.
+    uint32_t mKeyLease;          ///< The key lease time of a host/service in milliseconds.
+    uint32_t mRemainingLease;    ///< The remaining lease time of the host/service in milliseconds.
+    uint32_t mRemainingKeyLease; ///< The remaining key lease time of a host/service in milliseconds.
+} otSrpServerLeaseInfo;
+
+/**
+ * This structure includes the statistics of SRP server responses.
+ *
+ */
+typedef struct otSrpServerResponseCounters
+{
+    uint32_t mSuccess;       ///< The number of successful responses.
+    uint32_t mServerFailure; ///< The number of server failure responses.
+    uint32_t mFormatError;   ///< The number of format error responses.
+    uint32_t mNameExists;    ///< The number of 'name exists' responses.
+    uint32_t mRefused;       ///< The number of refused responses.
+    uint32_t mOther;         ///< The number of other responses.
+} otSrpServerResponseCounters;
 
 /**
  * This function returns the domain authorized to the SRP server.
@@ -206,6 +242,16 @@ otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain);
  *
  */
 otSrpServerState otSrpServerGetState(otInstance *aInstance);
+
+/**
+ * This function returns the port the SRP server is listening to.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  The port of the SRP server. It returns 0 if the server is not running.
+ *
+ */
+uint16_t otSrpServerGetPort(otInstance *aInstance);
 
 /**
  * This function returns the address mode being used by the SRP server.
@@ -261,6 +307,30 @@ otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t a
  *
  */
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function returns SRP server TTL configuration.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aTtlConfig  A pointer to an `otSrpServerTtlConfig` instance.
+ *
+ */
+void otSrpServerGetTtlConfig(otInstance *aInstance, otSrpServerTtlConfig *aTtlConfig);
+
+/**
+ * This function sets SRP server TTL configuration.
+ *
+ * The granted TTL will always be no greater than the max lease interval configured via `otSrpServerSetLeaseConfig()`,
+ * regardless of the minimum and maximum TTL configuration.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aTtlConfig  A pointer to an `otSrpServerTtlConfig` instance.
+ *
+ * @retval  OT_ERROR_NONE          Successfully set the TTL configuration.
+ * @retval  OT_ERROR_INVALID_ARGS  The TTL configuration is not valid.
+ *
+ */
+otError otSrpServerSetTtlConfig(otInstance *aInstance, const otSrpServerTtlConfig *aTtlConfig);
 
 /**
  * This function returns SRP server LEASE and KEY-LEASE configurations.
@@ -366,6 +436,16 @@ void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServ
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost);
 
 /**
+ * This function returns the response counters of the SRP server.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  A pointer to the response counters of the SRP server.
+ *
+ */
+const otSrpServerResponseCounters *otSrpServerGetResponseCounters(otInstance *aInstance);
+
+/**
  * This function tells if the SRP service host has been deleted.
  *
  * A SRP service host can be deleted but retains its name for future uses.
@@ -398,6 +478,15 @@ const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost);
  *
  */
 const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, uint8_t *aAddressesNum);
+
+/**
+ * This function returns the LEASE and KEY-LEASE information of a given host.
+ *
+ * @param[in]   aHost       A pointer to the SRP server host.
+ * @param[out]  aLeaseInfo  A pointer to where to output the LEASE and KEY-LEASE information.
+ *
+ */
+void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseInfo *aLeaseInfo);
 
 /**
  * This function returns the next service (excluding any sub-type services) of given host.
@@ -563,6 +652,16 @@ uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService);
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService);
 
 /**
+ * This function returns the TTL of the service instance.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns  The TTL of the service instance..
+ *
+ */
+uint32_t otSrpServerServiceGetTtl(const otSrpServerService *aService);
+
+/**
  * This function returns the TXT record data of the service instance.
  *
  * @param[in]  aService        A pointer to the SRP service.
@@ -583,6 +682,14 @@ const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, 
  */
 const otSrpServerHost *otSrpServerServiceGetHost(const otSrpServerService *aService);
 
+/**
+ * This function returns the LEASE and KEY-LEASE information of a given service.
+ *
+ * @param[in]   aService    A pointer to the SRP server service.
+ * @param[out]  aLeaseInfo  A pointer to where to output the LEASE and KEY-LEASE information.
+ *
+ */
+void otSrpServerServiceGetLeaseInfo(const otSrpServerService *aService, otSrpServerLeaseInfo *aLeaseInfo);
 /**
  * @}
  *

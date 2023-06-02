@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements MAC types such as Address, Extended PAN Identifier, Network Name, etc.
+ *   This file implements MAC types.
  */
 
 #include "mac_types.hpp"
@@ -108,80 +108,6 @@ Address::InfoString Address::ToString(void) const
     }
 
     return string;
-}
-
-ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
-{
-    InfoString string;
-
-    string.AppendHexBytes(m8, sizeof(ExtendedPanId));
-
-    return string;
-}
-
-uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const
-{
-    MutableData<kWithUint8Length> destData;
-
-    destData.Init(aBuffer, aMaxSize);
-    destData.ClearBytes();
-    IgnoreError(destData.CopyBytesFrom(*this));
-
-    return destData.GetLength();
-}
-
-NameData NetworkName::GetAsData(void) const
-{
-    return NameData(m8, static_cast<uint8_t>(StringLength(m8, kMaxSize + 1)));
-}
-
-Error NetworkName::Set(const char *aNameString)
-{
-    // When setting `NetworkName` from a string, we treat it as `NameData`
-    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
-    // for null char in the data (within its given size) to calculate
-    // the name's length and ensure that the name fits in `kMaxSize`
-    // chars. The `+ 1` ensures that a `aNameString` with length
-    // longer than `kMaxSize` is correctly rejected (returning error
-    // `kErrorInvalidArgs`).
-
-    Error    error;
-    NameData data(aNameString, kMaxSize + 1);
-
-    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
-
-    error = Set(data);
-
-exit:
-    return error;
-}
-
-Error NetworkName::Set(const NameData &aNameData)
-{
-    Error    error  = kErrorNone;
-    NameData data   = aNameData;
-    uint8_t  newLen = static_cast<uint8_t>(StringLength(data.GetBuffer(), data.GetLength()));
-
-    VerifyOrExit((0 < newLen) && (newLen <= kMaxSize), error = kErrorInvalidArgs);
-
-    data.SetLength(newLen);
-
-    // Ensure the new name does not match the current one.
-    if (data.MatchesBytesIn(m8) && m8[newLen] == '\0')
-    {
-        ExitNow(error = kErrorAlready);
-    }
-
-    data.CopyBytesTo(m8);
-    m8[newLen] = '\0';
-
-exit:
-    return error;
-}
-
-bool NetworkName::operator==(const NetworkName &aOther) const
-{
-    return GetAsData() == aOther.GetAsData();
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO

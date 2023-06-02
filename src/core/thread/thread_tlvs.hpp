@@ -48,10 +48,6 @@ namespace ot {
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-// Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
-constexpr uint8_t kIp6AddressesNumMin = 1;
-constexpr uint8_t kIp6AddressesNumMax = 15;
-
 /**
  * This class implements Network Layer TLV generation and parsing.
  *
@@ -166,6 +162,8 @@ public:
         kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
         kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
         kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
+        kBorderRouterRequest   = 5, ///< Address Solicit from Border Router request.
+        kUnrecognizedStatus    = 6, ///< The requested status is unrecognized or not meaningful in a request.
     };
 
     /**
@@ -313,6 +311,10 @@ OT_TOOL_PACKED_BEGIN
 class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
 {
 public:
+    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses to [1, 15].
+    static constexpr uint8_t kMinAddresses = 1;
+    static constexpr uint8_t kMaxAddresses = OT_IP6_MAX_MLR_ADDRESSES;
+
     /**
      * This method initializes the TLV.
      *
@@ -328,8 +330,9 @@ public:
      */
     bool IsValid(void) const
     {
-        return GetLength() >= sizeof(Ip6::Address) * kIp6AddressesNumMin &&
-               GetLength() <= sizeof(Ip6::Address) * kIp6AddressesNumMax && (GetLength() % sizeof(Ip6::Address)) == 0;
+        return GetLength() >= sizeof(Ip6::Address) * Ip6AddressesTlv::kMinAddresses &&
+               GetLength() <= sizeof(Ip6::Address) * Ip6AddressesTlv::kMaxAddresses &&
+               (GetLength() % sizeof(Ip6::Address)) == 0;
     }
 
     /**

@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -71,11 +72,11 @@ class SrpRemoveHost(thread_cert.TestCase):
         # Start the server & client devices.
 
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(server.get_state(), 'leader')
 
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(client.get_state(), 'router')
 
         server.srp_server_set_enabled(True)

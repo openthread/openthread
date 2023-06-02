@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, MODE_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -61,11 +62,11 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()

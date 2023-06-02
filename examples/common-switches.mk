@@ -86,7 +86,7 @@ SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
 SRP_CLIENT                ?= 0
 SRP_SERVER                ?= 0
-THREAD_VERSION            ?= 1.2
+THREAD_VERSION            ?= 1.3
 TIME_SYNC                 ?= 0
 TREL                      ?= 0
 UDP_FORWARD               ?= 0
@@ -333,6 +333,8 @@ ifeq ($(THREAD_VERSION),1.1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=2
 else ifeq ($(THREAD_VERSION),1.2)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=3
+else ifeq ($(THREAD_VERSION),1.3)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_THREAD_VERSION=4
 endif
 
 ifeq ($(TIME_SYNC),1)

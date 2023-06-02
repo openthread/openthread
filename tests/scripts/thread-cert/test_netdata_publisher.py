@@ -31,6 +31,7 @@ import ipaddress
 import unittest
 
 import command
+import config
 import thread_cert
 
 # Test description:
@@ -56,10 +57,10 @@ END_DEV5 = 11
 
 WAIT_TIME = 55
 
-ON_MESH_PREFIX = 'fd00:1234::/64'
+ON_MESH_PREFIX = 'fd00:1234:0:0::/64'
 ON_MESH_FLAGS = 'paso'
 
-EXTERNAL_ROUTE = 'fd00:abce::/64'
+EXTERNAL_ROUTE = 'fd00:abce:0:0::/64'
 EXTERNAL_FLAGS = 's'
 
 ANYCAST_SEQ_NUM = 4
@@ -206,12 +207,12 @@ class NetDataPublisher(thread_cert.TestCase):
         # Start the nodes
 
         leader.start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(leader.get_state(), 'leader')
 
         for router in routers:
             router.start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(router.get_state(), 'router')
 
         for end_dev in end_devs:
@@ -443,6 +444,8 @@ class NetDataPublisher(thread_cert.TestCase):
         #---------------------------------------------------------------------------------
         # External route
 
+        # Publish same external route on all nodes with low preference.
+
         num = 0
         for node in nodes:
             node.netdata_publish_route(EXTERNAL_ROUTE, EXTERNAL_FLAGS, 'low')
@@ -451,11 +454,25 @@ class NetDataPublisher(thread_cert.TestCase):
             routes = leader.get_routes()
             self.check_num_of_routes(routes, num, 0, 0)
 
-        leader.netdata_unpublish_prefix(EXTERNAL_ROUTE)
+        # Change the preference level of the existing entry on leader to high.
+
         leader.netdata_publish_route(EXTERNAL_ROUTE, EXTERNAL_FLAGS, 'high')
         self.simulator.go(WAIT_TIME)
         routes = leader.get_routes()
         self.check_num_of_routes(routes, num - 1, 0, 1)
+
+        # Publish the same prefix on leader as an on-mesh prefix. Make
+        # sure it is removed from external routes and now seen in the
+        # prefix list.
+
+        leader.netdata_publish_prefix(EXTERNAL_ROUTE, ON_MESH_FLAGS, 'low')
+        self.simulator.go(WAIT_TIME)
+        routes = leader.get_routes()
+        self.check_num_of_routes(routes, num - 1, 0, 0)
+
+        prefixes = leader.get_prefixes()
+        print(prefixes)
+        self.assertIn(EXTERNAL_ROUTE, [prefix.split()[0] for prefix in prefixes])
 
 
 if __name__ == '__main__':

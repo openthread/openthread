@@ -94,8 +94,8 @@ def cleanup_backbone_env():
 
 
 def setup_backbone_env():
-    if THREAD_VERSION != '1.2':
-        raise RuntimeError('Backbone tests only work with THREAD_VERSION=1.2')
+    if THREAD_VERSION == '1.1':
+        raise RuntimeError('Backbone tests do not work with THREAD_VERSION=1.1')
 
     if VIRTUAL_TIME:
         raise RuntimeError('Backbone tests only work with VIRTUAL_TIME=0')

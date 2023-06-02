@@ -98,7 +98,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[LEADER].add_prefix(PREFIX_2001, 'paros')
@@ -106,7 +106,7 @@ class Cert_7_1_1_BorderRouterAsLeader(thread_cert.TestCase):
         self.nodes[LEADER].register_netdata()
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[SED1].start()

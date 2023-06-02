@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_DATA_RESPONSE, MGMT_COMMISSIONER_GET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, ACTIVE_TIMESTAMP_TLV, SOURCE_ADDRESS_TLV, NWD_COMMISSIONING_DATA_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -73,11 +74,11 @@ class Cert_9_2_01_MGMTCommissionerGet(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
 
         self.collect_leader_aloc(LEADER)

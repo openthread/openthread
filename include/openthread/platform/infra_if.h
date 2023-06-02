@@ -47,6 +47,16 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup plat-infra-if
+ *
+ * @brief
+ *   This module includes the platform abstraction for the adjacent infrastructure network interface.
+ *
+ * @{
+ *
+ */
+
+/**
  * This method tells whether an infra interface has the given IPv6 address assigned.
  *
  * @param[in]  aInfraIfIndex  The index of the infra interface.
@@ -122,6 +132,11 @@ extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
  *
  */
 extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 } // extern "C"

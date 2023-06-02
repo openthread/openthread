@@ -43,6 +43,7 @@
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
+#include "meshcop/network_name.hpp"
 
 namespace ot {
 namespace Mac {
@@ -1480,6 +1481,145 @@ private:
     uint16_t mSuperframeSpec;
     uint8_t  mGtsSpec;
     uint8_t  mPendingAddressSpec;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class BeaconPayload
+{
+public:
+    static constexpr uint8_t kProtocolId      = 3;                     ///< Thread Protocol ID.
+    static constexpr uint8_t kProtocolVersion = 2;                     ///< Thread Protocol version.
+    static constexpr uint8_t kVersionOffset   = 4;                     ///< Version field bit offset.
+    static constexpr uint8_t kVersionMask     = 0xf << kVersionOffset; ///< Version field mask.
+    static constexpr uint8_t kNativeFlag      = 1 << 3;                ///< Native Commissioner flag.
+    static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
+
+    /**
+     * This method initializes the Beacon Payload.
+     *
+     */
+    void Init(void)
+    {
+        mProtocolId = kProtocolId;
+        mFlags      = kProtocolVersion << kVersionOffset;
+    }
+
+    /**
+     * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
+     *
+     * @retval TRUE   If the beacon appears to be a valid Thread Beacon Payload.
+     * @retval FALSE  If the beacon does not appear to be a valid Thread Beacon Payload.
+     *
+     */
+    bool IsValid(void) const { return (mProtocolId == kProtocolId); }
+
+    /**
+     * This method returns the Protocol ID value.
+     *
+     * @returns the Protocol ID value.
+     *
+     */
+    uint8_t GetProtocolId(void) const { return mProtocolId; }
+
+    /**
+     * This method returns the Protocol Version value.
+     *
+     * @returns The Protocol Version value.
+     *
+     */
+    uint8_t GetProtocolVersion(void) const { return mFlags >> kVersionOffset; }
+
+    /**
+     * This method indicates whether or not the Native Commissioner flag is set.
+     *
+     * @retval TRUE   If the Native Commissioner flag is set.
+     * @retval FALSE  If the Native Commissioner flag is not set.
+     *
+     */
+    bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
+
+    /**
+     * This method clears the Native Commissioner flag.
+     *
+     */
+    void ClearNative(void) { mFlags &= ~kNativeFlag; }
+
+    /**
+     * This method sets the Native Commissioner flag.
+     *
+     */
+    void SetNative(void) { mFlags |= kNativeFlag; }
+
+    /**
+     * This method indicates whether or not the Joining Permitted flag is set.
+     *
+     * @retval TRUE   If the Joining Permitted flag is set.
+     * @retval FALSE  If the Joining Permitted flag is not set.
+     *
+     */
+    bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
+
+    /**
+     * This method clears the Joining Permitted flag.
+     *
+     */
+    void ClearJoiningPermitted(void) { mFlags &= ~kJoiningFlag; }
+
+    /**
+     * This method sets the Joining Permitted flag.
+     *
+     */
+    void SetJoiningPermitted(void)
+    {
+        mFlags |= kJoiningFlag;
+
+#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != 2 // check against kProtocolVersion
+        mFlags &= ~kVersionMask;
+        mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
+#endif
+    }
+
+    /**
+     * This method gets the Network Name field.
+     *
+     * @returns The Network Name field as `NameData`.
+     *
+     */
+    MeshCoP::NameData GetNetworkName(void) const { return MeshCoP::NameData(mNetworkName, sizeof(mNetworkName)); }
+
+    /**
+     * This method sets the Network Name field.
+     *
+     * @param[in]  aNameData  The Network Name (as a `NameData`).
+     *
+     */
+    void SetNetworkName(const MeshCoP::NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
+
+    /**
+     * This method returns the Extended PAN ID field.
+     *
+     * @returns The Extended PAN ID field.
+     *
+     */
+    const otExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
+
+    /**
+     * This method sets the Extended PAN ID field.
+     *
+     * @param[in]  aExtPanId  An Extended PAN ID.
+     *
+     */
+    void SetExtendedPanId(const otExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
+
+private:
+    uint8_t         mProtocolId;
+    uint8_t         mFlags;
+    char            mNetworkName[MeshCoP::NetworkName::kMaxSize];
+    otExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

@@ -114,7 +114,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             'mode': 'rdn',
             'version': '1.2',
             'allowlist': [ROUTER_1_2],
-            'router_upgrade_threshold': 0,
+            'router_eligible': False,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
         },
     }
@@ -134,7 +134,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         self.nodes[BBR_1].set_backbone_router(seqno=1, reg_delay=REREG_DELAY, mlr_timeout=MLR_TIMEOUT)
         self.nodes[BBR_1].start()
         WAIT_TIME = WAIT_ATTACH + ROUTER_SELECTION_JITTER
-        self.simulator.go(WAIT_TIME)
+        self.simulator.go(WAIT_TIME * 2)
         self.assertEqual(self.nodes[BBR_1].get_state(), 'leader')
 
         if bbr_1_enable_backbone_router:

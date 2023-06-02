@@ -71,6 +71,7 @@ public:
         kIp6FragmentReassembler, ///< `Ip6::Ip6` (handling of fragmented messages)
         kDuaManager,             ///< `DuaManager`
         kMlrManager,             ///< `MlrManager`
+        kNetworkDataNotifier,    ///< `NetworkData::Notifier`
 
         kNumReceivers, ///< Number of receivers.
     };

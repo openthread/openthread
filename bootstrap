@@ -39,7 +39,8 @@ nlbuild_autotools_stem="third_party/nlbuild-autotools/repo"
 abs_srcdir=$(cd "$(dirname "${0}")" && pwd)
 
 # filter out knowning information from stderr which is causing GitHub annotation check warnings.
-(cd "$abs_srcdir" && exec "$abs_srcdir/$nlbuild_autotools_stem/scripts/bootstrap" -I "$abs_srcdir/$nlbuild_autotools_stem" "${@}") 2> \
-    >(grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/missing'" \
+(cd "$abs_srcdir" && exec "$abs_srcdir/$nlbuild_autotools_stem/scripts/bootstrap" -I "$abs_srcdir/$nlbuild_autotools_stem" "${@}") 2> >(
+    grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/missing'" \
         | grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/compile'" \
-        | grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/depcomp'" 1>&2)
+        | grep -v "installing 'third_party/nlbuild-autotools/repo/third_party/autoconf/depcomp'" 1>&2
+)

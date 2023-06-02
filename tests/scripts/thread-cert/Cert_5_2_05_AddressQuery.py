@@ -177,14 +177,14 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
     def test(self):
         # 1. LEADER: DHCPv6 Server for prefix 2001::/64.
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.nodes[LEADER].add_prefix('2001::/64', 'pdros')
         self.nodes[LEADER].register_netdata()
 
         # 2. BR: SLAAC Server for prefix 2002::/64.
         self.nodes[BR].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[BR].get_state(), 'router')
         self.nodes[BR].add_prefix('2002::/64', 'paros')
         self.nodes[BR].register_netdata()
@@ -194,7 +194,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
             if i == BR:
                 continue
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[MED].start()
@@ -203,7 +203,7 @@ class Cert_5_2_5_AddressQuery(thread_cert.TestCase):
 
         # 4. Bring up DUT_REED.
         self.nodes[DUT_REED].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.simulator.go(ROUTER_SELECTION_JITTER)
 
         # 5. Enable a link between the DUT and BR to create a one-way link.

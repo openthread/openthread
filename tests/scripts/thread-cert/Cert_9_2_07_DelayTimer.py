@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DATA_RESPONSE, MGMT_PENDING_SET_URI, MGMT_ACTIVE_SET_URI, MGMT_DATASET_CHANGED_URI, COAP_CODE_ACK, ACTIVE_OPERATION_DATASET_TLV, ACTIVE_TIMESTAMP_TLV, PENDING_TIMESTAMP_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, NETWORK_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_DELAY_TIMER_TLV, PENDING_OPERATION_DATASET_TLV
 from pktverify.packet_verifier import PacketVerifier
@@ -76,11 +77,11 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
@@ -89,12 +90,12 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         self.simulator.go(5)
 
         self.nodes[ROUTER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'leader')
 
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
         self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
-        self.simulator.go(20)
+        self.simulator.go(35)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')

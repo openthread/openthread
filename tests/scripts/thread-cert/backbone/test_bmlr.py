@@ -39,6 +39,7 @@
 import unittest
 
 import thread_cert
+import config
 from pktverify.packet_verifier import PacketVerifier
 
 PBBR = 1
@@ -87,7 +88,7 @@ class BBR_5_11_01(thread_cert.TestCase):
 
     def test(self):
         self.nodes[PBBR].start()
-        self.wait_node_state(PBBR, 'leader', 5)
+        self.wait_node_state(PBBR, 'leader', 10)
         self.nodes[PBBR].set_backbone_router(reg_delay=REREG_DELAY, mlr_timeout=MLR_TIMEOUT)
         self.nodes[PBBR].enable_backbone_router()
         self.wait_until(lambda: self.nodes[PBBR].is_primary_backbone_router, 5)

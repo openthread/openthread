@@ -113,12 +113,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in (2, 3):
             self.nodes[i].start()
-            self.simulator.go(5)
+            self.simulator.go(config.ROUTER_STARTUP_DELAY)
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
         self.nodes[MED].start()
@@ -146,7 +146,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
 
         # Wait for NETWORK_ID_TIMEOUT taking effect
         # Router_2 creates a new partition
-        self.simulator.go(60)
+        self.simulator.go(80)
         self.assertEqual(self.nodes[ROUTER_2].get_state(), 'leader')
         self.nodes[ROUTER_2].remove_domain_prefix(PREFIX_1)
         self.nodes[ROUTER_2].add_prefix(PREFIX_2, 'paros')

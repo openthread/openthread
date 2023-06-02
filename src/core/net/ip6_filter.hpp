@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/array.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -66,7 +67,10 @@ public:
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    explicit Filter(Instance &aInstance);
+    explicit Filter(Instance &aInstance)
+        : InstanceLocator(aInstance)
+    {
+    }
 
     /**
      * This method indicates whether or not the IPv6 datagram passes the filter.
@@ -89,7 +93,7 @@ public:
      * @retval kErrorNoBufs       The unsecure port list is full.
      *
      */
-    Error AddUnsecurePort(uint16_t aPort);
+    Error AddUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kAdd, aPort); }
 
     /**
      * This method removes a port from the allowed unsecure port list.
@@ -101,7 +105,7 @@ public:
      * @retval kErrorNotFound     The port was not found in the unsecure port list.
      *
      */
-    Error RemoveUnsecurePort(uint16_t aPort);
+    Error RemoveUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kRemove, aPort); }
 
     /**
      * This method checks whether a port is in the unsecure port list.
@@ -111,13 +115,13 @@ public:
      * @returns Whether the given port is in the unsecure port list.
      *
      */
-    bool IsUnsecurePort(uint16_t aPort);
+    bool IsUnsecurePort(uint16_t aPort) { return mUnsecurePorts.Contains(aPort); }
 
     /**
      * This method removes all ports from the allowed unsecure port list.
      *
      */
-    void RemoveAllUnsecurePorts(void);
+    void RemoveAllUnsecurePorts(void) { mUnsecurePorts.Clear(); }
 
     /**
      * This method returns a pointer to the unsecure port list.
@@ -129,12 +133,25 @@ public:
      * @returns A pointer to the unsecure port list.
      *
      */
-    const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
+    const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const
+    {
+        aNumEntries = mUnsecurePorts.GetLength();
+
+        return &mUnsecurePorts[0];
+    }
 
 private:
     static constexpr uint16_t kMaxUnsecurePorts = 2;
 
-    uint16_t mUnsecurePorts[kMaxUnsecurePorts];
+    enum Action : uint8_t
+    {
+        kAdd,
+        kRemove,
+    };
+
+    Error UpdateUnsecurePorts(Action aAction, uint16_t aPort);
+
+    Array<uint16_t, kMaxUnsecurePorts> mUnsecurePorts;
 };
 
 } // namespace Ip6

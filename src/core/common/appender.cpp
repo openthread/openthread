@@ -45,9 +45,7 @@ Appender::Appender(Message &aMessage)
 Appender::Appender(uint8_t *aBuffer, uint16_t aSize)
     : mType(kBuffer)
 {
-    mShared.mBuffer.mStart = aBuffer;
-    mShared.mBuffer.mCur   = aBuffer;
-    mShared.mBuffer.mEnd   = aBuffer + aSize;
+    mShared.mFrameBuilder.Init(aBuffer, aSize);
 }
 
 Error Appender::AppendBytes(const void *aBuffer, uint16_t aLength)
@@ -61,14 +59,10 @@ Error Appender::AppendBytes(const void *aBuffer, uint16_t aLength)
         break;
 
     case kBuffer:
-        VerifyOrExit(aLength <= static_cast<uint16_t>(mShared.mBuffer.mEnd - mShared.mBuffer.mCur),
-                     error = kErrorNoBufs);
-        memcpy(mShared.mBuffer.mCur, aBuffer, aLength);
-        mShared.mBuffer.mCur += aLength;
+        error = mShared.mFrameBuilder.AppendBytes(aBuffer, aLength);
         break;
     }
 
-exit:
     return error;
 }
 
@@ -83,7 +77,7 @@ uint16_t Appender::GetAppendedLength(void) const
         break;
 
     case kBuffer:
-        length = static_cast<uint16_t>(mShared.mBuffer.mCur - mShared.mBuffer.mStart);
+        length = mShared.mFrameBuilder.GetLength();
         break;
     }
 
@@ -92,7 +86,7 @@ uint16_t Appender::GetAppendedLength(void) const
 
 void Appender::GetAsData(Data<kWithUint16Length> &aData)
 {
-    aData.Init(mShared.mBuffer.mStart, GetAppendedLength());
+    aData.Init(mShared.mFrameBuilder.GetBytes(), mShared.mFrameBuilder.GetLength());
 }
 
 } // namespace ot

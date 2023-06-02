@@ -29,6 +29,7 @@
 
 import unittest
 
+import config
 import thread_cert
 from pktverify.consts import MLE_CHILD_ID_REQUEST, MGMT_PANID_QUERY, MGMT_PANID_CONFLICT, MGMT_ED_REPORT, NM_COMMISSIONER_SESSION_ID_TLV, NM_CHANNEL_MASK_TLV, NM_PAN_ID_TLV, REALM_LOCAL_All_THREAD_NODES_MULTICAST_ADDRESS
 from pktverify.packet_verifier import PacketVerifier
@@ -68,21 +69,21 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
 
     def test(self):
         self.nodes[LEADER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER1].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
-        self.simulator.go(5)
+        self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
 
         self.nodes[LEADER2].start()
-        self.simulator.go(5)
+        self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual(self.nodes[LEADER2].get_state(), 'leader')
 
         self.collect_rlocs()

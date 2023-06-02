@@ -134,7 +134,7 @@ endif()
 
 option(OT_COAP_OBSERVE "enable coap observe (RFC7641) api support")
 if(OT_COAP_OBSERVE)
-    list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1")
 endif()
 
 option(OT_COMMISSIONER "enable commissioner support")
@@ -358,6 +358,11 @@ endif()
 option(OT_TREL "enable TREL radio link for Thread over Infrastructure feature")
 if (OT_TREL)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
+endif()
+
+option(OT_TX_BEACON_PAYLOAD "enable Thread beacon payload in outgoing beacons")
+if (OT_TX_BEACON_PAYLOAD)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE=1")
 endif()
 
 option(OT_UDP_FORWARD "enable UDP forward support")

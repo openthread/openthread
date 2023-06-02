@@ -139,6 +139,64 @@ exit:
     return message;
 }
 
+Message *CoapBase::NewPriorityConfirmablePostMessage(const char *aUriPath)
+{
+    return InitMessage(NewPriorityMessage(), kTypeConfirmable, aUriPath);
+}
+
+Message *CoapBase::NewConfirmablePostMessage(const char *aUriPath)
+{
+    return InitMessage(NewMessage(), kTypeConfirmable, aUriPath);
+}
+
+Message *CoapBase::NewPriorityNonConfirmablePostMessage(const char *aUriPath)
+{
+    return InitMessage(NewPriorityMessage(), kTypeNonConfirmable, aUriPath);
+}
+
+Message *CoapBase::NewNonConfirmablePostMessage(const char *aUriPath)
+{
+    return InitMessage(NewMessage(), kTypeNonConfirmable, aUriPath);
+}
+
+Message *CoapBase::NewPriorityResponseMessage(const Message &aRequest)
+{
+    return InitResponse(NewPriorityMessage(), aRequest);
+}
+
+Message *CoapBase::NewResponseMessage(const Message &aRequest)
+{
+    return InitResponse(NewMessage(), aRequest);
+}
+
+Message *CoapBase::InitMessage(Message *aMessage, Type aType, const char *aUriPath)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aMessage != nullptr);
+
+    SuccessOrExit(error = aMessage->Init(aType, kCodePost, aUriPath));
+    SuccessOrExit(error = aMessage->SetPayloadMarker());
+
+exit:
+    FreeAndNullMessageOnError(aMessage, error);
+    return aMessage;
+}
+
+Message *CoapBase::InitResponse(Message *aMessage, const Message &aResponse)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aMessage != nullptr);
+
+    SuccessOrExit(error = aMessage->SetDefaultResponseHeader(aResponse));
+    SuccessOrExit(error = aMessage->SetPayloadMarker());
+
+exit:
+    FreeAndNullMessageOnError(aMessage, error);
+    return aMessage;
+}
+
 Error CoapBase::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error error;

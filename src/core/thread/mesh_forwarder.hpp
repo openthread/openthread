@@ -38,6 +38,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
+#include "common/frame_data.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -170,7 +171,6 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
-    friend class Utils::HistoryTracker;
 
 public:
     /**
@@ -334,14 +334,28 @@ private:
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
 
+    static constexpr uint32_t kTxDelayInterval = OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_INTERVAL; // In msec
+
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    static constexpr uint32_t kTimeInQueueMarkEcn = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_MARK_ECN_INTERVAL;
+    static constexpr uint32_t kTimeInQueueDropMsg = OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_DROP_MSG_INTERVAL;
+#endif
+
     enum MessageAction : uint8_t
     {
         kMessageReceive,         // Indicates that the message was received.
         kMessageTransmit,        // Indicates that the message was sent.
         kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,            // Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageDrop,            // Indicates that the outbound message is dropped (e.g., dst unknown).
         kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
         kMessageEvict,           // Indicates that the message was evicted.
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+        kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
+        kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+        kMessageFullQueueDrop, // Indicates message drop due to reaching max allowed frames in direct tx queue.
+#endif
     };
 
     enum AnycastType : uint8_t
@@ -360,21 +374,39 @@ private:
             friend class FragmentPriorityList;
 
         public:
-            Message::Priority GetPriority(void) const { return mPriority; }
+            // Lifetime of an entry in seconds.
+            static constexpr uint8_t kLifetime =
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+                OT_MAX(kReassemblyTimeout, OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_RETAIN_TIME);
+#else
+                kReassemblyTimeout;
+#endif
+
+            Message::Priority GetPriority(void) const { return static_cast<Message::Priority>(mPriority); }
             bool              IsExpired(void) const { return (mLifetime == 0); }
             void              DecrementLifetime(void) { mLifetime--; }
-            void              ResetLifetime(void) { mLifetime = kReassemblyTimeout; }
+            void              ResetLifetime(void) { mLifetime = kLifetime; }
 
             bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
             {
                 return (mSrcRloc16 == aSrcRloc16) && (mDatagramTag == aTag);
             }
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            bool ShouldDrop(void) const { return mShouldDrop; }
+            void MarkToDrop(void) { mShouldDrop = true; }
+#endif
+
         private:
-            uint16_t          mSrcRloc16;
-            uint16_t          mDatagramTag;
-            Message::Priority mPriority;
-            uint8_t           mLifetime;
+            uint16_t mSrcRloc16;
+            uint16_t mDatagramTag;
+            uint8_t  mLifetime;
+            uint8_t  mPriority : 2;
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            bool mShouldDrop : 1;
+#endif
+
+            static_assert(Message::kNumPriorities <= 4, "mPriority as a 2-bit does not fit all `Priority` values");
         };
 
         Entry *AllocateEntry(uint16_t aSrcRloc16, uint16_t aTag, Message::Priority aPriority);
@@ -382,56 +414,39 @@ private:
         bool   UpdateOnTimeTick(void);
 
     private:
-        static constexpr uint16_t kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+        static constexpr uint16_t kNumEntries =
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+            OT_MAX(OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
+                   OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_FRAG_TAG_ENTRY_LIST_SIZE);
+#else
+            OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+#endif
 
         Entry mEntries[kNumEntries];
     };
 #endif // OPENTHREAD_FTD
 
-    void  SendIcmpErrorIfDstUnreach(const Message &     aMessage,
-                                    const Mac::Address &aMacSource,
-                                    const Mac::Address &aMacDest);
-    Error CheckReachability(const uint8_t *     aFrame,
-                            uint16_t            aFrameLength,
-                            const Mac::Address &aMeshSource,
-                            const Mac::Address &aMeshDest);
-    void  UpdateRoutes(const uint8_t *     aFrame,
-                       uint16_t            aFrameLength,
-                       const Mac::Address &aMeshSource,
-                       const Mac::Address &aMeshDest);
-
-    Error    DecompressIp6Header(const uint8_t *     aFrame,
-                                 uint16_t            aFrameLength,
-                                 const Mac::Address &aMacSource,
-                                 const Mac::Address &aMacDest,
-                                 Ip6::Header &       aIp6Header,
-                                 uint8_t &           aHeaderLength,
-                                 bool &              aNextHeaderCompressed);
-    Error    FrameToMessage(const uint8_t *     aFrame,
-                            uint16_t            aFrameLength,
+    void     SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                       const Mac::Address &aMacSource,
+                                       const Mac::Address &aMacDest);
+    Error    CheckReachability(const FrameData &   aFrameData,
+                               const Mac::Address &aMeshSource,
+                               const Mac::Address &aMeshDest);
+    void     UpdateRoutes(const FrameData &aFrameData, const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
+    Error    FrameToMessage(const FrameData &   aFrameData,
                             uint16_t            aDatagramSize,
                             const Mac::Address &aMacSource,
                             const Mac::Address &aMacDest,
                             Message *&          aMessage);
-    Error    GetIp6Header(const uint8_t *     aFrame,
-                          uint16_t            aFrameLength,
-                          const Mac::Address &aMacSource,
-                          const Mac::Address &aMacDest,
-                          Ip6::Header &       aIp6Header);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *PrepareNextDirectTransmission(void);
-    void     HandleMesh(uint8_t *             aFrame,
-                        uint16_t              aFrameLength,
-                        const Mac::Address &  aMacSource,
-                        const ThreadLinkInfo &aLinkInfo);
-    void     HandleFragment(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
+    void     HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(FrameData &           aFrameData,
                             const Mac::Address &  aMacSource,
                             const Mac::Address &  aMacDest,
                             const ThreadLinkInfo &aLinkInfo);
-    void     HandleLowpanHC(const uint8_t *       aFrame,
-                            uint16_t              aFrameLength,
+    void     HandleLowpanHC(const FrameData &     aFrameData,
                             const Mac::Address &  aMacSource,
                             const Mac::Address &  aMacDest,
                             const ThreadLinkInfo &aLinkInfo);
@@ -445,8 +460,16 @@ private:
                               bool                aAddFragHeader = false);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
+#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
+    Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
+    Error RemoveAgedMessages(void);
+#endif
+#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
+    bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
+    void ApplyDirectTxQueueLimit(Message &aMessage);
+#endif
     void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
-    void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
+    void  SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::Headers &aIp6Headers);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
     void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
@@ -480,16 +503,14 @@ private:
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
     void        ScheduleTransmissionTask(void);
 
-    Error GetFramePriority(const uint8_t *     aFrame,
-                           uint16_t            aFrameLength,
+    Error GetFramePriority(const FrameData &   aFrameData,
                            const Mac::Address &aMacSource,
                            const Mac::Address &aMacDest,
                            Message::Priority & aPriority);
     Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
                               uint16_t                aSrcRloc16,
                               Message::Priority &     aPriority);
-    void  GetForwardFramePriority(const uint8_t *     aFrame,
-                                  uint16_t            aFrameLength,
+    void  GetForwardFramePriority(const FrameData &   aFrameData,
                                   const Mac::Address &aMeshSource,
                                   const Mac::Address &aMeshDest,
                                   Message::Priority & aPriority);
@@ -503,11 +524,15 @@ private:
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    static void HandleTxDelayTimer(Timer &aTimer);
+    void        HandleTxDelayTimer(void);
+#endif
+
     void LogMessage(MessageAction       aAction,
                     const Message &     aMessage,
                     Error               aError   = kErrorNone,
                     const Mac::Address *aAddress = nullptr);
-
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
@@ -521,25 +546,11 @@ private:
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
 
-    static Error ParseIp6UdpTcpHeader(const Message &aMessage,
-                                      Ip6::Header &  aIp6Header,
-                                      uint16_t &     aChecksum,
-                                      uint16_t &     aSourcePort,
-                                      uint16_t &     aDestPort);
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
 #if OPENTHREAD_FTD
-    Error DecompressIp6UdpTcpHeader(const Message &     aMessage,
-                                    uint16_t            aOffset,
-                                    const Mac::Address &aMeshSource,
-                                    const Mac::Address &aMeshDest,
-                                    Ip6::Header &       aIp6Header,
-                                    uint16_t &          aChecksum,
-                                    uint16_t &          aSourcePort,
-                                    uint16_t &          aDestPort);
     Error LogMeshFragmentHeader(MessageAction       aAction,
                                 const Message &     aMessage,
                                 const Mac::Address *aMacAddress,
@@ -559,10 +570,7 @@ private:
                          Error               aError,
                          LogLevel            aLogLevel);
 #endif
-    void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
-                                   uint16_t     aSourcePort,
-                                   uint16_t     aDestPort,
-                                   LogLevel     aLogLevel);
+    void LogIp6SourceDestAddresses(const Ip6::Headers &aHeaders, LogLevel aLogLevel);
     void LogIp6Message(MessageAction       aAction,
                        const Message &     aMessage,
                        const Mac::Address *aAddress,
@@ -585,6 +593,10 @@ private:
     bool         mEnabled : 1;
     bool         mTxPaused : 1;
     bool         mSendBusy : 1;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_COLLISION_AVOIDANCE_DELAY_ENABLE
+    bool       mDelayNextTx : 1;
+    TimerMilli mTxDelayTimer;
+#endif
 
     Tasklet mScheduleTransmissionTask;
 

@@ -62,7 +62,6 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
-- [linkquality](#linkquality-extaddr)
 - [locate](#locate)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -395,23 +394,48 @@ fd14:1078:b3d5:b0b0:0:0::/96
 Done
 ```
 
+### br rioprf
+
+Get the preference used when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
+
+```bash
+> br rioprf
+med
+Done
+```
+
+### br rioprf \<prf\>
+
+Set the preference (which may be 'high', 'med', or 'low') to use when advertising Route Info Options (e.g., for discovered OMR prefixes) in emitted Router Advertisement message.
+
+```bash
+> br rioprf low
+Done
+```
+
 ### bufferinfo
 
 Show the current message buffer information.
+
+- The `total` shows total number of message buffers in pool.
+- The `free` shows the number of free message buffers.
+- This is then followed by info about different queues used by OpenThread stack, each line representing info about a queue.
+  - The first number shows number messages in the queue.
+  - The second number shows number of buffers used by all messages in the queue.
+  - The third number shows total number of bytes of all messages in the queue.
 
 ```bash
 > bufferinfo
 total: 40
 free: 40
-6lo send: 0 0
-6lo reas: 0 0
-ip6: 0 0
-mpl: 0 0
-mle: 0 0
-arp: 0 0
-coap: 0 0
-coap secure: 0 0
-application coap: 0 0
+6lo send: 0 0 0
+6lo reas: 0 0 0
+ip6: 0 0 0
+mpl: 0 0 0
+mle: 0 0 0
+coap: 0 0 0
+coap secure: 0 0 0
+application coap: 0 0 0
 Done
 ```
 
@@ -1621,25 +1645,6 @@ Done
  - RSSI: -18 (dBm) (Exponential Moving Average)
 ```
 
-### linkquality \<extaddr\>
-
-Get the link quality on the link to a given extended address.
-
-```bash
-> linkquality 36c1dd7a4f5201ff
-3
-Done
-```
-
-### linkquality \<extaddr\> \<linkquality\>
-
-Set the link quality on the link to a given extended address.
-
-```bash
-> linkquality 36c1dd7a4f5201ff 3
-Done
-```
-
 ### locate
 
 Gets the current state (`In Progress` or `Idle`) of anycast locator.
@@ -2168,6 +2173,15 @@ Get the mesh local prefix.
 ```bash
 > prefix meshlocal
 fdde:ad00:beef:0::/64
+Done
+```
+
+### prefix meshlocal <prefix>
+
+Set the mesh local prefix.
+
+```bash
+> prefix meshlocal fdde:ad00:beef:0::/64
 Done
 ```
 

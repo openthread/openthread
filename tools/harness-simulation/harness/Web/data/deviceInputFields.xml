@@ -1,0 +1,10 @@
+<DEVICE_FIELDS>
+    <DEVICE name="OpenThread_Sim" thumbnail="OpenThread.png" description = "OpenThread Simulation" THCI="OpenThread_Sim">
+        <ITEM label="Serial Line"
+              type="text"
+              forParam="SerialPort"
+              validation="COM"
+              hint="eg: COM1">COM1
+        </ITEM>
+    </DEVICE>
+</DEVICE_FIELDS>

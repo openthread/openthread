@@ -125,16 +125,6 @@ public:
      */
     static void RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString);
 
-    /**
-     * This static method converts a route preference value to human-readable string.
-     *
-     * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
-     *
-     * @returns A string representation @p aPreference.
-     *
-     */
-    static const char *PreferenceToString(signed int aPreference);
-
 private:
     using Command = CommandEntry<NetworkData>;
 
