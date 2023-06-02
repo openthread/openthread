@@ -78,6 +78,7 @@ cc_defaults {
         "-DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1",
         "-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"src/android/openthread-core-android-config.h\"",
         "-DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1",
+        "-DOPENTHREAD_CONFIG_JOINER_ENABLE=1",
         "-DPACKAGE=\"openthread\"",
         "-DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"",
         "-DPACKAGE_NAME=\"OPENTHREAD\"",
