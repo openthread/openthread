@@ -71,6 +71,8 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
       run: |
         top_builddir=$(pwd)/build/toranj ./tests/toranj/start.sh
@@ -138,8 +140,15 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build & Run
       run: |
-        ./tests/toranj/build.sh cmake
+        ./tests/toranj/build.sh all
         ninja test
+        # Validate posix builds with different radio configs
+        git clean -dfx
+        ./tests/toranj/build.sh posix-15.4
+        git clean -dfx
+        ./tests/toranj/build.sh posix-15.4+trel
+        git clean -dfx
+        ./tests/toranj/build.sh posix-trel
 
   upload-coverage:
     needs:
