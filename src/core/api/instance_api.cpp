@@ -38,7 +38,6 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "radio/radio.hpp"
 
@@ -51,7 +50,7 @@
 #endif
 #else // __ANDROID__
 #if defined(__DATE__)
-#define OPENTHREAD_BUILD_DATETIME "; " __DATE__ " " __TIME__
+#define OPENTHREAD_BUILD_DATETIME __DATE__ " " __TIME__
 #endif
 #endif // __ANDROID__
 #endif // !defined(OPENTHREAD_BUILD_DATETIME)
@@ -64,7 +63,6 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
     Instance *instance;
 
     instance = Instance::Init(aInstanceBuffer, aInstanceBufferSize);
-    otLogInfoApi("otInstance Initialized");
 
     return instance;
 }
@@ -179,10 +177,10 @@ const char *otGetVersionString(void)
 #endif
     const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
 #ifdef OPENTHREAD_BUILD_DATETIME
-        OPENTHREAD_BUILD_DATETIME
+                                         "; " OPENTHREAD_BUILD_DATETIME
 #endif
 #ifdef PLATFORM_VERSION_ATTR_SUFFIX
-            PLATFORM_VERSION_ATTR_SUFFIX
+                                             PLATFORM_VERSION_ATTR_SUFFIX
 #endif
         ; // Trailing semicolon to end statement.
 

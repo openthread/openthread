@@ -192,6 +192,16 @@ typedef enum otTcpDisconnectedReason
 typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason);
 
 /**
+ * OT_TCP_ENDPOINT_TCB_SIZE_BASE and OT_TCP_ENDPOINT_TCB_NUM_POINTERS are
+ * chosen such that the mTcb field of otTcpEndpoint has the same size as
+ * struct tcpcb in TCPlp. This is necessary because the mTcb field, although
+ * opaque in its declaration, is treated as struct tcpcb in the TCP
+ * implementation.
+ */
+#define OT_TCP_ENDPOINT_TCB_SIZE_BASE 368
+#define OT_TCP_ENDPOINT_TCB_NUM_PTR 36
+
+/**
  * This structure represents a TCP endpoint.
  *
  * An TCP endpoint acts an endpoint of TCP connection. It can be used to
@@ -205,9 +215,14 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  */
 struct otTcpEndpoint
 {
-    struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
-    void *                mContext;  ///< A pointer to application-specific context
+    union
+    {
+        uint8_t  mSize[OT_TCP_ENDPOINT_TCB_SIZE_BASE + OT_TCP_ENDPOINT_TCB_NUM_PTR * sizeof(void *)];
+        uint64_t mAlign;
+    } mTcb;
+
+    struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
@@ -217,7 +232,8 @@ struct otTcpEndpoint
 
     uint32_t mTimers[4];
 
-    /* Other implementation-defined fields go here. */
+    otLinkedBuffer mReceiveLinks[2];
+    otSockAddr     mSockAddr;
 };
 
 /**
@@ -438,7 +454,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  *
  */
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
 /**
  * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -599,6 +615,16 @@ typedef otTcpIncomingConnectionAction (*otTcpAcceptReady)(otTcpListener *   aLis
 typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
 
 /**
+ * OT_TCP_LISTENER_TCB_SIZE_BASE and OT_TCP_LISTENER_TCB_NUM_POINTERS are
+ * chosen such that the mTcbListener field of otTcpListener has the same size
+ * as struct tcpcb_listen in TCPlp. This is necessary because the mTcbListen
+ * field, though opaque in its declaration, is treated as struct tcpcb in the
+ * TCP implementation.
+ */
+#define OT_TCP_LISTENER_TCB_SIZE_BASE 16
+#define OT_TCP_LISTENER_TCB_NUM_PTR 3
+
+/**
  * This structure represents a TCP listener.
  *
  * A TCP listener is used to listen for and accept incoming TCP connections.
@@ -610,14 +636,17 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  */
 struct otTcpListener
 {
-    struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
-    void *                mContext;  ///< A pointer to application-specific context
+    union
+    {
+        uint8_t mSize[OT_TCP_LISTENER_TCB_SIZE_BASE + OT_TCP_LISTENER_TCB_NUM_PTR * sizeof(void *)];
+        void *  mAlign;
+    } mTcbListen;
+
+    struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
-
-    /* Other implementation-defined fields go here. */
 };
 
 /**

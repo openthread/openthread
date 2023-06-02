@@ -36,8 +36,10 @@
 
 #include "openthread-core-config.h"
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
@@ -93,6 +95,15 @@ public:
      *
      */
     uint8_t GetChannel(void) const { return mChannel; }
+
+    /**
+     * This method returns whether the Destination PAN ID is broadcast.
+     *
+     * @retval TRUE   If Destination PAN ID is broadcast.
+     * @retval FALSE  If Destination PAN ID is not broadcast.
+     *
+     */
+    bool IsDstPanIdBroadcast(void) const { return mIsDstPanIdBroadcast; }
 
     /**
      * This method indicates whether or not link security is enabled.
@@ -156,6 +167,7 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class Instance;
     friend class DataPollSender;
     friend class IndirectSender;
+    friend class Ip6::Ip6;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
     friend class Utils::HistoryTracker;
@@ -299,15 +311,6 @@ public:
      */
     void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
-#if OPENTHREAD_FTD
-    /**
-     * This method returns a reference to the resolving queue.
-     *
-     * @returns  A reference to the resolving queue.
-     *
-     */
-    const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
-#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
      * This method handles a deferred ack.
@@ -417,7 +420,7 @@ private:
                           Ip6::Header &       aIp6Header);
     void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    Message *GetDirectTransmission(void);
+    Message *PrepareNextDirectTransmission(void);
     void     HandleMesh(uint8_t *             aFrame,
                         uint16_t              aFrameLength,
                         const Mac::Address &  aMacSource,
@@ -461,7 +464,10 @@ private:
 
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
-    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error aError, const Mac::Address &aMacDest);
+    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &      aFrame,
+                                            Error               aError,
+                                            const Mac::Address &aMacDest,
+                                            bool                aIsDataPoll = false);
     void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
                                              Error     aError,
                                              bool      aAllowNeighborRemove,
@@ -497,7 +503,11 @@ private:
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);
 
-    void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, Error aError);
+    void LogMessage(MessageAction       aAction,
+                    const Message &     aMessage,
+                    Error               aError   = kErrorNone,
+                    const Mac::Address *aAddress = nullptr);
+
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,
@@ -517,7 +527,7 @@ private:
                                       uint16_t &     aSourcePort,
                                       uint16_t &     aDestPort);
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
@@ -537,28 +547,28 @@ private:
                                 uint16_t &          aOffset,
                                 Mac::Address &      aMeshSource,
                                 Mac::Address &      aMeshDest,
-                                otLogLevel          aLogLevel);
+                                LogLevel            aLogLevel);
     void  LogMeshIpHeader(const Message &     aMessage,
                           uint16_t            aOffset,
                           const Mac::Address &aMeshSource,
                           const Mac::Address &aMeshDest,
-                          otLogLevel          aLogLevel);
+                          LogLevel            aLogLevel);
     void  LogMeshMessage(MessageAction       aAction,
                          const Message &     aMessage,
                          const Mac::Address *aAddress,
                          Error               aError,
-                         otLogLevel          aLogLevel);
+                         LogLevel            aLogLevel);
 #endif
     void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
                                    uint16_t     aSourcePort,
                                    uint16_t     aDestPort,
-                                   otLogLevel   aLogLevel);
+                                   LogLevel     aLogLevel);
     void LogIp6Message(MessageAction       aAction,
                        const Message &     aMessage,
                        const Mac::Address *aAddress,
                        Error               aError,
-                       otLogLevel          aLogLevel);
-#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+                       LogLevel            aLogLevel);
+#endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
 
     PriorityQueue mSendQueue;
     MessageQueue  mReassemblyList;
@@ -582,7 +592,6 @@ private:
 
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
-    PriorityQueue        mResolvingQueue;
     IndirectSender       mIndirectSender;
 #endif
 
@@ -593,6 +602,8 @@ private:
  * @}
  *
  */
+
+DefineCoreType(otThreadLinkInfo, ThreadLinkInfo);
 
 } // namespace ot
 

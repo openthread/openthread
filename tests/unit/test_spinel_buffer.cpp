@@ -176,7 +176,7 @@ void WriteTestFrame1(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     Message *       message;
     CallbackContext oldContext;
 
-    message = sMessagePool->New(Message::kTypeIp6, 0);
+    message = sMessagePool->Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMottoText)));
     message->Write(0, sMottoText);
@@ -220,12 +220,12 @@ void WriteTestFrame2(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     Message *       message2;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool->New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->Allocate(Message::kTypeIp6);
     VerifyOrQuit(message1 != nullptr, "Null Message");
     SuccessOrQuit(message1->SetLength(sizeof(sMysteryText)));
     message1->Write(0, sMysteryText);
 
-    message2 = sMessagePool->New(Message::kTypeIp6, 0);
+    message2 = sMessagePool->Allocate(Message::kTypeIp6);
     VerifyOrQuit(message2 != nullptr, "Null Message");
     SuccessOrQuit(message2->SetLength(sizeof(sHelloText)));
     message2->Write(0, sHelloText);
@@ -265,7 +265,7 @@ void WriteTestFrame3(Spinel::Buffer &aNcpBuffer, Spinel::Buffer::Priority aPrior
     Message *       message1;
     CallbackContext oldContext = sContext;
 
-    message1 = sMessagePool->New(Message::kTypeIp6, 0);
+    message1 = sMessagePool->Allocate(Message::kTypeIp6);
     VerifyOrQuit(message1 != nullptr, "Null Message");
 
     // An empty message with no content.
@@ -526,7 +526,7 @@ void TestBuffer(void)
         ncpBuffer.InFrameBegin((j % 2) == 0 ? Spinel::Buffer::kPriorityHigh : Spinel::Buffer::kPriorityLow);
         SuccessOrQuit(ncpBuffer.InFrameFeedData(sHelloText, sizeof(sHelloText)));
 
-        message = sMessagePool->New(Message::kTypeIp6, 0);
+        message = sMessagePool->Allocate(Message::kTypeIp6);
         VerifyOrQuit(message != nullptr, "Null Message");
         SuccessOrQuit(message->SetLength(sizeof(sMysteryText)));
         message->Write(0, sMysteryText);
@@ -731,7 +731,7 @@ void TestBuffer(void)
     VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE);
     VerifyOrQuit(ncpBuffer.InFrameFeedData(sOpenThreadText, 0) == OT_ERROR_INVALID_STATE);
     VerifyOrQuit(ncpBuffer.InFrameEnd() == OT_ERROR_INVALID_STATE);
-    message = sMessagePool->New(Message::kTypeIp6, 0);
+    message = sMessagePool->Allocate(Message::kTypeIp6);
     VerifyOrQuit(message != nullptr, "Null Message");
     SuccessOrQuit(message->SetLength(sizeof(sMysteryText)));
     message->Write(0, sMysteryText);

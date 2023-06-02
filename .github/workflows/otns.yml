@@ -1,0 +1,205 @@
+#
+#  Copyright (c) 2020, The OpenThread Authors.
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#  1. Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#  3. Neither the name of the copyright holder nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+#  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+#  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+#  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+#  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+#  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+#  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#  POSSIBILITY OF SUCH DAMAGE.
+#
+
+name: OTNS
+
+on: [push, pull_request]
+
+env:
+  COVERAGE: 1
+  REFERENCE_DEVICE: 1
+  VIRTUAL_TIME: 1
+  VIRTUAL_TIME_UART: 1
+  MAX_NETWORK_SIZE: 999
+  GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+jobs:
+
+  cancel-previous-runs:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: rokroskar/workflow-run-cleanup-action@master
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      if: "github.ref != 'refs/heads/main'"
+
+  unittests:
+    name: Unittests
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v1
+      with:
+        go-version: '1.14'
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
+        ./bootstrap
+    - name: Run
+      run: |
+        export OT_DIR=$PWD
+        ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+        (
+          cd /tmp/otns
+          ./script/test py-unittests
+        )
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: unittests-pcaps
+        path: |
+          ./output/*/bin/*.pcap
+          ./output/*/bin/*.replay
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-otns-unittests
+        path: tmp/coverage.info
+
+  examples:
+    name: Examples
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.14'
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
+          ./bootstrap
+      - name: Run
+        run: |
+          export OT_DIR=$PWD
+          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+          (
+            cd /tmp/otns
+            ./script/test py-examples
+          )
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: examples-pcaps
+          path: |
+            ./output/*/bin/*.pcap
+            ./output/*/bin/*.replay
+      - name: Generate Coverage
+        run: |
+          ./script/test generate_coverage gcc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cov-otns-examples
+          path: tmp/coverage.info
+
+  stress-tests:
+    name: Stress ${{ matrix.suite }}
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: "network-forming"
+            stress_level: 8
+          - suite: "commissioning"
+            stress_level: 14
+          - suite: "connectivity"
+            stress_level: 6
+          - suite: "network-latency"
+            stress_level: 10
+          - suite: "multicast-performance"
+            stress_level: 10
+          - suite: "otns-performance"
+            stress_level: 10
+    env:
+      STRESS_LEVEL: ${{ matrix.stress_level }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.14'
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
+          ./bootstrap
+      - name: Run
+        run: |
+          export OT_DIR=$PWD
+          ./script/git-tool clone --depth 1 https://github.com/openthread/ot-ns.git /tmp/otns
+          (
+            cd /tmp/otns
+            ./script/test stress-tests ${{ matrix.suite }}
+          )
+      - uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: stress-tests-${{ matrix.suite }}-pcaps
+          path: |
+            ./output/*/bin/*.pcap
+            ./output/*/bin/*.replay
+      - name: Generate Coverage
+        run: |
+          ./script/test generate_coverage gcc
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cov-otns-stress-tests-${{ matrix.suite }}
+          path: tmp/coverage.info
+
+  upload-coverage:
+    needs:
+      - unittests
+      - examples
+      - stress-tests
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo apt-get --no-install-recommends install -y lcov
+      - uses: actions/download-artifact@v2
+        with:
+          path: coverage/
+      - name: Upload Coverage
+        run: |
+          script/test upload_codecov

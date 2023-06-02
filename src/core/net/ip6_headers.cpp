@@ -38,14 +38,15 @@
 namespace ot {
 namespace Ip6 {
 
-Error Header::Init(const Message &aMessage)
+Error Header::ParseFrom(const Message &aMessage)
 {
-    Error error = kErrorNone;
+    Error error = kErrorParse;
 
-    SuccessOrExit(error = aMessage.Read(0, *this));
+    SuccessOrExit(aMessage.Read(0, *this));
+    VerifyOrExit(IsValid());
+    VerifyOrExit(sizeof(Header) + GetPayloadLength() == aMessage.GetLength());
 
-    VerifyOrExit(IsValid(), error = kErrorParse);
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) == aMessage.GetLength(), error = kErrorParse);
+    error = kErrorNone;
 
 exit:
     return error;
@@ -53,20 +54,13 @@ exit:
 
 bool Header::IsValid(void) const
 {
-    bool ret = true;
-
-    // check Version
-    VerifyOrExit(IsVersion6(), ret = false);
-
-    // check Payload Length
 #if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= Ip6::kMaxDatagramLength, ret = false);
+    static constexpr uint32_t kMaxLength = kMaxDatagramLength;
 #else
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) <= Ip6::kMaxAssembledDatagramLength, ret = false);
+    static constexpr uint32_t kMaxLength = kMaxAssembledDatagramLength;
 #endif
 
-exit:
-    return ret;
+    return IsVersion6() && ((sizeof(Header) + GetPayloadLength()) <= kMaxLength);
 }
 
 } // namespace Ip6

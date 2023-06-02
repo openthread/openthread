@@ -27,7 +27,6 @@
  */
 #include <openthread/config.h>
 
-#include "common/logging.hpp"
 #include "meshcop/commissioner.hpp"
 #include "meshcop/meshcop.hpp"
 

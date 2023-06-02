@@ -59,6 +59,35 @@ enum DataLengthType : uint8_t
     kWithUint16Length, ///< Use `uint16_t` for data length
 };
 
+/**
+ * This type specifies a function pointer which matches two given bytes.
+ *
+ * Such a function is used as a parameter in `Data::MatchesByteIn()` method. This can be used to relax the definition
+ * of a match when comparing data bytes, e.g., can be used for case-insensitive string comparison.
+ *
+ * @param[in] aFirst   A first byte.
+ * @param[in] aSecond  A second byte.
+ *
+ * @retval TRUE  if @p aFirst matches @p aSecond.
+ * @retval FALSE if @p aFirst does not match @p aSecond.
+ *
+ */
+typedef bool (*ByteMatcher)(uint8_t aFirst, uint8_t aSecond);
+
+/**
+ * This class implements common utility methods used by `Data` and `MutableData`.
+ *
+ */
+class DataUtils
+{
+protected:
+    DataUtils(void) = default;
+    static bool MatchBytes(const uint8_t *aFirstBuffer,
+                           const uint8_t *aSecondBuffer,
+                           uint16_t       aLength,
+                           ByteMatcher    aMatcher);
+};
+
 template <DataLengthType kDataLengthType> class MutableData;
 
 /**
@@ -76,7 +105,7 @@ template <DataLengthType kDataLengthType> class MutableData;
  *
  */
 template <DataLengthType kDataLengthType>
-class Data : public Clearable<Data<kDataLengthType>>, public Unequatable<Data<kDataLengthType>>
+class Data : public Clearable<Data<kDataLengthType>>, public Unequatable<Data<kDataLengthType>>, private DataUtils
 {
     friend class MutableData<kDataLengthType>;
 
@@ -175,6 +204,23 @@ public:
      *
      */
     bool MatchesBytesIn(const void *aBuffer) const { return memcmp(mBuffer, aBuffer, mLength) == 0; }
+
+    /**
+     * This method compares the `Data` content with the bytes from a given buffer using a given `Matcher` function.
+     *
+     * It is up to the caller to ensure that @p aBuffer has enough bytes to compare with the current data length.
+     *
+     * @param[in] aBuffer   A pointer to a buffer to compare with the data.
+     * @param[in] aMatcher  A `ByteMatcher` function to match the bytes. If `nullptr`, bytes are compared directly.
+     *
+     * @retval TRUE   The `Data` content matches the bytes in @p aBuffer.
+     * @retval FALSE  The `Data` content does not match the byes in @p aBuffer.
+     *
+     */
+    bool MatchesBytesIn(const void *aBuffer, ByteMatcher aMatcher)
+    {
+        return MatchBytes(mBuffer, static_cast<const uint8_t *>(aBuffer), mLength, aMatcher);
+    }
 
     /**
      * This method overloads operator `==` to compare the `Data` content with the content from another one.

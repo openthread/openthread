@@ -484,12 +484,12 @@ otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex,
 /**
  * This function gets the next IPv6 address (using an iterator) for a given child.
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[in]     aChildIndex  The child index.
- * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
- *                             entry in the list. To get the first IPv6 address the iterator should be set to
- *                             OT_CHILD_IP6_ADDRESS_ITERATOR_INIT.
- * @param[out]    aAddress     A pointer to an IPv6 address where the child's next address is placed (on success).
+ * @param[in]      aInstance    A pointer to an OpenThread instance.
+ * @param[in]      aChildIndex  The child index.
+ * @param[in,out]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
+ *                              entry in the list. To get the first IPv6 address the iterator should be set to
+ *                              OT_CHILD_IP6_ADDRESS_ITERATOR_INIT.
+ * @param[out]     aAddress     A pointer to an IPv6 address where the child's next address is placed (on success).
  *
  * @retval OT_ERROR_NONE          Successfully found the next IPv6 address (@p aAddress was successfully updated).
  * @retval OT_ERROR_NOT_FOUND     The child has no subsequent IPv6 address entry.
@@ -540,11 +540,11 @@ otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRoute
 /**
  * This function gets the next EID cache entry (using an iterator).
  *
- * @param[in]    aInstance   A pointer to an OpenThread instance.
- * @param[out]   aEntryInfo  A pointer to where the EID cache entry information is placed.
- * @param[inout] aIterator   A pointer to an iterator. It will be updated to point to next entry on success. To get the
- *                           first entry, initialize the iterator by setting all its fields to zero (e.g., `memset` the
- *                           the iterator structure to zero).
+ * @param[in]     aInstance   A pointer to an OpenThread instance.
+ * @param[out]    aEntryInfo  A pointer to where the EID cache entry information is placed.
+ * @param[in,out] aIterator   A pointer to an iterator. It will be updated to point to next entry on success. To get
+ *                            the first entry, initialize the iterator by setting all its fields to zero
+ *                            (e.g., `memset` the iterator structure to zero).
  *
  * @retval OT_ERROR_NONE          Successfully populated @p aEntryInfo for next EID cache entry.
  * @retval OT_ERROR_NOT_FOUND     No more entries in the address cache table.
@@ -605,7 +605,7 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aPskcRef    Key Reference to the new Thread PSKc.
+ * @param[in]  aKeyRef     Key Reference to the new Thread PSKc.
  *
  * @retval OT_ERROR_NONE           Successfully set the Thread PSKc.
  * @retval OT_ERROR_INVALID_STATE  Thread protocols are enabled.
@@ -739,6 +739,50 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
  */
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
 
+/**
+ * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
+ *       to indicate that thread protocol version check VR should be skipped.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   TRUE to enable Security Policy TLV version-threshold for routing, FALSE otherwise.
+ *
+ */
+void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This function gets the range of router IDs that are allowed to assign to nodes within the thread network.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
+ * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
+ *
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[out]  aMinRouterId  The minimum router ID.
+ * @param[out]  aMaxRouterId  The maximum router ID.
+ *
+ * @sa otThreadSetRouterIdRange
+ *
+ */
+void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId);
+
+/**
+ * This function sets the range of router IDs that are allowed to assign to nodes within the thread network.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
+ * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aMinRouterId  The minimum router ID.
+ * @param[in]  aMaxRouterId  The maximum router ID.
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the range.
+ * @retval  OT_ERROR_INVALID_ARGS   aMinRouterId > aMaxRouterId, or the range is not covered by [0, 62].
+ *
+ * @sa otThreadGetRouterIdRange
+ *
+ */
+otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
 /**
  * @}
  *

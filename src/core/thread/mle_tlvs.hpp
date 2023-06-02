@@ -692,8 +692,8 @@ public:
     {
         mPartitionId       = HostSwap32(aLeaderData.GetPartitionId());
         mWeighting         = aLeaderData.GetWeighting();
-        mDataVersion       = aLeaderData.GetDataVersion();
-        mStableDataVersion = aLeaderData.GetStableDataVersion();
+        mDataVersion       = aLeaderData.GetDataVersion(NetworkData::kFullSet);
+        mStableDataVersion = aLeaderData.GetDataVersion(NetworkData::kStableSubset);
         mLeaderRouterId    = aLeaderData.GetLeaderRouterId();
     }
 

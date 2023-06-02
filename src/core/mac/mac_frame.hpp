@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
@@ -92,7 +93,7 @@ public:
     /**
      * This method sets the IE Element Id.
      *
-     * @param[in]  aID  The IE Element Id.
+     * @param[in]  aId  The IE Element Id.
      *
      */
     void SetId(uint16_t aId)
@@ -154,7 +155,7 @@ public:
     /**
      * This method returns the Vendor OUI.
      *
-     * @returns the Vendor OUI.
+     * @returns The Vendor OUI.
      *
      */
     uint32_t GetVendorOui(void) const { return ReadUint24(mOui); }
@@ -170,7 +171,7 @@ public:
     /**
      * This method returns the Vendor IE sub-type.
      *
-     * @returns the Vendor IE sub-type.
+     * @returns The Vendor IE sub-type.
      *
      */
     uint8_t GetSubType(void) const { return mSubType; }
@@ -178,7 +179,7 @@ public:
     /**
      * This method sets the Vendor IE sub-type.
      *
-     * @param[in] the Vendor IE sub-type.
+     * @param[in]  aSubType  The Vendor IE sub-type.
      *
      */
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
@@ -363,8 +364,8 @@ public:
     /**
      * This method initializes the MAC header.
      *
-     * @param[in]  aFcf          The Frame Control field.
-     * @param[in]  aSecurityCtl  The Security Control field.
+     * @param[in]  aFcf              The Frame Control field.
+     * @param[in]  aSecurityControl  The Security Control field.
      *
      */
     void InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl);
@@ -662,7 +663,7 @@ public:
     /**
      * This method gets the Key Identifier Mode.
      *
-     * @param[out]  aSecurityLevel  The Key Identifier Mode.
+     * @param[out]  aKeyIdMode  The Key Identifier Mode.
      *
      * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
      *
@@ -898,7 +899,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
@@ -906,7 +907,7 @@ public:
     /**
      * This method returns a pointer to the vendor specific Time IE.
      *
-     * @returns A pointer to the Time IE, nullptr if not found.
+     * @returns A pointer to the Time IE, `nullptr` if not found.
      *
      */
     const TimeIe *GetTimeIe(void) const;
@@ -936,7 +937,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
@@ -946,7 +947,7 @@ public:
      *
      * @param[in] aIeId  The Element Id of the Header IE.
      *
-     * @returns A pointer to the Header IE, nullptr if not found.
+     * @returns A pointer to the Header IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
@@ -958,7 +959,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
@@ -970,7 +971,7 @@ public:
      *
      * @param[in] aSubType  The sub type of the Thread IE.
      *
-     * @returns A pointer to the Thread IE, nullptr if not found.
+     * @returns A pointer to the Thread IE, `nullptr` if not found.
      *
      */
     const uint8_t *GetThreadIe(uint8_t aSubType) const;
@@ -1479,161 +1480,6 @@ private:
     uint16_t mSuperframeSpec;
     uint8_t  mGtsSpec;
     uint8_t  mPendingAddressSpec;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements IEEE 802.15.4 Beacon Payload generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class BeaconPayload
-{
-public:
-    static constexpr uint8_t kProtocolId      = 3;                     ///< Thread Protocol ID.
-    static constexpr uint8_t kProtocolVersion = 2;                     ///< Thread Protocol version.
-    static constexpr uint8_t kVersionOffset   = 4;                     ///< Version field bit offset.
-    static constexpr uint8_t kVersionMask     = 0xf << kVersionOffset; ///< Version field mask.
-    static constexpr uint8_t kNativeFlag      = 1 << 3;                ///< Native Commissioner flag.
-    static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
-
-    static constexpr uint16_t kInfoStringSize = 92; ///< Max chars for the info string (@sa ToInfoString()).
-
-    /**
-     * This type defines the fixed-length `String` object returned from `ToInfoString()` method.
-     *
-     */
-    typedef String<kInfoStringSize> InfoString;
-
-    /**
-     * This method initializes the Beacon Payload.
-     *
-     */
-    void Init(void)
-    {
-        mProtocolId = kProtocolId;
-        mFlags      = kProtocolVersion << kVersionOffset;
-    }
-
-    /**
-     * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
-     *
-     * @retval TRUE   If the beacon appears to be a valid Thread Beacon Payload.
-     * @retval FALSE  If the beacon does not appear to be a valid Thread Beacon Payload.
-     *
-     */
-    bool IsValid(void) const { return (mProtocolId == kProtocolId); }
-
-    /**
-     * This method returns the Protocol ID value.
-     *
-     * @returns the Protocol ID value.
-     *
-     */
-    uint8_t GetProtocolId(void) const { return mProtocolId; }
-
-    /**
-     * This method returns the Protocol Version value.
-     *
-     * @returns The Protocol Version value.
-     *
-     */
-    uint8_t GetProtocolVersion(void) const { return mFlags >> kVersionOffset; }
-
-    /**
-     * This method indicates whether or not the Native Commissioner flag is set.
-     *
-     * @retval TRUE   If the Native Commissioner flag is set.
-     * @retval FALSE  If the Native Commissioner flag is not set.
-     *
-     */
-    bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
-
-    /**
-     * This method clears the Native Commissioner flag.
-     *
-     */
-    void ClearNative(void) { mFlags &= ~kNativeFlag; }
-
-    /**
-     * This method sets the Native Commissioner flag.
-     *
-     */
-    void SetNative(void) { mFlags |= kNativeFlag; }
-
-    /**
-     * This method indicates whether or not the Joining Permitted flag is set.
-     *
-     * @retval TRUE   If the Joining Permitted flag is set.
-     * @retval FALSE  If the Joining Permitted flag is not set.
-     *
-     */
-    bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
-
-    /**
-     * This method clears the Joining Permitted flag.
-     *
-     */
-    void ClearJoiningPermitted(void) { mFlags &= ~kJoiningFlag; }
-
-    /**
-     * This method sets the Joining Permitted flag.
-     *
-     */
-    void SetJoiningPermitted(void)
-    {
-        mFlags |= kJoiningFlag;
-
-#if OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION != 2 // check against kProtocolVersion
-        mFlags &= ~kVersionMask;
-        mFlags |= OPENTHREAD_CONFIG_MAC_JOIN_BEACON_VERSION << kVersionOffset;
-#endif
-    }
-
-    /**
-     * This method gets the Network Name field.
-     *
-     * @returns The Network Name field as `NameData`.
-     *
-     */
-    NameData GetNetworkName(void) const { return NameData(mNetworkName, sizeof(mNetworkName)); }
-
-    /**
-     * This method sets the Network Name field.
-     *
-     * @param[in]  aNameData  The Network Name (as a `NameData`).
-     *
-     */
-    void SetNetworkName(const NameData &aNameData) { aNameData.CopyTo(mNetworkName, sizeof(mNetworkName)); }
-
-    /**
-     * This method returns the Extended PAN ID field.
-     *
-     * @returns The Extended PAN ID field.
-     *
-     */
-    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * This method sets the Extended PAN ID field.
-     *
-     * @param[in]  aExtPanId  An Extended PAN ID.
-     *
-     */
-    void SetExtendedPanId(const ExtendedPanId &aExtPanId) { mExtendedPanId = aExtPanId; }
-
-    /**
-     * This method returns information about the Beacon as a `InfoString`.
-     *
-     * @returns An `InfoString` representing the beacon payload.
-     *
-     */
-    InfoString ToInfoString(void) const;
-
-private:
-    uint8_t       mProtocolId;
-    uint8_t       mFlags;
-    char          mNetworkName[NetworkName::kMaxSize];
-    ExtendedPanId mExtendedPanId;
 } OT_TOOL_PACKED_END;
 
 /**

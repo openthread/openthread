@@ -38,7 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -47,12 +47,14 @@ namespace ot {
 
 namespace BackboneRouter {
 
+RegisterLogModule("BbrLocal");
+
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(OT_BACKBONE_ROUTER_STATE_DISABLED)
     , mMlrTimeout(Mle::kMlrTimeoutDefault)
     , mReregistrationDelay(Mle::kRegistrationDelayDefault)
-    , mSequenceNumber(Random::NonCrypto::GetUint8())
+    , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
     , mIsServiceAdded(false)
     , mDomainPrefixCallback(nullptr)
@@ -109,7 +111,7 @@ void Local::Reset(void)
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
         // Increase sequence number when changing from Primary to Secondary.
-        mSequenceNumber++;
+        SequenceNumberIncrease();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         SetState(OT_BACKBONE_ROUTER_STATE_SECONDARY);
     }
@@ -130,8 +132,10 @@ Error Local::SetConfig(const BackboneRouterConfig &aConfig)
     Error error  = kErrorNone;
     bool  update = false;
 
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin && aConfig.mMlrTimeout <= Mle::kMlrTimeoutMax,
                  error = kErrorInvalidArgs);
+#endif
     // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
     // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
     VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = kErrorInvalidArgs);
@@ -265,9 +269,10 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
     {
         // Here original PBBR restores its Backbone Router Service from Thread Network,
         // Intentionally skips the state update as PBBR will refresh its service.
-        mSequenceNumber      = aConfig.mSequenceNumber + 1;
+        mSequenceNumber      = aConfig.mSequenceNumber;
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
+        SequenceNumberIncrease();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
         {
@@ -410,6 +415,24 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
     LogDomainPrefix("Remove", error);
 }
 
+void Local::SequenceNumberIncrease(void)
+{
+    switch (mSequenceNumber)
+    {
+    case 126:
+    case 127:
+        mSequenceNumber = 0;
+        break;
+    case 254:
+    case 255:
+        mSequenceNumber = 128;
+        break;
+    default:
+        mSequenceNumber++;
+        break;
+    }
+}
+
 void Local::AddDomainPrefixToNetworkData(void)
 {
     Error error = kErrorNotFound; // only used for logging.
@@ -422,17 +445,17 @@ void Local::AddDomainPrefixToNetworkData(void)
     LogDomainPrefix("Add", error);
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Local::LogDomainPrefix(const char *aAction, Error aError)
 {
-    otLogInfoBbr("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
-                 ErrorToString(aError));
+    LogInfo("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
+            ErrorToString(aError));
 }
 
 void Local::LogBackboneRouterService(const char *aAction, Error aError)
 {
-    otLogInfoBbr("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
-                 mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
+    LogInfo("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
+            mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
 }
 #endif
 

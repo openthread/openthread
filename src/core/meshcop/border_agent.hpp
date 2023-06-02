@@ -41,6 +41,7 @@
 #include <openthread/border_agent.h>
 
 #include "coap/coap.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -168,8 +169,7 @@ private:
     void        HandleProxyTransmit(const Coap::Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
-        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(
-            *static_cast<const Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
     }
     bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
@@ -198,6 +198,9 @@ private:
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otBorderAgentState, MeshCoP::BorderAgent::State);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

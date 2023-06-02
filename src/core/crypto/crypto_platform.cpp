@@ -33,11 +33,14 @@
 #include "openthread-core-config.h"
 
 #include <mbedtls/aes.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
 #include <mbedtls/md.h>
 #include <mbedtls/sha256.h>
 
 #include <openthread/instance.h>
 #include <openthread/platform/crypto.h>
+#include <openthread/platform/entropy.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -51,12 +54,27 @@
 using namespace ot;
 using namespace Crypto;
 
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
+
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs
 
-OT_TOOL_WEAK otError otPlatCryptoInit(void)
+#if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
+     (!defined(MBEDTLS_NO_PLATFORM_ENTROPY) || defined(MBEDTLS_HAVEGE_C) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT)))
+#define OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+#endif
+
+#if !OPENTHREAD_RADIO
+static mbedtls_ctr_drbg_context sCtrDrbgContext;
+static mbedtls_entropy_context  sEntropyContext;
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+static constexpr uint16_t kEntropyMinThreshold = 16;
+#endif
+#endif
+
+OT_TOOL_WEAK void otPlatCryptoInit(void)
 {
-    return kErrorNone;
+    // Intentionally empty.
 }
 
 // AES  Implementation
@@ -419,4 +437,53 @@ exit:
     return error;
 }
 
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+
+static int handleMbedtlsEntropyPoll(void *aData, unsigned char *aOutput, size_t aInLen, size_t *aOutLen)
+{
+    int rval = MBEDTLS_ERR_ENTROPY_SOURCE_FAILED;
+
+    SuccessOrExit(otPlatEntropyGet(reinterpret_cast<uint8_t *>(aOutput), static_cast<uint16_t>(aInLen)));
+    rval = 0;
+
+    VerifyOrExit(aOutLen != nullptr);
+    *aOutLen = aInLen;
+
+exit:
+    OT_UNUSED_VARIABLE(aData);
+    return rval;
+}
+
+#endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+
+OT_TOOL_WEAK void otPlatCryptoRandomInit(void)
+{
+    mbedtls_entropy_init(&sEntropyContext);
+
+#ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
+    mbedtls_entropy_add_source(&sEntropyContext, handleMbedtlsEntropyPoll, nullptr, kEntropyMinThreshold,
+                               MBEDTLS_ENTROPY_SOURCE_STRONG);
+#endif
+
+    mbedtls_ctr_drbg_init(&sCtrDrbgContext);
+
+    int rval = mbedtls_ctr_drbg_seed(&sCtrDrbgContext, mbedtls_entropy_func, &sEntropyContext, nullptr, 0);
+    OT_ASSERT(rval == 0);
+    OT_UNUSED_VARIABLE(rval);
+}
+
+OT_TOOL_WEAK void otPlatCryptoRandomDeinit(void)
+{
+    mbedtls_entropy_free(&sEntropyContext);
+    mbedtls_ctr_drbg_free(&sCtrDrbgContext);
+}
+
+OT_TOOL_WEAK otError otPlatCryptoRandomGet(uint8_t *aBuffer, uint16_t aSize)
+{
+    return ot::Crypto::MbedTls::MapError(
+        mbedtls_ctr_drbg_random(&sCtrDrbgContext, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));
+}
+
 #endif // #if !OPENTHREAD_RADIO
+
+#endif // #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS

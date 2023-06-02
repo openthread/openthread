@@ -61,6 +61,7 @@ add_library(openthread-simulation
     alarm.c
     crypto.c
     diag.c
+    dso_transport.c
     entropy.c
     flash.c
     infra_if.c
@@ -101,7 +102,7 @@ target_include_directories(openthread-simulation PRIVATE
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CPACK_PACKAGE_NAME "openthread-simulation")
     set(CPACK_GENERATOR "DEB")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors <openthread-users@googlegroups.com")
-    set(CPACK_PACKAGE_CONTACT "OpenThread Authors <openthread-users@googlegroups.com")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors (https://github.com/openthread/openthread)")
+    set(CPACK_PACKAGE_CONTACT "OpenThread Authors (https://github.com/openthread/openthread)")
     include(CPack)
 endif()

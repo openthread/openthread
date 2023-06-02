@@ -648,8 +648,8 @@ class OpenThread_WpanCtl(IThci):
         print('call _setSecurityPolicy')
         try:
             cmd1 = self.wpan_cmd_prefix + 'setprop Dataset:SecPolicy:KeyRotation %s' % str(securityPolicySecs)
-            if securityPolicyFlags == 'onrcb':
-                cmd2 = self.wpan_cmd_prefix + 'setprop Dataset:SecPolicy:Flags 0xff'
+            if securityPolicyFlags == 'onrc':
+                cmd2 = self.wpan_cmd_prefix + 'setprop Dataset:SecPolicy:Flags 0xf7'
             else:
                 print('unknown policy flag :' + securityPolicyFlags)
                 return False
@@ -1442,7 +1442,7 @@ class OpenThread_WpanCtl(IThci):
         # OT only accept hex format PSKc for now
         self.pskc = '00000000000000000000000000000000'
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
-        self.securityPolicyFlags = 'onrcb'
+        self.securityPolicyFlags = 'onrc'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds

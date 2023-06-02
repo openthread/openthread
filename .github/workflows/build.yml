@@ -84,6 +84,7 @@ jobs:
     name: package-${{ matrix.compiler }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - compiler: gcc
@@ -134,7 +135,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.0.0
+        ref: v3.1.0
         path: third_party/mbedtls/repo
     - name: Build
       run: |
@@ -144,6 +145,7 @@ jobs:
     name: arm-gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
         include:
           - gcc_ver: 4
@@ -184,6 +186,7 @@ jobs:
     name: gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
         gcc_ver: [5, 6, 7, 8, 9, 10]
     env:
@@ -206,6 +209,7 @@ jobs:
     name: clang-${{ matrix.clang_ver }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
     env:
@@ -228,6 +232,7 @@ jobs:
     name: clang-m32-${{ matrix.clang_ver }}
     runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
         clang_ver: ["6.0", "7", "8", "9"]
     env:
@@ -273,6 +278,7 @@ jobs:
   macos:
     name: macos-${{ matrix.CC }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - CC: clang

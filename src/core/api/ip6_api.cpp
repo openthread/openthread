@@ -37,10 +37,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
-#endif
 
 using namespace ot;
 
@@ -135,7 +132,8 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
-    return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage));
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage),
+                                                         !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
 }
 
 otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSettings)

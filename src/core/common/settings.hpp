@@ -42,17 +42,14 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/settings_driver.hpp"
+#include "crypto/ecdsa.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
-#endif
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-#include "crypto/ecdsa.hpp"
-#endif
 
 namespace ot {
 
@@ -121,14 +118,18 @@ public:
         kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
         kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
         kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyLegacyOmrPrefix   = OT_SETTINGS_KEY_LEGACY_OMR_PREFIX,
         kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
         kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+        kKeyLegacyNat64Prefix = OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX,
+        kKeyBrUlaPrefix       = OT_SETTINGS_KEY_BR_ULA_PREFIX,
     };
 
-    static constexpr Key kLastKey = kKeySrpServerInfo; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeyBrUlaPrefix; ///< The last (numerically) enumerator value in `Key`.
+    static_assert(static_cast<uint16_t>(kLastKey) < static_cast<uint16_t>(OT_SETTINGS_KEY_VENDOR_RESERVED_MIN),
+                  "Core settings keys overlap with vendor reserved keys");
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -479,7 +480,7 @@ public:
         /**
          * This method sets the Thread device mode.
          *
-         * @param[in] aRloc16  The Thread device mode.
+         * @param[in] aMode  The Thread device mode.
          *
          */
         void SetMode(uint8_t aMode) { mMode = aMode; }
@@ -572,18 +573,33 @@ public:
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This class defines constants and types for OMR prefix settings.
+     * This class defines constants and types for BR ULA prefix settings.
      *
      */
-    class OmrPrefix
+    class BrUlaPrefix
     {
     public:
-        static constexpr Key kKey = kKeyOmrPrefix; ///< The associated key.
+        static constexpr Key kKey = kKeyBrUlaPrefix; ///< The associated key.
 
         typedef Ip6::Prefix ValueType; ///< The associated value type.
 
     private:
-        OmrPrefix(void) = default;
+        BrUlaPrefix(void) = default;
+    };
+
+    /**
+     * This class defines constants and types for legacy OMR prefix settings.
+     *
+     */
+    class LegacyOmrPrefix
+    {
+    public:
+        static constexpr Key kKey = kKeyLegacyOmrPrefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        LegacyOmrPrefix(void) = default;
     };
 
     /**
@@ -730,10 +746,10 @@ protected:
     static void LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix);
 #endif
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
     static const char *KeyToString(Key aKey);
 #endif
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *ActionToString(Action aAction);
 #endif
 };
@@ -852,7 +868,7 @@ public:
      *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
      *
      * This version of `Read<EntryType>` is intended for use with entries that have a simple entry value type (which can
-     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     * be represented by an existing type), e.g., `OmrPrefix` (using `Ip6::Prefix` as the value type).
      *
      * @tparam EntryType              The settings entry type.
      *
@@ -902,11 +918,11 @@ public:
      *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
      *
      * This version of `Save<EntryType>` is intended for use with entries that have a simple entry value type (which can
-     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     * be represented by an existing type), e.g., `OmrPrefix` (using `Ip6::Prefix` as the value type).
      *
      * @tparam EntryType              The settings entry type.
      *
-     * @param[in] aEntry              The entry value to be saved.
+     * @param[in] aValue              The entry value to be saved.
      *
      * @retval kErrorNone             Successfully saved Network Info in settings.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
@@ -1104,7 +1120,7 @@ private:
 
     static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
 
-    static const uint16_t kCriticalKeys[];
+    static const uint16_t kSensitiveKeys[];
 };
 
 } // namespace ot

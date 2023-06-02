@@ -46,7 +46,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
@@ -59,6 +59,8 @@
 
 namespace ot {
 namespace MeshCoP {
+
+RegisterLogModule("DatasetManager");
 
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
@@ -169,7 +171,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
         isUpdateFromCommissioner = true;
 
-        localId = static_cast<const CommissionerSessionIdTlv *>(
+        localId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
 
         VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId);
@@ -203,7 +205,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv &delayTimerTlv = static_cast<DelayTimerTlv &>(static_cast<Tlv &>(datasetTlv));
+                DelayTimerTlv &delayTimerTlv = As<DelayTimerTlv>(datasetTlv);
 
                 if (doesAffectNetworkKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
@@ -241,7 +243,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         const CommissionerSessionIdTlv *localSessionId;
         Ip6::Address                    destination;
 
-        localSessionId = static_cast<const CommissionerSessionIdTlv *>(
+        localSessionId = As<CommissionerSessionIdTlv>(
             Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
         VerifyOrExit(localSessionId != nullptr);
 
@@ -268,7 +270,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -277,7 +279,7 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset set response");
+    LogInfo("sent dataset set response");
 
 exit:
     FreeMessageOnError(message, error);
@@ -388,7 +390,7 @@ Error ActiveDataset::GenerateLocal(void)
     SuccessOrExit(error = mLocal.Save(dataset));
     IgnoreError(Restore());
 
-    otLogInfoMeshCoP("Generated local dataset");
+    LogInfo("Generated local dataset");
 
 exit:
     return error;

@@ -128,10 +128,10 @@ public:
     /**
      * This method processes the payload.
      *
-     * @param[inout]  aPlainText   A pointer to the plaintext.
-     * @param[inout]  aCipherText  A pointer to the ciphertext.
-     * @param[in]     aLength      Payload length in bytes.
-     * @param[in]     aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
+     * @param[in,out]  aPlainText   A pointer to the plaintext.
+     * @param[in,out]  aCipherText  A pointer to the ciphertext.
+     * @param[in]      aLength      Payload length in bytes.
+     * @param[in]      aMode        Mode to indicate whether to encrypt (`kEncrypt`) or decrypt (`kDecrypt`).
      *
      */
     void Payload(void *aPlainText, void *aCipherText, uint32_t aLength, Mode aMode);

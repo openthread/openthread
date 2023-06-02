@@ -239,6 +239,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
 
                 aInfo.mSockAddr.SetAddress(serverData->GetAddress());
                 aInfo.mSockAddr.SetPort(serverData->GetPort());
+                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 ExitNow();
             }
 
@@ -250,6 +251,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                                  aIterator.mServerSubTlv->GetServer16());
                 aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
+                aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 ExitNow();
             }
         }
@@ -271,6 +273,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
             dnsServiceData = reinterpret_cast<const DnsSrpUnicast::ServiceData *>(serviceData.GetBytes());
             aInfo.mSockAddr.SetAddress(dnsServiceData->GetAddress());
             aInfo.mSockAddr.SetPort(dnsServiceData->GetPort());
+            aInfo.mOrigin = DnsSrpUnicast::kFromServiceData;
             ExitNow();
         }
 

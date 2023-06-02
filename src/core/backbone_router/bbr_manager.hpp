@@ -88,7 +88,7 @@ public:
      * Note: available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
      *       Only used for test and certification.
      *
-     * @param[in] aMlIid    A pointer to the Mesh Local IID. If nullptr, respond with @p aStatus for any
+     * @param[in] aMlIid    A pointer to the Mesh Local IID. If `nullptr`, respond with @p aStatus for any
      *                      coming DUA.req, otherwise only respond the one with matching @p aMlIid.
      * @param[in] aStatus   The status to respond.
      *
@@ -228,6 +228,8 @@ private:
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
+
+    void LogError(const char *aText, Error aError) const;
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     Coap::Resource mMulticastListenerRegistration;

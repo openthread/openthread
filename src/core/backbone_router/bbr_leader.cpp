@@ -37,10 +37,11 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 namespace BackboneRouter {
+
+RegisterLogModule("BbrLeader");
 
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -81,92 +82,67 @@ exit:
     return error;
 }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
 void Leader::LogBackboneRouterPrimary(State aState, const BackboneRouterConfig &aConfig) const
 {
     OT_UNUSED_VARIABLE(aConfig);
 
-    otLogInfoBbr("PBBR state: %s", StateToString(aState));
+    LogInfo("PBBR state: %s", StateToString(aState));
 
     if (aState != kStateRemoved && aState != kStateNone)
     {
-        otLogInfoBbr("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
-                     aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
+        LogInfo("Rloc16: 0x%4X, seqno: %d, delay: %d, timeout %d", aConfig.mServer16, aConfig.mSequenceNumber,
+                aConfig.mReregistrationDelay, aConfig.mMlrTimeout);
     }
 }
 
 void Leader::LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const
 {
-    otLogInfoBbr("Domain Prefix: %s, state: %s", aPrefix.ToString().AsCString(), DomainPrefixStateToString(aState));
+    LogInfo("Domain Prefix: %s, state: %s", aPrefix.ToString().AsCString(), DomainPrefixStateToString(aState));
 }
 
 const char *Leader::StateToString(State aState)
 {
-    const char *logString = "Unknown";
+    static const char *const kStateStrings[] = {
+        "None",            //  (0) kStateNone
+        "Added",           //  (1) kStateAdded
+        "Removed",         //  (2) kStateRemoved
+        "Rereg triggered", //  (3) kStateToTriggerRereg
+        "Refreshed",       //  (4) kStateRefreshed
+        "Unchanged",       //  (5) kStateUnchanged
+    };
 
-    switch (aState)
-    {
-    case kStateNone:
-        logString = "None";
-        break;
+    static_assert(0 == kStateNone, "kStateNone value is incorrect");
+    static_assert(1 == kStateAdded, "kStateAdded value is incorrect");
+    static_assert(2 == kStateRemoved, "kStateRemoved value is incorrect");
+    static_assert(3 == kStateToTriggerRereg, "kStateToTriggerRereg value is incorrect");
+    static_assert(4 == kStateRefreshed, "kStateRefreshed value is incorrect");
+    static_assert(5 == kStateUnchanged, "kStateUnchanged value is incorrect");
 
-    case kStateAdded:
-        logString = "Added";
-        break;
-
-    case kStateRemoved:
-        logString = "Removed";
-        break;
-
-    case kStateToTriggerRereg:
-        logString = "Rereg triggered";
-        break;
-
-    case kStateRefreshed:
-        logString = "Refreshed";
-        break;
-
-    case kStateUnchanged:
-        logString = "Unchanged";
-        break;
-
-    default:
-        break;
-    }
-
-    return logString;
+    return kStateStrings[aState];
 }
 
 const char *Leader::DomainPrefixStateToString(DomainPrefixState aState)
 {
-    const char *logString = "Unknown";
+    static const char *const kPrefixStateStrings[] = {
+        "None",      // (0) kDomainPrefixNone
+        "Added",     // (1) kDomainPrefixAdded
+        "Removed",   // (2) kDomainPrefixRemoved
+        "Refreshed", // (3) kDomainPrefixRefreshed
+        "Unchanged", // (4) kDomainPrefixUnchanged
+    };
 
-    switch (aState)
-    {
-    case kDomainPrefixNone:
-        logString = "None";
-        break;
+    static_assert(0 == kDomainPrefixNone, "kDomainPrefixNone value is incorrect");
+    static_assert(1 == kDomainPrefixAdded, "kDomainPrefixAdded value is incorrect");
+    static_assert(2 == kDomainPrefixRemoved, "kDomainPrefixRemoved value is incorrect");
+    static_assert(3 == kDomainPrefixRefreshed, "kDomainPrefixRefreshed value is incorrect");
+    static_assert(4 == kDomainPrefixUnchanged, "kDomainPrefixUnchanged value is incorrect");
 
-    case kDomainPrefixAdded:
-        logString = "Added";
-        break;
-
-    case kDomainPrefixRemoved:
-        logString = "Removed";
-        break;
-
-    case kDomainPrefixRefreshed:
-        logString = "Refreshed";
-        break;
-
-    case kDomainPrefixUnchanged:
-        logString = "Unchanged";
-        break;
-    }
-
-    return logString;
+    return kPrefixStateStrings[aState];
 }
-#endif
+
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 void Leader::Update(void)
 {
@@ -229,7 +205,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
 
         if (config.mMlrTimeout != origMlrTimeout)
         {
-            otLogNoteBbr("Leader MLR Timeout is normalized from %u to %u", origMlrTimeout, config.mMlrTimeout);
+            LogNote("Leader MLR Timeout is normalized from %u to %u", origMlrTimeout, config.mMlrTimeout);
         }
     }
 

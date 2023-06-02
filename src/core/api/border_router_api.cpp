@@ -38,8 +38,8 @@
 #include <openthread/border_router.h>
 
 #include "border_router/routing_manager.hpp"
-#include "common/as_core_type.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 
 using namespace ot;
 
@@ -64,11 +64,18 @@ otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPref
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(AsCoreType(aPrefix));
 }
 
-#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+otError otBorderRoutingGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNat64Prefix(AsCoreType(aPrefix));
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    return AsCoreType(aInstance).Get<NetworkData::Local>().CopyNetworkData(aStable, aData, *aDataLength);
+    return AsCoreType(aInstance).Get<NetworkData::Local>().CopyNetworkData(
+        aStable ? NetworkData::kStableSubset : NetworkData::kFullSet, aData, *aDataLength);
 }
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)

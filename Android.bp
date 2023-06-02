@@ -69,34 +69,20 @@ license {
 }
 
 cc_defaults {
-    name : "ot_cflags_defaults",
+    name : "ot_posix_cflags_defaults",
     cflags: [
-        "-DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1",
-        "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
+        "-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"",
+        "-DOPENTHREAD_CONFIG_FILE=\"src/android/openthread-android-config.h\"",
         "-DOPENTHREAD_FTD=1",
         "-DOPENTHREAD_POSIX=1",
-        "-DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_ANDROID_VERSION_HEADER_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_ECDSA_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1",
-        "-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"src/android/openthread-core-android-config.h\"",
-        "-DOPENTHREAD_CONFIG_FILE=\"src/android/openthread-android-config.h\"",
-        "-DOPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE=1",
-        "-DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1",
         "-DOPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1",
-        "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI",
+        "-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"src/android/openthread-core-android-config.h\"",
+        "-DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1",
         "-DPACKAGE=\"openthread\"",
         "-DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"",
         "-DPACKAGE_NAME=\"OPENTHREAD\"",
         "-DPACKAGE_TARNAME=\"openthread\"",
         "-DPACKAGE_URL=\"http://github.com/openthread/openthread\"",
-        "-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"",
         "-DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"",
     ],
 }
@@ -116,7 +102,13 @@ soong_config_module_type {
     module_type: "cc_defaults",
     config_namespace: "openthread",
     bool_variables: ["diag"],
+    variables: ["rcp_bus"],
     properties: ["cflags"],
+}
+
+soong_config_string_variable {
+    name: "rcp_bus",
+    values: ["spi", "uart"],
 }
 
 ot_config_cc_defaults {
@@ -125,12 +117,29 @@ ot_config_cc_defaults {
         diag: {
             cflags: ["-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"],
         },
+        rcp_bus: {
+            spi: {
+                cflags: ["-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI"]
+            },
+            uart: {
+                cflags: [
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
+                ]
+            },
+            conditions_default: {
+                cflags: [
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
+                ]
+            },
+        },
     },
 }
 
 cc_library_static {
     name: "ot-core",
-    defaults: ["ot_cflags_defaults", "ot_config_defaults"],
+    defaults: ["ot_posix_cflags_defaults", "ot_config_defaults"],
     generated_headers: ["ot_version_header"],
 
     local_include_dirs: [
@@ -180,7 +189,6 @@ cc_library_static {
         "src/core/api/diags_api.cpp",
         "src/core/api/dns_api.cpp",
         "src/core/api/dns_server_api.cpp",
-        "src/core/api/entropy_api.cpp",
         "src/core/api/error_api.cpp",
         "src/core/api/heap_api.cpp",
         "src/core/api/icmp6_api.cpp",
@@ -223,11 +231,15 @@ cc_library_static {
         "src/core/coap/coap.cpp",
         "src/core/coap/coap_message.cpp",
         "src/core/coap/coap_secure.cpp",
+        "src/core/common/binary_search.cpp",
         "src/core/common/crc16.cpp",
+        "src/core/common/data.cpp",
         "src/core/common/error.cpp",
+        "src/core/common/heap.cpp",
+        "src/core/common/heap_data.cpp",
         "src/core/common/heap_string.cpp",
         "src/core/common/instance.cpp",
-        "src/core/common/logging.cpp",
+        "src/core/common/log.cpp",
         "src/core/common/message.cpp",
         "src/core/common/notifier.cpp",
         "src/core/common/random_manager.cpp",
@@ -350,7 +362,6 @@ cc_library_static {
         "src/core/utils/flash.cpp",
         "src/core/utils/heap.cpp",
         "src/core/utils/jam_detector.cpp",
-        "src/core/utils/lookup_table.cpp",
         "src/core/utils/otns.cpp",
         "src/core/utils/parse_cmdline.cpp",
         "src/core/utils/ping_sender.cpp",
@@ -363,8 +374,6 @@ cc_library_static {
         "src/lib/spinel/spinel_decoder.cpp",
         "src/lib/spinel/spinel_encoder.cpp",
         "src/lib/url/url.cpp",
-        "src/posix/cli_readline.cpp",
-        "src/posix/cli_stdio.cpp",
         "src/posix/platform/alarm.cpp",
         "src/posix/platform/backbone.cpp",
         "src/posix/platform/daemon.cpp",
@@ -382,7 +391,7 @@ cc_library_static {
         "src/posix/platform/settings.cpp",
         "src/posix/platform/spi_interface.cpp",
         "src/posix/platform/system.cpp",
-        "src/posix/platform/trel_udp6.cpp",
+        "src/posix/platform/trel.cpp",
         "src/posix/platform/udp.cpp",
         "third_party/mbedtls/repo/library/aes.c",
         "third_party/mbedtls/repo/library/asn1parse.c",
@@ -393,6 +402,7 @@ cc_library_static {
         "third_party/mbedtls/repo/library/cipher.c",
         "third_party/mbedtls/repo/library/cipher_wrap.c",
         "third_party/mbedtls/repo/library/cmac.c",
+        "third_party/mbedtls/repo/library/constant_time.c",
         "third_party/mbedtls/repo/library/ctr_drbg.c",
         "third_party/mbedtls/repo/library/debug.c",
         "third_party/mbedtls/repo/library/ecdh.c",
@@ -428,9 +438,38 @@ cc_library_static {
 }
 
 cc_library_static {
+    name: "openthread-tcplp",
+
+    local_include_dirs: [
+        "include",
+    ],
+
+    cflags: [
+        "-Wno-sign-compare",
+        "-Wno-conversion",
+        "-Wno-unused-parameter",
+    ],
+
+    srcs: [
+        "third_party/tcplp/bsdtcp/cc/cc_newreno.c",
+        "third_party/tcplp/bsdtcp/tcp_input.c",
+        "third_party/tcplp/bsdtcp/tcp_output.c",
+        "third_party/tcplp/bsdtcp/tcp_reass.c",
+        "third_party/tcplp/bsdtcp/tcp_sack.c",
+        "third_party/tcplp/bsdtcp/tcp_subr.c",
+        "third_party/tcplp/bsdtcp/tcp_timer.c",
+        "third_party/tcplp/bsdtcp/tcp_timewait.c",
+        "third_party/tcplp/bsdtcp/tcp_usrreq.c",
+        "third_party/tcplp/lib/bitmap.c",
+        "third_party/tcplp/lib/cbuf.c",
+        "third_party/tcplp/lib/lbuf.c",
+    ],
+}
+
+cc_library_static {
     name: "libopenthread-cli",
 
-    defaults: ["ot_cflags_defaults", "ot_config_defaults"],
+    defaults: ["ot_posix_cflags_defaults", "ot_config_defaults"],
     generated_headers: ["ot_version_header"],
 
     local_include_dirs: [
@@ -444,7 +483,11 @@ cc_library_static {
         "third_party/mbedtls/repo/include",
     ],
 
-    cflags: ["-DOPENTHREAD_CONFIG_UART_CLI_RAW=1"],
+    cflags: [
+        "-DOPENTHREAD_CONFIG_CLI_UART_TX_BUFFER_SIZE=3500",
+        "-DOPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE=3500",
+        "-DOPENTHREAD_CONFIG_UART_CLI_RAW=1",
+    ],
 
     cppflags: [
         "-std=c++11",
@@ -471,7 +514,7 @@ cc_library_static {
 cc_binary {
     name: "ot-ctl",
 
-    defaults: ["ot_cflags_defaults"],
+    defaults: ["ot_posix_cflags_defaults"],
     generated_headers: ["ot_version_header"],
 
     cppflags: [
@@ -488,3 +531,226 @@ cc_binary {
 
     srcs: ["src/posix/client.cpp"],
 }
+
+cc_defaults {
+    name: "ot_rcp_cflags_defaults",
+    cflags: [
+        "-DOPENTHREAD_RADIO=1",
+    ],
+}
+
+cc_defaults {
+    name : "ot_simulation_cflags_defaults",
+
+    local_include_dirs: [
+        "examples/platforms/simulation",
+        "examples/platforms",
+        "include",
+        "src",
+        "src/cli",
+        "src/core",
+        "src/ncp",
+        "third_party",
+        "third_party/mbedtls",
+        "third_party/mbedtls/repo/include",
+    ],
+
+    export_include_dirs: [
+        "include",
+        "src",
+    ],
+
+    cflags: [
+        "-DMBEDTLS_CONFIG_FILE=\"mbedtls-config.h\"",
+        "-DOPENTHREAD_CONFIG_ANDROID_VERSION_HEADER_ENABLE=1",
+        "-DOPENTHREAD_CONFIG_FILE=\"openthread-config-android-version.h\"",
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1",
+        "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1",
+        "-DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1",
+        "-DOPENTHREAD_EXAMPLES_SIMULATION=1",
+        "-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"examples/platforms/simulation/openthread-core-simulation-config.h\"",
+        "-DPACKAGE=\"openthread\"",
+        "-DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"",
+        "-DPACKAGE_NAME=\"OPENTHREAD\"",
+        "-DPACKAGE_TARNAME=\"openthread\"",
+        "-DPACKAGE_URL=\"http://github.com/openthread/openthread\"",
+        "-DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-simulation",
+
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+
+    srcs: [
+        "examples/platforms/simulation/alarm.c",
+        "examples/platforms/simulation/crypto.c",
+        "examples/platforms/simulation/diag.c",
+        "examples/platforms/simulation/entropy.c",
+        "examples/platforms/simulation/flash.c",
+        "examples/platforms/simulation/infra_if.c",
+        "examples/platforms/simulation/logging.c",
+        "examples/platforms/simulation/misc.c",
+        "examples/platforms/simulation/radio.c",
+        "examples/platforms/simulation/spi-stubs.c",
+        "examples/platforms/simulation/system.c",
+        "examples/platforms/simulation/trel.c",
+        "examples/platforms/simulation/uart.c",
+
+        "examples/platforms/utils/link_metrics.cpp",
+        "examples/platforms/utils/mac_frame.cpp",
+        "examples/platforms/utils/soft_source_match_table.c",
+
+        "src/lib/platform/exit_code.c",
+
+        "third_party/mbedtls/repo/library/aes.c",
+        "third_party/mbedtls/repo/library/asn1parse.c",
+        "third_party/mbedtls/repo/library/asn1write.c",
+        "third_party/mbedtls/repo/library/base64.c",
+        "third_party/mbedtls/repo/library/bignum.c",
+        "third_party/mbedtls/repo/library/ccm.c",
+        "third_party/mbedtls/repo/library/cipher.c",
+        "third_party/mbedtls/repo/library/cipher_wrap.c",
+        "third_party/mbedtls/repo/library/cmac.c",
+        "third_party/mbedtls/repo/library/ctr_drbg.c",
+        "third_party/mbedtls/repo/library/debug.c",
+        "third_party/mbedtls/repo/library/entropy.c",
+        "third_party/mbedtls/repo/library/entropy_poll.c",
+        "third_party/mbedtls/repo/library/hmac_drbg.c",
+        "third_party/mbedtls/repo/library/md.c",
+        "third_party/mbedtls/repo/library/memory_buffer_alloc.c",
+        "third_party/mbedtls/repo/library/oid.c",
+        "third_party/mbedtls/repo/library/platform.c",
+        "third_party/mbedtls/repo/library/platform_util.c",
+        "third_party/mbedtls/repo/library/sha256.c",
+    ],
+
+    cflags: [
+        "-D_BSD_SOURCE=1",
+        "-D_DEFAULT_SOURCE=1",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-radio",
+
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+
+    generated_headers: ["ot_version_header"],
+
+    srcs: [
+        "src/core/api/diags_api.cpp",
+        "src/core/api/error_api.cpp",
+        "src/core/api/instance_api.cpp",
+        "src/core/api/link_raw_api.cpp",
+        "src/core/api/logging_api.cpp",
+        "src/core/api/random_noncrypto_api.cpp",
+        "src/core/api/tasklet_api.cpp",
+        "src/core/common/binary_search.cpp",
+        "src/core/common/error.cpp",
+        "src/core/common/instance.cpp",
+        "src/core/common/log.cpp",
+        "src/core/common/random_manager.cpp",
+        "src/core/common/string.cpp",
+        "src/core/common/tasklet.cpp",
+        "src/core/common/timer.cpp",
+        "src/core/common/uptime.cpp",
+        "src/core/crypto/aes_ccm.cpp",
+        "src/core/crypto/aes_ecb.cpp",
+        "src/core/crypto/crypto_platform.cpp",
+        "src/core/crypto/storage.cpp",
+        "src/core/diags/factory_diags.cpp",
+        "src/core/mac/link_raw.cpp",
+        "src/core/mac/mac_frame.cpp",
+        "src/core/mac/mac_types.cpp",
+        "src/core/mac/sub_mac.cpp",
+        "src/core/mac/sub_mac_callbacks.cpp",
+        "src/core/radio/radio.cpp",
+        "src/core/radio/radio_callbacks.cpp",
+        "src/core/radio/radio_platform.cpp",
+        "src/core/thread/link_quality.cpp",
+        "src/core/utils/parse_cmdline.cpp",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-hdlc",
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+    srcs: [
+        "src/lib/hdlc/hdlc.cpp",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-spinel-rcp",
+
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+
+    srcs: [
+        "src/lib/spinel/spinel.c",
+        "src/lib/spinel/spinel_buffer.cpp",
+        "src/lib/spinel/spinel_decoder.cpp",
+        "src/lib/spinel/spinel_encoder.cpp",
+    ],
+}
+
+cc_library_static {
+    name: "openthread-rcp",
+
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+
+    srcs: [
+        "src/ncp/changed_props_set.cpp",
+        "src/ncp/ncp_base.cpp",
+        "src/ncp/ncp_base_dispatcher.cpp",
+        "src/ncp/ncp_base_radio.cpp",
+        "src/ncp/ncp_spi.cpp",
+        "src/ncp/ncp_hdlc.cpp",
+    ],
+}
+
+cc_binary {
+    name: "ot-rcp",
+
+    defaults: [
+        "ot_rcp_cflags_defaults",
+        "ot_simulation_cflags_defaults",
+    ],
+
+    srcs: [
+        "examples/apps/ncp/main.c",
+        "examples/apps/ncp/ncp.c",
+    ],
+
+    static_libs: [
+        "openthread-hdlc",
+        "openthread-radio",
+        "openthread-spinel-rcp",
+        "openthread-rcp",
+        "openthread-simulation",
+        "openthread-radio",
+    ],
+
+    shared_libs: [
+        "libbase",
+        "libcutils",
+        "libutils",
+    ],
+}
+

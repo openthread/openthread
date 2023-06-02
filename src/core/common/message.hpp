@@ -41,14 +41,18 @@
 #include <openthread/message.h>
 #include <openthread/platform/messagepool.h>
 
+#include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
 #include "common/data.hpp"
 #include "common/encoding.hpp"
+#include "common/iterator_utils.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/pool.hpp"
+#include "common/timer.hpp"
 #include "common/type_traits.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/child_mask.hpp"
@@ -82,14 +86,14 @@ class HmacSha256;
  */
 
 /**
- * This macro frees a given message buffer if not nullptr.
+ * This macro frees a given message buffer if not `nullptr`.
  *
  * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
  * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
  * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
  * small implementations can add a rather large code-size overhead.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  *
  */
 #define FreeMessage(aMessage)      \
@@ -104,9 +108,9 @@ class HmacSha256;
 /**
  * This macro frees a given message buffer if a given `Error` indicates an error.
  *
- * The parameter @p aMessage can be nullptr in which case this macro does nothing.
+ * The parameter @p aMessage can be `nullptr` in which case this macro does nothing.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.
  *
  */
@@ -122,7 +126,7 @@ class HmacSha256;
 /**
  * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
- * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
+ * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.
  *
  */
@@ -186,28 +190,29 @@ protected:
         MessagePool *mMessagePool; // Message pool for this message.
         void *       mQueue;       // The queue where message is queued (if any). Queue type from `mInPriorityQ`.
         uint32_t     mDatagramTag; // The datagram tag used for 6LoWPAN frags or IPv6fragmentation.
+        TimeMilli    mTimestamp;   // The message timestamp.
         uint16_t     mReserved;    // Number of reserved bytes (for header).
         uint16_t     mLength;      // Current message length (number of bytes).
         uint16_t     mOffset;      // A byte offset within the message.
         uint16_t     mMeshDest;    // Used for unicast non-link-local messages.
         uint16_t     mPanId;       // PAN ID (used for MLE Discover Request and Response).
         uint8_t      mChannel;     // The message channel (used for MLE Announce).
-        uint8_t      mTimeout;     // Seconds remaining before dropping the message.
         RssAverager  mRssAverager; // The averager maintaining the received signal strength (RSS) average.
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #endif
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 
-        uint8_t mType : 3;          // The message type.
-        uint8_t mSubType : 4;       // The message sub type.
-        bool    mDirectTx : 1;      // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;  // Whether link security is enabled.
-        uint8_t mPriority : 2;      // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;   // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;     // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;    // Whether this message may be evicted.
-        bool    mMulticastLoop : 1; // Whether this multicast message may be looped back.
+        uint8_t mType : 3;             // The message type.
+        uint8_t mSubType : 4;          // The message sub type.
+        bool    mDirectTx : 1;         // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;     // Whether link security is enabled.
+        uint8_t mPriority : 2;         // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;      // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;        // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;       // Whether this message may be evicted.
+        bool    mMulticastLoop : 1;    // Whether this multicast message may be looped back.
+        bool    mResolvingAddress : 1; // Whether the message is pending an address query resolution.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -345,13 +350,24 @@ public:
     {
     public:
         /**
-         * This constructor initializes the Settings object.
+         * This constructor initializes the `Settings` object.
          *
          * @param[in]  aSecurityMode  A link security mode.
          * @param[in]  aPriority      A message priority.
          *
          */
         Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
+
+        /**
+         * This constructor initializes the `Settings` with a given message priority and link security enabled.
+         *
+         * @param[in]  aPriority      A message priority.
+         *
+         */
+        explicit Settings(Priority aPriority)
+            : Settings(kWithLinkSecurity, aPriority)
+        {
+        }
 
         /**
          * This method gets the message priority.
@@ -401,7 +417,7 @@ public:
     /**
      * This method returns a pointer to the next message.
      *
-     * @returns A pointer to the next message in the list or nullptr if at the end of the list.
+     * @returns A pointer to the next message in the list or `nullptr` if at the end of the list.
      *
      */
     Message *GetNext(void) const;
@@ -696,12 +712,14 @@ public:
      * @param[in]  aOffset    Byte offset within the message to read from for the comparison.
      * @param[in]  aBuf       A pointer to a data buffer to compare with the bytes from message.
      * @param[in]  aLength    Number of bytes in @p aBuf.
+     * @param[in]  aMatcher   A `ByteMatcher` function pointer to match the bytes. If `nullptr` then bytes are directly
+     *                        compared.
      *
      * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes from @p aBuf,
      *          FALSE otherwise.
      *
      */
-    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const;
+    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher = nullptr) const;
 
     /**
      * This method compares the bytes in the message at a given offset with bytes read from another message.
@@ -713,11 +731,17 @@ public:
      * @param[in]  aOtherMessage  The other message to compare with.
      * @param[in]  aOtherOffset   Byte offset within @p aOtherMessage to read from for the comparison.
      * @param[in]  aLength        Number of bytes to compare.
+     * @param[in]  aMatcher       A `ByteMatcher` function pointer to match the bytes. If `nullptr` then bytes are
+     *                            directly compared.
      *
      * @returns TRUE if there are enough bytes available in both messages and they all match. FALSE otherwise.
      *
      */
-    bool CompareBytes(uint16_t aOffset, const Message &aOtherMessage, uint16_t aOtherOffset, uint16_t aLength) const;
+    bool CompareBytes(uint16_t       aOffset,
+                      const Message &aOtherMessage,
+                      uint16_t       aOtherOffset,
+                      uint16_t       aLength,
+                      ByteMatcher    aMatcher = nullptr) const;
 
     /**
      * This method compares the bytes in the message at a given offset with an object.
@@ -811,7 +835,7 @@ public:
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
      * copied from the original one.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      *
      */
     Message *Clone(void) const { return Clone(GetLength()); }
@@ -930,26 +954,26 @@ public:
     void SetChannel(uint8_t aChannel) { GetMetadata().mChannel = aChannel; }
 
     /**
-     * This method returns the timeout used for 6LoWPAN reassembly.
+     * This method returns the message timestamp.
      *
-     * @returns The time remaining in seconds.
+     * @returns The message timestamp.
      *
      */
-    uint8_t GetTimeout(void) const { return GetMetadata().mTimeout; }
+    TimeMilli GetTimestamp(void) const { return GetMetadata().mTimestamp; }
 
     /**
-     * This method sets the timeout used for 6LoWPAN reassembly.
+     * This method sets the message timestamp to a given time.
      *
-     * @param[in]  aTimeout  The timeout value.
+     * @param[in] aTimestamp   The timestamp value.
      *
      */
-    void SetTimeout(uint8_t aTimeout) { GetMetadata().mTimeout = aTimeout; }
+    void SetTimestamp(TimeMilli aTimestamp) { GetMetadata().mTimestamp = aTimestamp; }
 
     /**
-     * This method decrements the timeout.
+     * This method sets the message timestamp to the current time.
      *
      */
-    void DecrementTimeout(void) { GetMetadata().mTimeout--; }
+    void SetTimestampToNow(void) { SetTimestamp(TimerMilli::GetNow()); }
 
     /**
      * This method returns whether or not message forwarding is scheduled for direct transmission.
@@ -958,7 +982,7 @@ public:
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
      *
      */
-    bool GetDirectTransmission(void) const { return GetMetadata().mDirectTx; }
+    bool IsDirectTransmission(void) const { return GetMetadata().mDirectTx; }
 
     /**
      * This method unschedules forwarding using direct transmission.
@@ -1006,6 +1030,23 @@ public:
      *
      */
     void SetDoNotEvict(bool aDoNotEvict) { GetMetadata().mDoNotEvict = aDoNotEvict; }
+
+    /**
+     * This method indicates whether the message is waiting for an address query resolution.
+     *
+     * @retval TRUE   If the message is waiting for address query resolution.
+     * @retval FALSE  If the message is not waiting for address query resolution.
+     *
+     */
+    bool IsResolvingAddress(void) const { return GetMetadata().mResolvingAddress; }
+
+    /**
+     * This method sets whether the message is waiting for an address query resolution.
+     *
+     * @param[in] aResolvingAddress    TRUE if message is waiting for address resolution, FALSE otherwise.
+     *
+     */
+    void SetResolvingAddress(bool aResolvingAddress) { GetMetadata().mResolvingAddress = aResolvingAddress; }
 
     /**
      * This method indicates whether or not link security is enabled for the message.
@@ -1057,7 +1098,7 @@ public:
      * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
      * frame fragments each received with a different signal strength.
      *
-     * @param[in] aLQI A new LQI value (has no unit) to be added to average.
+     * @param[in] aLqi A new LQI value (has no unit) to be added to average.
      *
      */
     void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
@@ -1090,7 +1131,7 @@ public:
     /**
      * This method returns a pointer to the message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the message queue or nullptr if not in any message queue.
+     * @returns A pointer to the message queue or `nullptr` if not in any message queue.
      *
      */
     MessageQueue *GetMessageQueue(void) const
@@ -1101,7 +1142,7 @@ public:
     /**
      * This method returns a pointer to the priority message queue (if any) where this message is queued.
      *
-     * @returns A pointer to the priority queue or nullptr if not in any priority queue.
+     * @returns A pointer to the priority queue or `nullptr` if not in any priority queue.
      *
      */
     PriorityQueue *GetPriorityQueue(void) const
@@ -1205,6 +1246,45 @@ public:
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 protected:
+    class ConstIterator : public ItemPtrIterator<const Message, ConstIterator>
+    {
+        friend class ItemPtrIterator<const Message, ConstIterator>;
+
+    public:
+        ConstIterator(void) = default;
+
+        explicit ConstIterator(const Message *aMessage)
+            : ItemPtrIterator(aMessage)
+        {
+        }
+
+    private:
+        void Advance(void) { mItem = mItem->GetNext(); }
+    };
+
+    class Iterator : public ItemPtrIterator<Message, Iterator>
+    {
+        friend class ItemPtrIterator<Message, Iterator>;
+
+    public:
+        Iterator(void)
+            : mNext(nullptr)
+        {
+        }
+
+        explicit Iterator(Message *aMessage)
+            : ItemPtrIterator(aMessage)
+            , mNext(NextMessage(aMessage))
+        {
+        }
+
+    private:
+        void            Advance(void);
+        static Message *NextMessage(Message *aMessage) { return (aMessage != nullptr) ? aMessage->GetNext() : nullptr; }
+
+        Message *mNext;
+    };
+
     uint16_t GetReserved(void) const { return GetMetadata().mReserved; }
     void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
@@ -1249,6 +1329,9 @@ private:
     Message *const &Next(void) const { return GetMetadata().mNext; }
     Message *&      Prev(void) { return GetMetadata().mPrev; }
 
+    static Message *      NextOf(Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
+    static const Message *NextOf(const Message *aMessage) { return (aMessage != nullptr) ? aMessage->Next() : nullptr; }
+
     Error ResizeMessage(uint16_t aLength);
 };
 
@@ -1277,7 +1360,7 @@ public:
      * This constructor initializes the message queue.
      *
      */
-    MessageQueue(void);
+    MessageQueue(void) { SetTail(nullptr); }
 
     /**
      * This method returns a pointer to the first message.
@@ -1285,7 +1368,15 @@ public:
      * @returns A pointer to the first message.
      *
      */
-    Message *GetHead(void) const;
+    Message *GetHead(void) { return Message::NextOf(GetTail()); }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    const Message *GetHead(void) const { return Message::NextOf(GetTail()); }
 
     /**
      * This method adds a message to the end of the list.
@@ -1335,16 +1426,28 @@ public:
      */
     void GetInfo(uint16_t &aMessageCount, uint16_t &aBufferCount) const;
 
+    // The following methods are intended to support range-based `for`
+    // loop iteration over the queue entries and should not be used
+    // directly. The range-based `for` works correctly even if the
+    // current entry is removed from the queue during iteration.
+
+    Message::Iterator begin(void);
+    Message::Iterator end(void) { return Message::Iterator(); }
+
+    Message::ConstIterator begin(void) const;
+    Message::ConstIterator end(void) const { return Message::ConstIterator(); }
+
 private:
-    Message *GetTail(void) const { return static_cast<Message *>(mData); }
-    void     SetTail(Message *aMessage) { mData = aMessage; }
+    Message *      GetTail(void) { return static_cast<Message *>(mData); }
+    const Message *GetTail(void) const { return static_cast<const Message *>(mData); }
+    void           SetTail(Message *aMessage) { mData = aMessage; }
 };
 
 /**
  * This class implements a priority queue.
  *
  */
-class PriorityQueue
+class PriorityQueue : private Clearable<PriorityQueue>
 {
     friend class Message;
     friend class MessageQueue;
@@ -1355,7 +1458,7 @@ public:
      * This constructor initializes the priority queue.
      *
      */
-    PriorityQueue(void);
+    PriorityQueue(void) { Clear(); }
 
     /**
      * This method returns a pointer to the first message.
@@ -1363,18 +1466,40 @@ public:
      * @returns A pointer to the first message.
      *
      */
-    Message *GetHead(void) const;
+    Message *GetHead(void) { return AsNonConst(AsConst(this)->GetHead()); }
+
+    /**
+     * This method returns a pointer to the first message.
+     *
+     * @returns A pointer to the first message.
+     *
+     */
+    const Message *GetHead(void) const;
 
     /**
      * This method returns a pointer to the first message for a given priority level.
      *
      * @param[in] aPriority   Priority level.
      *
-     * @returns A pointer to the first message with given priority level or nullptr if there is no messages with
+     * @returns A pointer to the first message with given priority level or `nullptr` if there is no messages with
      *          this priority level.
      *
      */
-    Message *GetHeadForPriority(Message::Priority aPriority) const;
+    Message *GetHeadForPriority(Message::Priority aPriority)
+    {
+        return AsNonConst(AsConst(this)->GetHeadForPriority(aPriority));
+    }
+
+    /**
+     * This method returns a pointer to the first message for a given priority level.
+     *
+     * @param[in] aPriority   Priority level.
+     *
+     * @returns A pointer to the first message with given priority level or `nullptr` if there is no messages with
+     *          this priority level.
+     *
+     */
+    const Message *GetHeadForPriority(Message::Priority aPriority) const;
 
     /**
      * This method adds a message to the queue.
@@ -1421,7 +1546,26 @@ public:
      * @returns A pointer to the tail of the list.
      *
      */
-    Message *GetTail(void) const;
+    Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
+
+    /**
+     * This method returns the tail of the list (last message in the list)
+     *
+     * @returns A pointer to the tail of the list.
+     *
+     */
+    const Message *GetTail(void) const;
+
+    // The following methods are intended to support range-based `for`
+    // loop iteration over the queue entries and should not be used
+    // directly. The range-based `for` works correctly even if the
+    // current entry is removed from the queue during iteration.
+
+    Message::Iterator begin(void);
+    Message::Iterator end(void) { return Message::Iterator(); }
+
+    Message::ConstIterator begin(void) const;
+    Message::ConstIterator end(void) const { return Message::ConstIterator(); }
 
 private:
     uint8_t PrevPriority(uint8_t aPriority) const
@@ -1429,7 +1573,12 @@ private:
         return (aPriority == Message::kNumPriorities - 1) ? 0 : (aPriority + 1);
     }
 
-    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
+    const Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel) const;
+
+    Message *FindFirstNonNullTail(Message::Priority aStartPriorityLevel)
+    {
+        return AsNonConst(AsConst(this)->FindFirstNonNullTail(aStartPriorityLevel));
+    }
 
     Message *mTails[Message::kNumPriorities]; // Tail pointers associated with different priority levels.
 };
@@ -1452,32 +1601,18 @@ public:
     explicit MessagePool(Instance &aInstance);
 
     /**
-     * This method is used to obtain a new message.
-     *
-     * The link security is enabled by default on the newly obtained message.
-     *
-     * @param[in]  aType           The message type.
-     * @param[in]  aReserveHeader  The number of header bytes to reserve.
-     * @param[in]  aPriority       The priority level of the message.
-     *
-     * @returns A pointer to the message or nullptr if no message buffers are available.
-     *
-     */
-    Message *New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority);
-
-    /**
-     * This method is used to obtain a new message with specified settings.
+     * This method allocates a new message with specified settings.
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
      * @param[in]  aSettings       The message settings.
      *
-     * @returns A pointer to the message or nullptr if no message buffers are available.
+     * @returns A pointer to the message or `nullptr` if no message buffers are available.
      *
      */
-    Message *New(Message::Type            aType,
-                 uint16_t                 aReserveHeader,
-                 const Message::Settings &aSettings = Message::Settings::GetDefault());
+    Message *Allocate(Message::Type            aType,
+                      uint16_t                 aReserveHeader = 0,
+                      const Message::Settings &aSettings      = Message::Settings::GetDefault());
 
     /**
      * This method is used to free a message and return all message buffers to the buffer pool.
@@ -1518,6 +1653,11 @@ private:
  * @}
  *
  */
+
+DefineCoreType(otMessageBuffer, Buffer);
+DefineCoreType(otMessageSettings, Message::Settings);
+DefineCoreType(otMessage, Message);
+DefineCoreType(otMessageQueue, MessageQueue);
 
 } // namespace ot
 

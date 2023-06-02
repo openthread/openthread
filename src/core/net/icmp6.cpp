@@ -37,13 +37,15 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
 namespace ot {
 namespace Ip6 {
+
+RegisterLogModule("Icmp6");
 
 Icmp::Icmp(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -79,7 +81,7 @@ Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, 
     aMessage.SetOffset(0);
     SuccessOrExit(error = Get<Ip6>().SendDatagram(aMessage, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent echo request: (seq = %d)", icmpHeader.GetSequence());
+    LogInfo("Sent echo request: (seq = %d)", icmpHeader.GetSequence());
 
 exit:
     return error;
@@ -116,7 +118,7 @@ Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo 
 
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*message, messageInfoLocal, kProtoIcmp6));
 
-    otLogInfoIcmp("Sent ICMPv6 Error");
+    LogInfo("Sent ICMPv6 Error");
 
 exit:
     FreeMessageOnError(message, error);
@@ -182,14 +184,14 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     // always handle Echo Request destined for RLOC or ALOC
     VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
 
-    otLogInfoIcmp("Received Echo Request");
+    LogInfo("Received Echo Request");
 
     icmp6Header.Clear();
     icmp6Header.SetType(Header::kTypeEchoReply);
 
     if ((replyMessage = Get<Ip6>().NewMessage(0)) == nullptr)
     {
-        otLogDebgIcmp("Failed to allocate a new message");
+        LogDebg("Failed to allocate a new message");
         ExitNow();
     }
 
@@ -210,7 +212,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
 
     IgnoreError(replyMessage->Read(replyMessage->GetOffset(), icmp6Header));
-    otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
+    LogInfo("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:
     FreeMessageOnError(replyMessage, error);

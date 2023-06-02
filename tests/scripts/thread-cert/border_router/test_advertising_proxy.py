@@ -181,11 +181,20 @@ class SingleHostAndService(thread_cert.TestCase):
         #
 
         client.srp_client_remove_service('my-service-1', '_ipps._tcp')
-        self.simulator.go(5)
+
+        # We previously had self.simulator.go(5) but got the issue that the client is scheduling
+        # the refresh timer with half of the lease time (10 seconds) and there will be chances
+        # that the client will be just in status "kToRefresh" after self.simulator.go(5). This will
+        # fail the checks in self.check_host_and_service() so updated to wait for 2 seconds.
+        self.simulator.go(2)
 
         self.check_host_and_service(server, client, '2001::2', 'my-service')
         self.host_check_mdns_service(host, '2001::2', 'my-service')
         self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
+
+        # Wait for KEY expiration of service 'my-service-1'.
+        # FIXME: workaround for https://github.com/openthread/ot-br-posix/issues/1071.
+        self.simulator.go(KEY_LEASE + 5)
 
         #
         # 8. Update both the host and the service in a loop and make sure the
@@ -197,7 +206,7 @@ class SingleHostAndService(thread_cert.TestCase):
             client.srp_client_clear_service('my-service', '_ipps._tcp')
             client.srp_client_set_host_address(host_address)
             client.srp_client_add_service('my-service', '_ipps._tcp', service_port)
-            self.simulator.go(5)
+            self.simulator.go(10)
 
             self.check_host_and_service(server, client, host_address, 'my-service', service_port)
             self.host_check_mdns_service(host, host_address, 'my-service', service_port)
@@ -269,6 +278,49 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(server_host['fullname'], server_service['host_fullname'])
         self.assertEqual(len(server_host['addresses']), 1)
         self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
+
+
+class SrpClientRemoveNonExistingHost(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
+
+    TOPOLOGY = {
+        BR: {
+            'name': 'BR',
+            'allowlist': [ROUTER],
+            'is_otbr': True,
+            'version': '1.2',
+        },
+        ROUTER: {
+            'name': 'Router',
+            'allowlist': [BR],
+            'version': '1.2',
+        }
+    }
+
+    def test(self):
+        server = self.nodes[BR]
+        client = self.nodes[ROUTER]
+
+        server.srp_server_set_enabled(True)
+        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+        server.start()
+        self.simulator.go(10)
+        self.assertEqual('leader', server.get_state())
+        self.assertEqual(server.srp_server_get_state(), 'running')
+
+        client.start()
+        self.simulator.go(5)
+        self.assertEqual('router', client.get_state())
+
+        # Immediately remove a non-existing host.
+
+        client.srp_client_enable_auto_start_mode()
+        client.srp_client_set_host_name('my-host')
+        self.assertEqual('ToAdd', client.srp_client_get_host_state())
+
+        client.srp_client_remove_host(remove_key=True, send_unreg_to_server=True)
+        self.simulator.go(2)
+        self.assertEqual('Removed', client.srp_client_get_host_state())
 
 
 if __name__ == '__main__':

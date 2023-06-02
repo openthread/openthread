@@ -42,7 +42,7 @@ void DeviceMode::Get(ModeConfig &aModeConfig) const
 {
     aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
     aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = IsFullNetworkData();
+    aModeConfig.mNetworkData  = (GetNetworkDataType() == NetworkData::kFullSet);
 }
 
 void DeviceMode::Set(const ModeConfig &aModeConfig)
@@ -57,8 +57,8 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 {
     InfoString string;
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                  IsFullNetworkData() ? "yes" : "no");
+    string.Append("rx-on:%s ftd:%s full-net:%s", ToYesNo(IsRxOnWhenIdle()), ToYesNo(IsFullThreadDevice()),
+                  ToYesNo(GetNetworkDataType() == NetworkData::kFullSet));
 
     return string;
 }

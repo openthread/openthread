@@ -39,8 +39,6 @@
 #include <openthread/udp.h>
 
 #include "cli/cli_output.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -57,7 +55,7 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aOutputContext The CLI console output context.
+     * @param[in]  aOutput The CLI console output context.
      *
      */
     explicit UdpExample(Output &aOutput);
@@ -71,11 +69,7 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (UdpExample::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<UdpExample>;
 
     otError ProcessHelp(Arg aArgs[]);
     otError ProcessBind(Arg aArgs[]);
@@ -101,7 +95,7 @@ private:
         {"send", &UdpExample::ProcessSend},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     bool        mLinkSecurityEnabled;
     otUdpSocket mSocket;

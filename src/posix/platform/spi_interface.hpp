@@ -122,10 +122,10 @@ public:
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
      *
-     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
-     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout]  aMaxFd       A reference to the max file descriptor.
-     * @param[inout]  aTimeout     A reference to the timeout.
+     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
+     * @param[in,out]  aWriteFdSet  A reference to the write file descriptors.
+     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
+     * @param[in,out]  aTimeout     A reference to the timeout.
      *
      */
     void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
@@ -173,6 +173,7 @@ private:
     uint8_t *GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength);
     otError  DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransferLength);
     otError  PushPullSpi(void);
+    void     Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
     bool CheckInterrupt(void);
     void LogStats(void);
@@ -244,6 +245,8 @@ private:
 
     bool     mDidPrintRateLimitLog;
     uint16_t mSpiSlaveDataLen;
+
+    bool mDidRxFrame;
 
     // Non-copyable, intentionally not implemented.
     SpiInterface(const SpiInterface &);

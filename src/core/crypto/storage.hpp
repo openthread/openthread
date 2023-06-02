@@ -38,6 +38,7 @@
 
 #include <openthread/platform/crypto.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
@@ -94,7 +95,13 @@ enum StorageType : uint8_t
  */
 typedef otCryptoKeyRef KeyRef;
 
-constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
+constexpr KeyRef kInvalidKeyRef               = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
+constexpr KeyRef kNetworkKeyRef               = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1;
+constexpr KeyRef kPskcRef                     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2;
+constexpr KeyRef kActiveDatasetNetworkKeyRef  = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 3;
+constexpr KeyRef kActiveDatasetPskcRef        = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 4;
+constexpr KeyRef kPendingDatasetNetworkKeyRef = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 5;
+constexpr KeyRef kPendingDatasetPskcRef       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 6;
 
 /**
  * Determine if a given `KeyRef` is valid or not.
@@ -113,17 +120,17 @@ inline bool IsKeyRefValid(KeyRef aKeyRef)
 /**
  * Import a key into PSA ITS.
  *
- * @param[inout] aKeyRef           Reference to the key ref to be used for crypto operations.
- * @param[in]    aKeyType          Key Type encoding for the key.
- * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]    aKeyUsage         Key Usage encoding for the key.
- * @param[in]    aStorageType      Key storage type.
- * @param[in]    aKey              Actual key to be imported.
- * @param[in]    aKeyLen           Length of the key to be imported.
+ * @param[in,out] aKeyRef          Reference to the key ref to be used for crypto operations.
+ * @param[in]     aKeyType         Key Type encoding for the key.
+ * @param[in]     aKeyAlgorithm    Key algorithm encoding for the key.
+ * @param[in]     aKeyUsage        Key Usage encoding for the key.
+ * @param[in]     aStorageType     Key storage type.
+ * @param[in]     aKey             Actual key to be imported.
+ * @param[in]     aKeyLen          Length of the key to be imported.
  *
  * @retval kErrorNone          Successfully imported the key.
  * @retval kErrorFailed        Failed to import the key.
- * @retval kErrorInvalidArgs   @p aKey was set to nullptr.
+ * @retval kErrorInvalidArgs   @p aKey was set to `nullptr`.
  *
  */
 inline Error ImportKey(KeyRef &       aKeyRef,
@@ -149,7 +156,7 @@ inline Error ImportKey(KeyRef &       aKeyRef,
  *
  * @retval kErrorNone          Successfully exported  @p aKeyRef.
  * @retval kErrorFailed        Failed to export @p aKeyRef.
- * @retval kErrorInvalidArgs   @p aBuffer was nullptr.
+ * @retval kErrorInvalidArgs   @p aBuffer was `nullptr`.
  *
  */
 inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t &aKeyLen)
@@ -273,9 +280,9 @@ public:
      *
      * This method MUST be used when `IsKeyRef()` returns `true`.
      *
-     * @param[out]    aKeyBuffer  Pointer to a byte array buffer to place the extracted key.
-     * @param[inout]  aKeyLength  On input, the size of @p aKeyBuffer.
-     *                            On exit, returns the key length (number of bytes written in @p aKeyBuffer).
+     * @param[out]     aKeyBuffer  Pointer to a byte array buffer to place the extracted key.
+     * @param[in,out]  aKeyLength  On input, the size of @p aKeyBuffer.
+     *                             On exit, returns the key length (number of bytes written in @p aKeyBuffer).
      *
      * @retval kErrorNone    Successfully extracted the key, @p aKeyBuffer and @p aKeyLength are updated.
      * @retval kErrorNoBufs  Key does not fit in @p aKeyBuffer (extracted key length is larger than @p aKeyLength).
@@ -330,6 +337,9 @@ private:
 };
 
 } // namespace Crypto
+
+DefineCoreType(otCryptoKey, Crypto::Key);
+
 } // namespace ot
 
 #endif // STORAGE_HPP_

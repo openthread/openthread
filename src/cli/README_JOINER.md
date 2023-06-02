@@ -10,6 +10,7 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 - [discerner](#discerner)
 - [id](#id)
 - [start](#start)
+- [state](#state)
 - [stop](#stop)
 
 ## Command Details
@@ -25,6 +26,7 @@ Print joiner help menu.
 help
 id
 start
+state
 stop
 Done
 ```
@@ -72,6 +74,25 @@ This command will cause the device to start the Joiner process.
 
 ```bash
 > joiner start J01NM3
+Done
+```
+
+### state
+
+Usage: `joiner state`
+
+Print the Joiner state.
+
+- Idle
+- Discover
+- Connecting
+- Connected
+- Entrust
+- Joined
+
+```bash
+> joiner state
+Idle
 Done
 ```
 

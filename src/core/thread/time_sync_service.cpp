@@ -43,11 +43,13 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
 
 namespace ot {
+
+RegisterLogModule("TimeSync");
 
 TimeSync::TimeSync(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -90,8 +92,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
         // synchronized with the current sequence, so forward it.
         mTimeSyncRequired = true;
 
-        otLogInfoCore("Older time sync seq received:%u. Forwarding current seq:%u", aMessage.GetTimeSyncSeq(),
-                      mTimeSyncSeq);
+        LogInfo("Older time sync seq received:%u. Forwarding current seq:%u", aMessage.GetTimeSyncSeq(), mTimeSyncSeq);
     }
     else if (Get<Mle::MleRouter>().IsLeader() && timeSyncSeqDelta > 0)
     {
@@ -101,8 +102,8 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
         mTimeSyncSeq      = aMessage.GetTimeSyncSeq() + 1;
         mTimeSyncRequired = true;
 
-        otLogInfoCore("Newer time sync seq:%u received by leader. Setting current seq to:%u and forwarding",
-                      aMessage.GetTimeSyncSeq(), mTimeSyncSeq);
+        LogInfo("Newer time sync seq:%u received by leader. Setting current seq to:%u and forwarding",
+                aMessage.GetTimeSyncSeq(), mTimeSyncSeq);
     }
     else if (!Get<Mle::MleRouter>().IsLeader())
     {
@@ -118,7 +119,7 @@ void TimeSync::HandleTimeSyncMessage(const Message &aMessage)
             mNetworkTimeOffset    = aMessage.GetNetworkTimeOffset();
             mTimeSyncRequired     = true;
 
-            otLogInfoCore("Newer time sync seq:%u received. Forwarding", mTimeSyncSeq);
+            LogInfo("Newer time sync seq:%u received. Forwarding", mTimeSyncSeq);
 
             // Only notify listeners of an update for network time offset jumps of more than
             // OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US but notify listeners regardless if the status changes.
@@ -156,7 +157,7 @@ void TimeSync::ProcessTimeSync(void)
         IncrementTimeSyncSeq();
         mTimeSyncRequired = true;
 
-        otLogInfoCore("Leader seeding new time sync seq:%u", mTimeSyncSeq);
+        LogInfo("Leader seeding new time sync seq:%u", mTimeSyncSeq);
     }
 
     if (mTimeSyncRequired)
@@ -194,7 +195,7 @@ void TimeSync::HandleNotifierEvents(Events aEvents)
 
         stateChanged = true;
 
-        otLogInfoCore("Resetting time sync seq, partition changed");
+        LogInfo("Resetting time sync seq, partition changed");
     }
 
     if (stateChanged)
@@ -226,7 +227,7 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:
         networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
-        otLogInfoCore("Time sync status UNSYNCHRONIZED as role:DISABLED/DETACHED");
+        LogInfo("Time sync status UNSYNCHRONIZED as role:DISABLED/DETACHED");
         break;
 
     case Mle::kRoleChild:
@@ -235,26 +236,26 @@ void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)
         {
             // Haven't yet received any time sync
             networkTimeStatus = OT_NETWORK_TIME_UNSYNCHRONIZED;
-            otLogInfoCore("Time sync status UNSYNCHRONIZED as mLastTimeSyncReceived:0");
+            LogInfo("Time sync status UNSYNCHRONIZED as mLastTimeSyncReceived:0");
         }
         else if (timeSyncLastSyncMs > resyncNeededThresholdMs)
         {
             // The device hasn’t received time sync for more than two periods time.
             networkTimeStatus = OT_NETWORK_TIME_RESYNC_NEEDED;
-            otLogInfoCore("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%u > resyncNeededThresholdMs:%u",
-                          timeSyncLastSyncMs, resyncNeededThresholdMs);
+            LogInfo("Time sync status RESYNC_NEEDED as timeSyncLastSyncMs:%u > resyncNeededThresholdMs:%u",
+                    timeSyncLastSyncMs, resyncNeededThresholdMs);
         }
         else
         {
             // Schedule a check 1 millisecond after two periods of time
             OT_ASSERT(resyncNeededThresholdMs >= timeSyncLastSyncMs);
             mTimer.Start(resyncNeededThresholdMs - timeSyncLastSyncMs + 1);
-            otLogInfoCore("Time sync status SYNCHRONIZED");
+            LogInfo("Time sync status SYNCHRONIZED");
         }
         break;
 
     case Mle::kRoleLeader:
-        otLogInfoCore("Time sync status SYNCHRONIZED as role:LEADER");
+        LogInfo("Time sync status SYNCHRONIZED as role:LEADER");
         break;
     }
 

@@ -54,8 +54,8 @@ extern "C" {
 /**
  * This enumeration defines the keys of settings.
  *
- * Note: When adding a new setings key, if the settings corresponding to the key contains security sensitive
- *       information, the developer MUST add the key to the array `kCriticalKeys`.
+ * Note: When adding a new settings key, if the settings corresponding to the key contains security sensitive
+ *       information, the developer MUST add the key to the array `kSensitiveKeys`.
  *
  */
 enum
@@ -68,20 +68,33 @@ enum
     OT_SETTINGS_KEY_RESERVED             = 0x0006, ///< Reserved (previously auto-start).
     OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY = 0x0007, ///< SLAAC key to generate semantically opaque IID.
     OT_SETTINGS_KEY_DAD_INFO             = 0x0008, ///< Duplicate Address Detection (DAD) information.
-    OT_SETTINGS_KEY_OMR_PREFIX           = 0x0009, ///< Off-mesh routable (OMR) prefix.
+    OT_SETTINGS_KEY_LEGACY_OMR_PREFIX    = 0x0009, ///< Reserved. Legacy Off-mesh routable (OMR) prefix.
     OT_SETTINGS_KEY_ON_LINK_PREFIX       = 0x000a, ///< On-link prefix for infrastructure link.
     OT_SETTINGS_KEY_SRP_ECDSA_KEY        = 0x000b, ///< SRP client ECDSA public/private key pair.
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
     OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
+    OT_SETTINGS_KEY_LEGACY_NAT64_PREFIX  = 0x000e, ///< Reserved. Legacy NAT64 prefix.
+    OT_SETTINGS_KEY_BR_ULA_PREFIX        = 0x000f, ///< BR ULA prefix.
+
+    // Keys in range 0x8000-0xffff are reserved for vendor-specific use.
+    OT_SETTINGS_KEY_VENDOR_RESERVED_MIN = 0x8000,
+    OT_SETTINGS_KEY_VENDOR_RESERVED_MAX = 0xffff,
 };
 
 /**
  * Performs any initialization for the settings subsystem, if necessary.
  *
- * @param[in]  aInstance The OpenThread instance structure.
+ * This function also sets the sensitive keys that should be stored in the secure area.
+ *
+ * Note that the memory pointed by @p aSensitiveKeys MUST not be released before @p aInstance is destroyed.
+ *
+ * @param[in]  aInstance             The OpenThread instance structure.
+ * @param[in]  aSensitiveKeys        A pointer to an array containing the list of sensitive keys. May be NULL only if
+ *                                   @p aSensitiveKeysLength is 0, which means that there is no sensitive keys.
+ * @param[in]  aSensitiveKeysLength  The number of entries in the @p aSensitiveKeys array.
  *
  */
-void otPlatSettingsInit(otInstance *aInstance);
+void otPlatSettingsInit(otInstance *aInstance, const uint16_t *aSensitiveKeys, uint16_t aSensitiveKeysLength);
 
 /**
  * Performs any de-initialization for the settings subsystem, if necessary.
@@ -90,18 +103,6 @@ void otPlatSettingsInit(otInstance *aInstance);
  *
  */
 void otPlatSettingsDeinit(otInstance *aInstance);
-
-/**
- * This function sets the critical keys that should be stored in the secure area.
- *
- * Note that the memory pointed by @p aKeys MUST not be released before @p aInstance is destroyed.
- *
- * @param[in]  aInstance    The OpenThread instance structure.
- * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
- * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
- *
- */
-void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength);
 
 /// Fetches the value of a setting
 /** This function fetches the value of the setting identified
@@ -121,15 +122,15 @@ void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys,
  *  values. The order of such values MAY change after ANY
  *  write operation to the store.
  *
- *  @param[in]     aInstance     The OpenThread instance structure.
- *  @param[in]     aKey          The key associated with the requested setting.
- *  @param[in]     aIndex        The index of the specific item to get.
- *  @param[out]    aValue        A pointer to where the value of the setting should be written. May be set to NULL if
- *                               just testing for the presence or length of a setting.
- *  @param[inout]  aValueLength  A pointer to the length of the value. When called, this pointer should point to an
- *                               integer containing the maximum value size that can be written to aValue. At return,
- *                               the actual length of the setting is written. This may be set to NULL if performing
- *                               a presence check.
+ *  @param[in]      aInstance     The OpenThread instance structure.
+ *  @param[in]      aKey          The key associated with the requested setting.
+ *  @param[in]      aIndex        The index of the specific item to get.
+ *  @param[out]     aValue        A pointer to where the value of the setting should be written. May be set to NULL if
+ *                                just testing for the presence or length of a setting.
+ *  @param[in,out]  aValueLength  A pointer to the length of the value. When called, this pointer should point to an
+ *                                integer containing the maximum value size that can be written to aValue. At return,
+ *                                the actual length of the setting is written. This may be set to NULL if performing
+ *                                a presence check.
  *
  *  @retval OT_ERROR_NONE             The given setting was found and fetched successfully.
  *  @retval OT_ERROR_NOT_FOUND        The given setting was not found in the setting store.

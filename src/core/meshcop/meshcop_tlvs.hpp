@@ -139,7 +139,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    Tlv *GetNext(void) { return static_cast<Tlv *>(ot::Tlv::GetNext()); }
+    Tlv *GetNext(void) { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This method returns a pointer to the next TLV.
@@ -147,7 +147,7 @@ public:
      * @returns A pointer to the next TLV.
      *
      */
-    const Tlv *GetNext(void) const { return static_cast<const Tlv *>(ot::Tlv::GetNext()); }
+    const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
      * This static method reads the requested TLV out of @p aMessage.
@@ -203,7 +203,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
@@ -218,7 +218,7 @@ public:
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      * @param[in]  aType       The TLV Type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
@@ -230,12 +230,12 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
@@ -245,12 +245,12 @@ public:
      * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
     {
-        return static_cast<const TlvType *>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
     }
 
 } OT_TOOL_PACKED_END;
@@ -827,7 +827,7 @@ public:
     /**
      * This method sets the Border Agent Locator value.
      *
-     * @param[in]  aBorderAgentLocator  The Border Agent Locator value.
+     * @param[in]  aLocator  The Border Agent Locator value.
      *
      */
     void SetBorderAgentLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
@@ -930,7 +930,7 @@ public:
     /**
      * This method sets the Commissioner Session ID value.
      *
-     * @param[in]  aCommissionerSessionId  The Commissioner Session ID value.
+     * @param[in]  aSessionId  The Commissioner Session ID value.
      *
      */
     void SetCommissionerSessionId(uint16_t aSessionId) { mSessionId = HostSwap16(aSessionId); }
@@ -1464,7 +1464,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     const ChannelMaskEntryBase *GetFirstEntry(void) const;
@@ -1472,7 +1472,7 @@ public:
     /**
      * This method gets the first Channel Mask Entry in the Channel Mask TLV.
      *
-     * @returns A pointer to first Channel Mask Entry or nullptr if not found.
+     * @returns A pointer to first Channel Mask Entry or `nullptr` if not found.
      *
      */
     ChannelMaskEntryBase *GetFirstEntry(void);
@@ -1500,7 +1500,7 @@ public:
     /**
      * This method sets the Channel Mask Entries.
      *
-     * @param[in]  aMask  The Channel Mask value.
+     * @param[in]  aChannelMask  The Channel Mask value.
      *
      */
     void SetChannelMask(uint32_t aChannelMask);

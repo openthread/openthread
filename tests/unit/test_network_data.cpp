@@ -28,6 +28,7 @@
 
 #include <openthread/config.h>
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "thread/network_data_leader.hpp"
@@ -42,7 +43,7 @@ namespace NetworkData {
 
 void PrintExternalRouteConfig(const ExternalRouteConfig &aConfig)
 {
-    printf("\nprefix:");
+    printf("\nroute-prefix:");
 
     for (uint8_t b : aConfig.mPrefix.mPrefix.mFields.m8)
     {
@@ -51,6 +52,19 @@ void PrintExternalRouteConfig(const ExternalRouteConfig &aConfig)
 
     printf(", length:%d, rloc16:%04x, preference:%d, nat64:%d, stable:%d, nexthop:%d", aConfig.mPrefix.mLength,
            aConfig.mRloc16, aConfig.mPreference, aConfig.mNat64, aConfig.mStable, aConfig.mNextHopIsThisDevice);
+}
+
+void PrintOnMeshPrefixConfig(const OnMeshPrefixConfig &aConfig)
+{
+    printf("\non-mesh-prefix:");
+
+    for (uint8_t b : aConfig.mPrefix.mPrefix.mFields.m8)
+    {
+        printf("%02x", b);
+    }
+
+    printf(", length:%d, rloc16:%04x, preference:%d, stable:%d, def-route:%d", aConfig.mPrefix.mLength, aConfig.mRloc16,
+           aConfig.mPreference, aConfig.mStable, aConfig.mDefaultRoute);
 }
 
 // Returns true if the two given ExternalRouteConfig match (intentionally ignoring mNextHopIsThisDevice).
@@ -62,11 +76,42 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
            (aConfig1.mPreference == aConfig2.mPreference) && (aConfig1.mStable == aConfig2.mStable);
 }
 
+// Returns true if the two given OnMeshprefix match.
+bool CompareOnMeshPrefixConfig(const otBorderRouterConfig &aConfig1, const otBorderRouterConfig &aConfig2)
+{
+    return (memcmp(aConfig1.mPrefix.mPrefix.mFields.m8, aConfig2.mPrefix.mPrefix.mFields.m8,
+                   sizeof(aConfig1.mPrefix.mPrefix)) == 0) &&
+           (aConfig1.mPrefix.mLength == aConfig2.mPrefix.mLength) && (aConfig1.mRloc16 == aConfig2.mRloc16) &&
+           (aConfig1.mPreference == aConfig2.mPreference) && (aConfig1.mStable == aConfig2.mStable) &&
+           (aConfig1.mDefaultRoute == aConfig2.mDefaultRoute) && (aConfig1.mOnMesh == aConfig2.mOnMesh);
+}
+
+template <uint8_t kLength>
+void VerifyRlocsArray(const uint16_t *aRlocs, uint16_t aRlocsLength, const uint16_t (&aExpectedRlocs)[kLength])
+{
+    VerifyOrQuit(aRlocsLength == kLength);
+
+    printf("\nRLOCs: { ");
+
+    for (uint8_t index = 0; index < aRlocsLength; index++)
+    {
+        VerifyOrQuit(aRlocs[index] == aExpectedRlocs[index]);
+        printf("0x%04x ", aRlocs[index]);
+    }
+
+    printf("}");
+}
+
 void TestNetworkDataIterator(void)
 {
+    static constexpr uint8_t kMaxRlocsArray = 10;
+
     ot::Instance *      instance;
     Iterator            iter = kIteratorInit;
-    ExternalRouteConfig config;
+    ExternalRouteConfig rconfig;
+    OnMeshPrefixConfig  pconfig;
+    uint16_t            rlocs[kMaxRlocsArray];
+    uint8_t             rlocsLength;
 
     instance = testInitInstance();
     VerifyOrQuit(instance != nullptr);
@@ -104,6 +149,8 @@ void TestNetworkDataIterator(void)
             },
         };
 
+        const uint16_t kRlocs[] = {0xc800, 0x5400};
+
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
         iter = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -113,10 +160,25 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config));
-            PrintExternalRouteConfig(config);
-            VerifyOrQuit(CompareExternalRouteConfig(config, route));
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            PrintExternalRouteConfig(rconfig);
+            VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocs);
+        VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocs));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocs);
+        VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocs));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
+        VerifyOrQuit(rlocsLength == 0);
+        VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == 0);
     }
 
     {
@@ -124,7 +186,7 @@ void TestNetworkDataIterator(void)
             0x08, 0x04, 0x0B, 0x02, 0x00, 0x00, 0x03, 0x1E, 0x00, 0x40, 0xFD, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
             0x07, 0x02, 0x11, 0x40, 0x00, 0x03, 0x10, 0x00, 0x40, 0x01, 0x03, 0x54, 0x00, 0x00, 0x05, 0x04, 0x54, 0x00,
             0x31, 0x00, 0x02, 0x0F, 0x00, 0x40, 0xFD, 0x00, 0xAB, 0xBA, 0xCD, 0xDC, 0x00, 0x00, 0x00, 0x03, 0x10, 0x00,
-            0x20, 0x03, 0x0E, 0x00, 0x20, 0xFD, 0x00, 0xAB, 0xBA, 0x01, 0x06, 0x54, 0x00, 0x00, 0x04, 0x00, 0x00,
+            0x20, 0x03, 0x0E, 0x00, 0x20, 0xFD, 0x00, 0xAB, 0xBA, 0x01, 0x06, 0x54, 0x00, 0x00, 0x04, 0x01, 0x00,
         };
 
         otExternalRouteConfig routes[] = {
@@ -182,13 +244,17 @@ void TestNetworkDataIterator(void)
                        0x00}}},
                     32,
                 },
-                0x0400, // mRloc16
+                0x0401, // mRloc16
                 0,      // mPreference
                 false,  // mNat64
                 true,   // mStable
                 false,  // mNextHopIsThisDevice
             },
         };
+
+        const uint16_t kRlocsAnyRole[]    = {0x1000, 0x5400, 0x0401};
+        const uint16_t kRlocsRouterRole[] = {0x1000, 0x5400};
+        const uint16_t kRlocsChildRole[]  = {0x0401};
 
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
@@ -199,10 +265,192 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config));
-            PrintExternalRouteConfig(config);
-            VerifyOrQuit(CompareExternalRouteConfig(config, route));
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            PrintExternalRouteConfig(rconfig);
+            VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+        VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocsAnyRole));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsRouterRole);
+        VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocsRouterRole));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsChildRole);
+        VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kRlocsChildRole));
+
+        // Test failure case when given array is smaller than number of RLOCs.
+        rlocsLength = GetArrayLength(kRlocsAnyRole) - 1;
+        VerifyOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength) == kErrorNoBufs);
+        VerifyOrQuit(rlocsLength == GetArrayLength(kRlocsAnyRole) - 1);
+        for (uint8_t index = 0; index < rlocsLength; index++)
+        {
+            VerifyOrQuit(rlocs[index] == kRlocsAnyRole[index]);
+        }
+
+        rlocsLength = GetArrayLength(kRlocsAnyRole);
+        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+    }
+
+    {
+        const uint8_t kNetworkData[] = {
+            0x08, 0x04, 0x0b, 0x02, 0x36, 0xcc, 0x03, 0x1c, 0x00, 0x40, 0xfd, 0x00, 0xbe, 0xef, 0xca, 0xfe,
+            0x00, 0x00, 0x05, 0x0c, 0x28, 0x00, 0x33, 0x00, 0x28, 0x01, 0x33, 0x00, 0x4c, 0x00, 0x31, 0x00,
+            0x07, 0x02, 0x11, 0x40, 0x03, 0x14, 0x00, 0x40, 0xfd, 0x00, 0x22, 0x22, 0x00, 0x00, 0x00, 0x00,
+            0x05, 0x04, 0x28, 0x00, 0x73, 0x00, 0x07, 0x02, 0x12, 0x40, 0x03, 0x12, 0x00, 0x40, 0xfd, 0x00,
+            0x33, 0x33, 0x00, 0x00, 0x00, 0x00, 0x01, 0x06, 0xec, 0x00, 0x00, 0x28, 0x01, 0xc0,
+        };
+
+        otExternalRouteConfig routes[] = {
+            {
+                {
+                    {{{0xfd, 0x00, 0x33, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                0xec00, // mRloc16
+                0,      // mPreference
+                false,  // mNat64
+                true,   // mStable
+                false,  // mNextHopIsThisDevice
+            },
+            {
+                {
+                    {{{0xfd, 0x00, 0x33, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                0x2801, // mRloc16
+                -1,     // mPreference
+                false,  // mNat64
+                true,   // mStable
+                false,  // mNextHopIsThisDevice
+            },
+        };
+
+        otBorderRouterConfig prefixes[] = {
+            {
+                {
+                    {{{0xfd, 0x00, 0xbe, 0xef, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                0,      // mPreference
+                true,   // mPreferred
+                true,   // mSlaac
+                false,  // mDhcp
+                true,   // mConfigure
+                true,   // mDefaultRoute
+                true,   // mOnMesh
+                true,   // mStable
+                false,  // mNdDns
+                false,  // mDp
+                0x2800, // mRloc16
+            },
+            {
+                {
+                    {{{0xfd, 0x00, 0xbe, 0xef, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                0,      // mPreference
+                true,   // mPreferred
+                true,   // mSlaac
+                false,  // mDhcp
+                true,   // mConfigure
+                true,   // mDefaultRoute
+                true,   // mOnMesh
+                true,   // mStable
+                false,  // mNdDns
+                false,  // mDp
+                0x2801, // mRloc16
+            },
+            {
+                {
+                    {{{0xfd, 0x00, 0xbe, 0xef, 0xca, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                0,      // mPreference
+                true,   // mPreferred
+                true,   // mSlaac
+                false,  // mDhcp
+                true,   // mConfigure
+                false,  // mDefaultRoute
+                true,   // mOnMesh
+                true,   // mStable
+                false,  // mNdDns
+                false,  // mDp
+                0x4c00, // mRloc16
+            },
+            {
+                {
+                    {{{0xfd, 0x00, 0x22, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                       0x00}}},
+                    64,
+                },
+                1,      // mPreference
+                true,   // mPreferred
+                true,   // mSlaac
+                false,  // mDhcp
+                true,   // mConfigure
+                true,   // mDefaultRoute
+                true,   // mOnMesh
+                true,   // mStable
+                false,  // mNdDns
+                false,  // mDp
+                0x2800, // mRloc16
+            },
+        };
+
+        const uint16_t kRlocsAnyRole[]    = {0xec00, 0x2801, 0x2800};
+        const uint16_t kRlocsRouterRole[] = {0xec00, 0x2800};
+        const uint16_t kRlocsChildRole[]  = {0x2801};
+
+        NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
+
+        printf("\nTest #3: Network data 3");
+        printf("\n-------------------------------------------------");
+
+        iter = OT_NETWORK_DATA_ITERATOR_INIT;
+
+        for (const auto &route : routes)
+        {
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, rconfig));
+            PrintExternalRouteConfig(rconfig);
+            VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
+        }
+
+        iter = OT_NETWORK_DATA_ITERATOR_INIT;
+
+        for (const auto &prefix : prefixes)
+        {
+            SuccessOrQuit(netData.GetNextOnMeshPrefix(iter, pconfig));
+            PrintOnMeshPrefixConfig(pconfig);
+            VerifyOrQuit(CompareOnMeshPrefixConfig(pconfig, prefix));
+        }
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+        VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocsAnyRole));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsRouterRole);
+        VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocsRouterRole));
+
+        rlocsLength = GetArrayLength(rlocs);
+        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
+        VerifyRlocsArray(rlocs, rlocsLength, kRlocsChildRole);
+        VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kRlocsChildRole));
     }
 
     testFreeInstance(instance);
@@ -318,6 +566,11 @@ void TestNetworkDataFindNextService(void)
 
 void TestNetworkDataDsnSrpServices(void)
 {
+    static const char *kOriginStrings[] = {
+        "service-data", // (0) Service::DnsSrpUnicast::kFromServiceData
+        "server-data",  // (1) Service::DnsSrpUnicast::kFromServerData
+    };
+
     class TestLeader : public Leader
     {
     public:
@@ -353,8 +606,9 @@ void TestNetworkDataDsnSrpServices(void)
 
         struct UnicastEntry
         {
-            const char *mAddress;
-            uint16_t    mPort;
+            const char *                   mAddress;
+            uint16_t                       mPort;
+            Service::DnsSrpUnicast::Origin mOrigin;
 
             bool Matches(Service::DnsSrpUnicast::Info aInfo) const
             {
@@ -363,7 +617,7 @@ void TestNetworkDataDsnSrpServices(void)
                 SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress));
                 sockAddr.SetPort(mPort);
 
-                return (aInfo.mSockAddr == sockAddr);
+                return (aInfo.mSockAddr == sockAddr) && (aInfo.mOrigin == mOrigin);
             }
         };
 
@@ -384,9 +638,11 @@ void TestNetworkDataDsnSrpServices(void)
         };
 
         const UnicastEntry kUnicastEntries[] = {
-            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234}, {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd},
-            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678},      {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e},
-            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12},
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234, Service::DnsSrpUnicast::kFromServiceData},
+            {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd, Service::DnsSrpUnicast::kFromServerData},
+            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678, Service::DnsSrpUnicast::kFromServerData},
+            {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e, Service::DnsSrpUnicast::kFromServerData},
+            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, Service::DnsSrpUnicast::kFromServerData},
         };
 
         const uint8_t kPreferredAnycastEntryIndex = 2;
@@ -436,7 +692,8 @@ void TestNetworkDataDsnSrpServices(void)
         for (const UnicastEntry &entry : kUnicastEntries)
         {
             SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo));
-            printf("\nunicastInfo %s", unicastInfo.mSockAddr.ToString().AsCString());
+            printf("\nunicastInfo { %s, origin:%s }", unicastInfo.mSockAddr.ToString().AsCString(),
+                   kOriginStrings[unicastInfo.mOrigin]);
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
         }

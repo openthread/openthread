@@ -98,6 +98,17 @@ public:
     Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix);
 
     /**
+     * This method indicates whether or not the Thread Network Data contains a given on mesh prefix.
+     *
+     * @param[in]  aPrefix   The on mesh prefix to check.
+     *
+     * @retval TRUE  if Network Data contains mesh prefix @p aPrefix.
+     * @retval FALSE if Network Data does not contain mesh prefix @p aPrefix.
+     *
+     */
+    bool ContainsOnMeshPrefix(const Ip6::Prefix &aPrefix) const;
+
+    /**
      * This method adds a Has Route entry to the Thread Network data.
      *
      * @param[in]  aConfig       A reference to the external route configuration.
@@ -172,13 +183,11 @@ private:
     Error AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType, uint16_t aFlags, bool aStable);
     Error RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
     void  UpdateRloc(PrefixTlv &aPrefixTlv);
-    bool  IsOnMeshPrefixConsistent(void) const;
-    bool  IsExternalRouteConsistent(void) const;
+    bool  IsConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     void UpdateRloc(ServiceTlv &aService);
-    bool IsServiceConsistent(void) const;
 #endif
 
     uint8_t  mTlvBuffer[kMaxSize];
