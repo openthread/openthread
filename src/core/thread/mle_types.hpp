@@ -377,7 +377,7 @@ private:
     uint8_t mMode;
 };
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 /**
  * Represents device properties.
  *
@@ -436,7 +436,7 @@ private:
     static_assert(kDefaultAdjustment <= kMaxAdjustment, "Invalid default weight adjustment");
 };
 
-#endif // OPENTHREAD_FTD
+#endif // #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 
 /**
  * Represents the Thread Leader Data.
@@ -702,7 +702,7 @@ const char *RoleToString(DeviceRole aRole);
 
 DefineCoreType(otLeaderData, Mle::LeaderData);
 DefineMapEnum(otDeviceRole, Mle::DeviceRole);
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 DefineCoreType(otDeviceProperties, Mle::DeviceProperties);
 DefineMapEnum(otPowerSupply, Mle::DeviceProperties::PowerSupply);
 #endif

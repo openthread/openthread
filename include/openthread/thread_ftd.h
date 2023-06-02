@@ -236,6 +236,8 @@ typedef struct otDeviceProperties
 /**
  * Get the current device properties.
  *
+ * Requires `OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1`.
+ *
  * @returns The device properties `otDeviceProperties`.
  *
  */
@@ -243,6 +245,8 @@ const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance);
 
 /**
  * Set the device properties which are then used to determine and set the Leader Weight.
+ *
+ * Requires `OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1`.
  *
  * @param[in]  aInstance           A pointer to an OpenThread instance.
  * @param[in]  aDeviceProperties   The device properties.
