@@ -629,12 +629,13 @@ bool SpiInterface::CheckInterrupt(void)
     return (mIntGpioValueFd >= 0) ? (GetGpioValue(mIntGpioValueFd) == kGpioIntAssertState) : true;
 }
 
-void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+void SpiInterface::UpdateFdSet(void *aMainloopContext)
 {
-    struct timeval timeout        = {kSecPerDay, 0};
-    struct timeval pollingTimeout = {0, kSpiPollPeriodUs};
+    struct timeval        timeout        = {kSecPerDay, 0};
+    struct timeval        pollingTimeout = {0, kSpiPollPeriodUs};
+    otSysMainloopContext *context        = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
 
-    OT_UNUSED_VARIABLE(aWriteFdSet);
+    assert(context != nullptr);
 
     if (mSpiTxIsReady)
     {
@@ -645,9 +646,9 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
 
     if (mIntGpioValueFd >= 0)
     {
-        if (aMaxFd < mIntGpioValueFd)
+        if (context->mMaxFd < mIntGpioValueFd)
         {
-            aMaxFd = mIntGpioValueFd;
+            context->mMaxFd = mIntGpioValueFd;
         }
 
         if (CheckInterrupt())
@@ -661,7 +662,7 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
         {
             // The interrupt pin was not asserted, so we wait for the interrupt pin to be asserted by adding it to the
             // read set.
-            FD_SET(mIntGpioValueFd, &aReadFdSet);
+            FD_SET(mIntGpioValueFd, &context->mReadFdSet);
         }
     }
     else if (timercmp(&pollingTimeout, &timeout, <))
@@ -721,19 +722,19 @@ void SpiInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMa
         mDidPrintRateLimitLog = false;
     }
 
-    if (timercmp(&timeout, &aTimeout, <))
+    if (timercmp(&timeout, &context->mTimeout, <))
     {
-        aTimeout = timeout;
+        context->mTimeout = timeout;
     }
 }
 
-void SpiInterface::Process(const RadioProcessContext &aContext) { Process(aContext.mReadFdSet, aContext.mWriteFdSet); }
-
-void SpiInterface::Process(const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+void SpiInterface::Process(const void *aMainloopContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
+    const otSysMainloopContext *context = reinterpret_cast<const otSysMainloopContext *>(aMainloopContext);
 
-    if (FD_ISSET(mIntGpioValueFd, aReadFdSet))
+    assert(context != nullptr);
+
+    if (FD_ISSET(mIntGpioValueFd, &context->mReadFdSet))
     {
         struct gpioevent_data event;
 
@@ -761,25 +762,23 @@ otError SpiInterface::WaitForFrame(uint64_t aTimeoutUs)
 
     while (now < end)
     {
-        fd_set         readFdSet;
-        fd_set         writeFdSet;
-        int            maxFds = -1;
-        struct timeval timeout;
-        int            ret;
+        otSysMainloopContext context;
+        int                  ret;
 
-        timeout.tv_sec  = static_cast<time_t>((end - now) / US_PER_S);
-        timeout.tv_usec = static_cast<suseconds_t>((end - now) % US_PER_S);
+        context.mMaxFd           = -1;
+        context.mTimeout.tv_sec  = static_cast<time_t>((end - now) / US_PER_S);
+        context.mTimeout.tv_usec = static_cast<suseconds_t>((end - now) % US_PER_S);
 
-        FD_ZERO(&readFdSet);
-        FD_ZERO(&writeFdSet);
+        FD_ZERO(&context.mReadFdSet);
+        FD_ZERO(&context.mWriteFdSet);
 
-        UpdateFdSet(readFdSet, writeFdSet, maxFds, timeout);
+        UpdateFdSet(&context);
 
-        ret = select(maxFds + 1, &readFdSet, &writeFdSet, nullptr, &timeout);
+        ret = select(context.mMaxFd + 1, &context.mReadFdSet, &context.mWriteFdSet, nullptr, &context.mTimeout);
 
         if (ret >= 0)
         {
-            Process(&readFdSet, &writeFdSet);
+            Process(&context);
 
             if (mDidRxFrame)
             {
