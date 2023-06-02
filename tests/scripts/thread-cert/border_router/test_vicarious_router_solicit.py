@@ -122,11 +122,11 @@ class MultiThreadNetworks(thread_cert.TestCase):
         logging.info("ROUTER1 addrs: %r", router1.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br1.get_routes()), 1)
-        br1_on_link_prefix = br1.get_routes()[0].split(' ')[0]
-        self.assertEqual(IPv6Network(br1_on_link_prefix), IPv6Network(ON_LINK_PREFIX))
+        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
+        on_link_prefix = br1.get_netdata_non_nat64_prefixes()[0]
+        self.assertEqual(IPv6Network(on_link_prefix), IPv6Network(ON_LINK_PREFIX))
 
-        host_on_link_addr = host.get_matched_ula_addresses(br1_on_link_prefix)[0]
+        host_on_link_addr = host.get_matched_ula_addresses(on_link_prefix)[0]
         self.assertTrue(router1.ping(host_on_link_addr))
         self.assertTrue(
             host.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True, interface=host_on_link_addr))
@@ -151,29 +151,27 @@ class MultiThreadNetworks(thread_cert.TestCase):
         logging.info("ROUTER2 addrs: %r", router2.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(br1.get_prefixes()) == 1)
-        self.assertTrue(len(router1.get_prefixes()) == 1)
-        self.assertTrue(len(br2.get_prefixes()) == 1)
-        self.assertTrue(len(router2.get_prefixes()) == 1)
+        self.assertTrue(len(br1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router1.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(br2.get_netdata_omr_prefixes()) == 1)
+        self.assertTrue(len(router2.get_netdata_omr_prefixes()) == 1)
 
-        br1_omr_prefix = br1.get_omr_prefix()
-        br2_omr_prefix = br2.get_omr_prefix()
+        br1_omr_prefix = br1.get_br_omr_prefix()
+        br2_omr_prefix = br2.get_br_omr_prefix()
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
         # Verify that the Border Routers starts advertsing new on-link prefix
         # but don't remove the external routes for the radvd on-link prefix
         # immediately, because the SLAAC addresses are still valid.
-        self.assertEqual(len(br1.get_routes()), 3)
-        self.assertEqual(len(router1.get_routes()), 3)
-        self.assertEqual(len(br2.get_routes()), 2)
-        self.assertEqual(len(router2.get_routes()), 2)
+        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 3)
+        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 3)
+        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
 
-        br1_external_routes = [route.split(' ')[0] for route in br1.get_routes()]
-        br2_external_routes = [route.split(' ')[0] for route in br2.get_routes()]
-
-        on_link_prefixes = list(set(br1_external_routes).intersection(br2_external_routes))
+        on_link_prefixes = list(
+            set(br1.get_netdata_non_nat64_prefixes()).intersection(br2.get_netdata_non_nat64_prefixes()))
         self.assertEqual(len(on_link_prefixes), 1)
-        self.assertEqual(IPv6Network(on_link_prefixes[0]), IPv6Network(br2.get_on_link_prefix()))
+        self.assertEqual(IPv6Network(on_link_prefixes[0]), IPv6Network(br2.get_br_on_link_prefix()))
 
         router1_omr_addr = router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
         router2_omr_addr = router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]

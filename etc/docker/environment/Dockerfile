@@ -16,10 +16,14 @@ RUN set -x \
         python3-setuptools \
         software-properties-common \
         sudo \
+        netbase \
+        inetutils-ping \
+        ca-certificates \
+    && update-ca-certificates \
     && python3 -m pip install -U cmake \
     && python3 -m pip install wheel
 
-# setup openthread
+# set up openthread simulation cli example apps 
 WORKDIR /
 COPY . openthread
 RUN set -x \
@@ -27,5 +31,11 @@ RUN set -x \
     && ./script/bootstrap \
     && mkdir build \
     && cd build \
-    && cmake -GNinja -DOT_PLATFORM=simulation .. \
+    && cmake -GNinja -DOT_COMMISSIONER=ON -DOT_JOINER=ON -DOT_PLATFORM=simulation .. \
     && ninja
+
+# set up ot-daemon
+WORKDIR /
+RUN set -x \
+    && cd openthread \
+    && ./script/cmake-build posix -DOT_DAEMON=ON

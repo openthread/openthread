@@ -100,10 +100,10 @@ class SingleBorderRouter(thread_cert.TestCase):
         logging.info("ROUTER  addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -120,10 +120,10 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.stop_radvd_service()
         self.simulator.go(15)
 
-        self.assertEqual(len(br.get_prefixes()), 1)
-        self.assertEqual(len(router.get_prefixes()), 1)
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertEqual(len(router.get_routes()), 1)
+        self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)

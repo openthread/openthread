@@ -58,7 +58,6 @@ if(OT_BIG_ENDIAN)
     target_compile_definitions(ot-config INTERFACE "BYTE_ORDER_BIG_ENDIAN=1")
 endif()
 
-include("${PROJECT_SOURCE_DIR}/etc/cmake/checks.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 

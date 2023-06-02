@@ -40,7 +40,17 @@ expect_line "Done"
 wait_for "state" "leader"
 expect_line "Done"
 
+send "route add 2001:dead:beef:cafe::/64 s n med\n"
+expect_line "Done"
+
+send "netdata register\n"
+expect_line "Done"
+
 send "dns resolve ipv6.google.com ::1 53\n"
+expect "DNS response for ipv6.google.com"
+expect_line "Done"
+
+send "dns resolve4 ipv6.google.com ::1 53\n"
 expect "DNS response for ipv6.google.com"
 expect_line "Done"
 

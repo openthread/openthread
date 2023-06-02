@@ -65,7 +65,7 @@ send "commissioner mgmtset sessionid $sessionid steeringdata ffffffff joinerudpp
 expect_line "Done"
 send "commissioner mgmtset sessionid $sessionid locator 0x0100\n"
 expect_line "Done"
-send "commissioner mgmtget sessionid steeringdata joinerudpport locator binary 0b081209\n"
+send "commissioner mgmtget sessionid steeringdata joinerudpport locator -x 0b081209\n"
 expect_line "Done"
 send "commissioner stop\n"
 expect "Commissioner: disabled"

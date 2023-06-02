@@ -42,19 +42,10 @@
 namespace ot {
 namespace Cli {
 
-constexpr History::Command History::sCommands[];
-
-otError History::ProcessHelp(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    for (const Command &command : sCommands)
-    {
-        OutputLine(command.mName);
-    }
-
-    return OT_ERROR_NONE;
-}
+static const char *const kSimpleEventStrings[] = {
+    "Added",  // (0) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESSS_EVENT}_ADDED
+    "Removed" // (1) OT_HISTORY_TRACKER_{NET_DATA_ENTRY/ADDRESS_EVENT}_REMOVED
+};
 
 otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) const
 {
@@ -80,13 +71,8 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
-otError History::ProcessIpAddr(Arg aArgs[])
+template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
-    static const char *const kEventStrings[] = {
-        "Added",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
-        "Removed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
-    };
-
     otError                                   error;
     bool                                      isList;
     uint16_t                                  numEntries;
@@ -128,16 +114,17 @@ otError History::ProcessIpAddr(Arg aArgs[])
         {
             sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
 
-            OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString, kEventStrings[info->mEvent],
-                       addressString, AddressOriginToString(info->mAddressOrigin), info->mScope,
+            OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString,
+                       Stringify(info->mEvent, kSimpleEventStrings), addressString,
+                       Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
                        info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
         }
         else
         {
             OutputLine("%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s",
-                       ageString, kEventStrings[info->mEvent], addressString, info->mPrefixLength,
-                       AddressOriginToString(info->mAddressOrigin), info->mScope, info->mPreferred ? "yes" : "no",
-                       info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
+                       ageString, Stringify(info->mEvent, kSimpleEventStrings), addressString, info->mPrefixLength,
+                       Interpreter::AddressOriginToString(info->mAddressOrigin), info->mScope,
+                       info->mPreferred ? "yes" : "no", info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
         }
     }
 
@@ -145,7 +132,7 @@ exit:
     return error;
 }
 
-otError History::ProcessIpMulticastAddr(Arg aArgs[])
+template <> otError History::Process<Cmd("ipmaddr")>(Arg aArgs[])
 {
     static const char *const kEventStrings[] = {
         "Subscribed",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
@@ -194,14 +181,15 @@ otError History::ProcessIpMulticastAddr(Arg aArgs[])
         otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
 
         OutputLine(isList ? "%s -> event:%s address:%s origin:%s" : "| %20s | %-12s | %-39s | %-6s |", ageString,
-                   kEventStrings[info->mEvent], addressString, AddressOriginToString(info->mAddressOrigin));
+                   Stringify(info->mEvent, kEventStrings), addressString,
+                   Interpreter::AddressOriginToString(info->mAddressOrigin));
     }
 
 exit:
     return error;
 }
 
-otError History::ProcessNeighbor(Arg aArgs[])
+template <> otError History::Process<Cmd("neighbor")>(Arg aArgs[])
 {
     static const char *const kEventString[] = {
         /* (0) OT_HISTORY_TRACKER_NEIGHBOR_EVENT_ADDED     -> */ "Added",
@@ -266,7 +254,7 @@ exit:
     return error;
 }
 
-otError History::ProcessNetInfo(Arg aArgs[])
+template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
 {
     otError                            error;
     bool                               isList;
@@ -309,77 +297,36 @@ exit:
     return error;
 }
 
-otError History::ProcessRx(Arg aArgs[])
+template <> otError History::Process<Cmd("rx")>(Arg aArgs[])
 {
     return ProcessRxTxHistory(kRx, aArgs);
 }
 
-otError History::ProcessRxTx(Arg aArgs[])
+template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[])
 {
     return ProcessRxTxHistory(kRxTx, aArgs);
 }
 
-otError History::ProcessTx(Arg aArgs[])
+template <> otError History::Process<Cmd("tx")>(Arg aArgs[])
 {
     return ProcessRxTxHistory(kTx, aArgs);
 }
 
-const char *History::AddressOriginToString(uint8_t aOrigin)
-{
-    const char *str = "Unknown";
-
-    switch (aOrigin)
-    {
-    case OT_ADDRESS_ORIGIN_THREAD:
-        str = "Thread";
-        break;
-
-    case OT_ADDRESS_ORIGIN_SLAAC:
-        str = "SLAAC";
-        break;
-
-    case OT_ADDRESS_ORIGIN_DHCPV6:
-        str = "DHCPv6";
-        break;
-
-    case OT_ADDRESS_ORIGIN_MANUAL:
-        str = "Manual";
-        break;
-
-    default:
-        break;
-    }
-
-    return str;
-}
-
 const char *History::MessagePriorityToString(uint8_t aPriority)
 {
-    const char *str = "unkn";
+    static const char *const kPriorityStrings[] = {
+        "low",  // (0) OT_HISTORY_TRACKER_MSG_PRIORITY_LOW
+        "norm", // (1) OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL
+        "high", // (2) OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH
+        "net",  // (3) OT_HISTORY_TRACKER_MSG_PRIORITY_NET
+    };
 
-    switch (aPriority)
-    {
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_LOW:
-        str = "low";
-        break;
+    static_assert(0 == OT_HISTORY_TRACKER_MSG_PRIORITY_LOW, "MSG_PRIORITY_LOW value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL, "MSG_PRIORITY_NORMAL value is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH, "MSG_PRIORITY_HIGH value is incorrect");
+    static_assert(3 == OT_HISTORY_TRACKER_MSG_PRIORITY_NET, "MSG_PRIORITY_NET value is incorrect");
 
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_NORMAL:
-        str = "norm";
-        break;
-
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_HIGH:
-        str = "high";
-        break;
-
-    case OT_HISTORY_TRACKER_MSG_PRIORITY_NET:
-        str = "net";
-        break;
-
-    default:
-        break;
-    }
-
-    return str;
+    return Stringify(aPriority, kPriorityStrings, "unkn");
 }
 
 const char *History::RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo)
@@ -542,7 +489,6 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
     constexpr uint8_t kIndentSize = 4;
 
     char ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
-    char addrString[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
@@ -561,11 +507,11 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
 
     OutputLine(" %s:0x%04x radio:%s", aIsRx ? "from" : "to", aInfo.mNeighborRloc16, RadioTypeToString(aInfo));
 
-    otIp6SockAddrToString(&aInfo.mSource, addrString, sizeof(addrString));
-    OutputLine(kIndentSize, "src:%s", addrString);
+    OutputFormat(kIndentSize, "src:");
+    OutputSockAddrLine(aInfo.mSource);
 
-    otIp6SockAddrToString(&aInfo.mDestination, addrString, sizeof(addrString));
-    OutputLine(kIndentSize, "dst:%s", addrString);
+    OutputFormat(kIndentSize, "dst:");
+    OutputSockAddrLine(aInfo.mDestination);
 }
 
 void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx)
@@ -611,18 +557,132 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
     OutputLine("| %20s | dst: %-70s |", "", addrString);
 }
 
+template <> otError History::Process<Cmd("prefix")>(Arg aArgs[])
+{
+    otError                                 error;
+    bool                                    isList;
+    uint16_t                                numEntries;
+    otHistoryTrackerIterator                iterator;
+    const otHistoryTrackerOnMeshPrefixInfo *info;
+    uint32_t                                entryAge;
+    char                                    ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                    prefixString[OT_IP6_PREFIX_STRING_SIZE];
+    NetworkData::FlagsString                flagsString;
+
+    static_assert(0 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED, "NET_DATA_ENTRY_ADDED value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED, "NET_DATA_ENTRY_REMOVED value is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Prefix                                      | Flags     | Pref | RLOC16 |
+        // +----------------------+---------+---------------------------------------------+-----------+------+--------+
+
+        static const char *const kPrefixTitles[]       = {"Age", "Event", "Prefix", "Flags", "Pref", "RLOC16"};
+        static const uint8_t     kPrefixColumnWidths[] = {22, 9, 45, 11, 6, 8};
+
+        OutputTableHeader(kPrefixTitles, kPrefixColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateOnMeshPrefixHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mPrefix.mPrefix, prefixString, sizeof(prefixString));
+        NetworkData::PrefixFlagsToString(info->mPrefix, flagsString);
+
+        OutputLine(isList ? "%s -> event:%s prefix:%s flags:%s pref:%s rloc16:0x%04x"
+                          : "| %20s | %-7s | %-43s | %-9s | %-4s | 0x%04x |",
+                   ageString, Stringify(info->mEvent, kSimpleEventStrings), prefixString, flagsString,
+                   NetworkData::PreferenceToString(info->mPrefix.mPreference), info->mPrefix.mRloc16);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError History::Process<Cmd("route")>(Arg aArgs[])
+{
+    otError                                  error;
+    bool                                     isList;
+    uint16_t                                 numEntries;
+    otHistoryTrackerIterator                 iterator;
+    const otHistoryTrackerExternalRouteInfo *info;
+    uint32_t                                 entryAge;
+    char                                     ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                     prefixString[OT_IP6_PREFIX_STRING_SIZE];
+    NetworkData::FlagsString                 flagsString;
+
+    static_assert(0 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_ADDED, "NET_DATA_ENTRY_ADDED value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_NET_DATA_ENTRY_REMOVED, "NET_DATA_ENTRY_REMOVED value is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Route                                       | Flags     | Pref | RLOC16 |
+        // +----------------------+---------+---------------------------------------------+-----------+------+--------+
+
+        static const char *const kRouteTitles[]       = {"Age", "Event", "Route", "Flags", "Pref", "RLOC16"};
+        static const uint8_t     kRouteColumnWidths[] = {22, 9, 45, 11, 6, 8};
+
+        OutputTableHeader(kRouteTitles, kRouteColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateExternalRouteHistory(GetInstancePtr(), &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        otIp6PrefixToString(&info->mRoute.mPrefix, prefixString, sizeof(prefixString));
+        NetworkData::RouteFlagsToString(info->mRoute, flagsString);
+
+        OutputLine(isList ? "%s -> event:%s route:%s flags:%s pref:%s rloc16:0x%04x"
+                          : "| %20s | %-7s | %-43s | %-9s | %-4s | 0x%04x |",
+                   ageString, Stringify(info->mEvent, kSimpleEventStrings), prefixString, flagsString,
+                   NetworkData::PreferenceToString(info->mRoute.mPreference), info->mRoute.mRloc16);
+    }
+
+exit:
+    return error;
+}
+
 otError History::Process(Arg aArgs[])
 {
+#define CmdEntry(aCommandString)                               \
+    {                                                          \
+        aCommandString, &History::Process<Cmd(aCommandString)> \
+    }
+
+    static constexpr Command kCommands[] = {
+        CmdEntry("ipaddr"), CmdEntry("ipmaddr"), CmdEntry("neighbor"), CmdEntry("netinfo"), CmdEntry("prefix"),
+        CmdEntry("route"),  CmdEntry("rx"),      CmdEntry("rxtx"),     CmdEntry("tx"),
+    };
+
+#undef CmdEntry
+
+    static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
+
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
-    if (aArgs[0].IsEmpty())
+    if (aArgs[0].IsEmpty() || (aArgs[0] == "help"))
     {
-        IgnoreError(ProcessHelp(aArgs));
-        ExitNow();
+        OutputCommandTable(kCommands);
+        ExitNow(error = aArgs[0].IsEmpty() ? error : OT_ERROR_NONE);
     }
 
-    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
+    command = BinarySearch::Find(aArgs[0].GetCString(), kCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgs + 1);

@@ -113,4 +113,17 @@
 #define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+ *
+ * Enable CLI prompt.
+ *
+ * When enabled, the CLI will print prompt on the output after processing a command.
+ * Otherwise, no prompt is added to the output.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+#define OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE 1
+#endif
+
 #endif // CONFIG_CLI_H_

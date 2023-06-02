@@ -160,6 +160,7 @@ Diags::Diags(Instance &aInstance)
     , mTxPower(0)
     , mTxLen(0)
     , mRepeatActive(false)
+    , mDiagSendOn(false)
 {
     mStats.Clear();
 }
@@ -378,6 +379,7 @@ void Diags::TransmitPacket(void)
         mTxPacket->mPsdu[i] = i;
     }
 
+    mDiagSendOn = true;
     IgnoreError(Get<Radio>().Transmit(*static_cast<Mac::TxFrame *>(mTxPacket)));
 }
 
@@ -480,6 +482,9 @@ void Diags::ReceiveDone(otRadioFrame *aFrame, Error aError)
 
 void Diags::TransmitDone(Error aError)
 {
+    VerifyOrExit(mDiagSendOn);
+    mDiagSendOn = false;
+
     if (aError == kErrorNone)
     {
         mStats.mSentPackets++;

@@ -70,9 +70,9 @@ void Tasklet::Scheduler::ProcessQueuedTasklets(void)
 
     // This method processes all tasklets queued when this is called. We
     // keep a copy the current list and then clear the main list by
-    // setting `mTail` to nullptr. A newly posted tasklet while processing
-    // the currently queued tasklets will then trigger a call to
-    // `otTaskletsSignalPending()`.
+    // setting `mTail` to `nullptr`. A newly posted tasklet while
+    // processing the currently queued tasklets will then trigger a call
+    // to `otTaskletsSignalPending()`.
 
     mTail = nullptr;
 

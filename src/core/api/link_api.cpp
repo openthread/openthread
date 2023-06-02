@@ -266,6 +266,20 @@ otError otLinkFilterGetNextRssIn(otInstance *aInstance, otMacFilterIterator *aIt
     return AsCoreType(aInstance).Get<Mac::Filter>().GetNextRssIn(*aIterator, *aEntry);
 }
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+void otLinkSetRadioFilterEnabled(otInstance *aInstance, bool aFilterEnabled)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetRadioFilterEnabled(aFilterEnabled);
+}
+
+bool otLinkIsRadioFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().IsRadioFilterEnabled();
+}
+#endif
+
+#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
 uint8_t otLinkConvertRssToLinkQuality(otInstance *aInstance, int8_t aRss)
 {
     return LinkQualityInfo::ConvertRssToLinkQuality(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(), aRss);
@@ -276,8 +290,6 @@ int8_t otLinkConvertLinkQualityToRss(otInstance *aInstance, uint8_t aLinkQuality
     return LinkQualityInfo::ConvertLinkQualityToRss(AsCoreType(aInstance).Get<Mac::Mac>().GetNoiseFloor(),
                                                     aLinkQuality);
 }
-
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *otLinkGetTxDirectRetrySuccessHistogram(otInstance *aInstance, uint8_t *aNumberOfEntries)

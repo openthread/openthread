@@ -163,6 +163,7 @@ EXTRA_DIST                                                         = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_dnssd_name_with_special_chars.py                            \
     test_history_tracker.py                                          \
     test_inform_previous_parent_on_reattach.py                       \
     test_ipv6.py                                                     \
@@ -170,6 +171,7 @@ EXTRA_DIST                                                         = \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
+    test_mac_scan.py                                                 \
     test_mle.py                                                      \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
@@ -177,6 +179,7 @@ EXTRA_DIST                                                         = \
     test_on_mesh_prefix.py                                           \
     test_pbbr_aloc.py                                                \
     test_ping.py                                                     \
+    test_radio_filter.py                                             \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \
@@ -234,6 +237,7 @@ check_SCRIPTS                                                      = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_dnssd_name_with_special_chars.py                            \
     test_history_tracker.py                                          \
     test_inform_previous_parent_on_reattach.py                       \
     test_ipv6.py                                                     \
@@ -241,6 +245,7 @@ check_SCRIPTS                                                      = \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
+    test_mac_scan.py                                                 \
     test_mle.py                                                      \
     test_netdata_publisher.py                                        \
     test_network_data.py                                             \
@@ -248,6 +253,7 @@ check_SCRIPTS                                                      = \
     test_on_mesh_prefix.py                                           \
     test_pbbr_aloc.py                                                \
     test_ping.py                                                     \
+    test_radio_filter.py                                             \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \

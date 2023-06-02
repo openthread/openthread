@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/serial_number.hpp"
 #include "net/socket.hpp"
 #include "thread/network_data_tlvs.hpp"
 
@@ -189,7 +190,7 @@ public:
          */
         bool IsSequenceNumberAheadOf(const Info &aOther) const
         {
-            return (((aOther.mSequenceNumber - mSequenceNumber) & (1U << 7)) != 0);
+            return SerialNumber::IsGreater(mSequenceNumber, aOther.mSequenceNumber);
         }
 
         Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.
@@ -259,12 +260,23 @@ public:
     static const uint8_t kServiceData = kServiceNumber;
 
     /**
+     * This enumeration represents the origin a `DnsSrpUnicast` entry.
+     *
+     */
+    enum Origin : uint8_t
+    {
+        kFromServiceData, ///< Socket address is from service data.
+        kFromServerData,  ///< Socket address is from server data.
+    };
+
+    /**
      * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
      *
      */
     struct Info
     {
         Ip6::SockAddr mSockAddr; ///< The socket address (IPv6 address and port) of the DNS/SRP server.
+        Origin        mOrigin;   ///< The origin of the socket address (whether from service or server data).
     };
 
     /**
@@ -559,8 +571,8 @@ public:
      * To get the first entry, @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).
      *
-     * @param[inout] aIterator     A reference to an iterator.
-     * @param[out]   aInfo         A reference to `DnsSrpAnycast::Info` to return the info.
+     * @param[in,out] aIterator    A reference to an iterator.
+     * @param[out]    aInfo        A reference to `DnsSrpAnycast::Info` to return the info.
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.
@@ -589,8 +601,8 @@ public:
      * To get the first entry @p aIterator should be cleared (e.g., a new instance of `Iterator` or calling `Clear()`
      * method).
      *
-     * @param[inout] aIterator     A reference to an iterator.
-     * @param[out]   aInfo         A reference to `DnsSrpUnicast::Info` to return the info.
+     * @param[in,out] aIterator    A reference to an iterator.
+     * @param[out]    aInfo        A reference to `DnsSrpUnicast::Info` to return the info.
      *
      * @retval kErrorNone       Successfully got the next info. @p aInfo and @p aIterator are updated.
      * @retval kErrorNotFound   No more matching entries in the Network Data.

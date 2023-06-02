@@ -41,8 +41,6 @@
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
 #include "common/time.hpp"
-#include "utils/lookup_table.hpp"
-#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -73,11 +71,7 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    struct Command
-    {
-        const char *mName;
-        otError (TcpExample::*mHandler)(Arg aArgs[]);
-    };
+    using Command = CommandEntry<TcpExample>;
 
     otError ProcessHelp(Arg aArgs[]);
     otError ProcessInit(Arg aArgs[]);
@@ -131,7 +125,7 @@ private:
         {"stoplistening", &TcpExample::ProcessStopListening},
     };
 
-    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+    static_assert(BinarySearch::IsSorted(sCommands), "Command Table is not sorted");
 
     otTcpEndpoint mEndpoint;
     otTcpListener mListener;

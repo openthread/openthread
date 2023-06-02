@@ -40,6 +40,7 @@
 #include <stdint.h>
 
 #include "common/equatable.hpp"
+#include "common/serial_number.hpp"
 
 namespace ot {
 
@@ -60,6 +61,11 @@ namespace ot {
 class Time : public Unequatable<Time>
 {
 public:
+    static constexpr uint32_t kOneSecondInMsec = 1000u;                 ///< One second interval in msec.
+    static constexpr uint32_t kOneMinuteInMsec = kOneSecondInMsec * 60; ///< One minute interval in msec.
+    static constexpr uint32_t kOneHourInMsec   = kOneMinuteInMsec * 60; ///< One hour interval in msec.
+    static constexpr uint32_t kOneDayInMsec    = kOneHourInMsec * 24;   ///< One day interval in msec.
+
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.
      *
@@ -173,7 +179,7 @@ public:
      * @retval FALSE   This `Time` instance is not strictly before @p aOther.
      *
      */
-    bool operator<(const Time &aOther) const { return ((mValue - aOther.mValue) & (1UL << 31)) != 0; }
+    bool operator<(const Time &aOther) const { return SerialNumber::IsLess(mValue, aOther.mValue); }
 
     /**
      * This method indicates whether this `Time` instance is after or equal to another one.
@@ -235,18 +241,22 @@ public:
     /**
      * This static method converts a given number of seconds to milliseconds.
      *
+     * @param[in] aSeconds   The seconds value to convert to milliseconds.
+     *
      * @returns The number of milliseconds.
      *
      */
-    static uint32_t SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
+    static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
 
     /**
      * This static method converts a given number of milliseconds to seconds.
      *
+     * @param[in] aMilliseconds  The milliseconds value to convert to seconds.
+     *
      * @returns The number of seconds.
      *
      */
-    static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
+    static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
     static constexpr uint32_t kDistantFuture = (1UL << 31);

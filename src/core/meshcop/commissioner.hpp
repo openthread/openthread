@@ -42,7 +42,10 @@
 
 #include "coap/coap.hpp"
 #include "coap/coap_secure.hpp"
+#include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
@@ -74,6 +77,150 @@ public:
     };
 
     /**
+     * This enumeration type represents Joiner Event.
+     *
+     */
+    enum JoinerEvent : uint8_t
+    {
+        kJoinerEventStart     = OT_COMMISSIONER_JOINER_START,
+        kJoinerEventConnected = OT_COMMISSIONER_JOINER_CONNECTED,
+        kJoinerEventFinalize  = OT_COMMISSIONER_JOINER_FINALIZE,
+        kJoinerEventEnd       = OT_COMMISSIONER_JOINER_END,
+        kJoinerEventRemoved   = OT_COMMISSIONER_JOINER_REMOVED,
+    };
+
+    typedef otCommissionerStateCallback  StateCallback;  ///< State change callback function pointer type.
+    typedef otCommissionerJoinerCallback JoinerCallback; ///< Joiner state change callback function pointer type.
+
+    /**
+     * This type represents a Commissioning Dataset.
+     *
+     */
+    class Dataset : public otCommissioningDataset, public Clearable<Dataset>
+    {
+    public:
+        /**
+         * This method indicates whether or not the Border Router RLOC16 Locator is set in the Dataset.
+         *
+         * @returns TRUE if Border Router RLOC16 Locator is set, FALSE otherwise.
+         *
+         */
+        bool IsLocatorSet(void) const { return mIsLocatorSet; }
+
+        /**
+         * This method gets the Border Router RLOC16 Locator in the Dataset.
+         *
+         * This method MUST be used when Locator is set in the Dataset, otherwise its behavior is undefined.
+         *
+         * @returns The Border Router RLOC16 Locator in the Dataset.
+         *
+         */
+        uint16_t GetLocator(void) const { return mLocator; }
+
+        /**
+         * This method sets the Border Router RLOCG16 Locator in the Dataset.
+         *
+         * @param[in] aLocator  A Locator.
+         *
+         */
+        void SetLocator(uint16_t aLocator)
+        {
+            mIsLocatorSet = true;
+            mLocator      = aLocator;
+        }
+
+        /**
+         * This method indicates whether or not the Session ID is set in the Dataset.
+         *
+         * @returns TRUE if Session ID is set, FALSE otherwise.
+         *
+         */
+        bool IsSessionIdSet(void) const { return mIsSessionIdSet; }
+
+        /**
+         * This method gets the Session ID in the Dataset.
+         *
+         * This method MUST be used when Session ID is set in the Dataset, otherwise its behavior is undefined.
+         *
+         * @returns The Session ID in the Dataset.
+         *
+         */
+        uint16_t GetSessionId(void) const { return mSessionId; }
+
+        /**
+         * This method sets the Session ID in the Dataset.
+         *
+         * @param[in] aSessionId  The Session ID.
+         *
+         */
+        void SetSessionId(uint16_t aSessionId)
+        {
+            mIsSessionIdSet = true;
+            mSessionId      = aSessionId;
+        }
+
+        /**
+         * This method indicates whether or not the Steering Data is set in the Dataset.
+         *
+         * @returns TRUE if Steering Data is set, FALSE otherwise.
+         *
+         */
+        bool IsSteeringDataSet(void) const { return mIsSteeringDataSet; }
+
+        /**
+         * This method gets the Steering Data in the Dataset.
+         *
+         * This method MUST be used when Steering Data is set in the Dataset, otherwise its behavior is undefined.
+         *
+         * @returns The Steering Data in the Dataset.
+         *
+         */
+        const SteeringData &GetSteeringData(void) const { return AsCoreType(&mSteeringData); }
+
+        /**
+         * This method returns a reference to the Steering Data in the Dataset to be updated by caller.
+         *
+         * @returns A reference to the Steering Data in the Dataset.
+         *
+         */
+        SteeringData &UpdateSteeringData(void)
+        {
+            mIsSteeringDataSet = true;
+            return AsCoreType(&mSteeringData);
+        }
+
+        /**
+         * This method indicates whether or not the Joiner UDP port is set in the Dataset.
+         *
+         * @returns TRUE if Joiner UDP port is set, FALSE otherwise.
+         *
+         */
+        bool IsJoinerUdpPortSet(void) const { return mIsJoinerUdpPortSet; }
+
+        /**
+         * This method gets the Joiner UDP port in the Dataset.
+         *
+         * This method MUST be used when Joiner UDP port is set in the Dataset, otherwise its behavior is undefined.
+         *
+         * @returns The Joiner UDP port in the Dataset.
+         *
+         */
+        uint16_t GetJoinerUdpPort(void) const { return mJoinerUdpPort; }
+
+        /**
+         * This method sets the Joiner UDP Port in the Dataset.
+         *
+         * @param[in] aJoinerUdpPort  The Joiner UDP Port.
+         *
+         */
+        void SetJoinerUdpPort(uint16_t aJoinerUdpPort)
+        {
+            mIsJoinerUdpPortSet = true;
+            mJoinerUdpPort      = aJoinerUdpPort;
+        }
+    };
+
+    /**
      * This constructor initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -93,20 +240,16 @@ public:
      * @retval kErrorInvalidState   Device is not currently attached to a network.
      *
      */
-    Error Start(otCommissionerStateCallback  aStateCallback,
-                otCommissionerJoinerCallback aJoinerCallback,
-                void *                       aCallbackContext);
+    Error Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
-     *
-     * @param[in]  aResign      Whether send LEAD_KA.req to resign as Commissioner
      *
      * @retval kErrorNone     Successfully stopped the Commissioner service.
      * @retval kErrorAlready  Commissioner is already stopped.
      *
      */
-    Error Stop(bool aResign);
+    Error Stop(void) { return Stop(kSendKeepAliveToResign); }
 
     /**
      * This method clears all Joiner entries.
@@ -164,7 +307,7 @@ public:
     /**
      * This method get joiner info at aIterator position.
      *
-     * @param[inout]    aIterator   A iterator to the index of the joiner.
+     * @param[in,out]   aIterator   A iterator to the index of the joiner.
      * @param[out]      aJoiner     A reference to Joiner info.
      *
      * @retval kErrorNone       Successfully get the Joiner info.
@@ -228,7 +371,7 @@ public:
     /**
      * This method sets the Provisioning URL.
      *
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr to set URL to empty string).
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be `nullptr` to set URL to empty string).
      *
      * @retval kErrorNone         Successfully set the Provisioning URL.
      * @retval kErrorInvalidArgs  @p aProvisioningUrl is invalid (too long).
@@ -293,7 +436,7 @@ public:
      * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    Error SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    Error SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.
@@ -332,13 +475,10 @@ private:
     static constexpr uint32_t kKeepAliveTimeout     = 50; // TIMEOUT_COMM_PET (seconds)
     static constexpr uint32_t kRemoveJoinerDelay    = 20; // Delay to remove successfully joined joiner
 
-    enum JoinerEvent : uint8_t
+    enum ResignMode : uint8_t
     {
-        kJoinerEventStart     = OT_COMMISSIONER_JOINER_START,
-        kJoinerEventConnected = OT_COMMISSIONER_JOINER_CONNECTED,
-        kJoinerEventFinalize  = OT_COMMISSIONER_JOINER_FINALIZE,
-        kJoinerEventEnd       = OT_COMMISSIONER_JOINER_END,
-        kJoinerEventRemoved   = OT_COMMISSIONER_JOINER_REMOVED,
+        kSendKeepAliveToResign,
+        kDoNotSendKeepAlive,
     };
 
     struct Joiner
@@ -365,6 +505,7 @@ private:
         void CopyToJoinerInfo(otJoinerInfo &aJoiner) const;
     };
 
+    Error   Stop(ResignMode aResignMode);
     Joiner *GetUnusedJoinerEntry(void);
     Joiner *FindJoinerEntry(const Mac::ExtAddress *aEui64);
     Joiner *FindJoinerEntry(const JoinerDiscerner &aDiscerner);
@@ -468,12 +609,17 @@ private:
 
     State mState;
 
-    otCommissionerStateCallback  mStateCallback;
-    otCommissionerJoinerCallback mJoinerCallback;
-    void *                       mCallbackContext;
+    StateCallback  mStateCallback;
+    JoinerCallback mJoinerCallback;
+    void *         mCallbackContext;
 };
 
 } // namespace MeshCoP
+
+DefineMapEnum(otCommissionerState, MeshCoP::Commissioner::State);
+DefineMapEnum(otCommissionerJoinerEvent, MeshCoP::Commissioner::JoinerEvent);
+DefineCoreType(otCommissioningDataset, MeshCoP::Commissioner::Dataset);
+
 } // namespace ot
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

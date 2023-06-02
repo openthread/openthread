@@ -146,7 +146,7 @@ void otJoinerStop(otInstance *aInstance);
 otJoinerState otJoinerGetState(otInstance *aInstance);
 
 /**
- * This method gets the Joiner ID.
+ * This function gets the Joiner ID.
  *
  * If a Joiner Discerner is not set, Joiner ID is the first 64 bits of the result of computing SHA-256 over
  * factory-assigned IEEE EUI-64. Otherwise the Joiner ID is calculated from the Joiner Discerner value.
@@ -161,7 +161,7 @@ otJoinerState otJoinerGetState(otInstance *aInstance);
 const otExtAddress *otJoinerGetId(otInstance *aInstance);
 
 /**
- * This method sets the Joiner Discerner.
+ * This function sets the Joiner Discerner.
  *
  * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
  *
@@ -180,7 +180,7 @@ const otExtAddress *otJoinerGetId(otInstance *aInstance);
 otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerner);
 
 /**
- * This method gets the Joiner Discerner.
+ * This function gets the Joiner Discerner.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
  *
@@ -188,6 +188,16 @@ otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerne
  *
  */
 const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance);
+
+/**
+ * This function converts a given joiner state enumeration value to a human-readable string.
+ *
+ * @param[in] aState   The joiner state.
+ *
+ * @returns A human-readable string representation of @p aState.
+ *
+ */
+const char *otJoinerStateToString(otJoinerState aState);
 
 /**
  * @}

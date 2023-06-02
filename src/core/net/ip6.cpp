@@ -40,7 +40,7 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "net/checksum.hpp"
@@ -62,6 +62,8 @@ static const IcmpType sForwardICMPTypes[] = {
 namespace ot {
 namespace Ip6 {
 
+RegisterLogModule("Ip6");
+
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mForwardingEnabled(false)
@@ -80,13 +82,13 @@ Ip6::Ip6(Instance &aInstance)
 
 Message *Ip6::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
 {
-    return Get<MessagePool>().New(Message::kTypeIp6,
-                                  sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
+    return Get<MessagePool>().Allocate(
+        Message::kTypeIp6, sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl) + aReserved, aSettings);
 }
 
 Message *Ip6::NewMessage(const uint8_t *aData, uint16_t aDataLength, const Message::Settings &aSettings)
 {
-    Message *message = Get<MessagePool>().New(Message::kTypeIp6, 0, aSettings);
+    Message *message = Get<MessagePool>().Allocate(Message::kTypeIp6, /* aReserveHeader */ 0, aSettings);
 
     VerifyOrExit(message != nullptr);
 
@@ -227,7 +229,7 @@ Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     messageInfo.GetPeerAddr().SetToRealmLocalAllMplForwarders();
 
-    tunnelHeader.Init();
+    tunnelHeader.InitVersionTrafficClassFlow();
     tunnelHeader.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     tunnelHeader.SetPayloadLength(aHeader.GetPayloadLength() + sizeof(tunnelHeader));
     tunnelHeader.SetDestination(messageInfo.GetPeerAddr());
@@ -262,7 +264,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
             OptionMpl      mplOption;
 
             // read existing hop-by-hop option header
-            IgnoreError(aMessage.Read(0, hbh));
+            SuccessOrExit(error = aMessage.Read(0, hbh));
             hbhLength = (hbh.GetLength() + 1) * 8;
 
             VerifyOrExit(hbhLength <= aHeader.GetPayloadLength(), error = kErrorParse);
@@ -307,12 +309,12 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
 
             if ((messageCopy = aMessage.Clone()) != nullptr)
             {
-                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, true));
-                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
+                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, /* aFromHost */ true));
+                LogInfo("Message copy for indirect transmission to sleepy children");
             }
             else
             {
-                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
+                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 #endif
@@ -452,9 +454,9 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
 
-    header.Init();
+    header.InitVersionTrafficClassFlow();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
-    header.SetEcn(aMessageInfo.mEcn);
+    header.SetEcn(aMessageInfo.GetEcn());
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
 
@@ -499,12 +501,12 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
             if (messageCopy != nullptr)
             {
-                otLogInfoIp6("Message copy for indirect transmission to sleepy children");
+                LogInfo("Message copy for indirect transmission to sleepy children");
                 EnqueueDatagram(*messageCopy);
             }
             else
             {
-                otLogWarnIp6("No enough buffer for message copy for indirect transmission to sleepy children");
+                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
             }
         }
 #endif
@@ -540,7 +542,7 @@ void Ip6::HandleSendQueue(void)
     while ((message = mSendQueue.GetHead()) != nullptr)
     {
         mSendQueue.Dequeue(*message);
-        IgnoreError(HandleDatagram(*message, nullptr, nullptr, false));
+        IgnoreError(HandleDatagram(*message, nullptr, nullptr, /* aFromHost */ false));
     }
 }
 
@@ -637,7 +639,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
             payloadFragment = payloadLeft;
             payloadLeft     = 0;
 
-            otLogDebgIp6("Last Fragment");
+            LogDebg("Last Fragment");
         }
         else
         {
@@ -649,6 +651,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragmentHeader.SetOffset(offset);
 
         VerifyOrExit((fragment = NewMessage(0)) != nullptr, error = kErrorNoBufs);
+        IgnoreError(fragment->SetPriority(aMessage.GetPriority()));
         SuccessOrExit(error = fragment->SetLength(aMessage.GetOffset() + sizeof(fragmentHeader) + payloadFragment));
 
         header.SetPayloadLength(payloadFragment + sizeof(fragmentHeader));
@@ -667,7 +670,7 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
         fragmentCnt++;
         fragment = nullptr;
 
-        otLogInfoIp6("Fragment %d with %d bytes sent", fragmentCnt, payloadFragment);
+        LogInfo("Fragment %d with %d bytes sent", fragmentCnt, payloadFragment);
     }
 
     aMessage.Free();
@@ -676,14 +679,14 @@ exit:
 
     if (error == kErrorNoBufs)
     {
-        otLogWarnIp6("No buffer for Ip6 fragmentation");
+        LogWarn("No buffer for Ip6 fragmentation");
     }
 
     FreeMessageOnError(fragment, error);
     return error;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost)
 {
     Error          error = kErrorNone;
     Header         header, headerBuffer;
@@ -706,13 +709,14 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
         ExitNow();
     }
 
-    for (message = mReassemblyList.GetHead(); message; message = message->GetNext())
+    for (Message &msg : mReassemblyList)
     {
-        SuccessOrExit(error = message->Read(0, headerBuffer));
+        SuccessOrExit(error = msg.Read(0, headerBuffer));
 
-        if (message->GetDatagramTag() == fragmentHeader.GetIdentification() &&
+        if (msg.GetDatagramTag() == fragmentHeader.GetIdentification() &&
             headerBuffer.GetSource() == header.GetSource() && headerBuffer.GetDestination() == header.GetDestination())
         {
+            message = &msg;
             break;
         }
     }
@@ -720,23 +724,23 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
     offset          = FragmentHeader::FragmentOffsetToBytes(fragmentHeader.GetOffset());
     payloadFragment = aMessage.GetLength() - aMessage.GetOffset() - sizeof(fragmentHeader);
 
-    otLogInfoIp6("Fragment with id %d received > %d bytes, offset %d", fragmentHeader.GetIdentification(),
-                 payloadFragment, offset);
+    LogInfo("Fragment with id %d received > %d bytes, offset %d", fragmentHeader.GetIdentification(), payloadFragment,
+            offset);
 
     if (offset + payloadFragment + aMessage.GetOffset() > kMaxAssembledDatagramLength)
     {
-        otLogWarnIp6("Packet too large for fragment buffer");
+        LogWarn("Packet too large for fragment buffer");
         ExitNow(error = kErrorNoBufs);
     }
 
     if (message == nullptr)
     {
-        otLogDebgIp6("start reassembly");
+        LogDebg("start reassembly");
         VerifyOrExit((message = NewMessage(0)) != nullptr, error = kErrorNoBufs);
         mReassemblyList.Enqueue(*message);
         SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
 
-        message->SetTimeout(kIp6ReassemblyTimeout);
+        message->SetTimestampToNow();
         message->SetOffset(0);
         message->SetDatagramTag(fragmentHeader.GetIdentification());
 
@@ -770,11 +774,11 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
         header.SetNextHeader(fragmentHeader.GetNextHeader());
         message->Write(0, header);
 
-        otLogDebgIp6("Reassembly complete.");
+        LogDebg("Reassembly complete.");
 
         mReassemblyList.Dequeue(*message);
 
-        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost));
+        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromHost));
     }
 
 exit:
@@ -785,7 +789,7 @@ exit:
             mReassemblyList.DequeueAndFree(*message);
         }
 
-        otLogWarnIp6("Reassembly failed: %s", ErrorToString(error));
+        LogWarn("Reassembly failed: %s", ErrorToString(error));
     }
 
     if (isFragmented)
@@ -814,22 +818,16 @@ void Ip6::HandleTimeTick(void)
 
 void Ip6::UpdateReassemblyList(void)
 {
-    Message *next;
+    TimeMilli now = TimerMilli::GetNow();
 
-    for (Message *message = mReassemblyList.GetHead(); message; message = next)
+    for (Message &message : mReassemblyList)
     {
-        next = message->GetNext();
-
-        if (message->GetTimeout() > 0)
+        if (now - message.GetTimestamp() >= TimeMilli::SecToMsec(kIp6ReassemblyTimeout))
         {
-            message->DecrementTimeout();
-        }
-        else
-        {
-            otLogNoteIp6("Reassembly timeout.");
-            SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
+            LogNote("Reassembly timeout.");
+            SendIcmpError(message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
-            mReassemblyList.DequeueAndFree(*message);
+            mReassemblyList.DequeueAndFree(message);
         }
     }
 }
@@ -853,7 +851,7 @@ exit:
 
     if (error != kErrorNone)
     {
-        otLogWarnIp6("Failed to send ICMP error: %s", ErrorToString(error));
+        LogWarn("Failed to send ICMP error: %s", ErrorToString(error));
     }
 }
 
@@ -867,11 +865,11 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     return kErrorNone;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromHost)
 {
     OT_UNUSED_VARIABLE(aNetif);
     OT_UNUSED_VARIABLE(aMessageInfo);
-    OT_UNUSED_VARIABLE(aFromNcpHost);
+    OT_UNUSED_VARIABLE(aFromHost);
 
     Error          error = kErrorNone;
     FragmentHeader fragmentHeader;
@@ -893,7 +891,7 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
                                   Header &     aHeader,
                                   uint8_t &    aNextHeader,
                                   bool         aIsOutbound,
-                                  bool         aFromNcpHost,
+                                  bool         aFromHost,
                                   bool &       aReceive)
 {
     Error           error = kErrorNone;
@@ -910,11 +908,11 @@ Error Ip6::HandleExtensionHeaders(Message &    aMessage,
             break;
 
         case kProtoFragment:
-            // Always forward IPv6 fragments to the Host.
-            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromNcpHost,
+#if !OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
+            IgnoreError(ProcessReceiveCallback(aMessage, aMessageInfo, aNextHeader, aFromHost,
                                                /* aAllowReceiveFilter */ false, Message::kCopyToUse));
-
-            SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromNcpHost));
+#endif
+            SuccessOrExit(error = HandleFragment(aMessage, aNetif, aMessageInfo, aFromHost));
             break;
 
         case kProtoDstOpts:
@@ -966,7 +964,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
         error = mTcp.HandleMessage(aIp6Header, *message, aMessageInfo);
         if (error == kErrorDrop)
         {
-            otLogNoteIp6("Error TCP Checksum");
+            LogNote("Error TCP Checksum");
         }
         break;
 #endif
@@ -974,7 +972,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
         error = mUdp.HandleMessage(*message, aMessageInfo);
         if (error == kErrorDrop)
         {
-            otLogNoteIp6("Error UDP Checksum");
+            LogNote("Error UDP Checksum");
         }
         break;
 
@@ -989,7 +987,7 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteIp6("Failed to handle payload: %s", ErrorToString(error));
+        LogNote("Failed to handle payload: %s", ErrorToString(error));
     }
 
     FreeMessage(message);
@@ -1000,14 +998,14 @@ exit:
 Error Ip6::ProcessReceiveCallback(Message &          aMessage,
                                   const MessageInfo &aMessageInfo,
                                   uint8_t            aIpProto,
-                                  bool               aFromNcpHost,
+                                  bool               aFromHost,
                                   bool               aAllowReceiveFilter,
                                   Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
     Message *message = &aMessage;
 
-    VerifyOrExit(!aFromNcpHost, error = kErrorNoRoute);
+    VerifyOrExit(!aFromHost, error = kErrorNoRoute);
     VerifyOrExit(mReceiveIp6DatagramCallback != nullptr, error = kErrorNoRoute);
 
     // Do not forward reassembled IPv6 packets.
@@ -1064,7 +1062,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
 
         if (message == nullptr)
         {
-            otLogWarnIp6("No buff to clone msg (len: %d) to pass to host", aMessage.GetLength());
+            LogWarn("No buff to clone msg (len: %d) to pass to host", aMessage.GetLength());
             ExitNow(error = kErrorNoBufs);
         }
 
@@ -1084,14 +1082,14 @@ exit:
     return error;
 }
 
-Error Ip6::SendRaw(Message &aMessage)
+Error Ip6::SendRaw(Message &aMessage, bool aFromHost)
 {
     Error       error = kErrorNone;
     Header      header;
     MessageInfo messageInfo;
     bool        freed = false;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
 
     messageInfo.SetPeerAddr(header.GetSource());
@@ -1103,7 +1101,7 @@ Error Ip6::SendRaw(Message &aMessage)
         SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
     }
 
-    error = HandleDatagram(aMessage, nullptr, nullptr, true);
+    error = HandleDatagram(aMessage, nullptr, nullptr, aFromHost);
     freed = true;
 
 exit:
@@ -1116,7 +1114,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromHost)
 {
     Error       error;
     MessageInfo messageInfo;
@@ -1133,12 +1131,13 @@ start:
     forwardHost       = false;
     shouldFreeMessage = true;
 
-    SuccessOrExit(error = header.Init(aMessage));
+    SuccessOrExit(error = header.ParseFrom(aMessage));
 
     messageInfo.Clear();
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
+    messageInfo.SetEcn(header.GetEcn());
     messageInfo.SetLinkInfo(aLinkMessageInfo);
 
     // determine destination of packet
@@ -1192,7 +1191,7 @@ start:
             forwardThread = true;
         }
 
-        if (forwardThread && !ShouldForwardToThread(messageInfo, aFromNcpHost))
+        if (forwardThread && !ShouldForwardToThread(messageInfo, aFromHost))
         {
             forwardThread = false;
             forwardHost   = true;
@@ -1204,7 +1203,7 @@ start:
     // process IPv6 Extension Headers
     nextHeader = static_cast<uint8_t>(header.GetNextHeader());
     SuccessOrExit(error = HandleExtensionHeaders(aMessage, aNetif, messageInfo, header, nextHeader, aNetif == nullptr,
-                                                 aFromNcpHost, receive));
+                                                 aFromHost, receive));
 
     // process IPv6 Payload
     if (receive)
@@ -1213,26 +1212,11 @@ start:
         {
             // Remove encapsulating header and start over.
             aMessage.RemoveHeader(aMessage.GetOffset());
+            Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
             goto start;
         }
 
-#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-        if (nextHeader == kProtoTcp || nextHeader == kProtoUdp)
-        {
-            uint16_t dstPort;
-
-            // TCP/UDP shares header uint16_t srcPort, uint16_t dstPort
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + sizeof(uint16_t), dstPort));
-            dstPort = HostSwap16(dstPort);
-
-            if (aMessage.IsLinkSecurityEnabled() && Get<Filter>().IsUnsecurePort(dstPort))
-            {
-                IgnoreError(Get<Filter>().RemoveUnsecurePort(dstPort));
-            }
-        }
-#endif
-
-        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost,
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromHost,
                                        /* aAllowReceiveFilter */ !forwardHost, Message::kCopyToUse);
 
         if ((error == kErrorNone || error == kErrorNoRoute) && forwardHost)
@@ -1248,7 +1232,7 @@ start:
     if (forwardHost)
     {
         // try passing to host
-        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromNcpHost, /* aAllowReceiveFilter */ false,
+        error = ProcessReceiveCallback(aMessage, messageInfo, nextHeader, aFromHost, /* aAllowReceiveFilter */ false,
                                        forwardThread ? Message::kCopyToUse : Message::kTakeCustody);
         shouldFreeMessage = forwardThread;
     }
@@ -1268,7 +1252,7 @@ start:
         hopLimit = header.GetHopLimit();
         aMessage.Write(Header::kHopLimitFieldOffset, hopLimit);
 
-        if (aFromNcpHost && nextHeader == kProtoIcmp6)
+        if (nextHeader == kProtoIcmp6)
         {
             uint8_t icmpType;
             bool    isAllowedType = false;
@@ -1284,35 +1268,21 @@ start:
             }
             VerifyOrExit(isAllowedType, error = kErrorDrop);
         }
-        if (aFromNcpHost && (nextHeader == kProtoTcp || nextHeader == kProtoUdp))
-        {
-            uint16_t sourcePort, destPort;
-
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), sourcePort));
-            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + sizeof(sourcePort), destPort));
-            sourcePort = HostSwap16(sourcePort);
-            destPort   = HostSwap16(destPort);
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        if (aFromHost && (nextHeader == kProtoUdp))
+        {
+            uint16_t destPort;
+
+            SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
+            destPort = HostSwap16(destPort);
+
             if (nextHeader == kProtoUdp)
             {
                 VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(destPort), error = kErrorDrop);
             }
-#else
-            OT_UNUSED_VARIABLE(destPort);
-#endif
-
-#if OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
-            // check whether source port is an unsecure port
-            if (Get<Filter>().IsUnsecurePort(sourcePort))
-            {
-                aMessage.SetLinkSecurityEnabled(false);
-                otLogInfoIp6("Disabled link security for packet to %s", header.GetDestination().ToString().AsCString());
-            }
-#else
-            OT_UNUSED_VARIABLE(sourcePort);
-#endif
         }
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
@@ -1337,9 +1307,9 @@ exit:
     return error;
 }
 
-bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const
+bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromHost) const
 {
-    OT_UNUSED_VARIABLE(aFromNcpHost);
+    OT_UNUSED_VARIABLE(aFromHost);
 
     bool rval = false;
 
@@ -1357,7 +1327,7 @@ bool Ip6::ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHo
     {
         // on-link global address
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-        ExitNow(rval = (aFromNcpHost ||
+        ExitNow(rval = (aFromHost ||
                         !Get<BackboneRouter::Manager>().ShouldForwardDuaToBackbone(aMessageInfo.GetSockAddr())));
 #else
         ExitNow(rval = true);
@@ -1509,52 +1479,32 @@ exit:
 
 const char *Ip6::IpProtoToString(uint8_t aIpProto)
 {
-    const char *retval;
+    static constexpr Stringify::Entry kIpProtoTable[] = {
+        {kProtoHopOpts, "HopOpts"}, {kProtoTcp, "TCP"},         {kProtoUdp, "UDP"},
+        {kProtoIp6, "IP6"},         {kProtoRouting, "Routing"}, {kProtoFragment, "Frag"},
+        {kProtoIcmp6, "ICMP6"},     {kProtoNone, "None"},       {kProtoDstOpts, "DstOpts"},
+    };
 
-    switch (aIpProto)
-    {
-    case kProtoHopOpts:
-        retval = "HopOpts";
-        break;
+    static_assert(Stringify::IsSorted(kIpProtoTable), "kIpProtoTable is not sorted");
 
-    case kProtoTcp:
-        retval = "TCP";
-        break;
+    return Stringify::Lookup(aIpProto, kIpProtoTable, "Unknown");
+}
 
-    case kProtoUdp:
-        retval = "UDP";
-        break;
+const char *Ip6::EcnToString(Ecn aEcn)
+{
+    static const char *const kEcnStrings[] = {
+        "no", // (0) kEcnNotCapable
+        "e1", // (1) kEcnCapable1  (ECT1)
+        "e0", // (2) kEcnCapable0  (ECT0)
+        "ce", // (3) kEcnMarked    (Congestion Encountered)
+    };
 
-    case kProtoIp6:
-        retval = "IP6";
-        break;
+    static_assert(0 == kEcnNotCapable, "kEcnNotCapable value is incorrect");
+    static_assert(1 == kEcnCapable1, "kEcnCapable1 value is incorrect");
+    static_assert(2 == kEcnCapable0, "kEcnCapable0 value is incorrect");
+    static_assert(3 == kEcnMarked, "kEcnMarked value is incorrect");
 
-    case kProtoRouting:
-        retval = "Routing";
-        break;
-
-    case kProtoFragment:
-        retval = "Frag";
-        break;
-
-    case kProtoIcmp6:
-        retval = "ICMP6";
-        break;
-
-    case kProtoNone:
-        retval = "None";
-        break;
-
-    case kProtoDstOpts:
-        retval = "DstOpts";
-        break;
-
-    default:
-        retval = "Unknown";
-        break;
-    }
-
-    return retval;
+    return kEcnStrings[aEcn];
 }
 
 // LCOV_EXCL_STOP

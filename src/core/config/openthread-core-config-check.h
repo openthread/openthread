@@ -478,11 +478,6 @@
 #error "OPENTHREAD_CONFIG_LOG_OUTPUT_NCP_SPINEL is removed, use OPENTHREAD_CONFIG_LOG_OUTPUT_APP instead"
 #endif
 
-#ifdef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
-#error "OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION was replaced by OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME " \
-       "(and OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY)"
-#endif
-
 #ifdef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
 #error "OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT was replaced by OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT"
 #endif
@@ -517,6 +512,111 @@
 #ifdef OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 #error "OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE was replaced by OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE" \
        " and OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
+#error "OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME
+#error "OPENTHREAD_CONFIG_PLAT_LOG_MACRO_NAME was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION
+#error "OPENTHREAD_CONFIG_PLAT_LOG_FUNCTION was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE
+#error "OPENTHREAD_CONFIG_UNSECURE_TRAFFIC_MANAGED_BY_STACK_ENABLE was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_API
+#error "OPENTHREAD_CONFIG_LOG_API was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_MLE
+#error "OPENTHREAD_CONFIG_LOG_MLE was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_MESHCOP
+#error "OPENTHREAD_CONFIG_LOG_MESHCOP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_ARP
+#error "OPENTHREAD_CONFIG_LOG_ARP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_NETDATA
+#error "OPENTHREAD_CONFIG_LOG_NETDATA was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_ICMP
+#error "OPENTHREAD_CONFIG_LOG_ICMP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_IP6
+#error "OPENTHREAD_CONFIG_LOG_IP6 was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_TCP
+#error "OPENTHREAD_CONFIG_LOG_TCP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_MAC
+#error "OPENTHREAD_CONFIG_LOG_MAC was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_MEM
+#error "OPENTHREAD_CONFIG_LOG_MEM was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_NETDIAG
+#error "OPENTHREAD_CONFIG_LOG_NETDIAG was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_COAP
+#error "OPENTHREAD_CONFIG_LOG_COAP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_CORE
+#error "OPENTHREAD_CONFIG_LOG_CORE was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_UTIL
+#error "OPENTHREAD_CONFIG_LOG_UTIL was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_BBR
+#error "OPENTHREAD_CONFIG_LOG_BBR was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_MLR
+#error "OPENTHREAD_CONFIG_LOG_MLR was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_DUA
+#error "OPENTHREAD_CONFIG_LOG_DUA was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_BR
+#error "OPENTHREAD_CONFIG_LOG_BR was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_SRP
+#error "OPENTHREAD_CONFIG_LOG_SRP was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_DNS
+#error "OPENTHREAD_CONFIG_LOG_DNS was removed and no longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_LOG_PREPEND_REGION
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_REGION was removed and not longer supported"
+#endif
+
+#ifdef OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
+#error "OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM was removed. "\
+       "SRP host uses dynamic heap array to store addresses so no need for config on max number of addresses".
 #endif
 
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

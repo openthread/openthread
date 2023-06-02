@@ -115,6 +115,10 @@ typedef int otLogLevel;
 /**
  * This enumeration represents log regions.
  *
+ * The support for log region is removed and instead each core module can define its own name to appended to the logs.
+ * However, the `otLogRegion` enumeration is still defined as before to help with platforms which we may be using it
+ * in their `otPlatLog()` implementation. The OT core will always emit all logs with `OT_LOG_REGION_CORE`.
+ *
  */
 typedef enum otLogRegion
 {
@@ -146,6 +150,9 @@ typedef enum otLogRegion
 /**
  * This function outputs logs.
  *
+ * Note that the support for log region is removed. The OT core will always emit all logs with `OT_LOG_REGION_CORE`
+ * as @p aLogRegion.
+ *
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.
  * @param[in]  aFormat     A pointer to the format string.
@@ -155,20 +162,17 @@ typedef enum otLogRegion
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
 /**
- * This (optional) platform function outputs a prepared log line.
+ * This function handles OpenThread log level changes.
  *
- * This platform function is used by OpenThread core when `OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY` is not enabled
- * (in this case, the OT core itself will prepare a full log line).
+ * This platform function is called whenever the OpenThread log level changes.
+ * This platform function is optional since an empty weak implementation has been provided.
  *
- * Note that this function is optional and if not provided by platform layer, a default (weak) implementation is
- * provided and used by OpenThread core as `otPlatLog(aLogLevel, aLogResion, "%s", aLogLine)`.
+ * @note Only applicable when `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1`.
  *
- * @param[in]  aLogLevel   The log level.
- * @param[in]  aLogRegion  The log region.
- * @param[in]  aLogLine    A pointer to a log line string.
+ * @param[in]  aLogLevel  The new OpenThread log level.
  *
  */
-void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine);
+void otPlatLogHandleLevelChanged(otLogLevel aLogLevel);
 
 /**
  * @}

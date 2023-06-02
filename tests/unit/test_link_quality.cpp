@@ -26,11 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "common/code_utils.hpp"
-#include "thread/link_quality.hpp"
-
 #include "test_platform.h"
 #include "test_util.h"
+
+#include "common/array.hpp"
+#include "common/code_utils.hpp"
+#include "thread/link_quality.hpp"
 
 namespace ot {
 
@@ -412,7 +413,7 @@ void TestSuccessRateTracker(void)
 
     // Adding success/failure at different rates and checking the RateTracker rate for every sample
 
-    for (uint16_t testRound = 0; testRound < OT_ARRAY_LENGTH(kWeightLimit) * 2; testRound++)
+    for (uint16_t testRound = 0; testRound < GetArrayLength(kWeightLimit) * 2; testRound++)
     {
         uint16_t weightLimit;
         bool     reverseLogic;

@@ -37,6 +37,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"
 #include "crypto/storage.hpp"
@@ -44,6 +45,8 @@
 #include "thread/thread_netif.hpp"
 
 namespace ot {
+
+RegisterLogModule("KeyManager");
 
 const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
@@ -69,7 +72,6 @@ void SecurityPolicy::SetToDefaultFlags(void)
     mNativeCommissioningEnabled     = true;
     mRoutersEnabled                 = true;
     mExternalCommissioningEnabled   = true;
-    mBeaconsEnabled                 = true;
     mCommercialCommissioningEnabled = false;
     mAutonomousEnrollmentEnabled    = false;
     mNetworkKeyProvisioningEnabled  = false;
@@ -88,7 +90,6 @@ void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
     mNativeCommissioningEnabled     = aFlags[0] & kNativeCommissioningMask;
     mRoutersEnabled                 = aFlags[0] & kRoutersMask;
     mExternalCommissioningEnabled   = aFlags[0] & kExternalCommissioningMask;
-    mBeaconsEnabled                 = aFlags[0] & kBeaconsMask;
     mCommercialCommissioningEnabled = (aFlags[0] & kCommercialCommissioningMask) == 0;
     mAutonomousEnrollmentEnabled    = (aFlags[0] & kAutonomousEnrollmentMask) == 0;
     mNetworkKeyProvisioningEnabled  = (aFlags[0] & kNetworkKeyProvisioningMask) == 0;
@@ -126,11 +127,6 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
     if (mExternalCommissioningEnabled)
     {
         aFlags[0] |= kExternalCommissioningMask;
-    }
-
-    if (mBeaconsEnabled)
-    {
-        aFlags[0] |= kBeaconsMask;
     }
 
     if (!mCommercialCommissioningEnabled)
@@ -180,7 +176,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
-    IgnoreError(otPlatCryptoInit());
+    otPlatCryptoInit();
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
@@ -483,9 +479,16 @@ void KeyManager::SetKek(const Kek &aKek)
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
-    OT_ASSERT(aSecurityPolicy.mRotationTime >= SecurityPolicy::kMinKeyRotationTime);
+    if (aSecurityPolicy.mRotationTime < SecurityPolicy::kMinKeyRotationTime)
+    {
+        LogNote("Key Rotation Time too small: %d", aSecurityPolicy.mRotationTime);
+        ExitNow();
+    }
 
     IgnoreError(Get<Notifier>().Update(mSecurityPolicy, aSecurityPolicy, kEventSecurityPolicyChanged));
+
+exit:
+    return;
 }
 
 void KeyManager::StartKeyRotationTimer(void)
@@ -562,7 +565,7 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 {
     NetworkKeyRef keyRef;
 
-    keyRef = kNetworkKeyPsaItsOffset;
+    keyRef = Crypto::Storage::kNetworkKeyRef;
 
     if (!aOverWriteExisting)
     {
@@ -593,7 +596,7 @@ exit:
 
 void KeyManager::StorePskc(const Pskc &aPskc)
 {
-    PskcRef keyRef = kPskcPsaItsOffset;
+    PskcRef keyRef = Crypto::Storage::kPskcRef;
 
     Crypto::Storage::DestroyKey(keyRef);
 

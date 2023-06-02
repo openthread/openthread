@@ -38,12 +38,14 @@
 
 #include <openthread/thread_ftd.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "common/serial_number.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
@@ -55,6 +57,7 @@
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/radio_selector.hpp"
 
 namespace ot {
@@ -352,12 +355,12 @@ public:
     bool IsFullThreadDevice(void) const { return GetDeviceMode().IsFullThreadDevice(); }
 
     /**
-     * This method indicates whether or not the device requests Full Network Data.
+     * This method gets the Network Data type (full set or stable subset) that the device requests.
      *
-     * @returns TRUE if requests Full Network Data, FALSE otherwise.
+     * @returns The Network Data type.
      *
      */
-    bool IsFullNetworkData(void) const { return GetDeviceMode().IsFullNetworkData(); }
+    NetworkData::Type GetNetworkDataType(void) const { return GetDeviceMode().GetNetworkDataType(); }
 
     /**
      * This method sets all bytes of the Extended Address to zero.
@@ -498,7 +501,7 @@ public:
     /**
      * This method clears the last received fragment tag.
      *
-     * The last received fragment tag is used for detect duplicate frames (receievd over different radios) when
+     * The last received fragment tag is used for detect duplicate frames (received over different radios) when
      * multi-radio feature is enabled.
      *
      */
@@ -520,15 +523,15 @@ public:
      * @param[in] aTag   The new tag value.
      *
      */
-    void SetLastRxFragmentTag(uint16_t aTag) { mLastRxFragmentTag = (aTag == 0) ? 0xffff : aTag; }
+    void SetLastRxFragmentTag(uint16_t aTag);
 
     /**
-     * This method indicates whether the last received fragment tag is set or not.
+     * This method indicates whether or not the last received fragment tag is set and valid (i.e., not yet timed out).
      *
-     * @returns TRUE if the last received fragment tag is set, FALSE otherwise.
+     * @returns TRUE if the last received fragment tag is set and valid, FALSE otherwise.
      *
      */
-    bool IsLastRxFragmentTagSet(void) const { return (mLastRxFragmentTag != 0); }
+    bool IsLastRxFragmentTagSet(void) const;
 
     /**
      * This method indicates whether the last received fragment tag is strictly after a given tag value.
@@ -544,7 +547,7 @@ public:
      * before @p aTag.
      *
      */
-    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return ((aTag - mLastRxFragmentTag) & (1U << 15)) != 0; }
+    bool IsLastRxFragmentTagAfter(uint16_t aTag) const { return SerialNumber::IsGreater(mLastRxFragmentTag, aTag); }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
 
@@ -563,6 +566,14 @@ public:
      *
      */
     bool IsThreadVersion1p2(void) const { return mState != kStateInvalid && mVersion == OT_THREAD_VERSION_1_2; }
+
+    /**
+     * This method indicates whether Thread version supports CSL.
+     *
+     * @returns TRUE if CSL is supported, FALSE otherwise.
+     *
+     */
+    bool IsThreadVersionCslCapable(void) const { return IsThreadVersion1p2() && !IsRxOnWhenIdle(); }
 
     /**
      * This method indicates whether Enhanced Keep-Alive is supported or not.
@@ -683,7 +694,7 @@ public:
     /**
      * This method adds a new LinkMetrics::SeriesInfo to the neighbor's list.
      *
-     * @param[in]    A reference to the new SeriesInfo.
+     * @param[in]  aSeriesInfo  A reference to the new SeriesInfo.
      *
      */
     void AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo);
@@ -767,6 +778,11 @@ protected:
     void Init(Instance &aInstance);
 
 private:
+    enum : uint32_t
+    {
+        kLastRxFragmentTagTimeout = OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT, ///< Frag tag timeout in msec.
+    };
+
     Mac::ExtAddress mMacAddr;   ///< The IEEE 802.15.4 Extended Address
     TimeMilli       mLastHeard; ///< Time when last heard.
     union
@@ -786,7 +802,8 @@ private:
     } mValidPending;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    uint16_t mLastRxFragmentTag; ///< Last received fragment tag
+    uint16_t  mLastRxFragmentTag;     ///< Last received fragment tag
+    TimeMilli mLastRxFragmentTagTime; ///< The time last fragment tag was received and set.
 #endif
 
     uint32_t mKeySequence; ///< Current key sequence
@@ -912,7 +929,7 @@ public:
         /**
          * This method gets the current `Child` IPv6 Address to which the iterator is pointing.
          *
-         * @returns  A pointer to the associated IPv6 Address, or nullptr if iterator is done.
+         * @returns  A pointer to the associated IPv6 Address, or `nullptr` if iterator is done.
          *
          */
         const Ip6::Address *GetAddress(void) const;
@@ -1418,7 +1435,7 @@ public:
     /**
      * This method sets the CSL clock accuracy of this router.
      *
-     * @param[in]  aCost  The CSL clock accuracy of this router.
+     * @param[in]  aCslClockAccuracy  The CSL clock accuracy of this router.
      *
      */
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
@@ -1434,7 +1451,7 @@ public:
     /**
      * This method sets the CSL clock uncertainty of this router.
      *
-     * @param[in]  aCost  The CSL clock uncertainty of this router.
+     * @param[in]  aCslClockUncertainty  The CSL clock uncertainty of this router.
      *
      */
     void SetCslClockUncertainty(uint8_t aCslClockUncertainty) { mCslClockUncertainty = aCslClockUncertainty; }
@@ -1454,6 +1471,12 @@ private:
     uint8_t mCslClockUncertainty; ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
+
+DefineCoreType(otNeighborInfo, Neighbor::Info);
+#if OPENTHREAD_FTD
+DefineCoreType(otChildInfo, Child::Info);
+#endif
+DefineCoreType(otRouterInfo, Router::Info);
 
 } // namespace ot
 

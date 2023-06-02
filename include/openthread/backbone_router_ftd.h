@@ -291,12 +291,12 @@ typedef struct otBackboneRouterMulticastListenerInfo
 /**
  * This function gets the next Multicast Listener info (using an iterator).
  *
- * @param[in]     aInstance    A pointer to an OpenThread instance.
- * @param[inout]  aIterator    A pointer to the iterator. On success the iterator will be updated to point to next
- *                             Multicast Listener. To get the first entry the iterator should be set to
- *                             OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
- * @param[out]    aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
- *                               Multicast Listener is placed (on success).
+ * @param[in]      aInstance      A pointer to an OpenThread instance.
+ * @param[in,out]  aIterator      A pointer to the iterator. On success the iterator will be updated to point to next
+ *                                Multicast Listener. To get the first entry the iterator should be set to
+ *                                OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT.
+ * @param[out]     aListenerInfo  A pointer to an `otBackboneRouterMulticastListenerInfo` where information of next
+ *                                Multicast Listener is placed (on success).
  *
  * @retval OT_ERROR_NONE       Successfully found the next Multicast Listener info (@p aListenerInfo was successfully
  *                             updated).
@@ -351,12 +351,12 @@ void otBackboneRouterSetNdProxyCallback(otInstance *                    aInstanc
  * Represents the Backbone Router ND Proxy info.
  *
  */
-struct otBackboneRouterNdProxyInfo
+typedef struct otBackboneRouterNdProxyInfo
 {
     otIp6InterfaceIdentifier *mMeshLocalIid;             ///< Mesh-local IID
     uint32_t                  mTimeSinceLastTransaction; ///< Time since last transaction (Seconds)
     uint16_t                  mRloc16;                   ///< RLOC16
-};
+} otBackboneRouterNdProxyInfo;
 
 /**
  * This method gets the Backbone Router ND Proxy info.

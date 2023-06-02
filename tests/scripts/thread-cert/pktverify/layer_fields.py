@@ -638,7 +638,11 @@ _LAYER_FIELDS = {
     # Thread Diagnostic
     'thread_diagnostic.tlv.type': _list(_auto),
     'thread_diagnostic.tlv.len8': _list(_auto),
-    'thread_diagnostic.tlv.general': _list(_str)
+    'thread_diagnostic.tlv.general': _list(_str),
+
+    # DNS
+    'dns.resp.ttl': _auto,
+    'dns.flags.response': _auto,
 }
 
 _layer_containers = set()

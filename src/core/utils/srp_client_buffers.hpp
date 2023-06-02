@@ -36,8 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+
 #include <openthread/srp_client_buffers.h>
 
+#include "common/array.hpp"
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -46,8 +50,6 @@
 
 namespace ot {
 namespace Utils {
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
 #if !OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 #error "OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE feature."
@@ -164,7 +166,7 @@ public:
          */
         const char **GetSubTypeLabelsArray(uint16_t &aArrayLength)
         {
-            aArrayLength = OT_ARRAY_LENGTH(mSubTypeLabels);
+            aArrayLength = GetArrayLength(mSubTypeLabels);
             return mSubTypeLabels;
         }
 
@@ -212,7 +214,7 @@ public:
      */
     Ip6::Address *GetHostAddressesArray(uint8_t &aArrayLength)
     {
-        aArrayLength = OT_ARRAY_LENGTH(mHostAddresses);
+        aArrayLength = static_cast<uint8_t>(GetArrayLength(mHostAddresses));
         return &mHostAddresses[0];
     }
 
@@ -260,9 +262,12 @@ private:
     Pool<ServiceEntry, kMaxServices> mServicePool;
 };
 
-#endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
-
 } // namespace Utils
+
+DefineCoreType(otSrpClientBuffersServiceEntry, Utils::SrpClientBuffers::ServiceEntry);
+
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
 #endif // SRP_CLIENT_BUFFERS_HPP_

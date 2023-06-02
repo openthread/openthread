@@ -38,7 +38,7 @@ from pktverify.addrs import EthAddr
 from pktverify.coap import CoapLayer
 from pktverify.consts import VALID_LAYER_NAMES
 from pktverify.decorators import cached_property
-from pktverify.layers import Layer, ThreadMeshcopLayer, Icmpv6Layer, WpanLayer, ThreadNetworkDataLayer
+from pktverify.layers import Layer, ThreadMeshcopLayer, Icmpv6Layer, WpanLayer, ThreadNetworkDataLayer, DnsLayer
 from pktverify.utils import make_filter_func
 
 
@@ -101,6 +101,10 @@ class Packet(object):
     @cached_property
     def thread_nwd(self) -> ThreadNetworkDataLayer:
         return ThreadNetworkDataLayer(self._packet, 'thread_nwd')
+
+    @cached_property
+    def dns(self) -> DnsLayer:
+        return DnsLayer(self._packet, 'dns')
 
     def __getattr__(self, layer_name: str) -> Layer:
 

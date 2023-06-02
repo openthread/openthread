@@ -37,6 +37,7 @@ import subprocess
 import sys
 import time
 import traceback
+import typing
 import unittest
 from ipaddress import IPv6Address, IPv6Network
 from typing import Union, Dict, Optional, List, Any
@@ -88,6 +89,14 @@ class OtbrDocker:
                                              stdout=subprocess.DEVNULL,
                                              stderr=subprocess.DEVNULL)
 
+        try:
+            self._ot_rcp_proc.wait(1)
+        except subprocess.TimeoutExpired:
+            # We expect ot-rcp not to quit in 1 second.
+            pass
+        else:
+            raise Exception(f"ot-rcp {nodeid} exited unexpectedly!")
+
     def _get_ot_rcp_path(self) -> str:
         srcdir = os.environ['top_builddir']
         path = '%s/examples/apps/ncp/ot-rcp' % srcdir
@@ -95,6 +104,7 @@ class OtbrDocker:
         return path
 
     def _launch_docker(self):
+        logging.info(f'Docker image: {config.OTBR_DOCKER_IMAGE}')
         subprocess.check_call(f"docker rm -f {self._docker_name} || true", shell=True)
         CI_ENV = os.getenv('CI_ENV', '').split()
         os.makedirs('/tmp/coverage/', exist_ok=True)
@@ -116,6 +126,8 @@ class OtbrDocker:
             config.OTBR_DOCKER_IMAGE,
             '-B',
             config.BACKBONE_IFNAME,
+            '--trel-url',
+            f'trel://{config.BACKBONE_IFNAME}',
         ],
                                              stdin=subprocess.DEVNULL,
                                              stdout=sys.stdout,
@@ -136,6 +148,29 @@ class OtbrDocker:
 
         assert launch_ok
 
+        self.start_ot_ctl()
+
+    def __repr__(self):
+        return f'OtbrDocker<{self.nodeid}>'
+
+    def start_otbr_service(self):
+        self.bash('service otbr-agent start')
+        self.simulator.go(3)
+        self.start_ot_ctl()
+
+    def stop_otbr_service(self):
+        self.stop_ot_ctl()
+        self.bash('service otbr-agent stop')
+
+    def stop_mdns_service(self):
+        self.bash('service avahi-daemon stop')
+        self.bash('service mdns stop')
+
+    def start_mdns_service(self):
+        self.bash('service avahi-daemon start')
+        self.bash('service mdns start')
+
+    def start_ot_ctl(self):
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
         self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=30)
         if self.verbose:
@@ -151,8 +186,10 @@ class OtbrDocker:
             except pexpect.TIMEOUT:
                 timeout -= 0.1
 
-    def __repr__(self):
-        return f'OtbrDocker<{self.nodeid}>'
+    def stop_ot_ctl(self):
+        self.pexpect.sendeof()
+        self.pexpect.wait()
+        self.pexpect.proc.kill()
 
     def destroy(self):
         logging.info("Destroying %s", self)
@@ -161,14 +198,19 @@ class OtbrDocker:
         self._shutdown_socat()
 
     def _shutdown_docker(self):
-        if self._docker_proc is not None:
+        if self._docker_proc is None:
+            return
+
+        try:
             COVERAGE = int(os.getenv('COVERAGE', '0'))
             OTBR_COVERAGE = int(os.getenv('OTBR_COVERAGE', '0'))
+            test_name = os.getenv('TEST_NAME')
+            unique_node_id = f'{test_name}-{PORT_OFFSET}-{self.nodeid}'
+
             if COVERAGE or OTBR_COVERAGE:
                 self.bash('service otbr-agent stop')
 
-                test_name = os.getenv('TEST_NAME')
-                cov_file_path = f'/tmp/coverage/coverage-{test_name}-{PORT_OFFSET}-{self.nodeid}.info'
+                cov_file_path = f'/tmp/coverage/coverage-{unique_node_id}.info'
                 # Upload OTBR code coverage if OTBR_COVERAGE=1, otherwise OpenThread code coverage.
                 if OTBR_COVERAGE:
                     codecov_cmd = f'lcov --directory . --capture --output-file {cov_file_path}'
@@ -178,6 +220,12 @@ class OtbrDocker:
 
                 self.bash(codecov_cmd)
 
+            copyCore = subprocess.run(f'docker cp {self._docker_name}:/core ./coredump_{unique_node_id}', shell=True)
+            if copyCore.returncode == 0:
+                subprocess.check_call(
+                    f'docker cp {self._docker_name}:/usr/sbin/otbr-agent ./otbr-agent_{unique_node_id}', shell=True)
+
+        finally:
             subprocess.check_call(f"docker rm -f {self._docker_name}", shell=True)
             self._docker_proc.wait()
             del self._docker_proc
@@ -292,16 +340,46 @@ class OtbrDocker:
                     line = line[1:]
                 record = list(line.split())
 
-                if section != 'QUESTION':
+                if section == 'QUESTION':
+                    if record[2] in ('SRV', 'TXT'):
+                        record[0] = self.__unescape_dns_instance_name(record[0])
+                else:
                     record[1] = int(record[1])
                     if record[3] == 'SRV':
+                        record[0] = self.__unescape_dns_instance_name(record[0])
                         record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
                     elif record[3] == 'TXT':
+                        record[0] = self.__unescape_dns_instance_name(record[0])
                         record[4:] = [self.__parse_dns_dig_txt(line)]
+                    elif record[3] == 'PTR':
+                        record[4] = self.__unescape_dns_instance_name(record[4])
 
                 dig_result[section].append(tuple(record))
 
         return dig_result
+
+    @staticmethod
+    def __unescape_dns_instance_name(name: str) -> str:
+        new_name = []
+        i = 0
+        while i < len(name):
+            c = name[i]
+
+            if c == '\\':
+                assert i + 1 < len(name), name
+                if name[i + 1].isdigit():
+                    assert i + 3 < len(name) and name[i + 2].isdigit() and name[i + 3].isdigit(), name
+                    new_name.append(chr(int(name[i + 1:i + 4])))
+                    i += 3
+                else:
+                    new_name.append(name[i + 1])
+                    i += 1
+            else:
+                new_name.append(c)
+
+            i += 1
+
+        return ''.join(new_name)
 
     def __parse_dns_dig_txt(self, line: str):
         # Example TXT entry:
@@ -587,7 +665,7 @@ class NodeImpl:
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
 
-        if isinstance(pattern, re.Pattern):
+        if isinstance(pattern, typing.Pattern):
             return pattern.match(line)
         else:
             return any(NodeImpl._match_pattern(line, p) for p in pattern)
@@ -609,7 +687,7 @@ class NodeImpl:
         return lines
 
     def __is_logging_line(self, line: str) -> bool:
-        return len(line) >= 6 and line[:6] in {'[DEBG]', '[INFO]', '[NOTE]', '[WARN]', '[CRIT]', '[NONE]'}
+        return len(line) >= 3 and line[:3] in {'[D]', '[I]', '[N]', '[W]', '[C]', '[-]'}
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
@@ -791,6 +869,21 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def radiofilter_is_enabled(self) -> bool:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('radiofilter')
+        return self._expect_result(states) == 'Enabled'
+
+    def radiofilter_enable(self):
+        cmd = 'radiofilter enable'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def radiofilter_disable(self):
+        cmd = 'radiofilter disable'
+        self.send_command(cmd)
+        self._expect_done()
+
     def get_bbr_registration_jitter(self):
         self.send_command('bbr jitter')
         return int(self._expect_result(r'\d+'))
@@ -799,6 +892,11 @@ class NodeImpl:
         cmd = 'bbr jitter %d' % jitter
         self.send_command(cmd)
         self._expect_done()
+
+    def get_rcp_version(self) -> str:
+        self.send_command('rcp version')
+        rcp_version = self._expect_command_output()[0].strip()
+        return rcp_version
 
     def srp_server_get_state(self):
         states = ['disabled', 'running', 'stopped']
@@ -1029,6 +1127,7 @@ class NodeImpl:
 
     def srp_client_add_service(self, instance_name, service_name, port, priority=0, weight=0, txt_entries=[]):
         txt_record = "".join(self._encode_txt_entry(entry) for entry in txt_entries)
+        instance_name = self._escape_escapable(instance_name)
         self.send_command(
             f'srp client service add {instance_name} {service_name} {port} {priority} {weight} {txt_record}')
         self._expect_done()
@@ -1046,6 +1145,31 @@ class NodeImpl:
         self.send_command(cmd)
         service_lines = self._expect_command_output()
         return [self._parse_srp_client_service(line) for line in service_lines]
+
+    def srp_client_set_lease_interval(self, leaseinterval: int):
+        cmd = f'srp client leaseinterval {leaseinterval}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_client_get_lease_interval(self) -> int:
+        cmd = 'srp client leaseinterval'
+        self.send_command(cmd)
+        return int(self._expect_result('\d+'))
+
+    #
+    # TREL utilities
+    #
+
+    def get_trel_state(self) -> Union[None, bool]:
+        states = [r'Disabled', r'Enabled']
+        self.send_command('trel')
+        try:
+            return self._expect_result(states) == 'Enabled'
+        except Exception as ex:
+            if 'InvalidCommand' in str(ex):
+                return None
+
+            raise
 
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
@@ -1288,6 +1412,10 @@ class NodeImpl:
     def set_extpanid(self, extpanid):
         self.send_command('extpanid %s' % extpanid)
         self._expect_done()
+
+    def get_extpanid(self):
+        self.send_command('extpanid')
+        return self._expect_result('[0-9a-fA-F]{16}')
 
     def get_joiner_id(self):
         self.send_command('joiner id')
@@ -1651,7 +1779,7 @@ class NodeImpl:
         omr_addrs = []
         for addr in self.get_addrs():
             for prefix in prefixes:
-                if (addr.startswith(prefix)):
+                if (addr.startswith(prefix)) and (addr != self.__getDua()):
                     omr_addrs.append(addr)
                     break
 
@@ -1778,15 +1906,40 @@ class NodeImpl:
         self.send_command('br disable')
         self._expect_done()
 
-    def get_omr_prefix(self):
+    def get_br_omr_prefix(self):
         cmd = 'br omrprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
-    def get_on_link_prefix(self):
+    def get_netdata_omr_prefixes(self):
+        prefixes = [prefix.split(' ')[0] for prefix in self.get_prefixes()]
+        return prefixes
+
+    def get_br_on_link_prefix(self):
         cmd = 'br onlinkprefix'
         self.send_command(cmd)
         return self._expect_command_output()[0]
+
+    def get_netdata_non_nat64_prefixes(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' not in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
+
+    def get_br_nat64_prefix(self):
+        cmd = 'br nat64prefix'
+        self.send_command(cmd)
+        return self._expect_command_output()[0]
+
+    def get_netdata_nat64_prefix(self):
+        prefixes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' in route.split(' ')[1]:
+                prefixes.append(route.split(' ')[0])
+        return prefixes
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -1825,10 +1978,12 @@ class NodeImpl:
 
         return netdata
 
-    def add_route(self, prefix, stable=False, prf='med'):
+    def add_route(self, prefix, stable=False, nat64=False, prf='med'):
         cmd = 'route add %s ' % prefix
         if stable:
             cmd += 's'
+        if nat64:
+            cmd += 'n'
         cmd += ' %s' % prf
         self.send_command(cmd)
         self._expect_done()
@@ -1922,12 +2077,38 @@ class NodeImpl:
 
         self._expect('Conflict:', timeout=timeout)
 
-    def scan(self, result=1):
+    def scan(self, result=1, timeout=10):
         self.send_command('scan')
 
+        self.simulator.go(timeout)
+
         if result == 1:
-            return self._expect_results(
-                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
+            networks = []
+            for line in self._expect_command_output()[2:]:
+                _, panid, extaddr, channel, dbm, lqi, _ = map(str.strip, line.split('|'))
+                panid = int(panid, 16)
+                channel, dbm, lqi = map(int, (channel, dbm, lqi))
+
+                networks.append({
+                    'panid': panid,
+                    'extaddr': extaddr,
+                    'channel': channel,
+                    'dbm': dbm,
+                    'lqi': lqi,
+                })
+            return networks
+
+    def scan_energy(self, timeout=10):
+        self.send_command('scan energy')
+        self.simulator.go(timeout)
+        rssi_list = []
+        for line in self._expect_command_output()[2:]:
+            _, channel, rssi, _ = line.split('|')
+            rssi_list.append({
+                'channel': int(channel.strip()),
+                'rssi': int(rssi.strip()),
+            })
+        return rssi_list
 
     def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64, interface=None):
         args = f'{ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
@@ -2712,6 +2893,7 @@ class NodeImpl:
                 'aaaa_ttl': 7100,
             }
         """
+        instance = self._escape_escapable(instance)
         cmd = f'dns service {instance} {service}'
         if server is not None:
             cmd += f' {server} {port}'
@@ -2932,6 +3114,17 @@ class NodeImpl:
 
         return rxtx_list
 
+    def set_router_id_range(self, min_router_id: int, max_router_id: int):
+        cmd = f'routeridrange {min_router_id} {max_router_id}'
+        self.send_command(cmd)
+        self._expect_command_output()
+
+    def get_router_id_range(self):
+        cmd = 'routeridrange'
+        self.send_command(cmd)
+        line = self._expect_command_output()[0]
+        return [int(item) for item in line.split()]
+
 
 class Node(NodeImpl, OtCli):
     pass
@@ -2945,13 +3138,13 @@ class LinuxHost():
         """Enable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} up')
+        self.bash(f'ip link set {self.ETH_DEV} up')
 
     def disable_ether(self):
         """Disable the ethernet interface.
         """
 
-        self.bash(f'ifconfig {self.ETH_DEV} down')
+        self.bash(f'ip link set {self.ETH_DEV} down')
 
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
@@ -3212,6 +3405,7 @@ EOF
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
+    TUN_DEV = config.THREAD_IFNAME
     is_otbr = True
     is_bbr = True  # OTBR is also BBR
     node_type = 'otbr-docker'
@@ -3224,6 +3418,14 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
         self.set_log_level(5)
         super().start()
 
+    def add_ipaddr(self, addr):
+        cmd = f'ip -6 addr add {addr}/64 dev {self.TUN_DEV}'
+        self.bash(cmd)
+
+    def add_ipmaddr_tun(self, ip: str):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.TUN_DEV} {ip} &'
+        self.bash(cmd)
+
 
 class HostNode(LinuxHost, OtbrDocker):
     is_host = True
@@ -3232,6 +3434,7 @@ class HostNode(LinuxHost, OtbrDocker):
         self.nodeid = nodeid
         self.name = name or ('Host%d' % nodeid)
         super().__init__(nodeid, **kwargs)
+        self.bash('service otbr-agent stop')
 
     def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()

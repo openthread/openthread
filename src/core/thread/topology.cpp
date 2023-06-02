@@ -33,11 +33,11 @@
 
 #include "topology.hpp"
 
+#include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 
@@ -79,7 +79,7 @@ void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
     mMessageErrorRate = aNeighbor.GetLinkInfo().GetMessageErrorRate();
     mRxOnWhenIdle     = aNeighbor.IsRxOnWhenIdle();
     mFullThreadDevice = aNeighbor.IsFullThreadDevice();
-    mFullNetworkData  = aNeighbor.IsFullNetworkData();
+    mFullNetworkData  = (aNeighbor.GetNetworkDataType() == NetworkData::kFullSet);
 }
 
 void Neighbor::Init(Instance &aInstance)
@@ -154,6 +154,19 @@ bool Neighbor::MatchesFilter(StateFilter aFilter) const
     return matches;
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void Neighbor::SetLastRxFragmentTag(uint16_t aTag)
+{
+    mLastRxFragmentTag     = (aTag == 0) ? 0xffff : aTag;
+    mLastRxFragmentTagTime = TimerMilli::GetNow();
+}
+
+bool Neighbor::IsLastRxFragmentTagSet(void) const
+{
+    return (mLastRxFragmentTag != 0) && (TimerMilli::GetNow() <= mLastRxFragmentTagTime + kLastRxFragmentTagTimeout);
+}
+#endif
+
 void Neighbor::GenerateChallenge(void)
 {
     IgnoreError(
@@ -199,18 +212,27 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 
 const char *Neighbor::StateToString(State aState)
 {
-    static const char *kStateStrings[] = {
-        "Invalid",        // kStateInvalid
-        "Restored",       // kStateRestored
-        "ParentReq",      // kStateParentRequest
-        "ParentRes",      // kStateParentResponse
-        "ChildIdReq",     // kStateChildIdRequest
-        "LinkReq",        // kStateLinkRequest
-        "ChildUpdateReq", // kStateChildUpdateRequest
-        "Valid",          // kStateValid
+    static const char *const kStateStrings[] = {
+        "Invalid",        // (0) kStateInvalid
+        "Restored",       // (1) kStateRestored
+        "ParentReq",      // (2) kStateParentRequest
+        "ParentRes",      // (3) kStateParentResponse
+        "ChildIdReq",     // (4) kStateChildIdRequest
+        "LinkReq",        // (5) kStateLinkRequest
+        "ChildUpdateReq", // (6) kStateChildUpdateRequest
+        "Valid",          // (7) kStateValid
     };
 
-    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
+    static_assert(0 == kStateInvalid, "kStateInvalid value is incorrect");
+    static_assert(1 == kStateRestored, "kStateRestored value is incorrect");
+    static_assert(2 == kStateParentRequest, "kStateParentRequest value is incorrect");
+    static_assert(3 == kStateParentResponse, "kStateParentResponse value is incorrect");
+    static_assert(4 == kStateChildIdRequest, "kStateChildIdRequest value is incorrect");
+    static_assert(5 == kStateLinkRequest, "kStateLinkRequest value is incorrect");
+    static_assert(6 == kStateChildUpdateRequest, "kStateChildUpdateRequest value is incorrect");
+    static_assert(7 == kStateValid, "kStateValid value is incorrect");
+
+    return kStateStrings[aState];
 }
 
 #if OPENTHREAD_FTD
@@ -233,7 +255,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mVersion            = aChild.GetVersion();
     mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
     mFullThreadDevice   = aChild.IsFullThreadDevice();
-    mFullNetworkData    = aChild.IsFullNetworkData();
+    mFullNetworkData    = (aChild.GetNetworkDataType() == NetworkData::kFullSet);
     mIsStateRestoring   = aChild.IsStateRestoring();
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
@@ -465,7 +487,7 @@ MlrState Child::GetAddressMlrState(const Ip6::Address &aAddress) const
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 
@@ -478,7 +500,7 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
 {
     uint16_t addressIndex;
 
-    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < OT_ARRAY_END(mIp6Address));
+    OT_ASSERT(&mIp6Address[0] <= &aAddress && &aAddress < GetArrayEnd(mIp6Address));
 
     addressIndex = static_cast<uint16_t>(&aAddress - mIp6Address);
 

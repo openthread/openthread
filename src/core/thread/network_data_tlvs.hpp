@@ -61,6 +61,68 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
+class NetworkDataTlv;
+
+/**
+ * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A pointer to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType *As(NetworkDataTlv *aTlv)
+{
+    return static_cast<TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` pointer to a given subclass `TlvType` pointer.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A pointer to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` pointer to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType *As(const NetworkDataTlv *aTlv)
+{
+    return static_cast<const TlvType *>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A reference to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> TlvType &As(NetworkDataTlv &aTlv)
+{
+    return static_cast<TlvType &>(aTlv);
+}
+
+/**
+ * This template method casts a `NetworkDataTlv` reference to a given subclass `TlvType` reference.
+ *
+ * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `NetworkDataTlv`.
+ *
+ * @param[in] aTlv   A reference to a `NetworkDataTlv` to convert/cast to a `TlvType`.
+ *
+ * @returns A `TlvType` reference to `aTlv`.
+ *
+ */
+template <class TlvType> const TlvType &As(const NetworkDataTlv &aTlv)
+{
+    return static_cast<const TlvType &>(aTlv);
+}
+
 /**
  * This class implements Thread Network Data TLV generation and parsing.
  *
@@ -217,7 +279,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType)
@@ -232,7 +294,7 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aType   The TLV type to find.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const NetworkDataTlv *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, Type aType);
@@ -245,12 +307,12 @@ public:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
     {
-        return static_cast<TlvType *>(Find(aStart, aEnd, TlvType::kType));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType));
     }
 
     /**
@@ -261,12 +323,12 @@ public:
      * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static const TlvType *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd)
     {
-        return static_cast<const TlvType *>(Find(aStart, aEnd, TlvType::kType));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType));
     }
 
     /**
@@ -278,7 +340,7 @@ public:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType, bool aStable)
@@ -295,7 +357,7 @@ public:
      * @param[in]  aType   The TLV type to find.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     static const NetworkDataTlv *Find(const NetworkDataTlv *aStart,
@@ -313,12 +375,12 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType> static TlvType *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
     {
-        return static_cast<TlvType *>(Find(aStart, aEnd, TlvType::kType, aStable));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType, aStable));
     }
 
     /**
@@ -331,13 +393,13 @@ public:
      * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
      * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename TlvType>
     static const TlvType *Find(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, bool aStable)
     {
-        return static_cast<const TlvType *>(Find(aStart, aEnd, TlvType::kType, aStable));
+        return As<TlvType>(Find(aStart, aEnd, TlvType::kType, aStable));
     }
 
 private:
@@ -733,12 +795,12 @@ public:
      *
      * @tparam     SubTlvType    The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(void)
     {
-        return static_cast<SubTlvType *>(FindSubTlv(SubTlvType::kType));
+        return As<SubTlvType>(FindSubTlv(SubTlvType::kType));
     }
 
     /**
@@ -746,12 +808,12 @@ public:
      *
      * @tparam     SubTlvType   The sub-TLV type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(void) const
     {
-        return static_cast<const SubTlvType *>(FindSubTlv(SubTlvType::kType));
+        return As<SubTlvType>(FindSubTlv(SubTlvType::kType));
     }
 
     /**
@@ -761,12 +823,12 @@ public:
      *
      * @param[in]  aStable       TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> SubTlvType *FindSubTlv(bool aStable)
     {
-        return static_cast<SubTlvType *>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
+        return As<SubTlvType>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
     }
 
     /**
@@ -776,12 +838,12 @@ public:
      *
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     template <typename SubTlvType> const SubTlvType *FindSubTlv(bool aStable) const
     {
-        return static_cast<const SubTlvType *>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
+        return As<SubTlvType>(FindSubTlv(static_cast<Type>(SubTlvType::kType), aStable));
     }
 
     /**
@@ -789,7 +851,7 @@ public:
      *
      * @param[in]  aType        The sub-TLV type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     NetworkDataTlv *FindSubTlv(Type aType) { return AsNonConst(AsConst(this)->FindSubTlv(aType)); }
@@ -799,7 +861,7 @@ public:
      *
      * @param[in]  aType        The sub-TLV type to search for.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     const NetworkDataTlv *FindSubTlv(Type aType) const;
@@ -810,7 +872,7 @@ public:
      * @param[in]  aType        The sub-TLV type to search for.
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     NetworkDataTlv *FindSubTlv(Type aType, bool aStable)
@@ -824,7 +886,7 @@ public:
      * @param[in]  aType        The sub-TLV type to search for.
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
+     * @returns A pointer to the TLV if found, or `nullptr` if not found.
      *
      */
     const NetworkDataTlv *FindSubTlv(Type aType, bool aStable) const;
@@ -1152,17 +1214,17 @@ public:
     /**
      * This method initializes the Context TLV.
      *
-     * @param[in]  aConextId   The Context ID value.
-     * @param[in]  aLength     The Context Length value.
+     * @param[in]  aContextId      The Context ID value.
+     * @param[in]  aContextLength  The Context Length value.
      *
      */
-    void Init(uint8_t aContextId, uint8_t aConextLength)
+    void Init(uint8_t aContextId, uint8_t aContextLength)
     {
         NetworkDataTlv::Init();
         SetType(kTypeContext);
         SetLength(sizeof(ContextTlv) - sizeof(NetworkDataTlv));
         mFlags         = ((aContextId << kContextIdOffset) & kContextIdMask);
-        mContextLength = aConextLength;
+        mContextLength = aContextLength;
     }
 
     /**
@@ -1564,13 +1626,10 @@ public:
      *
      * @tparam  TlvType The TLV Type to search for (MUST be a sub-class of `NetworkDataTlv`).
      *
-     * @returns A pointer to the next TLV, or nullptr if it can not be found.
+     * @returns A pointer to the next TLV, or `nullptr` if it can not be found.
      *
      */
-    template <typename TlvType> const TlvType *Iterate(void)
-    {
-        return static_cast<const TlvType *>(Iterate(TlvType::kType));
-    }
+    template <typename TlvType> const TlvType *Iterate(void) { return As<TlvType>(Iterate(TlvType::kType)); }
 
     /**
      * This template method iterates to the next TLV with a given type and stable flag.
@@ -1579,12 +1638,12 @@ public:
      *
      * @param[in]  aStable      TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
      *
-     * @returns A pointer to the next TLV, or nullptr if it can not be found.
+     * @returns A pointer to the next TLV, or `nullptr` if it can not be found.
      *
      */
     template <typename TlvType> const TlvType *Iterate(bool aStable)
     {
-        return static_cast<const TlvType *>(Iterate(TlvType::kType, aStable));
+        return As<TlvType>(Iterate(TlvType::kType, aStable));
     }
 
 private:

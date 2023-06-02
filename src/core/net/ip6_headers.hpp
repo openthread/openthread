@@ -38,9 +38,11 @@
 
 #include <stddef.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "net/ip6_address.hpp"
+#include "net/ip6_types.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
 
@@ -85,39 +87,12 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
-// Internet Protocol Numbers
-static constexpr uint8_t kProtoHopOpts  = OT_IP6_PROTO_HOP_OPTS; ///< IPv6 Hop-by-Hop Option
-static constexpr uint8_t kProtoTcp      = OT_IP6_PROTO_TCP;      ///< Transmission Control Protocol
-static constexpr uint8_t kProtoUdp      = OT_IP6_PROTO_UDP;      ///< User Datagram
-static constexpr uint8_t kProtoIp6      = OT_IP6_PROTO_IP6;      ///< IPv6 encapsulation
-static constexpr uint8_t kProtoRouting  = OT_IP6_PROTO_ROUTING;  ///< Routing Header for IPv6
-static constexpr uint8_t kProtoFragment = OT_IP6_PROTO_FRAGMENT; ///< Fragment Header for IPv6
-static constexpr uint8_t kProtoIcmp6    = OT_IP6_PROTO_ICMP6;    ///< ICMP for IPv6
-static constexpr uint8_t kProtoNone     = OT_IP6_PROTO_NONE;     ///< No Next Header for IPv6
-static constexpr uint8_t kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS; ///< Destination Options for IPv6
-
-/**
- * Class Selectors
- */
-enum IpDscpCs : uint8_t
-{
-    kDscpCs0    = 0,    ///< Class selector codepoint 0
-    kDscpCs1    = 8,    ///< Class selector codepoint 8
-    kDscpCs2    = 16,   ///< Class selector codepoint 16
-    kDscpCs3    = 24,   ///< Class selector codepoint 24
-    kDscpCs4    = 32,   ///< Class selector codepoint 32
-    kDscpCs5    = 40,   ///< Class selector codepoint 40
-    kDscpCs6    = 48,   ///< Class selector codepoint 48
-    kDscpCs7    = 56,   ///< Class selector codepoint 56
-    kDscpCsMask = 0x38, ///< Class selector mask
-};
-
 /**
  * This class implements IPv6 header generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Header
+class Header : public Clearable<Header>
 {
 public:
     static constexpr uint8_t kPayloadLengthFieldOffset = 4;  ///< Offset of Payload Length field in IPv6 header.
@@ -127,33 +102,18 @@ public:
     static constexpr uint8_t kDestinationFieldOffset   = 24; ///< Offset of Destination Address field in IPv6 header.
 
     /**
-     * This method initializes the IPv6 header.
+     * This method initializes the Version to 6 and sets Traffic Class and Flow fields to zero.
+     *
+     * The other fields in the IPv6 header remain unchanged.
      *
      */
-    void Init(void) { mVersionClassFlow.m32 = HostSwap32(kVersionClassFlowInit); }
-
-    /**
-     * This method initializes the IPv6 header and sets Version, Traffic Control and Flow Label fields.
-     *
-     */
-    void Init(uint32_t aVersionClassFlow) { mVersionClassFlow.m32 = HostSwap32(aVersionClassFlow); }
-
-    /**
-     * This method reads the IPv6 header from @p aMessage.
-     *
-     * @param[in]  aMessage  The IPv6 datagram.
-     *
-     * @retval kErrorNone   Successfully read the IPv6 header.
-     * @retval kErrorParse  Malformed IPv6 header.
-     *
-     */
-    Error Init(const Message &aMessage);
+    void InitVersionTrafficClassFlow(void) { SetVerionTrafficClassFlow(kVersTcFlowInit); }
 
     /**
      * This method indicates whether or not the header appears to be well-formed.
      *
-     * @retval TRUE  if the header appears to be well-formed.
-     * @retval FALSE if the header does not appear to be well-formed.
+     * @retval TRUE    If the header appears to be well-formed.
+     * @retval FALSE   If the header does not appear to be well-formed.
      *
      */
     bool IsValid(void) const;
@@ -165,48 +125,103 @@ public:
      * @retval FALSE  If the IPv6 Version is not set to 6.
      *
      */
-    bool IsVersion6(void) const { return (mVersionClassFlow.m8[0] & kVersionMask) == kVersion6; }
+    bool IsVersion6(void) const { return (mVerTcFlow.m8[0] & kVersionMask) == kVersion6; }
 
     /**
-     * This method returns the IPv6 DSCP value.
+     * This method gets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
      *
-     * @returns The IPv6 DSCP value.
+     * @returns The Version, Traffic Class, and Flow fields as a 32-bit value.
+     *
+     */
+    uint32_t GetVerionTrafficClassFlow(void) const { return HostSwap32(mVerTcFlow.m32); }
+
+    /**
+     * This method sets the combination of Version, Traffic Class, and Flow fields as a 32-bit value.
+     *
+     * @param[in] aVerTcFlow   The Version, Traffic Class, and Flow fields as a 32-bit value.
+     *
+     */
+    void SetVerionTrafficClassFlow(uint32_t aVerTcFlow) { mVerTcFlow.m32 = HostSwap32(aVerTcFlow); }
+
+    /**
+     * This method gets the Traffic Class field.
+     *
+     * @returns The Traffic Class field.
+     *
+     */
+    uint8_t GetTrafficClass(void) const
+    {
+        return static_cast<uint8_t>((HostSwap16(mVerTcFlow.m16[0]) & kTrafficClassMask) >> kTrafficClassOffset);
+    }
+
+    /**
+     * This method sets the Traffic Class filed.
+     *
+     * @param[in] aTc  The Traffic Class value.
+     *
+     */
+    void SetTrafficClass(uint8_t aTc)
+    {
+        mVerTcFlow.m16[0] = HostSwap16((HostSwap16(mVerTcFlow.m16[0]) & ~kTrafficClassMask) |
+                                       ((static_cast<uint16_t>(aTc) << kTrafficClassOffset) & kTrafficClassMask));
+    }
+
+    /**
+     * This method gets the 6-bit Differentiated Services Code Point (DSCP) from Traffic Class field.
+     *
+     * @returns The DSCP value.
      *
      */
     uint8_t GetDscp(void) const
     {
-        return static_cast<uint8_t>((HostSwap16(mVersionClassFlow.m16[0]) & kDscpMask) >> kDscpOffset);
+        return static_cast<uint8_t>((HostSwap16(mVerTcFlow.m16[0]) & kDscpMask) >> kDscpOffset);
     }
 
     /**
-     * This method sets the IPv6 DSCP value.
+     * This method sets 6-bit Differentiated Services Code Point (DSCP) in IPv6 header.
      *
-     * @param[in]  aDscp  The IPv6 DSCP value.
+     * @param[in]  aDscp  The DSCP value.
      *
      */
     void SetDscp(uint8_t aDscp)
     {
-        mVersionClassFlow.m16[0] = HostSwap16((HostSwap16(mVersionClassFlow.m16[0]) & ~kDscpMask) |
-                                              ((static_cast<uint16_t>(aDscp) << kDscpOffset) & kDscpMask));
+        mVerTcFlow.m16[0] = HostSwap16((HostSwap16(mVerTcFlow.m16[0]) & ~kDscpMask) |
+                                       ((static_cast<uint16_t>(aDscp) << kDscpOffset) & kDscpMask));
     }
 
     /**
-     * This method returns the IPv6 ECN value.
+     * This method gets the 2-bit Explicit Congestion Notification (ECN) from Traffic Class field.
      *
-     * @returns The IPv6 ECN value.
+     * @returns The ECN value.
      *
      */
-    uint8_t GetEcn(void) const { return (mVersionClassFlow.m8[1] & kEcnMask) >> kEcnOffset; }
+    Ecn GetEcn(void) const { return static_cast<Ecn>((mVerTcFlow.m8[1] & kEcnMask) >> kEcnOffset); }
 
     /**
-     * This method sets the Ipv6 ECN value.
+     * This method sets the 2-bit Explicit Congestion Notification (ECN) in IPv6 header..
      *
-     * @param[in]  aEcn  The Ipv6 ECN value.
+     * @param[in]  aEcn  The ECN value.
      *
      */
-    void SetEcn(uint8_t aEcn)
+    void SetEcn(Ecn aEcn) { mVerTcFlow.m8[1] = (mVerTcFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask); }
+
+    /**
+     * This method gets the 20-bit Flow field.
+     *
+     * @returns  The Flow value.
+     *
+     */
+    uint32_t GetFlow(void) const { return HostSwap32(mVerTcFlow.m32) & kFlowMask; }
+
+    /**
+     * This method sets the 20-bit Flow field in IPv6 header.
+     *
+     * @param[in] aFlow  The Flow value.
+     *
+     */
+    void SetFlow(uint32_t aFlow)
     {
-        mVersionClassFlow.m8[1] = (mVersionClassFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask);
+        mVerTcFlow.m32 = HostSwap32((HostSwap32(mVerTcFlow.m32) & ~kFlowMask) | (aFlow & kFlowMask));
     }
 
     /**
@@ -305,26 +320,48 @@ public:
      */
     void SetDestination(const Address &aDestination) { mDestination = aDestination; }
 
-private:
-    static constexpr uint8_t  kVersion6             = 0x60;
-    static constexpr uint8_t  kVersionMask          = 0xf0;       // To use with `mVersionClassFlow.m8[0]`
-    static constexpr uint8_t  kDscpOffset           = 6;          // To use with `mVersionClassFlow.m16[0]`
-    static constexpr uint16_t kDscpMask             = 0x0fc0;     // To use with `mVersionClassFlow.m16[0]`
-    static constexpr uint8_t  kEcnOffset            = 4;          // To use with `mVersionClassFlow.m8[1]`
-    static constexpr uint8_t  kEcnMask              = 0x30;       // To use with `mVersionClassFlow.m8[1]`
-    static constexpr uint32_t kVersionClassFlowInit = 0x60000000; // Version 6, TC and flow zero.
+    /**
+     * This method parses and validates the IPv6 header from a given message.
+     *
+     * The header is read from @p aMessage at offset zero.
+     *
+     * @param[in]  aMessage  The IPv6 message.
+     *
+     * @retval kErrorNone   Successfully parsed the IPv6 header from @p aMessage.
+     * @retval kErrorParse  Malformed IPv6 header or message (e.g., message does not contained expected payload length).
+     *
+     */
+    Error ParseFrom(const Message &aMessage);
 
-    static constexpr uint8_t kEcnNotCapable = OT_ECN_NOT_CAPABLE; ///< Non-ECT
-    static constexpr uint8_t kEcnCapable0   = OT_ECN_CAPABLE_0;   ///< ECT(0)
-    static constexpr uint8_t kEcnCapable1   = OT_ECN_CAPABLE_1;   ///< ECT(1)
-    static constexpr uint8_t kEcnMarked     = OT_ECN_MARKED;      ///< Congestion encountered (CE)
+private:
+    // IPv6 header `mVerTcFlow` field:
+    //
+    // |             m16[0]            |            m16[1]             |
+    // |     m8[0]     |     m8[1]     |     m8[2]     |      m8[3]    |
+    // +---------------+---------------+---------------+---------------+
+    // |7 6 5 4 3 2 1 0|7 6 5 4 3 2 1 0|7 6 5 4 3 2 1 0|7 6 5 4 3 2 1 0|
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    // |Version|    DSCP   |ECN|             Flow Label                |
+    // |       | Traffic Class |                                       |
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    static constexpr uint8_t  kVersion6           = 0x60;       // Use with `mVerTcFlow.m8[0]`
+    static constexpr uint8_t  kVersionMask        = 0xf0;       // Use with `mVerTcFlow.m8[0]`
+    static constexpr uint8_t  kTrafficClassOffset = 4;          // Use with `mVerTcFlow.m16[0]`
+    static constexpr uint16_t kTrafficClassMask   = 0x0ff0;     // Use with `mVerTcFlow.m16[0]`
+    static constexpr uint8_t  kDscpOffset         = 6;          // Use with `mVerTcFlow.m16[0]`
+    static constexpr uint16_t kDscpMask           = 0x0fc0;     // Use with `mVerTcFlow.m16[0]`
+    static constexpr uint8_t  kEcnOffset          = 4;          // Use with `mVerTcFlow.m8[1]`
+    static constexpr uint8_t  kEcnMask            = 0x30;       // Use with `mVerTcFlow.m8[1]`
+    static constexpr uint32_t kFlowMask           = 0x000fffff; // Use with `mVerTcFlow.m32`
+    static constexpr uint32_t kVersTcFlowInit     = 0x60000000; // Version 6, TC and flow zero.
 
     union OT_TOOL_PACKED_FIELD
     {
         uint8_t  m8[sizeof(uint32_t) / sizeof(uint8_t)];
         uint16_t m16[sizeof(uint32_t) / sizeof(uint16_t)];
         uint32_t m32;
-    } mVersionClassFlow;
+    } mVerTcFlow;
     uint16_t mPayloadLength;
     uint8_t  mNextHeader;
     uint8_t  mHopLimit;

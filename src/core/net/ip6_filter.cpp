@@ -38,7 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
 #include "net/tcp6.hpp"
@@ -47,6 +47,8 @@
 
 namespace ot {
 namespace Ip6 {
+
+RegisterLogModule("Ip6Filter");
 
 Filter::Filter(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -149,7 +151,7 @@ Error Filter::AddUnsecurePort(uint16_t aPort)
         if (unsecurePort == 0)
         {
             unsecurePort = aPort;
-            otLogInfoIp6("Added unsecure port %d", aPort);
+            LogInfo("Added unsecure port %d", aPort);
             ExitNow();
         }
     }
@@ -179,7 +181,7 @@ Error Filter::RemoveUnsecurePort(uint16_t aPort)
 
             // Clear the last port entry.
             mUnsecurePorts[i] = 0;
-            otLogInfoIp6("Removed unsecure port %d", aPort);
+            LogInfo("Removed unsecure port %d", aPort);
             ExitNow();
         }
     }

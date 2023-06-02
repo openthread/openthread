@@ -55,6 +55,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/non_copyable.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
@@ -259,7 +260,8 @@ private:
     void RemoveService(void);
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
+    void SequenceNumberIncrease(void);
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void LogBackboneRouterService(const char *aAction, Error aError);
     void LogDomainPrefix(const char *aAction, Error aError);
 #else

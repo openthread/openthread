@@ -278,7 +278,7 @@ private:
 
     // In the current implementation of `DataPollHandler`, we can have a
     // single indirect tx operation active at MAC layer at each point of
-    // time. `mIndirectTxChild` indicates the child being handled (nullptr
+    // time. `mIndirectTxChild` indicates the child being handled (`nullptr`
     // indicates no active indirect tx). `mFrameContext` tracks the
     // context for the prepared frame for the current indirect tx.
 

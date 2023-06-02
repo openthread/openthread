@@ -61,8 +61,8 @@ public:
      */
     enum Priority
     {
-        kPriorityLow  = 0, //< Indicates low/normal priority for a frame.
-        kPriorityHigh = 1, //< Indicates high priority for a frame.
+        kPriorityLow  = 0, ///< Indicates low/normal priority for a frame.
+        kPriorityHigh = 1, ///< Indicates high priority for a frame.
     };
 
     /**
@@ -98,8 +98,8 @@ public:
         }
 
     private:
-        uint8_t *mPosition;    //< Pointer into buffer corresponding to saved write position.
-        uint8_t *mSegmentHead; //< Pointer to segment head.
+        uint8_t *mPosition;    // Pointer into buffer corresponding to saved write position.
+        uint8_t *mSegmentHead; // Pointer to segment head.
 
         friend class Buffer;
     };

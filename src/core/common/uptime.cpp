@@ -117,7 +117,7 @@ static uint32_t DivideAndGetRemainder(uint32_t &aDividend, uint32_t aDivisor)
 
 void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
 {
-    uint64_t days = aUptime / kOneDayInMsec;
+    uint64_t days = aUptime / Time::kOneDayInMsec;
     uint32_t remainder;
     uint32_t hours;
     uint32_t minutes;
@@ -126,13 +126,13 @@ void Uptime::UptimeToString(uint64_t aUptime, StringWriter &aWriter)
     if (days > 0)
     {
         aWriter.Append("%lud.", days);
-        aUptime -= days * kOneDayInMsec;
+        aUptime -= days * Time::kOneDayInMsec;
     }
 
     remainder = static_cast<uint32_t>(aUptime);
-    hours     = DivideAndGetRemainder(remainder, kOneHourInMsec);
-    minutes   = DivideAndGetRemainder(remainder, kOneMinuteInMsec);
-    seconds   = DivideAndGetRemainder(remainder, kOneSecondInMsec);
+    hours     = DivideAndGetRemainder(remainder, Time::kOneHourInMsec);
+    minutes   = DivideAndGetRemainder(remainder, Time::kOneMinuteInMsec);
+    seconds   = DivideAndGetRemainder(remainder, Time::kOneSecondInMsec);
 
     aWriter.Append("%02u:%02u:%02u.%03u", hours, minutes, seconds, remainder);
 }

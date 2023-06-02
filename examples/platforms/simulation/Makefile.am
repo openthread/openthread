@@ -43,6 +43,7 @@ PLATFORM_SOURCES                          = \
     alarm.c                                 \
     crypto.c                                \
     diag.c                                  \
+    dso_transport.c                         \
     entropy.c                               \
     flash.c                                 \
     infra_if.c                              \

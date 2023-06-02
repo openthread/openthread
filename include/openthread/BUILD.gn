@@ -27,27 +27,10 @@
 
 import("../../etc/gn/openthread.gni")
 
-copy("copy_openthread_config_generic") {
-  sources = [ "../../etc/cmake/openthread-config-generic.h.in" ]
-  outputs = [ "${root_gen_dir}/include/{{source_name_part}}" ]
-}
-
-config("openthread_config_generic_config") {
-  include_dirs = [ "${root_gen_dir}/include" ]
-}
-
-source_set("openthread_config_generic") {
-  sources = [ "${root_gen_dir}/include/openthread-config-generic.h" ]
-  deps = [ ":copy_openthread_config_generic" ]
-  public_configs = [ ":openthread_config_generic_config" ]
-}
-
 source_set("openthread_config") {
   public = [ "config.h" ]
 
-  if (openthread_config_file == "") {
-    public_deps = [ ":openthread_config_generic" ]
-  } else {
+  if (openthread_config_file != "") {
     public_deps = openthread_config_deps
   }
 
@@ -76,7 +59,6 @@ source_set("openthread") {
     "dns.h",
     "dns_client.h",
     "dnssd_server.h",
-    "entropy.h",
     "error.h",
     "heap.h",
     "history_tracker.h",
@@ -102,6 +84,7 @@ source_set("openthread") {
     "platform/crypto.h",
     "platform/debug_uart.h",
     "platform/diag.h",
+    "platform/dso_transport.h",
     "platform/entropy.h",
     "platform/flash.h",
     "platform/infra_if.h",
@@ -115,7 +98,7 @@ source_set("openthread") {
     "platform/spi-slave.h",
     "platform/time.h",
     "platform/toolchain.h",
-    "platform/trel-udp6.h",
+    "platform/trel.h",
     "platform/udp.h",
     "random_crypto.h",
     "random_noncrypto.h",
@@ -128,6 +111,7 @@ source_set("openthread") {
     "tcp.h",
     "thread.h",
     "thread_ftd.h",
+    "trel.h",
     "udp.h",
   ]
 

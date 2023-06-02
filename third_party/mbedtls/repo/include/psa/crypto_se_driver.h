@@ -1061,7 +1061,8 @@ typedef psa_status_t (*psa_drv_se_export_key_t)(psa_drv_se_context_t *drv_contex
  * \brief A function that generates a symmetric or asymmetric key on a secure
  * element
  *
- * If \p type is asymmetric (#PSA_KEY_TYPE_IS_ASYMMETRIC(\p type) = 1),
+ * If the key type \c type recorded in \p attributes
+ * is asymmetric (#PSA_KEY_TYPE_IS_ASYMMETRIC(\c type) = 1),
  * the driver may export the public key at the time of generation,
  * in the format documented for psa_export_public_key() by writing it
  * to the \p pubkey buffer.
@@ -1158,7 +1159,7 @@ typedef struct {
  * can be problemmatic to manage on embedded platforms, the inputs are passed
  * to the driver via a function, `psa_drv_se_key_derivation_collateral`, that
  * is called multiple times with different `collateral_id`s. Thus, for a key
- * derivation algorithm that required 3 paramter inputs, the flow would look
+ * derivation algorithm that required 3 parameter inputs, the flow would look
  * something like:
  * ~~~~~~~~~~~~~{.c}
  * psa_drv_se_key_derivation_setup(kdf_algorithm, source_key, dest_key_size_bytes);
@@ -1206,7 +1207,7 @@ typedef psa_status_t (*psa_drv_se_key_derivation_setup_t)(psa_drv_se_context_t *
  * element key derivation or key agreement operation
  *
  * Since many key derivation algorithms require multiple parameters, it is
- * expeced that this function may be called multiple times for the same
+ * expected that this function may be called multiple times for the same
  * operation, each with a different algorithm-specific `collateral_id`
  *
  * \param[in,out] op_context    A hardware-specific structure containing any
@@ -1364,20 +1365,22 @@ typedef struct {
  *
  * \return #PSA_SUCCESS
  *         The driver was successfully registered. Applications can now
- *         use \p lifetime to access keys through the methods passed to
+ *         use \p location to access keys through the methods passed to
  *         this function.
  * \return #PSA_ERROR_BAD_STATE
  *         This function was called after the initialization of the
  *         cryptography module, and this implementation does not support
  *         driver registration at this stage.
  * \return #PSA_ERROR_ALREADY_EXISTS
- *         There is already a registered driver for this value of \p lifetime.
+ *         There is already a registered driver for this value of \p location.
  * \return #PSA_ERROR_INVALID_ARGUMENT
- *         \p lifetime is a reserved value.
+ *         \p location is a reserved value.
  * \return #PSA_ERROR_NOT_SUPPORTED
  *         `methods->hal_version` is not supported by this implementation.
  * \return #PSA_ERROR_INSUFFICIENT_MEMORY
  * \return #PSA_ERROR_NOT_PERMITTED
+ * \return #PSA_ERROR_STORAGE_FAILURE
+ * \return #PSA_ERROR_DATA_CORRUPT
  */
 psa_status_t psa_register_se_driver(
     psa_key_location_t location,

@@ -264,10 +264,10 @@ typedef struct otNetworkDiagTlv
 /**
  * This function gets the next Network Diagnostic TLV in the message.
  *
- * @param[in]     aMessage         A pointer to a message.
- * @param[inout]  aIterator        A pointer to the Network Diagnostic iterator context. To get the first
- *                                 Network Diagnostic TLV it should be set to OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
- * @param[out]    aNetworkDiagTlv  A pointer to where the Network Diagnostic TLV information will be placed.
+ * @param[in]      aMessage         A pointer to a message.
+ * @param[in,out]  aIterator        A pointer to the Network Diagnostic iterator context. To get the first
+ *                                  Network Diagnostic TLV it should be set to OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT.
+ * @param[out]     aNetworkDiagTlv  A pointer to where the Network Diagnostic TLV information will be placed.
  *
  * @retval OT_ERROR_NONE       Successfully found the next Network Diagnostic TLV.
  * @retval OT_ERROR_NOT_FOUND  No subsequent Network Diagnostic TLV exists in the message.

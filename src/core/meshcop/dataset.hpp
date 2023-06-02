@@ -39,6 +39,7 @@
 
 #include <openthread/dataset.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/const_cast.hpp"
 #include "common/locator.hpp"
@@ -264,7 +265,7 @@ public:
          * @returns The Network Key in the Dataset.
          *
          */
-        const NetworkKey &GetNetworkKey(void) const { return static_cast<const NetworkKey &>(mNetworkKey); }
+        const NetworkKey &GetNetworkKey(void) const { return AsCoreType(&mNetworkKey); }
 
         /**
          * This method sets the Network Key in the Dataset.
@@ -287,7 +288,7 @@ public:
         NetworkKey &UpdateNetworkKey(void)
         {
             mComponents.mIsNetworkKeyPresent = true;
-            return static_cast<NetworkKey &>(mNetworkKey);
+            return AsCoreType(&mNetworkKey);
         }
 
         /**
@@ -307,10 +308,7 @@ public:
          * @returns The Network Name in the Dataset.
          *
          */
-        const Mac::NetworkName &GetNetworkName(void) const
-        {
-            return static_cast<const Mac::NetworkName &>(mNetworkName);
-        }
+        const Mac::NetworkName &GetNetworkName(void) const { return AsCoreType(&mNetworkName); }
 
         /**
          * This method sets the Network Name in the Dataset.
@@ -320,7 +318,7 @@ public:
          */
         void SetNetworkName(const Mac::NameData &aNetworkNameData)
         {
-            IgnoreError(static_cast<Mac::NetworkName &>(mNetworkName).Set(aNetworkNameData));
+            IgnoreError(AsCoreType(&mNetworkName).Set(aNetworkNameData));
             mComponents.mIsNetworkNamePresent = true;
         }
 
@@ -341,10 +339,7 @@ public:
          * @returns The Extended PAN ID in the Dataset.
          *
          */
-        const Mac::ExtendedPanId &GetExtendedPanId(void) const
-        {
-            return static_cast<const Mac::ExtendedPanId &>(mExtendedPanId);
-        }
+        const Mac::ExtendedPanId &GetExtendedPanId(void) const { return AsCoreType(&mExtendedPanId); }
 
         /**
          * This method sets the Extended PAN ID in the Dataset.
@@ -375,10 +370,7 @@ public:
          * @returns The Mesh Local Prefix in the Dataset.
          *
          */
-        const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const
-        {
-            return static_cast<const Mle::MeshLocalPrefix &>(mMeshLocalPrefix);
-        }
+        const Mle::MeshLocalPrefix &GetMeshLocalPrefix(void) const { return AsCoreType(&mMeshLocalPrefix); }
 
         /**
          * This method sets the Mesh Local Prefix in the Dataset.
@@ -414,7 +406,7 @@ public:
         /**
          * This method sets the Delay Timer in the Dataset.
          *
-         * @param[in] aDely   A Delay value.
+         * @param[in] aDelay  A Delay value.
          *
          */
         void SetDelay(uint32_t aDelay)
@@ -501,7 +493,7 @@ public:
          * @returns The PSKc in the Dataset.
          *
          */
-        const Pskc &GetPskc(void) const { return static_cast<const Pskc &>(mPskc); }
+        const Pskc &GetPskc(void) const { return AsCoreType(&mPskc); }
 
         /**
          * This method set the PSKc in the Dataset.
@@ -532,10 +524,7 @@ public:
          * @returns The Security Policy in the Dataset.
          *
          */
-        const SecurityPolicy &GetSecurityPolicy(void) const
-        {
-            return static_cast<const SecurityPolicy &>(mSecurityPolicy);
-        }
+        const SecurityPolicy &GetSecurityPolicy(void) const { return AsCoreType(&mSecurityPolicy); }
 
         /**
          * This method sets the Security Policy in the Dataset.
@@ -635,7 +624,7 @@ public:
      *
      * @param[in] aType  A TLV type.
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     Tlv *GetTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->GetTlv(aType)); }
@@ -645,7 +634,7 @@ public:
      *
      * @param[in] aType  The TLV type.
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     const Tlv *GetTlv(Tlv::Type aType) const;
@@ -653,23 +642,23 @@ public:
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     template <typename TlvType> TlvType *GetTlv(void)
     {
-        return static_cast<TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
      * This template method returns a pointer to the TLV with a given template type `TlvType`
      *
-     * @returns A pointer to the TLV or nullptr if none is found.
+     * @returns A pointer to the TLV or `nullptr` if none is found.
      *
      */
     template <typename TlvType> const TlvType *GetTlv(void) const
     {
-        return static_cast<const TlvType *>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
     }
 
     /**
@@ -963,6 +952,10 @@ template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue
 }
 
 } // namespace MeshCoP
+
+DefineCoreType(otOperationalDatasetComponents, MeshCoP::Dataset::Components);
+DefineCoreType(otOperationalDataset, MeshCoP::Dataset::Info);
+
 } // namespace ot
 
 #endif // MESHCOP_DATASET_HPP_

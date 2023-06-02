@@ -32,7 +32,7 @@
 
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
+#include "common/log.hpp"
 #include "common/new.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
@@ -44,6 +44,8 @@
 
 namespace ot {
 namespace Coap {
+
+RegisterLogModule("CoapSecure");
 
 CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
     : CoapBase(aInstance, &CoapSecure::Send)
@@ -189,7 +191,7 @@ void CoapSecure::HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength)
 {
     ot::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<MessagePool>().New(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
+    VerifyOrExit((message = Get<MessagePool>().Allocate(Message::kTypeIp6, Message::GetHelpDataReserved())) != nullptr);
     SuccessOrExit(message->AppendBytes(aBuf, aLength));
 
     CoapBase::Receive(*message, mDtls.GetMessageInfo());
@@ -221,12 +223,12 @@ void CoapSecure::HandleTransmit(void)
 exit:
     if (error != kErrorNone)
     {
-        otLogNoteMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
+        LogNote("Transmit: %s", ErrorToString(error));
         message->Free();
     }
     else
     {
-        otLogDebgMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
+        LogDebg("Transmit: %s", ErrorToString(error));
     }
 }
 

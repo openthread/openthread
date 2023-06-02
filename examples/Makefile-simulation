@@ -51,6 +51,7 @@ DHCP6_CLIENT                   ?= 1
 DHCP6_SERVER                   ?= 1
 DIAGNOSTIC                     ?= 1
 DNS_CLIENT                     ?= 1
+DNS_DSO                        ?= 1
 DNSSD_SERVER                   ?= 1
 ECDSA                          ?= 1
 HISTORY_TRACKER                ?= 1

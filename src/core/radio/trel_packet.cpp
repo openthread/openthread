@@ -38,7 +38,6 @@
 #include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "common/logging.hpp"
 
 namespace ot {
 namespace Trel {
@@ -110,12 +109,6 @@ Header::InfoString Header::ToString(void) const
     return string;
 }
 
-void Packet::Init(uint8_t *aBuffer, uint16_t aLength)
-{
-    mBuffer = aBuffer;
-    mLength = aLength;
-}
-
 void Packet::Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength)
 {
     uint16_t headerSize = Header::GetSize(aType);
@@ -129,8 +122,8 @@ void Packet::Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength
 
 bool Packet::IsHeaderValid(void) const
 {
-    return ((mBuffer != nullptr) && (mLength > 0) && GetHeader().IsVersionValid() &&
-            (mLength >= GetHeader().GetLength()));
+    return ((GetBytes() != nullptr) && (GetLength() > 0) && GetHeader().IsVersionValid() &&
+            (GetLength() >= GetHeader().GetLength()));
 }
 
 } // namespace Trel

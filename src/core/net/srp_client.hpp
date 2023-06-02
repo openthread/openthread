@@ -35,9 +35,11 @@
 
 #include <openthread/srp_client.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -116,7 +118,7 @@ public:
         /**
          * This method gets the host name (label) string.
          *
-         * @returns The host name (label) string, or nullptr if not yet set.
+         * @returns The host name (label) string, or `nullptr` if not yet set.
          *
          */
         const char *GetName(void) const { return mName; }
@@ -137,10 +139,7 @@ public:
          * @returns  The host IPv6 address at index @p aIndex.
          *
          */
-        const Ip6::Address &GetAddress(uint8_t aIndex) const
-        {
-            return static_cast<const Ip6::Address &>(mAddresses[aIndex]);
-        }
+        const Ip6::Address &GetAddress(uint8_t aIndex) const { return AsCoreType(&mAddresses[aIndex]); }
 
         /**
          * This method gets the state of `HostInfo`.
@@ -243,7 +242,7 @@ public:
          * @returns A pointer to an array of service TXT entries.
          *
          */
-        const Dns::TxtEntry *GetTxtEntries(void) const { return static_cast<const Dns::TxtEntry *>(mTxtEntries); }
+        const Dns::TxtEntry *GetTxtEntries(void) const { return AsCoreTypePtr(mTxtEntries); }
 
         /**
          * This method gets the number of entries in the service TXT entry array.
@@ -266,6 +265,7 @@ public:
         TimeMilli GetLeaseRenewTime(void) const { return TimeMilli(mData); }
         void      SetLeaseRenewTime(TimeMilli aTime) { mData = aTime.GetValue(); }
         bool      Matches(const Service &aOther) const;
+        bool      Matches(ItemState aState) const { return GetState() == aState; }
     };
 
     /**
@@ -399,7 +399,7 @@ public:
      * The SRP client allows a single callback to be registered. So consecutive calls to this method will overwrite any
      * previously set callback functions.
      *
-     * @param[in] aCallback        The callback to notify of events and changes. Can be nullptr if not needed.
+     * @param[in] aCallback        The callback to notify of events and changes. Can be `nullptr` if not needed.
      * @param[in] aContext         An arbitrary context used with @p aCallback.
      *
      */
@@ -422,7 +422,7 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
+     * @param[in] aInterval  The lease interval (in seconds). If zero, the default value `kDefaultLease` would be used.
      *
      */
     void SetLeaseInterval(uint32_t aInterval) { mLeaseInterval = GetBoundedLeaseInterval(aInterval, kDefaultLease); }
@@ -441,7 +441,8 @@ public:
      * Changing the lease interval does not impact the accepted lease interval of already registered services/host-info.
      * It only changes any future SRP update messages (i.e adding new services and/or refreshes of existing services).
      *
-     * @param[in] The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be used.
+     * @param[in] aInterval The key lease interval (in seconds). If zero, the default value `kDefaultKeyLease` would be
+     *                      used.
      *
      */
     void SetKeyLeaseInterval(uint32_t aInterval)
@@ -576,9 +577,9 @@ public:
      * any previously registered services with the server. In this case, caller can `SetHostName()` and then request
      * `RemoveHostAndServices()` with `aSendUnregToServer` as `true`.
      *
-     * @param[in] aRemoveKeyLease     A boolean indicating whether or not the host key lease should also be removed.
-     * @param[in] aSendUnregToServer   A boolean indicating whether to send update to server when host info is not
-     *                                registered.
+     * @param[in] aShouldRemoveKeyLease  A boolean indicating whether or not the host key lease should also be removed.
+     * @param[in] aSendUnregToServer     A boolean indicating whether to send update to server when host info is not
+     *                                   registered.
      *
      * @retval kErrorNone      The removal of host and services started successfully. The `Callback` will be called
      *                         to report the status.
@@ -668,7 +669,7 @@ private:
         OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER;
 #endif
 
-    static constexpr uint16_t kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
+    static constexpr uint16_t kUdpPayloadSize = Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
     // -------------------------------
     // Lease related constants
@@ -844,7 +845,7 @@ private:
 #endif
 #endif
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_SRP == 1)
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     static const char *StateToString(State aState);
     void               LogRetryWaitInterval(void) const;
 #else
@@ -896,6 +897,11 @@ private:
 };
 
 } // namespace Srp
+
+DefineCoreType(otSrpClientHostInfo, Srp::Client::HostInfo);
+DefineCoreType(otSrpClientService, Srp::Client::Service);
+DefineMapEnum(otSrpClientItemState, Srp::Client::ItemState);
+
 } // namespace ot
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

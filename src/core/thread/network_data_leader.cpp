@@ -53,6 +53,8 @@
 namespace ot {
 namespace NetworkData {
 
+RegisterLogModule("NetworkData");
+
 void LeaderBase::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();
@@ -84,6 +86,29 @@ Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
     }
 
 exit:
+    return error;
+}
+
+Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+{
+    Error               error    = kErrorNotFound;
+    Iterator            iterator = kIteratorInit;
+    ExternalRouteConfig config;
+
+    while (GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        if ((error == kErrorNotFound) || (config.mPreference > aConfig.mPreference))
+        {
+            aConfig = config;
+            error   = kErrorNone;
+        }
+    }
+
     return error;
 }
 
@@ -346,7 +371,7 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16
 
 Error LeaderBase::SetNetworkData(uint8_t        aVersion,
                                  uint8_t        aStableVersion,
-                                 bool           aStableOnly,
+                                 Type           aType,
                                  const Message &aMessage,
                                  uint16_t       aMessageOffset)
 {
@@ -363,7 +388,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     mVersion       = aVersion;
     mStableVersion = aStableVersion;
 
-    if (aStableOnly)
+    if (aType == kStableSubset)
     {
         RemoveTemporaryData();
     }
@@ -376,7 +401,7 @@ Error LeaderBase::SetNetworkData(uint8_t        aVersion,
     }
 #endif
 
-    otDumpDebgNetData("SetNetworkData", GetBytes(), GetLength());
+    DumpDebg("SetNetworkData", GetBytes(), GetLength());
 
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 
@@ -394,8 +419,7 @@ Error LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLeng
     if (aValueLength > 0)
     {
         VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = kErrorNoBufs);
-        commissioningDataTlv =
-            static_cast<CommissioningDataTlv *>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
+        commissioningDataTlv = As<CommissioningDataTlv>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
         VerifyOrExit(commissioningDataTlv != nullptr, error = kErrorNoBufs);
 
         commissioningDataTlv->Init();
@@ -471,7 +495,7 @@ Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
     steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
     VerifyOrExit(steeringDataTlv != nullptr, error = kErrorInvalidState);
 
-    static_cast<const MeshCoP::SteeringDataTlv *>(steeringDataTlv)->CopyTo(steeringData);
+    As<MeshCoP::SteeringDataTlv>(steeringDataTlv)->CopyTo(steeringData);
 
     VerifyOrExit(steeringData.Contains(aFilterIndexes), error = kErrorNotFound);
 

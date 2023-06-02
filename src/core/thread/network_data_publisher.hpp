@@ -165,7 +165,7 @@ public:
      * This method indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.
      *
      * @retval TRUE    The published DNS/SRP Service entry is added to the Thread Network Data.
-     * @retval FLASE   The entry is not added to Thread Network Data or there is no entry to publish.
+     * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
      *
      */
     bool IsDnsSrpServiceAdded(void) const { return mDnsSrpServiceEntry.IsAdded(); }
@@ -246,7 +246,7 @@ public:
      * @param[in] aPrefix   The prefix to check.
      *
      * @retval TRUE    The published prefix entry is added to the Thread Network Data.
-     * @retval FLASE   The entry is not added to Thread Network Data or there is no matching entry to publish.
+     * @retval FALSE   The entry is not added to Thread Network Data or there is no matching entry to publish.
      *
      */
     bool IsPrefixAdded(const Ip6::Prefix &aPrefix) const;

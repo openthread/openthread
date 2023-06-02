@@ -261,9 +261,6 @@ NcpBase::NcpBase(Instance *aInstance)
     , mRxSpinelOutOfOrderTidCounter(0)
     , mTxSpinelFrameCounter(0)
     , mDidInitialUpdates(false)
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    , mTrelTestModeEnable(true)
-#endif
     , mLogTimestampBase(0)
 {
     OT_ASSERT(mInstance != nullptr);
@@ -2541,6 +2538,40 @@ exit:
 }
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
+{
+    otError error   = OT_ERROR_NONE;
+    uint8_t metrics = 0;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(metrics));
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_PDU_COUNT)
+    {
+        VerifyOrExit(aAllowPduCount, error = OT_ERROR_INVALID_ARGS);
+        aMetrics->mPduCount = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LQI)
+    {
+        aMetrics->mLqi = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LINK_MARGIN)
+    {
+        aMetrics->mLinkMargin = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_RSSI)
+    {
+        aMetrics->mRssi = true;
+    }
+
+exit:
+    return error;
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 
@@ -2597,16 +2628,6 @@ extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const ch
     }
 
     va_end(args);
-}
-
-extern "C" void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
-{
-    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
-
-    if (ncp != nullptr)
-    {
-        ncp->Log(aLogLevel, aLogRegion, aLogLine);
-    }
 }
 
 #endif // (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)

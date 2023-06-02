@@ -38,6 +38,7 @@
 
 #include <openthread/icmp6.h>
 
+#include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
@@ -239,7 +240,7 @@ public:
      *
      * @param[in]  aReserved  The number of header bytes to reserve after the ICMP header.
      *
-     * @returns A pointer to the message or nullptr if no buffers are available.
+     * @returns A pointer to the message or `nullptr` if no buffers are available.
      *
      */
     Message *NewMessage(uint16_t aReserved);
@@ -306,9 +307,9 @@ public:
     otIcmp6EchoMode GetEchoMode(void) const { return mEchoMode; }
 
     /**
-     * This method sets whether or not ICMPv6 Echo processing is enabled.
+     * Sets the ICMPv6 echo mode.
      *
-     * @param[in]  aEnabled  TRUE to enable ICMPv6 Echo processing, FALSE otherwise.
+     * @param[in]  aMode  The ICMPv6 echo mode.
      *
      */
     void SetEchoMode(otIcmp6EchoMode aMode) { mEchoMode = aMode; }
@@ -345,6 +346,10 @@ private:
  */
 
 } // namespace Ip6
+
+DefineCoreType(otIcmp6Header, Ip6::Icmp::Header);
+DefineCoreType(otIcmp6Handler, Ip6::Icmp::Handler);
+
 } // namespace ot
 
 #endif // ICMP6_HPP_
