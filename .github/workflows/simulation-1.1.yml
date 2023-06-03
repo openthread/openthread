@@ -300,7 +300,7 @@ jobs:
         path: tmp/coverage.info
 
   ot-commissioner:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       THREAD_VERSION: 1.1
     steps:
