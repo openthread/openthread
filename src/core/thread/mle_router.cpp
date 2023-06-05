@@ -1797,9 +1797,9 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     uint8_t  count       = 0;
     uint8_t  storedCount = 0;
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    Ip6::Address        oldDua;
-    const Ip6::Address *oldDuaPtr = nullptr;
-    bool                hasDua    = false;
+    bool         hasOldDua = false;
+    bool         hasNewDua = false;
+    Ip6::Address oldDua;
 #endif
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     Ip6::Address oldMlrRegisteredAddresses[kMaxChildIpAddresses - 1];
@@ -1811,9 +1811,14 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
     endOffset = offset + length;
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    if ((oldDuaPtr = aChild.GetDomainUnicastAddress()) != nullptr)
     {
-        oldDua = *oldDuaPtr;
+        const Ip6::Address *duaAddress = aChild.GetDomainUnicastAddress();
+
+        if (duaAddress != nullptr)
+        {
+            oldDua    = *duaAddress;
+            hasOldDua = true;
+        }
     }
 #endif
 
@@ -1897,40 +1902,42 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         if (error == kErrorNone)
         {
             storedCount++;
-
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
-            {
-                hasDua = true;
-
-                if (oldDuaPtr != nullptr)
-                {
-                    Get<DuaManager>().UpdateChildDomainUnicastAddress(
-                        aChild, oldDua != address ? ChildDuaState::kChanged : ChildDuaState::kUnchanged);
-                }
-                else
-                {
-                    Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kAdded);
-                }
-            }
-#endif
-
             LogInfo("Child 0x%04x IPv6 address[%u]=%s", aChild.GetRloc16(), storedCount,
                     address.ToString().AsCString());
         }
         else
         {
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
-            {
-                // if not able to store DUA, then assume child does not have one
-                hasDua = false;
-            }
-#endif
-
             LogWarn("Error %s adding IPv6 address %s to child 0x%04x", ErrorToString(error),
                     address.ToString().AsCString(), aChild.GetRloc16());
         }
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+        if (Get<BackboneRouter::Leader>().IsDomainUnicast(address))
+        {
+            if (error == kErrorNone)
+            {
+                DuaManager::ChildDuaAddressEvent event;
+
+                hasNewDua = true;
+
+                if (hasOldDua)
+                {
+                    event = (oldDua != address) ? DuaManager::kAddressChanged : DuaManager::kAddressUnchanged;
+                }
+                else
+                {
+                    event = DuaManager::kAddressAdded;
+                }
+
+                Get<DuaManager>().HandleChildDuaAddressEvent(aChild, event);
+            }
+            else
+            {
+                // if not able to store DUA, then assume child does not have one
+                hasNewDua = false;
+            }
+        }
+#endif
 
         if (address.IsMulticast())
         {
@@ -1961,10 +1968,9 @@ Error MleRouter::ProcessAddressRegistrationTlv(RxInfo &aRxInfo, Child &aChild)
         Get<AddressResolver>().RemoveEntryForAddress(address);
     }
 #if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    // Dua is removed
-    if (oldDuaPtr != nullptr && !hasDua)
+    if (hasOldDua && !hasNewDua)
     {
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kRemoved);
+        Get<DuaManager>().HandleChildDuaAddressEvent(aChild, DuaManager::kAddressRemoved);
     }
 #endif
 
