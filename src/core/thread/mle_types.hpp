@@ -234,50 +234,6 @@ enum LeaderStartMode : uint8_t
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-/*
- * Backbone Router / DUA / MLR constants
- *
- */
-constexpr uint16_t kRegistrationDelayDefault         = 5;                 ///< In seconds.
-constexpr uint32_t kMlrTimeoutDefault                = 3600;              ///< In seconds.
-constexpr uint32_t kMlrTimeoutMin                    = 300;               ///< In seconds.
-constexpr uint32_t kMlrTimeoutMax                    = 0x7fffffff / 1000; ///< In seconds (about 24 days).
-constexpr uint8_t  kBackboneRouterRegistrationJitter = 5;                 ///< In seconds.
-constexpr uint8_t  kParentAggregateDelay             = 5;                 ///< In seconds.
-constexpr uint8_t  kNoBufDelay                       = 5;                 ///< In seconds.
-constexpr uint8_t  kImmediateReRegisterDelay         = 1;                 ///< In seconds.
-constexpr uint8_t  KResponseTimeoutDelay             = 30;                ///< In seconds.
-
-/**
- * Time period after which the address becomes "Preferred" if no duplicate address error (in seconds).
- *
- */
-constexpr uint32_t kDuaDadPeriod = 100;
-
-/**
- * Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are repeated by the BBR, as
- * part of the DAD process.
- *
- */
-constexpr uint8_t kDuaDadRepeats = 3;
-
-/**
- * Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
- *
- */
-constexpr uint32_t kDuaRecentTime               = 20;
-constexpr uint32_t kTimeSinceLastTransactionMax = 10 * 86400; ///< In seconds (10 days).
-constexpr uint8_t  kDefaultBackboneHoplimit     = 1;          ///< default hoplimit for Backbone Link Protocol messages
-
-static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
-              "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
-
-static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
-static_assert(kMlrTimeoutMax * 1000 > kMlrTimeoutMax, "SecToMsec(kMlrTimeoutMax) will overflow");
-
-static_assert(kTimeSinceLastTransactionMax * 1000 > kTimeSinceLastTransactionMax,
-              "SecToMsec(kTimeSinceLastTransactionMax) will overflow");
-
 /**
  * State change of Child's DUA
  *
