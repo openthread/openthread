@@ -810,7 +810,7 @@ typedef void (*otIp6RegisterMulticastListenersCallback)(void               *aCon
 #define OT_IP6_MAX_MLR_ADDRESSES 15 ///< Max number of IPv6 addresses supported by Multicast Listener Registration.
 
 /**
- * This function registers Multicast Listeners to Primary Backbone Router.
+ * Registers Multicast Listeners to Primary Backbone Router.
  *
  * Note: only available when both `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` and
  * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)
@@ -843,7 +843,7 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
                                         void                                   *aContext);
 
 /**
- * This function sets the Mesh Local IID (for test purpose).
+ * Sets the Mesh Local IID (for test purpose).
  *
  * Only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
  *

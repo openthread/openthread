@@ -5135,6 +5135,10 @@ exit:
  * mliid 1122334455667788
  * Done
  * @endcode
+ * @par
+ * It must be used before Thread stack is enabled.
+ * @par
+ * Only for testing/reference device.
  * @par api_copy
  * #otIp6SetMeshLocalIid
  * @cparam mliid @ca{iid}
@@ -5178,9 +5182,13 @@ exit:
  * status 0, 0 failed
  * Done
  * @endcode
+ * @par
+ * Omit timeout to use the default MLR timeout on the Primary Backbone Router.
+ * @par
+ * Use timeout = 0 to deregister Multicast Listeners.
  * @par api_copy
  * #otIp6RegisterMulticastListeners
- * @cparam mlr reg @ca{ipaddr}
+ * @cparam mlr reg @ca{ipaddr} [@ca{timeout}]
  */
 template <> otError Interpreter::Process<Cmd("mlr")>(Arg aArgs[])
 {
@@ -5324,6 +5332,10 @@ exit:
  * [15.4, TREL]
  * Done
  * @endcode
+ * @par
+ * Get the list of supported radio links by the device.
+ * @par
+ * This command is always available, even when only a single radio is supported by the device.
  * @par api_copy
  * #otMultiRadioGetNeighborInfo
  */
@@ -5362,6 +5374,10 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
          * ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
          * Done
          * @endcode
+         * @par
+         * Get the list of neighbors and their supported radios and their preference.
+         * @par
+         * This command is only available when device supports more than one radio link.
          * @par api_copy
          * #otMultiRadioGetNeighborInfo
          */
@@ -5394,9 +5410,13 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
              * [15.4(255), TREL(255)]
              * Done
              * @endcode
+             * @par
+             * Get the radio info for specific neighbor with a given extended address.
+             * @par
+             * This command is only available when device supports more than one radio link.
              * @par api_copy
              * #otMultiRadioGetNeighborInfo
-             * @cparam multiradio neighbor @ca{ext address}
+             * @cparam multiradio neighbor @ca{ext-address}
              */
             otExtAddress extAddress;
 
