@@ -76,6 +76,87 @@ public:
         return (aLength >= sizeof(kSpinelResetCommand)) &&
                (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
     }
+
+    /**
+     * Initializes the interface to the Radio Co-processor (RCP)
+     *
+     * @note This method should be called before reading and sending spinel frames to the interface.
+     *
+     * @param[in]  aRadioUrl          RadioUrl parsed from radio url.
+     *
+     * @retval OT_ERROR_NONE          The interface is initialized successfully
+     * @retval OT_ERROR_ALREADY       The interface is already initialized.
+     * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
+     *
+     */
+    virtual otError Init(const Url::Url &aRadioUrl) = 0;
+
+    /**
+     * Deinitializes the interface to the RCP.
+     *
+     */
+    virtual void Deinit(void) = 0;
+
+    /**
+     * Encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+     *
+     * @param[in] aFrame     A pointer to buffer containing the spinel frame to send.
+     * @param[in] aLength    The length (number of bytes) in the frame.
+     *
+     * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
+     * @retval OT_ERROR_BUSY     Failed due to another operation is on going.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
+     * @retval OT_ERROR_FAILED   Failed to call the SPI driver to send the frame.
+     *
+     */
+    virtual otError SendFrame(const uint8_t *aFrame, uint16_t aLength) = 0;
+
+    /**
+     * Waits for receiving part or all of spinel frame within specified interval.
+     *
+     * @param[in]  aTimeout  The timeout value in microseconds.
+     *
+     * @retval OT_ERROR_NONE             Part or all of spinel frame is received.
+     * @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
+     *
+     */
+    virtual otError WaitForFrame(uint64_t aTimeoutUs) = 0;
+
+    /**
+     * Updates the file descriptor sets with file descriptors used by the radio driver.
+     *
+     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
+     * @param[in,out]  aWriteFdSet  A reference to the write file descriptors.
+     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
+     * @param[in,out]  aTimeout     A reference to the timeout.
+     *
+     */
+    virtual void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout) = 0;
+
+    /**
+     * Performs radio driver processing.
+     *
+     * @param[in]  aContext  The context containing fd_sets.
+     *
+     */
+    virtual void Process(const RadioProcessContext &aContext) = 0;
+
+    /**
+     * Returns the bus speed between the host and the radio.
+     *
+     * @returns   Bus speed in bits/second.
+     *
+     */
+    virtual uint32_t GetBusSpeed(void) const = 0;
+
+    /**
+     * Hardware resets the RCP.
+     *
+     * @retval OT_ERROR_NONE            Successfully reset the RCP.
+     * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
+     *
+     */
+    virtual otError HardwareReset(void) = 0;
 };
 } // namespace Spinel
 } // namespace ot
