@@ -175,8 +175,11 @@ public:
 #endif
 
 private:
-    static constexpr uint8_t kNewRouterRegistrationDelay = 3; ///< Delay (in sec) to establish link for a new router.
-    static constexpr uint8_t kNewDuaRegistrationDelay    = 1; ///< Delay (in sec) for newly added DUA.
+    static constexpr uint32_t kDuaDadPeriod               = 100; // DAD wait time to become "Preferred" (in sec).
+    static constexpr uint8_t  kNoBufDelay                 = 5;   // In sec.
+    static constexpr uint8_t  KResponseTimeoutDelay       = 30;  // In sec.
+    static constexpr uint8_t  kNewRouterRegistrationDelay = 3;   // Delay (in sec) to establish link for a new router.
+    static constexpr uint8_t  kNewDuaRegistrationDelay    = 1;   // Delay (in sec) for newly added DUA.
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Error GenerateDomainUnicastAddressIid(void);

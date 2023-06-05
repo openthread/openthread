@@ -60,6 +60,8 @@ namespace BackboneRouter {
 class NdProxyTable : public InstanceLocator, private NonCopyable
 {
 public:
+    static constexpr uint8_t kDuaDadRepeats = 3; ///< Number multicast DAD queries by BBR
+
     /**
      * Represents a ND Proxy instance.
      *
@@ -120,6 +122,8 @@ public:
         bool GetDadFlag(void) const { return mDadFlag; }
 
     private:
+        static constexpr uint32_t kMaxTimeSinceLastTransaction = 10 * 86400; // In seconds (10 days).
+
         NdProxy(void) { Clear(); }
 
         void Init(const Ip6::InterfaceIdentifier &aAddressIid,
@@ -129,7 +133,7 @@ public:
 
         void Update(uint16_t aRloc16, uint32_t aTimeSinceLastTransaction);
         void IncreaseDadAttempts(void) { mDadAttempts++; }
-        bool IsDadAttemptsComplete() const { return mDadAttempts == Mle::kDuaDadRepeats; }
+        bool IsDadAttemptsComplete(void) const { return mDadAttempts == kDuaDadRepeats; }
 
         Ip6::InterfaceIdentifier mAddressIid;
         Ip6::InterfaceIdentifier mMeshLocalIid;
@@ -139,7 +143,7 @@ public:
         bool                     mDadFlag : 1;
         bool                     mValid : 1;
 
-        static_assert(Mle::kDuaDadRepeats < 4, "Mle::kDuaDadRepeats does not fit in mDadAttempts field as 2-bit value");
+        static_assert(kDuaDadRepeats < 4, "kDuaDadRepeats does not fit in mDadAttempts field as 2-bit value");
     };
 
     /**

@@ -183,7 +183,7 @@ exit:
 
     if (aChild.HasAnyMlrToRegisterAddress())
     {
-        ScheduleSend(Random::NonCrypto::GetUint16InRange(1, Mle::kParentAggregateDelay));
+        ScheduleSend(Random::NonCrypto::GetUint16InRange(1, BackboneRouter::kParentAggregateDelay));
     }
 }
 
@@ -648,7 +648,7 @@ void MlrManager::UpdateReregistrationDelay(bool aRereg)
         {
             // Calculate renewing period according to Thread Spec. 5.24.2.3.2
             // The random time t SHOULD be chosen such that (0.5* MLR-Timeout) < t < (MLR-Timeout – 9 seconds).
-            effectiveMlrTimeout = Max(config.mMlrTimeout, Mle::kMlrTimeoutMin);
+            effectiveMlrTimeout = Max(config.mMlrTimeout, BackboneRouter::kMinMlrTimeout);
             reregDelay = Random::NonCrypto::GetUint32InRange((effectiveMlrTimeout >> 1u) + 1, effectiveMlrTimeout - 9);
         }
 
