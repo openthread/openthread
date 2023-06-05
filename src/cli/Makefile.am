@@ -153,6 +153,7 @@ libopenthread_cli_radio_a_CPPFLAGS =  \
 
 SOURCES_COMMON =                      \
     cli.cpp                           \
+    cli_bbr.cpp                       \
     cli_br.cpp                        \
     cli_coap.cpp                      \
     cli_coap_secure.cpp               \
@@ -185,6 +186,7 @@ libopenthread_cli_radio_a_SOURCES =   \
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_bbr.hpp                       \
     cli_br.hpp                        \
     cli_coap.hpp                      \
     cli_coap_secure.hpp               \
