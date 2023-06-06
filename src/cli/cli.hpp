@@ -115,6 +115,7 @@ class Interpreter : public OutputImplementer, public Output
     friend class Joiner;
     friend class NetworkData;
     friend class SrpClient;
+    friend class SrpServer;
 #endif
     friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
     friend void otCliAppendResult(otError aError);
@@ -290,6 +291,9 @@ private:
     template <typename ValueType> using GetHandler         = ValueType (&)(otInstance *);
     template <typename ValueType> using SetHandler         = void (&)(otInstance *, ValueType);
     template <typename ValueType> using SetHandlerFailable = otError (&)(otInstance *, ValueType);
+    using IsEnabledHandler                                 = bool (&)(otInstance *);
+    using SetEnabledHandler                                = void (&)(otInstance *, bool);
+    using SetEnabledHandlerFailable                        = otError (&)(otInstance *, bool);
 
     // Returns format string to output a `ValueType` (e.g., "%u" for `uint16_t`).
     template <typename ValueType> static constexpr const char *FormatStringFor(void);
@@ -364,6 +368,13 @@ private:
     exit:
         return error;
     }
+
+    otError ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg aArgs[], IsEnabledHandler aIsEnabledHandler, SetEnabledHandler aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg                       aArgs[],
+                                 IsEnabledHandler          aIsEnabledHandler,
+                                 SetEnabledHandlerFailable aSetEnabledHandler);
 
     void OutputPrompt(void);
     void OutputResult(otError aError);
