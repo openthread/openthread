@@ -341,7 +341,6 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
     return error;
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
 otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 {
     otError error = OT_ERROR_NONE;
@@ -361,6 +360,8 @@ otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 
     return error;
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 otError Interpreter::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner)
 {
@@ -610,12 +611,12 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[]) { return mBr.Pr
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
     if (aArgs[0].IsEmpty())
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
+
     /**
      * @cli nat64 (enable,disable)
      * @code
@@ -631,9 +632,8 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * #otNat64SetEnabled
      *
      */
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otNat64SetEnabled) == OT_ERROR_NONE)
     {
-        otNat64SetEnabled(GetInstancePtr(), enable);
     }
     /**
      * @cli nat64 state
@@ -1131,32 +1131,13 @@ exit:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
-
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-    otThreadSetCcmEnabled(GetInstancePtr(), enable);
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
 
 template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
-
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-    otThreadSetThreadVersionCheckEnabled(GetInstancePtr(), enable);
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
 }
-
 #endif
 
 /**
@@ -1858,15 +1839,9 @@ template <> otError Interpreter::Process<Cmd("coaps")>(Arg aArgs[]) { return mCo
 template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
-    if (aArgs[0].IsEmpty())
+    if (ProcessEnableDisable(aArgs, otPlatRadioIsCoexEnabled, otPlatRadioSetCoexEnabled) == OT_ERROR_NONE)
     {
-        OutputEnabledDisabledStatus(otPlatRadioIsCoexEnabled(GetInstancePtr()));
-    }
-    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        error = otPlatRadioSetCoexEnabled(GetInstancePtr(), enable);
     }
     else if (aArgs[0] == "metrics")
     {
@@ -3241,10 +3216,6 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
      */
     else if (aArgs[0] == "promiscuous")
     {
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otIp6IsMulticastPromiscuousEnabled(GetInstancePtr()));
-        }
         /**
          * @cli ipmaddr promiscuous (enable,disable)
          * @code
@@ -3259,13 +3230,8 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
          * @par api_copy
          * #otIp6SetMulticastPromiscuousEnabled
          */
-        else
-        {
-            bool enable;
-
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
-            otIp6SetMulticastPromiscuousEnabled(GetInstancePtr(), enable);
-        }
+        error =
+            ProcessEnableDisable(aArgs + 1, otIp6IsMulticastPromiscuousEnabled, otIp6SetMulticastPromiscuousEnabled);
     }
     /**
      * @cli ipmaddr llatn
@@ -5774,22 +5740,7 @@ template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otLinkIsRadioFilterEnabled(GetInstancePtr()));
-    }
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-        otLinkSetRadioFilterEnabled(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
 }
 #endif
 
@@ -6189,24 +6140,19 @@ template <> otError Interpreter::Process<Cmd("routerdowngradethreshold")>(Arg aA
     return ProcessGetSet(aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
 
+/**
+ * @cli routereligible
+ * @code
+ * routereligible
+ * Enabled
+ * Done
+ * @endcode
+ * @sa otThreadIsRouterEligible
+ * @par
+ * Indicates whether the router role is enabled or disabled.
+ */
 template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    /**
-     * @cli routereligible
-     * @code
-     * routereligible
-     * Enabled
-     * Done
-     * @endcode
-     * @sa otThreadIsRouterEligible
-     * @par
-     * Indicates whether the router role is enabled or disabled.
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otThreadIsRouterEligible(GetInstancePtr()));
-    }
     /**
      * @cli routereligible (enable,disable)
      * @code
@@ -6222,17 +6168,9 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
      * @par
      * Enables or disables the router role.
      */
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-        error = otThreadSetRouterEligible(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadIsRouterEligible, otThreadSetRouterEligible);
 }
+
 /**
  * @cli routerselectionjitter
  * @code
@@ -6766,27 +6704,13 @@ exit:
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
-    if (aArgs[0].IsEmpty())
+    if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
-        OutputEnabledDisabledStatus(otTrelIsEnabled(GetInstancePtr()));
-    }
-    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        otTrelSetEnabled(GetInstancePtr(), enable);
     }
     else if (aArgs[0] == "filter")
     {
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otTrelIsFilterEnabled(GetInstancePtr()));
-        }
-        else
-        {
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
-            otTrelSetFilterEnabled(GetInstancePtr(), enable);
-        }
+        error = ProcessEnableDisable(aArgs + 1, otTrelIsFilterEnabled, otTrelSetFilterEnabled);
     }
     else if (aArgs[0] == "peers")
     {
@@ -7231,6 +7155,76 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
     Instance *instance = static_cast<Instance *>(aInstance);
 
     Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
+}
+
+otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        error = aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg               aArgs[],
+                                          IsEnabledHandler  aIsEnabledHandler,
+                                          SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg                       aArgs[],
+                                          IsEnabledHandler          aIsEnabledHandler,
+                                          SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
 }
 
 void Interpreter::OutputPrompt(void)
