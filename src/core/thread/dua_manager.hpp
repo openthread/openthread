@@ -171,7 +171,26 @@ public:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    void UpdateChildDomainUnicastAddress(const Child &aChild, Mle::ChildDuaState aState);
+    /**
+     * Events related to a Child DUA address.
+     *
+     */
+    enum ChildDuaAddressEvent : uint8_t
+    {
+        kAddressAdded,     ///< A new DUA registered by the Child via Address Registration.
+        kAddressChanged,   ///< A different DUA registered by the Child via Address Registration.
+        kAddressRemoved,   ///< DUA registered by the Child is removed and not in Address Registration.
+        kAddressUnchanged, ///< The Child registers the same DUA again.
+    };
+
+    /**
+     * Handles Child DUA address event.
+     *
+     * @param[in] aChild   A child.
+     * @param[in] aEvent   The DUA address event for @p aChild.
+     *
+     */
+    void HandleChildDuaAddressEvent(const Child &aChild, ChildDuaAddressEvent aEvent);
 #endif
 
 private:
