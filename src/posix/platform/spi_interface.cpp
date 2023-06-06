@@ -402,16 +402,16 @@ otError SpiInterface::DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransf
 
 otError SpiInterface::PushPullSpi(void)
 {
-    otError       error               = OT_ERROR_FAILED;
-    uint16_t      spiTransferBytes    = 0;
-    uint8_t       successfulExchanges = 0;
-    bool          discardRxFrame      = true;
-    uint8_t      *spiRxFrameBuffer;
-    uint8_t      *spiRxFrame;
-    uint8_t       slaveHeader;
-    uint16_t      slaveAcceptLen;
-    Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);
-    uint16_t      skipAlignAllowanceLength;
+    otError          error               = OT_ERROR_FAILED;
+    uint16_t         spiTransferBytes    = 0;
+    uint8_t          successfulExchanges = 0;
+    bool             discardRxFrame      = true;
+    uint8_t         *spiRxFrameBuffer;
+    uint8_t         *spiRxFrame;
+    uint8_t          slaveHeader;
+    uint16_t         slaveAcceptLen;
+    Spinel::SpiFrame txFrame(mSpiTxFrameBuffer);
+    uint16_t         skipAlignAllowanceLength;
 
     if (mInterfaceMetrics.mTransferredValidFrameCount == 0)
     {
@@ -489,7 +489,7 @@ otError SpiInterface::PushPullSpi(void)
     spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, skipAlignAllowanceLength);
 
     {
-        Ncp::SpiFrame rxFrame(spiRxFrame);
+        Spinel::SpiFrame rxFrame(spiRxFrame);
 
         otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
                       txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
