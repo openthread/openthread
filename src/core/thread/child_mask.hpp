@@ -51,7 +51,7 @@ namespace ot {
  */
 
 /**
- * This class represents a bit-vector of child mask.
+ * Represents a bit-vector of child mask.
  *
  */
 typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;

@@ -50,7 +50,7 @@ using ot::Encoding::BigEndian::HostSwap16;
 class Message;
 
 /**
- * This class implements TLV generation and parsing.
+ * Implements TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -64,7 +64,7 @@ public:
     static constexpr uint8_t kBaseTlvMaxLength = OT_NETWORK_BASE_TLV_MAX_LENGTH;
 
     /**
-     * This method returns the Type value.
+     * Returns the Type value.
      *
      * @returns The Type value.
      *
@@ -72,7 +72,7 @@ public:
     uint8_t GetType(void) const { return mType; }
 
     /**
-     * This method sets the Type value.
+     * Sets the Type value.
      *
      * @param[in]  aType  The Type value.
      *
@@ -80,7 +80,7 @@ public:
     void SetType(uint8_t aType) { mType = aType; }
 
     /**
-     * This method indicates whether the TLV is an Extended TLV.
+     * Indicates whether the TLV is an Extended TLV.
      *
      * @retval TRUE  If the TLV is an Extended TLV.
      * @retval FALSE If the TLV is not an Extended TLV.
@@ -89,7 +89,7 @@ public:
     bool IsExtended(void) const { return (mLength == kExtendedLength); }
 
     /**
-     * This method returns the Length value.
+     * Returns the Length value.
      *
      * @note This method should be used when TLV is not an Extended TLV, otherwise the returned length from this method
      * would not be correct. When TLV is an Extended TLV, the TLV should be down-casted to the `ExtendedTlv` type and
@@ -101,7 +101,7 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method sets the Length value.
+     * Sets the Length value.
      *
      * @param[in]  aLength  The Length value.
      *
@@ -109,9 +109,9 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
-     * This method returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
+     * Returns the TLV's total size (number of bytes) including Type, Length, and Value fields.
      *
-     * This method correctly returns the TLV size independent of whether the TLV is an Extended TLV or not.
+     * Correctly returns the TLV size independent of whether the TLV is an Extended TLV or not.
      *
      * @returns The total size include Type, Length, and Value fields.
      *
@@ -119,9 +119,9 @@ public:
     uint32_t GetSize(void) const;
 
     /**
-     * This method returns a pointer to the Value.
+     * Returns a pointer to the Value.
      *
-     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     * Can be used independent of whether the TLV is an Extended TLV or not.
      *
      * @returns A pointer to the value.
      *
@@ -129,9 +129,9 @@ public:
     uint8_t *GetValue(void);
 
     /**
-     * This method returns a pointer to the Value.
+     * Returns a pointer to the Value.
      *
-     * This method can be used independent of whether the TLV is an Extended TLV or not.
+     * Can be used independent of whether the TLV is an Extended TLV or not.
      *
      * @returns A pointer to the value.
      *
@@ -139,9 +139,9 @@ public:
     const uint8_t *GetValue(void) const;
 
     /**
-     * This method returns a pointer to the next TLV.
+     * Returns a pointer to the next TLV.
      *
-     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
+     * Correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
@@ -149,9 +149,9 @@ public:
     Tlv *GetNext(void) { return reinterpret_cast<Tlv *>(reinterpret_cast<uint8_t *>(this) + GetSize()); }
 
     /**
-     * This method returns a pointer to the next TLV.
+     * Returns a pointer to the next TLV.
      *
-     * This method correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
+     * Correctly returns the next TLV independent of whether the current TLV is an Extended TLV or not.
      *
      * @returns A pointer to the next TLV.
      *
@@ -162,7 +162,7 @@ public:
     }
 
     /**
-     * This method appends a TLV to the end of the message.
+     * Appends a TLV to the end of the message.
      *
      * On success, this method grows the message by the size of the TLV.
      *
@@ -175,9 +175,9 @@ public:
     Error AppendTo(Message &aMessage) const;
 
     /**
-     * This static method reads a TLV's value in a message at a given offset expecting a minimum length for the value.
+     * Reads a TLV's value in a message at a given offset expecting a minimum length for the value.
      *
-     * This method can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from the message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    The message to read from.
      * @param[in]   aOffset     The offset into the message pointing to the start of the TLV.
@@ -191,7 +191,7 @@ public:
     static Error ReadTlvValue(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength);
 
     /**
-     * This static method reads a simple TLV with a single non-integral value in a message at a given offset.
+     * Reads a simple TLV with a single non-integral value in a message at a given offset.
      *
      * @tparam      SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
      *
@@ -210,7 +210,7 @@ public:
     }
 
     /**
-     * This static method reads a simple TLV with a single integral value in a message at a given offset.
+     * Reads a simple TLV with a single integral value in a message at a given offset.
      *
      * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `UintTlvInfo`).
      *
@@ -229,7 +229,7 @@ public:
     }
 
     /**
-     * This static method reads a simple TLV with a UTF-8 string value in a message at a given offset.
+     * Reads a simple TLV with a UTF-8 string value in a message at a given offset.
      *
      * @tparam      StringTlvType   The simple TLV type to read (must be a sub-class of `StringTlvInfo`).
      *
@@ -248,9 +248,9 @@ public:
     }
 
     /**
-     * This static method searches for and reads a requested TLV out of a given message.
+     * Searches for and reads a requested TLV out of a given message.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -264,9 +264,9 @@ public:
     static Error FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv);
 
     /**
-     * This static method searches for and reads a requested TLV out of a given message.
+     * Searches for and reads a requested TLV out of a given message.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @tparam      TlvType     The TlvType to search for (must be a sub-class of `Tlv`).
      *
@@ -283,9 +283,9 @@ public:
     }
 
     /**
-     * This static method obtains the offset of a TLV within @p aMessage.
+     * Obtains the offset of a TLV within @p aMessage.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage    A reference to the message.
      * @param[in]   aType       The Type value to search for.
@@ -298,9 +298,9 @@ public:
     static Error FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
 
     /**
-     * This static method finds the offset and length of a given TLV type.
+     * Finds the offset and length of a given TLV type.
      *
-     * This method can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
      * @param[in]   aMessage      A reference to the message.
      * @param[in]   aType         The Type value to search for.
@@ -314,7 +314,7 @@ public:
     static Error FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength);
 
     /**
-     * This static method searches for a TLV with a given type in a message, ensures its length is same or larger than
+     * Searches for a TLV with a given type in a message, ensures its length is same or larger than
      * an expected minimum value, and then reads its value into a given buffer.
      *
      * If the TLV length is smaller than the minimum length @p aLength, the TLV is considered invalid. In this case,
@@ -340,7 +340,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a single non-integral value in a message, ensures its length is
+     * Searches for a simple TLV with a single non-integral value in a message, ensures its length is
      * same or larger than the expected `ValueType` object size, and then reads its value into a value object reference.
      *
      * If the TLV length is smaller than the size of @p aValue, the TLV is considered invalid. In this case, this
@@ -366,7 +366,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a single integral value in a message, and then reads its value
+     * Searches for a simple TLV with a single integral value in a message, and then reads its value
      * into a given `uint` reference variable.
      *
      * If the TLV length is smaller than size of integral value, the TLV is considered invalid. In this case, this
@@ -389,7 +389,7 @@ public:
     }
 
     /**
-     * This static method searches for a simple TLV with a UTF-8 string value in a message, and then reads its value
+     * Searches for a simple TLV with a UTF-8 string value in a message, and then reads its value
      * into a given string buffer.
      *
      * If the TLV length is longer than maximum string length specified by `StringTlvType::kMaxStringLength` then
@@ -415,7 +415,7 @@ public:
     }
 
     /**
-     * This static method appends a TLV with a given type and value to a message.
+     * Appends a TLV with a given type and value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -435,7 +435,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single (non-integral) value to a message.
+     * Appends a simple TLV with a single (non-integral) value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -455,7 +455,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single integral value to a message.
+     * Appends a simple TLV with a single integral value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -474,7 +474,7 @@ public:
     }
 
     /**
-     * This static method appends a simple TLV with a single UTF-8 string value to a message.
+     * Appends a simple TLV with a single UTF-8 string value to a message.
      *
      * On success this method grows the message by the size of the TLV.
      *
@@ -531,13 +531,13 @@ class ExtendedTlv : public Tlv
 {
 public:
     /**
-     * This method returns the Length value.
+     * Returns the Length value.
      *
      */
     uint16_t GetLength(void) const { return HostSwap16(mLength); }
 
     /**
-     * This method sets the Length value.
+     * Sets the Length value.
      *
      * @param[in]  aLength  The Length value.
      *
@@ -553,7 +553,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `Tlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -565,7 +565,7 @@ private:
 template <class TlvType> TlvType *As(Tlv *aTlv) { return static_cast<TlvType *>(aTlv); }
 
 /**
- * This template method casts a `Tlv` pointer to a given subclass `TlvType` pointer.
+ * Casts a `Tlv` pointer to a given subclass `TlvType` pointer.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -577,7 +577,7 @@ template <class TlvType> TlvType *As(Tlv *aTlv) { return static_cast<TlvType *>(
 template <class TlvType> const TlvType *As(const Tlv *aTlv) { return static_cast<const TlvType *>(aTlv); }
 
 /**
- * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ * Casts a `Tlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -589,7 +589,7 @@ template <class TlvType> const TlvType *As(const Tlv *aTlv) { return static_cast
 template <class TlvType> TlvType &As(Tlv &aTlv) { return static_cast<TlvType &>(aTlv); }
 
 /**
- * This template method casts a `Tlv` reference to a given subclass `TlvType` reference.
+ * Casts a `Tlv` reference to a given subclass `TlvType` reference.
  *
  * @tparam TlvType  The TLV type to cast into. MUST be a subclass of `Tlv`.
  *
@@ -601,7 +601,7 @@ template <class TlvType> TlvType &As(Tlv &aTlv) { return static_cast<TlvType &>(
 template <class TlvType> const TlvType &As(const Tlv &aTlv) { return static_cast<const TlvType &>(aTlv); }
 
 /**
- * This class defines constants for a TLV.
+ * Defines constants for a TLV.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  *
@@ -613,7 +613,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with an unsigned int value type.
+ * Defines constants and types for a simple TLV with an unsigned int value type.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<UintTlvType>()`, and
  * the related `Tlv::Find<UintTlvType>()` and `Tlv::Read<UintTlvType>()`.
@@ -633,7 +633,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with a single value.
+ * Defines constants and types for a simple TLV with a single value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<SimpleTlvType>()`,
  * and the related `Tlv::Find<SimpleTlvType>()` and `Tlv::Read<SimpleTlvType>()`.
@@ -657,7 +657,7 @@ public:
 };
 
 /**
- * This class defines constants and types for a simple TLV with a UTF-8 string value.
+ * Defines constants and types for a simple TLV with a UTF-8 string value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<StringTlvType>()`,
  * and the related `Tlv::Find<StringTlvType>()` and `Tlv::Read<StringTlvType>()`.

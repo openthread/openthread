@@ -33,13 +33,16 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     cli.cpp
+    cli_bbr.cpp
     cli_br.cpp
     cli_coap.cpp
     cli_coap_secure.cpp
     cli_commissioner.cpp
     cli_dataset.cpp
+    cli_dns.cpp
     cli_history.cpp
     cli_joiner.cpp
+    cli_mac_filter.cpp
     cli_network_data.cpp
     cli_output.cpp
     cli_srp_client.cpp

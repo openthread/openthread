@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This structure represents the set of configurations used when discovering mesh topology indicating which items to
+ * Represents the set of configurations used when discovering mesh topology indicating which items to
  * discover.
  *
  */
@@ -66,7 +66,7 @@ typedef struct otMeshDiagDiscoverConfig
 } otMeshDiagDiscoverConfig;
 
 /**
- * This type is an opaque iterator to iterate over list of IPv6 addresses of a router.
+ * An opaque iterator to iterate over list of IPv6 addresses of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
  *
@@ -74,7 +74,7 @@ typedef struct otMeshDiagDiscoverConfig
 typedef struct otMeshDiagIp6AddrIterator otMeshDiagIp6AddrIterator;
 
 /**
- * This type is an opaque iterator to iterate over list of children of a router.
+ * An opaque iterator to iterate over list of children of a router.
  *
  * Pointers to instance of this type are provided in `otMeshDiagRouterInfo`.
  *
@@ -91,7 +91,7 @@ typedef struct otMeshDiagChildIterator otMeshDiagChildIterator;
 #define OT_MESH_DIAG_VERSION_UNKNOWN 0xffff
 
 /**
- * This type represents information about a router in Thread mesh.
+ * Represents information about a router in Thread mesh.
  *
  */
 typedef struct otMeshDiagRouterInfo
@@ -142,7 +142,7 @@ typedef struct otMeshDiagRouterInfo
 } otMeshDiagRouterInfo;
 
 /**
- * This type represents information about a discovered child in Thread mesh.
+ * Represents information about a discovered child in Thread mesh.
  *
  */
 typedef struct otMeshDiagChildInfo
@@ -155,7 +155,7 @@ typedef struct otMeshDiagChildInfo
 } otMeshDiagChildInfo;
 
 /**
- * This function pointer type represents the callback used by `otMeshDiagDiscoverTopology()` to provide information
+ * Pointer type represents the callback used by `otMeshDiagDiscoverTopology()` to provide information
  * about a discovered router.
  *
  * When @p aError is `OT_ERROR_PENDING`, it indicates that the discovery is not yet finished and there will be more
@@ -171,7 +171,7 @@ typedef struct otMeshDiagChildInfo
 typedef void (*otMeshDiagDiscoverCallback)(otError aError, otMeshDiagRouterInfo *aRouterInfo, void *aContext);
 
 /**
- * This function starts network topology discovery.
+ * Starts network topology discovery.
  *
  * @param[in] aInstance        The OpenThread instance.
  * @param[in] aConfig          The configuration to use for discovery (e.g., which items to discover).
@@ -190,7 +190,7 @@ otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
                                    void                           *aContext);
 
 /**
- * This function cancels an ongoing topology discovery if there is one, otherwise no action.
+ * Cancels an ongoing topology discovery if there is one, otherwise no action.
  *
  * When ongoing discovery is cancelled, the callback from `otMeshDiagDiscoverTopology()` will not be called anymore.
  *
@@ -198,7 +198,7 @@ otError otMeshDiagDiscoverTopology(otInstance                     *aInstance,
 void otMeshDiagCancel(otInstance *aInstance);
 
 /**
- * This function iterates through the discovered IPv6 address of a router.
+ * Iterates through the discovered IPv6 address of a router.
  *
  * @param[in,out]  aIterator    The address iterator to use.
  * @param[out]     aIp6Address  A pointer to return the next IPv6 address (if any).
@@ -210,7 +210,7 @@ void otMeshDiagCancel(otInstance *aInstance);
 otError otMeshDiagGetNextIp6Address(otMeshDiagIp6AddrIterator *aIterator, otIp6Address *aIp6Address);
 
 /**
- * This function iterates through the discovered children of a router.
+ * Iterates through the discovered children of a router.
  *
  * @param[in,out]  aIterator    The address iterator to use.
  * @param[out]     aChildInfo   A pointer to return the child info (if any).

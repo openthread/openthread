@@ -907,7 +907,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // Transmit security will be processed after time IE content is updated.
-    VerifyOrExit(aFrame.mInfo.mTxInfo.mCslPresent == 0);
+    VerifyOrExit(!aFrame.IsCslIePresent());
 #endif
 
     aFrame.ProcessTransmitAesCcm(*extAddress);

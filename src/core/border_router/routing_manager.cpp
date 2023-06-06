@@ -60,7 +60,7 @@ namespace ot {
 
 namespace BorderRouter {
 
-RegisterLogModule("BorderRouter");
+RegisterLogModule("RoutingManager");
 
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -86,6 +86,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
 Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Error error;
+
+    LogInfo("Initializing - InfraIfIndex:%u", aInfraIfIndex);
 
     SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
 
@@ -116,6 +118,7 @@ Error RoutingManager::SetEnabled(bool aEnabled)
     VerifyOrExit(aEnabled != mIsEnabled);
 
     mIsEnabled = aEnabled;
+    LogInfo("%s", mIsEnabled ? "Enabling" : "Disabling");
     EvaluateState();
 
 exit:
@@ -304,7 +307,7 @@ void RoutingManager::Start(void)
 {
     if (!mIsRunning)
     {
-        LogInfo("Border Routing manager started");
+        LogInfo("Starting");
 
         mIsRunning = true;
         UpdateDiscoveredPrefixTableOnNetDataChange();
@@ -344,7 +347,7 @@ void RoutingManager::Stop(void)
 
     mRoutePublisher.Stop();
 
-    LogInfo("Border Routing manager stopped");
+    LogInfo("Stopped");
 
     mIsRunning = false;
 
@@ -535,9 +538,25 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
     // Ensure we wait a min delay after last RA tx
     evaluateTime = Max(now + delay, mRaInfo.mLastTxTime + kMinDelayBetweenRtrAdvs);
 
-    LogInfo("Start evaluating routing policy, scheduled in %lu milliseconds", ToUlong(evaluateTime - now));
-
     mRoutingPolicyTimer.FireAtIfEarlier(evaluateTime);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    {
+        uint32_t duration = evaluateTime - now;
+
+        if (duration == 0)
+        {
+            LogInfo("Will evaluate routing policy immediately");
+        }
+        else
+        {
+            String<Uptime::kStringSize> string;
+
+            Uptime::UptimeToString(duration, string, /* aIncludeMsec */ true);
+            LogInfo("Will evaluate routing policy in %s (%lu msec)", string.AsCString() + 3, ToUlong(duration));
+        }
+    }
+#endif
 }
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
@@ -560,6 +579,8 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     Ip6::Nd::RouterAdvertMessage    raMsg(mRaInfo.mHeader, buffer);
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig prefixConfig;
+
+    LogInfo("Preparing RA");
 
     // Append PIO for local on-link prefix if is either being
     // advertised or deprecated and for old prefix if is being
@@ -603,7 +624,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         if (prefix.GetLength() != 0)
         {
             SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, /* aRouteLifetime */ 0, mRioPreference));
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=0)", prefix.ToString().AsCString());
+            LogRouteInfoOption(prefix, 0, mRioPreference);
         }
     }
 
@@ -678,8 +699,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
         {
             SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRioPreference));
-            LogInfo("RouterAdvert: Added RIO for %s (lifetime=%lu)", prefix.ToString().AsCString(),
-                    ToUlong(kDefaultOmrPrefixLifetime));
+            LogRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRioPreference);
         }
     }
 
@@ -698,15 +718,14 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
         {
             mRaInfo.mLastTxTime = TimerMilli::GetNow();
             Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
-            LogInfo("Sent Router Advertisement on %s", mInfraIf.ToString().AsCString());
+            LogInfo("Sent RA on %s", mInfraIf.ToString().AsCString());
             DumpDebg("[BR-CERT] direction=send | type=RA |", raMsg.GetAsPacket().GetBytes(),
                      raMsg.GetAsPacket().GetLength());
         }
         else
         {
             Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
-            LogWarn("Failed to send Router Advertisement on %s: %s", mInfraIf.ToString().AsCString(),
-                    ErrorToString(error));
+            LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
         }
     }
 }
@@ -843,8 +862,7 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
     OT_UNUSED_VARIABLE(aSrcAddress);
 
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRsRx++;
-    LogInfo("Received Router Solicitation from %s on %s", aSrcAddress.ToString().AsCString(),
-            mInfraIf.ToString().AsCString());
+    LogInfo("Received RS from %s on %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString());
 
     ScheduleRoutingPolicyEvaluation(kToReplyToRs);
 }
@@ -871,8 +889,8 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
     VerifyOrExit(routerAdvMessage.IsValid());
 
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
-    LogInfo("Received Router Advertisement from %s on %s", aSrcAddress.ToString().AsCString(),
-            mInfraIf.ToString().AsCString());
+
+    LogInfo("Received RA from %s on %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString());
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
 
     mDiscoveredPrefixTable.ProcessRouterAdvertMessage(routerAdvMessage, aSrcAddress);
@@ -899,7 +917,7 @@ bool RoutingManager::ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOpti
 
     if (!IsValidOnLinkPrefix(aPio))
     {
-        LogInfo("Ignore invalid on-link prefix in PIO: %s", aPrefix.ToString().AsCString());
+        LogInfo("- PIO %s - ignore since not a valid on-link prefix", aPrefix.ToString().AsCString());
         ExitNow();
     }
 
@@ -933,7 +951,7 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption
 
     if (!IsValidOmrPrefix(aPrefix))
     {
-        LogInfo("Ignore RIO prefix %s since not a valid OMR prefix", aPrefix.ToString().AsCString());
+        LogInfo("- RIO %s - ignore since not a valid OMR prefix", aPrefix.ToString().AsCString());
         ExitNow();
     }
 
@@ -1097,6 +1115,25 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     }
 }
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
+                                         uint32_t           aValidLifetime,
+                                         uint32_t           aPreferredLifetime)
+{
+    LogInfo("- PIO %s (valid:%lu, preferred:%lu)", aPrefix.ToString().AsCString(), ToUlong(aValidLifetime),
+            ToUlong(aPreferredLifetime));
+}
+
+void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference)
+{
+    LogInfo("- RIO %s (lifetime:%lu, prf:%s)", aPrefix.ToString().AsCString(), ToUlong(aLifetime),
+            RoutePreferenceToString(aPreference));
+}
+#else
+void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t) {}
+void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable
 
@@ -1171,6 +1208,8 @@ void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::R
     prefix.Clear();
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
 
+    LogInfo("- RA Header - default route - lifetime:%u", aRaHeader.GetRouterLifetime());
+
     if (entry == nullptr)
     {
         VerifyOrExit(aRaHeader.GetRouterLifetime() != 0);
@@ -1210,7 +1249,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::N
 
     VerifyOrExit(Get<RoutingManager>().ShouldProcessPrefixInfoOption(aPio, prefix));
 
-    LogInfo("Processing PIO (%s, %lu seconds)", prefix.ToString().AsCString(), ToUlong(aPio.GetValidLifetime()));
+    LogPrefixInfoOption(prefix, aPio.GetValidLifetime(), aPio.GetPreferredLifetime());
 
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeOnLink));
 
@@ -1256,7 +1295,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
 
     VerifyOrExit(Get<RoutingManager>().ShouldProcessRouteInfoOption(aRio, prefix));
 
-    LogInfo("Processing RIO (%s, %lu seconds)", prefix.ToString().AsCString(), ToUlong(aRio.GetRouteLifetime()));
+    LogRouteInfoOption(prefix, aRio.GetRouteLifetime(), aRio.GetPreference());
 
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
 
@@ -1439,10 +1478,13 @@ void RoutingManager::DiscoveredPrefixTable::RemoveOrDeprecateEntriesFromInactive
 
         for (Entry &entry : router.mEntries)
         {
-            if (entry.IsOnLinkPrefix() && !entry.IsDeprecated())
+            if (entry.IsOnLinkPrefix())
             {
-                entry.ClearPreferredLifetime();
-                SignalTableChanged();
+                if (!entry.IsDeprecated())
+                {
+                    entry.ClearPreferredLifetime();
+                    SignalTableChanged();
+                }
             }
             else
             {
@@ -2238,8 +2280,7 @@ void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 
         if (!(mLocalPrefix < mFavoredDiscoveredPrefix))
         {
-            LogInfo("EvaluateOnLinkPrefix: There is already favored on-link prefix %s",
-                    mFavoredDiscoveredPrefix.ToString().AsCString());
+            LogInfo("Found a favored on-link prefix %s", mFavoredDiscoveredPrefix.ToString().AsCString());
             Deprecate();
         }
     }
@@ -2295,6 +2336,8 @@ void RoutingManager::OnLinkPrefixManager::PublishAndAdvertise(void)
     mState = kPublishing;
     ResetExpireTime(TimerMilli::GetNow());
 
+    LogInfo("Publishing route for local on-link prefix %s", mLocalPrefix.ToString().AsCString());
+
     // We wait for the ULA `fc00::/7` route or a sub-prefix of it (e.g.,
     // default route) to be added in Network Data before
     // starting to advertise the local on-link prefix in RAs.
@@ -2325,7 +2368,7 @@ void RoutingManager::OnLinkPrefixManager::Deprecate(void)
     case kPublishing:
     case kAdvertising:
         mState = kDeprecating;
-        LogInfo("Deprecate local on-link prefix %s", mLocalPrefix.ToString().AsCString());
+        LogInfo("Deprecating local on-link prefix %s", mLocalPrefix.ToString().AsCString());
         break;
 
     case kIdle:
@@ -2354,7 +2397,7 @@ void RoutingManager::OnLinkPrefixManager::ResetExpireTime(TimeMilli aNow)
 void RoutingManager::OnLinkPrefixManager::EnterAdvertisingState(void)
 {
     mState = kAdvertising;
-    LogInfo("Start advertising local on-link prefix %s", mLocalPrefix.ToString().AsCString());
+    LogInfo("Advertising local on-link prefix %s", mLocalPrefix.ToString().AsCString());
 }
 
 bool RoutingManager::OnLinkPrefixManager::IsPublishingOrAdvertising(void) const
@@ -2400,8 +2443,7 @@ void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertM
 
     SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
 
-    LogInfo("RouterAdvert: Added PIO for %s (valid=%lu, preferred=%lu)", mLocalPrefix.ToString().AsCString(),
-            ToUlong(validLifetime), ToUlong(preferredLifetime));
+    LogPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime);
 
 exit:
     return;
@@ -2422,8 +2464,7 @@ void RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdver
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
         SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0));
 
-        LogInfo("RouterAdvert: Added PIO for %s (valid=%lu, preferred=0)", oldPrefix.mPrefix.ToString().AsCString(),
-                ToUlong(validLifetime));
+        LogPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0);
     }
 }
 
@@ -2548,7 +2589,7 @@ void RoutingManager::OnLinkPrefixManager::HandleTimer(void)
     case kDeprecating:
         if (now >= mExpireTime)
         {
-            LogInfo("Local on-link prefix %s expired", mLocalPrefix.ToString().AsCString());
+            LogInfo("Removing expired local on-link prefix %s", mLocalPrefix.ToString().AsCString());
             IgnoreError(Get<Settings>().RemoveBrOnLinkPrefix(mLocalPrefix));
             mState = kIdle;
         }
@@ -3041,7 +3082,8 @@ void RoutingManager::RsSender::Start(void)
     VerifyOrExit(!IsInProgress());
 
     delay = Random::NonCrypto::GetUint32InRange(0, kMaxStartDelay);
-    LogInfo("Scheduled Router Solicitation in %lu milliseconds", ToUlong(delay));
+
+    LogInfo("RsSender: Starting - will send first RS in %lu msec", ToUlong(delay));
 
     mTxCount   = 0;
     mStartTime = TimerMilli::GetNow();
@@ -3083,6 +3125,7 @@ void RoutingManager::RsSender::HandleTimer(void)
 
     if (mTxCount >= kMaxTxCount)
     {
+        LogInfo("RsSender: Finished sending RS msgs and waiting for RAs");
         Get<RoutingManager>().HandleRsSenderFinished(mStartTime);
         ExitNow();
     }
@@ -3092,12 +3135,12 @@ void RoutingManager::RsSender::HandleTimer(void)
     if (error == kErrorNone)
     {
         mTxCount++;
-        LogInfo("Successfully sent RS %u/%u", mTxCount, kMaxTxCount);
         delay = (mTxCount == kMaxTxCount) ? kWaitOnLastAttempt : kTxInterval;
+        LogInfo("RsSender: Sent RS %u/%u", mTxCount, kMaxTxCount);
     }
     else
     {
-        LogCrit("Failed to send RS %u, error:%s", mTxCount + 1, ErrorToString(error));
+        LogCrit("RsSender: Failed to send RS %u/%u: %s", mTxCount + 1, kMaxTxCount, ErrorToString(error));
 
         // Note that `mTxCount` is intentionally not incremented
         // if the tx fails.

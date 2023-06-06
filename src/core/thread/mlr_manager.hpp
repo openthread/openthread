@@ -71,7 +71,7 @@ namespace ot {
  */
 
 /**
- * This class implements MLR management.
+ * Implements MLR management.
  *
  */
 class MlrManager : public InstanceLocator, private NonCopyable
@@ -81,7 +81,7 @@ class MlrManager : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -89,7 +89,7 @@ public:
     explicit MlrManager(Instance &aInstance);
 
     /**
-     * This method notifies Primary Backbone Router status.
+     * Notifies Primary Backbone Router status.
      *
      * @param[in]  aState   The state or state change of Primary Backbone Router.
      * @param[in]  aConfig  The Primary Backbone Router service.
@@ -99,7 +99,7 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * This method updates the Multicast Subscription Table according to the Child information.
+     * Updates the Multicast Subscription Table according to the Child information.
      *
      * @param[in]  aChild                       A reference to the child information.
      * @param[in]  aOldMlrRegisteredAddresses   Pointer to an array of the Child's previously registered IPv6 addresses.
@@ -113,7 +113,7 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     /**
-     * This method registers Multicast Listeners to Primary Backbone Router.
+     * Registers Multicast Listeners to Primary Backbone Router.
      *
      * Note: only available when both `(OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)` and
      * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)

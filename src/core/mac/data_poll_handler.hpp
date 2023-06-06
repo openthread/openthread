@@ -60,7 +60,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements the data poll (mac data request command) handler.
+ * Implements the data poll (mac data request command) handler.
  *
  */
 class DataPollHandler : public InstanceLocator, private NonCopyable
@@ -71,7 +71,7 @@ public:
     static constexpr uint8_t kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This enumeration defines frame change request types used as input to `RequestFrameChange()`.
+     * Defines frame change request types used as input to `RequestFrameChange()`.
      *
      */
     enum FrameChange : uint8_t
@@ -81,7 +81,7 @@ public:
     };
 
     /**
-     * This class defines all the child info required for handling of data polls and indirect frame transmissions.
+     * Defines all the child info required for handling of data polls and indirect frame transmissions.
      *
      * `Child` class publicly inherits from this class.
      *
@@ -136,7 +136,7 @@ public:
     };
 
     /**
-     * This class defines the callbacks used by the `DataPollHandler`.
+     * Defines the callbacks used by the `DataPollHandler`.
      *
      */
     class Callbacks : public InstanceLocator
@@ -145,7 +145,7 @@ public:
 
     private:
         /**
-         * This type defines the frame context associated with a prepared frame.
+         * Defines the frame context associated with a prepared frame.
          *
          * Data poll handler treats `FrameContext` as an opaque data type. Data poll handler provides the buffer/object
          * for the context when a new frame is prepared (from the callback `PrepareFrameForChild()`). It ensures
@@ -156,7 +156,7 @@ public:
         typedef IndirectSenderBase::FrameContext FrameContext;
 
         /**
-         * This constructor initializes the callbacks object.
+         * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
          *
@@ -206,7 +206,7 @@ public:
     };
 
     /**
-     * This constructor initializes the data poll handler object.
+     * Initializes the data poll handler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
@@ -214,13 +214,13 @@ public:
     explicit DataPollHandler(Instance &aInstance);
 
     /**
-     * This method clears any state/info saved per child for indirect frame transmission.
+     * Clears any state/info saved per child for indirect frame transmission.
      *
      */
     void Clear(void);
 
     /**
-     * This method informs data poll handler that there is a new frame for a given child.
+     * Informs data poll handler that there is a new frame for a given child.
      *
      * After this call, the data poll handler can use the `Callbacks::PrepareFrameForChild()` method to request the
      * frame to be prepared. A subsequent call to `Callbacks::PrepareFrameForChild()` should ensure to prepare the same
@@ -234,7 +234,7 @@ public:
     void HandleNewFrame(Child &aChild);
 
     /**
-     * This method requests a frame change for a given child.
+     * Requests a frame change for a given child.
      *
      * Two types of frame change requests are supported:
      *

@@ -229,7 +229,7 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
 #define OT_TCP_ENDPOINT_TCB_NUM_PTR 36
 
 /**
- * This structure represents a TCP endpoint.
+ * Represents a TCP endpoint.
  *
  * An TCP endpoint acts an endpoint of TCP connection. It can be used to
  * initiate TCP connections, and, once a TCP connection is established, send
@@ -266,7 +266,7 @@ struct otTcpEndpoint
 };
 
 /**
- * This structure contains arguments to the otTcpEndpointInitialize() function.
+ * Contains arguments to the otTcpEndpointInitialize() function.
  *
  */
 typedef struct otTcpEndpointInitializeArgs
@@ -390,7 +390,7 @@ const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
 otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName);
 
 /**
- * This enumeration defines flags passed to otTcpConnect().
+ * Defines flags passed to otTcpConnect().
  *
  */
 enum
@@ -418,7 +418,7 @@ enum
 otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags);
 
 /**
- * This enumeration defines flags passed to @p otTcpSendByReference.
+ * Defines flags passed to @p otTcpSendByReference.
  *
  */
 enum
@@ -582,7 +582,7 @@ struct otTcpListener;
 typedef struct otTcpListener otTcpListener;
 
 /**
- * This enumeration defines incoming connection actions.
+ * Defines incoming connection actions.
  *
  * This is used in otTcpAcceptReady() callback.
  *
@@ -656,7 +656,7 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
 #define OT_TCP_LISTENER_TCB_NUM_PTR 3
 
 /**
- * This structure represents a TCP listener.
+ * Represents a TCP listener.
  *
  * A TCP listener is used to listen for and accept incoming TCP connections.
  *
@@ -681,7 +681,7 @@ struct otTcpListener
 };
 
 /**
- * This structure contains arguments to the otTcpListenerInitialize() function.
+ * Contains arguments to the otTcpListenerInitialize() function.
  *
  */
 typedef struct otTcpListenerInitializeArgs

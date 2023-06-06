@@ -43,7 +43,7 @@ namespace Posix {
 using ot::Spinel::SpinelInterface;
 
 /**
- * This class defines the vendor implementation object.
+ * Defines the vendor implementation object.
  *
  */
 class VendorInterfaceImpl
@@ -144,7 +144,7 @@ otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     return OT_ERROR_NONE;
 }
 
-const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
+const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const
 {
     // TODO: Implement vendor code here.
 

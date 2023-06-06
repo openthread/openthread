@@ -42,7 +42,7 @@
 namespace ot {
 
 /**
- * This class provides constants and static methods to convert between `int8_t` preference and its 2-bit unsigned
+ * Provides constants and static methods to convert between `int8_t` preference and its 2-bit unsigned
  * representation.
  *
  */
@@ -54,7 +54,7 @@ public:
     static constexpr int8_t kLow    = -1; ///< Low preference.
 
     /**
-     * This static method converts a signed preference value to its corresponding 2-bit `uint8_t` value.
+     * Converts a signed preference value to its corresponding 2-bit `uint8_t` value.
      *
      * A positive @p aPrf is mapped to "High Preference", a negative @p aPrf is mapped to "Low Preference", and
      * zero @p aPrf is mapped to "Medium Preference".
@@ -67,7 +67,7 @@ public:
     static uint8_t To2BitUint(int8_t aPrf);
 
     /**
-     * This static method converts a 2-bit `uint8_t` value to a signed preference value `kHigh`, `kMedium`, and `kLow`.
+     * Converts a 2-bit `uint8_t` value to a signed preference value `kHigh`, `kMedium`, and `kLow`.
      *
      * Only the first two bits (LSB) of @p a2BitUint are used and the rest of the bits are ignored.
      *
@@ -86,7 +86,7 @@ public:
     static int8_t From2BitUint(uint8_t a2BitUint);
 
     /**
-     * This static method indicates whether a given `int8_t` preference value is valid, i.e., whether it has of the
+     * Indicates whether a given `int8_t` preference value is valid, i.e., whether it has of the
      * three values `kHigh`, `kMedium`, or `kLow`.
      *
      * @param[in] aPrf  The signed preference value to check.
@@ -98,7 +98,7 @@ public:
     static bool IsValid(int8_t aPrf);
 
     /**
-     * This static method indicates whether a given 2-bit `uint8_t` preference value is valid.
+     * Indicates whether a given 2-bit `uint8_t` preference value is valid.
      *
      * @param[in] a2BitUint   The 2-bit unsigned value to convert from. Only two LSB bits are used and the reset are
      *                        ignored.
@@ -110,7 +110,7 @@ public:
     static bool Is2BitUintValid(uint8_t a2BitUint) { return ((a2BitUint & k2BitMask) != k2BitReserved); }
 
     /**
-     * This static method converts a given preference to a human-readable string.
+     * Converts a given preference to a human-readable string.
      *
      * @param[in] aPrf  The preference to convert.
      *

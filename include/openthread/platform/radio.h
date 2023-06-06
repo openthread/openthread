@@ -88,7 +88,7 @@ enum
 };
 
 /**
- * This enumeration defines the channel page.
+ * Defines the channel page.
  *
  */
 enum
@@ -100,7 +100,7 @@ enum
 };
 
 /**
- * This enumeration defines the frequency band channel range.
+ * Defines the frequency band channel range.
  *
  */
 enum
@@ -114,7 +114,7 @@ enum
 };
 
 /**
- * This type represents radio capabilities.
+ * Represents radio capabilities.
  *
  * The value is a bit-field indicating the capabilities supported by the radio. See `OT_RADIO_CAPS_*` definitions.
  *
@@ -122,7 +122,7 @@ enum
 typedef uint8_t otRadioCaps;
 
 /**
- * This enumeration defines constants that are used to indicate different radio capabilities. See `otRadioCaps`.
+ * Defines constants that are used to indicate different radio capabilities. See `otRadioCaps`.
  *
  */
 enum
@@ -141,13 +141,13 @@ enum
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
 
 /**
- * This type represents the IEEE 802.15.4 PAN ID.
+ * Represents the IEEE 802.15.4 PAN ID.
  *
  */
 typedef uint16_t otPanId;
 
 /**
- * This type represents the IEEE 802.15.4 Short Address.
+ * Represents the IEEE 802.15.4 Short Address.
  *
  */
 typedef uint16_t otShortAddress;
@@ -155,7 +155,7 @@ typedef uint16_t otShortAddress;
 #define OT_EXT_ADDRESS_SIZE 8 ///< Size of an IEEE 802.15.4 Extended Address (bytes)
 
 /**
- * This enumeration defines constants about size of header IE in ACK.
+ * Defines constants about size of header IE in ACK.
  *
  */
 enum
@@ -172,7 +172,7 @@ enum
 /**
  * @struct otExtAddress
  *
- * This structure represents the IEEE 802.15.4 Extended Address.
+ * Represents the IEEE 802.15.4 Extended Address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -182,7 +182,7 @@ struct otExtAddress
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents the IEEE 802.15.4 Extended Address.
+ * Represents the IEEE 802.15.4 Extended Address.
  *
  */
 typedef struct otExtAddress otExtAddress;
@@ -192,7 +192,7 @@ typedef struct otExtAddress otExtAddress;
 /**
  * @struct otMacKey
  *
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -202,13 +202,13 @@ struct otMacKey
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 typedef struct otMacKey otMacKey;
 
 /**
- * This type represents a MAC Key Ref used by PSA.
+ * Represents a MAC Key Ref used by PSA.
  *
  */
 typedef otCryptoKeyRef otMacKeyRef;
@@ -216,7 +216,7 @@ typedef otCryptoKeyRef otMacKeyRef;
 /**
  * @struct otMacKeyMaterial
  *
- * This structure represents a MAC Key.
+ * Represents a MAC Key.
  *
  */
 typedef struct otMacKeyMaterial
@@ -229,7 +229,7 @@ typedef struct otMacKeyMaterial
 } otMacKeyMaterial;
 
 /**
- * This enumeration defines constants about key types.
+ * Defines constants about key types.
  *
  */
 typedef enum
@@ -239,7 +239,7 @@ typedef enum
 } otRadioKeyType;
 
 /**
- * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
+ * Represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
 {
@@ -249,7 +249,7 @@ typedef struct otRadioIeInfo
 } otRadioIeInfo;
 
 /**
- * This structure represents an IEEE 802.15.4 radio frame.
+ * Represents an IEEE 802.15.4 radio frame.
  */
 typedef struct otRadioFrame
 {
@@ -352,7 +352,7 @@ typedef struct otRadioFrame
 } otRadioFrame;
 
 /**
- * This structure represents the state of a radio.
+ * Represents the state of a radio.
  * Initially, a radio is in the Disabled state.
  */
 typedef enum otRadioState
@@ -382,7 +382,7 @@ typedef enum otRadioState
  */
 
 /**
- * This structure represents radio coexistence metrics.
+ * Represents radio coexistence metrics.
  */
 typedef struct otRadioCoexMetrics
 {
@@ -408,7 +408,7 @@ typedef struct otRadioCoexMetrics
 } otRadioCoexMetrics;
 
 /**
- * This structure represents what metrics are specified to query.
+ * Represents what metrics are specified to query.
  *
  */
 typedef struct otLinkMetrics
@@ -610,7 +610,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 /**
  * Update MAC keys and key index
  *
- * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ * Is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.
  * @param[in]   aKeyIdMode   The key ID mode.
@@ -630,9 +630,9 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
                           otRadioKeyType          aKeyType);
 
 /**
- * This method sets the current MAC frame counter value.
+ * Sets the current MAC frame counter value.
  *
- * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
@@ -641,9 +641,9 @@ void otPlatRadioSetMacKey(otInstance             *aInstance,
 void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter);
 
 /**
- * This method sets the current MAC frame counter value only if the new given value is larger than the current value.
+ * Sets the current MAC frame counter value only if the new given value is larger than the current value.
  *
- * This function is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
+ * Is used when radio provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability.
  *
  * @param[in]   aInstance         A pointer to an OpenThread instance.
  * @param[in]   aMacFrameCounter  The MAC frame counter value.
@@ -693,7 +693,7 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance);
 /**
  * Get current state of the radio.
  *
- * This function is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
+ * Is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
  *
  * @note This function may be not implemented. It does not affect OpenThread.
  *
@@ -787,7 +787,7 @@ extern void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, 
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module of a received frame.
  *
- * This function is used when diagnostics is enabled.
+ * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance The OpenThread instance structure.
  * @param[in]  aFrame    A pointer to the received frame or NULL if the receive operation failed.
@@ -864,7 +864,7 @@ extern void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRad
 /**
  * The radio driver calls this method to notify OpenThread diagnostics module that the transmission has completed.
  *
- * This function is used when diagnostics is enabled.
+ * Is used when diagnostics is enabled.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aFrame         A pointer to the frame that was transmitted.
@@ -888,14 +888,14 @@ int8_t otPlatRadioGetRssi(otInstance *aInstance);
 /**
  * Begin the energy scan sequence on the radio.
  *
- * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+ * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
  * @param[in] aInstance      The OpenThread instance structure.
  * @param[in] aScanChannel   The channel to perform the energy scan on.
  * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
  *
  * @retval OT_ERROR_NONE             Successfully started scanning the channel.
- * @retval OT_ERROR_BUSY             The radio is performing enery scanning.
+ * @retval OT_ERROR_BUSY             The radio is performing energy scanning.
  * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
  *
  */
@@ -904,7 +904,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 /**
  * The radio driver calls this method to notify OpenThread that the energy scan is complete.
  *
- * This function is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
+ * Is used when radio provides OT_RADIO_CAPS_ENERGY_SCAN capability.
  *
  * @param[in]  aInstance           The OpenThread instance structure.
  * @param[in]  aEnergyScanMaxRssi  The maximum RSSI encountered on the scanned channel.
@@ -1019,7 +1019,7 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance);
 /**
  * Enable the radio coex.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aEnabled   TRUE to enable the radio coex, FALSE otherwise.
@@ -1033,7 +1033,7 @@ otError otPlatRadioSetCoexEnabled(otInstance *aInstance, bool aEnabled);
 /**
  * Check whether radio coex is enabled or not.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  *
@@ -1045,7 +1045,7 @@ bool otPlatRadioIsCoexEnabled(otInstance *aInstance);
 /**
  * Get the radio coexistence metrics.
  *
- * This function is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
+ * Is used when feature OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE is enabled.
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[out] aCoexMetrics  A pointer to the coexistence metrics structure.

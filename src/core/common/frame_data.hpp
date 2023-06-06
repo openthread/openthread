@@ -42,7 +42,7 @@
 namespace ot {
 
 /**
- * This class represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
+ * Represents a frame `Data` which is simply a wrapper over a pointer to a buffer with a given frame length.
  *
  * It provide helper method to parse the content. As data is parsed and read, the `FrameData` is updated to skip over
  * the read content.
@@ -52,7 +52,7 @@ class FrameData : public Data<kWithUint16Length>
 {
 public:
     /**
-     * This method indicates whether or not there are enough bytes remaining in the `FrameData` to read a given number
+     * Indicates whether or not there are enough bytes remaining in the `FrameData` to read a given number
      * of bytes.
      *
      * @param[in] aLength   The read length to check.
@@ -64,7 +64,7 @@ public:
     bool CanRead(uint16_t aLength) const { return GetLength() >= aLength; }
 
     /**
-     * This method reads an `uint8_t` value from the `FrameData`.
+     * Reads an `uint8_t` value from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -77,7 +77,7 @@ public:
     Error ReadUint8(uint8_t &aUint8);
 
     /**
-     * This method reads an `uint16_t` value assuming big endian encoding from the `FrameData`.
+     * Reads an `uint16_t` value assuming big endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -90,7 +90,7 @@ public:
     Error ReadBigEndianUint16(uint16_t &aUint16);
 
     /**
-     * This method reads an `uint32_t` value assuming big endian encoding from the `FrameData`.
+     * Reads an `uint32_t` value assuming big endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -103,7 +103,7 @@ public:
     Error ReadBigEndianUint32(uint32_t &aUint32);
 
     /**
-     * This method reads an `uint16_t` value assuming little endian encoding from the `FrameData`.
+     * Reads an `uint16_t` value assuming little endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -116,7 +116,7 @@ public:
     Error ReadLittleEndianUint16(uint16_t &aUint16);
 
     /**
-     * This method reads an `uint32_t` value assuming little endian encoding from the `FrameData`.
+     * Reads an `uint32_t` value assuming little endian encoding from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -129,7 +129,7 @@ public:
     Error ReadLittleEndianUint32(uint32_t &aUint32);
 
     /**
-     * This method reads a given number of bytes from the `FrameData`.
+     * Reads a given number of bytes from the `FrameData`.
      *
      * If read successfully, the `FrameData` is updated to skip over the read content.
      *
@@ -143,7 +143,7 @@ public:
     Error ReadBytes(void *aBuffer, uint16_t aLength);
 
     /**
-     * This template method reads an object from the `FrameData`.
+     * Reads an object from the `FrameData`.
      *
      * @tparam     ObjectType   The object type to read from the message.
      *
@@ -161,7 +161,7 @@ public:
     }
 
     /**
-     * This method skips over a given number of bytes from `FrameData`.
+     * Skips over a given number of bytes from `FrameData`.
      *
      * The caller MUST make sure that the @p aLength is smaller than current data length. Otherwise the behavior of
      * this method is undefined.

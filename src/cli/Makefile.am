@@ -153,13 +153,16 @@ libopenthread_cli_radio_a_CPPFLAGS =  \
 
 SOURCES_COMMON =                      \
     cli.cpp                           \
+    cli_bbr.cpp                       \
     cli_br.cpp                        \
     cli_coap.cpp                      \
     cli_coap_secure.cpp               \
     cli_commissioner.cpp              \
     cli_dataset.cpp                   \
+    cli_dns.cpp                       \
     cli_history.cpp                   \
     cli_joiner.cpp                    \
+    cli_mac_filter.cpp                \
     cli_network_data.cpp              \
     cli_output.cpp                    \
     cli_srp_client.cpp                \
@@ -183,14 +186,17 @@ libopenthread_cli_radio_a_SOURCES =   \
 
 noinst_HEADERS                      = \
     cli.hpp                           \
+    cli_bbr.hpp                       \
     cli_br.hpp                        \
     cli_coap.hpp                      \
     cli_coap_secure.hpp               \
     cli_commissioner.hpp              \
     cli_config.h                      \
     cli_dataset.hpp                   \
+    cli_dns.hpp                       \
     cli_history.hpp                   \
     cli_joiner.hpp                    \
+    cli_mac_filter.hpp                \
     cli_network_data.hpp              \
     cli_output.hpp                    \
     cli_srp_client.hpp                \

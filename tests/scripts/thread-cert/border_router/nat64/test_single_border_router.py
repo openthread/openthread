@@ -63,6 +63,9 @@ SMALL_NAT64_PREFIX = "fd00:00:00:01:00:00::/96"
 # So the BR will remove the random-generated one.
 LARGE_NAT64_PREFIX = "ff00:00:00:01:00:00::/96"
 
+DEFAULT_NAT64_CIDR = ipaddress.IPv4Network("192.168.255.0/24")
+UPDATED_NAT64_CIDR = ipaddress.IPv4Network("100.64.64.0/24")
+
 
 class Nat64SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -99,7 +102,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         if ready[0]:
             return sock.recv(1024)
         else:
-            raise AssertionError("No data recevied")
+            raise AssertionError("No data received")
 
     def listen_udp(self, addr, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -235,7 +238,16 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(counters['protocol']['ICMP']['6to4']['packets'], 2)
 
         #
-        # Case 6. Disable and re-enable ethernet on the border router.
+        # Case 6. Change the CIDR used by NAT64 during runtime
+        #
+        self.assertEqual(br.nat64_cidr, DEFAULT_NAT64_CIDR)
+
+        br.nat64_cidr = UPDATED_NAT64_CIDR
+        self.assertEqual(br.nat64_cidr, UPDATED_NAT64_CIDR)
+        self.assertTrue(router.ping(ipaddr=host_ip))
+
+        #
+        # Case 7. Disable and re-enable ethernet on the border router.
         # Note: disable_ether will remove default route but enable_ether won't add it back,
         # NAT64 connectivity tests will fail after this.
         # TODO: Add a default IPv4 route after enable_ether.

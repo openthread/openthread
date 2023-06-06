@@ -41,7 +41,7 @@ namespace Posix {
 namespace Mainloop {
 
 /**
- * This class is the base for all mainloop event sources.
+ * Is the base for all mainloop event sources.
  *
  */
 class Source
@@ -50,7 +50,7 @@ class Source
 
 public:
     /**
-     * This method registers events in the mainloop.
+     * Registers events in the mainloop.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      *
@@ -58,7 +58,7 @@ public:
     virtual void Update(otSysMainloopContext &aContext) = 0;
 
     /**
-     * This method processes the mainloop events.
+     * Processes the mainloop events.
      *
      * @param[in]   aContext    A reference to the mainloop context.
      *
@@ -66,7 +66,7 @@ public:
     virtual void Process(const otSysMainloopContext &aContext) = 0;
 
     /**
-     * This method marks destructor virtual method.
+     * Marks destructor virtual method.
      *
      */
     virtual ~Source() = default;
@@ -76,14 +76,14 @@ private:
 };
 
 /**
- * This class manages mainloop.
+ * Manages mainloop.
  *
  */
 class Manager
 {
 public:
     /**
-     * This method updates event polls in the mainloop context.
+     * Updates event polls in the mainloop context.
      *
      * @param[in,out]   aContext    A reference to the mainloop context.
      *
@@ -91,7 +91,7 @@ public:
     void Update(otSysMainloopContext &aContext);
 
     /**
-     * This method processes events in the mainloop context.
+     * Processes events in the mainloop context.
      *
      * @param[in]   aContext    A reference to the mainloop context.
      *
@@ -99,7 +99,7 @@ public:
     void Process(const otSysMainloopContext &aContext);
 
     /**
-     * This method adds a new event source into the mainloop.
+     * Adds a new event source into the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
      *
@@ -107,7 +107,7 @@ public:
     void Add(Source &aSource);
 
     /**
-     * This method removes an event source from the mainloop.
+     * Removes an event source from the mainloop.
      *
      * @param[in]   aSource     A reference to the event source.
      *
@@ -115,7 +115,7 @@ public:
     void Remove(Source &aSource);
 
     /**
-     * This function returns the Mainloop singleton.
+     * Returns the Mainloop singleton.
      *
      * @returns A reference to the Mainloop singleton.
      *

@@ -120,7 +120,7 @@ fed3_rloc = int(fed3.get_rloc16(), 16)
 
 
 def parse_nexthop(line):
-    # Exmaple: "0x5000 cost:3" -> (0x5000, 3).
+    # Example: "0x5000 cost:3" -> (0x5000, 3).
     items = line.strip().split(' ', 2)
     return (int(items[0], 16), int(items[1].split(':')[1]))
 

@@ -332,7 +332,7 @@ class LinkQualityAndRouteData(object):
         return (self.output == other.output and self.input == other.input and self.route == other.route)
 
     def __repr__(self):
-        return "LinkQualityAndRouteData(ouput={}, input={}, route={})".format(self.output, self.input, self.route)
+        return "LinkQualityAndRouteData(output={}, input={}, route={})".format(self.output, self.input, self.route)
 
 
 class LinkQualityAndRouteDataFactory:

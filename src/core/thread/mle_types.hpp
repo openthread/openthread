@@ -93,7 +93,7 @@ constexpr uint32_t kChildIdResponseTimeout         = 1250; ///< Wait time to rec
 constexpr uint32_t kAttachStartJitter              = 50;   ///< Max jitter time added to start of attach (in msec)
 constexpr uint32_t kAnnounceProcessTimeout         = 250;  ///< Delay after Announce rx before channel/pan-id change
 constexpr uint32_t kAnnounceTimeout                = 1400; ///< Total timeout for sending Announce messages (in msec)
-constexpr uint32_t kMinAnnounceDelay               = 80;   ///< Min delay between Announcement messages (in msec)
+constexpr uint16_t kMinAnnounceDelay               = 80;   ///< Min delay between Announcement messages (in msec)
 constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  ///< Max response delay for Parent Req to routers (in msec)
 constexpr uint32_t kParentResponseMaxDelayAll      = 1000; ///< Max response delay for Parent Req to all (in msec)
 constexpr uint32_t kUnicastRetransmissionDelay     = 1000; ///< Base delay before an MLE unicast retx (in msec)
@@ -193,7 +193,7 @@ constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
 constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
 
 /**
- * This type represents a Thread device role.
+ * Represents a Thread device role.
  *
  */
 enum DeviceRole : uint8_t
@@ -221,7 +221,7 @@ constexpr uint8_t kServiceMinId = 0x00; ///< Minimal Service ID.
 constexpr uint8_t kServiceMaxId = 0x0f; ///< Maximal Service ID.
 
 /**
- * This enumeration specifies the leader role start mode.
+ * Specifies the leader role start mode.
  *
  * The start mode indicates whether device is starting normally as leader or restoring its role after reset.
  *
@@ -232,68 +232,8 @@ enum LeaderStartMode : uint8_t
     kRestoringLeaderRoleAfterReset, ///< Restoring leader role after reset.
 };
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
-/*
- * Backbone Router / DUA / MLR constants
- *
- */
-constexpr uint16_t kRegistrationDelayDefault         = 5;                 ///< In seconds.
-constexpr uint32_t kMlrTimeoutDefault                = 3600;              ///< In seconds.
-constexpr uint32_t kMlrTimeoutMin                    = 300;               ///< In seconds.
-constexpr uint32_t kMlrTimeoutMax                    = 0x7fffffff / 1000; ///< In seconds (about 24 days).
-constexpr uint8_t  kBackboneRouterRegistrationJitter = 5;                 ///< In seconds.
-constexpr uint8_t  kParentAggregateDelay             = 5;                 ///< In seconds.
-constexpr uint8_t  kNoBufDelay                       = 5;                 ///< In seconds.
-constexpr uint8_t  kImmediateReRegisterDelay         = 1;                 ///< In seconds.
-constexpr uint8_t  KResponseTimeoutDelay             = 30;                ///< In seconds.
-
 /**
- * Time period after which the address becomes "Preferred" if no duplicate address error (in seconds).
- *
- */
-constexpr uint32_t kDuaDadPeriod = 100;
-
-/**
- * Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are repeated by the BBR, as
- * part of the DAD process.
- *
- */
-constexpr uint8_t kDuaDadRepeats = 3;
-
-/**
- * Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
- *
- */
-constexpr uint32_t kDuaRecentTime               = 20;
-constexpr uint32_t kTimeSinceLastTransactionMax = 10 * 86400; ///< In seconds (10 days).
-constexpr uint8_t  kDefaultBackboneHoplimit     = 1;          ///< default hoplimit for Backbone Link Protocol messages
-
-static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
-              "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
-
-static_assert(Mle::kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
-static_assert(kMlrTimeoutMax * 1000 > kMlrTimeoutMax, "SecToMsec(kMlrTimeoutMax) will overflow");
-
-static_assert(kTimeSinceLastTransactionMax * 1000 > kTimeSinceLastTransactionMax,
-              "SecToMsec(kTimeSinceLastTransactionMax) will overflow");
-
-/**
- * State change of Child's DUA
- *
- */
-enum class ChildDuaState : uint8_t
-{
-    kAdded,     ///< A new DUA registered by the Child via Address Registration.
-    kChanged,   ///< A different DUA registered by the Child via Address Registration.
-    kRemoved,   ///< DUA registered by the Child is removed and not in Address Registration.
-    kUnchanged, ///< The Child registers the same DUA again.
-};
-
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-
-/**
- * This type represents a MLE device mode.
+ * Represents a MLE device mode.
  *
  */
 class DeviceMode : public Equatable<DeviceMode>
@@ -307,7 +247,7 @@ public:
     static constexpr uint16_t kInfoStringSize = 45; ///< String buffer size used for `ToString()`.
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;
@@ -325,7 +265,7 @@ public:
     DeviceMode(void) = default;
 
     /**
-     * This constructor initializes a `DeviceMode` object from a given mode TLV bitmask.
+     * Initializes a `DeviceMode` object from a given mode TLV bitmask.
      *
      * @param[in] aMode   A mode TLV bitmask to initialize the `DeviceMode` object.
      *
@@ -333,7 +273,7 @@ public:
     explicit DeviceMode(uint8_t aMode) { Set(aMode); }
 
     /**
-     * This constructor initializes a `DeviceMode` object from a given mode configuration structure.
+     * Initializes a `DeviceMode` object from a given mode configuration structure.
      *
      * @param[in] aModeConfig   A mode configuration to initialize the `DeviceMode` object.
      *
@@ -341,7 +281,7 @@ public:
     explicit DeviceMode(ModeConfig aModeConfig) { Set(aModeConfig); }
 
     /**
-     * This method gets the device mode as a mode TLV bitmask.
+     * Gets the device mode as a mode TLV bitmask.
      *
      * @returns The device mode as a mode TLV bitmask.
      *
@@ -349,7 +289,7 @@ public:
     uint8_t Get(void) const { return mMode; }
 
     /**
-     * This method sets the device mode from a given mode TLV bitmask.
+     * Sets the device mode from a given mode TLV bitmask.
      *
      * @param[in] aMode   A mode TLV bitmask.
      *
@@ -357,7 +297,7 @@ public:
     void Set(uint8_t aMode) { mMode = aMode | kModeReserved; }
 
     /**
-     * This method gets the device mode as a mode configuration structure.
+     * Gets the device mode as a mode configuration structure.
      *
      * @param[out] aModeConfig   A reference to a mode configuration structure to output the device mode.
      *
@@ -373,7 +313,7 @@ public:
     void Set(const ModeConfig &aModeConfig);
 
     /**
-     * This method indicates whether or not the device is rx-on-when-idle.
+     * Indicates whether or not the device is rx-on-when-idle.
      *
      * @retval TRUE   If the device is rx-on-when-idle (non-sleepy).
      * @retval FALSE  If the device is not rx-on-when-idle (sleepy).
@@ -382,7 +322,7 @@ public:
     bool IsRxOnWhenIdle(void) const { return (mMode & kModeRxOnWhenIdle) != 0; }
 
     /**
-     * This method indicates whether or not the device is a Full Thread Device.
+     * Indicates whether or not the device is a Full Thread Device.
      *
      * @retval TRUE   If the device is Full Thread Device.
      * @retval FALSE  If the device if not Full Thread Device.
@@ -391,7 +331,7 @@ public:
     bool IsFullThreadDevice(void) const { return (mMode & kModeFullThreadDevice) != 0; }
 
     /**
-     * This method gets the Network Data type (full set or stable subset) that the device requests.
+     * Gets the Network Data type (full set or stable subset) that the device requests.
      *
      * @returns The Network Data type requested by this device.
      *
@@ -402,7 +342,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the device is a Minimal End Device.
+     * Indicates whether or not the device is a Minimal End Device.
      *
      * @retval TRUE   If the device is a Minimal End Device.
      * @retval FALSE  If the device is not a Minimal End Device.
@@ -414,7 +354,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the device mode flags are valid.
+     * Indicates whether or not the device mode flags are valid.
      *
      * An FTD which is not rx-on-when-idle (is sleepy) is considered invalid.
      *
@@ -426,7 +366,7 @@ public:
     bool IsValid(void) const { return !IsFullThreadDevice() || IsRxOnWhenIdle(); }
 
     /**
-     * This method converts the device mode into a human-readable string.
+     * Converts the device mode into a human-readable string.
      *
      * @returns An `InfoString` object representing the device mode.
      *
@@ -439,7 +379,7 @@ private:
 
 #if OPENTHREAD_FTD
 /**
- * This class represents device properties.
+ * Represents device properties.
  *
  * The device properties are used for calculating the local leader weight on the device.
  *
@@ -448,7 +388,7 @@ class DeviceProperties : public otDeviceProperties, public Clearable<DevicePrope
 {
 public:
     /**
-     * This enumeration represents the device's power supply property.
+     * Represents the device's power supply property.
      *
      */
     enum PowerSupply : uint8_t
@@ -460,19 +400,19 @@ public:
     };
 
     /**
-     * This constructor initializes `DeviceProperties` with default values.
+     * Initializes `DeviceProperties` with default values.
      *
      */
     DeviceProperties(void);
 
     /**
-     * This method clamps the `mLeaderWeightAdjustment` value to the valid range.
+     * Clamps the `mLeaderWeightAdjustment` value to the valid range.
      *
      */
     void ClampWeightAdjustment(void);
 
     /**
-     * This method calculates the leader weight based on the device properties.
+     * Calculates the leader weight based on the device properties.
      *
      * @returns The calculated leader weight.
      *
@@ -499,14 +439,14 @@ private:
 #endif // OPENTHREAD_FTD
 
 /**
- * This class represents the Thread Leader Data.
+ * Represents the Thread Leader Data.
  *
  */
 class LeaderData : public otLeaderData, public Clearable<LeaderData>
 {
 public:
     /**
-     * This method returns the Partition ID value.
+     * Returns the Partition ID value.
      *
      * @returns The Partition ID value.
      *
@@ -514,7 +454,7 @@ public:
     uint32_t GetPartitionId(void) const { return mPartitionId; }
 
     /**
-     * This method sets the Partition ID value.
+     * Sets the Partition ID value.
      *
      * @param[in]  aPartitionId  The Partition ID value.
      *
@@ -522,7 +462,7 @@ public:
     void SetPartitionId(uint32_t aPartitionId) { mPartitionId = aPartitionId; }
 
     /**
-     * This method returns the Weighting value.
+     * Returns the Weighting value.
      *
      * @returns The Weighting value.
      *
@@ -530,7 +470,7 @@ public:
     uint8_t GetWeighting(void) const { return mWeighting; }
 
     /**
-     * This method sets the Weighting value.
+     * Sets the Weighting value.
      *
      * @param[in]  aWeighting  The Weighting value.
      *
@@ -538,7 +478,7 @@ public:
     void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
 
     /**
-     * This method returns the Data Version value for a type (full set or stable subset).
+     * Returns the Data Version value for a type (full set or stable subset).
      *
      * @param[in] aType   The Network Data type (full set or stable subset).
      *
@@ -551,7 +491,7 @@ public:
     }
 
     /**
-     * This method sets the Data Version value.
+     * Sets the Data Version value.
      *
      * @param[in]  aVersion  The Data Version value.
      *
@@ -559,7 +499,7 @@ public:
     void SetDataVersion(uint8_t aVersion) { mDataVersion = aVersion; }
 
     /**
-     * This method sets the Stable Data Version value.
+     * Sets the Stable Data Version value.
      *
      * @param[in]  aVersion  The Stable Data Version value.
      *
@@ -567,7 +507,7 @@ public:
     void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
 
     /**
-     * This method returns the Leader Router ID value.
+     * Returns the Leader Router ID value.
      *
      * @returns The Leader Router ID value.
      *
@@ -575,7 +515,7 @@ public:
     uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
 
     /**
-     * This method sets the Leader Router ID value.
+     * Sets the Leader Router ID value.
      *
      * @param[in]  aRouterId  The Leader Router ID value.
      *
@@ -588,13 +528,13 @@ class RouterIdSet : public Equatable<RouterIdSet>
 {
 public:
     /**
-     * This method clears the Router Id Set.
+     * Clears the Router Id Set.
      *
      */
     void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
 
     /**
-     * This method indicates whether or not a Router ID bit is set.
+     * Indicates whether or not a Router ID bit is set.
      *
      * @param[in]  aRouterId  The Router ID.
      *
@@ -605,7 +545,7 @@ public:
     bool Contains(uint8_t aRouterId) const { return (mRouterIdSet[aRouterId / 8] & MaskFor(aRouterId)) != 0; }
 
     /**
-     * This method sets a given Router ID.
+     * Sets a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to set.
      *
@@ -613,7 +553,7 @@ public:
     void Add(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] |= MaskFor(aRouterId); }
 
     /**
-     * This method removes a given Router ID.
+     * Removes a given Router ID.
      *
      * @param[in]  aRouterId  The Router ID to remove.
      *
@@ -621,7 +561,7 @@ public:
     void Remove(uint8_t aRouterId) { mRouterIdSet[aRouterId / 8] &= ~MaskFor(aRouterId); }
 
     /**
-     * This method calculates the number of allocated Router IDs in the set.
+     * Calculates the number of allocated Router IDs in the set.
      *
      * @returns The number of allocated Router IDs in the set.
      *
@@ -635,25 +575,25 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a MLE Key Material
+ * Represents a MLE Key Material
  *
  */
 typedef Mac::KeyMaterial KeyMaterial;
 
 /**
- * This class represents a MLE Key.
+ * Represents a MLE Key.
  *
  */
 typedef Mac::Key Key;
 
 /**
- * This structure represents the Thread MLE counters.
+ * Represents the Thread MLE counters.
  *
  */
 typedef otMleCounters Counters;
 
 /**
- * This function derives the Child ID from a given RLOC16.
+ * Derives the Child ID from a given RLOC16.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -663,7 +603,7 @@ typedef otMleCounters Counters;
 inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChildId; }
 
 /**
- * This function derives the Router ID portion from a given RLOC16.
+ * Derives the Router ID portion from a given RLOC16.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -673,7 +613,7 @@ inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChild
 inline uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
 /**
- * This function returns whether the two RLOC16 have the same Router ID.
+ * Returns whether the two RLOC16 have the same Router ID.
  *
  * @param[in]  aRloc16A  The first RLOC16 value.
  * @param[in]  aRloc16B  The second RLOC16 value.
@@ -687,7 +627,7 @@ inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
 }
 
 /**
- * This function returns the Service ID corresponding to a Service ALOC16.
+ * Returns the Service ID corresponding to a Service ALOC16.
  *
  * @param[in]  aAloc16  The Service ALOC16 value.
  *
@@ -697,7 +637,7 @@ inline bool RouterIdMatch(uint16_t aRloc16A, uint16_t aRloc16B)
 inline uint8_t ServiceIdFromAloc(uint16_t aAloc16) { return static_cast<uint8_t>(aAloc16 - kAloc16ServiceStart); }
 
 /**
- * This function returns the Service ALOC16 corresponding to a Service ID.
+ * Returns the Service ALOC16 corresponding to a Service ID.
  *
  * @param[in]  aServiceId  The Service ID value.
  *
@@ -710,7 +650,7 @@ inline uint16_t ServiceAlocFromId(uint8_t aServiceId)
 }
 
 /**
- * This function returns the Commissioner Aloc corresponding to a Commissioner Session ID.
+ * Returns the Commissioner Aloc corresponding to a Commissioner Session ID.
  *
  * @param[in]  aSessionId   The Commissioner Session ID value.
  *
@@ -723,7 +663,7 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 }
 
 /**
- * This function derives RLOC16 from a given Router ID.
+ * Derives RLOC16 from a given Router ID.
  *
  * @param[in]  aRouterId  The Router ID value.
  *
@@ -733,7 +673,7 @@ inline uint16_t CommissionerAloc16FromId(uint16_t aSessionId)
 inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint16_t>(aRouterId << kRouterIdOffset); }
 
 /**
- * This function indicates whether or not @p aRloc16 refers to an active router.
+ * Indicates whether or not @p aRloc16 refers to an active router.
  *
  * @param[in]  aRloc16  The RLOC16 value.
  *
@@ -744,7 +684,7 @@ inline uint16_t Rloc16FromRouterId(uint8_t aRouterId) { return static_cast<uint1
 inline bool IsActiveRouter(uint16_t aRloc16) { return ChildIdFromRloc16(aRloc16) == 0; }
 
 /**
- * This function converts a device role into a human-readable string.
+ * Converts a device role into a human-readable string.
  *
  * @param[in] aRole  The device role to convert.
  *

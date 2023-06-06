@@ -52,10 +52,10 @@ RegisterLogModule("BbrLocal");
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kStateDisabled)
-    , mMlrTimeout(Mle::kMlrTimeoutDefault)
-    , mReregistrationDelay(Mle::kRegistrationDelayDefault)
+    , mMlrTimeout(kDefaultMlrTimeout)
+    , mReregistrationDelay(kDefaultRegistrationDelay)
     , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
-    , mRegistrationJitter(Mle::kBackboneRouterRegistrationJitter)
+    , mRegistrationJitter(kDefaultRegistrationJitter)
     , mIsServiceAdded(false)
 {
     mDomainPrefixConfig.GetPrefix().SetLength(0);
@@ -131,7 +131,7 @@ Error Local::SetConfig(const Config &aConfig)
     bool  update = false;
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin && aConfig.mMlrTimeout <= Mle::kMlrTimeoutMax,
+    VerifyOrExit(aConfig.mMlrTimeout >= kMinMlrTimeout && aConfig.mMlrTimeout <= kMaxMlrTimeout,
                  error = kErrorInvalidArgs);
 #endif
     // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:

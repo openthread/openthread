@@ -234,7 +234,7 @@ void TestInPlaceAesCcmProcessing(void)
 
         VerifyOrQuit(message->GetLength() == msgLength + kTagLength);
 
-        // Decrpt in place
+        // Decrypt in place
         aesCcm.Init(kHeaderLength, msgLength - kHeaderLength, kTagLength, kNonce, sizeof(kNonce));
         aesCcm.Header(header);
         aesCcm.Payload(*message, kHeaderLength, msgLength - kHeaderLength, ot::Crypto::AesCcm::kDecrypt);

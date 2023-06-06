@@ -39,7 +39,7 @@
 namespace ot {
 
 /**
- * This class template provides a way to query properties of arithmetic types.
+ * Provides a way to query properties of arithmetic types.
  *
  * There are no members if `Type` is not a supported arithmetic type.
  *

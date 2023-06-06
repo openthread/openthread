@@ -107,13 +107,13 @@ extern "C" {
 #define OT_LOG_LEVEL_DEBG 5
 
 /**
- * This type represents the log level.
+ * Represents the log level.
  *
  */
 typedef int otLogLevel;
 
 /**
- * This enumeration represents log regions.
+ * Represents log regions.
  *
  * The support for log region is removed and instead each core module can define its own name to appended to the logs.
  * However, the `otLogRegion` enumeration is still defined as before to help with platforms which we may be using it
@@ -148,7 +148,7 @@ typedef enum otLogRegion
 } otLogRegion;
 
 /**
- * This function outputs logs.
+ * Outputs logs.
  *
  * Note that the support for log region is removed. The OT core will always emit all logs with `OT_LOG_REGION_CORE`
  * as @p aLogRegion.
@@ -162,7 +162,7 @@ typedef enum otLogRegion
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...);
 
 /**
- * This function handles OpenThread log level changes.
+ * Handles OpenThread log level changes.
  *
  * This platform function is called whenever the OpenThread log level changes.
  * This platform function is optional since an empty weak implementation has been provided.

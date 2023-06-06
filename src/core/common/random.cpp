@@ -54,7 +54,7 @@ Manager::Manager(void)
 
 #if !OPENTHREAD_RADIO
     otPlatCryptoRandomInit();
-    SuccessOrAssert(Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
+    SuccessOrAssert(Random::Crypto::Fill(seed));
 #else
     SuccessOrAssert(otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed)));
 #endif

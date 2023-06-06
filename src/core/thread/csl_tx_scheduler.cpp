@@ -115,7 +115,7 @@ void CslTxScheduler::Clear(void)
 }
 
 /**
- * This method always finds the most recent CSL tx among all children,
+ * Always finds the most recent CSL tx among all children,
  * and requests `Mac` to do CSL tx at specific time. It shouldn't be called
  * when `Mac` is already starting to do the CSL tx (indicated by `mCslTxMessage`).
  *
@@ -227,7 +227,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     // in `RescheduleCslTx()` when determining the next CSL delay to
     // schedule CSL tx with `Mac` but here we calculate the delay with
     // zero `aAheadUs`. All the timings are in usec but when passing
-    // delay to `Mac` we divide by `1000` (to covert to msec) which
+    // delay to `Mac` we divide by `1000` (to convert to msec) which
     // can round the value down and cause `Mac` to start operation a
     // bit (some usec) earlier. This is covered by adding the guard
     // time `kFramePreparationGuardInterval`.

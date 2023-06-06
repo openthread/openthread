@@ -271,6 +271,7 @@ const char *Notifier::EventToString(Event aEvent) const
         "JoinerState",       // kEventJoinerStateChanged               (1 << 27)
         "ActDset",           // kEventActiveDatasetChanged             (1 << 28)
         "PndDset",           // kEventPendingDatasetChanged            (1 << 29)
+        "Nat64",             // kEventNat64TranslatorStateChanged      (1 << 30)
     };
 
     for (uint8_t index = 0; index < GetArrayLength(kEventStrings); index++)

@@ -72,7 +72,7 @@ OT11_VERSION = 'OPENTHREAD'
 OT12_VERSION = 'OPENTHREAD'
 OT13_VERSION = 'OPENTHREAD'
 
-# Supported device capabilites in this THCI implementation
+# Supported device capabilities in this THCI implementation
 OT11_CAPBS = DevCapb.V1_1
 OT12_CAPBS = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
 OT12BR_CAPBS = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
@@ -225,7 +225,7 @@ class OpenThreadTHCI(object):
             **kwargs: Arbitrary keyword arguments
                       Includes 'EUI' and 'SerialPort'
         """
-        self.intialize(kwargs)
+        self.initialize(kwargs)
 
     @abstractmethod
     def _connect(self):
@@ -255,7 +255,7 @@ class OpenThreadTHCI(object):
             line str: data send to device
         """
 
-    # Override the following empty methods in the dervied classes when needed
+    # Override the following empty methods in the derived classes when needed
     def _onCommissionStart(self):
         """Called when commissioning starts"""
 
@@ -399,7 +399,7 @@ class OpenThreadTHCI(object):
         time.sleep(duration)
 
     @API
-    def intialize(self, params):
+    def initialize(self, params):
         """initialize the serial port with baudrate, timeout parameters"""
         self.mac = params.get('EUI')
         self.backboneNetif = params.get('Param8') or 'eth0'
@@ -442,7 +442,7 @@ class OpenThreadTHCI(object):
                                 self.UIStatusMsg)
             ModuleHelper.WriteIntoDebugLogger('Err: OpenThread device Firmware not matching..')
 
-        # Make this class compatible with Thread referenece 20200818
+        # Make this class compatible with Thread reference 20200818
         self.__detectReference20200818()
 
     def __repr__(self):
@@ -880,7 +880,7 @@ class OpenThreadTHCI(object):
 
     @API
     def setMAC(self, xEUI):
-        """set the extended addresss of Thread device
+        """set the extended address of Thread device
 
         Args:
             xEUI: extended address in hex format
@@ -2369,7 +2369,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr: IPv6 destination address for this message
             xCommissionerSessionId: commissioner session id
-            listChannelMask: a channel array to indicate which channels to be scaned
+            listChannelMask: a channel array to indicate which channels to be scanned
             xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
             xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
             xScanDuration: ScanDuration when performing an IEEE 802.15.4 ED Scan (milliseconds)

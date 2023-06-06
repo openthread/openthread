@@ -56,6 +56,7 @@ Done
 - [fem](#fem)
 - [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
+- [instanceid](#instanceid)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [joiner](README_JOINER.md)
@@ -1325,7 +1326,7 @@ Done
 
 ### dua iid
 
-Get the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Get the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid
@@ -1335,7 +1336,7 @@ Done
 
 ### dua iid \<iid\>
 
-Set the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Set the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid 0004000300020001
@@ -1344,7 +1345,7 @@ Done
 
 ### dua iid clear
 
-Clear the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Clear the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid clear
@@ -1491,6 +1492,16 @@ Bring down the IPv6 interface.
 Done
 ```
 
+### instanceid
+
+Show OpenThread instance identifier.
+
+```bash
+> instanceid
+468697314
+Done
+```
+
 ### ipaddr
 
 List all IPv6 addresses assigned to the Thread interface.
@@ -1503,7 +1514,7 @@ fe80:0:0:0:f3d9:2a82:c8d8:fe43
 Done
 ```
 
-Use `-v` to get more verbose informations about the address.
+Use `-v` to get more verbose information about the address.
 
 ```bash
 > ipaddr -v
@@ -1679,7 +1690,7 @@ Done
 
 ### keysequence guardtime \<guardtime\>
 
-Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch imediately if key index match
+Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch immediately if key index match
 
 ```bash
 > keysequence guardtime 0
@@ -2202,14 +2213,14 @@ Gets the state of NAT64 functions.
 Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
 
 - `Disabled`: NAT64 prefix manager is disabled.
-- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is disabled.
+- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably because the routing manager is disabled.
 - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
 - `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
 
 Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
 
 - `Disabled`: NAT64 translator is disabled.
-- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.
+- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably because it is not configured with a NAT64 prefix or a CIDR for NAT64.
 - `Active`: NAT64 translator is enabled and is translating packets.
 
 `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
@@ -2685,7 +2696,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceeding `-` if backbone functionality is disabled.
+Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceding `-` if backbone functionality is disabled.
 
 ```bash
 > prefix
@@ -3408,8 +3419,6 @@ Done
 
 ### vendor name
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor name.
 
 ```bash
@@ -3427,8 +3436,6 @@ Done
 
 ### vendor model
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor model.
 
 ```bash
@@ -3445,8 +3452,6 @@ Done
 ```
 
 ### vendor swversion
-
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
 
 Get the vendor SW version.
 
@@ -3546,7 +3551,7 @@ Address Mode: Allowlist
 0f6127e33af6b402
 RssIn List:
 0f6127e33af6b403 : rss -95 (lqi 1)
-Default rss : -50 (lqi 3)
+Default rss: -50 (lqi 3)
 Done
 ```
 
@@ -3591,7 +3596,7 @@ Done
 
 ### macfilter addr add \<extaddr\> \[rss\]
 
-Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for the messages from the address if rss is specified.
+Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received signal strength for the messages from the address if rss is specified.
 
 ```bash
 > macfilter addr add 0f6127e33af6b403 -95

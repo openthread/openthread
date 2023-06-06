@@ -43,19 +43,20 @@
 #include "common/debug.hpp"
 #include "common/error.hpp"
 #include "common/non_copyable.hpp"
+#include "common/type_traits.hpp"
 
 namespace ot {
 namespace Random {
 
 /**
- * This class manages random number generator initialization/deinitialization.
+ * Manages random number generator initialization/deinitialization.
  *
  */
 class Manager : private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     Manager(void);
@@ -67,7 +68,7 @@ public:
     ~Manager(void);
 
     /**
-     * This static method generates and returns a random value using a non-crypto Pseudo Random Number Generator.
+     * Generates and returns a random value using a non-crypto Pseudo Random Number Generator.
      *
      * @returns    A random `uint32_t` value.
      *
@@ -76,7 +77,7 @@ public:
 
 #if !OPENTHREAD_RADIO
     /**
-     * This static method fills a given buffer with cryptographically secure random bytes.
+     * Fills a given buffer with cryptographically secure random bytes.
      *
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
      * @param[in]  aSize    Size of buffer (number of bytes to fill).
@@ -105,7 +106,7 @@ private:
 namespace NonCrypto {
 
 /**
- * This function generates and returns a random `uint32_t` value.
+ * Generates and returns a random `uint32_t` value.
  *
  * @returns    A random `uint32_t` value.
  *
@@ -113,7 +114,7 @@ namespace NonCrypto {
 inline uint32_t GetUint32(void) { return Manager::NonCryptoGetUint32(); }
 
 /**
- * This function generates and returns a random byte.
+ * Generates and returns a random byte.
  *
  * @returns A random `uint8_t` value.
  *
@@ -121,7 +122,7 @@ inline uint32_t GetUint32(void) { return Manager::NonCryptoGetUint32(); }
 inline uint8_t GetUint8(void) { return static_cast<uint8_t>(GetUint32() & 0xff); }
 
 /**
- * This function generates and returns a random `uint16_t` value.
+ * Generates and returns a random `uint16_t` value.
  *
  * @returns A random `uint16_t` value.
  *
@@ -129,7 +130,7 @@ inline uint8_t GetUint8(void) { return static_cast<uint8_t>(GetUint32() & 0xff);
 inline uint16_t GetUint16(void) { return static_cast<uint16_t>(GetUint32() & 0xffff); }
 
 /**
- * This function generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint8_t` value within a given range `[aMin, aMax)`.
  *
  * @param[in]  aMin  A minimum value (this value can be included in returned random result).
  * @param[in]  aMax  A maximum value (this value is excluded from returned random result).
@@ -140,7 +141,7 @@ inline uint16_t GetUint16(void) { return static_cast<uint16_t>(GetUint32() & 0xf
 uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax);
 
 /**
- * This function generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint16_t` value within a given range `[aMin, aMax)`.
  *
  * @note The returned random value can include the @p aMin value but excludes the @p aMax.
  *
@@ -153,7 +154,7 @@ uint8_t GetUint8InRange(uint8_t aMin, uint8_t aMax);
 uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax);
 
 /**
- * This function generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
+ * Generates and returns a random `uint32_t` value within a given range `[aMin, aMax)`.
  *
  * @note The returned random value can include the @p aMin value but excludes the @p aMax.
  *
@@ -166,7 +167,7 @@ uint16_t GetUint16InRange(uint16_t aMin, uint16_t aMax);
 uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
 
 /**
- * This function fills a given buffer with random bytes.
+ * Fills a given buffer with random bytes.
  *
  * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
@@ -175,7 +176,22 @@ uint32_t GetUint32InRange(uint32_t aMin, uint32_t aMax);
 void FillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
 /**
- * This function adds a random jitter within a given range to a given value.
+ * Fills a given object with random bytes.
+ *
+ * @tparam    ObjectType   The object type to fill.
+ *
+ * @param[in] aObject      A reference to the object to fill.
+ *
+ */
+template <typename ObjectType> void Fill(ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    FillBuffer(reinterpret_cast<uint8_t *>(&aObject), sizeof(ObjectType));
+}
+
+/**
+ * Adds a random jitter within a given range to a given value.
  *
  * @param[in]  aValue     A value to which the random jitter is added.
  * @param[in]  aJitter    Maximum jitter. Random jitter is selected from the range `[-aJitter, aJitter]`.
@@ -192,7 +208,7 @@ uint32_t AddJitter(uint32_t aValue, uint16_t aJitter);
 namespace Crypto {
 
 /**
- * This function fills a given buffer with cryptographically secure random bytes.
+ * Fills a given buffer with cryptographically secure random bytes.
  *
  * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
  * @param[in]  aSize    Size of buffer (number of bytes to fill).
@@ -201,6 +217,24 @@ namespace Crypto {
  *
  */
 inline Error FillBuffer(uint8_t *aBuffer, uint16_t aSize) { return Manager::CryptoFillBuffer(aBuffer, aSize); }
+
+/**
+ * Fills a given object with cryptographically secure random bytes.
+ *
+ * @tparam    ObjectType   The object type to fill.
+ *
+ * @param[in] aObject      A reference to the object to fill.
+ *
+ * @retval kErrorNone    Successfully filled @p aObject with random values.
+ * @retval kErrorFailed  Failed to generate secure random bytes to fill the object.
+ *
+ */
+template <typename ObjectType> Error Fill(ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    return FillBuffer(reinterpret_cast<uint8_t *>(&aObject), sizeof(ObjectType));
+}
 
 } // namespace Crypto
 

@@ -47,7 +47,7 @@ public:
     constexpr static ssize_t kMaxUpstreamServerCount      = 3;
 
     /**
-     * This method initialize the upstream DNS resolver.
+     * Initialize the upstream DNS resolver.
      *
      */
     void Init(void);

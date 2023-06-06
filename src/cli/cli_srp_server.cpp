@@ -75,24 +75,18 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+/**
+ * @cli srp server auto
+ * @code
+ * srp server auto
+ * Disabled
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpServerIsAutoEnableMode
+ */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli srp server auto
-     * @code
-     * srp server auto
-     * Disabled
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otSrpServerIsAutoEnableMode
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otSrpServerIsAutoEnableMode(GetInstancePtr()));
-    }
     /**
      * @cli srp server auto enable
      * @code
@@ -102,16 +96,8 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
      * @par api_copy
      * #otSrpServerSetAutoEnableMode
      */
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
-        otSrpServerSetAutoEnableMode(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode,
+                                                              otSrpServerSetAutoEnableMode);
 }
 #endif
 

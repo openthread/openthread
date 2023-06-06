@@ -41,20 +41,18 @@
 #include "platform-posix.h"
 #include "lib/spinel/spinel_interface.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
-
 namespace ot {
 namespace Posix {
 
 /**
- * This class defines a vendor interface to the Radio Co-processor (RCP).
+ * Defines a vendor interface to the Radio Co-processor (RCP).
  *
  */
-class VendorInterface
+class VendorInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aCallback         A reference to a `Callback` object.
      * @param[in] aCallbackContext  The context pointer passed to the callback.
@@ -72,7 +70,7 @@ public:
     ~VendorInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP).
+     * Initializes the interface to the Radio Co-processor (RCP).
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
@@ -86,13 +84,13 @@ public:
     otError Init(const Url::Url &aRadioUrl);
 
     /**
-     * This method deinitializes the interface to the RCP.
+     * Deinitializes the interface to the RCP.
      *
      */
     void Deinit(void);
 
     /**
-     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+     * Encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
      * @param[in] aFrame   A pointer to buffer containing the spinel frame to send.
      * @param[in] aLength  The length (number of bytes) in the frame.
@@ -106,7 +104,7 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving part or all of spinel frame within specified interval.
+     * Waits for receiving part or all of spinel frame within specified interval.
      *
      * @param[in] aTimeoutUs  The timeout value in microseconds.
      *
@@ -117,7 +115,7 @@ public:
     otError WaitForFrame(uint64_t aTimeoutUs);
 
     /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out] aReadFdSet   A reference to the read file descriptors.
      * @param[in,out] aWriteFdSet  A reference to the write file descriptors.
@@ -128,7 +126,7 @@ public:
     void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
 
     /**
-     * This method performs radio driver processing.
+     * Performs radio driver processing.
      *
      * @param[in] aContext  The context containing fd_sets.
      *
@@ -136,7 +134,7 @@ public:
     void Process(const RadioProcessContext &aContext);
 
     /**
-     * This method returns the bus speed between the host and the radio.
+     * Returns the bus speed between the host and the radio.
      *
      * @returns  Bus speed in bits/second.
      *
@@ -144,7 +142,7 @@ public:
     uint32_t GetBusSpeed(void) const;
 
     /**
-     * This method hardware resets the RCP.
+     * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
@@ -153,16 +151,15 @@ public:
     otError HardwareReset(void);
 
     /**
-     * This method returns the RCP interface metrics.
+     * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
      *
      */
-    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void);
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
 #endif // POSIX_APP_VENDOR_INTERFACE_HPP_

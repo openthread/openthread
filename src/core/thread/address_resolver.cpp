@@ -959,11 +959,7 @@ void AddressResolver::HandleTimeTick(void)
                 entry->SetTimeout(retryDelay);
 
                 retryDelay <<= 1;
-
-                if (retryDelay > kAddressQueryMaxRetryDelay)
-                {
-                    retryDelay = kAddressQueryMaxRetryDelay;
-                }
+                retryDelay = Min(retryDelay, kAddressQueryMaxRetryDelay);
 
                 entry->SetRetryDelay(retryDelay);
                 entry->SetCanEvict(true);

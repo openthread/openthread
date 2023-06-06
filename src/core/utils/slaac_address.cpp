@@ -335,11 +335,11 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
     // If there is no previously saved secret key, generate
     // a random one and save it.
 
-    error = Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey));
+    error = Random::Crypto::Fill(aKey);
 
     if (error != kErrorNone)
     {
-        IgnoreError(Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey)));
+        IgnoreError(Random::Crypto::Fill(aKey));
     }
 
     IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));

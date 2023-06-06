@@ -33,7 +33,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies bi-directional connectivity accross multiple Thread networks.
+#   This test verifies bi-directional connectivity across multiple Thread networks.
 #
 # Topology:
 #    -------------(eth)----------------

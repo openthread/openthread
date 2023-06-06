@@ -35,6 +35,7 @@
 
 #include <openthread/sntp.h>
 
+#include "common/clearable.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -52,411 +53,16 @@ namespace Sntp {
 using ot::Encoding::BigEndian::HostSwap32;
 
 /**
- * This class implements SNTP header generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class Header
-{
-public:
-    /**
-     * Default constructor for SNTP Header.
-     *
-     */
-    Header(void);
-
-    /**
-     * Defines supported SNTP modes.
-     *
-     */
-    enum Mode : uint8_t
-    {
-        kModeClient = 3,
-        kModeServer = 4,
-    };
-
-    static constexpr uint8_t kKissCodeLength = 4; ///< Length of the kiss code in ASCII format
-
-    /**
-     * This method returns the flags field value.
-     *
-     * @returns Value of the flags field (LI, VN and Mode).
-     *
-     */
-    uint8_t GetFlags(void) const { return mFlags; }
-
-    /**
-     * This method sets the flags field.
-     *
-     * @param[in]  aFlags  The value of the flags field.
-     *
-     */
-    void SetFlags(uint8_t aFlags) { mFlags = aFlags; }
-
-    /**
-     * This method returns the SNTP operational mode.
-     *
-     * @returns SNTP operational mode.
-     *
-     */
-    Mode GetMode(void) const { return static_cast<Mode>((mFlags & kModeMask) >> kModeOffset); }
-
-    /**
-     * This method returns the packet stratum field value.
-     *
-     * @returns Value of the packet stratum.
-     *
-     */
-    uint8_t GetStratum(void) const { return mStratum; }
-
-    /**
-     * This method sets the packet stratum field value.
-     *
-     * @param[in]  aStratum  The value of the packet stratum field.
-     *
-     */
-    void SetStratum(uint8_t aStratum) { mStratum = aStratum; }
-
-    /**
-     * This method returns the poll field value.
-     *
-     * @returns Value of the poll field.
-     *
-     */
-    uint8_t GetPoll(void) const { return mPoll; }
-
-    /**
-     * This method sets the poll field.
-     *
-     * @param[in]  aPoll  The value of the poll field.
-     *
-     */
-    void SetPoll(uint8_t aPoll) { mPoll = aPoll; }
-
-    /**
-     * This method returns the precision field value.
-     *
-     * @returns Value of the precision field.
-     *
-     */
-    uint8_t GetPrecision(void) const { return mPrecision; }
-
-    /**
-     * This method sets the precision field.
-     *
-     * @param[in]  aPrecision  The value of the precision field.
-     *
-     */
-    void SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
-
-    /**
-     * This method returns the root delay field value.
-     *
-     * @returns Value of the root delay field.
-     *
-     */
-    uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
-
-    /**
-     * This method sets the root delay field.
-     *
-     * @param[in]  aRootDelay  The value of the root delay field.
-     *
-     */
-    void SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
-
-    /**
-     * This method returns the root dispersion field value.
-     *
-     * @returns Value of the root dispersion field.
-     *
-     */
-    uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
-
-    /**
-     * This method sets the root dispersion field.
-     *
-     * @param[in]  aRootDispersion  The value of the root dispersion field.
-     *
-     */
-    void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
-
-    /**
-     * This method returns the reference identifier field value.
-     *
-     * @returns Value of the reference identifier field.
-     *
-     */
-    uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
-
-    /**
-     * This method sets the reference identifier field.
-     *
-     * @param[in]  aReferenceId  The value of the reference identifier field.
-     *
-     */
-    void SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
-
-    /**
-     * This method returns the kiss code in ASCII format.
-     *
-     * @returns Value of the reference identifier field in ASCII format.
-     *
-     */
-    char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
-
-    /**
-     * This method returns the reference timestamp seconds field.
-     *
-     * @returns Value of the reference timestamp seconds field.
-     *
-     */
-    uint32_t GetReferenceTimestampSeconds(void) const { return HostSwap32(mReferenceTimestampSeconds); }
-
-    /**
-     * This method sets the reference timestamp seconds field.
-     *
-     * @param[in]  aReferenceTimestampSeconds  Value of the reference timestamp seconds field.
-     *
-     */
-    void SetReferenceTimestampSeconds(uint32_t aReferenceTimestampSeconds)
-    {
-        mReferenceTimestampSeconds = HostSwap32(aReferenceTimestampSeconds);
-    }
-
-    /**
-     * This method returns the reference timestamp fraction field.
-     *
-     * @returns Value of the reference timestamp fraction field.
-     *
-     */
-    uint32_t GetReferenceTimestampFraction(void) const { return HostSwap32(mReferenceTimestampFraction); }
-
-    /**
-     * This method sets the reference timestamp fraction field.
-     *
-     * @param[in]  aReferenceTimestampFraction  Value of the reference timestamp fraction field.
-     *
-     */
-    void SetReferenceTimestampFraction(uint32_t aReferenceTimestampFraction)
-    {
-        mReferenceTimestampFraction = HostSwap32(aReferenceTimestampFraction);
-    }
-
-    /**
-     * This method returns the originate timestamp seconds field.
-     *
-     * @returns Value of the originate timestamp seconds field.
-     *
-     */
-    uint32_t GetOriginateTimestampSeconds(void) const { return HostSwap32(mOriginateTimestampSeconds); }
-
-    /**
-     * This method sets the originate timestamp seconds field.
-     *
-     * @param[in]  aOriginateTimestampSeconds  Value of the originate timestamp seconds field.
-     *
-     */
-    void SetOriginateTimestampSeconds(uint32_t aOriginateTimestampSeconds)
-    {
-        mOriginateTimestampSeconds = HostSwap32(aOriginateTimestampSeconds);
-    }
-
-    /**
-     * This method returns the originate timestamp fraction field.
-     *
-     * @returns Value of the originate timestamp fraction field.
-     *
-     */
-    uint32_t GetOriginateTimestampFraction(void) const { return HostSwap32(mOriginateTimestampFraction); }
-
-    /**
-     * This method sets the originate timestamp fraction field.
-     *
-     * @param[in]  aOriginateTimestampFraction  Value of the originate timestamp fraction field.
-     *
-     */
-    void SetOriginateTimestampFraction(uint32_t aOriginateTimestampFraction)
-    {
-        mOriginateTimestampFraction = HostSwap32(aOriginateTimestampFraction);
-    }
-
-    /**
-     * This method returns the receive timestamp seconds field.
-     *
-     * @returns Value of the receive timestamp seconds field.
-     *
-     */
-    uint32_t GetReceiveTimestampSeconds(void) const { return HostSwap32(mReceiveTimestampSeconds); }
-
-    /**
-     * This method sets the receive timestamp seconds field.
-     *
-     * @param[in]  aReceiveTimestampSeconds  Value of the receive timestamp seconds field.
-     *
-     */
-    void SetReceiveTimestampSeconds(uint32_t aReceiveTimestampSeconds)
-    {
-        mReceiveTimestampSeconds = HostSwap32(aReceiveTimestampSeconds);
-    }
-
-    /**
-     * This method returns the receive timestamp fraction field.
-     *
-     * @returns Value of the receive timestamp fraction field.
-     *
-     */
-    uint32_t GetReceiveTimestampFraction(void) const { return HostSwap32(mReceiveTimestampFraction); }
-
-    /**
-     * This method sets the receive timestamp fraction field.
-     *
-     * @param[in]  aReceiveTimestampFraction  Value of the receive timestamp fraction field.
-     *
-     */
-    void SetReceiveTimestampFraction(uint32_t aReceiveTimestampFraction)
-    {
-        mReceiveTimestampFraction = HostSwap32(aReceiveTimestampFraction);
-    }
-
-    /**
-     * This method returns the transmit timestamp seconds field.
-     *
-     * @returns Value of the transmit timestamp seconds field.
-     *
-     */
-    uint32_t GetTransmitTimestampSeconds(void) const { return HostSwap32(mTransmitTimestampSeconds); }
-
-    /**
-     * This method sets the transmit timestamp seconds field.
-     *
-     * @param[in]  aTransmitTimestampSeconds  Value of the transmit timestamp seconds field.
-     *
-     */
-    void SetTransmitTimestampSeconds(uint32_t aTransmitTimestampSeconds)
-    {
-        mTransmitTimestampSeconds = HostSwap32(aTransmitTimestampSeconds);
-    }
-
-    /**
-     * This method returns the transmit timestamp fraction field.
-     *
-     * @returns Value of the transmit timestamp fraction field.
-     *
-     */
-    uint32_t GetTransmitTimestampFraction(void) const { return HostSwap32(mTransmitTimestampFraction); }
-
-    /**
-     * This method sets the transmit timestamp fraction field.
-     *
-     * @param[in]  aTransmitTimestampFraction  Value of the transmit timestamp fraction field.
-     *
-     */
-    void SetTransmitTimestampFraction(uint32_t aTransmitTimestampFraction)
-    {
-        mTransmitTimestampFraction = HostSwap32(aTransmitTimestampFraction);
-    }
-
-private:
-    static constexpr uint8_t kNtpVersion    = 4;                      // Current NTP version.
-    static constexpr uint8_t kLeapOffset    = 6;                      // Leap Indicator field offset.
-    static constexpr uint8_t kLeapMask      = 0x03 << kLeapOffset;    // Leap Indicator field mask.
-    static constexpr uint8_t kVersionOffset = 3;                      // Version field offset.
-    static constexpr uint8_t kVersionMask   = 0x07 << kVersionOffset; // Version field mask.
-    static constexpr uint8_t kModeOffset    = 0;                      // Mode field offset.
-    static constexpr uint8_t kModeMask      = 0x07 << kModeOffset;    // Mode filed mask.
-
-    uint8_t  mFlags;                      // SNTP flags: LI Leap Indicator, VN Version Number and Mode.
-    uint8_t  mStratum;                    // Packet Stratum.
-    uint8_t  mPoll;                       // Maximum interval between successive messages, in log2 seconds.
-    uint8_t  mPrecision;                  // The precision of the system clock, in log2 seconds.
-    uint32_t mRootDelay;                  // Total round-trip delay to the reference clock, in NTP short format.
-    uint32_t mRootDispersion;             // Total dispersion to the reference clock.
-    uint32_t mReferenceId;                // ID identifying the particular server or reference clock.
-    uint32_t mReferenceTimestampSeconds;  // Time the system clock was last set or corrected (NTP format).
-    uint32_t mReferenceTimestampFraction; // Fraction part of above value.
-    uint32_t mOriginateTimestampSeconds;  // Time at the client when the request departed for the server (NTP format).
-    uint32_t mOriginateTimestampFraction; // Fraction part of above value.
-    uint32_t mReceiveTimestampSeconds;    // Time at the server when the request arrived from the client (NTP format).
-    uint32_t mReceiveTimestampFraction;   // Fraction part of above value.
-    uint32_t mTransmitTimestampSeconds;   // Time at the server when the response left for the client (NTP format).
-    uint32_t mTransmitTimestampFraction;  // Fraction part of above value.
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements metadata required for SNTP retransmission.
- *
- */
-class QueryMetadata
-{
-    friend class Client;
-
-public:
-    /**
-     * Default constructor for the object.
-     *
-     */
-    QueryMetadata(void);
-
-    /**
-     * This constructor initializes the object with specific values.
-     *
-     * @param[in]  aHandler  Pointer to a handler function for the response.
-     * @param[in]  aContext  Context for the handler function.
-     *
-     */
-    QueryMetadata(otSntpResponseHandler aHandler, void *aContext);
-
-    /**
-     * This method appends request data to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone    Successfully appended the bytes.
-     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-     *
-     */
-    Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-
-    /**
-     * This method reads request data from the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    void ReadFrom(const Message &aMessage)
-    {
-        SuccessOrAssert(aMessage.Read(aMessage.GetLength() - sizeof(*this), *this));
-    }
-
-    /**
-     * This method updates request data in the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     */
-    void UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
-
-private:
-    uint32_t              mTransmitTimestamp;   ///< Time at the client when the request departed for the server.
-    otSntpResponseHandler mResponseHandler;     ///< A function pointer that is called on response reception.
-    void                 *mResponseContext;     ///< A pointer to arbitrary context information.
-    TimeMilli             mTransmissionTime;    ///< Time when the timer should shoot for this message.
-    Ip6::Address          mSourceAddress;       ///< IPv6 address of the message source.
-    Ip6::Address          mDestinationAddress;  ///< IPv6 address of the message destination.
-    uint16_t              mDestinationPort;     ///< UDP port of the message destination.
-    uint8_t               mRetransmissionCount; ///< Number of retransmissions.
-};
-
-/**
- * This class implements SNTP client.
+ * Implements SNTP client.
  *
  */
 class Client : private NonCopyable
 {
 public:
+    typedef otSntpResponseHandler ResponseHandler; ///< Response handler callback.
+
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -464,7 +70,7 @@ public:
     explicit Client(Instance &aInstance);
 
     /**
-     * This method starts the SNTP client.
+     * Starts the SNTP client.
      *
      * @retval kErrorNone     Successfully started the SNTP client.
      * @retval kErrorAlready  The socket is already open.
@@ -472,7 +78,7 @@ public:
     Error Start(void);
 
     /**
-     * This method stops the SNTP client.
+     * Stops the SNTP client.
      *
      * @retval kErrorNone  Successfully stopped the SNTP client.
      *
@@ -480,7 +86,7 @@ public:
     Error Stop(void);
 
     /**
-     * This method returns the unix era number.
+     * Returns the unix era number.
      *
      * @returns The unix era number.
      *
@@ -488,7 +94,7 @@ public:
     uint32_t GetUnixEra(void) const { return mUnixEra; }
 
     /**
-     * This method sets the unix era number.
+     * Sets the unix era number.
      *
      * @param[in]  aUnixEra  The unix era number.
      *
@@ -496,7 +102,7 @@ public:
     void SetUnixEra(uint32_t aUnixEra) { mUnixEra = aUnixEra; }
 
     /**
-     * This method sends an SNTP query.
+     * Sends an SNTP query.
      *
      * @param[in]  aQuery    A pointer to specify SNTP query parameters.
      * @param[in]  aHandler  A function pointer that shall be called on response reception or time-out.
@@ -507,13 +113,126 @@ public:
      * @retval kErrorInvalidArgs  Invalid arguments supplied.
      *
      */
-    Error Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, void *aContext);
+    Error Query(const otSntpQuery *aQuery, ResponseHandler aHandler, void *aContext);
 
 private:
     static constexpr uint32_t kTimeAt1970 = 2208988800UL; // num seconds between 1st Jan 1900 and 1st Jan 1970.
 
     static constexpr uint32_t kResponseTimeout = OPENTHREAD_CONFIG_SNTP_CLIENT_RESPONSE_TIMEOUT;
     static constexpr uint8_t  kMaxRetransmit   = OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT;
+
+    OT_TOOL_PACKED_BEGIN
+    class Header : public Clearable<Header>
+    {
+    public:
+        enum Mode : uint8_t
+        {
+            kModeClient = 3,
+            kModeServer = 4,
+        };
+
+        static constexpr uint8_t kKissCodeLength = 4;
+
+        void Init(void)
+        {
+            Clear();
+            mFlags = (kNtpVersion << kVersionOffset | kModeClient << kModeOffset);
+        }
+
+        uint8_t GetFlags(void) const { return mFlags; }
+        void    SetFlags(uint8_t aFlags) { mFlags = aFlags; }
+
+        Mode GetMode(void) const { return static_cast<Mode>((mFlags & kModeMask) >> kModeOffset); }
+
+        uint8_t GetStratum(void) const { return mStratum; }
+        void    SetStratum(uint8_t aStratum) { mStratum = aStratum; }
+
+        uint8_t GetPoll(void) const { return mPoll; }
+        void    SetPoll(uint8_t aPoll) { mPoll = aPoll; }
+
+        uint8_t GetPrecision(void) const { return mPrecision; }
+        void    SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
+
+        uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
+        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
+
+        uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
+        void     SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
+
+        uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
+        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
+
+        char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
+
+        uint32_t GetReferenceTimestampSeconds(void) const { return HostSwap32(mReferenceTimestampSeconds); }
+        void SetReferenceTimestampSeconds(uint32_t aTimestamp) { mReferenceTimestampSeconds = HostSwap32(aTimestamp); }
+
+        uint32_t GetReferenceTimestampFraction(void) const { return HostSwap32(mReferenceTimestampFraction); }
+        void SetReferenceTimestampFraction(uint32_t aFraction) { mReferenceTimestampFraction = HostSwap32(aFraction); }
+
+        uint32_t GetOriginateTimestampSeconds(void) const { return HostSwap32(mOriginateTimestampSeconds); }
+        void SetOriginateTimestampSeconds(uint32_t aTimestamp) { mOriginateTimestampSeconds = HostSwap32(aTimestamp); }
+
+        uint32_t GetOriginateTimestampFraction(void) const { return HostSwap32(mOriginateTimestampFraction); }
+        void SetOriginateTimestampFraction(uint32_t aFraction) { mOriginateTimestampFraction = HostSwap32(aFraction); }
+
+        uint32_t GetReceiveTimestampSeconds(void) const { return HostSwap32(mReceiveTimestampSeconds); }
+        void     SetReceiveTimestampSeconds(uint32_t aTimestamp) { mReceiveTimestampSeconds = HostSwap32(aTimestamp); }
+
+        uint32_t GetReceiveTimestampFraction(void) const { return HostSwap32(mReceiveTimestampFraction); }
+        void     SetReceiveTimestampFraction(uint32_t aFraction) { mReceiveTimestampFraction = HostSwap32(aFraction); }
+
+        uint32_t GetTransmitTimestampSeconds(void) const { return HostSwap32(mTransmitTimestampSeconds); }
+        void SetTransmitTimestampSeconds(uint32_t aTimestamp) { mTransmitTimestampSeconds = HostSwap32(aTimestamp); }
+
+        uint32_t GetTransmitTimestampFraction(void) const { return HostSwap32(mTransmitTimestampFraction); }
+        void SetTransmitTimestampFraction(uint32_t aFraction) { mTransmitTimestampFraction = HostSwap32(aFraction); }
+
+    private:
+        static constexpr uint8_t kNtpVersion    = 4;                      // Current NTP version.
+        static constexpr uint8_t kLeapOffset    = 6;                      // Leap Indicator field offset.
+        static constexpr uint8_t kLeapMask      = 0x03 << kLeapOffset;    // Leap Indicator field mask.
+        static constexpr uint8_t kVersionOffset = 3;                      // Version field offset.
+        static constexpr uint8_t kVersionMask   = 0x07 << kVersionOffset; // Version field mask.
+        static constexpr uint8_t kModeOffset    = 0;                      // Mode field offset.
+        static constexpr uint8_t kModeMask      = 0x07 << kModeOffset;    // Mode filed mask.
+
+        uint8_t  mFlags;                      // SNTP flags: LI Leap Indicator, VN Version Number and Mode.
+        uint8_t  mStratum;                    // Packet Stratum.
+        uint8_t  mPoll;                       // Maximum interval between successive messages, in log2 seconds.
+        uint8_t  mPrecision;                  // The precision of the system clock, in log2 seconds.
+        uint32_t mRootDelay;                  // Total round-trip delay to the reference clock, in NTP short format.
+        uint32_t mRootDispersion;             // Total dispersion to the reference clock.
+        uint32_t mReferenceId;                // ID identifying the particular server or reference clock.
+        uint32_t mReferenceTimestampSeconds;  // Time the system clock was last set or corrected (NTP format).
+        uint32_t mReferenceTimestampFraction; // Fraction part of above value.
+        uint32_t mOriginateTimestampSeconds;  // Time at client when request departed for the server (NTP format).
+        uint32_t mOriginateTimestampFraction; // Fraction part of above value.
+        uint32_t mReceiveTimestampSeconds;    // Time at server when request arrived from the client (NTP format).
+        uint32_t mReceiveTimestampFraction;   // Fraction part of above value.
+        uint32_t mTransmitTimestampSeconds;   // Time at server when the response left for the client (NTP format).
+        uint32_t mTransmitTimestampFraction;  // Fraction part of above value.
+    } OT_TOOL_PACKED_END;
+
+    class QueryMetadata
+    {
+    public:
+        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+        void  ReadFrom(const Message &aMessage)
+        {
+            IgnoreError(aMessage.Read(aMessage.GetLength() - sizeof(*this), *this));
+        }
+
+        void UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
+
+        uint32_t                  mTransmitTimestamp;   // Time at client when request departed for server
+        Callback<ResponseHandler> mResponseHandler;     // Response handler callback
+        TimeMilli                 mTransmissionTime;    // Time when the timer should shoot for this message
+        Ip6::Address              mSourceAddress;       // Source IPv6 address
+        Ip6::Address              mDestinationAddress;  // Destination IPv6 address
+        uint16_t                  mDestinationPort;     // Destination UDP port
+        uint8_t                   mRetransmissionCount; // Number of retransmissions
+    };
 
     Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);

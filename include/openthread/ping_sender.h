@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This structure represents a ping reply.
+ * Represents a ping reply.
  *
  */
 typedef struct otPingSenderReply
@@ -69,7 +69,7 @@ typedef struct otPingSenderReply
 } otPingSenderReply;
 
 /**
- * This structure represents statistics of a ping request.
+ * Represents statistics of a ping request.
  *
  */
 typedef struct otPingSenderStatistics
@@ -83,7 +83,7 @@ typedef struct otPingSenderStatistics
 } otPingSenderStatistics;
 
 /**
- * This function pointer type specifies the callback to notify receipt of a ping reply.
+ * Pointer type specifies the callback to notify receipt of a ping reply.
  *
  * @param[in] aReply      A pointer to a `otPingSenderReply` containing info about the received ping reply.
  * @param[in] aContext    A pointer to application-specific context.
@@ -92,7 +92,7 @@ typedef struct otPingSenderStatistics
 typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void *aContext);
 
 /**
- * This function pointer type specifies the callback to report the ping statistics.
+ * Pointer type specifies the callback to report the ping statistics.
  *
  * @param[in] aStatistics      A pointer to a `otPingSenderStatistics` containing info about the received ping
  *                             statistics.
@@ -102,7 +102,7 @@ typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void 
 typedef void (*otPingSenderStatisticsCallback)(const otPingSenderStatistics *aStatistics, void *aContext);
 
 /**
- * This structure represents a ping request configuration.
+ * Represents a ping request configuration.
  *
  */
 typedef struct otPingSenderConfig
@@ -123,7 +123,7 @@ typedef struct otPingSenderConfig
 } otPingSenderConfig;
 
 /**
- * This function starts a ping.
+ * Starts a ping.
  *
  * @param[in] aInstance            A pointer to an OpenThread instance.
  * @param[in] aConfig              The ping config to use.
@@ -137,7 +137,7 @@ typedef struct otPingSenderConfig
 otError otPingSenderPing(otInstance *aInstance, const otPingSenderConfig *aConfig);
 
 /**
- * This function stops an ongoing ping.
+ * Stops an ongoing ping.
  *
  * @param[in] aInstance            A pointer to an OpenThread instance.
  *

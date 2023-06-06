@@ -53,7 +53,7 @@ namespace Crypto {
  */
 
 /**
- * This class implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF) [RFC5869] using SHA-256.
+ * Implements HMAC-based Extract-and-Expand Key Derivation Function (HKDF) [RFC5869] using SHA-256.
  *
  */
 class HkdfSha256
@@ -72,7 +72,7 @@ public:
     ~HkdfSha256(void);
 
     /**
-     * This method performs the HKDF Extract step.
+     * Performs the HKDF Extract step.
      *
      * In the Extract step getting an input key extracts from it a pseudo-random key.
      *
@@ -84,7 +84,7 @@ public:
     void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey);
 
     /**
-     * This method performs the HKDF Expand step.
+     * Performs the HKDF Expand step.
      *
      * The method should be used after a previous `Extract` call, otherwise its behavior is undefined. In the Expand
      * stage an output key of a given length is derived from the pseudo-random key of Extract stage.

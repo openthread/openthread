@@ -69,7 +69,7 @@ namespace ot {
 namespace BorderRouter {
 
 /**
- * This class implements bi-directional routing between Thread and Infrastructure networks.
+ * Implements bi-directional routing between Thread and Infrastructure networks.
  *
  * The Border Routing manager works on both Thread interface and infrastructure interface.
  * All ICMPv6 messages are sent/received on the infrastructure interface.
@@ -100,7 +100,7 @@ public:
     static constexpr uint16_t kMaxPublishedPrefixes = 3;
 
     /**
-     * This enumeration represents the states of `RoutingManager`.
+     * Represents the states of `RoutingManager`.
      *
      */
     enum State : uint8_t
@@ -112,7 +112,7 @@ public:
     };
 
     /**
-     * This constructor initializes the routing manager.
+     * Initializes the routing manager.
      *
      * @param[in]  aInstance  A OpenThread instance.
      *
@@ -120,7 +120,7 @@ public:
     explicit RoutingManager(Instance &aInstance);
 
     /**
-     * This method initializes the routing manager on given infrastructure interface.
+     * Initializes the routing manager on given infrastructure interface.
      *
      * @param[in]  aInfraIfIndex      An infrastructure network interface index.
      * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
@@ -133,7 +133,7 @@ public:
     Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
     /**
-     * This method enables/disables the Border Routing Manager.
+     * Enables/disables the Border Routing Manager.
      *
      * @note  The Border Routing Manager is enabled by default.
      *
@@ -146,7 +146,7 @@ public:
     Error SetEnabled(bool aEnabled);
 
     /**
-     * This method indicates whether or not it is currently running.
+     * Indicates whether or not it is currently running.
      *
      * In order for the `RoutingManager` to be running it needs to be initialized and enabled, and device being
      * attached.
@@ -158,7 +158,7 @@ public:
     bool IsRunning(void) const { return mIsRunning; }
 
     /**
-     * This method gets the state of `RoutingManager`.
+     * Gets the state of `RoutingManager`.
      *
      * @returns The current state of `RoutingManager`.
      *
@@ -166,7 +166,7 @@ public:
     State GetState(void) const;
 
     /**
-     * This method requests the Border Routing Manager to stop.
+     * Requests the Border Routing Manager to stop.
      *
      * If Border Routing Manager is running, calling this method immediately stops it and triggers the preparation
      * and sending of a final Router Advertisement (RA) message on infrastructure interface which deprecates and/or
@@ -181,7 +181,7 @@ public:
     void RequestStop(void) { Stop(); }
 
     /**
-     * This method gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
+     * Gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
      * messages sent over the infrastructure link.
      *
      * The RIO preference is determined as follows:
@@ -196,7 +196,7 @@ public:
     RoutePreference GetRouteInfoOptionPreference(void) const { return mRioPreference; }
 
     /**
-     * This method explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
+     * Explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
      * Advertisement messages sent over the infrastructure link.
      *
      * After a call to this method, BR will use the given preference for all its advertised RIOs. The preference can be
@@ -208,7 +208,7 @@ public:
     void SetRouteInfoOptionPreference(RoutePreference aPreference);
 
     /**
-     * This method clears a previously set preference value for advertised Route Info Options.
+     * Clears a previously set preference value for advertised Route Info Options.
      *
      * After a call to this method, BR will use device role to determine the RIO preference: Medium preference when
      * in router/leader role and low preference when in child role.
@@ -217,7 +217,7 @@ public:
     void ClearRouteInfoOptionPreference(void);
 
     /**
-     * This method returns the local off-mesh-routable (OMR) prefix.
+     * Returns the local off-mesh-routable (OMR) prefix.
      *
      * The randomly generated 64-bit prefix will be added to the Thread Network Data if there isn't already an OMR
      * prefix.
@@ -231,7 +231,7 @@ public:
     Error GetOmrPrefix(Ip6::Prefix &aPrefix) const;
 
     /**
-     * This method returns the currently favored off-mesh-routable (OMR) prefix.
+     * Returns the currently favored off-mesh-routable (OMR) prefix.
      *
      * The favored OMR prefix can be discovered from Network Data or can be our local OMR prefix.
      *
@@ -248,7 +248,7 @@ public:
     Error GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference) const;
 
     /**
-     * This method returns the on-link prefix for the adjacent infrastructure link.
+     * Returns the on-link prefix for the adjacent infrastructure link.
      *
      * The randomly generated 64-bit prefix will be advertised
      * on the infrastructure link if there isn't already a usable
@@ -263,7 +263,7 @@ public:
     Error GetOnLinkPrefix(Ip6::Prefix &aPrefix) const;
 
     /**
-     * This method returns the favored on-link prefix for the adjacent infrastructure link.
+     * Returns the favored on-link prefix for the adjacent infrastructure link.
      *
      * The favored prefix is either a discovered prefix on the infrastructure link or the local on-link prefix.
      *
@@ -298,7 +298,7 @@ public:
     void SetNat64PrefixManagerEnabled(bool aEnabled);
 
     /**
-     * This method returns the local NAT64 prefix.
+     * Returns the local NAT64 prefix.
      *
      * @param[out]  aPrefix  A reference to where the prefix will be output to.
      *
@@ -309,7 +309,7 @@ public:
     Error GetNat64Prefix(Ip6::Prefix &aPrefix);
 
     /**
-     * This method returns the currently favored NAT64 prefix.
+     * Returns the currently favored NAT64 prefix.
      *
      * The favored NAT64 prefix can be discovered from infrastructure link or can be the local NAT64 prefix.
      *
@@ -323,7 +323,7 @@ public:
     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
 
     /**
-     * This method informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
+     * Informs `RoutingManager` of the result of the discovery request of NAT64 prefix on infrastructure
      * interface (`InfraIf::DiscoverNat64Prefix()`).
      *
      * @param[in]  aPrefix  The discovered NAT64 prefix on `InfraIf`.
@@ -334,7 +334,7 @@ public:
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
     /**
-     * This method processes a received ICMPv6 message from the infrastructure interface.
+     * Processes a received ICMPv6 message from the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
      *
@@ -345,13 +345,13 @@ public:
     void HandleReceived(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
 
     /**
-     * This method handles infrastructure interface state changes.
+     * Handles infrastructure interface state changes.
      *
      */
     void HandleInfraIfStateChanged(void) { EvaluateState(); }
 
     /**
-     * This method checks whether the on-mesh prefix configuration is a valid OMR prefix.
+     * Checks whether the on-mesh prefix configuration is a valid OMR prefix.
      *
      * @param[in] aOnMeshPrefixConfig  The on-mesh prefix configuration to check.
      *
@@ -362,7 +362,7 @@ public:
     static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
 
     /**
-     * This method checks whether a given prefix is a valid OMR prefix.
+     * Checks whether a given prefix is a valid OMR prefix.
      *
      * @param[in]  aPrefix  The prefix to check.
      *
@@ -373,7 +373,7 @@ public:
     static bool IsValidOmrPrefix(const Ip6::Prefix &aPrefix);
 
     /**
-     * This method initializes a `PrefixTableIterator`.
+     * Initializes a `PrefixTableIterator`.
      *
      * An iterator can be initialized again to start from the beginning of the table.
      *
@@ -389,7 +389,7 @@ public:
     }
 
     /**
-     * This method iterates over entries in the discovered prefix table.
+     * Iterates over entries in the discovered prefix table.
      *
      * @param[in,out] aIterator  An iterator.
      * @param[out]    aEntry     A reference to the entry to populate.
@@ -405,7 +405,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     /**
-     * This method determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
+     * Determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
      *
      * This should be called from `Srp::Server` when auto-enable mode is changed.
      *
@@ -998,6 +998,9 @@ private:
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
+
+    static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
+    static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
 
     using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
     using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;

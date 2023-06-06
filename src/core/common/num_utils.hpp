@@ -132,6 +132,29 @@ template <typename UintType> uint16_t ClampToUint16(UintType aValue)
 }
 
 /**
+ * Returns a clamped version of given integer to a `int8_t`.
+ *
+ * If @p aValue is smaller than min value of a `int8_t`, the min value of `int8_t` is returned.
+ * If @p aValue is larger than max value of a `int8_t`, the max value of `int8_t` is returned.
+ *
+ * @tparam IntType    The value type (MUST be `int16_t`, `int32_t`, or `int64_t`).
+ *
+ * @param[in] aValue  The value to clamp.
+ *
+ * @returns The clamped version of @p aValue to `int8_t`.
+ *
+ */
+template <typename IntType> int8_t ClampToInt8(IntType aValue)
+{
+    static_assert(TypeTraits::IsSame<IntType, int16_t>::kValue || TypeTraits::IsSame<IntType, int32_t>::kValue ||
+                      TypeTraits::IsSame<IntType, int64_t>::kValue,
+                  "IntType must be `int16_t, `int32_t`, or `int64_t`");
+
+    return static_cast<int8_t>(Clamp(aValue, static_cast<IntType>(NumericLimits<int8_t>::kMin),
+                                     static_cast<IntType>(NumericLimits<int8_t>::kMax)));
+}
+
+/**
  * This template function performs a three-way comparison between two values.
  *
  * @tparam Type   The value type.
@@ -182,7 +205,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
 }
 
 /**
- * This function casts a given `uint32_t` to `unsigned long`.
+ * Casts a given `uint32_t` to `unsigned long`.
  *
  * @param[in] aUint32   A `uint32_t` value.
  *
@@ -192,7 +215,7 @@ template <typename IntType> inline IntType DivideAndRoundToClosest(IntType aDivi
 inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned long>(aUint32); }
 
 /**
- * This function counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
+ * Counts the number of `1` bits in the binary representation of a given unsigned int bit-mask value.
  *
  * @tparam UintType   The unsigned int type (MUST be `uint8_t`, uint16_t`, uint32_t`, or `uint64_t`).
  *

@@ -109,6 +109,15 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(aInstance, *this)
     , mNetworkData(aInstance, *this)
     , mUdp(aInstance, *this)
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    , mMacFilter(aInstance, *this)
+#endif
+#if OPENTHREAD_CLI_DNS_ENABLE
+    , mDns(aInstance, *this)
+#endif
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    , mBbr(aInstance, *this)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mBr(aInstance, *this)
 #endif
@@ -332,7 +341,6 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
     return error;
 }
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
 otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 {
     otError error = OT_ERROR_NONE;
@@ -352,6 +360,8 @@ otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 
     return error;
 }
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 otError Interpreter::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner)
 {
@@ -601,12 +611,12 @@ template <> otError Interpreter::Process<Cmd("br")>(Arg aArgs[]) { return mBr.Pr
 template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
     if (aArgs[0].IsEmpty())
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
+
     /**
      * @cli nat64 (enable,disable)
      * @code
@@ -622,9 +632,8 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      * #otNat64SetEnabled
      *
      */
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otNat64SetEnabled) == OT_ERROR_NONE)
     {
-        otNat64SetEnabled(GetInstancePtr(), enable);
     }
     /**
      * @cli nat64 state
@@ -675,25 +684,44 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 #endif
     }
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    /**
-     * @cli nat64 cidr
-     * @code
-     * nat64 cidr
-     * 192.168.255.0/24
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otNat64GetCidr
-     *
-     */
     else if (aArgs[0] == "cidr")
     {
         otIp4Cidr cidr;
-        char      cidrString[OT_IP4_CIDR_STRING_SIZE];
 
-        SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
-        otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
-        OutputLine("%s", cidrString);
+        /**
+         * @cli nat64 cidr
+         * @code
+         * nat64 cidr
+         * 192.168.255.0/24
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otNat64GetCidr
+         *
+         */
+        if (aArgs[1].IsEmpty())
+        {
+            char cidrString[OT_IP4_CIDR_STRING_SIZE];
+
+            SuccessOrExit(error = otNat64GetCidr(GetInstancePtr(), &cidr));
+            otIp4CidrToString(&cidr, cidrString, sizeof(cidrString));
+            OutputLine("%s", cidrString);
+        }
+        /**
+         * @cli nat64 cidr <cidr>
+         * @code
+         * nat64 cidr 192.168.255.0/24
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otPlatNat64SetIp4Cidr
+         *
+         */
+        else
+        {
+            SuccessOrExit(error = otIp4CidrFromString(aArgs[1].GetCString(), &cidr));
+            error = otNat64SetIp4Cidr(GetInstancePtr(), &cidr);
+        }
     }
     /**
      * @cli nat64 mappings
@@ -737,9 +765,8 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64InitAddressMappingIterator(GetInstancePtr(), &iterator);
         while (otNat64GetNextAddressMapping(GetInstancePtr(), &iterator, &mapping) == OT_ERROR_NONE)
         {
-            char               ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
-            char               ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
-            Uint64StringBuffer u64StringBuffer;
+            char ip4AddressString[OT_IP4_ADDRESS_STRING_SIZE];
+            char ip6AddressString[OT_IP6_PREFIX_STRING_SIZE];
 
             otIp6AddressToString(&mapping.mIp6, ip6AddressString, sizeof(ip6AddressString));
             otIp4AddressToString(&mapping.mIp4, ip4AddressString, sizeof(ip4AddressString));
@@ -749,36 +776,19 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
             OutputFormat("| %40s ", ip6AddressString);
             OutputFormat("| %16s ", ip4AddressString);
             OutputFormat("| %5lus ", ToUlong(mapping.mRemainingTimeMs / 1000));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTotal.m6To4Bytes, u64StringBuffer));
-
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mTotal);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "TCP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mTcp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mTcp);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "UDP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mUdp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mUdp);
 
             OutputFormat("| %16s ", "");
             OutputFormat("| %68s ", "ICMP");
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m4To6Bytes, u64StringBuffer));
-            OutputFormat("| %8s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Packets, u64StringBuffer));
-            OutputFormat("| %12s ", Uint64ToString(mapping.mCounters.mIcmp.m6To4Bytes, u64StringBuffer));
-            OutputLine("|");
+            OutputNat64Counters(mapping.mCounters.mIcmp);
         }
     }
     /**
@@ -851,28 +861,16 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         otNat64GetErrorCounters(GetInstancePtr(), &errorCounters);
 
         OutputFormat("| %13s ", "Total");
-        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mTotal.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mTotal.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mTotal.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mTotal);
 
         OutputFormat("| %13s ", "TCP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mTcp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mTcp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mTcp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mTcp);
 
         OutputFormat("| %13s ", "UDP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mUdp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mUdp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mUdp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mUdp);
 
         OutputFormat("| %13s ", "ICMP");
-        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m4To6Packets, u64StringBuffer));
-        OutputFormat("| %12s ", Uint64ToString(counters.mIcmp.m4To6Bytes, u64StringBuffer));
-        OutputFormat("| %8s ", Uint64ToString(counters.mIcmp.m6To4Packets, u64StringBuffer));
-        OutputLine("| %12s |", Uint64ToString(counters.mIcmp.m6To4Bytes, u64StringBuffer));
+        OutputNat64Counters(counters.mIcmp);
 
         OutputTableHeader(kNat64CounterTableErrorSubHeader, kNat64CounterTableErrorSubHeaderColumns);
         for (uint8_t i = 0; i < OT_NAT64_DROP_REASON_COUNT; i++)
@@ -891,408 +889,24 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void Interpreter::OutputNat64Counters(const otNat64Counters &aCounters)
+{
+    Uint64StringBuffer u64StringBuffer;
+
+    OutputFormat("| %8s ", Uint64ToString(aCounters.m4To6Packets, u64StringBuffer));
+    OutputFormat("| %12s ", Uint64ToString(aCounters.m4To6Bytes, u64StringBuffer));
+    OutputFormat("| %8s ", Uint64ToString(aCounters.m6To4Packets, u64StringBuffer));
+    OutputLine("| %12s |", Uint64ToString(aCounters.m6To4Bytes, u64StringBuffer));
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[])
-{
-    otError                error = OT_ERROR_INVALID_COMMAND;
-    otBackboneRouterConfig config;
 
-    /**
-     * @cli bbr
-     * @code
-     * bbr
-     * BBR Primary:
-     * server16: 0xE400
-     * seqno:    10
-     * delay:    120 secs
-     * timeout:  300 secs
-     * Done
-     * @endcode
-     * @code
-     * bbr
-     * BBR Primary: None
-     * Done
-     * @endcode
-     * @par
-     * Returns the current Primary Backbone Router information for the Thread device.
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        if (otBackboneRouterGetPrimary(GetInstancePtr(), &config) == OT_ERROR_NONE)
-        {
-            OutputLine("BBR Primary:");
-            OutputLine("server16: 0x%04X", config.mServer16);
-            OutputLine("seqno:    %u", config.mSequenceNumber);
-            OutputLine("delay:    %u secs", config.mReregistrationDelay);
-            OutputLine("timeout:  %lu secs", ToUlong(config.mMlrTimeout));
-        }
-        else
-        {
-            OutputLine("BBR Primary: None");
-        }
-
-        error = OT_ERROR_NONE;
-    }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    else
-    {
-        if (aArgs[0] == "mgmt")
-        {
-            if (aArgs[1].IsEmpty())
-            {
-                ExitNow(error = OT_ERROR_INVALID_COMMAND);
-            }
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-            /**
-             * @cli bbr mgmt dua
-             * @code
-             * bbr mgmt dua 1 2f7c235e5025a2fd
-             * Done
-             * @endcode
-             * @code
-             * bbr mgmt dua 160
-             * Done
-             * @endcode
-             * @cparam bbr mgmt dua @ca{status|coap-code} [@ca{meshLocalIid}]
-             * For `status` or `coap-code`, use:
-             * *    0: ST_DUA_SUCCESS
-             * *    1: ST_DUA_REREGISTER
-             * *    2: ST_DUA_INVALID
-             * *    3: ST_DUA_DUPLICATE
-             * *    4: ST_DUA_NO_RESOURCES
-             * *    5: ST_DUA_BBR_NOT_PRIMARY
-             * *    6: ST_DUA_GENERAL_FAILURE
-             * *    160: COAP code 5.00
-             * @par
-             * With the `meshLocalIid` included, this command configures the response status
-             * for the next DUA registration. Without `meshLocalIid`, respond to the next
-             * DUA.req with the specified `status` or `coap-code`.
-             * @par
-             * Available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
-             * @sa otBackboneRouterConfigNextDuaRegistrationResponse
-             */
-            else if (aArgs[1] == "dua")
-            {
-                uint8_t                   status;
-                otIp6InterfaceIdentifier *mlIid = nullptr;
-                otIp6InterfaceIdentifier  iid;
-
-                SuccessOrExit(error = aArgs[2].ParseAsUint8(status));
-
-                if (!aArgs[3].IsEmpty())
-                {
-                    SuccessOrExit(error = aArgs[3].ParseAsHexString(iid.mFields.m8));
-                    mlIid = &iid;
-                    VerifyOrExit(aArgs[4].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-                }
-
-                otBackboneRouterConfigNextDuaRegistrationResponse(GetInstancePtr(), mlIid, status);
-                ExitNow();
-            }
-#endif
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-            else if (aArgs[1] == "mlr")
-            {
-                error = ProcessBackboneRouterMgmtMlr(aArgs + 2);
-                ExitNow();
-            }
-#endif
-        }
-        SuccessOrExit(error = ProcessBackboneRouterLocal(aArgs));
-    }
-
-exit:
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    return error;
-}
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-otError Interpreter::ProcessBackboneRouterMgmtMlr(Arg aArgs[])
-{
-    otError error = OT_ERROR_INVALID_COMMAND;
-
-    /**
-     * @cli bbr mgmt mlr listener
-     * @code
-     * bbr mgmt mlr listener
-     * ff04:0:0:0:0:0:0:abcd 3534000
-     * ff04:0:0:0:0:0:0:eeee 3537610
-     * Done
-     * @endcode
-     * @par
-     * Returns the Multicast Listeners with the #otBackboneRouterMulticastListenerInfo
-     * `mTimeout` in seconds.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` and
-     * `OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE` are enabled.
-     * @sa otBackboneRouterMulticastListenerGetNext
-     */
-    if (aArgs[0] == "listener")
-    {
-        if (aArgs[1].IsEmpty())
-        {
-            PrintMulticastListenersTable();
-            ExitNow(error = OT_ERROR_NONE);
-        }
-
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        /**
-         * @cli bbr mgmt mlr listener clear
-         * @code
-         * bbr mgmt mlr listener clear
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otBackboneRouterMulticastListenerClear
-         */
-        if (aArgs[1] == "clear")
-        {
-            otBackboneRouterMulticastListenerClear(GetInstancePtr());
-            error = OT_ERROR_NONE;
-        }
-        /**
-         * @cli bbr mgmt mlr listener add
-         * @code
-         * bbr mgmt mlr listener add ff04::1
-         * Done
-         * @endcode
-         * @code
-         * bbr mgmt mlr listener add ff04::2 300
-         * Done
-         * @endcode
-         * @cparam bbr mgmt mlr listener add @ca{ipaddress} [@ca{timeout-seconds}]
-         * @par api_copy
-         * #otBackboneRouterMulticastListenerAdd
-         */
-        else if (aArgs[1] == "add")
-        {
-            otIp6Address address;
-            uint32_t     timeout = 0;
-
-            SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
-
-            if (!aArgs[3].IsEmpty())
-            {
-                SuccessOrExit(error = aArgs[3].ParseAsUint32(timeout));
-                VerifyOrExit(aArgs[4].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-            }
-
-            error = otBackboneRouterMulticastListenerAdd(GetInstancePtr(), &address, timeout);
-        }
-    }
-    /**
-     * @cli bbr mgmt mlr response
-     * @code
-     * bbr mgmt mlr response 2
-     * Done
-     * @endcode
-     * @cparam bbr mgmt mlr response @ca{status-code}
-     * For `status-code`, use:
-     * *    0: ST_MLR_SUCCESS
-     * *    2: ST_MLR_INVALID
-     * *    3: ST_MLR_NO_PERSISTENT
-     * *    4: ST_MLR_NO_RESOURCES
-     * *    5: ST_MLR_BBR_NOT_PRIMARY
-     * *    6: ST_MLR_GENERAL_FAILURE
-     * @par api_copy
-     * #otBackboneRouterConfigNextMulticastListenerRegistrationResponse
-     */
-    else if (aArgs[0] == "response")
-    {
-        error = ProcessSet(aArgs + 1, otBackboneRouterConfigNextMulticastListenerRegistrationResponse);
-#endif
-    }
-
-exit:
-    return error;
-}
-
-void Interpreter::PrintMulticastListenersTable(void)
-{
-    otBackboneRouterMulticastListenerIterator iter = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
-    otBackboneRouterMulticastListenerInfo     listenerInfo;
-
-    while (otBackboneRouterMulticastListenerGetNext(GetInstancePtr(), &iter, &listenerInfo) == OT_ERROR_NONE)
-    {
-        OutputIp6Address(listenerInfo.mAddress);
-        OutputLine(" %lu", ToUlong(listenerInfo.mTimeout));
-    }
-}
-
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-
-otError Interpreter::ProcessBackboneRouterLocal(Arg aArgs[])
-{
-    otError                error = OT_ERROR_NONE;
-    otBackboneRouterConfig config;
-    bool                   enable;
-
-    /**
-     * @cli bbr (enable,disable)
-     * @code
-     * bbr enable
-     * Done
-     * @endcode
-     * @code
-     * bbr disable
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBackboneRouterSetEnabled
-     */
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        otBackboneRouterSetEnabled(GetInstancePtr(), enable);
-    }
-    /**
-     * @cli bbr jitter (get,set)
-     * @code
-     * bbr jitter
-     * 20
-     * Done
-     * @endcode
-     * @code
-     * bbr jitter 10
-     * Done
-     * @endcode
-     * @cparam bbr jitter [@ca{jitter}]
-     * @par
-     * Gets or sets jitter (in seconds) for Backbone Router registration.
-     * @par
-     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
-     * @sa otBackboneRouterGetRegistrationJitter
-     * @sa otBackboneRouterSetRegistrationJitter
-     */
-    else if (aArgs[0] == "jitter")
-    {
-        error = ProcessGetSet(aArgs + 1, otBackboneRouterGetRegistrationJitter, otBackboneRouterSetRegistrationJitter);
-    }
-    /**
-     * @cli bbr register
-     * @code
-     * bbr register
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBackboneRouterRegister
-     */
-    else if (aArgs[0] == "register")
-    {
-        SuccessOrExit(error = otBackboneRouterRegister(GetInstancePtr()));
-    }
-    /**
-     * @cli bbr state
-     * @code
-     * bbr state
-     * Disabled
-     * Done
-     * @endcode
-     * @code
-     * bbr state
-     * Primary
-     * Done
-     * @endcode
-     * @code
-     * bbr state
-     * Secondary
-     * Done
-     * @endcode
-     * @par
-     * Available when `OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE` is enabled.
-     * @par api_copy
-     * #otBackboneRouterGetState
-     */
-    else if (aArgs[0] == "state")
-    {
-        static const char *const kStateStrings[] = {
-            "Disabled",  // (0) OT_BACKBONE_ROUTER_STATE_DISABLED
-            "Secondary", // (1) OT_BACKBONE_ROUTER_STATE_SECONDARY
-            "Primary",   // (2) OT_BACKBONE_ROUTER_STATE_PRIMARY
-        };
-
-        static_assert(0 == OT_BACKBONE_ROUTER_STATE_DISABLED, "OT_BACKBONE_ROUTER_STATE_DISABLED value is incorrect");
-        static_assert(1 == OT_BACKBONE_ROUTER_STATE_SECONDARY, "OT_BACKBONE_ROUTER_STATE_SECONDARY value is incorrect");
-        static_assert(2 == OT_BACKBONE_ROUTER_STATE_PRIMARY, "OT_BACKBONE_ROUTER_STATE_PRIMARY value is incorrect");
-
-        OutputLine("%s", Stringify(otBackboneRouterGetState(GetInstancePtr()), kStateStrings));
-    }
-    /**
-     * @cli bbr config
-     * @code
-     * bbr config
-     * seqno:    10
-     * delay:    120 secs
-     * timeout:  300 secs
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otBackboneRouterGetConfig
-     */
-    else if (aArgs[0] == "config")
-    {
-        otBackboneRouterGetConfig(GetInstancePtr(), &config);
-
-        if (aArgs[1].IsEmpty())
-        {
-            OutputLine("seqno:    %u", config.mSequenceNumber);
-            OutputLine("delay:    %u secs", config.mReregistrationDelay);
-            OutputLine("timeout:  %lu secs", ToUlong(config.mMlrTimeout));
-        }
-        else
-        {
-            // Set local Backbone Router configuration.
-            /**
-             * @cli bbr config (set)
-             * @code
-             * bbr config seqno 20 delay 30
-             * Done
-             * @endcode
-             * @cparam bbr config [seqno @ca{seqno}] [delay @ca{delay}] [timeout @ca{timeout}]
-             * @par
-             * `bbr register` should be issued explicitly to register Backbone Router service to Leader
-             * for Secondary Backbone Router.
-             * @par api_copy
-             * #otBackboneRouterSetConfig
-             */
-            for (Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
-            {
-                if (*arg == "seqno")
-                {
-                    arg++;
-                    SuccessOrExit(error = arg->ParseAsUint8(config.mSequenceNumber));
-                }
-                else if (*arg == "delay")
-                {
-                    arg++;
-                    SuccessOrExit(error = arg->ParseAsUint16(config.mReregistrationDelay));
-                }
-                else if (*arg == "timeout")
-                {
-                    arg++;
-                    SuccessOrExit(error = arg->ParseAsUint32(config.mMlrTimeout));
-                }
-                else
-                {
-                    ExitNow(error = OT_ERROR_INVALID_ARGS);
-                }
-            }
-
-            SuccessOrExit(error = otBackboneRouterSetConfig(GetInstancePtr(), &config));
-        }
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+template <> otError Interpreter::Process<Cmd("bbr")>(Arg aArgs[]) { return mBbr.Process(aArgs); }
 
 /**
  * @cli domainname
@@ -1517,32 +1131,13 @@ exit:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
-
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-    otThreadSetCcmEnabled(GetInstancePtr(), enable);
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
 
 template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
-
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-    otThreadSetThreadVersionCheckEnabled(GetInstancePtr(), enable);
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
 }
-
 #endif
 
 /**
@@ -2244,15 +1839,9 @@ template <> otError Interpreter::Process<Cmd("coaps")>(Arg aArgs[]) { return mCo
 template <> otError Interpreter::Process<Cmd("coex")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
-    if (aArgs[0].IsEmpty())
+    if (ProcessEnableDisable(aArgs, otPlatRadioIsCoexEnabled, otPlatRadioSetCoexEnabled) == OT_ERROR_NONE)
     {
-        OutputEnabledDisabledStatus(otPlatRadioIsCoexEnabled(GetInstancePtr()));
-    }
-    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        error = otPlatRadioSetCoexEnabled(GetInstancePtr(), enable);
     }
     else if (aArgs[0] == "metrics")
     {
@@ -2950,642 +2539,9 @@ exit:
     return error;
 }
 
-template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError error = OT_ERROR_NONE;
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    otDnsQueryConfig  queryConfig;
-    otDnsQueryConfig *config = &queryConfig;
+#if OPENTHREAD_CLI_DNS_ENABLE
+template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[]) { return mDns.Process(aArgs); }
 #endif
-
-    if (aArgs[0].IsEmpty())
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-    /**
-     * @cli dns compression
-     * @code
-     * dns compression
-     * Enabled
-     * @endcode
-     * @cparam dns compression [@ca{enable|disable}]
-     * @par api_copy
-     * #otDnsIsNameCompressionEnabled
-     * @par
-     * By default DNS name compression is enabled. When disabled,
-     * DNS names are appended as full and never compressed. This
-     * is applicable to OpenThread's DNS and SRP client/server
-     * modules."
-     * 'OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE' is required.
-     */
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    else if (aArgs[0] == "compression")
-    {
-        /**
-         * @cli dns compression (enable,disable)
-         * @code
-         * dns compression enable
-         * Enabled
-         * @endcode
-         * @code
-         * dns compression disable
-         * Done
-         * dns compression
-         * Disabled
-         * Done
-         * @endcode
-         * @cparam dns compression [@ca{enable|disable}]
-         * @par
-         * Set the "DNS name compression" mode.
-         * @par
-         * By default DNS name compression is enabled. When disabled,
-         * DNS names are appended as full and never compressed. This
-         * is applicable to OpenThread's DNS and SRP client/server
-         * modules."
-         * 'OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE' is required.
-         * @sa otDnsSetNameCompressionEnabled
-         */
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otDnsIsNameCompressionEnabled());
-        }
-        else
-        {
-            bool enable;
-
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
-            otDnsSetNameCompressionEnabled(enable);
-        }
-    }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-
-    else if (aArgs[0] == "config")
-    {
-        /**
-         * @cli dns config
-         * @code
-         * dns config
-         * Server: [fd00:0:0:0:0:0:0:1]:1234
-         * ResponseTimeout: 5000 ms
-         * MaxTxAttempts: 2
-         * RecursionDesired: no
-         * ServiceMode: srv
-         * Nat64Mode: allow
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otDnsClientGetDefaultConfig
-         * @par
-         * The config includes the server IPv6 address and port, response
-         * timeout in msec (wait time to rx response), maximum tx attempts
-         * before reporting failure, boolean flag to indicate whether the server
-         * can resolve the query recursively or not.
-         * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
-         */
-        if (aArgs[1].IsEmpty())
-        {
-            const otDnsQueryConfig *defaultConfig = otDnsClientGetDefaultConfig(GetInstancePtr());
-
-            OutputFormat("Server: ");
-            OutputSockAddrLine(defaultConfig->mServerSockAddr);
-            OutputLine("ResponseTimeout: %lu ms", ToUlong(defaultConfig->mResponseTimeout));
-            OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
-            OutputLine("RecursionDesired: %s",
-                       (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
-            OutputLine("ServiceMode: %s", DnsConfigServiceModeToString(defaultConfig->mServiceMode));
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-            OutputLine("Nat64Mode: %s", (defaultConfig->mNat64Mode == OT_DNS_NAT64_ALLOW) ? "allow" : "disallow");
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
-            OutputLine("TransportProtocol: %s",
-                       (defaultConfig->mTransportProto == OT_DNS_TRANSPORT_UDP) ? "udp" : "tcp");
-#endif
-        }
-        /**
-         * @cli dns config (set)
-         * @code
-         * dns config fd00::1 1234 5000 2 0
-         * Done
-         * @endcode
-         * @code
-         * dns config
-         * Server: [fd00:0:0:0:0:0:0:1]:1234
-         * ResponseTimeout: 5000 ms
-         * MaxTxAttempts: 2
-         * RecursionDesired: no
-         * Done
-         * @endcode
-         * @code
-         * dns config fd00::2
-         * Done
-         * @endcode
-         * @code
-         * dns config
-         * Server: [fd00:0:0:0:0:0:0:2]:53
-         * ResponseTimeout: 3000 ms
-         * MaxTxAttempts: 3
-         * RecursionDesired: yes
-         * Done
-         * @endcode
-         * @par api_copy
-         * #otDnsClientSetDefaultConfig
-         * @cparam dns config [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
-         * -->                [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
-         * -->                [@ca{recursion-desired-boolean}] [@ca{service-mode}]
-         * @par
-         * We can leave some of the fields as unspecified (or use value zero). The
-         * unspecified fields are replaced by the corresponding OT config option
-         * definitions OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT to form the default
-         * query config.
-         * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
-         */
-        else
-        {
-            SuccessOrExit(error = GetDnsConfig(aArgs + 1, config));
-            otDnsClientSetDefaultConfig(GetInstancePtr(), config);
-        }
-    }
-    /**
-     * @cli dns resolve
-     * @code
-     * dns resolve ipv6.google.com
-     * DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
-     * @endcode
-     * @code
-     * dns resolve example.com 8.8.8.8
-     * Synthesized IPv6 DNS server address: fdde:ad00:beef:2:0:0:808:808
-     * DNS response for example.com. - fd4c:9574:3720:2:0:0:5db8:d822 TTL:20456
-     * Done
-     * @endcode
-     * @cparam dns resolve @ca{hostname} [@ca{dns-server-IP}] <!--
-     * -->                 [@ca{dns-server-port}] [@ca{response-timeout-ms}] <!--
-     * -->                 [@ca{max-tx-attempts}] [@ca{recursion-desired-boolean}]
-     * @par api_copy
-     * #otDnsClientResolveAddress
-     * @par
-     * Send DNS Query to obtain IPv6 address for given hostname.
-     * @par
-     * The parameters after hostname are optional. Any unspecified (or zero) value
-     * for these optional parameters is replaced by the value from the current default
-     * config (dns config).
-     * @par
-     * The DNS server IP can be an IPv4 address, which will be synthesized to an
-     * IPv6 address using the preferred NAT64 prefix from the network data.
-     * @par
-     * Note: The command will return InvalidState when the DNS server IP is an IPv4
-     * address but the preferred NAT64 prefix is unavailable.
-     * 'OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE' is required.
-     */
-    else if (aArgs[0] == "resolve")
-    {
-        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = GetDnsConfig(aArgs + 2, config));
-        SuccessOrExit(error = otDnsClientResolveAddress(GetInstancePtr(), aArgs[1].GetCString(),
-                                                        &Interpreter::HandleDnsAddressResponse, this, config));
-        error = OT_ERROR_PENDING;
-    }
-#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-    else if (aArgs[0] == "resolve4")
-    {
-        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = GetDnsConfig(aArgs + 2, config));
-        SuccessOrExit(error = otDnsClientResolveIp4Address(GetInstancePtr(), aArgs[1].GetCString(),
-                                                           &Interpreter::HandleDnsAddressResponse, this, config));
-        error = OT_ERROR_PENDING;
-    }
-#endif
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /**
-     * @cli dns browse
-     * @code
-     * dns browse _service._udp.example.com
-     * DNS browse response for _service._udp.example.com.
-     * inst1
-     *     Port:1234, Priority:1, Weight:2, TTL:7200
-     *     Host:host.example.com.
-     *     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
-     *     TXT:[a=6531, b=6c12] TTL:7300
-     * instance2
-     *     Port:1234, Priority:1, Weight:2, TTL:7200
-     *     Host:host.example.com.
-     *     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
-     *     TXT:[a=1234] TTL:7300
-     * Done
-     * @endcode
-     * @code
-     * dns browse _airplay._tcp.default.service.arpa
-     * DNS browse response for _airplay._tcp.default.service.arpa.
-     * Mac mini
-     *     Port:7000, Priority:0, Weight:0, TTL:10
-     *     Host:Mac-mini.default.service.arpa.
-     *     HostAddress:fd97:739d:386a:1:1c2e:d83c:fcbe:9cf4 TTL:10
-     * Done
-     * @endcode
-     * @cparam dns browse @ca{service-name} [@ca{dns-server-IP}] [@ca{dns-server-port}] <!--
-     * -->                [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
-     * -->                [@ca{recursion-desired-boolean}]
-     * @sa otDnsClientBrowse
-     * @par
-     * Send a browse (service instance enumeration) DNS query to get the list of services for
-     * given service-name
-     * @par
-     * The parameters after `service-name` are optional. Any unspecified (or zero) value
-     * for these optional parameters is replaced by the value from the current default
-     * config (`dns config`).
-     * @par
-     * Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6
-     * address using the preferred NAT64 prefix from the network data. The command will return
-     * `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix
-     * is unavailable. When testing DNS-SD discovery proxy, the zone is not `local` and
-     * instead should be `default.service.arpa`.
-     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
-     */
-    else if (aArgs[0] == "browse")
-    {
-        VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = GetDnsConfig(aArgs + 2, config));
-        SuccessOrExit(error = otDnsClientBrowse(GetInstancePtr(), aArgs[1].GetCString(),
-                                                &Interpreter::HandleDnsBrowseResponse, this, config));
-        error = OT_ERROR_PENDING;
-    }
-    /**
-     * @cli dns service
-     * @cparam dns service @ca{service-instance-label} @ca{service-name} <!--
-     * -->                 [@ca{DNS-server-IP}] [@ca{DNS-server-port}] <!--
-     * -->                 [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
-     * -->                 [@ca{recursion-desired-boolean}]
-     * @par api_copy
-     * #otDnsClientResolveService
-     * @par
-     * Send a service instance resolution DNS query for a given service instance.
-     * Service instance label is provided first, followed by the service name
-     * (note that service instance label can contain dot '.' character).
-     * @par
-     * The parameters after `service-name` are optional. Any unspecified (or zero)
-     * value for these optional parameters is replaced by the value from the
-     * current default config (`dns config`).
-     * @par
-     * Note: The DNS server IP can be an IPv4 address, which will be synthesized
-     * to an IPv6 address using the preferred NAT64 prefix from the network data.
-     * The command will return `InvalidState` when the DNS server IP is an IPv4
-     * address but the preferred NAT64 prefix is unavailable.
-     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
-     */
-    else if (aArgs[0] == "service")
-    {
-        VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = GetDnsConfig(aArgs + 3, config));
-        SuccessOrExit(error = otDnsClientResolveService(GetInstancePtr(), aArgs[1].GetCString(), aArgs[2].GetCString(),
-                                                        &Interpreter::HandleDnsServiceResponse, this, config));
-        error = OT_ERROR_PENDING;
-    }
-    /**
-     * @cli dns servicehost
-     * @cparam dns servicehost @ca{service-instance-label} @ca{service-name} <!--
-     * -->                 [@ca{DNS-server-IP}] [@ca{DNS-server-port}] <!--
-     * -->                 [@ca{response-timeout-ms}] [@ca{max-tx-attempts}] <!--
-     * -->                 [@ca{recursion-desired-boolean}]
-     * @par api_copy
-     * #otDnsClientResolveServiceAndHostAddress
-     * @par
-     * Send a service instance resolution DNS query for a given service instance
-     * with potential follow-up host name resolution.
-     * Service instance label is provided first, followed by the service name
-     * (note that service instance label can contain dot '.' character).
-     * @par
-     * The parameters after `service-name` are optional. Any unspecified (or zero)
-     * value for these optional parameters is replaced by the value from the
-     * current default config (`dns config`).
-     * @par
-     * Note: The DNS server IP can be an IPv4 address, which will be synthesized
-     * to an IPv6 address using the preferred NAT64 prefix from the network data.
-     * The command will return `InvalidState` when the DNS server IP is an IPv4
-     * address but the preferred NAT64 prefix is unavailable.
-     * `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is required.
-     */
-    else if (aArgs[0] == "servicehost")
-    {
-        VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = GetDnsConfig(aArgs + 3, config));
-        SuccessOrExit(error = otDnsClientResolveServiceAndHostAddress(
-                          GetInstancePtr(), aArgs[1].GetCString(), aArgs[2].GetCString(),
-                          &Interpreter::HandleDnsServiceResponse, this, config));
-        error = OT_ERROR_PENDING;
-    }
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
-    else if (aArgs[0] == "server")
-    {
-        if (aArgs[1].IsEmpty())
-        {
-            error = OT_ERROR_INVALID_ARGS;
-        }
-#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-        else if (aArgs[1] == "upstream")
-        {
-            /**
-             * @cli dns server upstream
-             * @code
-             * dns server upstream
-             * Enabled
-             * Done
-             * @endcode
-             * @par api_copy
-             * #otDnssdUpstreamQueryIsEnabled
-             */
-            if (aArgs[2].IsEmpty())
-            {
-                OutputEnabledDisabledStatus(otDnssdUpstreamQueryIsEnabled(GetInstancePtr()));
-            }
-            /**
-             * @cli dns server upstream {enable|disable}
-             * @code
-             * dns server upstream enable
-             * Done
-             * @endcode
-             * @cparam dns server upstream @ca{enable|disable}
-             * @par api_copy
-             * #otDnssdUpstreamQuerySetEnabled
-             */
-            else
-            {
-                bool enable;
-
-                SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
-                otDnssdUpstreamQuerySetEnabled(GetInstancePtr(), enable);
-            }
-        }
-#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_COMMAND);
-        }
-    }
-#endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
-    }
-
-exit:
-    return error;
-}
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-
-const char *Interpreter::DnsConfigServiceModeToString(otDnsServiceMode aMode) const
-{
-    static const char *const kServiceModeStrings[] = {
-        "unspec",      // OT_DNS_SERVICE_MODE_UNSPECIFIED      (0)
-        "srv",         // OT_DNS_SERVICE_MODE_SRV              (1)
-        "txt",         // OT_DNS_SERVICE_MODE_TXT              (2)
-        "srv_txt",     // OT_DNS_SERVICE_MODE_SRV_TXT          (3)
-        "srv_txt_sep", // OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE (4)
-        "srv_txt_opt", // OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE (5)
-    };
-
-    static_assert(OT_DNS_SERVICE_MODE_UNSPECIFIED == 0, "OT_DNS_SERVICE_MODE_UNSPECIFIED value is incorrect");
-    static_assert(OT_DNS_SERVICE_MODE_SRV == 1, "OT_DNS_SERVICE_MODE_SRV value is incorrect");
-    static_assert(OT_DNS_SERVICE_MODE_TXT == 2, "OT_DNS_SERVICE_MODE_TXT value is incorrect");
-    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT == 3, "OT_DNS_SERVICE_MODE_SRV_TXT value is incorrect");
-    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE == 4, "OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE value is incorrect");
-    static_assert(OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE == 5, "OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE value is incorrect");
-
-    return Stringify(aMode, kServiceModeStrings);
-}
-
-otError Interpreter::ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArg == "def")
-    {
-        aMode = OT_DNS_SERVICE_MODE_UNSPECIFIED;
-    }
-    else if (aArg == "srv")
-    {
-        aMode = OT_DNS_SERVICE_MODE_SRV;
-    }
-    else if (aArg == "txt")
-    {
-        aMode = OT_DNS_SERVICE_MODE_TXT;
-    }
-    else if (aArg == "srv_txt")
-    {
-        aMode = OT_DNS_SERVICE_MODE_SRV_TXT;
-    }
-    else if (aArg == "srv_txt_sep")
-    {
-        aMode = OT_DNS_SERVICE_MODE_SRV_TXT_SEPARATE;
-    }
-    else if (aArg == "srv_txt_opt")
-    {
-        aMode = OT_DNS_SERVICE_MODE_SRV_TXT_OPTIMIZE;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-
-    return error;
-}
-
-otError Interpreter::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
-{
-    // This method gets the optional DNS config from `aArgs[]`.
-    // The format: `[server IP address] [server port] [timeout]
-    // [max tx attempt] [recursion desired] [service mode]
-    // [transport]`
-
-    otError error = OT_ERROR_NONE;
-    bool    recursionDesired;
-    bool    nat64SynthesizedAddress;
-
-    memset(aConfig, 0, sizeof(otDnsQueryConfig));
-
-    VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
-
-    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], aConfig->mServerSockAddr.mAddress,
-                                                         nat64SynthesizedAddress));
-    if (nat64SynthesizedAddress)
-    {
-        OutputFormat("Synthesized IPv6 DNS server address: ");
-        OutputIp6AddressLine(aConfig->mServerSockAddr.mAddress);
-    }
-
-    VerifyOrExit(!aArgs[1].IsEmpty());
-    SuccessOrExit(error = aArgs[1].ParseAsUint16(aConfig->mServerSockAddr.mPort));
-
-    VerifyOrExit(!aArgs[2].IsEmpty());
-    SuccessOrExit(error = aArgs[2].ParseAsUint32(aConfig->mResponseTimeout));
-
-    VerifyOrExit(!aArgs[3].IsEmpty());
-    SuccessOrExit(error = aArgs[3].ParseAsUint8(aConfig->mMaxTxAttempts));
-
-    VerifyOrExit(!aArgs[4].IsEmpty());
-    SuccessOrExit(error = aArgs[4].ParseAsBool(recursionDesired));
-    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
-
-    VerifyOrExit(!aArgs[5].IsEmpty());
-    SuccessOrExit(error = ParseDnsServiceMode(aArgs[5], aConfig->mServiceMode));
-
-    VerifyOrExit(!aArgs[6].IsEmpty());
-
-    if (aArgs[6] == "tcp")
-    {
-        aConfig->mTransportProto = OT_DNS_TRANSPORT_TCP;
-    }
-    else if (aArgs[6] == "udp")
-    {
-        aConfig->mTransportProto = OT_DNS_TRANSPORT_UDP;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
-
-exit:
-    return error;
-}
-
-void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleDnsAddressResponse(aError, aResponse);
-}
-
-void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse)
-{
-    char         hostName[OT_DNS_MAX_NAME_SIZE];
-    otIp6Address address;
-    uint32_t     ttl;
-
-    IgnoreError(otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName)));
-
-    OutputFormat("DNS response for %s - ", hostName);
-
-    if (aError == OT_ERROR_NONE)
-    {
-        uint16_t index = 0;
-
-        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
-        {
-            OutputIp6Address(address);
-            OutputFormat(" TTL:%lu ", ToUlong(ttl));
-            index++;
-        }
-    }
-
-    OutputNewLine();
-    OutputResult(aError);
-}
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-
-void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo)
-{
-    OutputLine(aIndentSize, "Port:%d, Priority:%d, Weight:%d, TTL:%lu", aServiceInfo.mPort, aServiceInfo.mPriority,
-               aServiceInfo.mWeight, ToUlong(aServiceInfo.mTtl));
-    OutputLine(aIndentSize, "Host:%s", aServiceInfo.mHostNameBuffer);
-    OutputFormat(aIndentSize, "HostAddress:");
-    OutputIp6Address(aServiceInfo.mHostAddress);
-    OutputLine(" TTL:%lu", ToUlong(aServiceInfo.mHostAddressTtl));
-    OutputFormat(aIndentSize, "TXT:");
-
-    if (!aServiceInfo.mTxtDataTruncated)
-    {
-        OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
-    }
-    else
-    {
-        OutputFormat("[");
-        OutputBytes(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
-        OutputFormat("...]");
-    }
-
-    OutputLine(" TTL:%lu", ToUlong(aServiceInfo.mTxtDataTtl));
-}
-
-void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleDnsBrowseResponse(aError, aResponse);
-}
-
-void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse)
-{
-    char             name[OT_DNS_MAX_NAME_SIZE];
-    char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[kMaxTxtDataSize];
-    otDnsServiceInfo serviceInfo;
-
-    IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
-
-    OutputLine("DNS browse response for %s", name);
-
-    if (aError == OT_ERROR_NONE)
-    {
-        uint16_t index = 0;
-
-        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, label, sizeof(label)) == OT_ERROR_NONE)
-        {
-            OutputLine("%s", label);
-            index++;
-
-            serviceInfo.mHostNameBuffer     = name;
-            serviceInfo.mHostNameBufferSize = sizeof(name);
-            serviceInfo.mTxtData            = txtBuffer;
-            serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
-
-            if (otDnsBrowseResponseGetServiceInfo(aResponse, label, &serviceInfo) == OT_ERROR_NONE)
-            {
-                OutputDnsServiceInfo(kIndentSize, serviceInfo);
-            }
-
-            OutputNewLine();
-        }
-    }
-
-    OutputResult(aError);
-}
-
-void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleDnsServiceResponse(aError, aResponse);
-}
-
-void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse)
-{
-    char             name[OT_DNS_MAX_NAME_SIZE];
-    char             label[OT_DNS_MAX_LABEL_SIZE];
-    uint8_t          txtBuffer[kMaxTxtDataSize];
-    otDnsServiceInfo serviceInfo;
-
-    IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
-
-    OutputLine("DNS service resolution response for %s for service %s", label, name);
-
-    if (aError == OT_ERROR_NONE)
-    {
-        serviceInfo.mHostNameBuffer     = name;
-        serviceInfo.mHostNameBufferSize = sizeof(name);
-        serviceInfo.mTxtData            = txtBuffer;
-        serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
-
-        if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
-        {
-            OutputDnsServiceInfo(/* aIndentSize */ 0, serviceInfo);
-            OutputNewLine();
-        }
-    }
-
-    OutputResult(aError);
-}
-
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #if OPENTHREAD_FTD
 const char *EidCacheStateToString(otCacheEntryState aState)
@@ -4002,6 +2958,29 @@ exit:
     return error;
 }
 
+template <> otError Interpreter::Process<Cmd("instanceid")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_ARGS;
+
+    /**
+     * @cli instanceid
+     * @code
+     * instanceid
+     * 468697314
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otInstanceGetId
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%lu", ToUlong(otInstanceGetId(GetInstancePtr())));
+        error = OT_ERROR_NONE;
+    }
+
+    return error;
+}
+
 const char *Interpreter::AddressOriginToString(uint8_t aOrigin)
 {
     static const char *const kOriginStrings[4] = {
@@ -4237,10 +3216,6 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
      */
     else if (aArgs[0] == "promiscuous")
     {
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otIp6IsMulticastPromiscuousEnabled(GetInstancePtr()));
-        }
         /**
          * @cli ipmaddr promiscuous (enable,disable)
          * @code
@@ -4255,13 +3230,8 @@ template <> otError Interpreter::Process<Cmd("ipmaddr")>(Arg aArgs[])
          * @par api_copy
          * #otIp6SetMulticastPromiscuousEnabled
          */
-        else
-        {
-            bool enable;
-
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
-            otIp6SetMulticastPromiscuousEnabled(GetInstancePtr(), enable);
-        }
+        error =
+            ProcessEnableDisable(aArgs + 1, otIp6IsMulticastPromiscuousEnabled, otIp6SetMulticastPromiscuousEnabled);
     }
     /**
      * @cli ipmaddr llatn
@@ -6877,22 +5847,7 @@ template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otLinkIsRadioFilterEnabled(GetInstancePtr()));
-    }
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-        otLinkSetRadioFilterEnabled(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
 }
 #endif
 
@@ -7292,24 +6247,19 @@ template <> otError Interpreter::Process<Cmd("routerdowngradethreshold")>(Arg aA
     return ProcessGetSet(aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
 
+/**
+ * @cli routereligible
+ * @code
+ * routereligible
+ * Enabled
+ * Done
+ * @endcode
+ * @sa otThreadIsRouterEligible
+ * @par
+ * Indicates whether the router role is enabled or disabled.
+ */
 template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    /**
-     * @cli routereligible
-     * @code
-     * routereligible
-     * Enabled
-     * Done
-     * @endcode
-     * @sa otThreadIsRouterEligible
-     * @par
-     * Indicates whether the router role is enabled or disabled.
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otThreadIsRouterEligible(GetInstancePtr()));
-    }
     /**
      * @cli routereligible (enable,disable)
      * @code
@@ -7325,17 +6275,9 @@ template <> otError Interpreter::Process<Cmd("routereligible")>(Arg aArgs[])
      * @par
      * Enables or disables the router role.
      */
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-        error = otThreadSetRouterEligible(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return ProcessEnableDisable(aArgs, otThreadIsRouterEligible, otThreadSetRouterEligible);
 }
+
 /**
  * @cli routerselectionjitter
  * @code
@@ -7812,253 +6754,8 @@ template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
-template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        PrintMacFilter();
-    }
-    else if (aArgs[0] == "addr")
-    {
-        error = ProcessMacFilterAddress(aArgs + 1);
-    }
-    else if (aArgs[0] == "rss")
-    {
-        error = ProcessMacFilterRss(aArgs + 1);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-    return error;
-}
-
-void Interpreter::PrintMacFilter(void)
-{
-    otMacFilterEntry    entry;
-    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-
-    OutputLine("Address Mode: %s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
-
-    while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-    {
-        OutputMacFilterEntry(entry);
-    }
-
-    iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    OutputLine("RssIn List:");
-
-    while (otLinkFilterGetNextRssIn(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-    {
-        uint8_t i = 0;
-
-        for (; i < OT_EXT_ADDRESS_SIZE; i++)
-        {
-            if (entry.mExtAddress.m8[i] != 0xff)
-            {
-                break;
-            }
-        }
-
-        if (i == OT_EXT_ADDRESS_SIZE)
-        {
-            OutputLine("Default rss : %d (lqi %u)", entry.mRssIn,
-                       otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-        }
-        else
-        {
-            OutputMacFilterEntry(entry);
-        }
-    }
-}
-
-otError Interpreter::ProcessMacFilterAddress(Arg aArgs[])
-{
-    otError      error = OT_ERROR_NONE;
-    otExtAddress extAddr;
-
-    if (aArgs[0].IsEmpty())
-    {
-        otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-        otMacFilterEntry    entry;
-
-        OutputLine("%s", MacFilterAddressModeToString(otLinkFilterGetAddressMode(GetInstancePtr())));
-
-        while (otLinkFilterGetNextAddress(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-        {
-            OutputMacFilterEntry(entry);
-        }
-    }
-    else if (aArgs[0] == "disable")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_DISABLED);
-    }
-    else if (aArgs[0] == "allowlist")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST);
-    }
-    else if (aArgs[0] == "denylist")
-    {
-        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otLinkFilterSetAddressMode(GetInstancePtr(), OT_MAC_FILTER_ADDRESS_MODE_DENYLIST);
-    }
-    else if (aArgs[0] == "add")
-    {
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-        error = otLinkFilterAddAddress(GetInstancePtr(), &extAddr);
-
-        VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
-
-        if (!aArgs[2].IsEmpty())
-        {
-            int8_t rss;
-
-            SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
-            SuccessOrExit(error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss));
-        }
-    }
-    else if (aArgs[0] == "remove")
-    {
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-        otLinkFilterRemoveAddress(GetInstancePtr(), &extAddr);
-    }
-    else if (aArgs[0] == "clear")
-    {
-        otLinkFilterClearAddresses(GetInstancePtr());
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-
-otError Interpreter::ProcessMacFilterRss(Arg aArgs[])
-{
-    otError             error = OT_ERROR_NONE;
-    otMacFilterEntry    entry;
-    otMacFilterIterator iterator = OT_MAC_FILTER_ITERATOR_INIT;
-    otExtAddress        extAddr;
-    int8_t              rss;
-
-    if (aArgs[0].IsEmpty())
-    {
-        while (otLinkFilterGetNextRssIn(GetInstancePtr(), &iterator, &entry) == OT_ERROR_NONE)
-        {
-            uint8_t i = 0;
-
-            for (; i < OT_EXT_ADDRESS_SIZE; i++)
-            {
-                if (entry.mExtAddress.m8[i] != 0xff)
-                {
-                    break;
-                }
-            }
-
-            if (i == OT_EXT_ADDRESS_SIZE)
-            {
-                OutputLine("Default rss: %d (lqi %u)", entry.mRssIn,
-                           otLinkConvertRssToLinkQuality(GetInstancePtr(), entry.mRssIn));
-            }
-            else
-            {
-                OutputMacFilterEntry(entry);
-            }
-        }
-    }
-    else if (aArgs[0] == "add-lqi")
-    {
-        uint8_t linkQuality;
-
-        SuccessOrExit(error = aArgs[2].ParseAsUint8(linkQuality));
-        VerifyOrExit(linkQuality <= 3, error = OT_ERROR_INVALID_ARGS);
-        rss = otLinkConvertLinkQualityToRss(GetInstancePtr(), linkQuality);
-
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterSetDefaultRssIn(GetInstancePtr(), rss);
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
-        }
-    }
-    else if (aArgs[0] == "add")
-    {
-        SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
-
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterSetDefaultRssIn(GetInstancePtr(), rss);
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
-        }
-    }
-    else if (aArgs[0] == "remove")
-    {
-        if (aArgs[1] == "*")
-        {
-            otLinkFilterClearDefaultRssIn(GetInstancePtr());
-        }
-        else
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
-            otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
-        }
-    }
-    else if (aArgs[0] == "clear")
-    {
-        otLinkFilterClearAllRssIn(GetInstancePtr());
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-exit:
-    return error;
-}
-
-void Interpreter::OutputMacFilterEntry(const otMacFilterEntry &aEntry)
-{
-    OutputExtAddress(aEntry.mExtAddress);
-
-    if (aEntry.mRssIn != OT_MAC_FILTER_FIXED_RSS_DISABLED)
-    {
-        OutputFormat(" : rss %d (lqi %d)", aEntry.mRssIn,
-                     otLinkConvertRssToLinkQuality(GetInstancePtr(), aEntry.mRssIn));
-    }
-
-    OutputNewLine();
-}
-
-const char *Interpreter::MacFilterAddressModeToString(otMacFilterAddressMode aMode)
-{
-    static const char *const kModeStrings[] = {
-        "Disabled",  // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
-        "Allowlist", // (1) OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST
-        "Denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
-    };
-
-    static_assert(0 == OT_MAC_FILTER_ADDRESS_MODE_DISABLED, "OT_MAC_FILTER_ADDRESS_MODE_DISABLED value is incorrect");
-    static_assert(1 == OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST, "OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST value is incorrect");
-    static_assert(2 == OT_MAC_FILTER_ADDRESS_MODE_DENYLIST, "OT_MAC_FILTER_ADDRESS_MODE_DENYLIST value is incorrect");
-
-    return Stringify(aMode, kModeStrings);
-}
-
-#endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[]) { return mMacFilter.Process(aArgs); }
+#endif
 
 template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 {
@@ -8114,27 +6811,13 @@ exit:
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
-    bool    enable;
 
-    if (aArgs[0].IsEmpty())
+    if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
-        OutputEnabledDisabledStatus(otTrelIsEnabled(GetInstancePtr()));
-    }
-    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        otTrelSetEnabled(GetInstancePtr(), enable);
     }
     else if (aArgs[0] == "filter")
     {
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otTrelIsFilterEnabled(GetInstancePtr()));
-        }
-        else
-        {
-            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
-            otTrelSetFilterEnabled(GetInstancePtr(), enable);
-        }
+        error = ProcessEnableDisable(aArgs + 1, otTrelIsFilterEnabled, otTrelSetFilterEnabled);
     }
     else if (aArgs[0] == "peers")
     {
@@ -8581,6 +7264,76 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
     Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
 }
 
+otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        error = aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg               aArgs[],
+                                          IsEnabledHandler  aIsEnabledHandler,
+                                          SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
+}
+
+otError Interpreter::ProcessEnableDisable(Arg                       aArgs[],
+                                          IsEnabledHandler          aIsEnabledHandler,
+                                          SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
+}
+
 void Interpreter::OutputPrompt(void)
 {
 #if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
@@ -8688,7 +7441,10 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("discover"),
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE || OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE || \
+    OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         CmdEntry("dns"),
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         CmdEntry("domainname"),
 #endif
@@ -8712,6 +7468,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("history"),
 #endif
         CmdEntry("ifconfig"),
+        CmdEntry("instanceid"),
         CmdEntry("ipaddr"),
         CmdEntry("ipmaddr"),
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -8849,9 +7606,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
         CmdEntry("uptime"),
 #endif
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
         CmdEntry("vendor"),
-#endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
     };
