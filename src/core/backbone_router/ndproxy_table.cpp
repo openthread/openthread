@@ -125,10 +125,9 @@ void NdProxyTable::Iterator::Advance(void)
 
 void NdProxyTable::Erase(NdProxy &aNdProxy) { aNdProxy.mValid = false; }
 
-void NdProxyTable::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
+void NdProxyTable::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
 {
-    if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRemoved ||
-        aState == Leader::kDomainPrefixRefreshed)
+    if (aEvent == kDomainPrefixAdded || aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
     {
         Clear();
     }

@@ -188,12 +188,12 @@ public:
     bool IsRegistered(const Ip6::InterfaceIdentifier &aAddressIid) { return FindByAddressIid(aAddressIid) != nullptr; }
 
     /**
-     * Notifies Domain Prefix status.
+     * Notifies Domain Prefix event.
      *
-     * @param[in]  aState  The Domain Prefix state or state change.
+     * @param[in]  aEvent  The Domain Prefix event.
      *
      */
-    void HandleDomainPrefixUpdate(Leader::DomainPrefixState aState);
+    void HandleDomainPrefixUpdate(DomainPrefixEvent aEvent);
 
     /**
      * Notifies ND Proxy table of the timer tick.
