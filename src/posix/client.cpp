@@ -238,7 +238,7 @@ static bool ShouldEscape(char aChar)
 
 Config ParseArg(int &aArgCount, char **&aArgVector)
 {
-    Config config = {"wpan0"};
+    Config config = {OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME};
 
     optind = 1;
 
