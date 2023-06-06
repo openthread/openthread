@@ -172,7 +172,8 @@ public:
                                             uint32_t                        aTimeSinceLastTransaction);
 
 private:
-    static constexpr uint32_t kTimerInterval = 1000;
+    static constexpr uint8_t  kDefaultHoplimit = 1;
+    static constexpr uint32_t kTimerInterval   = 1000;
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 

@@ -68,7 +68,7 @@ void NdProxyTable::NdProxy::Update(uint16_t aRloc16, uint32_t aTimeSinceLastTran
     OT_ASSERT(mValid);
 
     mRloc16                   = aRloc16;
-    aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, Mle::kTimeSinceLastTransactionMax);
+    aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, kMaxTimeSinceLastTransaction);
     mLastRegistrationTime     = TimerMilli::GetNow() - TimeMilli::SecToMsec(aTimeSinceLastTransaction);
 }
 
@@ -291,7 +291,7 @@ void NdProxyTable::NotifyDadComplete(NdProxyTable::NdProxy &aNdProxy, bool aDupl
     }
     else
     {
-        aNdProxy.mDadAttempts = Mle::kDuaDadRepeats;
+        aNdProxy.mDadAttempts = kDuaDadRepeats;
     }
 }
 

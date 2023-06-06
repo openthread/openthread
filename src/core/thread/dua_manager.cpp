@@ -376,7 +376,7 @@ void DuaManager::HandleTimeTick(void)
             mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
 
     if ((mDuaState != kNotExist) &&
-        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(Mle::kDuaDadPeriod))))
+        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(kDuaDadPeriod))))
     {
         mDomainUnicastAddress.mPreferred = true;
     }
@@ -546,7 +546,7 @@ void DuaManager::PerformNextRegistration(void)
 exit:
     if (error == kErrorNoBufs)
     {
-        UpdateCheckDelay(Mle::kNoBufDelay);
+        UpdateCheckDelay(kNoBufDelay);
     }
 
     LogInfo("PerformNextRegistration: %s", ErrorToString(error));
@@ -574,7 +574,7 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageIn
 
     if (aResult == kErrorResponseTimeout)
     {
-        UpdateCheckDelay(Mle::KResponseTimeoutDelay);
+        UpdateCheckDelay(KResponseTimeoutDelay);
         ExitNow(error = aResult);
     }
 
@@ -780,7 +780,7 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {
-            UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, Mle::kParentAggregateDelay));
+            UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, BackboneRouter::kParentAggregateDelay));
         }
 
         mChildDuaMask.Set(childIndex, true);

@@ -209,7 +209,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
         {
             uint32_t origTimeout = timeout;
 
-            timeout = Min(timeout, Mle::kMlrTimeoutMax);
+            timeout = Min(timeout, kMaxMlrTimeout);
 
             if (timeout != origTimeout)
             {
@@ -341,7 +341,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
     messageInfo.SetPeerAddr(Get<Local>().GetAllNetworkBackboneRoutersAddress());
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort); // TODO: Provide API for configuring Backbone COAP port.
 
-    messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
+    messageInfo.SetHopLimit(kDefaultHoplimit);
     messageInfo.SetIsHostInterface(true);
 
     SuccessOrExit(error = backboneTmf.SendMessage(*message, messageInfo));
@@ -535,7 +535,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
     messageInfo.SetPeerAddr(Get<Local>().GetAllDomainBackboneRoutersAddress());
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort);
 
-    messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
+    messageInfo.SetHopLimit(kDefaultHoplimit);
     messageInfo.SetIsHostInterface(true);
 
     error = mBackboneTmfAgent.SendMessage(*message, messageInfo);
@@ -672,7 +672,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address             &aDstAddr,
     messageInfo.SetPeerAddr(aDstAddr);
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort);
 
-    messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
+    messageInfo.SetHopLimit(kDefaultHoplimit);
     messageInfo.SetIsHostInterface(true);
 
     error = mBackboneTmfAgent.SendMessage(*message, messageInfo);
