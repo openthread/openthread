@@ -4246,7 +4246,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
         OutputLine("%s", LinkModeToString(otThreadGetLinkMode(GetInstancePtr()), linkModeString));
         ExitNow();
     }
-    
+
     /**
      * @cli mode (get,set)
      * @code
@@ -4294,7 +4294,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 exit:
     return error;
 }
-    
+
 /**
  * @cli multiradio
  * @code
@@ -4344,10 +4344,6 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
          * ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
          * Done
          * @endcode
-         * @par
-         * Get the list of neighbors and their supported radios and their preference.
-         * @par
-         * This command is only available when device supports more than one radio link.
          * @par api_copy
          * #otMultiRadioGetNeighborInfo
          */
@@ -4372,7 +4368,6 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         }
         else
         {
-            
             /**
              * @cli multiradio neighbor
              * @code
@@ -4380,10 +4375,6 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
              * [15.4(255), TREL(255)]
              * Done
              * @endcode
-             * @par
-             * Get the radio info for specific neighbor with a given extended address.
-             * @par
-             * This command is only available when device supports more than one radio link.
              * @par api_copy
              * #otMultiRadioGetNeighborInfo
              * @cparam multiradio neighbor @ca{ext-address}
