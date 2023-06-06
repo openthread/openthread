@@ -250,11 +250,9 @@ Error Server::AppendRequestedTlvs(const Message &aRequest, Message &aResponse)
 {
     Error    error;
     uint16_t offset;
-    uint16_t length;
     uint16_t endOffset;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequest, Tlv::kTypeList, offset, length));
-    endOffset = offset + length;
+    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRequest, Tlv::kTypeList, offset, endOffset));
 
     for (; offset < endOffset; offset++)
     {

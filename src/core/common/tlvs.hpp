@@ -283,22 +283,7 @@ public:
     }
 
     /**
-     * Obtains the offset of a TLV within @p aMessage.
-     *
-     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[out]  aOffset     A reference to the offset of the TLV.
-     *
-     * @retval kErrorNone       Successfully copied the TLV.
-     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
-     *
-     */
-    static Error FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset);
-
-    /**
-     * Finds the offset and length of a given TLV type.
+     * Finds the offset and length of TLV value for a given TLV type within @p aMessage.
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
@@ -312,6 +297,25 @@ public:
      *
      */
     static Error FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength);
+
+    /**
+     * Finds the start and end offset of TLV value for a given TLV type with @p aMessage.
+     *
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     *
+     * @param[in]   aMessage           A reference to the message.
+     * @param[in]   aType              The Type value to search for.
+     * @param[out]  aValueStartOffset  The offset where the value starts.
+     * @param[out]  aValueEndOffset    The offset immediately after the last byte of value.
+     *
+     * @retval kErrorNone       Successfully found the TLV.
+     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
+     *
+     */
+    static Error FindTlvValueStartEndOffsets(const Message &aMessage,
+                                             uint8_t        aType,
+                                             uint16_t      &aValueStartOffset,
+                                             uint16_t      &aValueEndOffset);
 
     /**
      * Searches for a TLV with a given type in a message, ensures its length is same or larger than

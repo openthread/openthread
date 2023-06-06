@@ -239,12 +239,10 @@ exit:
 
 Error MeshDiag::Ip6AddrIterator::InitFrom(const Message &aMessage)
 {
-    Error    error;
-    uint16_t tlvLength;
+    Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Ip6AddressListTlv::kType, mCurOffset, tlvLength));
-    mEndOffset = mCurOffset + tlvLength;
-    mMessage   = &aMessage;
+    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, Ip6AddressListTlv::kType, mCurOffset, mEndOffset));
+    mMessage = &aMessage;
 
 exit:
     return error;
@@ -269,11 +267,9 @@ exit:
 
 Error MeshDiag::ChildIterator::InitFrom(const Message &aMessage, uint16_t aParentRloc16)
 {
-    Error    error;
-    uint16_t tlvLength;
+    Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, ChildTableTlv::kType, mCurOffset, tlvLength));
-    mEndOffset    = mCurOffset + tlvLength;
+    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, ChildTableTlv::kType, mCurOffset, mCurOffset));
     mMessage      = &aMessage;
     mParentRloc16 = aParentRloc16;
 
