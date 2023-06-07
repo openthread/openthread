@@ -146,26 +146,14 @@ exit:
     return ret;
 }
 
-void MlrManager::UpdateProxiedSubscriptions(Child              &aChild,
-                                            const Ip6::Address *aOldMlrRegisteredAddresses,
-                                            uint16_t            aOldMlrRegisteredAddressNum)
+void MlrManager::UpdateProxiedSubscriptions(Child &aChild, const MlrAddressArray &aOldMlrRegisteredAddresses)
 {
     VerifyOrExit(aChild.IsStateValid());
 
     // Search the new multicast addresses and set its flag accordingly
     for (const Ip6::Address &address : aChild.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        bool isMlrRegistered = false;
-
-        // Check if it's a new multicast address against old addresses
-        for (size_t i = 0; i < aOldMlrRegisteredAddressNum; i++)
-        {
-            if (aOldMlrRegisteredAddresses[i] == address)
-            {
-                isMlrRegistered = true;
-                break;
-            }
-        }
+        bool isMlrRegistered = aOldMlrRegisteredAddresses.Contains(address);
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
         // Check if it's a new multicast address against parent Netif
