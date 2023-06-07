@@ -159,37 +159,24 @@ void virtualTimeSendRadioSpinelWriteEvent(const uint8_t *aData, uint16_t aLength
     virtualTimeSendEvent(&event, offsetof(struct VirtualTimeEvent, mData) + event.mDataLength);
 }
 
-void virtualTimeUpdateFdSet(fd_set         *aReadFdSet,
-                            fd_set         *aWriteFdSet,
-                            fd_set         *aErrorFdSet,
-                            int            *aMaxFd,
-                            struct timeval *aTimeout)
+void virtualTimeUpdateFdSet(otSysMainloopContext *aContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aErrorFdSet);
-    OT_UNUSED_VARIABLE(aTimeout);
-
-    FD_SET(sSockFd, aReadFdSet);
-    if (*aMaxFd < sSockFd)
+    FD_SET(sSockFd, &aContext->mReadFdSet);
+    if (aContext->mMaxFd < sSockFd)
     {
-        *aMaxFd = sSockFd;
+        aContext->mMaxFd = sSockFd;
     }
 }
 
-void virtualTimeProcess(otInstance   *aInstance,
-                        const fd_set *aReadFdSet,
-                        const fd_set *aWriteFdSet,
-                        const fd_set *aErrorFdSet)
+void virtualTimeProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     struct VirtualTimeEvent event;
 
     memset(&event, 0, sizeof(event));
 
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aErrorFdSet);
 
-    if (FD_ISSET(sSockFd, aReadFdSet))
+    if (FD_ISSET(sSockFd, &aContext->mReadFdSet))
     {
         virtualTimeReceiveEvent(&event);
     }

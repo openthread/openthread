@@ -339,25 +339,44 @@ exit:
     return error;
 }
 
-void HdlcInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+void HdlcInterface::UpdateFdSet(void *aMainloopContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aTimeout);
+    otSysMainloopContext *context = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
 
-    FD_SET(mSockFd, &aReadFdSet);
+    assert(context != nullptr);
 
-    if (aMaxFd < mSockFd)
+    FD_SET(mSockFd, &context->mReadFdSet);
+
+    if (context->mMaxFd < mSockFd)
     {
-        aMaxFd = mSockFd;
+        context->mMaxFd = mSockFd;
     }
 }
 
-void HdlcInterface::Process(const RadioProcessContext &aContext)
+void HdlcInterface::Process(const void *aMainloopContext)
 {
-    if (FD_ISSET(mSockFd, aContext.mReadFdSet))
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    /**
+     * Process read data (decode the data).
+     *
+     * Is intended only for virtual time simulation. Its behavior is similar to `Read()` but instead of
+     * reading the data from the radio socket, it uses the given data in @p `event`.
+     */
+    const VirtualTimeEvent *event = reinterpret_cast<const VirtualTimeEvent *>(aMainloopContext);
+
+    assert(event != nullptr);
+
+    Decode(event->mData, event->mDataLength);
+#else
+    const otSysMainloopContext *context = reinterpret_cast<const otSysMainloopContext *>(aMainloopContext);
+
+    assert(context != nullptr);
+
+    if (FD_ISSET(mSockFd, &context->mReadFdSet))
     {
         Read();
     }
+#endif
 }
 
 otError HdlcInterface::WaitForWritable(void)
