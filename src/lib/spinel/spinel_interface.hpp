@@ -155,6 +155,12 @@ public:
      *
      */
     virtual otError HardwareReset(void) = 0;
+
+    /**
+     * Marks destructor virtual method.
+     *
+     */
+    virtual ~SpinelInterface() = default;
 };
 } // namespace Spinel
 } // namespace ot
