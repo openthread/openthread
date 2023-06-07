@@ -1686,7 +1686,7 @@ static void SetAddrGenModeToNone(void)
         char             buf[512];
     } req;
 
-    const enum in6_addr_gen_mode mode = IN6_ADDR_GEN_MODE_NONE;
+    const uint8_t mode = IN6_ADDR_GEN_MODE_NONE;
 
     memset(&req, 0, sizeof(req));
 
