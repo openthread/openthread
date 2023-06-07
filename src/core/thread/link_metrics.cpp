@@ -306,14 +306,13 @@ Error Initiator::HandleManagementResponse(const Message &aMessage, const Ip6::Ad
     Error    error = kErrorNone;
     uint16_t offset;
     uint16_t endOffset;
-    uint16_t length;
     uint8_t  status;
     bool     hasStatus = false;
 
     VerifyOrExit(mMgmtResponseCallback.IsSet());
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
-    endOffset = offset + length;
+    SuccessOrExit(
+        error = Tlv::FindTlvValueStartEndOffsets(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, endOffset));
 
     while (offset < endOffset)
     {
@@ -434,9 +433,8 @@ Error Subject::AppendReport(Message &aMessage, const Message &aRequestMessage, N
     // Parse MLE Link Metrics Query TLV and its sub-TLVs from
     // `aRequestMessage`.
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, offset, length));
-
-    endOffset = offset + length;
+    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRequestMessage, Mle::Tlv::Type::kLinkMetricsQuery, offset,
+                                                           endOffset));
 
     while (offset < endOffset)
     {
@@ -519,13 +517,12 @@ Error Subject::HandleManagementRequest(const Message &aMessage, Neighbor &aNeigh
     uint16_t            offset;
     uint16_t            endOffset;
     uint16_t            tlvEndOffset;
-    uint16_t            length;
     FwdProbingRegSubTlv fwdProbingSubTlv;
     EnhAckConfigSubTlv  enhAckConfigSubTlv;
     Metrics             metrics;
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, length));
-    endOffset = offset + length;
+    SuccessOrExit(
+        error = Tlv::FindTlvValueStartEndOffsets(aMessage, Mle::Tlv::Type::kLinkMetricsManagement, offset, endOffset));
 
     // Set sub-TLV lengths to zero to indicate that we have
     // not yet seen them in the message.
