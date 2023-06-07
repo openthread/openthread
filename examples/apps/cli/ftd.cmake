@@ -31,6 +31,12 @@ add_executable(ot-cli-ftd
     main.c
 )
 
+if(OT_RTT_UART)
+    target_compile_definitions(ot-cli-ftd PRIVATE
+        OPENTHREAD_UART_RTT_ENABLE=1
+    )
+endif()
+
 target_include_directories(ot-cli-ftd PRIVATE ${COMMON_INCLUDES})
 
 if(NOT DEFINED OT_PLATFORM_LIB_FTD)
