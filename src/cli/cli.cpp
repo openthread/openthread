@@ -4099,6 +4099,20 @@ exit:
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+/**
+ * @cli mliid
+ * @code
+ * mliid 1122334455667788
+ * Done
+ * @endcode
+ * @par
+ * It must be used before Thread stack is enabled.
+ * @par
+ * Only for testing/reference device.
+ * @par api_copy
+ * #otIp6SetMeshLocalIid
+ * @cparam mliid @ca{iid}
+ */
 template <> otError Interpreter::Process<Cmd("mliid")>(Arg aArgs[])
 {
     otError                  error = OT_ERROR_NONE;
@@ -4115,7 +4129,37 @@ exit:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-
+/**
+ * @cli mlr reg
+ * @code
+ * mlr reg ff04::1
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 ff02::1
+ * status 2, 1 failed
+ * ff02:0:0:0:0:0:0:1
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 1000
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @code
+ * mlr reg ff04::1 ff04::2 0
+ * status 0, 0 failed
+ * Done
+ * @endcode
+ * @par
+ * Omit timeout to use the default MLR timeout on the Primary Backbone Router.
+ * @par
+ * Use timeout = 0 to deregister Multicast Listeners.
+ * @par api_copy
+ * #otIp6RegisterMulticastListeners
+ * @cparam mlr reg @ca{ipaddr} [@ca{timeout}]
+ */
 template <> otError Interpreter::Process<Cmd("mlr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -4203,6 +4247,24 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
         ExitNow();
     }
 
+    /**
+     * @cli mode (get,set)
+     * @code
+     * mode rdn
+     * Done
+     * @endcode
+     * @code
+     * mode -
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetLinkMode
+     * @cparam mode [@ca{rdn}]
+     * - `-`: -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
+     * - `r`: rx-on-when-idle
+     * - `d`: Full Thread Device
+     * - `n`: Full Network Data
+     */
     if (aArgs[0] != "-")
     {
         for (const char *arg = aArgs[0].GetCString(); *arg != '\0'; arg++)
@@ -4233,6 +4295,20 @@ exit:
     return error;
 }
 
+/**
+ * @cli multiradio
+ * @code
+ * multiradio
+ * [15.4, TREL]
+ * Done
+ * @endcode
+ * @par
+ * Get the list of supported radio links by the device.
+ * @par
+ * This command is always available, even when only a single radio is supported by the device.
+ * @par api_copy
+ * #otMultiRadioGetNeighborInfo
+ */
 template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -4260,6 +4336,21 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
     {
         otMultiRadioNeighborInfo multiRadioInfo;
 
+        /**
+         * @cli multiradio neighbor list
+         * @code
+         * multiradio neighbor list
+         * ExtAddr:3a65bc38dbe4a5be, RLOC16:0xcc00, Radios:[15.4(255), TREL(255)]
+         * ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
+         * Done
+         * @endcode
+         * @par
+         * Get the list of neighbors and their supported radios and their preference.
+         * @par
+         * This command is only available when device supports more than one radio link.
+         * @par api_copy
+         * #otMultiRadioGetNeighborInfo
+         */
         if (aArgs[1] == "list")
         {
             otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
@@ -4281,6 +4372,21 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         }
         else
         {
+            /**
+             * @cli multiradio neighbor
+             * @code
+             * multiradio neighbor 3a65bc38dbe4a5be
+             * [15.4(255), TREL(255)]
+             * Done
+             * @endcode
+             * @par
+             * Get the radio info for specific neighbor with a given extended address.
+             * @par
+             * This command is only available when device supports more than one radio link.
+             * @par api_copy
+             * #otMultiRadioGetNeighborInfo
+             * @cparam multiradio neighbor @ca{ext-address}
+             */
             otExtAddress extAddress;
 
             SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddress.m8));
