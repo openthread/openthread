@@ -731,7 +731,7 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
 /**
  * Indicates whether the SLAAC module is enabled or not.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` build-time feature must be enabled.
  *
  * @retval TRUE    SLAAC module is enabled.
  * @retval FALSE   SLAAC module is disabled.
@@ -742,7 +742,7 @@ bool otIp6IsSlaacEnabled(otInstance *aInstance);
 /**
  * Enables/disables the SLAAC module.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` build-time feature must be enabled.
  *
  * When SLAAC module is enabled, SLAAC addresses (based on on-mesh prefixes in Network Data) are added to the interface.
  * When SLAAC module is disabled any previously added SLAAC address is removed.
@@ -772,7 +772,7 @@ typedef bool (*otIp6SlaacPrefixFilter)(otInstance *aInstance, const otIp6Prefix 
 /**
  * Sets the SLAAC module filter handler.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE` build-time feature must be enabled.
  *
  * The filter handler is called by SLAAC module when it is about to add a SLAAC address based on a prefix to decide
  * whether the address should be added or not.
@@ -812,8 +812,8 @@ typedef void (*otIp6RegisterMulticastListenersCallback)(void               *aCon
 /**
  * Registers Multicast Listeners to Primary Backbone Router.
  *
- * Note: only available when both `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` and
- * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)
+ * `OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE` and `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE`
+ * must be enabled.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aAddresses   A Multicast Address Array to register.
@@ -845,7 +845,7 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
 /**
  * Sets the Mesh Local IID (for test purpose).
  *
- * Only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` must be enabled.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aIid        A pointer to the Mesh Local IID to set.
@@ -897,7 +897,7 @@ typedef struct otBorderRoutingCounters
 /**
  * Gets the Border Routing counters.
  *
- * Requires the build-time feature `OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE` to be enabled.
+ * `OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE` build-time feature must be enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *

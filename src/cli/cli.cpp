@@ -4246,7 +4246,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
         OutputLine("%s", LinkModeToString(otThreadGetLinkMode(GetInstancePtr()), linkModeString));
         ExitNow();
     }
-    
+
     /**
      * @cli mode (get,set)
      * @code
@@ -4294,7 +4294,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
 exit:
     return error;
 }
-    
+
 /**
  * @cli multiradio
  * @code
@@ -4372,7 +4372,6 @@ template <> otError Interpreter::Process<Cmd("multiradio")>(Arg aArgs[])
         }
         else
         {
-            
             /**
              * @cli multiradio neighbor
              * @code
