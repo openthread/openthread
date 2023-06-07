@@ -94,12 +94,6 @@ struct VirtualTimeEvent
     uint8_t  mData[OT_EVENT_DATA_MAX_SIZE];
 } OT_TOOL_PACKED_END;
 
-struct RadioProcessContext
-{
-    const fd_set *mReadFdSet;
-    const fd_set *mWriteFdSet;
-};
-
 /**
  * This function initializes the alarm service used by OpenThread.
  *
@@ -184,23 +178,18 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 /**
  * This function updates the file descriptor sets with file descriptors used by the radio driver.
  *
- * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
- * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
- * @param[in,out]  aTimeout     A pointer to the timeout.
+ * @param[in]   aContext    A pointer to the mainloop context.
  *
  */
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout);
+void platformRadioUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function performs radio driver processing.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]   aContext    A pointer to the mainloop context.
  *
  */
-void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+void platformRadioProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
 
 /**
  * This function initializes the random number service used by OpenThread.
@@ -219,22 +208,18 @@ void platformLoggingInit(const char *aName);
 /**
  * This function updates the file descriptor sets with file descriptors used by the UART driver.
  *
- * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
- * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
+ * @param[in]   aContext    A pointer to the mainloop context.
  *
  */
-void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+void platformUartUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function performs radio driver processing.
  *
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
- * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
+ * @param[in]   aContext    A pointer to the mainloop context.
  *
  */
-void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
+void platformUartProcess(const otSysMainloopContext *aContext);
 
 /**
  * This function initializes platform netif.
@@ -275,23 +260,18 @@ void platformNetifDeinit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
  *
- * @param[in,out]  aReadFdSet    A pointer to the read file descriptors.
- * @param[in,out]  aWriteFdSet   A pointer to the write file descriptors.
- * @param[in,out]  aErrorFdSet   A pointer to the error file descriptors.
- * @param[in,out]  aMaxFd        A pointer to the max file descriptor.
+ * @param[in,out]  aContext  A pointer to the mainloop context.
  *
  */
-void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+void platformNetifUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function performs platform netif processing.
  *
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
- * @param[in]   aErrorFdSet     A pointer to the error file descriptors.
+ * @param[in]  aContext  A pointer to the mainloop context.
  *
  */
-void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, const fd_set *aErrorFdSet);
+void platformNetifProcess(const otSysMainloopContext *aContext);
 
 /**
  * This function performs notifies state changes to platform netif.
@@ -319,32 +299,19 @@ void virtualTimeDeinit(void);
 /**
  * This function performs virtual time simulation processing.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]  aContext  A pointer to the mainloop context.
  *
  */
-void virtualTimeProcess(otInstance   *aInstance,
-                        const fd_set *aReadFdSet,
-                        const fd_set *aWriteFdSet,
-                        const fd_set *aErrorFdSet);
+void virtualTimeProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
 
 /**
  * This function updates the file descriptor sets with file descriptors
  * used by the virtual time simulation.
  *
- * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
- * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[in,out]  aErrorFdSet  A pointer to the error file descriptors.
- * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
- * @param[in,out]  aTimeout     A pointer to the timeout.
+ * @param[in,out]  aContext  A pointer to the mainloop context.
  *
  */
-void virtualTimeUpdateFdSet(fd_set         *aReadFdSet,
-                            fd_set         *aWriteFdSet,
-                            fd_set         *aErrorFdSet,
-                            int            *aMaxFd,
-                            struct timeval *aTimeout);
+void virtualTimeUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function sends radio spinel event of virtual time simulation.
@@ -403,23 +370,18 @@ void platformTrelDeinit(void);
 /**
  * This function updates the file descriptor sets with file descriptors used by the TREL driver.
  *
- * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
- * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
- * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
- * @param[in,out]  aTimeout     A pointer to the timeout.
+ * @param[in,out]  aContext  A pointer to the mainloop context.
  *
  */
-void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout);
+void platformTrelUpdateFdSet(otSysMainloopContext *aContext);
 
 /**
  * This function performs TREL driver processing.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- * @param[in]   aReadFdSet      A pointer to the read file descriptors.
- * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ * @param[in]  aContext  A pointer to the mainloop context.
  *
  */
-void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+void platformTrelProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
 
 /**
  * This function creates a socket with SOCK_CLOEXEC flag set.

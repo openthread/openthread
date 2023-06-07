@@ -46,19 +46,15 @@
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #include "hdlc_interface.hpp"
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, VirtualTimeEvent> sRadioSpinel;
-#else
-static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface, RadioProcessContext> sRadioSpinel;
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
+static ot::Spinel::RadioSpinel<ot::Posix::HdlcInterface> sRadioSpinel;
 #elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 #include "spi_interface.hpp"
 
-static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface, RadioProcessContext> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::SpiInterface> sRadioSpinel;
 #elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
 #include "vendor_interface.hpp"
 
-static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface, RadioProcessContext> sRadioSpinel;
+static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface> sRadioSpinel;
 #else
 #error "OPENTHREAD_POSIX_CONFIG_RCP_BUS only allows OT_POSIX_RCP_BUS_UART, OT_POSIX_RCP_BUS_SPI and " \
     "OT_POSIX_RCP_BUS_VENDOR!"
@@ -313,7 +309,7 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance)
     return sRadioSpinel.IsPromiscuous();
 }
 
-void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
+void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
 {
     uint64_t now      = otPlatTimeGet();
     uint64_t deadline = sRadioSpinel.GetNextRadioTimeRecalcStart();
@@ -332,24 +328,25 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     {
         uint64_t remain = deadline - now;
 
-        if (remain < (static_cast<uint64_t>(aTimeout->tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout->tv_usec)))
+        if (remain < (static_cast<uint64_t>(aContext->mTimeout.tv_sec) * US_PER_S +
+                      static_cast<uint64_t>(aContext->mTimeout.tv_usec)))
         {
-            aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
-            aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
+            aContext->mTimeout.tv_sec  = static_cast<time_t>(remain / US_PER_S);
+            aContext->mTimeout.tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
         }
     }
     else
     {
-        aTimeout->tv_sec  = 0;
-        aTimeout->tv_usec = 0;
+        aContext->mTimeout.tv_sec  = 0;
+        aContext->mTimeout.tv_usec = 0;
     }
 
-    sRadioSpinel.GetSpinelInterface().UpdateFdSet(*aReadFdSet, *aWriteFdSet, *aMaxFd, *aTimeout);
+    sRadioSpinel.GetSpinelInterface().UpdateFdSet(aContext);
 
     if (sRadioSpinel.HasPendingFrame() || sRadioSpinel.IsTransmitDone())
     {
-        aTimeout->tv_sec  = 0;
-        aTimeout->tv_usec = 0;
+        aContext->mTimeout.tv_sec  = 0;
+        aContext->mTimeout.tv_usec = 0;
     }
 }
 
@@ -357,15 +354,14 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
 void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    sRadioSpinel.Process(*aEvent);
+    sRadioSpinel.Process(aEvent);
 }
 #else
-void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+void platformRadioProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    RadioProcessContext context = {aReadFdSet, aWriteFdSet};
 
-    sRadioSpinel.Process(context);
+    sRadioSpinel.Process(aContext);
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 

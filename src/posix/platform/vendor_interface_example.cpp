@@ -108,19 +108,16 @@ otError VendorInterface::HardwareReset(void)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+void VendorInterface::UpdateFdSet(void *aMainloopContext)
 {
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aMaxFd);
-    OT_UNUSED_VARIABLE(aTimeout);
+    OT_UNUSED_VARIABLE(aMainloopContext);
 
     // TODO: Implement vendor code here.
 }
 
-void VendorInterface::Process(const RadioProcessContext &aContext)
+void VendorInterface::Process(const void *aMainloopContext)
 {
-    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aMainloopContext);
 
     // TODO: Implement vendor code here.
 }

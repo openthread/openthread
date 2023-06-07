@@ -29,6 +29,7 @@
 #ifndef POSIX_PLATFORM_RESOLVER_HPP_
 #define POSIX_PLATFORM_RESOLVER_HPP_
 
+#include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
 
 #include <arpa/inet.h>
@@ -78,7 +79,7 @@ public:
      * @param[in,out]  aTimeout     A reference to the timeout.
      *
      */
-    void UpdateFdSet(fd_set *aReadFdSet, fd_set *aErrorFdSet, int *aMaxFd);
+    void UpdateFdSet(otSysMainloopContext &aContext);
 
     /**
      * Handles the result of select.
@@ -87,7 +88,7 @@ public:
      * @param[in]  aErrorFdSet  A reference to the error file descriptors.
      *
      */
-    void Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet);
+    void Process(const otSysMainloopContext &aContext);
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
