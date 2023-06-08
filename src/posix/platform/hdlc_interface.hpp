@@ -40,8 +40,6 @@
 #include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel_interface.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
-
 namespace ot {
 namespace Posix {
 
@@ -49,7 +47,7 @@ namespace Posix {
  * This class defines an HDLC interface to the Radio Co-processor (RCP)
  *
  */
-class HdlcInterface
+class HdlcInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
@@ -278,6 +276,4 @@ private:
 
 } // namespace Posix
 } // namespace ot
-
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 #endif // POSIX_APP_HDLC_INTERFACE_HPP_
