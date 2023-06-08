@@ -119,7 +119,6 @@ Mac::Mac(Instance &aInstance)
     ResetCounters();
 
     SetEnabled(true);
-    mLinks.Enable();
 
     Get<KeyManager>().UpdateKeyMaterial();
     SetPanId(mPanId);
@@ -127,6 +126,20 @@ Mac::Mac(Instance &aInstance)
     SetShortAddress(GetShortAddress());
 
     mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
+}
+
+void Mac::SetEnabled(bool aEnable)
+{
+    mEnabled = aEnable;
+
+    if (aEnable)
+    {
+        mLinks.Enable();
+    }
+    else
+    {
+        mLinks.Disable();
+    }
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
