@@ -88,6 +88,7 @@ Radio::Radio(const char *aUrl)
 void Radio::Init(void)
 {
     bool        resetRadio             = (mRadioUrl.GetValue("no-reset") == nullptr);
+    bool        restoreDataset         = (mRadioUrl.GetValue("ncp-dataset") != nullptr);
     bool        skipCompatibilityCheck = (mRadioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
     const char *parameterValue;
     const char *region;
@@ -107,6 +108,12 @@ void Radio::Init(void)
         virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
     }
 #endif
+
+    if (restoreDataset)
+    {
+        otLogCritPlat("The argument \"ncp-dataset\" is no longer supported");
+        DieNow(OT_ERROR_FAILED);
+    }
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(mRadioUrl));
     sRadioSpinel.Init(resetRadio, skipCompatibilityCheck);
