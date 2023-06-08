@@ -32,6 +32,7 @@ noinst_LIBRARIES = libopenthread-hdlc.a
 
 libopenthread_hdlc_a_CPPFLAGS               = \
     -I$(top_srcdir)/include                   \
+    -I$(top_srcdir)/src                       \
     -I$(top_srcdir)/src/core                  \
     $(NULL)
 

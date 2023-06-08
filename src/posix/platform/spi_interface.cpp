@@ -59,14 +59,10 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
-using ot::Spinel::SpinelInterface;
-
 namespace ot {
 namespace Posix {
 
-SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void                                 *aCallbackContext,
-                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+SpiInterface::SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
@@ -805,7 +801,7 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
 
-    if (ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    if (IsSpinelResetCommand(aFrame, aLength))
     {
         ResetStates();
     }

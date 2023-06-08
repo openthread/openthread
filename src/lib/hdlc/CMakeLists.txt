@@ -34,6 +34,7 @@ target_include_directories(openthread-hdlc
     PUBLIC
         ${OT_PUBLIC_INCLUDES}
     PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/src/core
 )
 
