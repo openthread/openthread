@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/border_routing.h>
+#include <openthread/platform/border_routing.h>
 
 #include "border_router/routing_manager.hpp"
 #include "common/instance.hpp"
@@ -78,6 +79,15 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
 {
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetOmrPrefix(AsCoreType(aPrefix));
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPrefixTableEntry *aPrefixInfo)
+{
+    AssertPointerIsNotNull(aPrefixInfo);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdOmrPrefix(*aPrefixInfo);
+}
+#endif
 
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
 {
@@ -144,5 +154,18 @@ otError otBorderRoutingGetNextPrefixTableEntry(otInstance                       
 
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetNextPrefixTableEntry(*aIterator, *aEntry);
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(aEnabled);
+}
+
+otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance)
+{
+    return static_cast<otBorderRoutingDhcp6PdState>(
+        AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetDhcp6PdState());
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

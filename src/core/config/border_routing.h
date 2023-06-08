@@ -104,4 +104,17 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT (60 * 1000) // (in msec).
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+ *
+ * Specifies whether to support handling platform generated ND messages.
+ *
+ * The desired use case is the prefix will be allocated by other software on the interface, and they will advertise the
+ * assigned prefix to the thread interface via router advertisement messages.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
+#endif
+
 #endif // CONFIG_BORDER_ROUTING_H_

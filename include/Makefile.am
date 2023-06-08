@@ -100,6 +100,7 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
+    openthread/platform/border_routing.h  \
     openthread/platform/crypto.h          \
     openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \

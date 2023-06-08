@@ -532,6 +532,14 @@ public:
          */
         RoutePreference GetDefaultRouterPreference(void) const;
 
+        /**
+         * This method returns the ICMPv6 message type.
+         *
+         * @returns The ICMPv6 message type.
+         *
+         */
+        Icmp::Header::Type GetType(void) const { return static_cast<Icmp::Header::Type>(mType); }
+
     private:
         // Router Advertisement Message
         //
@@ -613,7 +621,11 @@ public:
      * @retval FALSE  If the RA message is not valid.
      *
      */
-    bool IsValid(void) const { return (mData.GetBytes() != nullptr) && (mData.GetLength() >= sizeof(Header)); }
+    bool IsValid(void) const
+    {
+        return (mData.GetBytes() != nullptr) && (mData.GetLength() >= sizeof(Header)) &&
+               (GetHeader().GetType() == Icmp::Header::kTypeRouterAdvert);
+    }
 
     /**
      * Gets the RA message's header.

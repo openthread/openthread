@@ -119,6 +119,17 @@ typedef enum
 } otBorderRoutingState;
 
 /**
+ * This enumeration represents the state of DHCPv6 Prefix Delegation State.
+ *
+ */
+typedef enum
+{
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< DHCPv6 PD is disabled on the border router.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
+} otBorderRoutingDhcp6PdState;
+
+/**
  * Initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
@@ -209,14 +220,39 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
  * Thread network if there isn't already an OMR prefix. This prefix can be reached
  * from the local Wi-Fi or Ethernet network.
  *
+ * Note: When DHCPv6 PD is enabled, the border router may publish the prefix from
+ * DHCPv6 PD.
+ *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
  *
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
  * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
  *
+ * @sa otBorderRoutingGetPdOmrPrefix
+ *
  */
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the DHCPv6 Prefix Delegation (PD) provided off-mesh-routable (OMR) prefix.
+ *
+ * Only mPrefix, mValidLifetime and mPreferredLifetime fields are used in the returned prefix info.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
+ *
+ * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NOT_FOUND      There are no valid PD prefix on this BR.
+ *
+ * @sa otBorderRoutingGetOmrPrefix
+ * @sa otPlatBorderRoutingProcessIcmp6Ra
+ *
+ */
+otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPrefixTableEntry *aPrefixInfo);
 
 /**
  * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
@@ -325,6 +361,17 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry    *aEntry);
+
+/**
+ * Enables / Disables DHCPv6 Prefix Delegation.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnabled  Whether to accept platform generated RA messages.
+ *
+ */
+void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}
