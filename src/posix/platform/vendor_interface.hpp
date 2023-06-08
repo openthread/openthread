@@ -41,8 +41,6 @@
 #include "platform-posix.h"
 #include "lib/spinel/spinel_interface.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
-
 namespace ot {
 namespace Posix {
 
@@ -50,7 +48,7 @@ namespace Posix {
  * This class defines a vendor interface to the Radio Co-processor (RCP).
  *
  */
-class VendorInterface
+class VendorInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
@@ -158,11 +156,10 @@ public:
      * @returns The RCP interface metrics.
      *
      */
-    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void);
+    const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
 #endif // POSIX_APP_VENDOR_INTERFACE_HPP_
