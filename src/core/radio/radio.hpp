@@ -47,6 +47,7 @@ namespace ot {
 
 static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< Time for 10 symbols in units of microseconds
 static constexpr uint32_t kRadioHeaderShrDuration = 160;            ///< Duration of SHR in us
+static constexpr uint32_t kRadioHeaderPhrDuration = 32;             ///< Duration of PHR in us
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 /**

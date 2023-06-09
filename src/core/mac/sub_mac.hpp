@@ -534,6 +534,9 @@ private:
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
     void        GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter);
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+    void LogReceived(RxFrame *aFrame);
+#endif
 #endif
 
     static constexpr uint8_t  kCsmaMinBe         = 3;   // macMinBE (IEEE 802.15.4-2006).
