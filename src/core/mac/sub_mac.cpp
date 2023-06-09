@@ -280,7 +280,7 @@ exit:
 void SubMac::LogReceived(RxFrame *aFrame)
 {
     static constexpr uint8_t kLogStringSize = 72;
-    
+
     String<kLogStringSize> logString;
     Address                dst;
     int32_t                deviation;
