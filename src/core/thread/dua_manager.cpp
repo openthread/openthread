@@ -78,10 +78,9 @@ DuaManager::DuaManager(Instance &aInstance)
 #endif
 }
 
-void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixState aState)
+void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEvent)
 {
-    if ((aState == BackboneRouter::Leader::kDomainPrefixRemoved) ||
-        (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
+    if ((aEvent == BackboneRouter::kDomainPrefixRemoved) || (aEvent == BackboneRouter::kDomainPrefixRefreshed))
     {
         if (mIsDuaPending)
         {
@@ -102,16 +101,16 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    switch (aState)
+    switch (aEvent)
     {
-    case BackboneRouter::Leader::kDomainPrefixUnchanged:
+    case BackboneRouter::kDomainPrefixUnchanged:
         // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcefully
         VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
         OT_FALL_THROUGH;
 
-    case BackboneRouter::Leader::kDomainPrefixRefreshed:
-    case BackboneRouter::Leader::kDomainPrefixAdded:
+    case BackboneRouter::kDomainPrefixRefreshed:
+    case BackboneRouter::kDomainPrefixAdded:
     {
         const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
         OT_ASSERT(prefix != nullptr);
