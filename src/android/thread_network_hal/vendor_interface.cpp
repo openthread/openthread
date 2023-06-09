@@ -106,7 +106,7 @@ otError VendorInterface::HardwareReset(void)
     return sHalInterface->HardwareReset();
 }
 
-const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
+const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const
 {
     return nullptr;
 }
