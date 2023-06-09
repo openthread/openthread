@@ -96,12 +96,12 @@ public:
     explicit DuaManager(Instance &aInstance);
 
     /**
-     * Notifies Domain Prefix status.
+     * Notifies Domain Prefix changes.
      *
-     * @param[in]  aState  The Domain Prefix state or state change.
+     * @param[in]  aEvent  The Domain Prefix event.
      *
      */
-    void HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixState aState);
+    void HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEvent);
 
     /**
      * Notifies Primary Backbone Router status.

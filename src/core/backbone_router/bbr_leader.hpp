@@ -67,6 +67,18 @@ static_assert(kMaxMlrTimeout * 1000 > kMaxMlrTimeout, "SecToMsec(kMaxMlrTimeout)
 static_assert(kParentAggregateDelay > 1, "kParentAggregateDelay should be larger than 1 second");
 
 /**
+ * Represents Domain Prefix changes.
+ *
+ */
+enum DomainPrefixEvent : uint8_t
+{
+    kDomainPrefixAdded,     ///< Domain Prefix Added.
+    kDomainPrefixRemoved,   ///< Domain Prefix Removed.
+    kDomainPrefixRefreshed, ///< Domain Prefix Changed.
+    kDomainPrefixUnchanged, ///< Domain Prefix did not change.
+};
+
+/**
  * Implements the basic Primary Backbone Router service operations.
  *
  */
@@ -83,16 +95,6 @@ public:
                               ///< May also have ReregistrationDelay or MlrTimeout update.
         kStateRefreshed,      ///< Only ReregistrationDelay or MlrTimeout changes.
         kStateUnchanged,      ///< No change on Primary Backbone Router information (only for logging).
-    };
-
-    // Domain Prefix state or state change.
-    enum DomainPrefixState : uint8_t
-    {
-        kDomainPrefixNone = 0,  ///< Not available.
-        kDomainPrefixAdded,     ///< Added.
-        kDomainPrefixRemoved,   ///< Removed.
-        kDomainPrefixRefreshed, ///< Changed.
-        kDomainPrefixUnchanged, ///< Nothing changed.
     };
 
     /**
@@ -190,12 +192,10 @@ private:
     void UpdateDomainPrefixConfig(void);
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     void               LogBackboneRouterPrimary(State aState, const Config &aConfig) const;
-    void               LogDomainPrefix(DomainPrefixState aState, const Ip6::Prefix &aPrefix) const;
     static const char *StateToString(State aState);
-    static const char *DomainPrefixStateToString(DomainPrefixState aState);
+    static const char *DomainPrefixEventToString(DomainPrefixEvent aEvent);
 #else
     void LogBackboneRouterPrimary(State, const Config &) const {}
-    void LogDomainPrefix(DomainPrefixState, const Ip6::Prefix &) const {}
 #endif
 
     Config      mConfig;       ///< Primary Backbone Router information.

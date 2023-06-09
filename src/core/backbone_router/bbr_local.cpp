@@ -358,19 +358,19 @@ exit:
     return;
 }
 
-void Local::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
+void Local::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
 {
     if (!IsEnabled())
     {
         ExitNow();
     }
 
-    if (aState == Leader::kDomainPrefixRemoved || aState == Leader::kDomainPrefixRefreshed)
+    if (aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
     {
         Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllDomainBackboneRouters);
     }
 
-    if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRefreshed)
+    if (aEvent == kDomainPrefixAdded || aEvent == kDomainPrefixRefreshed)
     {
         mAllDomainBackboneRouters.SetMulticastNetworkPrefix(*Get<Leader>().GetDomainPrefix());
         Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
@@ -378,15 +378,15 @@ void Local::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
 
     if (mDomainPrefixCallback.IsSet())
     {
-        switch (aState)
+        switch (aEvent)
         {
-        case Leader::kDomainPrefixAdded:
+        case kDomainPrefixAdded:
             mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED, Get<Leader>().GetDomainPrefix());
             break;
-        case Leader::kDomainPrefixRemoved:
+        case kDomainPrefixRemoved:
             mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, Get<Leader>().GetDomainPrefix());
             break;
-        case Leader::kDomainPrefixRefreshed:
+        case kDomainPrefixRefreshed:
             mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, Get<Leader>().GetDomainPrefix());
             break;
         default:
