@@ -114,13 +114,10 @@ public:
      * Initialize this radio transceiver.
      *
      * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
-     * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
-     *                                         (only used when attempts to upgrade from NCP to RCP mode),
-     *                                         FALSE otherwise.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
+    void Init(bool aResetRadio, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
@@ -748,17 +745,6 @@ public:
     bool HasPendingFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
 
     /**
-     * Gets dataset from NCP radio and saves it.
-     *
-     * @retval  OT_ERROR_NONE               Successfully restore dataset.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the radio.
-     * @retval  OT_ERROR_NOT_FOUND          Failed due to spinel property not supported in radio.
-     * @retval  OT_ERROR_FAILED             Failed due to other reasons.
-     */
-    otError RestoreDatasetFromNcp(void);
-
-    /**
      * Returns the next timepoint to recalculate RCP time offset.
      *
      * @returns The timepoint to start the recalculation of RCP time offset.
@@ -1005,7 +991,6 @@ private:
                         const char       *aFormat,
                         va_list           aArgs);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
-    otError ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength);
 
     /**
      * Returns if the property changed event is safe to be handled now.

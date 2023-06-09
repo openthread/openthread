@@ -36,7 +36,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <openthread/dataset.h>
 #include <openthread/logging.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/time.h>
@@ -45,13 +44,10 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/new.hpp"
-#include "common/settings.hpp"
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
-#include "meshcop/dataset.hpp"
-#include "meshcop/meshcop_tlvs.hpp"
 #include "radio/radio.hpp"
 #include "thread/key_manager.hpp"
 
@@ -217,7 +213,7 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType>
-void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aRestoreDatasetFromNcp, bool aSkipRcpCompatibilityCheck)
+void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aSkipRcpCompatibilityCheck)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -232,19 +228,7 @@ void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aRestoreDatasetFrom
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, mIeeeEui64.m8));
 
-    if (!IsRcp(supportsRcpApiVersion, supportsRcpMinHostApiVersion))
-    {
-        uint8_t exitCode = OT_EXIT_RADIO_SPINEL_INCOMPATIBLE;
-
-        if (aRestoreDatasetFromNcp)
-        {
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-            exitCode = (RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE;
-#endif
-        }
-
-        DieNow(exitCode);
-    }
+    VerifyOrDie(IsRcp(supportsRcpApiVersion, supportsRcpMinHostApiVersion), OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
 
     if (!aSkipRcpCompatibilityCheck)
     {
@@ -464,25 +448,6 @@ exit:
     return error;
 }
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-template <typename InterfaceType> otError RadioSpinel<InterfaceType>::RestoreDatasetFromNcp(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    Instance::Get().template Get<SettingsDriver>().Init(nullptr, 0);
-
-    otLogInfoPlat("Trying to get saved dataset from NCP");
-    SuccessOrExit(
-        error = Get(SPINEL_PROP_THREAD_ACTIVE_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
-    SuccessOrExit(
-        error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
-
-exit:
-    Instance::Get().template Get<SettingsDriver>().Deinit();
-    return error;
-}
-#endif
-
 template <typename InterfaceType> void RadioSpinel<InterfaceType>::Deinit(void)
 {
     mSpinelInterface.Deinit();
@@ -641,171 +606,6 @@ exit:
     UpdateParseErrorCount(error);
     LogIfFail("Error processing response", error);
 }
-
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-template <typename InterfaceType>
-otError RadioSpinel<InterfaceType>::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength)
-{
-    otError              error = OT_ERROR_NONE;
-    otOperationalDataset opDataset;
-    bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
-    Spinel::Decoder      decoder;
-    MeshCoP::Dataset     dataset;
-
-    memset(&opDataset, 0, sizeof(otOperationalDataset));
-    decoder.Init(aBuffer, aLength);
-
-    while (!decoder.IsAllReadInStruct())
-    {
-        unsigned int propKey;
-
-        SuccessOrExit(error = decoder.OpenStruct());
-        SuccessOrExit(error = decoder.ReadUintPacked(propKey));
-
-        switch (static_cast<spinel_prop_key_t>(propKey))
-        {
-        case SPINEL_PROP_NET_NETWORK_KEY:
-        {
-            const uint8_t *key;
-            uint16_t       len;
-
-            SuccessOrExit(error = decoder.ReadData(key, len));
-            VerifyOrExit(len == OT_NETWORK_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mNetworkKey.m8, key, len);
-            opDataset.mComponents.mIsNetworkKeyPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_NET_NETWORK_NAME:
-        {
-            const char *name;
-            size_t      len;
-
-            SuccessOrExit(error = decoder.ReadUtf8(name));
-            len = StringLength(name, OT_NETWORK_NAME_MAX_SIZE);
-            memcpy(opDataset.mNetworkName.m8, name, len);
-            opDataset.mNetworkName.m8[len]              = '\0';
-            opDataset.mComponents.mIsNetworkNamePresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_NET_XPANID:
-        {
-            const uint8_t *xpanid;
-            uint16_t       len;
-
-            SuccessOrExit(error = decoder.ReadData(xpanid, len));
-            VerifyOrExit(len == OT_EXT_PAN_ID_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mExtendedPanId.m8, xpanid, len);
-            opDataset.mComponents.mIsExtendedPanIdPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_IPV6_ML_PREFIX:
-        {
-            const otIp6Address *addr;
-            uint8_t             prefixLen;
-
-            SuccessOrExit(error = decoder.ReadIp6Address(addr));
-            SuccessOrExit(error = decoder.ReadUint8(prefixLen));
-            VerifyOrExit(prefixLen == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mMeshLocalPrefix.m8, addr, OT_MESH_LOCAL_PREFIX_SIZE);
-            opDataset.mComponents.mIsMeshLocalPrefixPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_DATASET_DELAY_TIMER:
-        {
-            SuccessOrExit(error = decoder.ReadUint32(opDataset.mDelay));
-            opDataset.mComponents.mIsDelayPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_MAC_15_4_PANID:
-        {
-            SuccessOrExit(error = decoder.ReadUint16(opDataset.mPanId));
-            opDataset.mComponents.mIsPanIdPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_PHY_CHAN:
-        {
-            uint8_t channel;
-
-            SuccessOrExit(error = decoder.ReadUint8(channel));
-            opDataset.mChannel                      = channel;
-            opDataset.mComponents.mIsChannelPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_NET_PSKC:
-        {
-            const uint8_t *psk;
-            uint16_t       len;
-
-            SuccessOrExit(error = decoder.ReadData(psk, len));
-            VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
-            opDataset.mComponents.mIsPskcPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_DATASET_SECURITY_POLICY:
-        {
-            uint8_t flags[2];
-            uint8_t flagsLength = 1;
-
-            SuccessOrExit(error = decoder.ReadUint16(opDataset.mSecurityPolicy.mRotationTime));
-            SuccessOrExit(error = decoder.ReadUint8(flags[0]));
-            if (otThreadGetVersion() >= OT_THREAD_VERSION_1_2 && decoder.GetRemainingLengthInStruct() > 0)
-            {
-                SuccessOrExit(error = decoder.ReadUint8(flags[1]));
-                ++flagsLength;
-            }
-            static_cast<SecurityPolicy &>(opDataset.mSecurityPolicy).SetFlags(flags, flagsLength);
-            opDataset.mComponents.mIsSecurityPolicyPresent = true;
-            break;
-        }
-
-        case SPINEL_PROP_PHY_CHAN_SUPPORTED:
-        {
-            uint8_t channel;
-
-            opDataset.mChannelMask = 0;
-
-            while (!decoder.IsAllReadInStruct())
-            {
-                SuccessOrExit(error = decoder.ReadUint8(channel));
-                VerifyOrExit(channel <= 31, error = OT_ERROR_INVALID_ARGS);
-                opDataset.mChannelMask |= (1UL << channel);
-            }
-            opDataset.mComponents.mIsChannelMaskPresent = true;
-            break;
-        }
-
-        default:
-            break;
-        }
-
-        SuccessOrExit(error = decoder.CloseStruct());
-    }
-
-    /*
-     * Initially set Active Timestamp to 0. This is to allow the node to join the network
-     * yet retrieve the full Active Dataset from a neighboring device if one exists.
-     */
-    memset(&opDataset.mActiveTimestamp, 0, sizeof(opDataset.mActiveTimestamp));
-    opDataset.mComponents.mIsActiveTimestampPresent = true;
-
-    SuccessOrExit(error = dataset.SetFrom(static_cast<MeshCoP::Dataset::Info &>(opDataset)));
-    SuccessOrExit(error = Instance::Get().template Get<SettingsDriver>().Set(
-                      isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset, dataset.GetBytes(),
-                      dataset.GetSize()));
-
-exit:
-    return error;
-}
-#endif // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 template <typename InterfaceType>
 void RadioSpinel<InterfaceType>::HandleWaitingResponse(uint32_t          aCommand,

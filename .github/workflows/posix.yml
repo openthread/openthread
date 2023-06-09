@@ -166,38 +166,6 @@ jobs:
         name: cov-thread-cert
         path: tmp/coverage.info
 
-  ncp-rcp-migrate:
-    runs-on: ubuntu-20.04
-    env:
-      COVERAGE: 1
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y expect lcov
-    - name: Build
-      run: |
-        ./bootstrap
-        script/check-ncp-rcp-migrate build
-    - name: Run
-      run: |
-        script/check-ncp-rcp-migrate check
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        name: cov-ncp-rcp-migrate
-        path: tmp/coverage.info
-
   pty-linux:
     name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: ubuntu-20.04
@@ -318,7 +286,6 @@ jobs:
   upload-coverage:
     needs:
     - expects-linux
-    - ncp-rcp-migrate
     - pty-linux
     - thread-cert
     runs-on: ubuntu-20.04

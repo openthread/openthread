@@ -109,8 +109,14 @@ void Radio::Init(void)
     }
 #endif
 
+    if (restoreDataset)
+    {
+        otLogCritPlat("The argument \"ncp-dataset\" is no longer supported");
+        DieNow(OT_ERROR_FAILED);
+    }
+
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(mRadioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
+    sRadioSpinel.Init(resetRadio, skipCompatibilityCheck);
 
     parameterValue = mRadioUrl.GetValue("fem-lnagain");
     if (parameterValue != nullptr)

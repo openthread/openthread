@@ -102,7 +102,6 @@ const char *otSysGetRadioUrlHelpString(void)
            "    enable-coex[=1|0]             If not specified, RCP coex operates with its default configuration.\n"
            "                                  Disable coex with 0, and enable it with other values.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
-           "    ncp-dataset                   Retrieve dataset from ncp.\n"
            "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
            "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n";
 }
