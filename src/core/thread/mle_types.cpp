@@ -70,7 +70,7 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // DeviceProperties
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 
 DeviceProperties::DeviceProperties(void)
 {
@@ -133,7 +133,7 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
     return weight;
 }
 
-#endif // OPENTHREAD_FTD
+#endif // #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 
 //---------------------------------------------------------------------------------------------------------------------
 // RouterIdSet
