@@ -81,14 +81,14 @@ uint32_t VendorInterface::GetBusSpeed(void) const
     return sHalInterface->GetBusSpeed();
 }
 
-void VendorInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+void VendorInterface::UpdateFdSet(void *aMainloopContext)
 {
-    sHalInterface->UpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
+    sHalInterface->UpdateFdSet(aMainloopContext);
 }
 
-void VendorInterface::Process(const RadioProcessContext &aContext)
+void VendorInterface::Process(const void *aMainloopContext)
 {
-    sHalInterface->Process(aContext);
+    sHalInterface->Process(aMainloopContext);
 }
 
 otError VendorInterface::WaitForFrame(uint64_t aTimeoutUs)
@@ -106,7 +106,7 @@ otError VendorInterface::HardwareReset(void)
     return sHalInterface->HardwareReset();
 }
 
-const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void)
+const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const
 {
     return nullptr;
 }
