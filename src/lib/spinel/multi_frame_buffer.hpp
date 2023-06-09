@@ -118,7 +118,7 @@ protected:
 /**
  * Defines a template frame buffer of a given size for storing a single frame.
  *
- * The template parameter `kSize` specifies the size of the buffer.
+ * @tparam kSize  The size of the frame buffer.
  *
  */
 template <uint16_t kSize> class FrameBuffer : public FrameWritePointer
@@ -147,8 +147,8 @@ public:
     /**
      * Indicates whether the buffer is empty or contains a frame.
      *
-     * @retval TRUE  Buffer is empty
-     * @retval FALSE Buffer contains a frame
+     * @retval TRUE  Buffer is empty.
+     * @retval FALSE Buffer contains a frame.
      *
      */
     bool IsEmpty(void) const { return (mWritePointer == mBuffer); }
@@ -176,10 +176,10 @@ private:
 /**
  * Defines a template frame buffer of a given size for storing multiple frames.
  *
- * The template parameter `kSize` specifies the total size of the buffer.
- *
  * Unlike `FrameBuffer` class where a single frame can be stored, this class is capable of saving multiple frames
  * in a FIFO queue format.
+ *
+ * @tparam kSize  The total size of the buffer.
  *
  */
 template <uint16_t kSize> class MultiFrameBuffer : public FrameWritePointer
