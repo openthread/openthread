@@ -78,6 +78,8 @@ public:
     /**
      * Writes a byte into the buffer and updates the write pointer (if space is available).
      *
+     * @param[in]  aByte  A byte to be written to the buffer.
+     *
      * @retval OT_ERROR_NONE     Successfully wrote the byte and updated the pointer.
      * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte.
      *
