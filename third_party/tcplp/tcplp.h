@@ -55,11 +55,12 @@ extern "C" {
 
 struct tcplp_signals
 {
-    uint32_t links_popped;
-    uint32_t bytes_acked;
-    bool     conn_established;
-    bool     recvbuf_added;
-    bool     rcvd_fin;
+    struct tcpcb* accepted_connection;
+    uint32_t      links_popped;
+    uint32_t      bytes_acked;
+    bool          conn_established;
+    bool          recvbuf_added;
+    bool          rcvd_fin;
 };
 
 /*

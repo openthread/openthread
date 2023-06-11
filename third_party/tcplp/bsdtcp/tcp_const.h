@@ -95,8 +95,16 @@ enum tcp_subr_consts {
 enum tcp_timer_consts {
 //	V_tcp_v6pmtud_blackhole_mss = FRAMECAP_6LOWPAN - sizeof(struct ip6_hdr) - sizeof(struct tcphdr), // Doesn't matter unless blackhole_detect is 1.
 	tcp_rexmit_drop_options = 0, // drop options after a few retransmits
-	always_keepalive = 1,
+	always_keepalive = 1
 };
+
+enum tcp_fastopen_consts {
+	V_tcp_fastopen_client_enable = 1,
+	V_tcp_fastopen_server_enable = 1,
+	V_tcp_fastopen_acceptany = 1,
+	V_tcp_fastopen_numkeys = 4
+};
+#define TCP_RFC7413
 
 /*
  * Force a time value to be in a certain range.
