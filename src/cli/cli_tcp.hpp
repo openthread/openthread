@@ -96,7 +96,8 @@ private:
     void    CompleteBenchmark(void);
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    bool ContinueTLSHandshake(void);
+    void PrepareTlsHandshake(void);
+    bool ContinueTlsHandshake(void);
 #endif
 
     static void HandleTcpEstablishedCallback(otTcpEndpoint *aEndpoint);
@@ -138,6 +139,7 @@ private:
 
     bool mInitialized;
     bool mEndpointConnected;
+    bool mEndpointConnectedFastOpen;
     bool mSendBusy;
     bool mUseCircularSendBuffer;
     bool mUseTls;

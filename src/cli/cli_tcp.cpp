@@ -64,6 +64,7 @@ TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
     : Output(aInstance, aOutputImplementer)
     , mInitialized(false)
     , mEndpointConnected(false)
+    , mEndpointConnectedFastOpen(false)
     , mSendBusy(false)
     , mUseCircularSendBuffer(true)
     , mUseTls(false)
@@ -294,6 +295,7 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
     otError    error;
     otSockAddr sockaddr;
     bool       nat64SynthesizedAddress;
+    uint32_t   flags;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
@@ -306,7 +308,26 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
     }
 
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
-    VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    if (aArgs[2].IsEmpty())
+    {
+        flags = OT_TCP_CONNECT_NO_FAST_OPEN;
+    }
+    else
+    {
+        if (aArgs[2] == "slow")
+        {
+            flags = OT_TCP_CONNECT_NO_FAST_OPEN;
+        }
+        else if (aArgs[2] == "fast")
+        {
+            flags = 0;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+        VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    }
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls)
@@ -320,8 +341,17 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
     }
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
-    SuccessOrExit(error = otTcpConnect(&mEndpoint, &sockaddr, OT_TCP_CONNECT_NO_FAST_OPEN));
-    mEndpointConnected = true;
+    SuccessOrExit(error = otTcpConnect(&mEndpoint, &sockaddr, flags));
+    mEndpointConnected         = true;
+    mEndpointConnectedFastOpen = ((flags & OT_TCP_CONNECT_NO_FAST_OPEN) == 0);
+
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+    if (mUseTls && mEndpointConnectedFastOpen)
+    {
+        PrepareTlsHandshake();
+        ContinueTlsHandshake();
+    }
+#endif
 
 exit:
     return error;
@@ -472,7 +502,8 @@ template <> otError TcpExample::Process<Cmd("abort")>(Arg aArgs[])
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrExit(error = otTcpAbort(&mEndpoint));
-    mEndpointConnected = false;
+    mEndpointConnected         = false;
+    mEndpointConnectedFastOpen = false;
 
 exit:
     return error;
@@ -591,24 +622,10 @@ void TcpExample::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
     OT_UNUSED_VARIABLE(aEndpoint);
     OutputLine("TCP: Connection established");
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    if (mUseTls)
+    if (mUseTls && !mEndpointConnectedFastOpen)
     {
-        int rv;
-        rv = mbedtls_ssl_set_hostname(&mSslContext, "localhost");
-        if (rv != 0)
-        {
-            OutputLine("mbedtls_ssl_set_hostname returned %d", rv);
-        }
-        rv = mbedtls_ssl_set_hs_ecjpake_password(
-            &mSslContext, reinterpret_cast<const unsigned char *>(sEcjpakePassword), sEcjpakePasswordLength);
-        if (rv != 0)
-        {
-            OutputLine("mbedtls_ssl_set_hs_ecjpake_password returned %d", rv);
-        }
-        mbedtls_ssl_set_bio(&mSslContext, &mEndpointAndCircularSendBuffer, otTcpMbedTlsSslSendCallback,
-                            otTcpMbedTlsSslRecvCallback, nullptr);
-        mTlsHandshakeComplete = false;
-        ContinueTLSHandshake();
+        PrepareTlsHandshake();
+        ContinueTlsHandshake();
     }
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 }
@@ -660,7 +677,7 @@ void TcpExample::HandleTcpForwardProgress(otTcpEndpoint *aEndpoint, size_t aInSe
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls)
     {
-        ContinueTLSHandshake();
+        ContinueTlsHandshake();
     }
 #endif
 
@@ -688,8 +705,22 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
     OT_UNUSED_VARIABLE(aBytesRemaining);
     OT_ASSERT(aEndpoint == &mEndpoint);
 
+    /* If we get data before the handshake completes, then this is a TFO connection. */
+    if (!mEndpointConnected)
+    {
+        mEndpointConnected         = true;
+        mEndpointConnectedFastOpen = true;
+
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-    if (mUseTls && ContinueTLSHandshake())
+        if (mUseTls)
+        {
+            PrepareTlsHandshake();
+        }
+#endif
+    }
+
+#if OPENTHREAD_CONFIG_TLS_ENABLE
+    if (mUseTls && ContinueTlsHandshake())
     {
         return;
     }
@@ -773,8 +804,9 @@ void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnect
     // We set this to false even for the TIME-WAIT state, so that we can reuse
     // the active socket if an incoming connection comes in instead of waiting
     // for the 2MSL timeout.
-    mEndpointConnected = false;
-    mSendBusy          = false;
+    mEndpointConnected         = false;
+    mEndpointConnectedFastOpen = false;
+    mSendBusy                  = false;
 
     // Mark the benchmark as inactive if the connection was disconnected.
     mBenchmarkBytesTotal  = 0;
@@ -803,20 +835,11 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener    
     *aAcceptInto = &mEndpoint;
     action       = OT_TCP_INCOMING_CONNECTION_ACTION_ACCEPT;
 
-exit:
-    return action;
-}
-
-void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer)
-{
-    OT_UNUSED_VARIABLE(aListener);
-    OT_UNUSED_VARIABLE(aEndpoint);
-
-    mEndpointConnected = true;
-    OutputFormat("Accepted connection from ");
-    OutputSockAddrLine(*aPeer);
-
 #if OPENTHREAD_CONFIG_TLS_ENABLE
+    /*
+     * Natural to wait until the AcceptDone callback but with TFO we could get data before that
+     * so it doesn't make sense to wait until then.
+     */
     if (mUseTls)
     {
         int rv;
@@ -835,6 +858,19 @@ void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aE
         }
     }
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
+
+exit:
+    return action;
+}
+
+void TcpExample::HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer)
+{
+    OT_UNUSED_VARIABLE(aListener);
+    OT_UNUSED_VARIABLE(aEndpoint);
+
+    mEndpointConnected = true;
+    OutputFormat("Accepted connection from ");
+    OutputSockAddrLine(*aPeer);
 }
 
 otError TcpExample::ContinueBenchmarkCircularSend(void)
@@ -908,7 +944,26 @@ void TcpExample::CompleteBenchmark(void)
 }
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE
-bool TcpExample::ContinueTLSHandshake(void)
+void TcpExample::PrepareTlsHandshake(void)
+{
+    int rv;
+    rv = mbedtls_ssl_set_hostname(&mSslContext, "localhost");
+    if (rv != 0)
+    {
+        OutputLine("mbedtls_ssl_set_hostname returned %d", rv);
+    }
+    rv = mbedtls_ssl_set_hs_ecjpake_password(&mSslContext, reinterpret_cast<const unsigned char *>(sEcjpakePassword),
+                                             sEcjpakePasswordLength);
+    if (rv != 0)
+    {
+        OutputLine("mbedtls_ssl_set_hs_ecjpake_password returned %d", rv);
+    }
+    mbedtls_ssl_set_bio(&mSslContext, &mEndpointAndCircularSendBuffer, otTcpMbedTlsSslSendCallback,
+                        otTcpMbedTlsSslRecvCallback, nullptr);
+    mTlsHandshakeComplete = false;
+}
+
+bool TcpExample::ContinueTlsHandshake(void)
 {
     bool wasNotAlreadyDone = false;
     int  rv;
