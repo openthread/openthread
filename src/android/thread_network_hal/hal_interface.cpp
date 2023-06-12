@@ -151,21 +151,26 @@ otError HalInterface::HardwareReset(void)
     return OT_ERROR_NONE;
 }
 
-void HalInterface::UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout)
+void HalInterface::UpdateFdSet(void *aMainloopContext)
 {
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aTimeout);
+    otSysMainloopContext *context = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
+
+    assert(context != nullptr);
 
     if (mBinderFd >= 0)
     {
-        FD_SET(mBinderFd, &aReadFdSet);
-        aMaxFd = std::max(aMaxFd, mBinderFd);
+        FD_SET(mBinderFd, &context->mReadFdSet);
+        context->mMaxFd = std::max(context->mMaxFd, mBinderFd);
     }
 }
 
-void HalInterface::Process(const RadioProcessContext &aContext)
+void HalInterface::Process(const void *aMainloopContext)
 {
-    if ((mBinderFd >= 0) && FD_ISSET(mBinderFd, aContext.mReadFdSet))
+    const otSysMainloopContext *context = reinterpret_cast<const otSysMainloopContext *>(aMainloopContext);
+
+    assert(context != nullptr);
+
+    if ((mBinderFd >= 0) && FD_ISSET(mBinderFd, &context->mReadFdSet))
     {
         ABinderProcess_handlePolledCommands();
     }
