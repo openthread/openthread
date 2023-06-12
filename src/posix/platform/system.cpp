@@ -292,29 +292,26 @@ void otSysDeinit(void)
 /**
  * This function try selecting the given file descriptors in nonblocking mode.
  *
- * @param[in,out]   aReadFdSet   A pointer to the read file descriptors.
- * @param[in,out]   aWriteFdSet  A pointer to the write file descriptors.
- * @param[in,out]   aErrorFdSet  A pointer to the error file descriptors.
- * @param[in]       aMaxFd       The max file descriptor.
+ * @param[in,out]  aContext  A reference to the mainloop context.
  *
  * @returns The value returned from select().
  *
  */
-static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int aMaxFd)
+static int trySelect(otSysMainloopContext &aContext)
 {
     struct timeval timeout          = {0, 0};
-    fd_set         originReadFdSet  = *aReadFdSet;
-    fd_set         originWriteFdSet = *aWriteFdSet;
-    fd_set         originErrorFdSet = *aErrorFdSet;
+    fd_set         originReadFdSet  = aContext.mReadFdSet;
+    fd_set         originWriteFdSet = aContext.mWriteFdSet;
+    fd_set         originErrorFdSet = aContext.mErrorFdSet;
     int            rval;
 
-    rval = select(aMaxFd + 1, aReadFdSet, aWriteFdSet, aErrorFdSet, &timeout);
+    rval = select(aContext.mMaxFd + 1, &aContext.mReadFdSet, &aContext.mWriteFdSet, &aContext.mErrorFdSet, &timeout);
 
     if (rval == 0)
     {
-        *aReadFdSet  = originReadFdSet;
-        *aWriteFdSet = originWriteFdSet;
-        *aErrorFdSet = originErrorFdSet;
+        aContext.mReadFdSet  = originReadFdSet;
+        aContext.mWriteFdSet = originWriteFdSet;
+        aContext.mErrorFdSet = originErrorFdSet;
     }
 
     return rval;
@@ -327,17 +324,15 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
-                             &aMainloop->mMaxFd);
+    platformNetifUpdateFdSet(aMainloop);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
-                           &aMainloop->mTimeout);
+    virtualTimeUpdateFdSet(aMainloop);
 #else
-    platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
+    platformRadioUpdateFdSet(aMainloop);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
+    platformTrelUpdateFdSet(aMainloop);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -355,7 +350,7 @@ int otSysMainloopPoll(otSysMainloopContext *aMainloop)
     if (timerisset(&aMainloop->mTimeout))
     {
         // Make sure there are no data ready in UART
-        rval = trySelect(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, aMainloop->mMaxFd);
+        rval = trySelect(*aMainloop);
 
         if (rval == 0)
         {
@@ -395,16 +390,16 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     ot::Posix::Mainloop::Manager::Get().Process(*aMainloop);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    virtualTimeProcess(aInstance, aMainloop);
 #else
-    platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
+    platformRadioProcess(aInstance, aMainloop);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
+    platformTrelProcess(aInstance, aMainloop);
 #endif
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
+    platformNetifProcess(aMainloop);
 #endif
 }
 

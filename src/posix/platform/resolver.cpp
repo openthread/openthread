@@ -257,30 +257,30 @@ void Resolver::CloseTransaction(Transaction *aTxn)
     aTxn->mThreadTxn = nullptr;
 }
 
-void Resolver::UpdateFdSet(fd_set *aReadFdSet, fd_set *aErrorFdSet, int *aMaxFd)
+void Resolver::UpdateFdSet(otSysMainloopContext &aContext)
 {
     for (Transaction &txn : mUpstreamTransaction)
     {
         if (txn.mThreadTxn != nullptr)
         {
-            FD_SET(txn.mUdpFd, aReadFdSet);
-            FD_SET(txn.mUdpFd, aErrorFdSet);
-            if (txn.mUdpFd > *aMaxFd)
+            FD_SET(txn.mUdpFd, &aContext.mReadFdSet);
+            FD_SET(txn.mUdpFd, &aContext.mErrorFdSet);
+            if (txn.mUdpFd > aContext.mMaxFd)
             {
-                *aMaxFd = txn.mUdpFd;
+                aContext.mMaxFd = txn.mUdpFd;
             }
         }
     }
 }
 
-void Resolver::Process(const fd_set *aReadFdSet, const fd_set *aErrorFdSet)
+void Resolver::Process(const otSysMainloopContext &aContext)
 {
     for (Transaction &txn : mUpstreamTransaction)
     {
         if (txn.mThreadTxn != nullptr)
         {
             // Note: On Linux, we can only get the error via read, so they should share the same logic.
-            if (FD_ISSET(txn.mUdpFd, aErrorFdSet) || FD_ISSET(txn.mUdpFd, aReadFdSet))
+            if (FD_ISSET(txn.mUdpFd, &aContext.mErrorFdSet) || FD_ISSET(txn.mUdpFd, &aContext.mReadFdSet))
             {
                 ForwardResponse(&txn);
                 CloseTransaction(&txn);
