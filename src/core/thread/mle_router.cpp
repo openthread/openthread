@@ -3542,6 +3542,16 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
         leader->SetNextHopAndCost(RouterIdFromRloc16(mParent.GetRloc16()), mParent.GetLeaderCost());
     }
 
+    // We send a unicast Link Request to our former parent if its
+    // version is earlier than 1.3. This is to address a potential
+    // compatibility issue with some non-OpenThread stacks which may
+    // ignore MLE Advertisements from a former/existing child.
+
+    if (mParent.GetVersion() < kThreadVersion1p3)
+    {
+        IgnoreError(SendLinkRequest(&mParent));
+    }
+
     // We send an Advertisement to inform our former parent of our
     // newly allocated Router ID. This will cause the parent to
     // reset its advertisement trickle timer which can help speed
