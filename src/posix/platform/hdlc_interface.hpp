@@ -37,6 +37,7 @@
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel_interface.hpp"
 
@@ -58,9 +59,7 @@ public:
      * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void                                         *aCallbackContext,
-                  Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
+    HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -234,7 +233,6 @@ private:
 
     enum
     {
-        kMaxFrameSize  = Spinel::SpinelInterface::kMaxFrameSize,
         kMaxWaitTime   = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
         kResetTimeout  = 5000, ///< Maximum wait time in Milliseconds for file to become ready (see `ResetConnection`).
         kOpenFileDelay = 500,  ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
@@ -242,9 +240,9 @@ private:
             2000, ///< Delay for removing RCP device from host OS after hard reset (see `ResetConnection`).
     };
 
-    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void                                         *mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
+    ReceiveFrameCallback mReceiveFrameCallback;
+    void                *mReceiveFrameContext;
+    RxFrameBuffer       &mReceiveFrameBuffer;
 
     int             mSockFd;
     uint32_t        mBaudRate;

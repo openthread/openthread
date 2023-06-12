@@ -31,6 +31,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 
 #include "test_util.h"
 
@@ -60,7 +61,7 @@ static const uint8_t sSkipText[]       = "Skip text";
 static const uint8_t sHdlcSpecials[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
                                           kFlagSequence, kEscapeSequence, kFlagSpecial};
 
-otError WriteToBuffer(const uint8_t *aText, Hdlc::FrameWritePointer &aWritePointer)
+otError WriteToBuffer(const uint8_t *aText, Spinel::FrameWritePointer &aWritePointer)
 {
     otError error = OT_ERROR_NONE;
 
@@ -75,9 +76,9 @@ exit:
 
 void TestHdlcFrameBuffer(void)
 {
-    Hdlc::FrameBuffer<kBufferSize> frameBuffer;
+    Spinel::FrameBuffer<kBufferSize> frameBuffer;
 
-    printf("Testing Hdlc::FrameBuffer");
+    printf("Testing Spinel::FrameBuffer");
 
     VerifyOrQuit(frameBuffer.IsEmpty(), "after constructor");
     VerifyOrQuit(frameBuffer.GetLength() == 0, "after constructor");
@@ -123,15 +124,15 @@ void TestHdlcFrameBuffer(void)
     printf(" -- PASS\n");
 }
 
-void TestHdlcMultiFrameBuffer(void)
+void TestSpinelMultiFrameBuffer(void)
 {
-    Hdlc::MultiFrameBuffer<kBufferSize> frameBuffer;
-    uint8_t                            *frame    = nullptr;
-    uint8_t                            *newFrame = nullptr;
-    uint16_t                            length;
-    uint16_t                            newLength;
+    Spinel::MultiFrameBuffer<kBufferSize> frameBuffer;
+    uint8_t                              *frame    = nullptr;
+    uint8_t                              *newFrame = nullptr;
+    uint16_t                              length;
+    uint16_t                              newLength;
 
-    printf("Testing Hdlc::MultiFrameBuffer");
+    printf("Testing Spinel::MultiFrameBuffer");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check state after constructor
@@ -447,16 +448,16 @@ void ProcessDecodedFrame(void *aContext, otError aError)
 
 void TestEncoderDecoder(void)
 {
-    otError                             error;
-    uint8_t                             byte;
-    Hdlc::MultiFrameBuffer<kBufferSize> encoderBuffer;
-    Hdlc::MultiFrameBuffer<kBufferSize> decoderBuffer;
-    DecoderContext                      decoderContext;
-    Hdlc::Encoder                       encoder(encoderBuffer);
-    Hdlc::Decoder                       decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
-    uint8_t                            *frame;
-    uint16_t                            length;
-    uint8_t                             badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
+    otError                               error;
+    uint8_t                               byte;
+    Spinel::MultiFrameBuffer<kBufferSize> encoderBuffer;
+    Spinel::MultiFrameBuffer<kBufferSize> decoderBuffer;
+    DecoderContext                        decoderContext;
+    Hdlc::Encoder                         encoder(encoderBuffer);
+    Hdlc::Decoder                         decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    uint8_t                              *frame;
+    uint16_t                              length;
+    uint8_t                               badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder");
 
@@ -595,13 +596,13 @@ uint32_t GetRandom(uint32_t max) { return static_cast<uint32_t>(rand()) % max; }
 
 void TestFuzzEncoderDecoder(void)
 {
-    uint16_t                       length;
-    uint8_t                        frame[kMaxFrameLength];
-    Hdlc::FrameBuffer<kBufferSize> encoderBuffer;
-    Hdlc::FrameBuffer<kBufferSize> decoderBuffer;
-    DecoderContext                 decoderContext;
-    Hdlc::Encoder                  encoder(encoderBuffer);
-    Hdlc::Decoder                  decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    uint16_t                         length;
+    uint8_t                          frame[kMaxFrameLength];
+    Spinel::FrameBuffer<kBufferSize> encoderBuffer;
+    Spinel::FrameBuffer<kBufferSize> decoderBuffer;
+    DecoderContext                   decoderContext;
+    Hdlc::Encoder                    encoder(encoderBuffer);
+    Hdlc::Decoder                    decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder with randomly generated frames");
 
@@ -647,7 +648,7 @@ void TestFuzzEncoderDecoder(void)
 int main(void)
 {
     ot::Ncp::TestHdlcFrameBuffer();
-    ot::Ncp::TestHdlcMultiFrameBuffer();
+    ot::Ncp::TestSpinelMultiFrameBuffer();
     ot::Ncp::TestEncoderDecoder();
     ot::Ncp::TestFuzzEncoderDecoder();
     printf("\nAll tests passed.\n");

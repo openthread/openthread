@@ -37,7 +37,7 @@
 #include "openthread-posix-config.h"
 
 #include "platform-posix.h"
-#include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/spinel_interface.hpp"
 
 #include <openthread/openthread-system.h>
@@ -62,9 +62,7 @@ public:
      * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    SpiInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                 void                                         *aCallbackContext,
-                 Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
+    SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -206,14 +204,9 @@ private:
         kSlowRetryTimeoutUs      = 33 * kUsecPerMsec,
     };
 
-    enum
-    {
-        kMaxFrameSize = Spinel::SpinelInterface::kMaxFrameSize,
-    };
-
-    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void                                         *mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer       &mRxFrameBuffer;
+    ReceiveFrameCallback mReceiveFrameCallback;
+    void                *mReceiveFrameContext;
+    RxFrameBuffer       &mRxFrameBuffer;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
