@@ -37,6 +37,7 @@
 
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/spinel.h"
+#include "lib/url/url.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -125,21 +126,18 @@ public:
     /**
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
-     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in,out]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
-     * @param[in,out]  aTimeout     A reference to the timeout.
+     * @param[in,out]   aMainloopContext  A pointer to the mainloop context.
      *
      */
-    virtual void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout) = 0;
+    virtual void UpdateFdSet(void *aMainloopContext) = 0;
 
     /**
      * Performs radio driver processing.
      *
-     * @param[in]  aContext  The context containing fd_sets.
+     * @param[in]   aMainloopContext  A pointer to the mainloop context.
      *
      */
-    virtual void Process(const RadioProcessContext &aContext) = 0;
+    virtual void Process(const void *aMainloopContext) = 0;
 
     /**
      * Returns the bus speed between the host and the radio.
