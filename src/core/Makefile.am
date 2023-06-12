@@ -516,6 +516,7 @@ HEADERS_COMMON                                  = \
     config/logging.h                              \
     config/mac.h                                  \
     config/mesh_diag.h                            \
+    config/mesh_forwarder.h                       \
     config/misc.h                                 \
     config/mle.h                                  \
     config/nat64.h                                \
