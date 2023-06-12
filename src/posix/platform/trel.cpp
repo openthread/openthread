@@ -388,24 +388,20 @@ OT_TOOL_WEAK void trelDnssdRemoveService(void)
     // advertising TREL service after this call.
 }
 
-OT_TOOL_WEAK void trelDnssdUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
+OT_TOOL_WEAK void trelDnssdUpdateFdSet(otSysMainloopContext *aContext)
 {
     // This function can be used to update the file descriptor sets
     // by DNS-SD layer (if needed).
 
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
-    OT_UNUSED_VARIABLE(aMaxFd);
-    OT_UNUSED_VARIABLE(aTimeout);
+    OT_UNUSED_VARIABLE(aContext);
 }
 
-OT_TOOL_WEAK void trelDnssdProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+OT_TOOL_WEAK void trelDnssdProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     // This function performs processing by DNS-SD (if needed).
 
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aWriteFdSet);
+    OT_UNUSED_VARIABLE(aContext);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -525,45 +521,45 @@ exit:
     return;
 }
 
-void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
+void platformTrelUpdateFdSet(otSysMainloopContext *aContext)
 {
-    assert((aReadFdSet != NULL) && (aWriteFdSet != NULL) && (aMaxFd != NULL) && (aTimeout != NULL));
+    assert(aContext != nullptr);
 
     VerifyOrExit(sEnabled);
 
-    FD_SET(sSocket, aReadFdSet);
+    FD_SET(sSocket, &aContext->mReadFdSet);
 
-    if (sTxPacketQueueTail != NULL)
+    if (sTxPacketQueueTail != nullptr)
     {
-        FD_SET(sSocket, aWriteFdSet);
+        FD_SET(sSocket, &aContext->mWriteFdSet);
     }
 
-    if (*aMaxFd < sSocket)
+    if (aContext->mMaxFd < sSocket)
     {
-        *aMaxFd = sSocket;
+        aContext->mMaxFd = sSocket;
     }
 
-    trelDnssdUpdateFdSet(aReadFdSet, aWriteFdSet, aMaxFd, aTimeout);
+    trelDnssdUpdateFdSet(aContext);
 
 exit:
     return;
 }
 
-void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+void platformTrelProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     VerifyOrExit(sEnabled);
 
-    if (FD_ISSET(sSocket, aWriteFdSet))
+    if (FD_ISSET(sSocket, &aContext->mWriteFdSet))
     {
         SendQueuedPackets();
     }
 
-    if (FD_ISSET(sSocket, aReadFdSet))
+    if (FD_ISSET(sSocket, &aContext->mReadFdSet))
     {
         ReceivePacket(sSocket, aInstance);
     }
 
-    trelDnssdProcess(aInstance, aReadFdSet, aWriteFdSet);
+    trelDnssdProcess(aInstance, aContext);
 
 exit:
     return;

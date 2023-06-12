@@ -91,10 +91,9 @@ namespace Spinel {
  *
  *    // This method performs radio driver processing.
  *
- *    // @param[in]   aContext        The context containing fd_sets.
- *    //                              The type is specified by the user in template parameters.
+ *    // @param[in]   aContext  The process context.
  *
- *    void Process(const ProcessContextType &aContext);
+ *    void Process(const void *aContext);
  *
  *
  *    // This method deinitializes the interface to the RCP.
@@ -102,7 +101,7 @@ namespace Spinel {
  *    void Deinit(void);
  * };
  */
-template <typename InterfaceType, typename ProcessContextType> class RadioSpinel
+template <typename InterfaceType> class RadioSpinel
 {
 public:
     /**
@@ -562,7 +561,7 @@ public:
      * @param[in]  aContext   The process context.
      *
      */
-    void Process(const ProcessContextType &aContext);
+    void Process(const void *aContext);
 
     /**
      * This method returns the underlying spinel interface.

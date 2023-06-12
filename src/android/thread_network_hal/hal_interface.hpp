@@ -123,21 +123,18 @@ public:
     /**
      * This method updates the file descriptor sets with file descriptors used by the radio driver.
      *
-     * @param[inout]  aReadFdSet   A reference to the read file descriptors.
-     * @param[inout]  aWriteFdSet  A reference to the write file descriptors.
-     * @param[inout]  aMaxFd       A reference to the max file descriptor.
-     * @param[inout]  aTimeout     A reference to the timeout.
+     * @param[in]   aMainloopContext  The context containing fd_sets.
      *
      */
-    void UpdateFdSet(fd_set &aReadFdSet, fd_set &aWriteFdSet, int &aMaxFd, struct timeval &aTimeout);
+    void UpdateFdSet(void *aMainloopContext);
 
     /**
      * This method performs radio driver processing.
      *
-     * @param[in]   aContext        The context containing fd_sets.
+     * @param[in]   aMainloopContext  The context containing fd_sets.
      *
      */
-    void Process(const RadioProcessContext &aContext);
+    void Process(const void *aMainloopContext);
 
     /**
      * This method returns the bus speed between the host and the radio.
