@@ -311,6 +311,55 @@ public:
      */
     void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
 
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+    /**
+     * Gets the time-in-queue histogram for messages in the TX queue.
+     *
+     * Histogram of the time-in-queue of messages in the transmit queue is collected. The time-in-queue is tracked for
+     * direct transmissions only and is measured as the duration from when a message is added to the transmit queue
+     * until it is passed to the MAC layer for transmission or dropped.
+     *
+     * The histogram is returned as an array of `uint32_t` values with `aNumBins` entries. The first entry in the array
+     * (at index 0) represents the number of messages with a time-in-queue less than `aBinInterval`. The second entry
+     * represents the number of messages with a time-in-queue greater than or equal to `aBinInterval`, but less than
+     * `2 * aBinInterval`. And so on. The last entry represents the number of messages with time-in-queue  greater than
+     * or * equal to `(aNumBins - 1) * aBinInterval`.
+     *
+     * The collected statistics can be reset by calling `ResetTimeInQueueStat()`. The histogram information is
+     * collected since the OpenThread instance was initialized or since the last time statistics collection was reset
+     * by calling the `ResetTimeInQueueStat()`.
+     *
+     * @param[out] aNumBins       Reference to return the number of bins in histogram (array length).
+     * @param[out] aBinInterval   Reference to return the histogram bin interval length in milliseconds.
+     *
+     * @returns A pointer to an array of @p aNumBins entries representing the collected histogram info.
+     *
+     */
+    const uint32_t *GetTimeInQueueHistogram(uint16_t &aNumBins, uint32_t &aBinInterval) const
+    {
+        return mTxQueueStats.GetHistogram(aNumBins, aBinInterval);
+    }
+
+    /**
+     * Gets the maximum time-in-queue for messages in the TX queue.
+     *
+     * The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message
+     * is added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+     *
+     * The collected statistics can be reset by calling `ResetTimeInQueueStat()`.
+     *
+     * @returns The maximum time-in-queue in milliseconds for all messages in the TX queue (so far).
+     *
+     */
+    uint32_t GetMaxTimeInQueue(void) const { return mTxQueueStats.GetMaxInterval(); }
+
+    /**
+     * Resets the TX queue time-in-queue statistics.
+     *
+     */
+    void ResetTimeInQueueStat(void) { mTxQueueStats.Clear(); }
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
      * Handles a deferred ack.
@@ -431,6 +480,24 @@ private:
         Entry mEntries[kNumEntries];
     };
 #endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+    class TxQueueStats : public Clearable<TxQueueStats>
+    {
+    public:
+        const uint32_t *GetHistogram(uint16_t &aNumBins, uint32_t &aBinInterval) const;
+        uint32_t        GetMaxInterval(void) const { return mMaxInterval; }
+        void            UpdateFor(const Message &aMessage);
+
+    private:
+        static constexpr uint32_t kHistMaxInterval = OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL;
+        static constexpr uint32_t kHistBinInterval = OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL;
+        static constexpr uint16_t kNumHistBins     = (kHistMaxInterval + kHistBinInterval - 1) / kHistBinInterval;
+
+        uint32_t mMaxInterval;
+        uint32_t mHistogram[kNumHistBins];
+    };
+#endif
 
     void     SendIcmpErrorIfDstUnreach(const Message &aMessage, const Mac::Addresses &aMacAddrs);
     Error    CheckReachability(const FrameData &aFrameData, const Mac::Addresses &aMeshAddrs);
@@ -603,6 +670,10 @@ private:
 #endif
 
     DataPollSender mDataPollSender;
+
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+    TxQueueStats mTxQueueStats;
+#endif
 };
 
 /**
