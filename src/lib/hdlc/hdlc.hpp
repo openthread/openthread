@@ -140,6 +140,8 @@ public:
      */
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
+    Decoder(void);
+
     /**
      * Initializes the decoder.
      *
@@ -148,7 +150,7 @@ public:
      * @param[in] aContext             A pointer to arbitrary context information.
      *
      */
-    Decoder(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext);
+    void Init(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext);
 
     /**
      * Feeds a block of data into the decoder.
@@ -179,7 +181,7 @@ private:
     };
 
     State                      mState;
-    Spinel::FrameWritePointer &mWritePointer;
+    Spinel::FrameWritePointer *mWritePointer;
     FrameHandler               mFrameHandler;
     void                      *mContext;
     uint16_t                   mFcs;

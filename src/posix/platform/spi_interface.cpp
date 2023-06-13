@@ -54,7 +54,7 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
@@ -62,10 +62,11 @@
 namespace ot {
 namespace Posix {
 
-SpiInterface::SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mRxFrameBuffer(aFrameBuffer)
+SpiInterface::SpiInterface(const Url::Url &aRadioUrl)
+    : mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mRxFrameBuffer(nullptr)
+    , mRadioUrl(aRadioUrl)
     , mSpiDevFd(-1)
     , mResetGpioValueFd(-1)
     , mIntGpioValueFd(-1)
@@ -90,7 +91,7 @@ void SpiInterface::ResetStates(void)
     mSpiSlaveDataLen      = 0;
     memset(mSpiTxFrameBuffer, 0, sizeof(mSpiTxFrameBuffer));
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
-    mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_SPI;
+    mInterfaceMetrics.mRcpInterfaceType = kSpinelInterfaceTypeSpi;
 }
 
 otError SpiInterface::HardwareReset(void)
@@ -107,7 +108,7 @@ otError SpiInterface::HardwareReset(void)
     return OT_ERROR_NONE;
 }
 
-otError SpiInterface::Init(const Url::Url &aRadioUrl)
+otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
     const char *spiGpioIntDevice;
     const char *spiGpioResetDevice;
@@ -120,8 +121,8 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
 
-    spiGpioIntDevice   = aRadioUrl.GetValue("gpio-int-device");
-    spiGpioResetDevice = aRadioUrl.GetValue("gpio-reset-device");
+    spiGpioIntDevice   = mRadioUrl.GetValue("gpio-int-device");
+    spiGpioResetDevice = mRadioUrl.GetValue("gpio-reset-device");
     if (!spiGpioIntDevice || !spiGpioResetDevice)
     {
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
@@ -156,7 +157,11 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     }
 
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
-    InitSpiDev(aRadioUrl.GetPath(), spiMode, spiSpeed);
+    InitSpiDev(mRadioUrl.GetPath(), spiMode, spiSpeed);
+
+    mReceiveFrameCallback = aCallback;
+    mReceiveFrameContext  = aCallbackContext;
+    mRxFrameBuffer        = &aFrameBuffer;
 
     return OT_ERROR_NONE;
 }
@@ -182,6 +187,10 @@ void SpiInterface::Deinit(void)
         close(mIntGpioValueFd);
         mIntGpioValueFd = -1;
     }
+
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mRxFrameBuffer        = nullptr;
 }
 
 int SpiInterface::SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel)
@@ -382,6 +391,8 @@ otError SpiInterface::PushPullSpi(void)
     Spinel::SpiFrame txFrame(mSpiTxFrameBuffer);
     uint16_t         skipAlignAllowanceLength;
 
+    VerifyOrExit((mReceiveFrameCallback != nullptr) && (mRxFrameBuffer != nullptr), error = OT_ERROR_INVALID_STATE);
+
     if (mInterfaceMetrics.mTransferredValidFrameCount == 0)
     {
         // Set the reset flag to indicate to our slave that we are coming up from scratch.
@@ -426,13 +437,13 @@ otError SpiInterface::PushPullSpi(void)
     txFrame.SetHeaderAcceptLen(spiTransferBytes);
 
     // Set skip length to make MultiFrameBuffer to reserve a space in front of the frame buffer.
-    SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(kSpiFrameHeaderSize));
+    SuccessOrExit(error = mRxFrameBuffer->SetSkipLength(kSpiFrameHeaderSize));
 
     // Check whether the remaining frame buffer has enough space to store the data to be received.
-    VerifyOrExit(mRxFrameBuffer.GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
+    VerifyOrExit(mRxFrameBuffer->GetFrameMaxLength() >= spiTransferBytes + mSpiAlignAllowance);
 
     // Point to the start of the reserved buffer.
-    spiRxFrameBuffer = mRxFrameBuffer.GetFrame() - kSpiFrameHeaderSize;
+    spiRxFrameBuffer = mRxFrameBuffer->GetFrame() - kSpiFrameHeaderSize;
 
     // Set the total number of bytes to be transmitted.
     spiTransferBytes += kSpiFrameHeaderSize + mSpiAlignAllowance;
@@ -534,9 +545,9 @@ otError SpiInterface::PushPullSpi(void)
             successfulExchanges++;
 
             // Set the skip length to skip align bytes and SPI frame header.
-            SuccessOrExit(error = mRxFrameBuffer.SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
+            SuccessOrExit(error = mRxFrameBuffer->SetSkipLength(skipAlignAllowanceLength + kSpiFrameHeaderSize));
             // Set the received frame length.
-            SuccessOrExit(error = mRxFrameBuffer.SetLength(rxFrame.GetHeaderDataLen()));
+            SuccessOrExit(error = mRxFrameBuffer->SetLength(rxFrame.GetHeaderDataLen()));
 
             // Upper layer will free the frame buffer.
             discardRxFrame = false;
@@ -583,7 +594,7 @@ otError SpiInterface::PushPullSpi(void)
 exit:
     if (discardRxFrame)
     {
-        mRxFrameBuffer.DiscardFrame();
+        mRxFrameBuffer->DiscardFrame();
     }
 
     return error;
@@ -809,5 +820,4 @@ void SpiInterface::LogStats(void)
 }
 } // namespace Posix
 } // namespace ot
-
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE

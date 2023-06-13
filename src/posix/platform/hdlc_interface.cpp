@@ -123,60 +123,75 @@
 
 #endif // __APPLE__
 
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
 
 namespace ot {
 namespace Posix {
 
-HdlcInterface::HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
-    : mReceiveFrameCallback(aCallback)
-    , mReceiveFrameContext(aCallbackContext)
-    , mReceiveFrameBuffer(aFrameBuffer)
+HdlcInterface::HdlcInterface(const Url::Url &aRadioUrl)
+    : mReceiveFrameCallback(nullptr)
+    , mReceiveFrameContext(nullptr)
+    , mReceiveFrameBuffer(nullptr)
     , mSockFd(-1)
     , mBaudRate(0)
-    , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
-    , mRadioUrl(nullptr)
+    , mHdlcDecoder()
+    , mRadioUrl(aRadioUrl)
 {
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
-    mInterfaceMetrics.mRcpInterfaceType = OT_POSIX_RCP_BUS_UART;
+    mInterfaceMetrics.mRcpInterfaceType = kSpinelInterfaceTypeHdlc;
 }
 
-otError HdlcInterface::Init(const Url::Url &aRadioUrl)
+otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
+    otLogCritPlat("HdlcInterface::Init() TP1");
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    VerifyOrDie(stat(aRadioUrl.GetPath(), &st) == 0, OT_EXIT_INVALID_ARGUMENTS);
+    otLogCritPlat("HdlcInterface::Init() TP2 Path=%s", mRadioUrl.GetPath());
+    VerifyOrDie(stat(mRadioUrl.GetPath(), &st) == 0, OT_EXIT_ERROR_ERRNO);
 
     if (S_ISCHR(st.st_mode))
     {
-        mSockFd = OpenFile(aRadioUrl);
-        VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
+        otLogCritPlat("HdlcInterface::Init() TP2.1");
+        mSockFd = OpenFile(mRadioUrl);
+        VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else if (S_ISREG(st.st_mode))
     {
-        mSockFd = ForkPty(aRadioUrl);
-        VerifyOrExit(mSockFd != -1, error = OT_ERROR_INVALID_ARGS);
+        mSockFd = ForkPty(mRadioUrl);
+        otLogCritPlat("HdlcInterface::Init() TP2.2");
+        VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", aRadioUrl.GetPath());
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        otLogCritPlat("Radio file '%s' not supported", mRadioUrl.GetPath());
+        ExitNow(error = OT_ERROR_FAILED);
     }
 
-    mRadioUrl = &aRadioUrl;
+    mHdlcDecoder.Init(aFrameBuffer, HandleHdlcFrame, this);
+    mReceiveFrameCallback = aCallback;
+    mReceiveFrameContext  = aCallbackContext;
+    mReceiveFrameBuffer   = &aFrameBuffer;
 
 exit:
+    otLogCritPlat("HdlcInterface::Init() TP3 error=%d", error);
     return error;
 }
 
 HdlcInterface::~HdlcInterface(void) { Deinit(); }
 
-void HdlcInterface::Deinit(void) { CloseFile(); }
+void HdlcInterface::Deinit(void)
+{
+    CloseFile();
+
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mReceiveFrameBuffer   = nullptr;
+}
 
 void HdlcInterface::Read(void)
 {
@@ -689,21 +704,26 @@ void HdlcInterface::HandleHdlcFrame(void *aContext, otError aError)
 
 void HdlcInterface::HandleHdlcFrame(otError aError)
 {
+    VerifyOrExit((mReceiveFrameCallback != nullptr) && (mReceiveFrameBuffer != nullptr));
+
     mInterfaceMetrics.mTransferredFrameCount++;
 
     if (aError == OT_ERROR_NONE)
     {
         mInterfaceMetrics.mRxFrameCount++;
-        mInterfaceMetrics.mRxFrameByteCount += mReceiveFrameBuffer.GetLength();
+        mInterfaceMetrics.mRxFrameByteCount += mReceiveFrameBuffer->GetLength();
         mInterfaceMetrics.mTransferredValidFrameCount++;
         mReceiveFrameCallback(mReceiveFrameContext);
     }
     else
     {
         mInterfaceMetrics.mTransferredGarbageFrameCount++;
-        mReceiveFrameBuffer.DiscardFrame();
+        mReceiveFrameBuffer->DiscardFrame();
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
+
+exit:
+    return;
 }
 
 otError HdlcInterface::ResetConnection(void)
@@ -719,7 +739,7 @@ otError HdlcInterface::ResetConnection(void)
         end = otPlatTimeGet() + kResetTimeout * US_PER_MS;
         do
         {
-            mSockFd = OpenFile(*mRadioUrl);
+            mSockFd = OpenFile(mRadioUrl);
             if (mSockFd != -1)
             {
                 ExitNow();
@@ -737,4 +757,4 @@ exit:
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE

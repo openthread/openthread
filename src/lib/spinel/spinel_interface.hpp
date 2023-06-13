@@ -36,8 +36,8 @@
 #define SPINEL_SPINEL_INTERFACE_HPP_
 
 #include "lib/spinel/multi_frame_buffer.hpp"
+#include "lib/spinel/radio_spinel_metrics.h"
 #include "lib/spinel/spinel.h"
-#include "lib/url/url.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -66,14 +66,16 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]  aRadioUrl          RadioUrl parsed from radio url.
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
-     * @retval OT_ERROR_NONE          The interface is initialized successfully
-     * @retval OT_ERROR_ALREADY       The interface is already initialized.
-     * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
+     * @retval OT_ERROR_NONE       The interface is initialized successfully
+     * @retval OT_ERROR_ALREADY    The interface is already initialized.
+     * @retval OT_ERROR_FAILED     Failed to initialize the interface.
      *
      */
-    virtual otError Init(const Url::Url &aRadioUrl) = 0;
+    virtual otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer) = 0;
 
     /**
      * Deinitializes the interface to the RCP.
@@ -140,12 +142,27 @@ public:
     virtual otError HardwareReset(void) = 0;
 
     /**
+     * Returns the RCP interface metrics.
+     *
+     * @returns The RCP interface metrics.
+     *
+     */
+    virtual const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const = 0;
+
+    /**
      * Marks destructor virtual method.
      *
      */
     virtual ~SpinelInterface() = default;
 
 protected:
+    enum : uint8_t
+    {
+        kSpinelInterfaceTypeHdlc   = 1, ///< The type of Spinel HDLC interface.
+        kSpinelInterfaceTypeSpi    = 2, ///< The type of Spinel SPI interface.
+        kSpinelInterfaceTypeVendor = 3, ///< The type of Spinel Vendor interface.
+    };
+
     /**
      * Indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
      *

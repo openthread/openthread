@@ -51,6 +51,22 @@ typedef struct otRadioSpinelMetrics
     uint32_t mSpinelParseErrorCount;   ///< The number of spinel frame parse errors.
 } otRadioSpinelMetrics;
 
+/**
+ * Represents RCP interface metrics.
+ *
+ */
+typedef struct otRcpInterfaceMetrics
+{
+    uint8_t  mRcpInterfaceType;             ///< The RCP interface type.
+    uint64_t mTransferredFrameCount;        ///< The number of transferred frames.
+    uint64_t mTransferredValidFrameCount;   ///< The number of transferred valid frames.
+    uint64_t mTransferredGarbageFrameCount; ///< The number of transferred garbage frames.
+    uint64_t mRxFrameCount;                 ///< The number of received frames.
+    uint64_t mRxFrameByteCount;             ///< The number of received bytes.
+    uint64_t mTxFrameCount;                 ///< The number of transmitted frames.
+    uint64_t mTxFrameByteCount;             ///< The number of transmitted bytes.
+} otRcpInterfaceMetrics;
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

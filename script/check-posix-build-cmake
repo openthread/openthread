@@ -76,7 +76,7 @@ main()
     fi
 
     reset_source
-    build -DOT_POSIX_CONFIG_RCP_BUS=VENDOR "$@"
+    build -DOT_POSIX_RCP_VENDOR_BUS=ON "$@"
 }
 
 main "$@"

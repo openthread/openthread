@@ -83,7 +83,6 @@ NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
     : NcpBase(aInstance)
     , mSendCallback(aSendCallback)
     , mFrameEncoder(mHdlcBuffer)
-    , mFrameDecoder(mRxBuffer, &NcpHdlc::HandleFrame, this)
     , mState(kStartingFrame)
     , mByte(0)
     , mHdlcSendImmediate(false)
@@ -92,6 +91,7 @@ NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
     , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 {
+    mFrameDecoder.Init(mRxBuffer, &NcpHdlc::HandleFrame, this);
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 }
 

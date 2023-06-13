@@ -454,13 +454,14 @@ void TestEncoderDecoder(void)
     Spinel::MultiFrameBuffer<kBufferSize> decoderBuffer;
     DecoderContext                        decoderContext;
     Hdlc::Encoder                         encoder(encoderBuffer);
-    Hdlc::Decoder                         decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    Hdlc::Decoder                         decoder;
     uint8_t                              *frame;
     uint16_t                              length;
     uint8_t                               badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder");
 
+    decoder.Init(decoderBuffer, ProcessDecodedFrame, &decoderContext);
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sOpenThreadText, sizeof(sOpenThreadText) - 1));
     SuccessOrQuit(encoder.EndFrame());
@@ -602,10 +603,11 @@ void TestFuzzEncoderDecoder(void)
     Spinel::FrameBuffer<kBufferSize> decoderBuffer;
     DecoderContext                   decoderContext;
     Hdlc::Encoder                    encoder(encoderBuffer);
-    Hdlc::Decoder                    decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    Hdlc::Decoder                    decoder;
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder with randomly generated frames");
 
+    decoder.Init(decoderBuffer, ProcessDecodedFrame, &decoderContext);
     for (uint32_t iter = 0; iter < kFuzzTestIteration; iter++)
     {
         encoderBuffer.Clear();

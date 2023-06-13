@@ -37,8 +37,14 @@
 
 const char *otSysGetRadioUrlHelpString(void)
 {
-#if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
-#define OT_RADIO_URL_HELP_BUS                                                                                  \
+#define OT_RADIO_URL_HELP_BUS                           \
+    "Radio Url format:"                                 \
+    "    {Protocol}//${PATH_TO_DEVICE}?${Parameters}\n" \
+    "\n"
+
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
+#define OT_SPINEL_SPI_RADIO_URL_HELP_BUS                                                                       \
+    "Protocol=[spinel+spi*]           Specify the Spinel interface as the Spinel SPI interface\n"              \
     "    spinel+spi://${PATH_TO_SPI_DEVICE}?${Parameters}\n"                                                   \
     "Parameters:\n"                                                                                            \
     "    gpio-int-device[=gpio-device-path]\n"                                                                 \
@@ -61,10 +67,15 @@ const char *otSysGetRadioUrlHelpString(void)
     "    spi-align-allowance[=n]       Specify the maximum number of 0xFF bytes to clip from start of\n"       \
     "                                  MISO frame. Max value is 16.\n"                                         \
     "    spi-small-packet=[n]          Specify the smallest packet we can receive in a single transaction.\n"  \
-    "                                  (larger packets will require two transactions). Default value is 32.\n"
+    "                                  (larger packets will require two transactions). Default value is 32.\n" \
+    "\n"
+#else
+#define OT_SPINEL_SPI_RADIO_URL_HELP_BUS
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
 
-#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
-#define OT_RADIO_URL_HELP_BUS                                                                        \
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
+#define OT_SPINEL_HDLC_RADIO_URL_HELP_BUS                                                            \
+    "Protocol=[spinel+hdlc*]           Specify the Spinel interface as the Spinel HDLC interface\n"  \
     "    forkpty-arg[=argument string]  Command line arguments for subprocess, can be repeated.\n"   \
     "    spinel+hdlc+uart://${PATH_TO_UART_DEVICE}?${Parameters} for real uart device\n"             \
     "    spinel+hdlc+forkpty://${PATH_TO_UART_DEVICE}?${Parameters} for forking a pty subprocess.\n" \
@@ -73,17 +84,22 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
     "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
     "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
-    "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"
+    "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"   \
+    "\n"
+#else
+#define OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
 
-#elif OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_VENDOR
+#if OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
 
 #ifndef OT_VENDOR_RADIO_URL_HELP_BUS
 #define OT_VENDOR_RADIO_URL_HELP_BUS "\n"
 #endif // OT_VENDOR_RADIO_URL_HELP_BUS
 
-#define OT_RADIO_URL_HELP_BUS OT_VENDOR_RADIO_URL_HELP_BUS
-
-#endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
+#define OT_SPINEL_VENDOR_RADIO_URL_HELP_BUS OT_VENDOR_RADIO_URL_HELP_BUS
+#else
+#define OT_SPINEL_VENDOR_RADIO_URL_HELP_BUS
+#endif // OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 #define OT_RADIO_URL_HELP_MAX_POWER_TABLE                                                                  \
@@ -95,7 +111,8 @@ const char *otSysGetRadioUrlHelpString(void)
 #define OT_RADIO_URL_HELP_MAX_POWER_TABLE
 #endif
 
-    return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
+    return "RadioURL:\n" OT_RADIO_URL_HELP_BUS OT_SPINEL_SPI_RADIO_URL_HELP_BUS OT_SPINEL_HDLC_RADIO_URL_HELP_BUS
+        OT_SPINEL_VENDOR_RADIO_URL_HELP_BUS OT_RADIO_URL_HELP_MAX_POWER_TABLE
            "    region[=region-code]          Set the radio's region code. The region code must be an\n"
            "                                  ISO 3166 alpha-2 code.\n"
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
