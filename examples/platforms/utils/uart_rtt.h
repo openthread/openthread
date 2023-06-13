@@ -29,6 +29,7 @@
 /**
  * @file
  *   This file defines the RTT implementation of the uart API and default constants used by uart_rtt.c.
+ *
  */
 
 #ifndef UTILS_UART_RTT_H

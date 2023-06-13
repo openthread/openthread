@@ -29,6 +29,7 @@
 /**
  * @file
  *   This file implements the RTT implementation of the uart API.
+ *
  */
 
 #include <stdint.h>
