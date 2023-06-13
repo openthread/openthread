@@ -73,6 +73,7 @@ noinst_HEADERS                                    = \
     multi_frame_buffer.hpp                          \
     radio_spinel.hpp                                \
     radio_spinel_impl.hpp                           \
+    spi_frame.hpp                                   \
     spinel_buffer.hpp                               \
     spinel_decoder.hpp                              \
     spinel_encoder.hpp                              \
