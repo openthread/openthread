@@ -269,7 +269,7 @@ Error MeshDiag::ChildIterator::InitFrom(const Message &aMessage, uint16_t aParen
 {
     Error error;
 
-    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, ChildTableTlv::kType, mCurOffset, mCurOffset));
+    SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aMessage, ChildTableTlv::kType, mCurOffset, mEndOffset));
     mMessage      = &aMessage;
     mParentRloc16 = aParentRloc16;
 
