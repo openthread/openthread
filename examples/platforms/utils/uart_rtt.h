@@ -4,6 +4,8 @@
 #include "openthread-core-config.h"
 #include <openthread/config.h>
 
+#include "logging_rtt.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,7 +16,13 @@ extern "C" {
  * RTT buffer index used for the uart.
  */
 #ifndef UART_RTT_BUFFER_INDEX
-#define UART_RTT_BUFFER_INDEX 0
+#define UART_RTT_BUFFER_INDEX 1
+#endif
+
+#if OPENTHREAD_UART_RTT_ENABLE                                                           \
+    && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)   \
+    && (LOG_RTT_BUFFER_INDEX == UART_RTT_BUFFER_INDEX)
+#error Log buffer index matches uart buffer index
 #endif
 
 /**
@@ -47,6 +55,16 @@ extern "C" {
  */
 #ifndef UART_RTT_DOWN_BUFFER_SIZE
 #define UART_RTT_DOWN_BUFFER_SIZE 16
+#endif
+
+/**
+ * @def UART_RTT_READ_BUFFER_SIZE
+ *
+ * Size of the temporary buffer used when reading from the RTT channel. It will be
+ * locally allocated on the stack.
+ */
+#ifndef UART_RTT_READ_BUFFER_SIZE
+#define UART_RTT_READ_BUFFER_SIZE 16
 #endif
 
 /**

@@ -95,7 +95,7 @@ void utilsUartRttUpdate(void)
         otPlatUartSendDone();
     }
 
-    uint8_t  buf[16];
+    uint8_t  buf[UART_RTT_READ_BUFFER_SIZE];
     unsigned count;
 
     count = SEGGER_RTT_Read(UART_RTT_BUFFER_INDEX, &buf, sizeof(buf));

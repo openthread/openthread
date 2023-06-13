@@ -54,11 +54,7 @@ extern "C" {
  *
  */
 #ifndef LOG_RTT_BUFFER_INDEX
-#if OPENTHREAD_UART_RTT_ENABLE
-#define LOG_RTT_BUFFER_INDEX 1
-#else
 #define LOG_RTT_BUFFER_INDEX 0
-#endif
 #endif
 
 /**
