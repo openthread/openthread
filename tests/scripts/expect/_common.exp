@@ -213,11 +213,23 @@ proc get_rloc16 {} {
 }
 
 proc setup_default_network {} {
-    send "channel 11\n"
+    send "dataset init new\n"
     expect_line "Done"
-    send "panid 0xface\n"
+    send "dataset channel 11\n"
     expect_line "Done"
-    send "networkkey 00112233445566778899aabbccddeeff\n"
+    send "dataset extpanid 000db80000000000\n"
+    expect_line "Done"
+    send "dataset meshlocalprefix fd00:db8::\n"
+    expect_line "Done"
+    send "dataset networkkey 00112233445566778899aabbccddeeff\n"
+    expect_line "Done"
+    send "dataset networkname OpenThread-face\n"
+    expect_line "Done"
+    send "dataset panid 0xface\n"
+    expect_line "Done"
+    send "dataset pskc c23a76e98f1a6483639b1ac1271e2e27\n"
+    expect_line "Done"
+    send "dataset commit active\n"
     expect_line "Done"
 }
 

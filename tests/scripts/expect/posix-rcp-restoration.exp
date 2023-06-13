@@ -251,6 +251,7 @@ try {
     puts "While energy scanning"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
+    setup_default_network
     attach
 
     send "scan energy 100\n"
