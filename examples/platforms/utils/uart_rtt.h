@@ -19,9 +19,8 @@ extern "C" {
 #define UART_RTT_BUFFER_INDEX 1
 #endif
 
-#if OPENTHREAD_UART_RTT_ENABLE                                                           \
-    && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)   \
-    && (LOG_RTT_BUFFER_INDEX == UART_RTT_BUFFER_INDEX)
+#if OPENTHREAD_UART_RTT_ENABLE && (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED) && \
+    (LOG_RTT_BUFFER_INDEX == UART_RTT_BUFFER_INDEX)
 #error Log buffer index matches uart buffer index
 #endif
 
