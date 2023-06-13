@@ -40,7 +40,6 @@
 #include "common/code_utils.hpp"
 
 #include "lib/platform/reset_util.h"
-#include "utils/uart_rtt.h"
 
 /**
  * Initializes the CLI app.
@@ -134,9 +133,6 @@ pseudo_reset:
     {
         otTaskletsProcess(instance);
         otSysProcessDrivers(instance);
-#if OPENTHREAD_UART_RTT_ENABLE
-        utilsUartRttUpdate();
-#endif
     }
 
     otInstanceFinalize(instance);

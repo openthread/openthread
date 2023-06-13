@@ -31,12 +31,6 @@ add_executable(ot-cli-radio
     main.c
 )
 
-if(OT_RTT_UART)
-    target_compile_definitions(ot-cli-radio PRIVATE
-        OPENTHREAD_UART_RTT_ENABLE=1
-    )
-endif()
-
 target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
 
 if(NOT DEFINED OT_PLATFORM_LIB_RCP)

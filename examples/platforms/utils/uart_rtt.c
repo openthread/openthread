@@ -1,3 +1,35 @@
+/*
+ *  Copyright (c) 2023, The OpenThread Authors.
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. Neither the name of the copyright holder nor the
+ *     names of its contributors may be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @file
+ *   This file implements the RTT implementation of the uart API.
+ */
 
 #include <stdint.h>
 
@@ -56,22 +88,17 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
     otError error = OT_ERROR_NONE;
 
-    unsigned count = SEGGER_RTT_Write(UART_RTT_BUFFER_INDEX, aBuf, aBufLength);
-    if (count == 0)
-    {
-        error = OT_ERROR_FAILED;
-    }
-    else
-    {
-        sUartPendingUp = true;
-    }
+    otEXPECT_ACTION(SEGGER_RTT_Write(UART_RTT_BUFFER_INDEX, aBuf, aBufLength) != 0, error = OT_ERROR_FAILED);
+    sUartPendingUp = true;
 
+exit:
     return error;
 }
 
 otError otPlatUartFlush(void)
 {
     otError error = OT_ERROR_NONE;
+
     otEXPECT_ACTION(sUartPendingUp, error = OT_ERROR_INVALID_STATE);
 
     while (SEGGER_RTT_HasDataUp(UART_RTT_BUFFER_INDEX) != 0)
