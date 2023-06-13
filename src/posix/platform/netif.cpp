@@ -146,6 +146,7 @@ extern int
 #include <openthread/message.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
+#include <openthread/platform/border_routing.h>
 #include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
@@ -1022,17 +1023,18 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-enum IpVersion
-{
-    IP_VERSION_IP4 = 4,
-    IP_VERSION_IP6 = 6,
-};
+static constexpr uint8_t kIpVersion4 = 4;
+static constexpr uint8_t kIpVersion6 = 6;
 
-static IpVersion getIpVersion(const uint8_t *data)
+static uint8_t getIpVersion(const uint8_t *data)
 {
     assert(data != nullptr);
 
-    return static_cast<IpVersion>((data[0] >> 4) & 0x0F);
+    // Mute compiler warnings.
+    OT_UNUSED_VARIABLE(kIpVersion4);
+    OT_UNUSED_VARIABLE(kIpVersion6);
+
+    return (static_cast<uint8_t>(data[0]) >> 4) & 0x0F;
 }
 #endif
 
@@ -1048,7 +1050,7 @@ static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
     otIcmp6Header  icmpHeader;
 
     VerifyOrExit(length >= OT_IP6_HEADER_SIZE + OT_ICMP6_ROUTER_ADVERT_MIN_SIZE);
-    VerifyOrExit(getIpVersion(data) == IP_VERSION_IP6);
+    VerifyOrExit(getIpVersion(data) == kIpVersion6);
     VerifyOrExit(data[OT_IP6_HEADER_PROTO_OFFSET] == OT_IP6_PROTO_ICMP6);
 
     ret = data + OT_IP6_HEADER_SIZE;
@@ -1064,24 +1066,24 @@ exit:
  * Returns false if the message is not an ICMPv6 RA message.
  *
  */
-static bool tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *data, ssize_t length)
+static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *data, ssize_t length)
 {
-    const uint8_t *ra = getIcmp6RaMessage(data, length);
+    otError        error = OT_ERROR_NONE;
+    const uint8_t *ra    = getIcmp6RaMessage(data, length);
     ssize_t        raLength;
 
-    VerifyOrExit(ret != nullptr);
-    VerifyOrERxit(otBorderRoutingDhcp6PdGetState(aInstance) == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING);
-
-    raLength = length + (ret - data);
-    otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
+    VerifyOrExit(ra != nullptr, error = OT_ERROR_INVALID_ARGS);
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
     otLogInfoPlat("[netif] RA to BorderRouting (%hu bytes)", static_cast<uint16_t>(length));
     otDumpInfoPlat("", data, static_cast<size_t>(length));
 #endif
 
+    raLength = length + (ra - data);
+    otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
+
 exit:
-    return ra != nullptr;
+    return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
@@ -1111,7 +1113,10 @@ static void processTransmit(otInstance *aInstance)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    VerifyOrExit(!tryProcessIcmp6RaMessage(aInstance, &packet[offset], rval));
+    if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
+    {
+        ExitNow();
+    }
 #endif
 
     {
@@ -1120,7 +1125,7 @@ static void processTransmit(otInstance *aInstance)
         settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
         settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        isIp4   = (getIpVersion(&packet[offset]) == IP_VERSION_IP4);
+        isIp4   = (getIpVersion(reinterpret_cast<uint8_t *>(&packet[offset])) == kIpVersion4);
         message = isIp4 ? otIp4NewMessage(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
 #else
         message = otIp6NewMessage(aInstance, &settings);
