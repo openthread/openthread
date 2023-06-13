@@ -2544,23 +2544,23 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[]) { return mDns.
 #endif
 
 #if OPENTHREAD_FTD
-const char *EidCacheStateToString(otCacheEntryState aState)
-{
-    static const char *const kStateStrings[4] = {
-        "cache",
-        "snoop",
-        "query",
-        "retry",
-    };
-
-    return Interpreter::Stringify(aState, kStateStrings);
-}
-
 void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
 {
+    static const char *const kStateStrings[] = {
+        "cache", // (0) OT_CACHE_ENTRY_STATE_CACHED
+        "snoop", // (1) OT_CACHE_ENTRY_STATE_SNOOPED
+        "query", // (2) OT_CACHE_ENTRY_STATE_QUERY
+        "retry", // (3) OT_CACHE_ENTRY_STATE_RETRY_QUERY
+    };
+
+    static_assert(0 == OT_CACHE_ENTRY_STATE_CACHED, "OT_CACHE_ENTRY_STATE_CACHED value is incorrect");
+    static_assert(1 == OT_CACHE_ENTRY_STATE_SNOOPED, "OT_CACHE_ENTRY_STATE_SNOOPED value is incorrect");
+    static_assert(2 == OT_CACHE_ENTRY_STATE_QUERY, "OT_CACHE_ENTRY_STATE_QUERY value is incorrect");
+    static_assert(3 == OT_CACHE_ENTRY_STATE_RETRY_QUERY, "OT_CACHE_ENTRY_STATE_RETRY_QUERY value is incorrect");
+
     OutputIp6Address(aEntry.mTarget);
     OutputFormat(" %04x", aEntry.mRloc16);
-    OutputFormat(" %s", EidCacheStateToString(aEntry.mState));
+    OutputFormat(" %s", Stringify(aEntry.mState, kStateStrings));
     OutputFormat(" canEvict=%d", aEntry.mCanEvict);
 
     if (aEntry.mState == OT_CACHE_ENTRY_STATE_CACHED)
