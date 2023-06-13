@@ -115,6 +115,9 @@ exit:
 
 void utilsUartRttUpdate(void)
 {
+    uint8_t  buf[UART_RTT_READ_BUFFER_SIZE];
+    unsigned count;
+
     otEXPECT(sUartInitialized);
 
     if (sUartPendingUp && SEGGER_RTT_HasDataUp(UART_RTT_BUFFER_INDEX) == 0)
@@ -122,9 +125,6 @@ void utilsUartRttUpdate(void)
         sUartPendingUp = false;
         otPlatUartSendDone();
     }
-
-    uint8_t  buf[UART_RTT_READ_BUFFER_SIZE];
-    unsigned count;
 
     count = SEGGER_RTT_Read(UART_RTT_BUFFER_INDEX, &buf, sizeof(buf));
     if (count > 0)
