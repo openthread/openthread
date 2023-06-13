@@ -75,7 +75,7 @@ typedef struct otMultiRadioNeighborInfo
 /**
  * Gets the multi radio link information associated with a neighbor with a given Extended Address.
  *
- * Requires the multi radio link feature to be enabled (please see `config/radio_link.h`).
+ * `OPENTHREAD_CONFIG_MULTI_RADIO` must be enabled.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aExtAddress    The Extended Address of neighbor.

@@ -32,10 +32,10 @@
  *
  */
 
-#ifndef POSIX_APP_SPINEL_INTERFACE_HPP_
-#define POSIX_APP_SPINEL_INTERFACE_HPP_
+#ifndef SPINEL_SPINEL_INTERFACE_HPP_
+#define SPINEL_SPINEL_INTERFACE_HPP_
 
-#include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/url/url.hpp"
 
@@ -53,30 +53,13 @@ public:
     /**
      * Defines a receive frame buffer to store received spinel frame(s).
      *
-     * @note The receive frame buffer is an `Hdlc::MultiFrameBuffer` and therefore it is capable of storing multiple
+     * @note The receive frame buffer is an `Spinel::MultiFrameBuffer` and therefore it is capable of storing multiple
      * frames in a FIFO queue manner.
      *
      */
-    typedef Hdlc::MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
+    typedef MultiFrameBuffer<kMaxFrameSize> RxFrameBuffer;
 
     typedef void (*ReceiveFrameCallback)(void *aContext);
-
-    /**
-     * Indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
-     *
-     * @param[in] aFrame   A pointer to buffer containing the spinel frame.
-     * @param[in] aLength  The length (number of bytes) in the frame.
-     *
-     * @retval true  If the frame is a Spinel SPINEL_CMD_RESET frame.
-     * @retval false If the frame is not a Spinel SPINEL_CMD_RESET frame.
-     *
-     */
-    static bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
-    {
-        static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
-        return (aLength >= sizeof(kSpinelResetCommand)) &&
-               (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
-    }
 
     /**
      * Initializes the interface to the Radio Co-processor (RCP)
@@ -161,8 +144,26 @@ public:
      *
      */
     virtual ~SpinelInterface() = default;
+
+protected:
+    /**
+     * Indicates whether or not the frame is the Spinel SPINEL_CMD_RESET frame.
+     *
+     * @param[in] aFrame   A pointer to buffer containing the spinel frame.
+     * @param[in] aLength  The length (number of bytes) in the frame.
+     *
+     * @retval true  If the frame is a Spinel SPINEL_CMD_RESET frame.
+     * @retval false If the frame is not a Spinel SPINEL_CMD_RESET frame.
+     *
+     */
+    bool IsSpinelResetCommand(const uint8_t *aFrame, uint16_t aLength)
+    {
+        static constexpr uint8_t kSpinelResetCommand[] = {SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET};
+        return (aLength >= sizeof(kSpinelResetCommand)) &&
+               (memcmp(aFrame, kSpinelResetCommand, sizeof(kSpinelResetCommand)) == 0);
+    }
 };
 } // namespace Spinel
 } // namespace ot
 
-#endif // POSIX_APP_SPINEL_INTERFACE_HPP_
+#endif // SPINEL_SPINEL_INTERFACE_HPP_

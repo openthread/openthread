@@ -143,6 +143,7 @@ public:
      */
     Error BecomeLeader(void);
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
     /**
      * Gets the device properties which are used to determine the Leader Weight.
      *
@@ -158,6 +159,7 @@ public:
      *
      */
     void SetDeviceProperties(const DeviceProperties &aDeviceProperties);
+#endif
 
     /**
      * Returns the Leader Weighting value for this Thread interface.
@@ -564,6 +566,7 @@ private:
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
     static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
+    static constexpr uint8_t  kDefaultLeaderWeight           = 64;
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
@@ -656,7 +659,9 @@ private:
 
     TrickleTimer mAdvertiseTrickleTimer;
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
     DeviceProperties mDeviceProperties;
+#endif
 
     ChildTable  mChildTable;
     RouterTable mRouterTable;

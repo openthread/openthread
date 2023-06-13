@@ -36,6 +36,7 @@
 #include "openthread-core-config.h"
 
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "ncp/ncp_base.hpp"
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
@@ -128,14 +129,14 @@ private:
                                                       Spinel::Buffer          *aBuffer);
     otNcpHdlcSendCallback mSendCallback;
 
-    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
-    Hdlc::Encoder                        mFrameEncoder;
-    Hdlc::Decoder                        mFrameDecoder;
-    HdlcTxState                          mState;
-    uint8_t                              mByte;
-    Hdlc::FrameBuffer<kRxBufferSize>     mRxBuffer;
-    bool                                 mHdlcSendImmediate;
-    Tasklet                              mHdlcSendTask;
+    Spinel::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
+    Hdlc::Encoder                          mFrameEncoder;
+    Hdlc::Decoder                          mFrameDecoder;
+    HdlcTxState                            mState;
+    uint8_t                                mByte;
+    Spinel::FrameBuffer<kRxBufferSize>     mRxBuffer;
+    bool                                   mHdlcSendImmediate;
+    Tasklet                                mHdlcSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     BufferEncrypterReader mTxFrameBufferEncrypterReader;

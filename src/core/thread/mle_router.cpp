@@ -94,7 +94,12 @@ MleRouter::MleRouter(Instance &aInstance)
 #endif
 {
     mDeviceMode.Set(mDeviceMode.Get() | DeviceMode::kModeFullThreadDevice | DeviceMode::kModeFullNetworkData);
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
     mLeaderWeight = mDeviceProperties.CalculateLeaderWeight();
+#else
+    mLeaderWeight = kDefaultLeaderWeight;
+#endif
 
     SetRouterId(kInvalidRouterId);
 
@@ -183,12 +188,14 @@ exit:
     return error;
 }
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 void MleRouter::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
 {
     mDeviceProperties = aDeviceProperties;
     mDeviceProperties.ClampWeightAdjustment();
     SetLeaderWeight(mDeviceProperties.CalculateLeaderWeight());
 }
+#endif
 
 Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
 {
@@ -3533,6 +3540,16 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
 
         OT_ASSERT(leader != nullptr);
         leader->SetNextHopAndCost(RouterIdFromRloc16(mParent.GetRloc16()), mParent.GetLeaderCost());
+    }
+
+    // We send a unicast Link Request to our former parent if its
+    // version is earlier than 1.3. This is to address a potential
+    // compatibility issue with some non-OpenThread stacks which may
+    // ignore MLE Advertisements from a former/existing child.
+
+    if (mParent.GetVersion() < kThreadVersion1p3)
+    {
+        IgnoreError(SendLinkRequest(&mParent));
     }
 
     // We send an Advertisement to inform our former parent of our

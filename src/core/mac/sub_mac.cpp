@@ -276,6 +276,61 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+void SubMac::LogReceived(RxFrame *aFrame)
+{
+    static constexpr uint8_t kLogStringSize = 72;
+
+    String<kLogStringSize> logString;
+    Address                dst;
+    int32_t                deviation;
+    uint32_t               sampleTime, ahead, after;
+
+    IgnoreError(aFrame->GetDstAddr(dst));
+
+    VerifyOrExit((dst.GetType() == Address::kTypeShort && dst.GetShort() == GetShortAddress()) ||
+                 (dst.GetType() == Address::kTypeExtended && dst.GetExtended() == GetExtAddress()));
+
+    LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %lu", StateToString(mState),
+            mIsCslSampling ? "CslSample" : "CslSleep",
+            ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
+
+    VerifyOrExit(mState == kStateCslSample);
+
+    GetCslWindowEdges(ahead, after);
+    ahead -= kMinReceiveOnAhead + kCslReceiveTimeAhead;
+
+    sampleTime = mCslSampleTime.GetValue() - mCslPeriod * kUsPerTenSymbols;
+    deviation  = aFrame->mInfo.mRxInfo.mTimestamp + kRadioHeaderPhrDuration - sampleTime;
+
+    // This logs three values (all in microseconds):
+    // - Absolute sample time in which the CSL receiver expected the MHR of the received frame.
+    // - Allowed margin around that time accounting for accuracy and uncertainty from both devices.
+    // - Real deviation on the reception of the MHR with regards to expected sample time. This can
+    //   be due to clocks drift and/or CSL Phase rounding error.
+    // This means that a deviation absolute value greater than the margin would result in the frame
+    // not being received out of the debug mode.
+    logString.Append("Expected sample time %lu, margin ±%lu, deviation %d", ToUlong(sampleTime), ToUlong(ahead),
+                     deviation);
+
+    // Treat as a warning when the deviation is not within the margins. Neither kCslReceiveTimeAhead
+    // or kMinReceiveOnAhead/kMinReceiveOnAfter are considered for the margin since they have no
+    // impact on understanding possible deviation errors between transmitter and receiver. So in this
+    // case ahead equals after.
+    if ((deviation + ahead > 0) && (deviation < static_cast<int32_t>(ahead)))
+    {
+        LogDebg("%s", logString.AsCString());
+    }
+    else
+    {
+        LogWarn("%s", logString.AsCString());
+    }
+
+exit:
+    return;
+}
+#endif
+
 void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 {
     if (mPcapCallback.IsSet() && (aFrame != nullptr) && (aError == kErrorNone))
@@ -291,20 +346,14 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (aFrame != nullptr && aError == kErrorNone)
     {
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+        LogReceived(aFrame);
+#endif
         // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
         if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
         {
             mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
         }
-
-#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-        // Split the log into two lines for RTT to output
-        LogDebg("Received frame in state (SubMac %s, CSL %s), timestamp %lu", StateToString(mState),
-                mIsCslSampling ? "CslSample" : "CslSleep",
-                ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp)));
-        LogDebg("Target sample start time %lu, time drift %lu", ToUlong(mCslSampleTime.GetValue()),
-                ToUlong(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp) - mCslSampleTime.GetValue()));
-#endif
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -1129,7 +1178,7 @@ void SubMac::HandleCslTimer(void)
      *
      */
     uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
-    uint32_t timeAhead, timeAfter;
+    uint32_t timeAhead, timeAfter, winStart, winDuration;
 
     GetCslWindowEdges(timeAhead, timeAfter);
 
@@ -1149,16 +1198,19 @@ void SubMac::HandleCslTimer(void)
     {
         if (RadioSupportsReceiveTiming())
         {
-            mCslSampleTime += periodUs;
-            mCslTimer.FireAt(mCslSampleTime - timeAhead);
+            mCslTimer.FireAt(mCslSampleTime - timeAhead + periodUs);
             timeAhead -= kCslReceiveTimeAhead;
+            winStart = mCslSampleTime.GetValue() - timeAhead;
         }
         else
         {
             mCslTimer.FireAt(mCslSampleTime + timeAfter);
             mIsCslSampling = true;
-            mCslSampleTime += periodUs;
+            winStart       = ot::TimerMicro::GetNow().GetValue();
         }
+
+        winDuration = timeAhead + timeAfter;
+        mCslSampleTime += periodUs;
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
 
@@ -1166,15 +1218,14 @@ void SubMac::HandleCslTimer(void)
         // than scanning or RX after the data poll.
         if (RadioSupportsReceiveTiming() && (mState != kStateDisabled) && (mState != kStateReceive))
         {
-            IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, mCslSampleTime.GetValue() - periodUs - timeAhead,
-                                               timeAhead + timeAfter));
+            IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, winStart, winDuration));
         }
         else if (mState == kStateCslSample)
         {
             IgnoreError(Get<Radio>().Receive(mCslChannel));
-            LogDebg("CSL sample %lu, duration %lu", ToUlong(mCslTimer.GetNow().GetValue()),
-                    ToUlong(timeAhead + timeAfter));
         }
+
+        LogDebg("CSL window start %lu, duration %lu", ToUlong(winStart), ToUlong(winDuration));
     }
 }
 
