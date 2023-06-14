@@ -263,7 +263,7 @@ exit:
     return error;
 }
 
-Error MleRouter::BecomeLeader(void)
+Error MleRouter::BecomeLeader(bool aCheckWeight)
 {
     Error    error = kErrorNone;
     Router  *router;
@@ -278,6 +278,11 @@ Error MleRouter::BecomeLeader(void)
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsLeader(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
+
+    if (aCheckWeight && IsAttached())
+    {
+        VerifyOrExit(mLeaderWeight > mLeaderData.GetWeighting(), error = kErrorNotCapable);
+    }
 
     mRouterTable.Clear();
 
