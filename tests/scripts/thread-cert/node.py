@@ -2611,11 +2611,14 @@ class NodeImpl:
             self.send_command(cmd, go=False)
             self._expect_done()
 
-        if security_policy and len(security_policy) == 2:
-            cmd = 'dataset securitypolicy %s %s' % (
-                str(security_policy[0]),
-                security_policy[1],
-            )
+        if security_policy is not None:
+            if len(security_policy) >= 2:
+                cmd = 'dataset securitypolicy %s %s' % (
+                    str(security_policy[0]),
+                    security_policy[1],
+                )
+            if len(security_policy) >= 3:
+                cmd += ' %s' % (str(security_policy[2]))
             self.send_command(cmd, go=False)
             self._expect_done()
 
@@ -2723,8 +2726,9 @@ class NodeImpl:
             cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         if security_policy is not None:
-            rotation, flags = security_policy
-            cmd += 'securitypolicy %d %s ' % (rotation, flags)
+            cmd += 'securitypolicy %d %s ' % (security_policy[0], security_policy[1])
+            if (len(security_policy) >= 3):
+                cmd += '%d ' % (security_policy[2])
 
         if binary is not None:
             cmd += '-x %s ' % binary

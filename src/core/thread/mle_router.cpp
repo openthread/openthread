@@ -188,6 +188,30 @@ exit:
     return error;
 }
 
+void MleRouter::HandleSecurityPolicyChanged(void)
+{
+    // If we are currently router or leader and no longer eligible to
+    // be a router (due to security policy change), we start jitter
+    // timeout to downgrade.
+
+    VerifyOrExit(IsRouterOrLeader() && !IsRouterEligible());
+
+    // `mRouterSelectionJitterTimeout` is non-zero if we are already
+    // waiting to downgrade.
+
+    VerifyOrExit(mRouterSelectionJitterTimeout == 0);
+
+    mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
+
+    if (IsLeader())
+    {
+        mRouterSelectionJitterTimeout += kLeaderDowngradeExtraDelay;
+    }
+
+exit:
+    return;
+}
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
 void MleRouter::SetDeviceProperties(const DeviceProperties &aDeviceProperties)
 {
@@ -1588,9 +1612,15 @@ void MleRouter::HandleTimeTick(void)
             Attach(kDowngradeToReed);
         }
 
-        break;
+        OT_FALL_THROUGH;
 
     case kRoleLeader:
+        if (routerStateUpdate && !IsRouterEligible())
+        {
+            LogInfo("No longer router eligible");
+            IgnoreError(BecomeDetached());
+        }
+
         break;
 
     case kRoleDisabled:

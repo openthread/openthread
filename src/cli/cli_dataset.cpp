@@ -1093,7 +1093,7 @@ exit:
 
 void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
 {
-    OutputFormat("%d ", aSecurityPolicy.mRotationTime);
+    OutputFormat("%u ", aSecurityPolicy.mRotationTime);
 
     if (aSecurityPolicy.mObtainNetworkKeyEnabled)
     {
@@ -1135,13 +1135,16 @@ void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
         OutputFormat("R");
     }
 
-    OutputNewLine();
+    OutputLine(" %u", aSecurityPolicy.mVersionThresholdForRouting);
 }
 
 otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs)
 {
+    static constexpr uint8_t kMaxVersionThreshold = 7;
+
     otError          error;
     otSecurityPolicy policy;
+    uint8_t          versionThreshold;
 
     memset(&policy, 0, sizeof(policy));
 
@@ -1192,6 +1195,11 @@ otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aA
     }
 
     aArgs++;
+    VerifyOrExit(!aArgs->IsEmpty());
+
+    SuccessOrExit(error = aArgs->ParseAsUint8(versionThreshold));
+    VerifyOrExit(versionThreshold <= kMaxVersionThreshold, error = OT_ERROR_INVALID_ARGS);
+    policy.mVersionThresholdForRouting = versionThreshold;
 
 exit:
     if (error == OT_ERROR_NONE)

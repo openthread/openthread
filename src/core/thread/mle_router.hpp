@@ -566,6 +566,7 @@ private:
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
     static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
+    static constexpr uint8_t  kLeaderDowngradeExtraDelay     = 10;  // Extra delay to downgrade leader (in sec).
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
 
     // Threshold to accept a router upgrade request with reason
@@ -585,6 +586,7 @@ private:
 
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
+    void  HandleSecurityPolicyChanged(void);
     void  HandleLinkRequest(RxInfo &aRxInfo);
     void  HandleLinkAccept(RxInfo &aRxInfo);
     Error HandleLinkAccept(RxInfo &aRxInfo, bool aRequest);
