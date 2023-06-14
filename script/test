@@ -446,7 +446,7 @@ do_expect()
             fi
         fi
     else
-        test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
+        test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp' -o -name 'cli_non_rcp-*.exp')
     fi
 
     if [[ $# != 0 ]]; then

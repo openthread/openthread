@@ -285,4 +285,15 @@
 #define OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+ *
+ * Set to 1 to enable support for Radio Statistics. Note that this option only works for OPENTHREAD_FTD and
+ * OPENTHREAD_MTD.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+#define OPENTHREAD_CONFIG_RADIO_STATS_ENABLE 1
+#endif
+
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_

@@ -78,6 +78,7 @@ openthread_headers                      = \
     openthread/netdiag.h                  \
     openthread/network_time.h             \
     openthread/ping_sender.h              \
+    openthread/radio_stats.h              \
     openthread/random_crypto.h            \
     openthread/random_noncrypto.h         \
     openthread/server.h                   \
