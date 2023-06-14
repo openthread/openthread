@@ -380,21 +380,22 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
 
     if (aArgs[0] == "result")
     {
+        OutputFormat("TCP Benchmark Status: ");
         if (mBenchmarkBytesTotal != 0)
         {
-            OutputLine("TCP Benchmark Status: Ongoing");
+            OutputLine("Ongoing");
         }
         else if (mBenchmarkTimeUsed != 0)
         {
-            OutputLine("TCP Benchmark Status: Completed");
+            OutputLine("Completed");
             OutputBenchmarkResult();
         }
         else
         {
-            OutputLine("TCP Benchmark Status: Untested");
+            OutputLine("Untested");
         }
     }
-    else if (aArgs[0] == "start")
+    else if (aArgs[0] == "run")
     {
         VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
         VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);

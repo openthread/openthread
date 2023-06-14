@@ -60,7 +60,7 @@ For a more in-depth example, see [this video](https://youtu.be/ppZ784YUKlI).
 - [bind](#bind-ip-port)
 - [connect](#connect-ip-port)
 - [send](#send-message)
-- [benchmark](#benchmark-start-size)
+- [benchmark](#benchmark-run-size)
 - [sendend](#sendend)
 - [abort](#abort)
 - [listen](#listen-ip-port)
@@ -78,14 +78,14 @@ TCP: Connection reset
 Done
 ```
 
-### benchmark start [\<size\>]
+### benchmark run [\<size\>]
 
 Transfers the specified number of bytes using the TCP connection currently associated with the example TCP endpoint (this TCP connection must be established before using this command).
 
 - size: the number of bytes to send for the benchmark. If it is left unspecified, the default size is used.
 
 ```bash
-> tcp benchmark start
+> tcp benchmark run
 Done
 TCP Benchmark Complete: Transferred 73728 bytes in 7233 milliseconds
 TCP Goodput: 81.546 kb/s
