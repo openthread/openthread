@@ -742,6 +742,33 @@ cc_library_static {
 }
 
 cc_library_static {
+    name: "openthread-spi",
+    vendor: true,
+    local_include_dirs: [
+        "include",
+        "src",
+        "src/core",
+        "src/lib/platform",
+        "src/posix/platform",
+        "src/posix/platform/include",
+    ],
+    export_include_dirs: [
+        "include",
+        "src/core",
+        "src/posix/platform",
+        "src/posix/platform/include",
+    ],
+
+    cflags: [
+        "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI",
+    ],
+
+    srcs: [
+        "src/posix/platform/spi_interface.cpp",
+    ],
+}
+
+cc_library_static {
     name: "openthread-url",
     vendor: true,
     local_include_dirs: [
