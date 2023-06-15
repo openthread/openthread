@@ -73,7 +73,7 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
     {
         struct sockaddr_in6 *ip6Addr;
 
-        if (if_nametoindex(addr->ifa_name) != aInfraIfIndex || addr->ifa_addr == NULL || addr->ifa_addr->sa_family != AF_INET6)
+        if (if_nametoindex(addr->ifa_name) != aInfraIfIndex || addr->ifa_addr == nullptr || addr->ifa_addr->sa_family != AF_INET6)
         {
             continue;
         }
