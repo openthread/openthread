@@ -671,6 +671,10 @@ template <> inline Radio &Instance::Get(void) { return mRadio; }
 
 template <> inline Radio::Callbacks &Instance::Get(void) { return mRadio.mCallbacks; }
 
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+template <> inline RadioStatistics &Instance::Get(void) { return mRadio.mRadioStatistics; }
+#endif
+
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 template <> inline Uptime &Instance::Get(void) { return mUptime; }
 #endif

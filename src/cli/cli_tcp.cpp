@@ -70,6 +70,7 @@ TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
     , mTlsHandshakeComplete(false)
     , mBenchmarkBytesTotal(0)
     , mBenchmarkBytesUnsent(0)
+    , mBenchmarkTimeUsed(0)
 {
     mEndpointAndCircularSendBuffer.mEndpoint   = &mEndpoint;
     mEndpointAndCircularSendBuffer.mSendBuffer = &mSendBuffer;
@@ -377,48 +378,73 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
-    VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);
-
-    if (aArgs[0].IsEmpty())
+    if (aArgs[0] == "result")
     {
-        mBenchmarkBytesTotal = OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE;
-    }
-    else
-    {
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(mBenchmarkBytesTotal));
-        VerifyOrExit(mBenchmarkBytesTotal != 0, error = OT_ERROR_INVALID_ARGS);
-    }
-    VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-
-    mBenchmarkStart       = TimerMilli::GetNow();
-    mBenchmarkBytesUnsent = mBenchmarkBytesTotal;
-
-    if (mUseCircularSendBuffer)
-    {
-        SuccessOrExit(error = ContinueBenchmarkCircularSend());
-    }
-    else
-    {
-        uint32_t benchmarkLinksLeft = (mBenchmarkBytesTotal + sizeof(mSendBufferBytes) - 1) / sizeof(mSendBufferBytes);
-        uint32_t toSendOut          = OT_MIN(OT_ARRAY_LENGTH(mBenchmarkLinks), benchmarkLinksLeft);
-
-        /* We could also point the linked buffers directly to sBenchmarkData. */
-        memset(mSendBufferBytes, 'a', sizeof(mSendBufferBytes));
-
-        for (uint32_t i = 0; i != toSendOut; i++)
+        OutputFormat("TCP Benchmark Status: ");
+        if (mBenchmarkBytesTotal != 0)
         {
-            mBenchmarkLinks[i].mNext   = nullptr;
-            mBenchmarkLinks[i].mData   = mSendBufferBytes;
-            mBenchmarkLinks[i].mLength = sizeof(mSendBufferBytes);
-            if (i == 0 && mBenchmarkBytesTotal % sizeof(mSendBufferBytes) != 0)
-            {
-                mBenchmarkLinks[i].mLength = mBenchmarkBytesTotal % sizeof(mSendBufferBytes);
-            }
-            error = otTcpSendByReference(&mEndpoint, &mBenchmarkLinks[i],
-                                         i == toSendOut - 1 ? 0 : OT_TCP_SEND_MORE_TO_COME);
-            VerifyOrExit(error == OT_ERROR_NONE, mBenchmarkBytesTotal = 0);
+            OutputLine("Ongoing");
         }
+        else if (mBenchmarkTimeUsed != 0)
+        {
+            OutputLine("Completed");
+            OutputBenchmarkResult();
+        }
+        else
+        {
+            OutputLine("Untested");
+        }
+    }
+    else if (aArgs[0] == "run")
+    {
+        VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
+        VerifyOrExit(mBenchmarkBytesTotal == 0, error = OT_ERROR_BUSY);
+
+        if (aArgs[1].IsEmpty())
+        {
+            mBenchmarkBytesTotal = OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE;
+        }
+        else
+        {
+            SuccessOrExit(error = aArgs[1].ParseAsUint32(mBenchmarkBytesTotal));
+            VerifyOrExit(mBenchmarkBytesTotal != 0, error = OT_ERROR_INVALID_ARGS);
+        }
+        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        mBenchmarkStart       = TimerMilli::GetNow();
+        mBenchmarkBytesUnsent = mBenchmarkBytesTotal;
+
+        if (mUseCircularSendBuffer)
+        {
+            SuccessOrExit(error = ContinueBenchmarkCircularSend());
+        }
+        else
+        {
+            uint32_t benchmarkLinksLeft =
+                (mBenchmarkBytesTotal + sizeof(mSendBufferBytes) - 1) / sizeof(mSendBufferBytes);
+            uint32_t toSendOut = OT_MIN(OT_ARRAY_LENGTH(mBenchmarkLinks), benchmarkLinksLeft);
+
+            /* We could also point the linked buffers directly to sBenchmarkData. */
+            memset(mSendBufferBytes, 'a', sizeof(mSendBufferBytes));
+
+            for (uint32_t i = 0; i != toSendOut; i++)
+            {
+                mBenchmarkLinks[i].mNext   = nullptr;
+                mBenchmarkLinks[i].mData   = mSendBufferBytes;
+                mBenchmarkLinks[i].mLength = sizeof(mSendBufferBytes);
+                if (i == 0 && mBenchmarkBytesTotal % sizeof(mSendBufferBytes) != 0)
+                {
+                    mBenchmarkLinks[i].mLength = mBenchmarkBytesTotal % sizeof(mSendBufferBytes);
+                }
+                error = otTcpSendByReference(&mEndpoint, &mBenchmarkLinks[i],
+                                             i == toSendOut - 1 ? 0 : OT_TCP_SEND_MORE_TO_COME);
+                VerifyOrExit(error == OT_ERROR_NONE, mBenchmarkBytesTotal = 0);
+            }
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
     }
 
 exit:
@@ -860,15 +886,24 @@ exit:
     return error;
 }
 
-void TcpExample::CompleteBenchmark(void)
+void TcpExample::OutputBenchmarkResult(void)
 {
-    uint32_t milliseconds         = TimerMilli::GetNow() - mBenchmarkStart;
-    uint32_t thousandTimesGoodput = (1000 * (mBenchmarkBytesTotal << 3) + (milliseconds >> 1)) / milliseconds;
+    uint32_t thousandTimesGoodput =
+        (1000 * (mBenchmarkLastBytesTotal << 3) + (mBenchmarkTimeUsed >> 1)) / mBenchmarkTimeUsed;
 
-    OutputLine("TCP Benchmark Complete: Transferred %lu bytes in %lu milliseconds", ToUlong(mBenchmarkBytesTotal),
-               ToUlong(milliseconds));
+    OutputLine("TCP Benchmark Complete: Transferred %lu bytes in %lu milliseconds", ToUlong(mBenchmarkLastBytesTotal),
+               ToUlong(mBenchmarkTimeUsed));
     OutputLine("TCP Goodput: %lu.%03u kb/s", ToUlong(thousandTimesGoodput / 1000),
                static_cast<uint16_t>(thousandTimesGoodput % 1000));
+}
+
+void TcpExample::CompleteBenchmark(void)
+{
+    mBenchmarkTimeUsed       = TimerMilli::GetNow() - mBenchmarkStart;
+    mBenchmarkLastBytesTotal = mBenchmarkBytesTotal;
+
+    OutputBenchmarkResult();
+
     mBenchmarkBytesTotal = 0;
 }
 

@@ -131,6 +131,8 @@ private:
     static void MbedTlsDebugOutput(void *ctx, int level, const char *file, int line, const char *str);
 #endif
 
+    void OutputBenchmarkResult(void);
+
     otTcpEndpoint mEndpoint;
     otTcpListener mListener;
 
@@ -151,7 +153,8 @@ private:
     uint32_t  mBenchmarkBytesTotal;
     uint32_t  mBenchmarkBytesUnsent;
     TimeMilli mBenchmarkStart;
-
+    uint32_t  mBenchmarkTimeUsed;
+    uint32_t  mBenchmarkLastBytesTotal;
     otTcpEndpointAndCircularSendBuffer mEndpointAndCircularSendBuffer;
 
 #if OPENTHREAD_CONFIG_TLS_ENABLE

@@ -576,7 +576,7 @@ public:
      * @param[in]  aEnable The requested State for the MAC layer. true - Start, false - Stop.
      *
      */
-    void SetEnabled(bool aEnable) { mEnabled = aEnable; }
+    void SetEnabled(bool aEnable);
 
     /**
      * Indicates whether or not the link layer is enabled.

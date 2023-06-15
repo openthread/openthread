@@ -353,6 +353,15 @@ public:
 
     static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
+    static constexpr uint8_t kPreambleSize  = 4;
+    static constexpr uint8_t kSfdSize       = 1;
+    static constexpr uint8_t kPhrSize       = 1;
+    static constexpr uint8_t kPhyHeaderSize = kPreambleSize + kSfdSize + kPhrSize;
+    static constexpr uint8_t kFcfSize       = sizeof(uint16_t);
+    static constexpr uint8_t kDsnSize       = sizeof(uint8_t);
+    static constexpr uint8_t k154FcsSize    = sizeof(uint16_t);
+    static constexpr uint8_t kImmAckLength  = kFcfSize + kDsnSize + k154FcsSize;
+
     /**
      * Defines the fixed-length `String` object returned from `ToInfoString()` method.
      *
@@ -1081,12 +1090,9 @@ public:
     uint16_t GetFrameControlField(void) const;
 
 protected:
-    static constexpr uint8_t kFcfSize             = sizeof(uint16_t);
-    static constexpr uint8_t kDsnSize             = sizeof(uint8_t);
     static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
     static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
     static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
-    static constexpr uint8_t k154FcsSize          = sizeof(uint16_t);
     static constexpr uint8_t kKeyIndexSize        = sizeof(uint8_t);
 
     static constexpr uint16_t kFcfFrameTypeMask    = 7 << 0;
@@ -1119,8 +1125,6 @@ protected:
     static constexpr uint8_t kKeySourceSizeMode2 = 4;
     static constexpr uint8_t kKeySourceSizeMode3 = 8;
 
-    static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
-
     static constexpr uint8_t kInvalidIndex  = 0xff;
     static constexpr uint8_t kInvalidSize   = kInvalidIndex;
     static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
@@ -1152,6 +1156,8 @@ protected:
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);
+
+public:
 };
 
 /**

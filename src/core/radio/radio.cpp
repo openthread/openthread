@@ -28,7 +28,10 @@
 
 #include "radio.hpp"
 
+#include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_frame.hpp"
 #include "utils/otns.hpp"
 
 namespace ot {
@@ -91,5 +94,112 @@ Error Radio::Transmit(Mac::TxFrame &aFrame)
     return otPlatRadioTransmit(GetInstancePtr(), &aFrame);
 }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+inline uint64_t UintSafeMinus(uint64_t aLhs, uint64_t aRhs) { return aLhs > aRhs ? (aLhs - aRhs) : 0; }
+
+RadioStatistics::RadioStatistics(void)
+    : mStatus(kDisabled)
+{
+    ResetTime();
+}
+
+void RadioStatistics::RecordStateChange(Status aStatus)
+{
+    UpdateTime();
+    mStatus = aStatus;
+}
+
+void RadioStatistics::HandleReceiveAt(uint32_t aDurationUs)
+{
+    // The actual rx time of ReceiveAt cannot be obtained from software level. This is a workaround.
+    if (mStatus == kSleep)
+    {
+        mTimeStats.mRxTime += aDurationUs;
+    }
+}
+
+void RadioStatistics::RecordTxDone(otError aError, uint16_t aPsduLength)
+{
+    if (aError == kErrorNone || aError == kErrorNoAck)
+    {
+        uint32_t txTimeUs = (aPsduLength + Mac::Frame::kPhyHeaderSize) * Radio::kSymbolsPerOctet * Radio::kSymbolTime;
+        uint32_t rxAckTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+
+        UpdateTime();
+        mTimeStats.mTxTime += txTimeUs;
+
+        if (mStatus == kReceive)
+        {
+            mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, txTimeUs);
+        }
+        else if (mStatus == kSleep)
+        {
+            mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, txTimeUs);
+            if (aError == kErrorNone)
+            {
+                mTimeStats.mRxTime += rxAckTimeUs;
+                mTimeStats.mSleepTime = UintSafeMinus(mTimeStats.mSleepTime, rxAckTimeUs);
+            }
+        }
+    }
+}
+
+void RadioStatistics::RecordRxDone(otError aError)
+{
+    uint32_t ackTimeUs;
+
+    VerifyOrExit(aError == kErrorNone);
+
+    UpdateTime();
+    // Currently we cannot know the actual length of ACK. So assume the ACK is an immediate ACK.
+    ackTimeUs = (Mac::Frame::kImmAckLength + Mac::Frame::kPhyHeaderSize) * Radio::kPhyUsPerByte;
+    mTimeStats.mTxTime += ackTimeUs;
+    if (mStatus == kReceive)
+    {
+        mTimeStats.mRxTime = UintSafeMinus(mTimeStats.mRxTime, ackTimeUs);
+    }
+
+exit:
+    return;
+}
+
+const otRadioTimeStats &RadioStatistics::GetStats(void)
+{
+    UpdateTime();
+
+    return mTimeStats;
+}
+
+void RadioStatistics::ResetTime(void)
+{
+    mTimeStats.mDisabledTime = 0;
+    mTimeStats.mSleepTime    = 0;
+    mTimeStats.mRxTime       = 0;
+    mTimeStats.mTxTime       = 0;
+    mLastUpdateTime          = TimerMicro::GetNow();
+}
+
+void RadioStatistics::UpdateTime(void)
+{
+    TimeMicro nowTime     = TimerMicro::GetNow();
+    uint32_t  timeElapsed = nowTime - mLastUpdateTime;
+
+    switch (mStatus)
+    {
+    case kSleep:
+        mTimeStats.mSleepTime += timeElapsed;
+        break;
+    case kReceive:
+        mTimeStats.mRxTime += timeElapsed;
+        break;
+    case kDisabled:
+        mTimeStats.mDisabledTime += timeElapsed;
+        break;
+    }
+    mLastUpdateTime = nowTime;
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
 
 } // namespace ot
