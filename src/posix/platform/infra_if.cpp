@@ -316,7 +316,7 @@ void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters
     {
         in6_addr *in6Addr;
 
-        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr == NULL || addr->ifa_addr->sa_family != AF_INET6)
+        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr == nullptr || addr->ifa_addr->sa_family != AF_INET6)
         {
             continue;
         }
@@ -348,7 +348,7 @@ bool InfraNetif::HasLinkLocalAddress(void) const
     {
         struct sockaddr_in6 *ip6Addr;
 
-        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr == NULL || addr->ifa_addr->sa_family != AF_INET6)
+        if (strncmp(addr->ifa_name, mInfraIfName, sizeof(mInfraIfName)) != 0 || addr->ifa_addr == nullptr || addr->ifa_addr->sa_family != AF_INET6)
         {
             continue;
         }
