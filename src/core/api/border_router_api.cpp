@@ -118,4 +118,26 @@ otError otBorderRouterRegister(otInstance *aInstance)
     return kErrorNone;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+void otBorderRouterSetNetDataFullCallback(otInstance                       *aInstance,
+                                          otBorderRouterNetDataFullCallback aCallback,
+                                          void                             *aContext)
+{
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().SetNetDataFullCallback(aCallback, aContext);
+}
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+
+bool otBorderRouterIsLeaderOverrideEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Notifier>().IsLeaderOverrideEnabled();
+}
+
+void otBorderRouterSetLeaderOverrideEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<NetworkData::Notifier>().SetLeaderOverrideEnabled(aEnabled);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

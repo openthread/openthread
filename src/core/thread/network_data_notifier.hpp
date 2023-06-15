@@ -36,7 +36,25 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE && !OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+#error "OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE requires BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL"
+#endif
+
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+#ifdef OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER
+#error "OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER should not be defined directly, it is derived from other configs"
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+#define OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER 1
+#elif OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+#define OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER 1
+#else
+#define OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER 0
+#endif
+
+#include <openthread/border_router.h>
 
 #include "coap/coap.hpp"
 #include "common/message.hpp"
@@ -78,6 +96,61 @@ public:
      */
     void HandleServerDataUpdated(void);
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    /**
+     * Enables or disables the leader override mechanism.
+     *
+     * When enabled, device acting as a border router (BR) monitors the following trigger conditions to start leader
+     * override:
+     * - The BR's leader weight is higher than the current partition's weight (as indicated in the current Leader Data).
+     * - The BR has pending local Network Data entries and has tried to register them with the leader at least 3 times,
+     *   but failed each time.
+     * - Each attempt consisted of sending a SRV_DATA.ntf message to the leader, which was acknowledged but not
+     *   integrated into the Thread Network Data within `DATA_RESUBMIT_DELAY` seconds (300 seconds).
+     * - The maximum size of the Thread Network Data has been such that the local Network Data entries would fit over
+     *   the past period.
+     *
+     * If all of these conditions are met, the BR starts the leader override procedure by selecting a random delay
+     * between 1 and 30 seconds. If the trigger conditions still hold after the random delay, the BR starts a new
+     * partition as the leader.
+     *
+     * @param[in]  aEnabled     TRUE to enable leader override mechanism, FALSE to disable.
+     *
+     */
+    void SetLeaderOverrideEnabled(bool aEnabled);
+
+    /**
+     * Indicates whether or not leader override mechanism is enabled.
+     *
+     * @retval TRUE  The leader override mechanism is enabled.
+     * @retval FALSE The leader override mechanism is disabled.
+     *
+     * @sa SetLeaderOverrideEnabled
+     *
+     */
+    bool IsLeaderOverrideEnabled(void) const { return mLeaderOverrideEnabled; }
+
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    typedef otBorderRouterNetDataFullCallback NetDataCallback; ///< Network Data full callback.
+
+    /**
+     * Sets the callback to indicate when Network Data gets full.
+     *
+     * @param[in] aCallback   The callback.
+     * @param[in] aContext    The context to use with @p aCallback.
+     *
+     */
+    void SetNetDataFullCallback(NetDataCallback aCallback, void *aContext);
+
+    /**
+     * Signals that network data (local or leader) is getting full.
+     *
+     */
+    void SignalNetworkDataFull(void) { mNetDataFullTask.Post(); }
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     /**
      * Indicates whether the device as border router is eligible for router role upgrade request using the
@@ -106,6 +179,11 @@ private:
     static constexpr uint32_t kDelaySynchronizeServerData  = 300000; // in msec
     static constexpr uint8_t  kRouterRoleUpgradeMaxTimeout = 10;     // in sec
 
+    // Leader override constants
+    static constexpr uint8_t kLeaderOverrideTriggerFailedAttempts = 3;
+    static constexpr uint8_t kMinLeaderOverrideDelay              = 1;  // in sec
+    static constexpr uint8_t kMaxLeaderOverrideDelay              = 30; // in sec
+
     void  SynchronizeServerData(void);
     Error SendServerDataNotification(uint16_t aOldRloc16, const NetworkData *aNetworkData = nullptr);
 #if OPENTHREAD_FTD
@@ -123,23 +201,50 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void HandleNetDataFull(void);
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     void ScheduleRouterRoleUpgradeIfEligible(void);
+    bool HandleTimeTickForRoleUpgrade(void);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    void ResetLeaderOverride(void);
+    bool ShouldOverrideLeaderRole(void) const;
+    bool HandleTimeTickForLeaderOverride(void);
+#endif
+
+#if OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER
     void HandleTimeTick(void);
 #endif
 
     using SynchronizeDataTask = TaskletIn<Notifier, &Notifier::SynchronizeServerData>;
     using DelayTimer          = TimerMilliIn<Notifier, &Notifier::HandleTimer>;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    using NetDataFullTask = TaskletIn<Notifier, &Notifier::HandleNetDataFull>;
+#endif
 
     DelayTimer          mTimer;
     SynchronizeDataTask mSynchronizeDataTask;
-    uint32_t            mNextDelay;
-    uint16_t            mOldRloc;
-    bool                mWaitingForResponse : 1;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    NetDataFullTask           mNetDataFullTask;
+    Callback<NetDataCallback> mNetDataFullCallback;
+#endif
+    uint32_t mNextDelay;
+    uint16_t mOldRloc;
+    bool     mWaitingForResponse : 1;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     bool    mDidRequestRouterRoleUpgrade : 1;
     uint8_t mRouterRoleUpgradeTimeout;
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_LEADER_OVERRIDE_ENABLE
+    bool    mLeaderOverrideEnabled;
+    uint8_t mFailedAttempts;
+    uint8_t mLeaderOverrideDelay;
 #endif
 };
 

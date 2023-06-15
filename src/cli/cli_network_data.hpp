@@ -71,10 +71,7 @@ public:
      * @param[in]  aOutputImplementer   An `OutputImplementer`.
      *
      */
-    NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
-    {
-    }
+    NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer);
 
     /**
      * Processes a CLI sub-command.
@@ -146,6 +143,13 @@ private:
     void    OutputRoutes(bool aLocal);
     void    OutputServices(bool aLocal);
     void    OutputLowpanContexts(bool aLocal);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }
+    void        HandleNetdataFull(void) { mFullCallbackWasCalled = true; }
+
+    bool mFullCallbackWasCalled;
+#endif
 };
 
 } // namespace Cli

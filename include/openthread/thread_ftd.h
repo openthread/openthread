@@ -910,6 +910,37 @@ void otThreadGetNextHopAndPathCost(otInstance *aInstance,
                                    uint8_t    *aPathCost);
 
 /**
+ * Enables or disables leader test mode, which causes the leader to ignore Network Data registrations from any Border
+ * Router.
+ *
+ * @note: This API requires the `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration option to be set, and is only
+ * intended for testing purposes. It configures the leader to misbehave by ignoring Network Data registrations (from
+ * received `SRV_DATA.ntf` messages) and not integrating the entries into the Thread Network Data.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aEnabled    TRUE to enable test behavior (ignore Network Data registration), FALSE to disable.
+ *
+ * @sa otThreadGetIgnoreNetDataRegistration
+ *
+ */
+void otThreadSetIgnoreNetDataRegistration(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether or not test mode behavior to ignore Network Data registration is enabled.
+ *
+ * Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
+ *
+ * @param[in]  aInstance       A pointer to an OpenThread instance.
+ *
+ * @retval TRUE    The test mode behavior (ignore Network Data registration) is enabled.
+ * @retval FALSE   The test mode behavior (ignore Network Data registration) is disabled.
+ *
+ * @sa otThreadSetIgnoreNetDataRegistration
+ *
+ */
+bool otThreadGetIgnoreNetDataRegistration(otInstance *aInstance);
+
+/**
  * @}
  *
  */

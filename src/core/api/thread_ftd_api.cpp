@@ -421,4 +421,16 @@ void otThreadGetNextHopAndPathCost(otInstance *aInstance,
         (aPathCost != nullptr) ? *aPathCost : pathcost);
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+bool otThreadGetIgnoreNetDataRegistration(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetIgnoreRegistration();
+}
+
+void otThreadSetIgnoreNetDataRegistration(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<NetworkData::Leader>().SetIgnoreRegistration(aEnabled);
+}
+#endif
+
 #endif // OPENTHREAD_FTD

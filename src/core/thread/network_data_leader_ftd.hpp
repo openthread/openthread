@@ -52,6 +52,8 @@ namespace ot {
 
 namespace NetworkData {
 
+class Notifier;
+
 /**
  * @addtogroup core-netdata-leader
  *
@@ -69,6 +71,7 @@ namespace NetworkData {
 class Leader : public LeaderBase, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class Notifier;
 
 public:
     /**
@@ -177,6 +180,30 @@ public:
     bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * Enables or disables leader test mode, which causes the leader to ignore Network Data registrations from any
+     * Border Router.
+     *
+     * This method requires the `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration option to be set, and is only
+     * intended for testing purposes. It configures the leader to misbehave by ignoring Network Data registrations
+     * (from received `SRV_DATA.ntf` messages) and not integrating the entries into the Thread Network Data.
+     *
+     * @param[in]  aEnabled    TRUE to enable test behavior (ignore Network Data registration), FALSE to disable.
+     *
+     */
+    void SetIgnoreRegistration(bool aEnabled) { mIgnoreRegistration = aEnabled; }
+
+    /**
+     * Indicates whether or not test mode behavior to ignore Network Data registration is enabled.
+     *
+     * @retval TRUE    The test mode behavior (ignore Network Data registration) is enabled.
+     * @retval FALSE   The test mode behavior (ignore Network Data registration) is disabled.
+     *
+     */
+    bool GetIgnoreRegistration(void) const { return mIgnoreRegistration; }
+#endif
+
 private:
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
 
@@ -219,11 +246,7 @@ private:
 
         static constexpr uint8_t kInvalidId = NumericLimits<uint8_t>::kMax;
 
-        explicit ContextIds(Instance &aInstance)
-            : InstanceLocator(aInstance)
-            , mReuseDelay(kReuseDelay)
-        {
-        }
+        explicit ContextIds(Instance &aInstance);
 
         void     Clear(void);
         Error    GetUnallocatedId(uint8_t &aId);
@@ -232,6 +255,9 @@ private:
         uint32_t GetReuseDelay(void) const { return mReuseDelay; }
         void     SetReuseDelay(uint32_t aDelay) { mReuseDelay = aDelay; }
         void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        void MarkAsClone(void) { mIsClone = true; }
+#endif
 
     private:
         static constexpr uint32_t kReuseDelay = 5 * 60; // 5 minutes (in seconds).
@@ -256,6 +282,9 @@ private:
 
         TimeMilli mRemoveTimes[kMaxId - kMinId + 1];
         uint32_t  mReuseDelay;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        bool mIsClone;
+#endif
     };
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -330,11 +359,23 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16);
+    void MarkAsClone(void);
+#endif
+
     using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    bool mIsClone;
+#endif
     bool        mWaitingForNetDataSync;
     ContextIds  mContextIds;
     UpdateTimer mTimer;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mIgnoreRegistration;
+#endif
 };
 
 DeclareTmfHandler(Leader, kUriServerData);

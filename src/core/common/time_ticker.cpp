@@ -39,6 +39,7 @@
 #include "common/locator_getters.hpp"
 #include "common/random.hpp"
 #include "thread/mle_router.hpp"
+#include "thread/network_data_notifier.hpp"
 
 namespace ot {
 
@@ -89,7 +90,7 @@ void TimeTicker::HandleTimer(void)
         Get<AddressResolver>().HandleTimeTick();
     }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
+#if OPENTHREAD_NETDATA_NOTIFIER_USES_TIME_TICKER
     if (mReceivers & Mask(kNetworkDataNotifier))
     {
         Get<NetworkData::Notifier>().HandleTimeTick();
