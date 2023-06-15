@@ -153,6 +153,10 @@ Error InfraIf::HandleStateChanged(uint32_t aIfIndex, bool aIsRunning)
 
     Get<RoutingManager>().HandleInfraIfStateChanged();
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    Get<Srp::AdvertisingProxy>().HandleInfraIfStateChanged();
+#endif
+
 exit:
     return error;
 }

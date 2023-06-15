@@ -166,6 +166,7 @@ set(COMMON_SOURCES
     net/dns_dso.cpp
     net/dns_platform.cpp
     net/dns_types.cpp
+    net/dnssd.cpp
     net/dnssd_server.cpp
     net/icmp6.cpp
     net/ip4_types.cpp
@@ -180,6 +181,7 @@ set(COMMON_SOURCES
     net/netif.cpp
     net/sntp_client.cpp
     net/socket.cpp
+    net/srp_advertising_proxy.cpp
     net/srp_client.cpp
     net/srp_server.cpp
     net/tcp6.cpp

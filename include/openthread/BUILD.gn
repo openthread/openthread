@@ -89,6 +89,7 @@ source_set("openthread") {
     "platform/debug_uart.h",
     "platform/diag.h",
     "platform/dns.h",
+    "platform/dnssd.h",
     "platform/dso_transport.h",
     "platform/entropy.h",
     "platform/flash.h",

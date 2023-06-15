@@ -1002,6 +1002,27 @@ target_link_libraries(ot-test-serial-number
 
 add_test(NAME ot-test-serial-number COMMAND ot-test-serial-number)
 
+add_executable(ot-test-srp-adv-proxy
+    test_srp_adv_proxy.cpp
+)
+
+target_include_directories(ot-test-srp-adv-proxy
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-srp-adv-proxy
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-srp-adv-proxy
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-srp-adv-proxy COMMAND ot-test-srp-adv-proxy)
+
 add_executable(ot-test-srp-server
     test_srp_server.cpp
 )

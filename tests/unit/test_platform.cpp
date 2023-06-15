@@ -623,4 +623,81 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
 }
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+OT_TOOL_WEAK otPlatDnssdState otPlatDnssdGetState(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return OT_PLAT_DNSSD_STOPPED;
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterService(otInstance                 *aInstance,
+                                             const otPlatDnssdService   *aService,
+                                             otPlatDnssdRequestId        aRequestId,
+                                             otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aService);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterService(otInstance                 *aInstance,
+                                               const otPlatDnssdService   *aService,
+                                               otPlatDnssdRequestId        aRequestId,
+                                               otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aService);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterHost(otInstance                 *aInstance,
+                                          const otPlatDnssdHost      *aHost,
+                                          otPlatDnssdRequestId        aRequestId,
+                                          otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHost);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterHost(otInstance                 *aInstance,
+                                            const otPlatDnssdHost      *aHost,
+                                            otPlatDnssdRequestId        aRequestId,
+                                            otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHost);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdRegisterKey(otInstance                 *aInstance,
+                                         const otPlatDnssdKey       *aKey,
+                                         otPlatDnssdRequestId        aRequestId,
+                                         otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+OT_TOOL_WEAK void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
+                                           const otPlatDnssdKey       *aKey,
+                                           otPlatDnssdRequestId        aRequestId,
+                                           otPlatDnssdRegisterCallback aCallback)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aRequestId);
+    OT_UNUSED_VARIABLE(aCallback);
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
 } // extern "C"

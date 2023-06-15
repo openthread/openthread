@@ -184,6 +184,7 @@
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-trel                TREL - Platform
  * @defgroup plat-infra-if            Infrastructure Interface
+ * @defgroup plat-dns-sd              DNS-SD (mDNS)
  *
  * @}
  *
