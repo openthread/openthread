@@ -2254,12 +2254,20 @@ public:
     bool IsValid(void) const;
 
     /**
-     * Returns the ECDSA P-256 public kek.
+     * Returns the ECDSA P-256 public key.
      *
      * @returns  A reference to the public key.
      *
      */
     const Crypto::Ecdsa::P256::PublicKey &GetKey(void) const { return mKey; }
+
+    /**
+     * Sets the ECDSA P-256 public key.
+     *
+     * @param[in] aKey  The public key.
+     *
+     */
+    void SetKey(const Crypto::Ecdsa::P256::PublicKey &aKey) { mKey = aKey; }
 
 private:
     Crypto::Ecdsa::P256::PublicKey mKey;
