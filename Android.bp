@@ -124,15 +124,15 @@ ot_config_cc_defaults {
             spi: {
                 cflags: ["-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI"]
             },
-            hal: {
+            uart: {
                 cflags: [
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_VENDOR",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
                 ]
             },
             conditions_default: {
                 cflags: [
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
+                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_VENDOR",
                 ]
             },
         },
@@ -170,10 +170,13 @@ cc_library_static {
         "-Wno-non-virtual-dtor",
     ],
 
+    vintf_fragments: ["src/android/thread_network_hal/device_manifest.xml"],
     shared_libs: [
         "libbase",
         "libcutils",
         "libutils",
+        "libbinder_ndk",
+        "android.hardware.threadnetwork-V1-ndk",
     ],
 
     srcs: [
@@ -575,8 +578,6 @@ cc_defaults {
     cflags: [
         "-DOPENTHREAD_RADIO=1",
     ],
-    apex_available: [ "com.android.threadnetwork" ],
-    min_sdk_version: "33",
 }
 
 cc_defaults {
@@ -621,7 +622,7 @@ cc_defaults {
 
 cc_library_static {
     name: "openthread-simulation",
-    vendor: true,
+    vendor_available: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -676,7 +677,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-radio",
-    vendor: true,
+    vendor_available: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -727,7 +728,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-hdlc",
-    vendor: true,
+    vendor_available: true,
     defaults: [
         "ot_rcp_cflags_defaults",
         "ot_simulation_cflags_defaults",
@@ -743,7 +744,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-url",
-    vendor: true,
+    vendor_available: true,
     local_include_dirs: [
         "include",
         "src",
@@ -761,7 +762,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-platform",
-    vendor: true,
+    vendor_available: true,
     local_include_dirs: [
         "include",
         "src",
@@ -780,7 +781,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-spinel-rcp",
-    vendor: true,
+    vendor_available: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -802,7 +803,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-rcp",
-    vendor: true,
+    vendor_available: true,
 
     defaults: [
         "ot_rcp_cflags_defaults",
@@ -850,7 +851,7 @@ cc_binary {
 
 cc_library_static {
     name: "openthread-posix",
-    vendor: true,
+    vendor_available: true,
     local_include_dirs: [
         "include",
         "src",
@@ -884,7 +885,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-common",
-    vendor: true,
+    vendor_available: true,
     local_include_dirs: [
         "include",
         "src",
