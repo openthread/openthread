@@ -314,4 +314,14 @@
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
+ *
+ * The max number of series that a Link Metrics Subject (MTD device) can track simultaneously.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD 2
+#endif
+
 #endif // CONFIG_MLE_H_
