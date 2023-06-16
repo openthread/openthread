@@ -64,7 +64,6 @@ DEFAULT_PARAMS = {
     'mode': 'rdn',
     'allowlist': None,
     'version': ENV_THREAD_VERSION,
-    'panid': 0xface,
 }
 """Default configurations when creating nodes."""
 
@@ -179,20 +178,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if node.is_host:
                 continue
 
-            self.nodes[i].set_networkkey(binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode())
-            self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
-            if 'extended_panid' in params:
-                self.nodes[i].set_extpanid(params['extended_panid'])
             if 'partition_id' in params:
                 self.nodes[i].set_preferred_partition_id(params['partition_id'])
-            if 'channel' in params:
-                self.nodes[i].set_channel(params['channel'])
-            if 'networkkey' in params:
-                self.nodes[i].set_networkkey(params['networkkey'])
-            if 'network_name' in params:
-                self.nodes[i].set_network_name(params['network_name'])
 
             if params['is_ftd']:
                 self.nodes[i].set_router_selection_jitter(params['router_selection_jitter'])
@@ -209,15 +198,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
 
-            if 'active_dataset' in params:
-                if 'network_key' not in params['active_dataset']:
-                    params['active_dataset']['network_key'] = binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode()
-                self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
-                                                 panid=params['active_dataset'].get('panid'),
-                                                 channel=params['active_dataset'].get('channel'),
-                                                 channel_mask=params['active_dataset'].get('channel_mask'),
-                                                 network_key=params['active_dataset'].get('network_key'),
-                                                 security_policy=params['active_dataset'].get('security_policy'))
+            self._set_up_active_dataset(self.nodes[i], params)
 
             if 'pending_dataset' in params:
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],
@@ -261,6 +242,34 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         self._inspector = debug.Inspector(self)
         self._collect_test_info_after_setup()
+
+    def _set_up_active_dataset(self, node, params):
+        dataset = {
+            'timestamp': 1,
+            'channel': config.CHANNEL,
+            'channel_mask': config.CHANNEL_MASK,
+            'extended_panid': config.EXTENDED_PANID,
+            'mesh_local_prefix': config.MESH_LOCAL_PREFIX.split('/')[0],
+            'network_key': binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode(),
+            'network_name': config.NETWORK_NAME,
+            'panid': config.PANID,
+            'pskc': config.PSKC,
+            'security_policy': config.SECURITY_POLICY,
+        }
+
+        if 'channel' in params:
+            dataset['channel'] = params['channel']
+        if 'networkkey' in params:
+            dataset['network_key'] = params['networkkey']
+        if 'network_name' in params:
+            dataset['network_name'] = params['network_name']
+        if 'panid' in params:
+            dataset['panid'] = params['panid']
+
+        if 'active_dataset' in params:
+            dataset.update(params['active_dataset'])
+
+        node.set_active_dataset(**dataset)
 
     def inspect(self):
         self._inspector.inspect()
