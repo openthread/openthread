@@ -160,6 +160,7 @@ SOURCES_COMMON                                  = \
     api/netdiag_api.cpp                           \
     api/network_time_api.cpp                      \
     api/ping_sender_api.cpp                       \
+    api/radio_stats_api.cpp                       \
     api/random_crypto_api.cpp                     \
     api/random_noncrypto_api.cpp                  \
     api/server_api.cpp                            \

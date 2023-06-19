@@ -32,11 +32,9 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
+setup_default_network
 
 set timeout 1
-
-send "panid 0xface\n"
-expect_line "Done"
 
 attach
 

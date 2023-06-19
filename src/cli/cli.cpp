@@ -86,7 +86,9 @@
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 #include <openthread/nat64.h>
 #endif
-
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+#include <openthread/radio_stats.h>
+#endif
 #include "common/new.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
@@ -2544,23 +2546,23 @@ template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[]) { return mDns.
 #endif
 
 #if OPENTHREAD_FTD
-const char *EidCacheStateToString(otCacheEntryState aState)
-{
-    static const char *const kStateStrings[4] = {
-        "cache",
-        "snoop",
-        "query",
-        "retry",
-    };
-
-    return Interpreter::Stringify(aState, kStateStrings);
-}
-
 void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
 {
+    static const char *const kStateStrings[] = {
+        "cache", // (0) OT_CACHE_ENTRY_STATE_CACHED
+        "snoop", // (1) OT_CACHE_ENTRY_STATE_SNOOPED
+        "query", // (2) OT_CACHE_ENTRY_STATE_QUERY
+        "retry", // (3) OT_CACHE_ENTRY_STATE_RETRY_QUERY
+    };
+
+    static_assert(0 == OT_CACHE_ENTRY_STATE_CACHED, "OT_CACHE_ENTRY_STATE_CACHED value is incorrect");
+    static_assert(1 == OT_CACHE_ENTRY_STATE_SNOOPED, "OT_CACHE_ENTRY_STATE_SNOOPED value is incorrect");
+    static_assert(2 == OT_CACHE_ENTRY_STATE_QUERY, "OT_CACHE_ENTRY_STATE_QUERY value is incorrect");
+    static_assert(3 == OT_CACHE_ENTRY_STATE_RETRY_QUERY, "OT_CACHE_ENTRY_STATE_RETRY_QUERY value is incorrect");
+
     OutputIp6Address(aEntry.mTarget);
     OutputFormat(" %04x", aEntry.mRloc16);
-    OutputFormat(" %s", EidCacheStateToString(aEntry.mState));
+    OutputFormat(" %s", Stringify(aEntry.mState, kStateStrings));
     OutputFormat(" canEvict=%d", aEntry.mCanEvict);
 
     if (aEntry.mState == OT_CACHE_ENTRY_STATE_CACHED)
@@ -5842,6 +5844,87 @@ template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 }
 #endif
 
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+inline unsigned long UsToSInt(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs / 1000000)); }
+inline unsigned long UsToSDec(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs % 1000000)); }
+
+void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
+{
+    uint32_t timePercentInt = static_cast<uint32_t>(aTimeUs * 100 / aTotalTimeUs);
+    uint32_t timePercentDec = static_cast<uint32_t>((aTimeUs * 100 % aTotalTimeUs) * 100 / aTotalTimeUs);
+
+    OutputLine("%s Time: %lu.%06lus (%lu.%02lu%%)", aTimeName, UsToSInt(aTimeUs), UsToSDec(aTimeUs),
+               ToUlong(timePercentInt), ToUlong(timePercentDec));
+}
+
+template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli radio stats
+     * @code
+     * radio stats
+     * Radio Statistics:
+     * Total Time: 67.756s
+     * Tx Time: 0.022944s (0.03%)
+     * Rx Time: 1.482353s (2.18%)
+     * Sleep Time: 66.251128s (97.77%)
+     * Disabled Time: 0.000080s (0.00%)
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otRadioTimeStatsGet
+     */
+    if (aArgs[0] == "stats")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            const otRadioTimeStats *radioStats = nullptr;
+            uint64_t                totalTimeUs;
+
+            radioStats = otRadioTimeStatsGet(GetInstancePtr());
+
+            totalTimeUs =
+                radioStats->mSleepTime + radioStats->mTxTime + radioStats->mRxTime + radioStats->mDisabledTime;
+            if (totalTimeUs == 0)
+            {
+                OutputLine("Total Time is 0!");
+            }
+            else
+            {
+                OutputLine("Radio Statistics:");
+                OutputLine("Total Time: %lu.%03lus", ToUlong(static_cast<uint32_t>(totalTimeUs / 1000000)),
+                           ToUlong((totalTimeUs % 1000000) / 1000));
+                OutputRadioStatsTime("Tx", radioStats->mTxTime, totalTimeUs);
+                OutputRadioStatsTime("Rx", radioStats->mRxTime, totalTimeUs);
+                OutputRadioStatsTime("Sleep", radioStats->mSleepTime, totalTimeUs);
+                OutputRadioStatsTime("Disabled", radioStats->mDisabledTime, totalTimeUs);
+            }
+        }
+        /**
+         * @cli radio stats clear
+         * @code
+         * radio stats clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otRadioTimeStatsReset
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otRadioTimeStatsReset(GetInstancePtr());
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+
 template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
@@ -7543,6 +7626,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
         CmdEntry("pskcref"),
 #endif
+#endif
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+        CmdEntry("radio"),
 #endif
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         CmdEntry("radiofilter"),

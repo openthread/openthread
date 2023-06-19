@@ -648,9 +648,15 @@ protected:
     void UnsubscribeAllNodesMulticast(void);
 
 private:
-    void SignalMulticastAddressChange(AddressEvent            aAddressEvent,
-                                      const MulticastAddress *aStart,
-                                      const MulticastAddress *aEnd);
+    typedef otIp6AddressInfo AddressInfo;
+
+    static constexpr uint8_t kMulticastPrefixLength = 128; // Multicast prefix length used in `AdressInfo`.
+
+    void SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress &aAddress);
+    void SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAddress &aAddress, AddressOrigin aOrigin);
+    void SignalMulticastAddressesChange(AddressEvent            aEvent,
+                                        const MulticastAddress *aStart,
+                                        const MulticastAddress *aEnd);
 
     LinkedList<UnicastAddress>   mUnicastAddresses;
     LinkedList<MulticastAddress> mMulticastAddresses;

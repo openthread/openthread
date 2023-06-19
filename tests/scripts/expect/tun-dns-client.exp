@@ -30,9 +30,8 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
+setup_default_network
 
-send "panid 0xface\n"
-expect_line "Done"
 send "ifconfig up\n"
 expect_line "Done"
 send "thread start\n"

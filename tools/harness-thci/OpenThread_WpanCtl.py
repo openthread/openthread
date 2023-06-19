@@ -90,7 +90,7 @@ class OpenThread_WpanCtl(IThci):
                 self.password = kwargs.get('Param7').strip() if kwargs.get('Param7') else None
             else:
                 self.port = kwargs.get('SerialPort')
-            self.initialize()
+            self.intialize()
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('initialize() Error: ' + str(e))
 
@@ -794,7 +794,7 @@ class OpenThread_WpanCtl(IThci):
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('closeConnection() Error: ' + str(e))
 
-    def initialize(self):
+    def intialize(self):
         """initialize the serial port with baudrate, timeout parameters"""
         print('%s call intialize' % self.port)
         try:

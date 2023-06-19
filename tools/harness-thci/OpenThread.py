@@ -225,7 +225,7 @@ class OpenThreadTHCI(object):
             **kwargs: Arbitrary keyword arguments
                       Includes 'EUI' and 'SerialPort'
         """
-        self.initialize(kwargs)
+        self.intialize(kwargs)
 
     @abstractmethod
     def _connect(self):
@@ -399,7 +399,7 @@ class OpenThreadTHCI(object):
         time.sleep(duration)
 
     @API
-    def initialize(self, params):
+    def intialize(self, params):
         """initialize the serial port with baudrate, timeout parameters"""
         self.mac = params.get('EUI')
         self.backboneNetif = params.get('Param8') or 'eth0'

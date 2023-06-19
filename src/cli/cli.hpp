@@ -471,6 +471,9 @@ private:
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     void OutputNat64Counters(const otNat64Counters &aCounters);
 #endif
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+    void OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTime);
+#endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
