@@ -62,7 +62,7 @@ jobs:
       # of OMR prefix and Domain prefix is not deterministic.
       BORDER_ROUTING: 0
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         submodules: true
     - name: Build OTBR Docker
@@ -172,7 +172,7 @@ jobs:
       NAT64: ${{ matrix.nat64 }}
       MAX_JOBS: 3
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
     - name: Build OTBR Docker
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -223,7 +223,7 @@ jobs:
     - thread-border-router
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
       with:
         submodules: true
     - name: Bootstrap
