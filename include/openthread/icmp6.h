@@ -80,8 +80,8 @@ typedef enum otIcmp6Code
     OT_ICMP6_CODE_FRAGM_REAS_TIME_EX   = 1, ///< Fragment Reassembly Time Exceeded
 } otIcmp6Code;
 
-#define OT_ICMP6_HEADER_DATA_SIZE 4        ///< Size of an message specific data of ICMPv6 Header.
-#define OT_ICMP6_ROUTER_ADVERT_MIN_SIZE 16 ///< Size of an Router Advertisement message without any options.
+#define OT_ICMP6_HEADER_DATA_SIZE 4        ///< Size of ICMPv6 Header.
+#define OT_ICMP6_ROUTER_ADVERT_MIN_SIZE 16 ///< Size of a Router Advertisement message without any options.
 
 /**
  * @struct otIcmp6Header

@@ -1041,7 +1041,7 @@ static uint8_t getIpVersion(const uint8_t *data)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 /**
- * Returns nullptr if data is not pointed to a valid ICMPv6 RA message.
+ * Returns nullptr if data does not point to a valid ICMPv6 RA message.
  *
  */
 static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
@@ -1055,8 +1055,8 @@ static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
 
     ret = data + OT_IP6_HEADER_SIZE;
     memcpy(&icmpHeader, ret, sizeof(icmpHeader));
-    VerifyOrExit(icmpHeader.mType == OT_ICMP6_TYPE_ROUTER_ADVERT);
-    VerifyOrExit(icmpHeader.mCode == 0);
+    VerifyOrExit(icmpHeader.mType == OT_ICMP6_TYPE_ROUTER_ADVERT, ret = nullptr);
+    VerifyOrExit(icmpHeader.mCode == 0, ret = nullptr);
 
 exit:
     return ret;
