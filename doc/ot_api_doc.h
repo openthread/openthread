@@ -142,6 +142,7 @@
  * @defgroup api-mesh-diag            Mesh Diagnostics
  * @defgroup api-ncp                  Network Co-Processor
  * @defgroup api-network-time         Network Time Synchronization
+ * @defgroup api-radio-stats          Radio Statistics
  * @defgroup api-random-group         Random Number Generator
  *
  * @{
