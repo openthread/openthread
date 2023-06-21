@@ -283,7 +283,7 @@ static const char kHostName[] = "myhost";
 void PrepareService1(Srp::Client::Service &aService)
 {
     static const char          kServiceName[]   = "_srv._udp";
-    static const char          kInstanceLabel[] = "srv-instance";
+    static const char          kInstanceLabel[] = "srv.instance";
     static const char          kSub1[]          = "_sub1";
     static const char          kSub2[]          = "_V1234567";
     static const char          kSub3[]          = "_XYZWS";

@@ -43,6 +43,7 @@
 #include "common/new.hpp"
 #include "common/num_utils.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 #include "net/dns_types.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -915,12 +916,14 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
 
     for (uint16_t numRecords = aMetadata.mDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
-        char           serviceName[Dns::Name::kMaxNameSize];
-        char           instanceName[Dns::Name::kMaxNameSize];
-        Dns::PtrRecord ptrRecord;
-        const char    *subServiceName;
-        Service       *service;
-        bool           isSubType;
+        char                            serviceName[Dns::Name::kMaxNameSize];
+        char                            instanceLabel[Dns::Name::kMaxLabelSize];
+        char                            instanceServiceName[Dns::Name::kMaxNameSize];
+        String<Dns::Name::kMaxNameSize> instanceName;
+        Dns::PtrRecord                  ptrRecord;
+        const char                     *subServiceName;
+        Service                        *service;
+        bool                            isSubType;
 
         SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, serviceName, sizeof(serviceName)));
         VerifyOrExit(Dns::Name::IsSubDomainOf(serviceName, GetDomain()), error = kErrorSecurity);
@@ -937,7 +940,9 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
 
         SuccessOrExit(error);
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, instanceName, sizeof(instanceName)));
+        SuccessOrExit(error = ptrRecord.ReadPtrName(aMessage, offset, instanceLabel, sizeof(instanceLabel),
+                                                    instanceServiceName, sizeof(instanceServiceName)));
+        instanceName.Append("%s.%s", instanceLabel, instanceServiceName);
 
         VerifyOrExit(ptrRecord.GetClass() == Dns::ResourceRecord::kClassNone ||
                          ptrRecord.GetClass() == aMetadata.mDnsZone.GetClass(),
@@ -957,13 +962,14 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
         }
 
         // Verify that instance name and service name are related.
-        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName, isSubType ? subServiceName : serviceName),
+        VerifyOrExit(Dns::Name::IsSubDomainOf(instanceName.AsCString(), isSubType ? subServiceName : serviceName),
                      error = kErrorFailed);
 
         // Ensure the same service does not exist already.
-        VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);
+        VerifyOrExit(aHost.FindService(serviceName, instanceName.AsCString()) == nullptr, error = kErrorFailed);
 
-        service = aHost.AddNewService(serviceName, instanceName, isSubType, aMetadata.mRxTime);
+        service =
+            aHost.AddNewService(serviceName, instanceName.AsCString(), instanceLabel, isSubType, aMetadata.mRxTime);
         VerifyOrExit(service != nullptr, error = kErrorNoBufs);
 
         // This RR is a "Delete an RR from an RRset" update when the CLASS is NONE.
@@ -1854,8 +1860,10 @@ void Server::Service::Log(Action) const {}
 //---------------------------------------------------------------------------------------------------------------------
 // Server::Service::Description
 
-Error Server::Service::Description::Init(const char *aInstanceName, Host &aHost)
+Error Server::Service::Description::Init(const char *aInstanceName, const char *aInstanceLabel, Host &aHost)
 {
+    Error error;
+
     mNext       = nullptr;
     mHost       = &aHost;
     mPriority   = 0;
@@ -1867,7 +1875,11 @@ Error Server::Service::Description::Init(const char *aInstanceName, Host &aHost)
     mUpdateTime = TimerMilli::GetNow().GetDistantPast();
     mTxtData.Free();
 
-    return mInstanceName.Set(aInstanceName);
+    SuccessOrExit(error = mInstanceLabel.Set(aInstanceLabel));
+    error = mInstanceName.Set(aInstanceName);
+
+exit:
+    return error;
 }
 
 bool Server::Service::Description::Matches(const char *aInstanceName) const
@@ -2042,6 +2054,7 @@ const Server::Service *Server::Host::FindNextService(const Service *aPrevService
 
 Server::Service *Server::Host::AddNewService(const char *aServiceName,
                                              const char *aInstanceName,
+                                             const char *aInstanceLabel,
                                              bool        aIsSubType,
                                              TimeMilli   aUpdateTime)
 {
@@ -2050,7 +2063,7 @@ Server::Service *Server::Host::AddNewService(const char *aServiceName,
 
     if (desc == nullptr)
     {
-        desc.Reset(Service::Description::AllocateAndInit(aInstanceName, *this));
+        desc.Reset(Service::Description::AllocateAndInit(aInstanceName, aInstanceLabel, *this));
         VerifyOrExit(desc != nullptr);
     }
 
@@ -2061,6 +2074,12 @@ Server::Service *Server::Host::AddNewService(const char *aServiceName,
 
 exit:
     return service;
+}
+
+Server::Service *Server::Host::AddNewService(const Service &aService, TimeMilli aUpdateTime)
+{
+    return AddNewService(aService.GetServiceName(), aService.GetInstanceName(), aService.GetInstanceLabel(),
+                         aService.IsSubType(), aUpdateTime);
 }
 
 void Server::Host::RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler)
@@ -2103,8 +2122,7 @@ Error Server::Host::AddCopyOfServiceAsDeletedIfNotPresent(const Service &aServic
 
     VerifyOrExit(FindService(aService.GetServiceName(), aService.GetInstanceName()) == nullptr);
 
-    newService =
-        AddNewService(aService.GetServiceName(), aService.GetInstanceName(), aService.IsSubType(), aUpdateTime);
+    newService = AddNewService(aService, aUpdateTime);
 
     VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
 
@@ -2156,9 +2174,7 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 
         // Add/Merge `service` into the existing service or a allocate a new one
 
-        newService = (existingService != nullptr) ? existingService
-                                                  : AddNewService(service.GetServiceName(), service.GetInstanceName(),
-                                                                  service.IsSubType(), service.GetUpdateTime());
+        newService = (existingService != nullptr) ? existingService : AddNewService(service, service.GetUpdateTime());
 
         VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
 
