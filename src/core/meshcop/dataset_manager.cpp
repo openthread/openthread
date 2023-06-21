@@ -633,6 +633,8 @@ ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
 
 bool ActiveDatasetManager::IsPartiallyComplete(void) const { return mLocal.IsSaved() && !mTimestampValid; }
 
+bool ActiveDatasetManager::IsComplete(void) const { return mLocal.IsSaved() && mTimestampValid; }
+
 bool ActiveDatasetManager::IsCommissioned(void) const
 {
     Dataset::Info datasetInfo;
