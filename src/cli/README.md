@@ -95,7 +95,7 @@ Done
 - [promiscuous](#promiscuous)
 - [pskc](#pskc)
 - [pskcref](#pskcref)
-- [radio](#radio-stats)
+- [radio](#radio-enable)
 - [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
@@ -2784,6 +2784,24 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### radio enable
+
+Enable radio.
+
+```bash
+> radio enable
+Done
+```
+
+### radio disable
+
+Disable radio.
+
+```bash
+> radio disable
 Done
 ```
 
