@@ -31,6 +31,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include <openthread/dataset_ftd.h>
 #include <openthread/thread.h>
 #include <openthread/platform/border_routing.h>
 
@@ -59,6 +60,56 @@ static constexpr uint32_t kPreferredLifetime = 1800;
 
 static constexpr uint16_t kMaxRaSize              = 800;
 static constexpr uint16_t kMaxDeprecatingPrefixes = 16;
+
+static constexpr otOperationalDataset kDataset = {
+    .mActiveTimestamp =
+        {
+            .mSeconds       = 1,
+            .mTicks         = 0,
+            .mAuthoritative = false,
+        },
+    .mNetworkKey =
+        {
+            .m8 = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mNetworkName = {"OpenThread"},
+    .mExtendedPanId =
+        {
+            .m8 = {0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0xca, 0xfe},
+        },
+    .mMeshLocalPrefix =
+        {
+            .m8 = {0xfd, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+        },
+    .mPanId   = 0x1234,
+    .mChannel = 11,
+    .mPskc =
+        {
+            .m8 = {0xc2, 0x3a, 0x76, 0xe9, 0x8f, 0x1a, 0x64, 0x83, 0x63, 0x9b, 0x1a, 0xc1, 0x27, 0x1e, 0x2e, 0x27},
+        },
+    .mSecurityPolicy =
+        {
+            .mRotationTime                 = 672,
+            .mObtainNetworkKeyEnabled      = true,
+            .mNativeCommissioningEnabled   = true,
+            .mRoutersEnabled               = true,
+            .mExternalCommissioningEnabled = true,
+        },
+    .mChannelMask = 0x07fff800,
+    .mComponents =
+        {
+            .mIsActiveTimestampPresent = true,
+            .mIsNetworkKeyPresent      = true,
+            .mIsNetworkNamePresent     = true,
+            .mIsExtendedPanIdPresent   = true,
+            .mIsMeshLocalPrefixPresent = true,
+            .mIsPanIdPresent           = true,
+            .mIsChannelPresent         = true,
+            .mIsPskcPresent            = true,
+            .mIsSecurityPolicyPresent  = true,
+            .mIsChannelMaskPresent     = true,
+        },
+};
 
 static ot::Instance *sInstance;
 
@@ -912,7 +963,11 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     SuccessOrQuit(otBorderRoutingInit(sInstance, kInfraIfIndex, /* aInfraIfIsRunning */ true));
 
-    SuccessOrQuit(otLinkSetPanId(sInstance, 0x1234));
+    otOperationalDatasetTlvs datasetTlvs;
+
+    SuccessOrQuit(otDatasetConvertToTlvs(&kDataset, &datasetTlvs));
+    SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
+
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
