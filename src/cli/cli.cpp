@@ -5856,11 +5856,31 @@ void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, 
     OutputLine("%s Time: %lu.%06lus (%lu.%02lu%%)", aTimeName, UsToSInt(aTimeUs), UsToSDec(aTimeUs),
                ToUlong(timePercentInt), ToUlong(timePercentDec));
 }
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
 
 template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli radio (enable,disable)
+     * @code
+     * radio enable
+     * Done
+     * @endcode
+     * @code
+     * radio disable
+     * Done
+     * @endcode
+     * @cparam radio [@ca{enable|disable}]
+     * @sa otLinkSetEnabled
+     * @par
+     * Enables or disables the radio.
+     */
+    if (ProcessEnableDisable(aArgs, otLinkSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
     /**
      * @cli radio stats
      * @code
@@ -5876,7 +5896,7 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
      * @par api_copy
      * #otRadioTimeStatsGet
      */
-    if (aArgs[0] == "stats")
+    else if (aArgs[0] == "stats")
     {
         if (aArgs[1].IsEmpty())
         {
@@ -5916,6 +5936,7 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
             otRadioTimeStatsReset(GetInstancePtr());
         }
     }
+#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -5923,7 +5944,6 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
 
     return error;
 }
-#endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
 
 template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 {
