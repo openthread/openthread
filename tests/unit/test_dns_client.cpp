@@ -83,6 +83,8 @@ void AdvanceTime(uint32_t aDuration);
 
 extern "C" {
 
+otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF; }
+
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
 {
     sRadioTxOngoing = true;
@@ -191,10 +193,12 @@ void InitTest(void)
     // Initialize OT instance.
 
     sNow      = 0;
+    sAlarmOn  = false;
     sInstance = static_cast<Instance *>(testInitInstance());
 
     memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
     sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
+    sRadioTxOngoing     = false;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize Border Router and start Thread operation.

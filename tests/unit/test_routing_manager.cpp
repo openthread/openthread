@@ -182,6 +182,8 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 extern "C" {
 
+otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF; }
+
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
 {
     sRadioTxOngoing = true;
@@ -885,13 +887,15 @@ void VerifyPrefixTableIsEmpty(void) { VerifyPrefixTable(nullptr, 0, nullptr, 0);
 
 void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 {
+    uint32_t delay = 10000;
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
 
     sNow      = 0;
+    sAlarmOn  = false;
     sInstance = static_cast<Instance *>(testInitInstance());
 
-    uint32_t delay = 10000;
     if (aAfterReset)
     {
         delay += 26000; // leader reset sync delay
@@ -899,6 +903,7 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
     sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
+    sRadioTxOngoing     = false;
 
     SuccessOrQuit(sInfraIfAddress.FromString(kInfraIfAddress));
 
