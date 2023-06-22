@@ -45,7 +45,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-radio-stats
+ * @addtogroup api-radio
  *
  * @{
  *
