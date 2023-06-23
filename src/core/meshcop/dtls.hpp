@@ -42,8 +42,10 @@
 #include <mbedtls/version.h>
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 #include <mbedtls/base64.h>
+#endif
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #include <mbedtls/x509.h>
 #include <mbedtls/x509_crl.h>
 #include <mbedtls/x509_crt.h>
