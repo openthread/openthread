@@ -485,18 +485,15 @@ private:
                                          const Ip6::MessageInfo &aMessageInfo,
                                          Ip6::Udp::Socket       &aSocket);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    Header::Response                   ResolveBySrp(Header                   &aResponseHeader,
-                                                    Message                  &aResponseMessage,
-                                                    Server::NameCompressInfo &aCompressInfo);
-    Header::Response                   ResolveQuestionBySrp(const char       *aName,
-                                                            const Question   &aQuestion,
-                                                            Header           &aResponseHeader,
-                                                            Message          &aResponseMessage,
-                                                            NameCompressInfo &aCompressInfo,
-                                                            bool              aAdditional);
-    const Srp::Server::Host           *GetNextSrpHost(const Srp::Server::Host *aHost);
-    static const Srp::Server::Service *GetNextSrpService(const Srp::Server::Host    &aHost,
-                                                         const Srp::Server::Service *aService);
+    Header::Response ResolveBySrp(Header                   &aResponseHeader,
+                                  Message                  &aResponseMessage,
+                                  Server::NameCompressInfo &aCompressInfo);
+    Header::Response ResolveQuestionBySrp(const char       *aName,
+                                          const Question   &aQuestion,
+                                          Header           &aResponseHeader,
+                                          Message          &aResponseMessage,
+                                          NameCompressInfo &aCompressInfo,
+                                          bool              aAdditional);
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
