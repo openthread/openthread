@@ -853,8 +853,8 @@ public:
      * On successful read, the read name follows  "<label1>.<label2>.<label3>.", i.e., a sequence of labels separated by
      * dot '.' character. The read name will ALWAYS end with a dot.
      *
-     * Verifies that the read labels in message do not contain any dot character, otherwise it returns
-     * `kErrorParse`).
+     * Verifies that the labels after the first label in message do not contain any dot character. If they do,
+     * returns `kErrorParse`.
      *
      * @param[in]     aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
      *                                 the start of DNS header (this is used to handle compressed names).

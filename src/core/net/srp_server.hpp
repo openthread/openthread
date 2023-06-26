@@ -245,7 +245,15 @@ public:
          * @returns  A pointer service instance name (as a null-terminated C string).
          *
          */
-        const char *GetInstanceName(void) const { return mDescription->mInstanceName.AsCString(); }
+        const char *GetInstanceName(void) const { return mDescription->GetInstanceName(); }
+
+        /**
+         * Gets the service instance label of the service.
+         *
+         * @returns  A pointer service instance label (as a null-terminated C string).
+         *
+         */
+        const char *GetInstanceLabel(void) const { return mDescription->GetInstanceLabel(); }
 
         /**
          * Gets the full service name of the service.
@@ -399,8 +407,9 @@ public:
                              public RetainCountable,
                              private NonCopyable
         {
-            Error       Init(const char *aInstanceName, Host &aHost);
+            Error       Init(const char *aInstanceName, const char *aInstanceLabel, Host &aHost);
             const char *GetInstanceName(void) const { return mInstanceName.AsCString(); }
+            const char *GetInstanceLabel(void) const { return mInstanceLabel.AsCString(); }
             bool        Matches(const char *aInstanceName) const;
             void        ClearResources(void);
             void        TakeResourcesFrom(Description &aDescription);
@@ -408,6 +417,7 @@ public:
 
             Description *mNext;
             Heap::String mInstanceName;
+            Heap::String mInstanceLabel;
             Host        *mHost;
             Heap::Data   mTxtData;
             uint16_t     mPriority;
@@ -600,8 +610,10 @@ public:
         LinkedList<Service> &GetServices(void) { return mServices; }
         Service             *AddNewService(const char *aServiceName,
                                            const char *aInstanceName,
+                                           const char *aInstanceLabel,
                                            bool        aIsSubType,
                                            TimeMilli   aUpdateTime);
+        Service             *AddNewService(const Service &aService, TimeMilli aUpdateTime);
         void                 RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
         Error                AddCopyOfServiceAsDeletedIfNotPresent(const Service &aService, TimeMilli aUpdateTime);
         void                 FreeAllServices(void);
