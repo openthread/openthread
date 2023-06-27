@@ -708,25 +708,29 @@ class Node(object):
     # Helper methods
 
     def form(self, network_name=None, network_key=None, channel=None, panid=0x1234, xpanid=None):
+        self._cli_no_output('dataset init new')
+        self._cli_no_output('dataset panid', panid)
         if network_name is not None:
-            self.set_network_name(network_name)
+            self._cli_no_output('dataset networkname', network_name)
         if network_key is not None:
-            self.set_network_key(network_key)
+            self._cli_no_output('dataset networkkey', network_key)
         if channel is not None:
-            self.set_channel(channel)
+            self._cli_no_output('dataset channel', channel)
         if xpanid is not None:
-            self.set_ext_panid(xpanid)
+            self._cli_no_output('dataset extpanid', xpanid)
+        self._cli_no_output('dataset commit active')
         self.set_mode('rdn')
-        self.set_panid(panid)
         self.interface_up()
         self.thread_start()
         verify_within(_check_node_is_leader, self._WAIT_TIME, arg=self)
 
     def join(self, node, type=JOIN_TYPE_ROUTER):
-        self.set_network_name(node.get_network_name())
-        self.set_network_key(node.get_network_key())
-        self.set_channel(node.get_channel())
-        self.set_panid(node.get_panid())
+        self._cli_no_output('dataset clear')
+        self._cli_no_output('dataset networkname', node.get_network_name())
+        self._cli_no_output('dataset networkkey', node.get_network_key())
+        self._cli_no_output('dataset channel', node.get_channel())
+        self._cli_no_output('dataset panid', node.get_panid())
+        self._cli_no_output('dataset commit active')
         if type == JOIN_TYPE_END_DEVICE:
             self.set_mode('rn')
         elif type == JOIN_TYPE_SLEEPY_END_DEVICE:
