@@ -26,6 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import binascii
 import ipaddress
 import logging
 import unittest
@@ -82,8 +83,8 @@ class PublishMeshCopService(thread_cert.TestCase):
         br2.disable_br()
 
         # Use different network names to distinguish meshcop services
-        br1.set_network_name('ot-br1')
-        br2.set_network_name('ot-br2')
+        br1.set_active_dataset(updateExisting=True, network_name='ot-br1')
+        br2.set_active_dataset(updateExisting=True, network_name='ot-br2')
 
         host.start(start_radvd=False)
         self.simulator.go(20)
@@ -101,13 +102,13 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br1, host)
 
         br1.stop()
-        br1.set_network_name('ot-br1-1')
+        br1.set_active_dataset(updateExisting=True, network_name='ot-br1-1')
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
-        br2.set_network_name('ot-br2-1')
+        br2.set_active_dataset(updateExisting=True, network_name='ot-br2-1')
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
@@ -131,7 +132,22 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br2, host)
 
         br1.factory_reset()
-        br1.set_network_name('ot-br-1-3')
+
+        dataset = {
+            'timestamp': 1,
+            'channel': config.CHANNEL,
+            'channel_mask': config.CHANNEL_MASK,
+            'extended_panid': config.EXTENDED_PANID,
+            'mesh_local_prefix': config.MESH_LOCAL_PREFIX.split('/')[0],
+            'network_key': binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode(),
+            'network_name': 'ot-br-1-3',
+            'panid': config.PANID,
+            'pskc': config.PSKC,
+            'security_policy': config.SECURITY_POLICY,
+        }
+
+        br1.set_active_dataset(**dataset)
+
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
         self.check_meshcop_service(br1, host)
         self.check_meshcop_service(br2, host)

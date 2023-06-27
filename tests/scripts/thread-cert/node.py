@@ -2557,8 +2557,13 @@ class NodeImpl:
         panid=None,
         pskc=None,
         security_policy=[],
+        updateExisting=False,
     ):
-        self.send_command('dataset clear', go=False)
+
+        if updateExisting:
+            self.send_command('dataset init active', go=False)
+        else:
+            self.send_command('dataset clear', go=False)
         self._expect_done()
 
         if timestamp is not None:
