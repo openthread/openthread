@@ -38,6 +38,8 @@
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
+#include <openthread/border_router.h>
+
 #include "coap/coap.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -77,6 +79,25 @@ public:
      *
      */
     void HandleServerDataUpdated(void);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    typedef otBorderRouterNetDataFullCallback NetDataCallback; ///< Network Data full callback.
+
+    /**
+     * Sets the callback to indicate when Network Data gets full.
+     *
+     * @param[in] aCallback   The callback.
+     * @param[in] aContext    The context to use with @p aCallback.
+     *
+     */
+    void SetNetDataFullCallback(NetDataCallback aCallback, void *aContext);
+
+    /**
+     * Signals that network data (local or leader) is getting full.
+     *
+     */
+    void SignalNetworkDataFull(void) { mNetDataFullTask.Post(); }
+#endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     /**
@@ -123,6 +144,10 @@ private:
                                    Error                aResult);
     void        HandleCoapResponse(Error aResult);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void HandleNetDataFull(void);
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     void ScheduleRouterRoleUpgradeIfEligible(void);
     void HandleTimeTick(void);
@@ -130,12 +155,19 @@ private:
 
     using SynchronizeDataTask = TaskletIn<Notifier, &Notifier::SynchronizeServerData>;
     using DelayTimer          = TimerMilliIn<Notifier, &Notifier::HandleTimer>;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    using NetDataFullTask = TaskletIn<Notifier, &Notifier::HandleNetDataFull>;
+#endif
 
     DelayTimer          mTimer;
     SynchronizeDataTask mSynchronizeDataTask;
-    uint32_t            mNextDelay;
-    uint16_t            mOldRloc;
-    bool                mWaitingForResponse : 1;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    NetDataFullTask           mNetDataFullTask;
+    Callback<NetDataCallback> mNetDataFullCallback;
+#endif
+    uint32_t mNextDelay;
+    uint16_t mOldRloc;
+    bool     mWaitingForResponse : 1;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTER_REQUEST_ROUTER_ROLE
     bool    mDidRequestRouterRoleUpgrade : 1;

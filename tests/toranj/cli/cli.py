@@ -411,6 +411,9 @@ class Node(object):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
         return (int(leaderdata['Data Version']), int(leaderdata['Stable Data Version']))
 
+    def get_netdata_length(self):
+        return self._cli_single_output('netdata length')
+
     def add_prefix(self, prefix, flags=None, prf=None):
         return self._cli_no_output('prefix add', prefix, flags, prf)
 
@@ -422,6 +425,12 @@ class Node(object):
 
     def register_netdata(self):
         self._cli_no_output('netdata register')
+
+    def get_netdata_full(self):
+        return self._cli_single_output('netdata full')
+
+    def reset_netdata_full(self):
+        self._cli_no_output('netdata full reset')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # ping and counters

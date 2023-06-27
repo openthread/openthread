@@ -52,6 +52,8 @@ namespace ot {
 
 namespace NetworkData {
 
+class Notifier;
+
 /**
  * @addtogroup core-netdata-leader
  *
@@ -69,6 +71,7 @@ namespace NetworkData {
 class Leader : public LeaderBase, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class Notifier;
 
 public:
     /**
@@ -219,11 +222,7 @@ private:
 
         static constexpr uint8_t kInvalidId = NumericLimits<uint8_t>::kMax;
 
-        explicit ContextIds(Instance &aInstance)
-            : InstanceLocator(aInstance)
-            , mReuseDelay(kReuseDelay)
-        {
-        }
+        explicit ContextIds(Instance &aInstance);
 
         void     Clear(void);
         Error    GetUnallocatedId(uint8_t &aId);
@@ -232,6 +231,9 @@ private:
         uint32_t GetReuseDelay(void) const { return mReuseDelay; }
         void     SetReuseDelay(uint32_t aDelay) { mReuseDelay = aDelay; }
         void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        void MarkAsClone(void) { mIsClone = true; }
+#endif
 
     private:
         static constexpr uint32_t kReuseDelay = 5 * 60; // 5 minutes (in seconds).
@@ -256,6 +258,9 @@ private:
 
         TimeMilli mRemoveTimes[kMaxId - kMinId + 1];
         uint32_t  mReuseDelay;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        bool mIsClone;
+#endif
     };
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -330,8 +335,16 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16);
+    void MarkAsClone(void);
+#endif
+
     using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    bool mIsClone;
+#endif
     bool        mWaitingForNetDataSync;
     ContextIds  mContextIds;
     UpdateTimer mTimer;

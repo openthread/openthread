@@ -60,6 +60,9 @@ RegisterLogModule("NetworkData");
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    , mIsClone(false)
+#endif
     , mWaitingForNetDataSync(false)
     , mContextIds(aInstance)
     , mTimer(aInstance)
@@ -76,6 +79,10 @@ void Leader::Reset(void)
 
 void Leader::Start(Mle::LeaderStartMode aStartMode)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    OT_ASSERT(!mIsClone);
+#endif
+
     mWaitingForNetDataSync = (aStartMode == Mle::kRestoringLeaderRoleAfterReset);
 
     if (mWaitingForNetDataSync)
@@ -110,6 +117,10 @@ void Leader::IncrementVersions(const ChangedFlags &aFlags)
 
 void Leader::IncrementVersions(bool aIncludeStable)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    VerifyOrExit(!mIsClone);
+#endif
+
     if (aIncludeStable)
     {
         mStableVersion++;
@@ -117,6 +128,10 @@ void Leader::IncrementVersions(bool aIncludeStable)
 
     mVersion++;
     SignalNetDataChanged();
+    ExitNow();
+
+exit:
+    return;
 }
 
 void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
@@ -124,6 +139,7 @@ void Leader::RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode)
     ChangedFlags flags;
 
     RemoveRloc(aRloc16, aMatchMode, flags);
+
     IncrementVersions(flags);
 }
 
@@ -672,6 +688,52 @@ exit:
     return status;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+
+void Leader::CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16)
+{
+    // Determines whether there is still room in Network Data to register
+    // `aNetworkData` entries. The `aNetworkData` MUST follow the format of
+    // local Network Data (e.g., all entries associated with the RLOC16 of
+    // this device). Network data getting full is signaled by invoking the
+    // `Get<Notifier>().SignalNetworkDataFull()` method.
+    //
+    // Input `aOldRloc16` can be used to indicate the old RLOC16 of the
+    // device. If provided, then entries matching old RLOC16 are first
+    // removed, before checking if new entries from @p aNetworkData can fit.
+
+    if (!Get<Mle::MleRouter>().IsLeader())
+    {
+        // Create a clone of the leader's network data, and try to register
+        // `aNetworkData` into the copy (as if this device itself is the
+        // leader). `mIsClone` flag is used to mark the clone and ensure
+        // that the cloned instance does interact with other OT modules,
+        // e.g., does not start timer, or does not signal version change
+        // using `Get<ot::Notifier>().Signal()`, or allocate service or
+        // context ID.
+
+        Leader leaderClone(GetInstance());
+
+        leaderClone.MarkAsClone();
+        SuccessOrAssert(CopyNetworkData(kFullSet, leaderClone));
+
+        if (aOldRloc16 != Mac::kShortAddrInvalid)
+        {
+            leaderClone.RemoveBorderRouter(aOldRloc16, kMatchModeRloc16);
+        }
+
+        leaderClone.RegisterNetworkData(Get<Mle::Mle>().GetRloc16(), aNetworkData);
+    }
+}
+
+void Leader::MarkAsClone(void)
+{
+    mIsClone = true;
+    mContextIds.MarkAsClone();
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+
 void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData)
 {
     Error        error = kErrorNone;
@@ -710,9 +772,19 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkDa
 exit:
     IncrementVersions(flags);
 
-    if (error != kErrorNone)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (error == kErrorNoBufs)
     {
-        LogNote("Failed to register network data: %s", ErrorToString(error));
+        Get<Notifier>().SignalNetworkDataFull();
+    }
+
+    if (!mIsClone)
+#endif
+    {
+        if (error != kErrorNone)
+        {
+            LogNote("Failed to register network data: %s", ErrorToString(error));
+        }
     }
 }
 
@@ -943,6 +1015,15 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
     Error   error = kErrorNotFound;
     uint8_t serviceId;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (mIsClone)
+    {
+        aServiceId = Mle::kServiceMinId;
+        error      = kErrorNone;
+        ExitNow();
+    }
+#endif
+
     for (serviceId = Mle::kServiceMinId; serviceId <= Mle::kServiceMaxId; serviceId++)
     {
         if (FindServiceById(serviceId) == nullptr)
@@ -950,10 +1031,11 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
             aServiceId = serviceId;
             error      = kErrorNone;
             LogInfo("Allocated Service ID = %d", serviceId);
-            break;
+            ExitNow();
         }
     }
 
+exit:
     return error;
 }
 
@@ -1316,6 +1398,15 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // Leader::ContextIds
 
+Leader::ContextIds::ContextIds(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mReuseDelay(kReuseDelay)
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    , mIsClone(false)
+#endif
+{
+}
+
 void Leader::ContextIds::Clear(void)
 {
     for (uint8_t id = kMinId; id <= kMaxId; id++)
@@ -1328,21 +1419,35 @@ Error Leader::ContextIds::GetUnallocatedId(uint8_t &aId)
 {
     Error error = kErrorNotFound;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    if (mIsClone)
+    {
+        aId   = kMinId;
+        error = kErrorNone;
+        ExitNow();
+    }
+#endif
+
     for (uint8_t id = kMinId; id <= kMaxId; id++)
     {
         if (IsUnallocated(id))
         {
             aId   = id;
             error = kErrorNone;
-            break;
+            ExitNow();
         }
     }
 
+exit:
     return error;
 }
 
 void Leader::ContextIds::ScheduleToRemove(uint8_t aId)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    VerifyOrExit(!mIsClone);
+#endif
+
     VerifyOrExit(IsInUse(aId));
 
     SetRemoveTime(aId, TimerMilli::GetNow() + Time::SecToMsec(mReuseDelay));
@@ -1368,6 +1473,10 @@ void Leader::ContextIds::HandleTimer(void)
 {
     TimeMilli now      = TimerMilli::GetNow();
     TimeMilli nextTime = now.GetDistantFuture();
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    OT_ASSERT(!mIsClone);
+#endif
 
     for (uint8_t id = kMinId; id <= kMaxId; id++)
     {
