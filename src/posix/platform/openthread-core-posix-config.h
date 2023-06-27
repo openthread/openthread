@@ -178,16 +178,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
- *
- * The number of EID-to-RLOC cache entries.
- *
- */
-#ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 128
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
  *
  * The maximum number of children.
