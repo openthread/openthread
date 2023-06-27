@@ -94,7 +94,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Error error;
 
-    LogInfo("Initializing - InfraIfIndex:%u", aInfraIfIndex);
+    LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
 
     SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
 
