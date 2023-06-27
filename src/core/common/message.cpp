@@ -785,6 +785,7 @@ exit:
     return messageCopy;
 }
 
+#if OPENTHREAD_FTD
 bool Message::GetChildMask(uint16_t aChildIndex) const { return GetMetadata().mChildMask.Get(aChildIndex); }
 
 void Message::ClearChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, false); }
@@ -792,6 +793,7 @@ void Message::ClearChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Se
 void Message::SetChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, true); }
 
 bool Message::IsChildPending(void) const { return GetMetadata().mChildMask.HasAny(); }
+#endif
 
 void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
 {
