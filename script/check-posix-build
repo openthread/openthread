@@ -31,7 +31,6 @@ set -euxo pipefail
 
 main()
 {
-    "$(dirname "$0")"/check-posix-build-autotools
     "$(dirname "$0")"/check-posix-build-cmake
     "$(dirname "$0")"/check-posix-build-cmake -DOT_DAEMON=ON
 }

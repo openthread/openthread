@@ -29,6 +29,9 @@
 
 set -euxo pipefail
 
+: "${CFLAGS:=}"
+: "${CXXFLAGS:=}"
+
 OT_BUILDDIR="$(pwd)/build"
 readonly OT_BUILDDIR
 
@@ -39,9 +42,78 @@ reset_source()
 
 build_all_features()
 {
+    local cppflags=(
+        "-DOPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_ANYCAST_LOCATOR=1"
+        "-DOPENTHREAD_CONFIG_BORDER_AGENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_COAP_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DNS_DSO_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_ECDSA_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_JOINER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_BEACON_RSP_WHEN_JOINABLE_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MPL_DYNAMIC_INTERVAL_ENABLE"
+        "-DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE=1"
+    )
+
     # Build Thread 1.1 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1
+
+    # Build Thread 1.1 with full features and no log
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_LOG_OUTPUT=NONE
+
+    # Build Thread 1.1 with full features and full logs
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_FULL_LOGS=ON
 
     # Build Thread 1.1 cli-radio
     reset_source
@@ -53,6 +125,22 @@ build_all_features()
         -DOT_APP_RCP=OFF \
         -DOT_FTD=OFF \
         -DOT_MTD=OFF
+
+    # Build Thread 1.1 with ASSERT disabled
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_SIMULATION_VIRTUAL_TIME=ON \
+        -DOT_ASSERT=OFF
+
+    # Build Thread 1.1 OTNS
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation \
+        -DOT_THREAD_VERSION=1.1 \
+        -DOT_SIMULATION_VIRTUAL_TIME=ON \
+        -DOT_OTNS=ON
 
     # Thread 1.3 options
     local options=(
@@ -69,7 +157,24 @@ build_all_features()
 
     # Build Thread 1.3 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
+
+    # Build Thread 1.3 with external heap and msg pool using heap
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1" \
+        CXXFLAGS="${cppflags[*]} ${CXXFLAGS} -DOPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE=1" \
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON
+
+    # Build Thread 1.3 with full features and no log
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_LOG_OUTPUT=NONE
+
+    # Build Thread 1.3 with full features and full logs
+    reset_source
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        "$(dirname "$0")"/cmake-build simulation "${options[@]}" -DOT_DUA=ON -DOT_FULL_LOGS=ON
 
     # Build Thread 1.3 Backbone Router without DUA ND Proxying
     reset_source
@@ -96,23 +201,78 @@ build_all_features()
     # Build with RAM settings
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_SETTINGS_RAM=ON
-
-    # Build with Vendor CLI commands
-    reset_source
-    "$(dirname "$0")"/cmake-build simulation \
-        -DOT_CLI_VENDOR_EXTENSION=../../src/cli/cli_extension_example.cmake
 }
 
-build_toranj()
+build_nest_common()
 {
+    local cppflags=(
+        "-DOPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_JAM_DETECTION_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
+    )
+
     reset_source
-    top_builddir="$OT_BUILDDIR" ./tests/toranj/build.sh cmake
+    mkdir build && cd build
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        cmake -GNinja -DOT_PLATFORM=simulation ..
+    ninja
+    cd ..
+
+    cppflags=(
+        "-DOPENTHREAD_CONFIG_ANOUNCE_SENDER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
+    )
+
+    reset_source
+    mkdir build && cd build
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        cmake -GNinja -DOT_PLATFORM=simulation ..
+    ninja
+    cd ..
+
+    cppflags=(
+        "-DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+    )
+
+    reset_source
+    mkdir build && cd build
+    CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
+        cmake -GNinja -DOT_PLATFORM=simulation \
+        -DOT_VENDOR_EXTENSION=common/extension_example.cpp \
+        -DOT_NCP_VENDOR_HOOK_SOURCE=example_vendor_hook.cpp \
+        ..
+    ninja
+    cd ..
 }
 
+build_multi_radio_links()
+{
+    # TREL radio link only.
+    reset_source
+    ./script/cmake-build simulation -DOT_LOG_LEVEL=DEBG \
+        -DOT_TREL=OFF -DOT_15_4=ON
+
+    # Multi radio link - 15.4 and TREL.
+    reset_source
+    ./script/cmake-build simulation -DOT_LOG_LEVEL=DEBG \
+        -DOT_TREL=ON -DOT_15_4=ON
+}
 main()
 {
     build_all_features
-    build_toranj
+    build_nest_common
+    build_multi_radio_links
 }
 
 main "$@"

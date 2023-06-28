@@ -45,37 +45,6 @@ permissions:
 
 jobs:
 
-  distcheck:
-    runs-on: ubuntu-20.04
-    env:
-      CC: clang
-      CXX: clang++
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y llvm-runtime python3-setuptools python3-wheel
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-    - name: Run
-      run: |
-        export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer`
-        export ASAN_OPTIONS=symbolize=1
-        export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
-        export DISTCHECK_BUILD=1
-        ./bootstrap
-        VERBOSE=1 make -f examples/Makefile-simulation distcheck
-
   packet-verification:
     runs-on: ubuntu-20.04
     env:

@@ -146,34 +146,3 @@ formatted_list = ["    \"{}\",\n".format(file_name[19:]) for file_name in includ
 update_build_file(include_build_gn_file, "  public = [\n", "  ]\n", formatted_list)
 
 print("Updated " + include_build_gn_file)
-
-#----------------------------------------------------------------------------------------------
-# Update Makefile.am files
-
-core_makefile_am_file = "./src/core/Makefile.am"
-
-formatted_list = ["    {:<45} \\\n".format(file_name[9:]) for file_name in core_cpp_files]
-start_string = "SOURCES_COMMON                                  = \\\n"
-end_string = "    $(NULL)\n"
-update_build_file(core_makefile_am_file, start_string, end_string, formatted_list)
-
-formatted_list = ["    {:<45} \\\n".format(file_name[9:]) for file_name in core_h_hpp_files]
-start_string = "HEADERS_COMMON                                  = \\\n"
-end_string = "    $(NULL)\n"
-update_build_file(core_makefile_am_file, start_string, end_string, formatted_list)
-
-print("Updated " + core_makefile_am_file)
-
-include_makefile_am_file = "./include/Makefile.am"
-
-formatted_list = ["    {:<37} \\\n".format(file_name) for file_name in include_ot_h_files]
-start_string = "openthread_headers                      = \\\n"
-end_string = "    $(NULL)\n"
-update_build_file(include_makefile_am_file, start_string, end_string, formatted_list)
-
-formatted_list = ["    {:<37} \\\n".format(file_name) for file_name in include_platform_h_files]
-start_string = "ot_platform_headers                     = \\\n"
-end_string = "    $(NULL)\n"
-update_build_file(include_makefile_am_file, start_string, end_string, formatted_list)
-
-print("Updated " + include_makefile_am_file)
