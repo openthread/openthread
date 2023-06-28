@@ -203,7 +203,9 @@ protected:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #endif
+#if OPENTHREAD_FTD
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
+#endif
 
         uint8_t mType : 3;             // The message type.
         uint8_t mSubType : 4;          // The message sub type.
@@ -940,6 +942,7 @@ public:
      */
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
+#if OPENTHREAD_FTD
     /**
      * Returns whether or not the message forwarding is scheduled for the child.
      *
@@ -975,6 +978,7 @@ public:
      *
      */
     bool IsChildPending(void) const;
+#endif // OPENTHREAD_FTD
 
     /**
      * Returns the RLOC16 of the mesh destination.

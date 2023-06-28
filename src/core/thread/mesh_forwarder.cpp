@@ -1268,7 +1268,11 @@ exit:
 
 void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
 {
+#if OPENTHREAD_FTD
     VerifyOrExit(!aMessage.IsDirectTransmission() && !aMessage.IsChildPending());
+#else
+    VerifyOrExit(!aMessage.IsDirectTransmission());
+#endif
 
     if (mSendMessage == &aMessage)
     {
