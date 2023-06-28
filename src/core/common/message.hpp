@@ -978,7 +978,7 @@ public:
      *
      */
     bool IsChildPending(void) const;
-#endif
+#endif // OPENTHREAD_FTD
 
     /**
      * Returns the RLOC16 of the mesh destination.
