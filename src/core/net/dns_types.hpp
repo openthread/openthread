@@ -1192,7 +1192,7 @@ public:
      * @retval kErrorNoBufs        Insufficient available buffers to grow the message.
      *
      */
-    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
+    static Error AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Message &aMessage);
 
     /**
      * Appends an array of `TxtEntry` items to a `MutableData` buffer.
@@ -1206,11 +1206,11 @@ public:
      * @retval kErrorNoBufs        Insufficient available buffers.
      *
      */
-    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, MutableData<kWithUint16Length> &aData);
+    static Error AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, MutableData<kWithUint16Length> &aData);
 
 private:
     Error        AppendTo(Appender &aAppender) const;
-    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Appender &aAppender);
+    static Error AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Appender &aAppender);
 
     static constexpr uint8_t kMaxKeyValueEncodedSize = 255;
     static constexpr char    kKeyValueSeparator      = '=';

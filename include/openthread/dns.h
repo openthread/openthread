@@ -142,6 +142,24 @@ void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *
 otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aEntry);
 
 /**
+ * Encodes a given list of TXT record entries (key/value pairs) into TXT data (following format specified by RFC 6763).
+ *
+ * @param[in]      aTxtEntries      Pointer to an array of `otDnsTxtEntry`.
+ * @param[in]      aNumTxtEntries   Number of entries in @p aTxtEntries array.
+ * @param[out]     aTxtData         A pointer to a buffer to output the encoded TXT data.
+ * @param[in,out]  aTxtDataLength   On input, size of buffer @p aTxtData. On output, length of the encoded TXT data.
+ *
+ * @retval OT_ERROR_NONE          Encoded TXT data successfully, @p aTxtData and @p aTxtDataLength are updated.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aTxtEntries is not valid.
+ * @retval OT_ERROR_NO_BUS        Could not fit the encoded data in @p aTxtData buffer with its @p aTxtDataLength.
+ *
+ */
+otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
+                           uint16_t             aNumTxtEntries,
+                           uint8_t             *aTxtData,
+                           uint16_t            *aTxtDataLength);
+
+/**
  * Enables/disables the "DNS name compression" mode.
  *
  * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This

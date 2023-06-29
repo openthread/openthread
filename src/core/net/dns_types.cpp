@@ -1037,14 +1037,14 @@ exit:
     return error;
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Message &aMessage)
 {
     Appender appender(aMessage);
 
     return AppendEntries(aEntries, aNumEntries, appender);
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, MutableData<kWithUint16Length> &aData)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, MutableData<kWithUint16Length> &aData)
 {
     Error    error;
     Appender appender(aData.GetBytes(), aData.GetLength());
@@ -1056,11 +1056,11 @@ exit:
     return error;
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Appender &aAppender)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Appender &aAppender)
 {
     Error error = kErrorNone;
 
-    for (uint8_t index = 0; index < aNumEntries; index++)
+    for (uint16_t index = 0; index < aNumEntries; index++)
     {
         SuccessOrExit(error = aEntries[index].AppendTo(aAppender));
     }
