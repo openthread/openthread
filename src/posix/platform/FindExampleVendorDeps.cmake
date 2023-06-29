@@ -36,9 +36,7 @@ files used by a vendor implementation in the posix library.
 
 The name of this file and the name of the targets it defines are
 conventionally related. For the purpose of this reference, targets
-will be based off of the identifier "ExampleRcpVendorDeps". Derived
-references should be based off of the value of the cache variable,
-"OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE".
+will be based off of the identifier "ExampleRcpVendorDeps".
 
 For more information about package resolution using CMake find modules,
 reference the cmake-developer documentation.

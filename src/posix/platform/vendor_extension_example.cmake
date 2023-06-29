@@ -26,36 +26,32 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
-    CACHE STRING "vendor interface implementation")
+# This file provides an example on how to implement a RCP vendor extension.
 
-set(OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE "" CACHE STRING
-    "path to CMake file to define and link posix vendor extension")
+# Set name of the cmake target to link with rcp-vendor-intf
+set(OT_POSIX_RCP_VENDOR_TARGET "vendor-lib")
 
-set(OT_POSIX_RCP_VENDOR_TARGET "" CACHE STRING 
-    "name of vendor extension CMake target to link with posix library")
+# Create library target using source file "vendor_source.cpp"
+add_library(${OT_POSIX_RCP_VENDOR_TARGET} vendor_source.cpp)
 
-if(OT_POSIX_CONFIG_RCP_BUS STREQUAL "VENDOR")
-    add_library(rcp-vendor-intf ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE})
+# Include header files located at "${VENDOR_INCLUDE_PATH}"
+target_include_directories(${OT_POSIX_RCP_VENDOR_TARGET}
+    PRIVATE
+        ${VENDOR_INCLUDE_PATH}
+)
 
-    target_link_libraries(rcp-vendor-intf PUBLIC ot-posix-config)
+set(EXAMPLE_DEPS_ENABLE OFF CACHE BOOL "Include example deps library if enabled")
 
-    target_include_directories(rcp-vendor-intf
-        PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}
-        PRIVATE
-            ${PROJECT_SOURCE_DIR}/include
-            ${PROJECT_SOURCE_DIR}/src
-            ${PROJECT_SOURCE_DIR}/src/core
-            ${PROJECT_SOURCE_DIR}/src/posix/platform/include
-    )
+# Search for and include an optional library using the module file
+# "FindExampleRcpDeps.cmake" at path "${VENDOR_MODULE_PATH}"
+if (EXAMPLE_DEPS_ENABLE)
+    list(APPEND CMAKE_MODULE_PATH ${VENDOR_MODULE_PATH})
+    find_package(ExampleRcpVendorDeps)
 
-    target_link_libraries(openthread-posix PUBLIC rcp-vendor-intf)
-
-    if (OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE)
-        include(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
-        if (OT_POSIX_CONFIG_RCP_VENDOR_TARGET)
-            target_link_libraries(rcp-vendor-intf PRIVATE ${OT_POSIX_RCP_VENDOR_TARGET})
-        endif()
+    if(ExampleRcpVendorDeps_FOUND)
+        target_link_libraries(${OT_POSIX_RCP_VENDOR_TARGET} 
+            PRIVATE
+            ${ExampleRcpVendorDeps::ExampleRcpVendorDeps}
+        )
     endif()
 endif()
