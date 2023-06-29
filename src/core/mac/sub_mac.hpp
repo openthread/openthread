@@ -155,7 +155,6 @@ public:
          * of a frame transmission, this method is invoked on all frame transmission attempts.
          *
          * @param[in] aFrame      The transmitted frame.
-         * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
          * @param[in] aError      kErrorNone when the frame was transmitted successfully,
          *                        kErrorNoAck when the frame was transmitted but no ACK was received,
          *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -165,11 +164,7 @@ public:
          *                        when there was an error in current transmission attempt.
          *
          */
-        void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                       RxFrame       *aAckFrame,
-                                       Error          aError,
-                                       uint8_t        aRetryCount,
-                                       bool           aWillRetx);
+        void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 
         /**
          * The method notifies user of `SubMac` that the transmit operation has completed, providing, if applicable,

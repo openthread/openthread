@@ -289,7 +289,6 @@ public:
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -299,13 +298,9 @@ public:
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      *
      */
-    void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   RxFrame       *aAckFrame,
-                                   Error          aError,
-                                   uint8_t        aRetryCount,
-                                   bool           aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, RxFrame *, Error, uint8_t, bool) {}
+    void    RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
 private:
