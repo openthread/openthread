@@ -18,21 +18,3 @@
 *.png    binary !eol
 *.jpg    binary !eol
 *.gif    binary !eol
-
-# Files normalized to always keep Unix line endings
-.default-version  eol=lf
-bootstrap*        eol=lf
-config.guess      eol=lf
-config.status     eol=lf
-configure         eol=lf
-libtool           eol=lf
-libtoolize        eol=lf
-autoreconf        eol=lf
-mkversion         eol=lf
-*.sh              eol=lf
-*-sh              eol=lf
-*.m4              eol=lf
-configure.ac      eol=lf
-Makefile.am       eol=lf
-Makefile.in       eol=lf
-Makefile          eol=lf

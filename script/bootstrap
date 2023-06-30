@@ -56,7 +56,7 @@ install_packages_apt()
 
     # apt-get update and install dependencies
     sudo apt-get update
-    sudo apt-get --no-install-recommends install -y automake g++ libtool lsb-release make cmake ninja-build shellcheck
+    sudo apt-get --no-install-recommends install -y g++ lsb-release cmake ninja-build shellcheck
 
     echo 'Installing GNU Arm Embedded Toolchain...'
 
@@ -94,7 +94,7 @@ install_packages_brew()
     echo 'Installing toolchain dependencies...'
 
     # add build tools
-    brew install automake libtool cmake ninja shfmt shellcheck
+    brew install cmake ninja shfmt shellcheck
 
     echo 'Installing GNU Arm Embedded Toolchain...'
 
