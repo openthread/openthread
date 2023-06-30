@@ -251,7 +251,7 @@ void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
 {
     SetState(kStateReceive);
 
-    Get<Mac::Mac>().RecordFrameTransmitStatus(mTxFrame, aAckFrame, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
+    Get<Mac::Mac>().RecordFrameTransmitStatus(mTxFrame, aError, /* aRetryCount */ 0, /* aWillRetx */ false);
     Get<Mac::Mac>().HandleTransmitDone(mTxFrame, aAckFrame, aError);
 }
 
