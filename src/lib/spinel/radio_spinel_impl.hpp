@@ -530,13 +530,14 @@ void RadioSpinel<InterfaceType>::HandleNotification(SpinelInterface::RxFrameBuff
     }
 
 exit:
-    if (shouldSaveFrame)
-    {
-        aFrameBuffer.SaveFrame();
-    }
-    else
+    if (!shouldSaveFrame || aFrameBuffer.SaveFrame() != OT_ERROR_NONE)
     {
         aFrameBuffer.DiscardFrame();
+
+        if (shouldSaveFrame)
+        {
+            otLogCritPlat("RX Spinel buffer full, dropped incoming frame");
+        }
     }
 
     UpdateParseErrorCount(error);
