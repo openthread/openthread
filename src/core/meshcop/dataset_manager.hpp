@@ -382,11 +382,20 @@ public:
      * Is primarily used to determine whether a user has supplied a partial Active Dataset for use
      * with joining a network.
      *
-     * @retval TRUE   if an Active Dataset is saved but does not include an Active Timestamp.
-     * @retval FALSE  if an Active Dataset is not saved or does include an Active Timestamp.
+     * @retval TRUE   If an Active Dataset is saved but does not include an Active Timestamp.
+     * @retval FALSE  If an Active Dataset is not saved or does include an Active Timestamp.
      *
      */
     bool IsPartiallyComplete(void) const;
+
+    /**
+     * Indicates whether the Active Dataset is complete.
+     *
+     * @retval TRUE   If an Active Dataset is saved and includes an Active Timestamp.
+     * @retval FALSE  If an Active Dataset is not saved or does include an Active Timestamp.
+     *
+     */
+    bool IsComplete(void) const;
 
     /**
      * Indicates whether or not a valid network is present in the Active Operational Dataset.
@@ -471,6 +480,7 @@ public:
      */
     void StartLeader(void);
 
+#if OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
     /**
      * Generate a default Active Operational Dataset.
      *
@@ -480,6 +490,7 @@ public:
      *
      */
     Error GenerateLocal(void);
+#endif
 #endif
 
 private:

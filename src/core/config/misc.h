@@ -530,4 +530,16 @@
 #define OPENTHREAD_CONFIG_ALLOW_EMPTY_NETWORK_NAME 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
+ *
+ * Define as 1 to enable support for locally initializing an Active Operational Dataset.
+ *
+ * @note This functionality is deprecated and not recommended.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
+#define OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT 0
+#endif
+
 #endif // CONFIG_MISC_H_

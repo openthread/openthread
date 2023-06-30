@@ -296,6 +296,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
 Error ActiveDatasetManager::GenerateLocal(void)
 {
     Error   error = kErrorNone;
@@ -395,6 +396,9 @@ exit:
 }
 
 void ActiveDatasetManager::StartLeader(void) { IgnoreError(GenerateLocal()); }
+#else  // OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
+void ActiveDatasetManager::StartLeader(void) {}
+#endif // OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
 
 template <>
 void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
