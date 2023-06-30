@@ -1236,6 +1236,13 @@ void Mle::HandleNotifierEvents(Events aEvents)
         }
     }
 
+#if OPENTHREAD_FTD
+    if (aEvents.Contains(kEventSecurityPolicyChanged))
+    {
+        Get<MleRouter>().HandleSecurityPolicyChanged();
+    }
+#endif
+
 exit:
     return;
 }

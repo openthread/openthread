@@ -1738,7 +1738,7 @@ class OTCI(object):
         # Network Name: OpenThread-7caa
         # PAN ID: 0x7caa
         # PSKc: 167d89fd169e439ca0b8266de248090f
-        # Security Policy: 0, onrc
+        # Security Policy: 672 onrc 0
 
         dataset = {}
 
@@ -1765,7 +1765,7 @@ class OTCI(object):
             elif key == 'PSKc':
                 dataset['pskc'] = val
             elif key == 'Security Policy':
-                rotation_time, flags = val.split(', ') if ', ' in val else val.split(' ')
+                rotation_time, flags, version_threshold = val.split(' ')
                 rotation_time = int(rotation_time)
                 dataset['security_policy'] = SecurityPolicy(rotation_time, flags)
             else:
