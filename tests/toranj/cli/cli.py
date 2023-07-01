@@ -713,6 +713,30 @@ class Node(object):
             if (instance_name == service['instance'] and service_name == service['name']):
                 return service
 
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # br
+
+    def br_init(self, if_inex, is_running):
+        self._cli_no_output('br init', if_inex, is_running)
+
+    def br_enable(self):
+        self._cli_no_output('br enable')
+
+    def br_disable(self):
+        self._cli_no_output('br disable')
+
+    def br_get_state(self):
+        return self._cli_single_output('br state')
+
+    def br_get_routeprf(self):
+        return self._cli_single_output('br routeprf')
+
+    def br_set_routeprf(self, prf):
+        self._cli_no_output('br routeprf', prf)
+
+    def br_clear_routeprf(self):
+        self._cli_no_output('br routeprf clear')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 

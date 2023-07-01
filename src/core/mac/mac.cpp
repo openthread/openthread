@@ -1298,11 +1298,8 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
             if ((aError == kErrorNone) && (neighbor != nullptr))
             {
-                neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-                neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
-                                               aAckFrame->GetRssi());
-#endif
+                UpdateNeighborLinkInfo(*neighbor, *aAckFrame);
+
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
                 ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
@@ -1863,10 +1860,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 
     if (neighbor != nullptr)
     {
-        neighbor->GetLinkInfo().AddRss(aFrame->GetRssi());
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-        neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aFrame->GetType(), aFrame->GetLqi(), aFrame->GetRssi());
-#endif
+        UpdateNeighborLinkInfo(*neighbor, *aFrame);
 
         if (aFrame->GetSecurityEnabled())
         {
@@ -2028,6 +2022,27 @@ exit:
             break;
         }
     }
+}
+
+void Mac::UpdateNeighborLinkInfo(Neighbor &aNeighbor, const RxFrame &aRxFrame)
+{
+    LinkQuality oldLinkQuality = aNeighbor.GetLinkInfo().GetLinkQuality();
+
+    aNeighbor.GetLinkInfo().AddRss(aRxFrame.GetRssi());
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    aNeighbor.AggregateLinkMetrics(/* aSeriesId */ 0, aRxFrame.GetType(), aRxFrame.GetLqi(), aRxFrame.GetRssi());
+#endif
+
+    // Signal when `aNeighbor` is the current parent and its link
+    // quality gets changed.
+
+    VerifyOrExit(Get<Mle::Mle>().IsChild() && (&aNeighbor == &Get<Mle::Mle>().GetParent()));
+    VerifyOrExit(aNeighbor.GetLinkInfo().GetLinkQuality() != oldLinkQuality);
+    Get<Notifier>().Signal(kEventParentLinkQualityChanged);
+
+exit:
+    return;
 }
 
 bool Mac::HandleMacCommand(RxFrame &aFrame)
