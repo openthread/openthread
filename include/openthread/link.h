@@ -1002,8 +1002,8 @@ void otLinkSetPcapCallback(otInstance *aInstance, otLinkPcapCallback aPcapCallba
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval true   Promiscuous mode is enabled.
- * @retval false  Promiscuous mode is not enabled.
+ * @retval TRUE   Promiscuous mode is enabled.
+ * @retval FALSE  Promiscuous mode is not enabled.
  *
  */
 bool otLinkIsPromiscuous(otInstance *aInstance);
@@ -1121,11 +1121,31 @@ otError otLinkSetEnabled(otInstance *aInstance, bool aEnable);
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @retval true   Link layer is enabled.
- * @retval false  Link layer is not enabled.
+ * @retval TRUE   Link layer is enabled.
+ * @retval FALSE  Link layer is not enabled.
  *
  */
 bool otLinkIsEnabled(otInstance *aInstance);
+
+/**
+ * Indicates whether or not CSL is enabled.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   Link layer is CSL enabled.
+ * @retval FALSE  Link layer is not CSL enabled.
+ *
+ */
+bool otLinkIsCslEnabled(otInstance *aInstance);
+
+/**
+ * Indicates whether the device is connected to a parent which supports CSL.
+ *
+ * @retval TRUE   If parent supports CSL.
+ * @retval FALSE  If parent does not support CSL.
+ *
+ */
+bool otLinkIsCslSupported(otInstance *aInstance);
 
 /**
  * Instructs the device to send an empty IEEE 802.15.4 data frame.
