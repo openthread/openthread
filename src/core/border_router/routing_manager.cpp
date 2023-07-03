@@ -3317,8 +3317,8 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
             continue;
         }
 
-        entry.mPrefix.SetLength(kOmrPrefixLength);
         entry.mPrefix.Tidy();
+        entry.mPrefix.SetLength(kOmrPrefixLength);
 
         // The platform may send another RA message to announce that the current prefix we are using is no longer
         // preferred or no longer valid.
