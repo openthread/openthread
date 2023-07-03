@@ -744,7 +744,7 @@ cc_library_static {
 
 cc_library_static {
     name: "openthread-spi",
-    vendor: true,
+    vendor_available: true,
     local_include_dirs: [
         "include",
         "src",
