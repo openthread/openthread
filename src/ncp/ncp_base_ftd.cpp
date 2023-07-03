@@ -1210,7 +1210,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_ADDRESS_CACHE_
         if (entry.mState != OT_CACHE_ENTRY_STATE_CACHED)
         {
             SuccessOrExit(error = mEncoder.WriteBool(entry.mCanEvict));
-            SuccessOrExit(error = mEncoder.WriteUint16(entry.mTimeout));
+            SuccessOrExit(error = mEncoder.WriteUint16(entry.mRampDown ? 0 : entry.mTimeout));
             SuccessOrExit(error = mEncoder.WriteUint16(entry.mRetryDelay));
         }
 

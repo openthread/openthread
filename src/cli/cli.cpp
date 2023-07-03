@@ -2580,7 +2580,7 @@ void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
 
     if (aEntry.mState == OT_CACHE_ENTRY_STATE_RETRY_QUERY)
     {
-        OutputFormat(" retryDelay=%u", aEntry.mRetryDelay);
+        OutputFormat(" retryDelay=%u rampDown=%d", aEntry.mRetryDelay, aEntry.mRampDown);
     }
 
     OutputNewLine();

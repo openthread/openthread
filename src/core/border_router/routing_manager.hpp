@@ -229,6 +229,39 @@ public:
     void ClearRouteInfoOptionPreference(void);
 
     /**
+     * Gets the current preference used for published routes in Network Data.
+     *
+     * The preference is determined as follows:
+     *
+     * - If explicitly set by user by calling `SetRoutePreference()`, the given preference is used.
+     * - Otherwise, it is determined automatically by `RoutingManager` based on the device's role and link quality.
+     *
+     * @returns The current published route preference.
+     *
+     */
+    RoutePreference GetRoutePreference(void) const { return mRoutePublisher.GetPreference(); }
+
+    /**
+     * Explicitly sets the preference of published routes in Network Data.
+     *
+     * After a call to this method, BR will use the given preference. The preference can be cleared by calling
+     * `ClearRoutePreference`()`.
+     *
+     * @param[in] aPreference   The route preference to use.
+     *
+     */
+    void SetRoutePreference(RoutePreference aPreference) { mRoutePublisher.SetPreference(aPreference); }
+
+    /**
+     * Clears a previously set preference value for published routes in Network Data.
+     *
+     * After a call to this method, BR will determine the preference automatically based on the device's role and
+     * link quality (to the parent when acting as end-device).
+     *
+     */
+    void ClearRoutePreference(void) { mRoutePublisher.ClearPreference(); }
+
+    /**
      * Returns the local generated off-mesh-routable (OMR) prefix.
      *
      * The randomly generated 64-bit prefix will be added to the Thread Network Data if there isn't already an OMR
@@ -941,6 +974,8 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 
+    void HandleRoutePublisherTimer(void) { mRoutePublisher.HandleTimer(); }
+
     class RoutePublisher : public InstanceLocator // Manages the routes that are published in net data
     {
     public:
@@ -954,11 +989,14 @@ private:
         void            SetPreference(RoutePreference aPreference);
         void            ClearPreference(void);
 
-        void HandleRoleChanged(void);
+        void HandleNotifierEvents(Events aEvents);
+        void HandleTimer(void);
 
         static const Ip6::Prefix &GetUlaPrefix(void) { return AsCoreType(&kUlaPrefix); }
 
     private:
+        static constexpr uint32_t kDelayBeforePrfUpdateOnLinkQuality3 = TimeMilli::SecToMsec(5 * 60);
+
         static const otIp6Prefix kUlaPrefix;
 
         enum State : uint8_t
@@ -976,9 +1014,12 @@ private:
 
         static const char *StateToString(State aState);
 
+        using DelayTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRoutePublisherTimer>;
+
         State           mState;
         RoutePreference mPreference;
         bool            mUserSetPreference;
+        DelayTimer      mTimer;
     };
 
     struct RaInfo

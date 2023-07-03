@@ -104,6 +104,7 @@ typedef struct otCacheEntryInfo
     otShortAddress    mRloc16;             ///< RLOC16
     otCacheEntryState mState;              ///< Entry state
     bool              mCanEvict : 1;       ///< Indicates whether the entry can be evicted.
+    bool              mRampDown : 1;       ///< Whether in ramp-down mode while in `OT_CACHE_ENTRY_STATE_RETRY_QUERY`.
     bool              mValidLastTrans : 1; ///< Indicates whether last transaction time and ML-EID are valid.
     uint32_t          mLastTransTime;      ///< Last transaction time (applicable in cached state).
     otIp6Address      mMeshLocalEid;       ///< Mesh Local EID (applicable if entry in cached state).

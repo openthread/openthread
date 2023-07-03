@@ -285,6 +285,9 @@ private:
         bool CanEvict(void) const { return mInfo.mOther.mCanEvict; }
         void SetCanEvict(bool aCanEvict) { mInfo.mOther.mCanEvict = aCanEvict; }
 
+        bool IsInRampDown(void) const { return mInfo.mOther.mRampDown; }
+        void SetRampDown(bool aRampDown) { mInfo.mOther.mRampDown = aRampDown; }
+
         bool Matches(const Ip6::Address &aEid) const { return GetTarget() == aEid; }
 
     private:
@@ -308,6 +311,7 @@ private:
                 uint16_t mTimeout;
                 uint16_t mRetryDelay;
                 bool     mCanEvict;
+                bool     mRampDown;
             } mOther;
 
         } mInfo;
