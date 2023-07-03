@@ -81,7 +81,7 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 
     rval = vsnprintf(buf, sizeof(buf) - 1, aFormat, aArguments);
 
-    VerifyOrExit((rval >= 0) && (rval <= (sizeof(buf) - 1)),
+    VerifyOrExit((rval >= 0) && (rval <= static_cast<int>(sizeof(buf) - 1)),
                  otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
     VerifyOrExit(mSessionSocket != -1);
