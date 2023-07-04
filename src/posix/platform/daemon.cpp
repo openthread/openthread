@@ -74,15 +74,20 @@ void GetFilename(Filename &aFilename, const char *aPattern)
 
 int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 {
-    char buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH + 1];
+    static constexpr char truncatedMsg[] = "(truncated ...)";
+    static_assert(sizeof(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH) < sizeof(truncatedMsg),
+                  "OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH is too short!");
+    char buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
     int  rval;
 
-    buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH] = '\0';
+    rval = vsnprintf(buf, sizeof(buf), aFormat, aArguments);
+    VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
-    rval = vsnprintf(buf, sizeof(buf) - 1, aFormat, aArguments);
-
-    VerifyOrExit((rval >= 0) && (rval <= static_cast<int>(sizeof(buf) - 1)),
-                 otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
+    if (rval >= static_cast<int>(sizeof(buf)))
+    {
+        rval = static_cast<int>(sizeof(buf));
+        memcpy(buf + sizeof(buf) - sizeof(truncatedMsg), truncatedMsg, sizeof(truncatedMsg));
+    }
 
     VerifyOrExit(mSessionSocket != -1);
 
