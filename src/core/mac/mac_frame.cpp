@@ -1214,7 +1214,7 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
         // different FCS size. We adjust the PSDU length after the
         // copy to account for this.
 
-        SetLength(aFromFrame.GetPsduLength() - aFromFrame.GetFcsSize() + GetFcsSize());
+        SetLength(aFromFrame.GetLength() - aFromFrame.GetFcsSize() + GetFcsSize());
     }
 #endif
 }
