@@ -784,7 +784,7 @@ public:
     bool IsDataRequestCommand(void) const;
 
     /**
-     * Returns the MAC Frame Length.
+     * Returns the MAC Frame Length, namely the IEEE 802.15.4 PSDU length.
      *
      * @returns The MAC Frame Length.
      *
@@ -844,14 +844,6 @@ public:
      *
      */
     uint8_t GetChannel(void) const { return mChannel; }
-
-    /**
-     * Returns the IEEE 802.15.4 PSDU length.
-     *
-     * @returns The IEEE 802.15.4 PSDU length.
-     *
-     */
-    uint16_t GetPsduLength(void) const { return mLength; }
 
     /**
      * Returns a pointer to the PSDU.
