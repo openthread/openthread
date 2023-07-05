@@ -707,9 +707,9 @@ Done
 
 ### childsupervision interval
 
-Get the Child Supervision Interval value.
+Get the Child Supervision interval value on the child.
 
-Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child. This command can only be used with FTD devices.
+Child Supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a Child Supervision Message to the child.
 
 ```bash
 > childsupervision interval
@@ -719,7 +719,7 @@ Done
 
 ### childsupervision interval \<interval\>
 
-Set the Child Supervision Interval value. This command can only be used with FTD devices.
+Set the Child Supervision interval value on the child.
 
 ```bash
 > childsupervision interval 30
@@ -728,7 +728,7 @@ Done
 
 ### childsupervision checktimeout
 
-Get the Child Supervision Check Timeout value.
+Get the Child Supervision Check Timeout value on the child.
 
 If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates the re-attach process (MLE Child Update Request/Response exchange with its parent).
 
@@ -740,7 +740,7 @@ Done
 
 ### childsupervision checktimeout \<timeout\>
 
-Set the Child Supervision Check Timeout value.
+Set the Child Supervision Check Timeout value on the child.
 
 ```bash
 > childsupervision checktimeout 30

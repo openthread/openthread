@@ -45,18 +45,18 @@ extern "C" {
  * @addtogroup api-child-supervision
  *
  * @brief
- *   This module includes functions for child supervision feature.
+ *   This module includes functions for Child Supervision feature.
  *
  * @{
  *
  */
 
 /**
- * Gets the child supervision interval (in seconds) on a child.
+ * Gets the Child Supervision interval (in seconds) on a child.
  *
- * Child supervision feature provides a mechanism for a sleepy child to ask its parent to ensure to send a message to
- * it within the supervision interval. If there is no transmission to the child within the supervision interval,
- * parent sends a supervision message (a data message with empty payload) to the child.
+ * Child Supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child
+ * within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread
+ * enqueues and sends a Child Supervision Message to the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *
@@ -88,7 +88,7 @@ void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval);
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance);
 
 /**
- * Sets the supervision check timeout interval (in seconds).
+ * Sets the supervision check timeout interval (in seconds) on the child.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  * @param[in]  aTimeout        The check timeout (in seconds). Zero to disable supervision check on the child.
