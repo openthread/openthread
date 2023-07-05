@@ -75,8 +75,8 @@ void GetFilename(Filename &aFilename, const char *aPattern)
 int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 {
     static constexpr char truncatedMsg[] = "(truncated ...)";
-    char buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
-    int  rval;
+    char                  buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+    int                   rval;
 
     static_assert(sizeof(truncatedMsg) < OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
                   "OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH is too short!");
