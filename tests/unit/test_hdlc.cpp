@@ -150,7 +150,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -160,7 +160,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHelloText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -189,7 +189,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHexText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHexText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -225,7 +225,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0,
                  "GetFrame() content is incorrect");
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     // Read the fourth saved frame and check the content
     SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
@@ -263,10 +263,10 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == 0, "after Clear()");
 
     SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
 
     frame = nullptr;
@@ -287,11 +287,11 @@ void TestSpinelMultiFrameBuffer(void)
     // Verify behavior of `ClearSavedFrames()`
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sMottoText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sHexText, frameBuffer));
 
     frame = nullptr;
@@ -307,7 +307,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHexText) - 1, "after ClearSavedFrames()");
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHexText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
 
@@ -334,7 +334,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHelloText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     frame = nullptr;
     SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
     VerifyOrQuit(length == sizeof(sHelloText) - 1, "GetNextSavedFrame() length is incorrect");
@@ -354,7 +354,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "after SaveFrame()");
@@ -367,7 +367,7 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sOpenThreadText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "after SaveFrame()");
@@ -398,14 +398,14 @@ void TestSpinelMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.SetLength(sizeof(sHelloText)) == OT_ERROR_NONE);
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText));
     VerifyOrQuit(frameBuffer.HasFrame());
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit((frame = frameBuffer.GetFrame()) != nullptr);
     memcpy(frame, sMottoText, sizeof(sMottoText));
     VerifyOrQuit(frameBuffer.SetLength(sizeof(sMottoText)) == OT_ERROR_NONE);
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText));
     VerifyOrQuit(frameBuffer.HasFrame());
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit((frame = frameBuffer.GetFrame()) != nullptr);
     memcpy(frame, sHexText, sizeof(sHexText));
@@ -464,33 +464,33 @@ void TestEncoderDecoder(void)
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sOpenThreadText, sizeof(sOpenThreadText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sMottoText, sizeof(sMottoText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sHdlcSpecials, sizeof(sHdlcSpecials)));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sHelloText, sizeof(sHelloText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     // Empty frame
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     byte = kFlagSequence;
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(&byte, sizeof(uint8_t)));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     // Feed the encoded frames to decoder and save the content
     for (frame = nullptr; encoderBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE;)
@@ -502,7 +502,7 @@ void TestEncoderDecoder(void)
         VerifyOrQuit(decoderContext.mWasCalled);
         VerifyOrQuit(decoderContext.mError == OT_ERROR_NONE, "Decoder::Decode() returned incorrect error code");
 
-        decoderBuffer.SaveFrame();
+        SuccessOrQuit(decoderBuffer.SaveFrame());
     }
 
     // Verify the decoded frames match the original frames
