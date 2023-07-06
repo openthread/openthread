@@ -1177,8 +1177,7 @@ Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, Dns
 
 void Server::HandleTimer(void)
 {
-    TimeMilli now        = TimerMilli::GetNow();
-    TimeMilli nextExpire = now.GetDistantFuture();
+    NextFireTime nextExpire;
 
     for (ProxyQuery &query : mProxyQueries)
     {
@@ -1186,13 +1185,13 @@ void Server::HandleTimer(void)
 
         info.ReadFrom(query);
 
-        if (info.mExpireTime <= now)
+        if (info.mExpireTime <= nextExpire.GetNow())
         {
             Finalize(query, Header::kResponseSuccess);
         }
         else
         {
-            nextExpire = Min(nextExpire, info.mExpireTime);
+            nextExpire.UpdateIfEarlier(info.mExpireTime);
         }
     }
 
@@ -1204,21 +1203,18 @@ void Server::HandleTimer(void)
             continue;
         }
 
-        if (query.GetExpireTime() <= now)
+        if (query.GetExpireTime() <= nextExpire.GetNow())
         {
             otPlatDnsCancelUpstreamQuery(&GetInstance(), &query);
         }
         else
         {
-            nextExpire = Min(nextExpire, query.GetExpireTime());
+            nextExpire.UpdateIfEarlier(query.GetExpireTime());
         }
     }
 #endif
 
-    if (nextExpire != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextExpire);
-    }
+    mTimer.FireAtIfEarlier(nextExpire);
 }
 
 void Server::Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode)

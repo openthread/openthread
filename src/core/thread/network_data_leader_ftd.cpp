@@ -1434,8 +1434,7 @@ void Leader::ContextIds::SetRemoveTime(uint8_t aId, TimeMilli aTime)
 
 void Leader::ContextIds::HandleTimer(void)
 {
-    TimeMilli now      = TimerMilli::GetNow();
-    TimeMilli nextTime = now.GetDistantFuture();
+    NextFireTime nextTime;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     OT_ASSERT(!mIsClone);
@@ -1448,21 +1447,18 @@ void Leader::ContextIds::HandleTimer(void)
             continue;
         }
 
-        if (now >= GetRemoveTime(id))
+        if (nextTime.GetNow() >= GetRemoveTime(id))
         {
             MarkAsUnallocated(id);
             Get<Leader>().RemoveContext(id);
         }
         else
         {
-            nextTime = Min(nextTime, GetRemoveTime(id));
+            nextTime.UpdateIfEarlier(GetRemoveTime(id));
         }
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        Get<Leader>().mTimer.FireAt(nextTime);
-    }
+    Get<Leader>().mTimer.FireAt(nextTime);
 }
 
 } // namespace NetworkData

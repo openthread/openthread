@@ -1253,23 +1253,19 @@ exit:
 
 void AdvertisingProxy::HandleTimer(void)
 {
-    TimeMilli           now      = TimerMilli::GetNow();
-    TimeMilli           nextTime = now.GetDistantFuture();
+    NextFireTime        nextTime;
     OwningList<AdvInfo> expiredList;
 
     VerifyOrExit(mState == kStateRunning);
 
-    mAdvInfoList.RemoveAllMatching(AdvInfo::ExpirationChecker(now), expiredList);
+    mAdvInfoList.RemoveAllMatching(AdvInfo::ExpirationChecker(nextTime.GetNow()), expiredList);
 
     for (AdvInfo &adv : mAdvInfoList)
     {
-        nextTime = Min(adv.mExpireTime, nextTime);
+        nextTime.UpdateIfEarlier(adv.mExpireTime);
     }
 
-    if (nextTime != now.GetDistantFuture())
-    {
-        mTimer.FireAtIfEarlier(nextTime);
-    }
+    mTimer.FireAtIfEarlier(nextTime);
 
     for (AdvInfo &adv : expiredList)
     {

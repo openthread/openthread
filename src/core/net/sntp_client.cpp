@@ -227,8 +227,7 @@ void Client::FinalizeSntpTransaction(Message             &aQuery,
 
 void Client::HandleRetransmissionTimer(void)
 {
-    TimeMilli        now      = TimerMilli::GetNow();
-    TimeMilli        nextTime = now.GetDistantFuture();
+    NextFireTime     nextTime;
     QueryMetadata    queryMetadata;
     Ip6::MessageInfo messageInfo;
 
@@ -236,7 +235,7 @@ void Client::HandleRetransmissionTimer(void)
     {
         queryMetadata.ReadFrom(message);
 
-        if (now >= queryMetadata.mTransmissionTime)
+        if (nextTime.GetNow() >= queryMetadata.mTransmissionTime)
         {
             if (queryMetadata.mRetransmissionCount >= kMaxRetransmit)
             {
@@ -247,7 +246,7 @@ void Client::HandleRetransmissionTimer(void)
 
             // Increment retransmission counter and timer.
             queryMetadata.mRetransmissionCount++;
-            queryMetadata.mTransmissionTime = now + kResponseTimeout;
+            queryMetadata.mTransmissionTime = nextTime.GetNow() + kResponseTimeout;
             queryMetadata.UpdateIn(message);
 
             // Retransmit
@@ -258,13 +257,10 @@ void Client::HandleRetransmissionTimer(void)
             SendCopy(message, messageInfo);
         }
 
-        nextTime = Min(nextTime, queryMetadata.mTransmissionTime);
+        nextTime.UpdateIfEarlier(queryMetadata.mTransmissionTime);
     }
 
-    if (nextTime < now.GetDistantFuture())
-    {
-        mRetransmissionTimer.FireAt(nextTime);
-    }
+    mRetransmissionTimer.FireAt(nextTime);
 }
 
 void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

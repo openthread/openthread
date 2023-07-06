@@ -598,8 +598,7 @@ void Commissioner::HandleTimer(void)
 
 void Commissioner::HandleJoinerExpirationTimer(void)
 {
-    TimeMilli now  = TimerMilli::GetNow();
-    TimeMilli next = now.GetDistantFuture();
+    NextFireTime nextTime;
 
     for (Joiner &joiner : mJoiners)
     {
@@ -608,21 +607,18 @@ void Commissioner::HandleJoinerExpirationTimer(void)
             continue;
         }
 
-        if (joiner.mExpirationTime <= now)
+        if (joiner.mExpirationTime <= nextTime.GetNow())
         {
             LogDebg("removing joiner due to timeout or successfully joined");
             RemoveJoinerEntry(joiner);
         }
         else
         {
-            next = Min(joiner.mExpirationTime, next);
+            nextTime.UpdateIfEarlier(joiner.mExpirationTime);
         }
     }
 
-    if (next != now.GetDistantFuture())
-    {
-        mJoinerExpirationTimer.FireAtIfEarlier(next);
-    }
+    mJoinerExpirationTimer.FireAtIfEarlier(nextTime);
 }
 
 Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength)
