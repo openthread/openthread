@@ -147,7 +147,7 @@ uint32_t HalInterface::GetBusSpeed(void) const
 
 otError HalInterface::HardwareReset(void)
 {
-    mThreadChip->reset();
+    mThreadChip->hardwareReset();
     return OT_ERROR_NONE;
 }
 
@@ -266,6 +266,10 @@ otError HalInterface::StatusToError(ScopedAStatus &aStatus)
     else if (aStatus.getExceptionCode() == EX_ILLEGAL_ARGUMENT)
     {
         error = OT_ERROR_INVALID_ARGS;
+    }
+    else if (aStatus.getExceptionCode() == EX_UNSUPPORTED_OPERATION)
+    {
+        error = OT_ERROR_NOT_IMPLEMENTED;
     }
     else if (aStatus.getExceptionCode() == EX_SERVICE_SPECIFIC)
     {
