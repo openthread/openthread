@@ -32,6 +32,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/num_utils.hpp"
 #include "common/timer.hpp"
 
 enum
@@ -650,14 +651,20 @@ int TestTimerTime(void)
             VerifyOrQuit(t1 - t2 == duration, "Time difference failed");
 
             t2 = t1.GetDistantFuture();
-            VerifyOrQuit((t1 < t2), "GetDistanceFuture() failed");
+            VerifyOrQuit((t1 < t2) && !(t1 > t2), "GetDistanceFuture() failed");
             t2 += 1;
-            VerifyOrQuit(!(t1 < t2), "GetDistanceFuture() failed");
+            VerifyOrQuit(!(t1 < t2) || (t1 > t2), "GetDistanceFuture() failed");
 
             t2 = t1.GetDistantPast();
-            VerifyOrQuit((t1 > t2), "GetDistantPast() failed");
+            VerifyOrQuit((t1 > t2) && !(t1 < t2), "GetDistantPast() failed");
             t2 -= 1;
-            VerifyOrQuit(!(t1 > t2), "GetDistantPast() failed");
+            VerifyOrQuit(!(t1 > t2) || (t1 < t2), "GetDistantPast() failed");
+
+            VerifyOrQuit(Min(t1, t1.GetDistantFuture()) == t1);
+            VerifyOrQuit(Min(t1.GetDistantFuture(), t1) == t1);
+
+            VerifyOrQuit(Max(t1, t1.GetDistantPast()) == t1);
+            VerifyOrQuit(Max(t1.GetDistantPast(), t1) == t1);
 
             printf("--> PASSED\n");
         }
