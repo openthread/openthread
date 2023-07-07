@@ -644,6 +644,13 @@ public:
         mParentResponseCallback.Set(aCallback, aContext);
     }
 #endif
+    /**
+     * Notifies MLE whether the Child ID Request message was transmitted successfully.
+     *
+     * @param[in]  aMessage  The transmitted message.
+     *
+     */
+    void HandleChildIdRequestTxDone(Message &aMessage);
 
     /**
      * Requests MLE layer to prepare and send a shorter version of Child ID Request message by only
