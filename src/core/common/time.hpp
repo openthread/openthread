@@ -259,9 +259,15 @@ public:
     static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
-    static constexpr uint32_t kDistantFuture = (1UL << 31);
-
-    uint32_t mValue;
+    /**
+     * minus 1 to guarantee that `now.GetDistantFuture()` is a future time, and `now.GetDistantPast()` is a past time:
+     *  - `Min(now, now.GetDistantFuture())` and `Min(now.GetDistantFuture(), now)` all return `now`
+     *  - `Max(now, now.GetDistantFuture())` and `Max(now.GetDistantFuture(), now)` all return `now.GetDistantFuture()`
+     *  - `Min(now, now.GetDistantPast())` and `Min(now.GetDistantPast(), now)` all return `now.GetDistantPast()`
+     *  - `Max(now, now.GetDistantPast())` and `Max(now.GetDistantPast(), now)` all return `now`
+     */
+    static constexpr uint32_t kDistantFuture = ((1UL << 31) - 1);
+    uint32_t                  mValue;
 };
 
 /**
