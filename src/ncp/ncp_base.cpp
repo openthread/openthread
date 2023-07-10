@@ -363,7 +363,7 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
 
     mCurCommandIid = SPINEL_HEADER_GET_IID(header);
 
-    if (mCurCommandIid > SPINEL_HEADER_IID_MAX)
+    if (mCurCommandIid >= kSpinelHeaderMaxNumIid)
     {
         IgnoreError(WriteLastStatusFrame(header, SPINEL_STATUS_INVALID_INTERFACE));
         ExitNow();

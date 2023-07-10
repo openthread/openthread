@@ -132,7 +132,9 @@ void NcpBase::LinkRawReceiveDone(otRadioFrame *aFrame, otError aError)
 {
     uint8_t header = SPINEL_HEADER_FLAG;
 
-    header |= ((aFrame->mIid <= SPINEL_HEADER_IID_MAX) ? SPINEL_HEADER_IID(aFrame->mIid) : SPINEL_HEADER_IID_0);
+    OT_ASSERT(aFrame->mIid < kSpinelHeaderMaxNumIid);
+
+    header |= SPINEL_HEADER_IID(aFrame->mIid);
 
     // Append frame header
     SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_STREAM_RAW));

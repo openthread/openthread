@@ -47,6 +47,16 @@ namespace ot {
 namespace Spinel {
 
 /**
+ * Maximum number of Spinel Interface IDs.
+ *
+ */
+#ifdef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
+#else
+static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
+#endif
+
+/**
  * The class for providing a OpenThread radio interface by talking with a radio-only
  * co-processor(RCP). The InterfaceType template parameter should provide the following
  * methods:
@@ -115,10 +125,12 @@ public:
      *
      * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
-     * @param[in]  aIid                        The IID of the Host Application.
+     * @param[in]  aIidList                    A Pointer to the list of IIDs to receive spinel frame from.
+     *                                         First entry must be the IID of the Host Application.
+     * @param[in]  aIidListLength              The Length of the @p aIidList.
      *
      */
-    void Init(bool aResetRadio, bool aSkipRcpCompatibilityCheck, spinel_iid_t aIid);
+    void Init(bool aResetRadio, bool aSkipRcpCompatibilityCheck, const spinel_iid_t *aIidList, uint8_t aIidListLength);
 
     /**
      * Deinitialize this radio transceiver.
@@ -1009,6 +1021,17 @@ private:
         return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
     }
 
+    /**
+     * Checks whether given interface ID is part of list of IIDs to be allowed.
+     *
+     * @param[in] aIid    Spinel Interface ID.
+     *
+     * @retval  TRUE    Given IID present in allow list.
+     * @retval  FALSE   Otherwise.
+     *
+     */
+    inline bool IsFrameForUs(spinel_iid_t aIid);
+
     void HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer);
     void HandleNotification(const uint8_t *aBuffer, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
@@ -1054,6 +1077,7 @@ private:
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
     spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
+    spinel_iid_t mIidList[kSpinelHeaderMaxNumIid]; ///< Array of interface ids to accept the incoming spinel frames.
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];

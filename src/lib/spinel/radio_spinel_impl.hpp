@@ -158,6 +158,22 @@ static inline void LogIfFail(const char *aText, otError aError)
     }
 }
 
+template <typename InterfaceType> inline bool RadioSpinel<InterfaceType>::IsFrameForUs(spinel_iid_t aIid)
+{
+    bool found = false;
+
+    for (spinel_iid_t iid : mIidList)
+    {
+        if (aIid == iid)
+        {
+            ExitNow(found = true);
+        }
+    }
+
+exit:
+    return found;
+}
+
 template <typename InterfaceType> void RadioSpinel<InterfaceType>::HandleReceivedFrame(void *aContext)
 {
     static_cast<RadioSpinel *>(aContext)->HandleReceivedFrame();
@@ -210,11 +226,15 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     , mRadioTimeOffset(UINT64_MAX)
 {
     mVersion[0] = '\0';
+    memset(mIidList, SPINEL_HEADER_INVALID_IID, sizeof(mIidList));
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
 }
 
 template <typename InterfaceType>
-void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aSkipRcpCompatibilityCheck, spinel_iid_t aIid)
+void RadioSpinel<InterfaceType>::Init(bool                aResetRadio,
+                                      bool                aSkipRcpCompatibilityCheck,
+                                      const spinel_iid_t *aIidList,
+                                      uint8_t             aIidListLength)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -224,7 +244,11 @@ void RadioSpinel<InterfaceType>::Init(bool aResetRadio, bool aSkipRcpCompatibili
     mResetRadioOnStartup = aResetRadio;
 #endif
 
-    mIid = aIid;
+    VerifyOrDie(aIidList != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aIidListLength != 0 && aIidListLength <= OT_ARRAY_LENGTH(mIidList), OT_EXIT_INVALID_ARGUMENTS);
+    mIid = aIidList[0];
+    memset(mIidList, SPINEL_HEADER_INVALID_IID, sizeof(mIidList));
+    memcpy(mIidList, aIidList, aIidListLength * sizeof(spinel_iid_t));
 
     ResetRcp(aResetRadio);
     SuccessOrExit(error = CheckSpinelVersion());
@@ -472,9 +496,8 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::HandleReceive
     LogSpinelFrame(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), false);
     unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 
-    // Accept spinel messages with the correct IID or broadcast IID 0.
     iid = SPINEL_HEADER_GET_IID(header);
-    if (iid != 0 && iid != mIid)
+    if (!IsFrameForUs(iid))
     {
         mRxFrameBuffer.DiscardFrame();
         ExitNow();

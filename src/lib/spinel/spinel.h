@@ -93,9 +93,6 @@
  *   response is not expected or needed, such as for unsolicited update
  *   commands sent to the host from the NCP.
  *
- *   In case of multiple IID support, the co-processor can use the IID value
- *   of zero to broadcast spinel frames to all the hosts.
- *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  *
  *   The command identifier is a 21-bit unsigned integer encoded in up to
@@ -4945,16 +4942,13 @@ typedef uint32_t spinel_prop_key_t;
 #define SPINEL_HEADER_IID_SHIFT 4
 #define SPINEL_HEADER_IID_MASK (3 << SPINEL_HEADER_IID_SHIFT)
 #define SPINEL_HEADER_IID(iid) (static_cast<uint8_t>((iid) << SPINEL_HEADER_IID_SHIFT))
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-#define SPINEL_HEADER_IID_MAX 3
-#else // !OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-#define SPINEL_HEADER_IID_MAX 0
-#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 
 #define SPINEL_HEADER_IID_0 SPINEL_HEADER_IID(0)
 #define SPINEL_HEADER_IID_1 SPINEL_HEADER_IID(1)
 #define SPINEL_HEADER_IID_2 SPINEL_HEADER_IID(2)
 #define SPINEL_HEADER_IID_3 SPINEL_HEADER_IID(3)
+
+#define SPINEL_HEADER_INVALID_IID 0xFF
 
 #define SPINEL_HEADER_GET_IID(x) (((x)&SPINEL_HEADER_IID_MASK) >> SPINEL_HEADER_IID_SHIFT)
 #define SPINEL_HEADER_GET_TID(x) (spinel_tid_t)(((x)&SPINEL_HEADER_TID_MASK) >> SPINEL_HEADER_TID_SHIFT)

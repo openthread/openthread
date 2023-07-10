@@ -72,6 +72,11 @@ public:
     {
         kSpinelCmdHeaderSize = 2, ///< Size of spinel command header (in bytes).
         kSpinelPropIdSize    = 3, ///< Size of spinel property identifier (in bytes).
+#ifdef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+        kSpinelHeaderMaxNumIid = 4, ///< Maximum number of Spinel Interface IDs.
+#else
+        kSpinelHeaderMaxNumIid = 1, ///< Maximum number of Spinel Interface IDs.
+#endif
     };
 
     /**
@@ -581,7 +586,7 @@ protected:
 
     uint8_t mTxBuffer[kTxBufferSize];
 
-    spinel_tid_t mNextExpectedTid[SPINEL_HEADER_IID_MAX + 1];
+    spinel_tid_t mNextExpectedTid[kSpinelHeaderMaxNumIid];
 
     uint8_t       mResponseQueueHead;
     uint8_t       mResponseQueueTail;
@@ -615,7 +620,7 @@ protected:
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    static constexpr uint16_t kPendingCommandQueueSize = SPINEL_HEADER_IID_MAX;
+    static constexpr uint16_t kPendingCommandQueueSize = kSpinelHeaderMaxNumIid - 1;
 
     enum PendingCommandType
     {

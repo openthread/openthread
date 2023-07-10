@@ -65,6 +65,8 @@ public:
 
 private:
     RadioUrl mRadioUrl;
+
+    void GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid]);
 };
 
 } // namespace Posix
