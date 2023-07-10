@@ -268,6 +268,23 @@ public:
      *
      * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
      *
+     * @param[in]   aMessage    A reference to the message.
+     * @param[in]   aType       The Type value to search for.
+     * @param[in]   aMaxSize    Maximum number of bytes to read.
+     * @param[out]  aTlv        A reference to the TLV that will be copied to.
+     * @param[out]  aOffset     A reference to return the offset to start of the TLV in @p aMessage.
+     *
+     * @retval kErrorNone       Successfully copied the TLV.
+     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
+     *
+     */
+    static Error FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv, uint16_t &aOffset);
+
+    /**
+     * Searches for and reads a requested TLV out of a given message.
+     *
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     *
      * @tparam      TlvType     The TlvType to search for (must be a sub-class of `Tlv`).
      *
      * @param[in]   aMessage    A reference to the message.
@@ -280,6 +297,26 @@ public:
     template <typename TlvType> static Error FindTlv(const Message &aMessage, TlvType &aTlv)
     {
         return FindTlv(aMessage, TlvType::kType, sizeof(TlvType), aTlv);
+    }
+
+    /**
+     * Searches for and reads a requested TLV out of a given message.
+     *
+     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
+     *
+     * @tparam      TlvType     The TlvType to search for (must be a sub-class of `Tlv`).
+     *
+     * @param[in]   aMessage    A reference to the message.
+     * @param[out]  aTlv        A reference to the TLV that will be copied to.
+     * @param[out]  aOffset     A reference to return the offset to start of the TLV in @p aMessage.
+     *
+     * @retval kErrorNone       Successfully copied the TLV.
+     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
+     *
+     */
+    template <typename TlvType> static Error FindTlv(const Message &aMessage, TlvType &aTlv, uint16_t &aOffset)
+    {
+        return FindTlv(aMessage, TlvType::kType, sizeof(TlvType), aTlv, aOffset);
     }
 
     /**
