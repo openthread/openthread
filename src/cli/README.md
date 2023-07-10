@@ -117,6 +117,7 @@ Done
 - [srp](README_SRP.md)
 - [tcp](README_TCP.md)
 - [thread](#thread-start)
+- [timeinqueue](#timeinqueue)
 - [trel](#trel)
 - [tvcheck](#tvcheck-enable)
 - [txpower](#txpower)
@@ -3359,6 +3360,97 @@ Get the Thread Version number.
 ```bash
 > thread version
 2
+Done
+```
+
+### timeinqueue
+
+Print the tx queue time-in-queue histogram.
+
+Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+
+The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message is added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+
+Each table row shows min and max time-in-queue (in milliseconds) followed by number of messages with time-in-queue within the specified min-max range. The histogram information is collected since the OpenThread instance was initialized or since the last time statistics collection was reset by the `timeinqueue reset` command.
+
+The collected statistics can be reset by `timeinqueue reset`.
+
+```bash
+> timeinqueue
+| Min  | Max  |Msg Count|
++------+------+---------+
+|    0 |    9 |    1537 |
+|   10 |   19 |     156 |
+|   20 |   29 |      57 |
+|   30 |   39 |     108 |
+|   40 |   49 |      60 |
+|   50 |   59 |      76 |
+|   60 |   69 |      88 |
+|   70 |   79 |      51 |
+|   80 |   89 |      86 |
+|   90 |   99 |      45 |
+|  100 |  109 |      43 |
+|  110 |  119 |      44 |
+|  120 |  129 |      38 |
+|  130 |  139 |      44 |
+|  140 |  149 |      35 |
+|  150 |  159 |      41 |
+|  160 |  169 |      34 |
+|  170 |  179 |      13 |
+|  180 |  189 |      24 |
+|  190 |  199 |       3 |
+|  200 |  209 |       0 |
+|  210 |  219 |       0 |
+|  220 |  229 |       2 |
+|  230 |  239 |       0 |
+|  240 |  249 |       0 |
+|  250 |  259 |       0 |
+|  260 |  269 |       0 |
+|  270 |  279 |       0 |
+|  280 |  289 |       0 |
+|  290 |  299 |       1 |
+|  300 |  309 |       0 |
+|  310 |  319 |       0 |
+|  320 |  329 |       0 |
+|  330 |  339 |       0 |
+|  340 |  349 |       0 |
+|  350 |  359 |       0 |
+|  360 |  369 |       0 |
+|  370 |  379 |       0 |
+|  380 |  389 |       0 |
+|  390 |  399 |       0 |
+|  400 |  409 |       0 |
+|  410 |  419 |       0 |
+|  420 |  429 |       0 |
+|  430 |  439 |       0 |
+|  440 |  449 |       0 |
+|  450 |  459 |       0 |
+|  460 |  469 |       0 |
+|  470 |  479 |       0 |
+|  480 |  489 |       0 |
+|  490 |  inf |       0 |
+Done
+```
+
+### timeinqueue max
+
+Print the maximum observed time-in-queue in milliseconds.
+
+Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+
+The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message is added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+
+```bash
+> timeinqueue max
+291
+```
+
+### timeinqueue reset
+
+Reset the TX queue time-in-queue statistics.
+
+```bash
+> timeinqueue reset
 Done
 ```
 

@@ -903,6 +903,63 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance);
 void otThreadResetIp6Counters(otInstance *aInstance);
 
 /**
+ * Gets the time-in-queue histogram for messages in the TX queue.
+ *
+ * Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+ *
+ * Histogram of the time-in-queue of messages in the transmit queue is collected. The time-in-queue is tracked for
+ * direct transmissions only and is measured as the duration from when a message is added to the transmit queue until
+ * it is passed to the MAC layer for transmission or dropped.
+ *
+ * The histogram is returned as an array of `uint32_t` values with `aNumBins` entries. The first entry in the array
+ * (at index 0) represents the number of messages with a time-in-queue less than `aBinInterval`. The second entry
+ * represents the number of messages with a time-in-queue greater than or equal to `aBinInterval`, but less than
+ * `2 * aBinInterval`. And so on. The last entry represents the number of messages with time-in-queue  greater than or
+ * equal to `(aNumBins - 1) * aBinInterval`.
+ *
+ * The collected statistics can be reset by calling `otThreadResetTimeInQueueStat()`. The histogram information is
+ * collected since the OpenThread instance was initialized or since the last time statistics collection was reset by
+ * calling the `otThreadResetTimeInQueueStat()`.
+ *
+ * Pointers @p aNumBins and @p aBinInterval MUST NOT be NULL.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ * @param[out] aNumBins       Pointer to return the number of bins in histogram (array length).
+ * @param[out] aBinInterval   Pointer to return the histogram bin interval length in milliseconds.
+ *
+ * @returns A pointer to an array of @p aNumBins entries representing the collected histogram info.
+ *
+ */
+const uint32_t *otThreadGetTimeInQueueHistogram(otInstance *aInstance, uint16_t *aNumBins, uint32_t *aBinInterval);
+
+/**
+ * Gets the maximum time-in-queue for messages in the TX queue.
+ *
+ * Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+ *
+ * The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message is
+ * added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+ *
+ * The collected statistics can be reset by calling `otThreadResetTimeInQueueStat()`.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The maximum time-in-queue in milliseconds for all messages in the TX queue (so far).
+ *
+ */
+uint32_t otThreadGetMaxTimeInQueue(otInstance *aInstance);
+
+/**
+ * Resets the TX queue time-in-queue statistics.
+ *
+ * Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ */
+void otThreadResetTimeInQueueStat(otInstance *aInstance);
+
+/**
  * Gets the Thread MLE counters.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.

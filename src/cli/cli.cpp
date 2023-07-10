@@ -6948,6 +6948,139 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
     return error;
 }
 
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli timeinqueue
+     * @code
+     * timeinqueue
+     * | Min  | Max  |Msg Count|
+     * +------+------+---------+
+     * |    0 |    9 |    1537 |
+     * |   10 |   19 |     156 |
+     * |   20 |   29 |      57 |
+     * |   30 |   39 |     108 |
+     * |   40 |   49 |      60 |
+     * |   50 |   59 |      76 |
+     * |   60 |   69 |      88 |
+     * |   70 |   79 |      51 |
+     * |   80 |   89 |      86 |
+     * |   90 |   99 |      45 |
+     * |  100 |  109 |      43 |
+     * |  110 |  119 |      44 |
+     * |  120 |  129 |      38 |
+     * |  130 |  139 |      44 |
+     * |  140 |  149 |      35 |
+     * |  150 |  159 |      41 |
+     * |  160 |  169 |      34 |
+     * |  170 |  179 |      13 |
+     * |  180 |  189 |      24 |
+     * |  190 |  199 |       3 |
+     * |  200 |  209 |       0 |
+     * |  210 |  219 |       0 |
+     * |  220 |  229 |       2 |
+     * |  230 |  239 |       0 |
+     * |  240 |  249 |       0 |
+     * |  250 |  259 |       0 |
+     * |  260 |  269 |       0 |
+     * |  270 |  279 |       0 |
+     * |  280 |  289 |       0 |
+     * |  290 |  299 |       1 |
+     * |  300 |  309 |       0 |
+     * |  310 |  319 |       0 |
+     * |  320 |  329 |       0 |
+     * |  330 |  339 |       0 |
+     * |  340 |  349 |       0 |
+     * |  350 |  359 |       0 |
+     * |  360 |  369 |       0 |
+     * |  370 |  379 |       0 |
+     * |  380 |  389 |       0 |
+     * |  390 |  399 |       0 |
+     * |  400 |  409 |       0 |
+     * |  410 |  419 |       0 |
+     * |  420 |  429 |       0 |
+     * |  430 |  439 |       0 |
+     * |  440 |  449 |       0 |
+     * |  450 |  459 |       0 |
+     * |  460 |  469 |       0 |
+     * |  470 |  479 |       0 |
+     * |  480 |  489 |       0 |
+     * |  490 |  inf |       0 |
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetTimeInQueueHistogram
+     * @csa{timeinqueue reset}
+     */
+    if (aArgs[0].IsEmpty())
+    {
+        static const char *const kTimeInQueueTableTitles[]       = {"Min", "Max", "Msg Count"};
+        static const uint8_t     kTimeInQueueTableColumnWidths[] = {6, 6, 9};
+
+        uint16_t        numBins;
+        uint32_t        binInterval;
+        const uint32_t *histogram;
+
+        OutputTableHeader(kTimeInQueueTableTitles, kTimeInQueueTableColumnWidths);
+
+        histogram = otThreadGetTimeInQueueHistogram(GetInstancePtr(), &numBins, &binInterval);
+
+        for (uint16_t index = 0; index < numBins; index++)
+        {
+            OutputFormat("| %4lu | ", ToUlong(index * binInterval));
+
+            if (index < numBins - 1)
+            {
+                OutputFormat("%4lu", ToUlong((index + 1) * binInterval - 1));
+            }
+            else
+            {
+                OutputFormat("%4s", "inf");
+            }
+
+            OutputLine(" | %7lu |", ToUlong(histogram[index]));
+        }
+    }
+    /**
+     * @cli timeinqueue max
+     * @code
+     * timeinqueue max
+     * 281
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetMaxTimeInQueue
+     * @csa{timeinqueue reset}
+     */
+    else if (aArgs[0] == "max")
+    {
+        OutputLine("%lu", ToUlong(otThreadGetMaxTimeInQueue(GetInstancePtr())));
+    }
+    /**
+     * @cli timeinqueue reset
+     * @code
+     * timeinqueue reset
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadResetTimeInQueueStat
+     */
+    else if (aArgs[0] == "reset")
+    {
+        otThreadResetTimeInQueueStat(GetInstancePtr());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+
 template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
 
 template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
@@ -7988,6 +8121,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("tcp"),
 #endif
         CmdEntry("thread"),
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+        CmdEntry("timeinqueue"),
+#endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
         CmdEntry("trel"),
 #endif

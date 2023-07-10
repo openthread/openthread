@@ -132,6 +132,10 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
 #if OPENTHREAD_FTD
     mFragmentPriorityList.Clear();
 #endif
+
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+    mTxQueueStats.Clear();
+#endif
 }
 
 void MeshForwarder::Start(void)
@@ -380,6 +384,9 @@ Error MeshForwarder::UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend)
 exit:
     if (error == kErrorDrop)
     {
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+        mTxQueueStats.UpdateFor(aMessage);
+#endif
         LogMessage(kMessageQueueMgmtDrop, aMessage);
         aMessage.ClearDirectTransmission();
         RemoveMessageIfNoPendingTx(aMessage);
@@ -503,6 +510,23 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
 
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+const uint32_t *MeshForwarder::TxQueueStats::GetHistogram(uint16_t &aNumBins, uint32_t &aBinInterval) const
+{
+    aNumBins     = kNumHistBins;
+    aBinInterval = kHistBinInterval;
+    return mHistogram;
+}
+
+void MeshForwarder::TxQueueStats::UpdateFor(const Message &aMessage)
+{
+    uint32_t timeInQueue = TimerMilli::GetNow() - aMessage.GetTimestamp();
+
+    mHistogram[Min<uint32_t>(timeInQueue / kHistBinInterval, kNumHistBins - 1)]++;
+    mMaxInterval = Max(mMaxInterval, timeInQueue);
+}
+#endif
+
 void MeshForwarder::ScheduleTransmissionTask(void)
 {
     VerifyOrExit(!mSendBusy && !mTxPaused);
@@ -585,6 +609,9 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
         switch (error)
         {
         case kErrorNone:
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+            mTxQueueStats.UpdateFor(*curMessage);
+#endif
             ExitNow();
 
 #if OPENTHREAD_FTD
@@ -594,6 +621,9 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 #endif
 
         default:
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+            mTxQueueStats.UpdateFor(*curMessage);
+#endif
             LogMessage(kMessageDrop, *curMessage, error);
             mSendQueue.DequeueAndFree(*curMessage);
             continue;

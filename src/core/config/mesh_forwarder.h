@@ -34,6 +34,8 @@
 #ifndef CONFIG_MESH_FORWARDER_H_
 #define CONFIG_MESH_FORWARDER_H_
 
+#include "config/border_router.h"
+
 /**
  * @def OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
  *
@@ -146,6 +148,56 @@
 #else
 #define OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE 0
 #endif
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+ *
+ * Define as 1 to enable TX queue time-in-queue statistics collection feature.
+ *
+ * When enabled, histogram of the time-in-queue of messages in the transmit queue is collected. The time-in-queue is
+ * tracked for direct transmissions only and is measured as the duration from when a message is added to the transmit
+ * queue until it is passed to the MAC layer for transmission or dropped.
+ *
+ * The histogram data consists of number of bins, each representing a range of time-in-queue values. The bin interval
+ * length is specified by the `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL` configuration, and the
+ * maximum tracked interval is given by the `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL`.
+ *
+ * Along with histogram, the maximum observed time-in-queue is also tracked.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+#define OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE (OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_FTD)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL
+ *
+ * Specifies the maximum time-in-queue interval in milliseconds tracked by the histogram when the TX queue time-in-queue
+ * statistics collection feature is enabled.
+ *
+ * By default the `OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_MARK_ECN_INTERVAL` is used which defines the
+ * maximum time-in-queue interval after which a non-ECN capable message is dropped by delay-aware queue management
+ * feature.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL
+#define OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL \
+    OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_MARK_ECN_INTERVAL
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL
+ *
+ * Specifies the time-in-queue histogram bin interval in milliseconds when the TX queue time-in-queue statistics
+ * collection feature is enabled.
+ *
+ * The number of bins is calculated by dividing `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_MAX_INTERVAL` by
+ * `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL` and rounding up to the nearest integer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL
+#define OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL 10
 #endif
 
 #endif // CONFIG_MESH_FORWARDER_H_
