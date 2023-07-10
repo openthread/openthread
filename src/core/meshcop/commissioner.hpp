@@ -549,8 +549,6 @@ private:
     void HandleTimer(void);
     void HandleJoinerExpirationTimer(void);
 
-    void UpdateJoinerExpirationTimer(void);
-
     static void HandleMgmtCommissionerSetResponse(void                *aContext,
                                                   otMessage           *aMessage,
                                                   const otMessageInfo *aMessageInfo,
