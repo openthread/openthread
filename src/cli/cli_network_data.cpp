@@ -134,6 +134,11 @@ void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, Flags
         *flagsPtr++ = 'n';
     }
 
+    if (aConfig.mAdvPio)
+    {
+        *flagsPtr++ = 'a';
+    }
+
     *flagsPtr = '\0';
 }
 

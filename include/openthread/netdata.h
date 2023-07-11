@@ -94,6 +94,7 @@ typedef struct otExternalRouteConfig
     bool        mNat64 : 1;               ///< Whether this is a NAT64 prefix.
     bool        mStable : 1;              ///< Whether this configuration is considered Stable Network Data.
     bool        mNextHopIsThisDevice : 1; ///< Whether the next hop is this device (value ignored on config add).
+    bool        mAdvPio : 1;              ///< Whether or not BR is advertising a ULA prefix in PIO (AP flag).
 } otExternalRouteConfig;
 
 /**

@@ -97,7 +97,7 @@ def check_published_route_1():
     verify(br.br_get_state() == 'running')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s med'))
+    verify(routes[0].startswith('fc00::/7 sa med'))
     verify(br.br_get_routeprf() == 'med')
 
 
@@ -118,7 +118,7 @@ def check_published_route_2():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s low'))
+    verify(routes[0].startswith('fc00::/7 sa low'))
     verify(br.br_get_routeprf() == 'low')
 
 
@@ -135,7 +135,7 @@ def check_published_route_3():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s high'))
+    verify(routes[0].startswith('fc00::/7 sa high'))
     verify(br.br_get_routeprf() == 'high')
 
 
@@ -148,7 +148,7 @@ def check_published_route_4():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s med'))
+    verify(routes[0].startswith('fc00::/7 sa med'))
     verify(br.br_get_routeprf() == 'med')
 
 
@@ -166,7 +166,7 @@ def check_published_route_5():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s low'))
+    verify(routes[0].startswith('fc00::/7 sa low'))
     verify(br.br_get_routeprf() == 'low')
 
 
@@ -183,7 +183,7 @@ def check_published_route_6():
     verify(br.get_state() == 'router')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s med'))
+    verify(routes[0].startswith('fc00::/7 sa med'))
     verify(br.br_get_routeprf() == 'med')
 
 
@@ -204,7 +204,7 @@ def check_published_route_7():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s med'))
+    verify(routes[0].startswith('fc00::/7 sa med'))
     verify(br.br_get_routeprf() == 'med')
 
 
@@ -224,7 +224,7 @@ def check_published_route_8():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s low'))
+    verify(routes[0].startswith('fc00::/7 sa low'))
     verify(br.br_get_routeprf() == 'low')
 
 
@@ -247,7 +247,7 @@ def check_published_route_9():
     verify(br.get_state() == 'child')
     routes = br.get_netdata_routes()
     verify(len(routes) == 1)
-    verify(routes[0].startswith('fc00::/7 s med'))
+    verify(routes[0].startswith('fc00::/7 sa med'))
     verify(br.br_get_routeprf() == 'med')
 
 

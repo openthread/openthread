@@ -468,6 +468,15 @@ public:
     bool IsNat64(void) const { return (mFlags & kNat64Flag) != 0; }
 
     /**
+     * Indicates whether or not the Advertising PIO (AP) flag is set.
+     *
+     * @retval TRUE   If the AP flag is set.
+     * @retval FALSE  If the AP flag is not set.
+     *
+     */
+    bool IsAdvPio(void) const { return (mFlags & kAdvPioFlag) != 0; }
+
+    /**
      * Returns a pointer to the next HasRouteEntry.
      *
      * @returns A pointer to the next HasRouteEntry.
@@ -508,6 +517,7 @@ private:
     static constexpr uint8_t kPreferenceOffset = 6;
     static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
     static constexpr uint8_t kNat64Flag        = 1 << 5;
+    static constexpr uint8_t kAdvPioFlag       = 1 << 4;
 
     uint16_t mRloc;
     uint8_t  mFlags;

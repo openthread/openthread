@@ -297,6 +297,7 @@ Publish an external route entry.
 
 - s: Stable flag
 - n: NAT64 flag
+- a: Advertising PIO (AP) flag
 - prf: Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
@@ -312,6 +313,7 @@ If there is no previously published external route matching old prefix, this com
 
 - s: Stable flag
 - n: NAT64 flag
+- a: Advertising PIO (AP) flag
 - prf: Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
@@ -358,6 +360,7 @@ External Routes are listed under `Routes` header:
 - Flags
   - s: Stable flag
   - n: NAT64 flag
+  - a: Advertising PIO (AP) flag
 - Preference `high`, `med`, or `low`
 - RLOC16 of device which added the route prefix
 

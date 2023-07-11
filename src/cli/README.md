@@ -3020,12 +3020,13 @@ Get the external route list in the local Network Data.
 Done
 ```
 
-### route add \<prefix\> [sn][prf]
+### route add \<prefix\> [sna][prf]
 
 Add a valid external route to the Network Data.
 
 - s: Stable flag
 - n: NAT64 flag
+- a: Advertising PIO (AP) flag
 - prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash

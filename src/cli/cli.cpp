@@ -6321,6 +6321,10 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
                     aConfig.mNat64 = true;
                     break;
 
+                case 'a':
+                    aConfig.mAdvPio = true;
+                    break;
+
                 case '-':
                     break;
 
