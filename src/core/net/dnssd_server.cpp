@@ -754,31 +754,46 @@ Header::Response Server::ResolveQuestionBySrp(const char       *aName,
                                               NameCompressInfo &aCompressInfo,
                                               bool              aAdditional)
 {
-    Error                    error    = kErrorNone;
-    const Srp::Server::Host *host     = nullptr;
-    TimeMilli                now      = TimerMilli::GetNow();
-    uint16_t                 qtype    = aQuestion.GetType();
-    Header::Response         response = Header::kResponseNameError;
+    Error            error    = kErrorNone;
+    TimeMilli        now      = TimerMilli::GetNow();
+    uint16_t         qtype    = aQuestion.GetType();
+    Header::Response response = Header::kResponseNameError;
 
-    while ((host = GetNextSrpHost(host)) != nullptr)
+    for (const Srp::Server::Host &host : Get<Srp::Server>().GetHosts())
     {
         bool        needAdditionalAaaaRecord = false;
-        const char *hostName                 = host->GetFullName();
+        const char *hostName                 = host.GetFullName();
+
+        if (host.IsDeleted())
+        {
+            continue;
+        }
 
         // Handle PTR/SRV/TXT query
         if (qtype == ResourceRecord::kTypePtr || qtype == ResourceRecord::kTypeSrv || qtype == ResourceRecord::kTypeTxt)
         {
-            const Srp::Server::Service *service = nullptr;
-
-            while ((service = GetNextSrpService(*host, service)) != nullptr)
+            for (const Srp::Server::Service &service : host.GetServices())
             {
-                uint32_t    instanceTtl         = TimeMilli::MsecToSec(service->GetExpireTime() - TimerMilli::GetNow());
-                const char *instanceName        = service->GetInstanceName();
-                bool        serviceNameMatched  = service->MatchesServiceName(aName);
-                bool        instanceNameMatched = service->MatchesInstanceName(aName);
-                bool        ptrQueryMatched     = qtype == ResourceRecord::kTypePtr && serviceNameMatched;
-                bool        srvQueryMatched     = qtype == ResourceRecord::kTypeSrv && instanceNameMatched;
-                bool        txtQueryMatched     = qtype == ResourceRecord::kTypeTxt && instanceNameMatched;
+                uint32_t    instanceTtl;
+                const char *instanceName;
+                bool        serviceNameMatched;
+                bool        instanceNameMatched;
+                bool        ptrQueryMatched;
+                bool        srvQueryMatched;
+                bool        txtQueryMatched;
+
+                if (service.IsDeleted())
+                {
+                    continue;
+                }
+
+                instanceTtl         = TimeMilli::MsecToSec(service.GetExpireTime() - TimerMilli::GetNow());
+                instanceName        = service.GetInstanceName();
+                serviceNameMatched  = service.MatchesServiceName(aName) || service.HasSubTypeServiceName(aName);
+                instanceNameMatched = service.MatchesInstanceName(aName);
+                ptrQueryMatched     = qtype == ResourceRecord::kTypePtr && serviceNameMatched;
+                srvQueryMatched     = qtype == ResourceRecord::kTypeSrv && instanceNameMatched;
+                txtQueryMatched     = qtype == ResourceRecord::kTypeTxt && instanceNameMatched;
 
                 if (ptrQueryMatched || srvQueryMatched)
                 {
@@ -798,8 +813,8 @@ Header::Response Server::ResolveQuestionBySrp(const char       *aName,
                      !HasQuestion(aResponseHeader, aResponseMessage, instanceName, ResourceRecord::kTypeSrv)))
                 {
                     SuccessOrExit(error = AppendSrvRecord(aResponseMessage, instanceName, hostName, instanceTtl,
-                                                          service->GetPriority(), service->GetWeight(),
-                                                          service->GetPort(), aCompressInfo));
+                                                          service.GetPriority(), service.GetWeight(), service.GetPort(),
+                                                          aCompressInfo));
                     IncResourceRecordCount(aResponseHeader, aAdditional);
                     response = Header::kResponseSuccess;
                 }
@@ -808,8 +823,8 @@ Header::Response Server::ResolveQuestionBySrp(const char       *aName,
                     (aAdditional && ptrQueryMatched &&
                      !HasQuestion(aResponseHeader, aResponseMessage, instanceName, ResourceRecord::kTypeTxt)))
                 {
-                    SuccessOrExit(error = AppendTxtRecord(aResponseMessage, instanceName, service->GetTxtData(),
-                                                          service->GetTxtDataLength(), instanceTtl, aCompressInfo));
+                    SuccessOrExit(error = AppendTxtRecord(aResponseMessage, instanceName, service.GetTxtData(),
+                                                          service.GetTxtDataLength(), instanceTtl, aCompressInfo));
                     IncResourceRecordCount(aResponseHeader, aAdditional);
                     response = Header::kResponseSuccess;
                 }
@@ -817,13 +832,13 @@ Header::Response Server::ResolveQuestionBySrp(const char       *aName,
         }
 
         // Handle AAAA query
-        if ((!aAdditional && qtype == ResourceRecord::kTypeAaaa && host->Matches(aName)) ||
+        if ((!aAdditional && qtype == ResourceRecord::kTypeAaaa && host.Matches(aName)) ||
             (aAdditional && needAdditionalAaaaRecord &&
              !HasQuestion(aResponseHeader, aResponseMessage, hostName, ResourceRecord::kTypeAaaa)))
         {
             uint8_t             addrNum;
-            const Ip6::Address *addrs   = host->GetAddresses(addrNum);
-            uint32_t            hostTtl = TimeMilli::MsecToSec(host->GetExpireTime() - now);
+            const Ip6::Address *addrs   = host.GetAddresses(addrNum);
+            uint32_t            hostTtl = TimeMilli::MsecToSec(host.GetExpireTime() - now);
 
             for (uint8_t i = 0; i < addrNum; i++)
             {
@@ -839,23 +854,6 @@ exit:
     return error == kErrorNone ? response : Header::kResponseServerFailure;
 }
 
-const Srp::Server::Host *Server::GetNextSrpHost(const Srp::Server::Host *aHost)
-{
-    const Srp::Server::Host *host = Get<Srp::Server>().GetNextHost(aHost);
-
-    while (host != nullptr && host->IsDeleted())
-    {
-        host = Get<Srp::Server>().GetNextHost(host);
-    }
-
-    return host;
-}
-
-const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host    &aHost,
-                                                      const Srp::Server::Service *aService)
-{
-    return aHost.FindNextService(aService, Srp::Server::kFlagsAnyTypeActiveService);
-}
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 Error Server::ResolveByQueryCallbacks(Header                 &aResponseHeader,

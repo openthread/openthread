@@ -74,64 +74,6 @@ typedef struct otSrpServerService otSrpServerService;
 typedef uint32_t otSrpServerServiceUpdateId;
 
 /**
- * The service flag type to indicate which services to include or exclude when searching in (or iterating over) the
- * list of SRP services.
- *
- * This is a combination of bit-flags. The specific bit-flags are defined in the enumeration `OT_SRP_SERVER_FLAG_*`.
- *
- */
-typedef uint8_t otSrpServerServiceFlags;
-
-enum
-{
-    OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE = 1 << 0, ///< Include base services (not a sub-type).
-    OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE  = 1 << 1, ///< Include sub-type services.
-    OT_SRP_SERVER_SERVICE_FLAG_ACTIVE    = 1 << 2, ///< Include active (not deleted) services.
-    OT_SRP_SERVER_SERVICE_FLAG_DELETED   = 1 << 3, ///< Include deleted services.
-};
-
-enum
-{
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any service (base/sub-type,
-     * active/deleted).
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_SERVICE = (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-                                       OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting base service only.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting sub-type service only.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY =
-        (OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE | OT_SRP_SERVER_SERVICE_FLAG_DELETED),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any active service (not deleted).
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_TYPE_ACTIVE_SERVICE =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-         OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
-
-    /**
-     * This constant defines an `otSrpServerServiceFlags` combination accepting any deleted service.
-     *
-     */
-    OT_SRP_SERVER_FLAGS_ANY_TYPE_DELETED_SERVICE =
-        (OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE | OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE |
-         OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
-};
-
-/**
  * Represents the state of the SRP server.
  *
  */
@@ -506,6 +448,21 @@ bool otSrpServerHostIsDeleted(const otSrpServerHost *aHost);
 const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost);
 
 /**
+ * Indicates whether the host matches a given host name.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in]  aHost       A pointer to the SRP service host.
+ * @param[in]  aFullName   A full host name.
+ *
+ * @retval  TRUE   If host matches the host name.
+ * @retval  FALSE  If host does not match the host name.
+ *
+ */
+bool otSrpServerHostMatchesFullName(const otSrpServerHost *aHost, const char *aFullName);
+
+/**
  * Returns the addresses of given host.
  *
  * @param[in]   aHost          A pointer to the SRP service host.
@@ -526,10 +483,7 @@ const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, ui
 void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseInfo *aLeaseInfo);
 
 /**
- * Returns the next service (excluding any sub-type services) of given host.
- *
- * @note This function is being deprecated and will be removed. `otSrpServerHostFindNextService()` can be used
- *       instead.
+ * Returns the next service of given host.
  *
  * @param[in]  aHost     A pointer to the SRP service host.
  * @param[in]  aService  A pointer to current SRP service instance; use NULL to get the first service.
@@ -539,44 +493,6 @@ void otSrpServerHostGetLeaseInfo(const otSrpServerHost *aHost, otSrpServerLeaseI
  */
 const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService);
-
-/**
- * Finds the next matching service on the host.
- *
- * The combination of flags and service and instance names enables iterating over the full list of services and/or a
- * subset of them matching certain conditions, or finding a specific service.
- *
- * To iterate over all services of a host:
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_ANY_SERVICE, NULL, NULL);
- *
- * To iterate over base services only (exclude sub-types):
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY, NULL, NULL);
- *
- * To iterate over sub-types of a specific instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY, NULL,
- *                                            instanceName);
- *
- * To find a specific service with service name `serviceName` and service instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_ANY_SERVICE, serviceName, instanceName);
- *
- * To find the base type service with a given service instance name `instanceName`:
- *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY, NULL,
- *                                            instanceName);
- *
- * @param[in] aHost          A pointer to the SRP service host (MUST NOT be NULL).
- * @param[in] aPrevService   A pointer to the previous service or NULL to start from the beginning of the list.
- * @param[in] aFlags         Flags indicating which services to include (base/sub-type, active/deleted).
- * @param[in] aServiceName   The service name to match. Set to NULL to accept any name.
- * @param[in] aInstanceName  The service instance name to match. Set to NULL to accept any name.
- *
- * @returns  A pointer to the next matching service or NULL if no matching service could be found.
- *
- */
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
-                                                         const otSrpServerService *aPrevService,
-                                                         otSrpServerServiceFlags   aFlags,
-                                                         const char               *aServiceName,
-                                                         const char               *aInstanceName);
 
 /**
  * Indicates whether or not the SRP service has been deleted.
@@ -593,29 +509,6 @@ const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost  
 bool otSrpServerServiceIsDeleted(const otSrpServerService *aService);
 
 /**
- * Indicates whether or not the SRP service is sub-type.
- *
- * @param[in]  aService  A pointer to the SRP service.
- *
- * @returns  TRUE if the service is a sub-type, FALSE if not.
- *
- */
-bool otSrpServerServiceIsSubType(const otSrpServerService *aService);
-
-/**
- * Returns the full service instance name of the service.
- *
- * @note This function is being deprecated and will be removed. `otSrpServerServiceGetInstanceName()` can be used
- *       instead.
- *
- * @param[in]  aService  A pointer to the SRP service.
- *
- * @returns  A pointer to the null-terminated service instance name string.
- *
- */
-const char *otSrpServerServiceGetFullName(const otSrpServerService *aService);
-
-/**
  * Returns the full service instance name of the service.
  *
  * @param[in]  aService  A pointer to the SRP service.
@@ -624,6 +517,31 @@ const char *otSrpServerServiceGetFullName(const otSrpServerService *aService);
  *
  */
 const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService);
+
+/**
+ * Indicates whether this service matches a given service instance name.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in]  aService       A pointer to the SRP service.
+ * @param[in]  aInstanceName  The service instance name.
+ *
+ * @retval  TRUE   If service matches the service instance name.
+ * @retval  FALSE  If service does not match the service instance name.
+ *
+ */
+bool otSrpServerServiceMatchesInstanceName(const otSrpServerService *aService, const char *aInstanceName);
+
+/**
+ * Returns the service instance label (first label in instance name) of the service.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns  A pointer to the null-terminated service instance label string..
+ *
+ */
+const char *otSrpServerServiceGetInstanceLabel(const otSrpServerService *aService);
 
 /**
  * Returns the full service name of the service.
@@ -636,27 +554,74 @@ const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService
 const char *otSrpServerServiceGetServiceName(const otSrpServerService *aService);
 
 /**
- * Gets the sub-type label from service name.
+ * Indicates whether this service matches a given service name.
  *
- * Is intended to be used when the @p aService is a sub-type, i.e., `otSrpServerServiceIsSubType()` for
- * the service returns TRUE. If it is not a sub-type this function returns `OT_ERROR_INVALID_ARGS`.
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
  *
- * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.". This function
- * copies the `<sub-label>` into the @p aLabel buffer.
+ * @param[in]  aService       A pointer to the SRP service.
+ * @param[in]  aServiceName  The service  name.
  *
- * The @p aLabel is ensured to always be null-terminated after returning even in case of failure.
- *
- * @param[in]  aService           A pointer to the SRP service.
- * @param[out] aLabel             A pointer to a buffer to copy the sub-type label name into.
- * @param[in]  aMaxSize           Maximum size of @p aLabel buffer.
- *
- * @retval OT_ERROR_NONE          @p aLabel was updated successfully.
- * @retval OT_ERROR_NO_BUFS       The sub-type label could not fit in @p aLabel buffer (number of chars from label
- *                                that could fit are copied in @p aLabel ensuring it is null-terminated).
- * @retval OT_ERROR_INVALID_ARGS  SRP service is not a sub-type.
+ * @retval  TRUE   If service matches the service name.
+ * @retval  FALSE  If service does not match the service name.
  *
  */
-otError otSrpServerServiceGetServiceSubTypeLabel(const otSrpServerService *aService, char *aLabel, uint8_t aMaxSize);
+bool otSrpServerServiceMatchesServiceName(const otSrpServerService *aService, const char *aServiceName);
+
+/**
+ * Gets the number of sub-types of the service.
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ *
+ * @returns The number of sub-types of @p aService.
+ *
+ */
+uint16_t otSrpServerServiceGetNumberOfSubTypes(const otSrpServerService *aService);
+
+/**
+ * Gets the sub-type service name (full name) of the service at a given index
+ *
+ * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.".
+ *
+ * @param[in]  aService  A pointer to the SRP service.
+ * @param[in] aIndex     The index to get.
+ *
+ * @returns A pointer to sub-type service name at @p aIndex, or `NULL` if no sub-type at this index.
+ *
+ */
+const char *otSrpServerServiceGetSubTypeServiceNameAt(const otSrpServerService *aService, uint16_t aIndex);
+
+/**
+ * Indicates whether or not the service has a given sub-type.
+ *
+ * DNS name matches are performed using a case-insensitive string comparison (i.e., "Abc" and "aBc" are considered to
+ * be the same).
+ *
+ * @param[in] aService             A pointer to the SRP service.
+ * @param[in] aSubTypeServiceName  The sub-type service name (full name) to check.
+ *
+ * @retval TRUE   Service contains the sub-type @p aSubTypeServiceName.
+ * @retval FALSE  Service does not contain the sub-type @p aSubTypeServiceName.
+ *
+ */
+bool otSrpServerServiceHasSubTypeServiceName(const otSrpServerService *aService, const char *aSubTypeServiceName);
+
+/**
+ * Parses a sub-type service name (full name) and extracts the sub-type label.
+ *
+ * The full service name for a sub-type service follows "<sub-label>._sub.<service-labels>.<domain>.".
+ *
+ * @param[in]  aSubTypeServiceName  A sub-type service name (full name).
+ * @param[out] aLabel               A pointer to a buffer to copy the extracted sub-type label.
+ * @param[in]  aLabelSize           Maximum size of @p aLabel buffer.
+ *
+ * @retval OT_ERROR_NONE          Name was successfully parsed and @p aLabel was updated.
+ * @retval OT_ERROR_NO_BUFS       The sub-type label could not fit in @p aLabel buffer (number of chars from label
+ *                                that could fit are copied in @p aLabel ensuring it is null-terminated).
+ * @retval OT_ERROR_INVALID_ARGS  @p aSubTypeServiceName is not a valid sub-type format.
+ *
+ */
+otError otSrpServerParseSubTypeServiceName(const char *aSubTypeServiceName, char *aLabel, uint8_t aLabelSize);
 
 /**
  * Returns the port of the service instance.
