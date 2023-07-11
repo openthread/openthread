@@ -730,6 +730,7 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
 #endif
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
+    ProcessKeySequence(aRxInfo);
 
     SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, neighbor, requestedTlvList, challenge));
 
@@ -1025,6 +1026,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
     mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+    ProcessKeySequence(aRxInfo);
 
     if (aRequest)
     {
@@ -1476,6 +1478,7 @@ void MleRouter::HandleParentRequest(RxInfo &aRxInfo)
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
+    ProcessKeySequence(aRxInfo);
 
     SendParentResponse(child, challenge, !ScanMaskTlv::IsEndDeviceFlagSet(scanMask));
 
@@ -2215,6 +2218,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     }
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
+    ProcessKeySequence(aRxInfo);
 
     switch (mRole)
     {
@@ -2671,6 +2675,7 @@ void MleRouter::HandleDataRequest(RxInfo &aRxInfo)
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
+    ProcessKeySequence(aRxInfo);
 
     SendDataResponse(aRxInfo.mMessageInfo.GetPeerAddr(), tlvList, /* aDelay */ 0, &aRxInfo.mMessage);
 
