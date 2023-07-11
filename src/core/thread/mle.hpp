@@ -1738,6 +1738,7 @@ protected:
 #endif
 
     void ScheduleMessageTransmissionTimer(void);
+    void ProcessKeySequence(RxInfo &aRxInfo);
 
 private:
     // Declare early so we can use in as `TimerMilli` callbacks.

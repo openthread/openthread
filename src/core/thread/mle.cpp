@@ -2657,47 +2657,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
         ExitNow(error = kErrorDrop);
     }
 
-    // In case key sequence is larger, we determine whether to adopt it
-    // or not. The `Handle{MleMsg}()` methods set the `rxInfo.mClass`
-    // based on the message command type and the included TLVs. If
-    // there is any error during parsing of the message the `mClass`
-    // remains as its default value of `RxInfo::kUnknown`. Message
-    // classes are determined based on this:
-    //
-    // Authoritative : Larger key seq MUST be adopted.
-    // Peer          : If from a known neighbor
-    //                    If difference is 1, adopt
-    //                    Otherwise don't adopt and try to re-sync with
-    //                    neighbor.
-    //                 Otherwise larger key seq MUST NOT be adopted.
-
-    if (keySequence > Get<KeyManager>().GetCurrentKeySequence())
-    {
-        switch (rxInfo.mClass)
-        {
-        case RxInfo::kAuthoritativeMessage:
-            Get<KeyManager>().SetCurrentKeySequence(keySequence);
-            break;
-
-        case RxInfo::kPeerMessage:
-            if ((neighbor != nullptr) && neighbor->IsStateValid())
-            {
-                if (keySequence - Get<KeyManager>().GetCurrentKeySequence() == 1)
-                {
-                    Get<KeyManager>().SetCurrentKeySequence(keySequence);
-                }
-                else
-                {
-                    LogInfo("Large key seq jump in peer class msg from 0x%04x ", neighbor->GetRloc16());
-                    ReestablishLinkWithNeighbor(*neighbor);
-                }
-            }
-            break;
-
-        case RxInfo::kUnknown:
-            break;
-        }
-    }
+    ProcessKeySequence(rxInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     // If we could not find a neighbor matching the MAC address of the
@@ -2728,6 +2688,53 @@ exit:
     {
         LogProcessError(kTypeGenericUdp, error);
     }
+}
+
+void Mle::ProcessKeySequence(RxInfo &aRxInfo)
+{
+    // In case key sequence is larger, we determine whether to adopt it
+    // or not. The `Handle{MleMsg}()` methods set the `rxInfo.mClass`
+    // based on the message command type and the included TLVs. If
+    // there is any error during parsing of the message the `mClass`
+    // remains as its default value of `RxInfo::kUnknown`. Message
+    // classes are determined based on this:
+    //
+    // Authoritative : Larger key seq MUST be adopted.
+    // Peer          : If from a known neighbor
+    //                    If difference is 1, adopt
+    //                    Otherwise don't adopt and try to re-sync with
+    //                    neighbor.
+    //                 Otherwise larger key seq MUST NOT be adopted.
+
+    VerifyOrExit(aRxInfo.mKeySequence > Get<KeyManager>().GetCurrentKeySequence());
+
+    switch (aRxInfo.mClass)
+    {
+    case RxInfo::kAuthoritativeMessage:
+        Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence);
+        break;
+
+    case RxInfo::kPeerMessage:
+        if ((aRxInfo.mNeighbor != nullptr) && aRxInfo.mNeighbor->IsStateValid())
+        {
+            if (aRxInfo.mKeySequence - Get<KeyManager>().GetCurrentKeySequence() == 1)
+            {
+                Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence);
+            }
+            else
+            {
+                LogInfo("Large key seq jump in peer class msg from 0x%04x ", aRxInfo.mNeighbor->GetRloc16());
+                ReestablishLinkWithNeighbor(*aRxInfo.mNeighbor);
+            }
+        }
+        break;
+
+    case RxInfo::kUnknown:
+        break;
+    }
+
+exit:
+    return;
 }
 
 void Mle::ReestablishLinkWithNeighbor(Neighbor &aNeighbor)
@@ -3521,6 +3528,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     }
 
     aRxInfo.mClass = RxInfo::kPeerMessage;
+    ProcessKeySequence(aRxInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     if ((aRxInfo.mNeighbor != nullptr) && (challenge.mLength != 0))

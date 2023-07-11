@@ -236,6 +236,30 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
         self.simulator.go(2)
         self.assertEqual(child.get_key_sequence_counter(), 21)
 
+        #-------------------------------------------------------------------
+        # Force a reattachment from the child with a higher key seq counter,
+        # so that the leader generated a fragmented Child Id Response. Ensure
+        # the child becomes attached on first attempt while the leader adopts
+        # the higher counter value.
+
+        router.stop()
+        reed.stop()
+
+        child.factory_reset()
+        self.assertEqual(child.get_state(), 'disabled')
+
+        child.set_active_dataset(channel=leader.get_channel(),
+                                 network_key=leader.get_networkkey(),
+                                 panid=leader.get_panid())
+        child.set_key_sequence_counter(25)
+        self.assertEqual(child.get_key_sequence_counter(), 25)
+
+        child.start()
+        self.simulator.go(2)
+
+        self.assertEqual(child.get_state(), 'child')
+        self.assertEqual(leader.get_key_sequence_counter(), 25)
+
 
 if __name__ == '__main__':
     unittest.main()
