@@ -68,12 +68,17 @@ setup()
 
 markdown_init()
 {
+    echo '~~~~~~~~~~~~~~~~Code size report ~~~~~~~~~~~~~~~~'
+
     echo '|  name  |  branch  |  text  | data  | bss  | total |'
     echo '| :----: | :------: | -----: | ----: | ---: | ----: |'
 }
 
 markdown_size()
 {
+    echo '~~~~~~~~~~~~~~~~Code size report markdown_size() ~~~~~~~~~~~~~~~~'
+
+
     local name
     name=$(basename "$1")
 
@@ -228,16 +233,17 @@ size_nrf52840_version()
     )
 
     for file in "${bins[@]}"; do
+        echo "~~~~ Calling reporter"
         "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
-        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
-        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
+        #echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
+        #nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
     done
 
-    for file in "${libs[@]}"; do
-        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-    done
+#    for file in "${libs[@]}"; do
+#        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+        #echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+        #nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+#    done
 }
 
 size_nrf52840()
@@ -245,10 +251,16 @@ size_nrf52840()
     export OT_SHA_NEW OT_SHA_OLD
 
     local reporter="${OT_SIZE_REPORTER:-markdown}"
+
     "${reporter}" init OpenThread
 
-    size_nrf52840_version 1.1
+#    size_nrf52840_version 1.1
     size_nrf52840_version 1.3
+
+
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    cat ${OT_REPORT_FILE}
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
     "${reporter}" post
 }

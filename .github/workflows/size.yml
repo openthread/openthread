@@ -70,5 +70,8 @@ jobs:
           curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
           chmod a+x size-report
           export OT_SIZE_REPORTER=./size-report
+          echo '----------------------------------------------------------------'
+          cat ./size-report
+          echo '---------------------------------------------------------------'
         fi
         ./script/check-size
