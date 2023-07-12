@@ -1500,7 +1500,7 @@ template <typename InterfaceType> otError RadioSpinel<InterfaceType>::WaitRespon
             {
                 HandleRcpTimeout();
             }
-            ExitNow(mError = OT_ERROR_NONE);
+            ExitNow(mError = OT_ERROR_RESPONSE_TIMEOUT);
         }
     } while (mWaitingTid || !mIsReady);
 
