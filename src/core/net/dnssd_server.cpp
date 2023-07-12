@@ -734,6 +734,15 @@ Header::Response Server::ResolveBySrp(Header                   &aResponseHeader,
             IgnoreError(aResponseMessage.Read(readOffset, question));
             readOffset += sizeof(question);
 
+            if ((question.GetType() == ResourceRecord::kTypePtr) && (aResponseHeader.GetAnswerCount() > 1))
+            {
+                // Skip adding additional records, when answering a
+                // PTR query with more than one answer. This is the
+                // recommended behavior to keep the size of the
+                // response small.
+                continue;
+            }
+
             VerifyOrExit(Header::kResponseServerFailure != ResolveQuestionBySrp(name, question, aResponseHeader,
                                                                                 aResponseMessage, aCompressInfo,
                                                                                 /* aAdditional */ true),
