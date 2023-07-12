@@ -70,6 +70,13 @@ struct otBorderAgentId
 } OT_TOOL_PACKED_END;
 
 /**
+ *
+ * Represents a Border Agent ID.
+ *
+ */
+typedef struct otBorderAgentId otBorderAgentId;
+
+/**
  * Defines the Border Agent state.
  *
  */
