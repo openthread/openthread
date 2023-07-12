@@ -32,23 +32,5 @@
 
 set -uo pipefail
 
-main()
-{
-    # "Usage: config-android-version-gen.sh < src/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
-
-    OPENTHREAD_VERSION_GEN_FILE="$0"
-    OPENTHREAD_VERSION_GEN_FILE_PATH=$(dirname "${OPENTHREAD_VERSION_GEN_FILE}")
-
-    cd ${OPENTHREAD_VERSION_GEN_FILE_PATH}
-    INSIDE_GIT_REPO=$(git rev-parse --is-inside-work-tree 2>/dev/null)
-
-    if [ "${INSIDE_GIT_REPO}" == "true" ]; then
-        OPENTHREAD_SOURCE_VERSION=$(git describe --dirty --always)
-    else
-        OPENTHREAD_SOURCE_VERSION="Unknown"
-    fi
-
-    sed -e s/@OPENTHREAD_SOURCE_VERSION@/"${OPENTHREAD_SOURCE_VERSION}"/
-}
-
-main "$@"
+# "Usage: config-android-version-gen.sh < src/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
+sed -e s/@OPENTHREAD_SOURCE_VERSION@/Unknown/ "$@"
