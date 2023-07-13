@@ -29,12 +29,8 @@
 name: Size
 
 on:
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-  pull_request:
-    branches:
-      - 'main'
+  pull_request_target:
+    types: [assigned, opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || (github.repository == 'openthread/openthread' && github.run_id) || github.ref }}
@@ -42,6 +38,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
 
@@ -54,21 +51,41 @@ jobs:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
     - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-    - name: Bootstrap
-      if: "github.event_name == 'push'"
-      run: |
-        python3 -m pip install --upgrade setuptools wheel
-        python3 -m pip install git+https://github.com/axiros/terminal_markdown_viewer.git
     - name: Run
+      if : "github.event_name == 'pull_request_target'"
       env:
-        OT_BASE_BRANCH: "${{ github.base_ref }}"
-        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        PR_NUMBER: ${{ github.event.number }}
       run: |
-        export PATH=$PATH:$HOME/.local/bin
-        if [ ${{ github.event_name }} == pull_request ]; then
-          curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
-          chmod a+x size-report
-          export OT_SIZE_REPORTER=./size-report
-        fi
-        ./script/check-size
+        gh pr comment $PR_NUMBER --body-file ./size_report_comment
+
+
+
+#
+#  size-report:
+#    runs-on: ubuntu-20.04
+#    steps:
+#    - name: Harden Runner
+#      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+#      with:
+#        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+#
+#    - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+#    - name: Bootstrap
+#      if: "github.event_name == 'push'"
+#      run: |
+#        python3 -m pip install --upgrade setuptools wheel
+#        python3 -m pip install git+https://github.com/axiros/terminal_markdown_viewer.git
+#    - name: Run
+#      env:
+#        OT_BASE_BRANCH: "${{ github.base_ref }}"
+#        SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+#        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+#      run: |
+#        export PATH=$PATH:$HOME/.local/bin
+#        if [ ${{ github.event_name }} == pull_request ]; then
+#          curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
+#          chmod a+x size-report
+#          export OT_SIZE_REPORTER=./size-report
+#        fi
+#        ./script/check-size
