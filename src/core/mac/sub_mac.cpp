@@ -468,10 +468,10 @@ void SubMac::StartCsmaBackoff(void)
         {
             if (Time(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()))) <
                 Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) + mTransmitFrame.mInfo.mTxInfo.mTxDelay -
-                    kCcaSampleInterval - kCslTransmitTimeAhead)
+                    kCcaSampleInterval - kCslTransmitTimeAhead - kRadioHeaderShrDuration)
             {
                 mTimer.StartAt(Time(mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime) - kCcaSampleInterval -
-                                   kCslTransmitTimeAhead,
+                                   kCslTransmitTimeAhead - kRadioHeaderShrDuration,
                                mTransmitFrame.mInfo.mTxInfo.mTxDelay);
             }
             else // Transmit without delay
