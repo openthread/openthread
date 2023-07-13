@@ -2174,6 +2174,12 @@ void RoutingManager::OnLinkPrefixManager::SetState(State aState)
             mLocalPrefix.ToString().AsCString());
     mState = aState;
 
+    // Mark the Advertising PIO (AP) flag in the published route, when
+    // the local on-link prefix is being published, advertised, or
+    // deprecated.
+
+    Get<RoutingManager>().mRoutePublisher.UpdateAdvPioFlags(aState != kIdle);
+
 exit:
     return;
 }
@@ -2745,6 +2751,7 @@ RoutingManager::RoutePublisher::RoutePublisher(Instance &aInstance)
     , mState(kDoNotPublish)
     , mPreference(NetworkData::kRoutePreferenceMedium)
     , mUserSetPreference(false)
+    , mAdvPioFlag(false)
     , mTimer(aInstance)
 {
 }
@@ -2799,7 +2806,8 @@ void RoutingManager::RoutePublisher::UpdatePublishedRoute(State aNewState)
 {
     // Updates the published route entry in Network Data, transitioning
     // from current `mState` to new `aNewState`. This method can be used
-    // when there is no change to `mState` but a change to `mPreference`.
+    // when there is no change to `mState` but a change to `mPreference`
+    // or `mAdvPioFlag`.
 
     Ip6::Prefix                      oldPrefix;
     NetworkData::ExternalRouteConfig routeConfig;
@@ -2815,6 +2823,7 @@ void RoutingManager::RoutePublisher::UpdatePublishedRoute(State aNewState)
 
     routeConfig.Clear();
     routeConfig.mPreference = mPreference;
+    routeConfig.mAdvPio     = mAdvPioFlag;
     routeConfig.mStable     = true;
     DeterminePrefixFor(aNewState, routeConfig.GetPrefix());
 
@@ -2850,6 +2859,16 @@ void RoutingManager::RoutePublisher::Unpublish(void)
     DeterminePrefixFor(mState, prefix);
     IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(prefix));
     mState = kDoNotPublish;
+
+exit:
+    return;
+}
+
+void RoutingManager::RoutePublisher::UpdateAdvPioFlags(bool aAdvPioFlag)
+{
+    VerifyOrExit(mAdvPioFlag != aAdvPioFlag);
+    mAdvPioFlag = aAdvPioFlag;
+    UpdatePublishedRoute(mState);
 
 exit:
     return;

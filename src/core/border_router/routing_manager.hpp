@@ -988,6 +988,8 @@ private:
         void Stop(void) { Unpublish(); }
         void Evaluate(void);
 
+        void UpdateAdvPioFlags(bool aAdvPioFlag);
+
         RoutePreference GetPreference(void) const { return mPreference; }
         void            SetPreference(RoutePreference aPreference);
         void            ClearPreference(void);
@@ -1022,6 +1024,7 @@ private:
         State           mState;
         RoutePreference mPreference;
         bool            mUserSetPreference;
+        bool            mAdvPioFlag;
         DelayTimer      mTimer;
     };
 

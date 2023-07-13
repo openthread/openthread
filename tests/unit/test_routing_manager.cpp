@@ -631,7 +631,14 @@ enum ExternalRouteMode : uint8_t
     kUlaRoute,
 };
 
-void VerifyExternalRouteInNetData(ExternalRouteMode aMode)
+enum AdvPioMode : uint8_t
+{
+    kSkipAdvPioCheck,
+    kWithAdvPioFlagSet,
+    kWithAdvPioCleared,
+};
+
+void VerifyExternalRouteInNetData(ExternalRouteMode aExternalRouteMode, AdvPioMode aAdvPioMode = kSkipAdvPioCheck)
 {
     Error                 error;
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -639,7 +646,7 @@ void VerifyExternalRouteInNetData(ExternalRouteMode aMode)
 
     error = otNetDataGetNextRoute(sInstance, &iterator, &routeConfig);
 
-    switch (aMode)
+    switch (aExternalRouteMode)
     {
     case kNoRoute:
         Log("VerifyExternalRouteInNetData(kNoRoute)");
@@ -650,6 +657,7 @@ void VerifyExternalRouteInNetData(ExternalRouteMode aMode)
         Log("VerifyExternalRouteInNetData(kDefaultRoute)");
         VerifyOrQuit(error == kErrorNone);
         VerifyOrQuit(routeConfig.mPrefix.mLength == 0);
+        VerifyOrQuit((aAdvPioMode == kSkipAdvPioCheck) || (routeConfig.mAdvPio == (aAdvPioMode == kWithAdvPioFlagSet)));
         VerifyOrQuit(otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) != kErrorNone);
         break;
 
@@ -658,6 +666,7 @@ void VerifyExternalRouteInNetData(ExternalRouteMode aMode)
         VerifyOrQuit(error == kErrorNone);
         VerifyOrQuit(routeConfig.mPrefix.mLength == 7);
         VerifyOrQuit(routeConfig.mPrefix.mPrefix.mFields.m8[0] == 0xfc);
+        VerifyOrQuit((aAdvPioMode == kSkipAdvPioCheck) || (routeConfig.mAdvPio == (aAdvPioMode == kWithAdvPioFlagSet)));
         VerifyOrQuit(otNetDataGetNextRoute(sInstance, &iterator, &routeConfig) != kErrorNone);
         break;
     }
@@ -1040,7 +1049,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     // Check Network Data to include the local OMR and on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A with a new on-link (PIO) and route prefix (RIO).
@@ -1068,7 +1077,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     // Check Network Data to include new prefixes from router A.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send the same RA again from router A with the on-link (PIO) and route prefix (RIO).
@@ -1103,7 +1112,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     // Check Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router B removing the route prefix.
@@ -1122,7 +1131,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1172,7 +1181,7 @@ void TestOmrSelection(void)
     // Check Network Data to include the local OMR and on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Add a new OMR prefix directly into net data. The new prefix should
@@ -1210,7 +1219,7 @@ void TestOmrSelection(void)
     // is removed.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove the OMR prefix previously added in net data.
@@ -1237,7 +1246,7 @@ void TestOmrSelection(void)
     // added again.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1288,7 +1297,7 @@ void TestDefaultRoute(void)
     // Check Network Data to include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A advertising a default route.
@@ -1309,7 +1318,7 @@ void TestDefaultRoute(void)
     // OMR prefix (with preference medium or higher).
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Add an OMR prefix directly into Network Data with
@@ -1334,7 +1343,7 @@ void TestDefaultRoute(void)
     // OMR prefix, the default route should be published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove the OMR prefix from Network Data.
@@ -1350,7 +1359,7 @@ void TestDefaultRoute(void)
     // the discovered prefix table.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     VerifyPrefixTable({RoutePrefix(defaultRoute, kValidLitime, NetworkData::kRoutePreferenceLow, routerAddressA)});
 
@@ -1366,7 +1375,7 @@ void TestDefaultRoute(void)
     // Check Network Data. Again the default route should be published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A removing the default route.
@@ -1382,7 +1391,7 @@ void TestDefaultRoute(void)
     // a default-route, we should go back to publishing ULA route.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A again advertising a default route.
@@ -1397,7 +1406,7 @@ void TestDefaultRoute(void)
     // Check Network Data. We should see default route published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1449,7 +1458,7 @@ void TestAdvNonUlaRoute(void)
     // Check Network Data to include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A advertising a non-ULA.
@@ -1470,7 +1479,7 @@ void TestAdvNonUlaRoute(void)
     // OMR prefix (with preference medium or higher).
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Add an OMR prefix directly into Network Data with
@@ -1495,7 +1504,7 @@ void TestAdvNonUlaRoute(void)
     // OMR prefix, the default route should be published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove the OMR prefix from Network Data.
@@ -1511,7 +1520,7 @@ void TestAdvNonUlaRoute(void)
     // the discovered prefix table.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     VerifyPrefixTable({RoutePrefix(routePrefix, kValidLitime, NetworkData::kRoutePreferenceMedium, routerAddressA)});
 
@@ -1527,7 +1536,7 @@ void TestAdvNonUlaRoute(void)
     // Check Network Data. Again the default route should be published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A removing the route.
@@ -1543,7 +1552,7 @@ void TestAdvNonUlaRoute(void)
     // the route, we should go back to publishing the ULA route.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A again advertising the route again.
@@ -1558,7 +1567,7 @@ void TestAdvNonUlaRoute(void)
     // Check Network Data. We should see default route published.
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1611,7 +1620,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // Check Network Data to include the local OMR and on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A with a new on-link (PIO) which is preferred over
@@ -1639,7 +1648,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // along with the deprecating local on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Wait for local on-link prefix to expire
@@ -1654,7 +1663,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
         // see the deprecating local on-link prefix.
 
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-        VerifyExternalRouteInNetData(kUlaRoute);
+        VerifyExternalRouteInNetData(kUlaRoute, kSkipAdvPioCheck);
 
         // Keep checking the emitted RAs and make sure on-link prefix
         // is included with smaller lifetime every time.
@@ -1692,7 +1701,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // Check Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioCleared);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1743,7 +1752,7 @@ void TestDomainPrefixAsOmr(void)
     // Check Network Data to include the local OMR and on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Add a domain prefix directly into net data. The new prefix should
@@ -1812,7 +1821,7 @@ void TestDomainPrefixAsOmr(void)
     // is removed.
 
     VerifyOmrPrefixInNetData(domainPrefix, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove the domain prefix from net data.
@@ -1839,7 +1848,7 @@ void TestDomainPrefixAsOmr(void)
     // added again.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1938,7 +1947,7 @@ void TestExtPanIdChange(void)
     // Validate Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Stop BR and validate that a final RA is emitted deprecating
@@ -1985,7 +1994,7 @@ void TestExtPanIdChange(void)
     {
         // Ensure Network Data entries remain as before.
 
-        VerifyExternalRouteInNetData(kUlaRoute);
+        VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
         // Keep checking the emitted RAs and make sure the prefix
         // is included with smaller lifetime every time.
@@ -2017,7 +2026,7 @@ void TestExtPanIdChange(void)
     // Validate the Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     // Check behavior when ext PAN ID changes while the local on-link is being
@@ -2070,7 +2079,7 @@ void TestExtPanIdChange(void)
     // Validate that Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Wait for old local on-link prefix to expire.
@@ -2083,7 +2092,7 @@ void TestExtPanIdChange(void)
 
         // Ensure Network Data entries remain as before.
 
-        VerifyExternalRouteInNetData(kDefaultRoute);
+        VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
         // Keep checking the emitted RAs and make sure the prefix
         // is included with smaller lifetime every time.
@@ -2121,7 +2130,7 @@ void TestExtPanIdChange(void)
     // Validate the Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     // Check behavior when ext PAN ID changes while the local on-link is not
@@ -2150,7 +2159,7 @@ void TestExtPanIdChange(void)
     // Validate the Network Data.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Remove the on-link prefix PIO being advertised by router A
@@ -2171,7 +2180,7 @@ void TestExtPanIdChange(void)
 
     AdvanceTime(2000 * 1000);
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     // Multiple PAN ID changes and multiple deprecating old prefixes.
@@ -2190,7 +2199,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sDeprecatingPrefixes.GetLength() == 1);
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[0]));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Change the prefix again. We should see two deprecating prefixes.
@@ -2210,7 +2219,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[0]));
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[1]));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Wait for 15 minutes and then change ext PAN ID again.
@@ -2234,7 +2243,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[1]));
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[2]));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Change ext PAN ID back to previous value of `kExtPanId1`.
@@ -2258,7 +2267,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(oldPrefixes[2] == localOnLink);
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[3]));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Stop BR and validate the final emitted RA to contain
@@ -2308,7 +2317,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sDeprecatingPrefixes.GetLength() == 1);
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[3]));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     // Validate the oldest prefix is removed when we have too many
@@ -2343,7 +2352,7 @@ void TestExtPanIdChange(void)
     VerifyOrQuit(sDeprecatingPrefixes.ContainsMatching(oldPrefixes[2]));
     VerifyOrQuit(!sDeprecatingPrefixes.ContainsMatching(oldLocalOnLink));
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2545,7 +2554,7 @@ void TestConflictingPrefix(void)
     // Check Network Data to include the local OMR and on-link prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A with our local on-link prefix as RIO.
@@ -2564,7 +2573,7 @@ void TestConflictingPrefix(void)
     // Check Network Data to still include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A removing local on-link prefix as RIO.
@@ -2576,7 +2585,7 @@ void TestConflictingPrefix(void)
     // the change by router A did not cause it to be unpublished.
 
     AdvanceTime(10000);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check that the local on-link prefix is still being advertised.
@@ -2585,7 +2594,7 @@ void TestConflictingPrefix(void)
     AdvanceTime(610000);
     VerifyOrQuit(sRaValidated);
 
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router B advertising an on-link prefix. This
@@ -2609,7 +2618,7 @@ void TestConflictingPrefix(void)
     // the new on-link prefix from router B.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A again adding local on-link prefix as RIO.
@@ -2627,7 +2636,7 @@ void TestConflictingPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data remains unchanged.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A removing the previous RIO.
@@ -2638,7 +2647,7 @@ void TestConflictingPrefix(void)
     // Check Network Data remains unchanged.
 
     AdvanceTime(60000);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router B removing its on-link prefix.
@@ -2657,7 +2666,7 @@ void TestConflictingPrefix(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data to remain unchanged.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Change the extended PAN ID.
@@ -2682,7 +2691,7 @@ void TestConflictingPrefix(void)
     // Check Network Data contains default route due to the
     // deprecating on-link prefix from router B.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A again adding the old local on-link prefix
@@ -2694,7 +2703,7 @@ void TestConflictingPrefix(void)
     // Check Network Data remains unchanged.
 
     AdvanceTime(10000);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from router A removing the previous RIO.
@@ -2705,7 +2714,7 @@ void TestConflictingPrefix(void)
     // Check Network Data remains unchanged.
 
     AdvanceTime(10000);
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2757,7 +2766,7 @@ void TestSavedOnLinkPrefixes(void)
     // Check Network Data to include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Disable the instance and re-enable it.
@@ -2782,7 +2791,7 @@ void TestSavedOnLinkPrefixes(void)
     // Check Network Data to include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send RA from router A advertising an on-link prefix.
@@ -2818,7 +2827,7 @@ void TestSavedOnLinkPrefixes(void)
     // Check Network Data to include the local OMR and ULA prefix.
 
     VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
-    VerifyExternalRouteInNetData(kUlaRoute);
+    VerifyExternalRouteInNetData(kUlaRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2879,7 +2888,7 @@ void TestSavedOnLinkPrefixes(void)
     // Check Network Data to now use default route due to the
     // on-link prefix from router A.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Wait for more than 1800 seconds to let the deprecating
@@ -2891,7 +2900,7 @@ void TestSavedOnLinkPrefixes(void)
         AdvanceTime(10 * 1000);
     }
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Disable the instance and re-enable it and restart Routing Manager.
@@ -2920,7 +2929,7 @@ void TestSavedOnLinkPrefixes(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check Network Data still contains the default route.
 
-    VerifyExternalRouteInNetData(kDefaultRoute);
+    VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioCleared);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
