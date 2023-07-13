@@ -1211,10 +1211,18 @@ public:
 
     /**
      * Returns the timestamp when the frame was received.
-     * The timestamp marks the frame detection time: the end of the last symbol of SFD.
      *
-     * @returns The timestamp when the frame SFD was received, in microseconds.
+     * The value SHALL be the time of the local radio clock in
+     * microseconds when the end of the SFD (or equivalently: the start
+     * of the first symbol of the PHR) was present at the local antenna,
+     * see the definition of a "symbol boundary" in IEEE 802.15.4-2020,
+     * section 6.5.2 or equivalently the RMARKER definition in section
+     * 6.9.1 (albeit both unrelated to OT).
      *
+     * The time is relative to the local radio clock as defined by
+     * `otPlatRadioGetNow`.
+     *
+     * @returns The timestamp in microseconds.
      */
     const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 

@@ -667,7 +667,7 @@ private:
     bool mIsCslSampling : 1;  // Indicates that the radio is receiving in CSL state for platforms not supporting delayed
                               // reception.
     uint16_t    mCslPeerShort;      // The CSL peer short address.
-    TimeMicro   mCslSampleTime;     // The CSL sample time of the current period.
+    TimeMicro   mCslSampleTime;     // The CSL sample time of the current period relative to the local radio clock.
     TimeMicro   mCslLastSync;       // The timestamp of the last successful CSL synchronization.
     CslAccuracy mCslParentAccuracy; // The parent's CSL accuracy (clock accuracy and uncertainty).
     TimerMicro  mCslTimer;

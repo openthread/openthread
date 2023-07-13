@@ -316,7 +316,7 @@ void SubMac::LogReceived(RxFrame *aFrame)
     // Treat as a warning when the deviation is not within the margins. Neither kCslReceiveTimeAhead
     // or kMinReceiveOnAhead/kMinReceiveOnAfter are considered for the margin since they have no
     // impact on understanding possible deviation errors between transmitter and receiver. So in this
-    // case ahead equals after.
+    // case only `ahead` is used, as an allowable max deviation in both +/- directions.
     if ((deviation + ahead > 0) && (deviation < static_cast<int32_t>(ahead)))
     {
         LogDebg("%s", logString.AsCString());
