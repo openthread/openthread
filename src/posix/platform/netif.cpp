@@ -77,6 +77,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #endif // __linux__
+#include <math.h>
 #include <net/if.h>
 #include <net/if_arp.h>
 #include <stdio.h>
@@ -1563,6 +1564,82 @@ exit:
 
 #endif
 
+#if defined(__linux__)
+
+#define ERR_RTA(errmsg, requestPayloadLength) \
+    ((struct rtattr *)((char *)(errmsg)) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength))
+
+// The format of NLMSG_ERROR is described below:
+//
+// ----------------------------------------------
+// | struct nlmsghdr - response header          |
+// ----------------------------------------------------------------
+// |    int error                               |                 |
+// ---------------------------------------------| struct nlmsgerr |
+// | struct nlmsghdr - original request header  |                 |
+// ----------------------------------------------------------------
+// | ** optionally (1) payload of the request   |
+// ----------------------------------------------
+// | ** optionally (2) extended ACK attrs       |
+// ----------------------------------------------
+//
+static void HandleNetlinkResponse(struct nlmsghdr *msg)
+{
+    const struct nlmsgerr *err;
+    const char            *errorMsg;
+    size_t                 rtaLength;
+    size_t                 requestPayloadLength = 0;
+    uint32_t               requestSeq           = 0;
+
+    if (msg->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr)))
+    {
+        otLogWarnPlat("[netif] Truncated netlink reply of request#%u", requestSeq);
+        ExitNow();
+    }
+
+    err        = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
+    requestSeq = err->msg.nlmsg_seq;
+
+    if (err->error == 0)
+    {
+        otLogInfoPlat("[netif] Succeeded to process request#%u", requestSeq);
+        ExitNow();
+    }
+
+    // For rtnetlink, `abs(err->error)` maps to values of `errno`.
+    // But this is not a requirement in RFC 3549.
+    errorMsg = strerror(abs(err->error));
+
+    // The payload of the request is omitted if NLM_F_CAPPED is set
+    if (!(msg->nlmsg_flags & NLM_F_CAPPED))
+    {
+        requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+    }
+
+    rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
+
+    for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+         rta                = RTA_NEXT(rta, rtaLength))
+    {
+        if (rta->rta_type == NLMSGERR_ATTR_MSG)
+        {
+            errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
+            break;
+        }
+        else
+        {
+            otLogDebgPlat("[netif] Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+        }
+    }
+
+    otLogWarnPlat("[netif] Failed to process request#%u: %s", requestSeq, errorMsg);
+
+exit:
+    return;
+}
+
+#endif // defined(__linux__)
+
 static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
@@ -1624,20 +1701,8 @@ static void processNetlinkEvent(otInstance *aInstance)
 
 #else
         case NLMSG_ERROR:
-        {
-            const struct nlmsgerr *err = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
-
-            if (err->error == 0)
-            {
-                otLogInfoPlat("[netif] Succeeded to process request#%u", err->msg.nlmsg_seq);
-            }
-            else
-            {
-                otLogWarnPlat("[netif] Failed to process request#%u: %s", err->msg.nlmsg_seq, strerror(err->error));
-            }
-
+            HandleNetlinkResponse(msg);
             break;
-        }
 #endif
 
 #if defined(ROUTE_FILTER) || defined(RO_MSGFILTER) || defined(__linux__)
@@ -1645,7 +1710,7 @@ static void processNetlinkEvent(otInstance *aInstance)
             otLogWarnPlat("[netif] Unhandled/Unexpected netlink/route message (%d).", (int)msg->nlmsg_type);
             break;
 #else
-        // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
+            // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
 #endif
         }
     }
@@ -1934,6 +1999,17 @@ static void platformConfigureNetLink(void)
 #error "!! Unknown platform !!"
 #endif
     VerifyOrDie(sNetlinkFd >= 0, OT_EXIT_ERROR_ERRNO);
+
+#if defined(SOL_NETLINK)
+    {
+        int enable = 1;
+
+        VerifyOrDie(setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) == 0,
+                    OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) == 0,
+                    OT_EXIT_ERROR_ERRNO);
+    }
+#endif
 
 #if defined(__linux__)
     {
