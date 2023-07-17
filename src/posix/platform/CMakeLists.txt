@@ -91,8 +91,8 @@ if(OT_POSIX_NAT64_CIDR)
     )
 endif()
 
-if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
+if(NOT OT_PLATFORM_CONFIG)
+    set(OT_PLATFORM_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "-rdynamic ${CMAKE_EXE_LINKER_FLAGS}" PARENT_SCOPE)

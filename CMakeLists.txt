@@ -106,13 +106,11 @@ if(OT_PACKAGE_VERSION STREQUAL "")
 endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
-# OT_CONFIG allows users to specify the path to a customized OpenThread
-# config header file. The default value of this parameter is empty string.
-# When not specified by user (value is ""), a platform cmake file may
-# choose to change this variable to provide its own OpenThread config header
-# file instead.
+# Deprecated
+set(OT_CONFIG "" CACHE STRING "OpenThread config header file (deprecated, use `OT_PROJECT_CONFIG` or `OT_PLATFORM_CONFIG` instead")
 
-set(OT_CONFIG "" CACHE STRING "OpenThread project-specific config header file chosen by user at configure time")
+set(OT_PROJECT_CONFIG "" CACHE STRING "OpenThread project-specific config header file")
+set(OT_PLATFORM_CONFIG "" CACHE STRING "OpenThread platform-specific config header file")
 
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_BINARY_DIR}/etc/cmake)
 list(APPEND OT_PUBLIC_INCLUDES ${PROJECT_SOURCE_DIR}/etc/cmake)
@@ -131,7 +129,18 @@ endif()
 
 if(OT_CONFIG)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_FILE=\"${OT_CONFIG}\"")
-    message(STATUS "OpenThread Config File: \"${OT_CONFIG}\"")
+    message(WARNING "OT_CONFIG is deprecated - use `OT_PROJECT_CONFIG` and `OT_PLATFORM_CONFIG` instead")
+    message(STATUS "OT_CONFIG=\"${OT_CONFIG}\"")
+endif()
+
+if (OT_PROJECT_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_PROJECT_CONFIG}\"")
+    message(STATUS "OT_PROJECT_CONFIG=\"${OT_PROJECT_CONFIG}\"")
+endif()
+
+if (OT_PLATFORM_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_PLATFORM_CORE_CONFIG_FILE=\"${OT_PLATFORM_CONFIG}\"")
+    message(STATUS "OT_PLATFORM_CONFIG=\"${OT_PLATFORM_CONFIG}\"")
 endif()
 
 target_compile_definitions(ot-config INTERFACE ${OT_PLATFORM_DEFINES})
