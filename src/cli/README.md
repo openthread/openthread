@@ -66,6 +66,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
+- [linkmetricsmgr](#linkmetricsmgr-disable)
 - [locate](#locate)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -1875,6 +1876,41 @@ Done
  - LQI: 76 (Exponential Moving Average)
  - Margin: 82 (dB) (Exponential Moving Average)
  - RSSI: -18 (dBm) (Exponential Moving Average)
+```
+
+### linkmetricsmgr disable
+
+Disable the Link Metrics Manager.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+> linkmetricsmgr disable
+Done
+```
+
+### linkmetricsmgr enable
+
+Enable the Link Metrics Manager.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+> linkmetricsmgr enable
+Done
+```
+
+### linkmetricsmgr show
+
+Display the Link Metrics data of all subjects. The subjects are identified by its extended address.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+
+> linkmetricsmgr show
+ExtAddr:827aa7f7f63e1234, LinkMargin:80, Rssi:-20
+Done
 ```
 
 ### locate

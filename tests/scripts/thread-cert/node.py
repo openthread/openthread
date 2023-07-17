@@ -3257,6 +3257,12 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def link_metrics_mgr_set_enabled(self, enable: bool):
+        op_str = "enable" if enable else "disable"
+        cmd = f'linkmetricsmgr {op_str}'
+        self.send_command(cmd)
+        self._expect_done()
+
     def send_address_notification(self, dst: str, target: str, mliid: str):
         cmd = f'fake /a/an {dst} {target} {mliid}'
         self.send_command(cmd)

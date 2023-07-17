@@ -127,6 +127,7 @@
 #include "utils/heap.hpp"
 #include "utils/history_tracker.hpp"
 #include "utils/jam_detector.hpp"
+#include "utils/link_metrics_manager.hpp"
 #include "utils/mesh_diag.hpp"
 #include "utils/ping_sender.hpp"
 #include "utils/slaac_address.hpp"
@@ -610,6 +611,10 @@ private:
     Utils::HistoryTracker mHistoryTracker;
 #endif
 
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    Utils::LinkMetricsManager mLinkMetricsManager;
+#endif
+
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
     MeshCoP::DatasetUpdater mDatasetUpdater;
 #endif
@@ -899,6 +904,10 @@ template <> inline Utils::MeshDiag &Instance::Get(void) { return mMeshDiag; }
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 template <> inline Utils::HistoryTracker &Instance::Get(void) { return mHistoryTracker; }
+#endif
+
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+template <> inline Utils::LinkMetricsManager &Instance::Get(void) { return mLinkMetricsManager; }
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD

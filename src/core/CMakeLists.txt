@@ -244,6 +244,7 @@ set(COMMON_SOURCES
     utils/heap.cpp
     utils/history_tracker.cpp
     utils/jam_detector.cpp
+    utils/link_metrics_manager.cpp
     utils/mesh_diag.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp

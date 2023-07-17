@@ -92,6 +92,7 @@
 #include "config/history_tracker.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
+#include "config/link_metrics_manager.h"
 #include "config/link_quality.h"
 #include "config/link_raw.h"
 #include "config/logging.h"
