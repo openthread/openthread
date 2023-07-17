@@ -152,6 +152,9 @@ class MdnsRestart(thread_cert.TestCase):
         self.assertEqual(len(host.browse_mdns_services('_ed2._tcp')), 1)
 
         ed1.dns_set_config(br1.get_ip6_address(config.ADDRESS_TYPE.ML_EID))
+
+        # Since there is only one match, server should include
+        # service info in additional section of its response.
         browsed_services = ed1.dns_browse('_ed2._tcp.default.service.arpa')
         self.assertEqual(len(browsed_services), 1)
         self.assertEqual(browsed_services['ed2']['port'], 12345)

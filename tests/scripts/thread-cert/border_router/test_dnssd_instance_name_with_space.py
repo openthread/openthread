@@ -114,6 +114,8 @@ class TestDnssdInstanceNameWithSpace(thread_cert.TestCase):
         full_instance_name = f'{INSTANCE_NAME}.{SERVICE_FULL_NAME}'
         EMPTY_TXT = {}
 
+        # In all cases, there is one match, so server should include
+        # service info in additional section of PTR query response.
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br1.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME, server=br2.get_rloc()))
         self._verify_service_browse_result(client.dns_browse(SERVICE_FULL_NAME.lower(), server=br2.get_rloc()))
