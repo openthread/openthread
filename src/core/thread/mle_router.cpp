@@ -2046,14 +2046,10 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     uint8_t            modeBitmask;
     DeviceMode         mode;
     uint32_t           timeout;
-    TlvList            requestedTlvList;
+    TlvList            tlvList;
     MeshCoP::Timestamp timestamp;
-    bool               needsActiveDatasetTlv;
-    bool               needsPendingDatasetTlv;
-    bool               needsSupervisionTlv;
     Child             *child;
     Router            *router;
-    uint8_t            numTlvs;
     uint16_t           supervisionInterval;
 
     Log(kMessageReceive, kTypeChildIdRequest, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -2093,12 +2089,14 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     // Timeout
     SuccessOrExit(error = Tlv::Find<TimeoutTlv>(aRxInfo.mMessage, timeout));
 
+    // Requested TLVs
+    SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(tlvList));
+
     // Supervision interval
-    needsSupervisionTlv = false;
     switch (Tlv::Find<SupervisionIntervalTlv>(aRxInfo.mMessage, supervisionInterval))
     {
     case kErrorNone:
-        needsSupervisionTlv = true;
+        tlvList.Add(Tlv::kSupervisionInterval);
         break;
     case kErrorNotFound:
         supervisionInterval = (version <= kThreadVersion1p3) ? kChildSupervisionDefaultIntervalForOlderVersion : 0;
@@ -2107,55 +2105,45 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    // TLV Request
-    SuccessOrExit(error = aRxInfo.mMessage.ReadTlvRequestTlv(requestedTlvList));
-
     // Active Timestamp
-    needsActiveDatasetTlv = true;
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        needsActiveDatasetTlv =
-            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) != 0);
-        break;
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) == 0)
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
     case kErrorNotFound:
+        tlvList.Add(Tlv::kActiveDataset);
         break;
+
     default:
         ExitNow(error = kErrorParse);
     }
 
     // Pending Timestamp
-    needsPendingDatasetTlv = true;
     switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, timestamp))
     {
     case kErrorNone:
-        needsPendingDatasetTlv =
-            (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) != 0);
-        break;
+        if (MeshCoP::Timestamp::Compare(&timestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) == 0)
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
     case kErrorNotFound:
+        tlvList.Add(Tlv::kPendingDataset);
         break;
+
     default:
         ExitNow(error = kErrorParse);
     }
 
-    numTlvs = requestedTlvList.GetLength();
-
-    if (needsActiveDatasetTlv)
-    {
-        numTlvs++;
-    }
-
-    if (needsPendingDatasetTlv)
-    {
-        numTlvs++;
-    }
-
-    if (needsSupervisionTlv)
-    {
-        numTlvs++;
-    }
-
-    VerifyOrExit(numTlvs <= Child::kMaxRequestTlvs, error = kErrorParse);
+    VerifyOrExit(tlvList.GetLength() <= Child::kMaxRequestTlvs, error = kErrorParse);
 
     if (!mode.IsFullThreadDevice())
     {
@@ -2195,26 +2183,15 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
 #endif
 
     child->SetNetworkDataVersion(mLeaderData.GetDataVersion(mode.GetNetworkDataType()));
+
+    // We already checked above that `tlvList` will fit in
+    // `child` entry (with `Child::kMaxRequestTlvs` TLVs).
+
     child->ClearRequestTlvs();
 
-    for (numTlvs = 0; numTlvs < requestedTlvList.GetLength(); numTlvs++)
+    for (uint8_t index = 0; index < tlvList.GetLength(); index++)
     {
-        child->SetRequestTlv(numTlvs, requestedTlvList[numTlvs]);
-    }
-
-    if (needsActiveDatasetTlv)
-    {
-        child->SetRequestTlv(numTlvs++, Tlv::kActiveDataset);
-    }
-
-    if (needsPendingDatasetTlv)
-    {
-        child->SetRequestTlv(numTlvs++, Tlv::kPendingDataset);
-    }
-
-    if (needsSupervisionTlv)
-    {
-        child->SetRequestTlv(numTlvs++, Tlv::kSupervisionInterval);
+        child->SetRequestTlv(index, tlvList[index]);
     }
 
     aRxInfo.mClass = RxInfo::kAuthoritativeMessage;
