@@ -336,7 +336,11 @@ public:
 
 private:
     // Max number of SeriesInfo that could be allocated by the pool.
+#if OPENTHREAD_FTD
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED;
+#elif OPENTHREAD_MTD
+    static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD;
+#endif
 
     static Error ReadTypeIdsFromMessage(const Message &aMessage,
                                         uint16_t       aStartOffset,

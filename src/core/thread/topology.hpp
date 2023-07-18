@@ -54,7 +54,7 @@
 #include "radio/trel_link.hpp"
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
-#include "thread/link_metrics.hpp"
+#include "thread/link_metrics_types.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
