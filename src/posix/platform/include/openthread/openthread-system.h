@@ -123,7 +123,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
  *       when deinitialization of OpenThread's drivers is most appropriate.
  *
  */
-void otSysDeinit(void);
+void otSysDeinit(otInstance *aInstance);
 
 /**
  * Represents a context for a select() based mainloop.
@@ -172,8 +172,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 /**
  * Returns the radio url help string.
  *
- * @returns the radio url help string.
- *
  */
 const char *otSysGetRadioUrlHelpString(void);
 
@@ -182,31 +180,37 @@ extern otPlatResetReason gPlatResetReason;
 /**
  * Returns the Thread network interface name.
  *
- * @returns The Thread network interface name.
- *
  */
 const char *otSysGetThreadNetifName(void);
 
 /**
- * Returns the Thread network interface index.
- *
- * @returns The Thread network interface index.
+ * Returns the Thread network interface index..
  *
  */
 unsigned int otSysGetThreadNetifIndex(void);
 
 /**
- * Returns the infrastructure network interface name.
- *
- * @returns The infrastructure network interface name, or `nullptr` if not specified.
+ * Returns the infrastructure network interface name, or `nullptr` if not specified.
  *
  */
 const char *otSysGetInfraNetifName(void);
 
 /**
- * Returns the radio spinel metrics.
+ * Returns the infrastructure network interface index, or `0` if not specified.
  *
- * @returns The radio spinel metrics.
+ */
+unsigned int otSysGetInfraNetifIndex(void);
+
+/**
+ * Returns the ifr_flags of the infrastructure network interface.
+ *
+ * @returns The ifr_flags of infrastructure network interface.
+ *
+ */
+uint32_t otSysGetInfraNetifFlags(void);
+
+/**
+ * Returns the radio spinel metrics.
  *
  */
 const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
@@ -218,14 +222,6 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void);
  *
  */
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void);
-
-/**
- * Returns the ifr_flags of the infrastructure network interface.
- *
- * @returns The ifr_flags of infrastructure network interface.
- *
- */
-uint32_t otSysGetInfraNetifFlags(void);
 
 typedef struct otSysInfraNetIfAddressCounters
 {

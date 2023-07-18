@@ -69,21 +69,33 @@ namespace Posix {
         }                                                                                                           \
     } while (false)
 
-void MulticastRoutingManager::SetUp(void)
+MulticastRoutingManager &MulticastRoutingManager::Get(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    static MulticastRoutingManager sManager;
 
-    otBackboneRouterSetMulticastListenerCallback(gInstance,
+    return sManager;
+}
+
+void MulticastRoutingManager::SetUp(otInstance *aInstance)
+{
+    OT_ASSERT(aInstance != nullptr);
+
+    mInstance = aInstance;
+    otBackboneRouterSetMulticastListenerCallback(mInstance,
                                                  &MulticastRoutingManager::HandleBackboneMulticastListenerEvent, this);
     Mainloop::Manager::Get().Add(*this);
 }
 
 void MulticastRoutingManager::TearDown(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    VerifyOrExit(mInstance != nullptr);
 
-    otBackboneRouterSetMulticastListenerCallback(gInstance, nullptr, nullptr);
     Mainloop::Manager::Get().Remove(*this);
+    otBackboneRouterSetMulticastListenerCallback(mInstance, nullptr, nullptr);
+    mInstance = nullptr;
+
+exit:
+    return;
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void                                  *aContext,
@@ -159,7 +171,7 @@ void MulticastRoutingManager::UpdateMldReport(const Ip6::Address &aAddress, bool
     struct ipv6_mreq ipv6mr;
     otError          error = OT_ERROR_NONE;
 
-    ipv6mr.ipv6mr_interface = if_nametoindex(gBackboneNetifName);
+    ipv6mr.ipv6mr_interface = otSysGetInfraNetifIndex();
     memcpy(&ipv6mr.ipv6mr_multiaddr, aAddress.GetBytes(), sizeof(ipv6mr.ipv6mr_multiaddr));
     error = (setsockopt(mMulticastRouterSock, IPPROTO_IPV6, (isAdd ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP),
                         (void *)&ipv6mr, sizeof(ipv6mr))
@@ -176,7 +188,9 @@ bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress)
     otBackboneRouterMulticastListenerIterator iter  = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
     otBackboneRouterMulticastListenerInfo     listenerInfo;
 
-    while (otBackboneRouterMulticastListenerGetNext(gInstance, &iter, &listenerInfo) == OT_ERROR_NONE)
+    VerifyOrExit(mInstance != nullptr);
+
+    while (otBackboneRouterMulticastListenerGetNext(mInstance, &iter, &listenerInfo) == OT_ERROR_NONE)
     {
         VerifyOrExit(static_cast<const Ip6::Address &>(listenerInfo.mAddress) != aAddress, found = true);
     }
@@ -236,14 +250,14 @@ void MulticastRoutingManager::InitMulticastRouterSock(void)
 
     // Add Thread network interface to MIF
     mif6ctl.mif6c_mifi = kMifIndexThread;
-    mif6ctl.mif6c_pifi = if_nametoindex(gNetifName);
+    mif6ctl.mif6c_pifi = if_nametoindex(otSysGetThreadNetifName());
     VerifyOrDie(mif6ctl.mif6c_pifi > 0, OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == setsockopt(mMulticastRouterSock, IPPROTO_IPV6, MRT6_ADD_MIF, &mif6ctl, sizeof(mif6ctl)),
                 OT_EXIT_ERROR_ERRNO);
 
     // Add Backbone network interface to MIF
     mif6ctl.mif6c_mifi = kMifIndexBackbone;
-    mif6ctl.mif6c_pifi = if_nametoindex(gBackboneNetifName);
+    mif6ctl.mif6c_pifi = otSysGetInfraNetifIndex();
     VerifyOrDie(mif6ctl.mif6c_pifi > 0, OT_EXIT_ERROR_ERRNO);
     VerifyOrDie(0 == setsockopt(mMulticastRouterSock, IPPROTO_IPV6, MRT6_ADD_MIF, &mif6ctl, sizeof(mif6ctl)),
                 OT_EXIT_ERROR_ERRNO);
@@ -294,6 +308,7 @@ otError MulticastRoutingManager::AddMulticastForwardingCache(const Ip6::Address 
     struct mf6cctl mf6cctl;
     MifIndex       forwardMif = kMifIndexNone;
 
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(aIif == kMifIndexThread || aIif == kMifIndexBackbone, error = OT_ERROR_INVALID_ARGS);
 
     ExpireMulticastForwardingCache();
@@ -310,7 +325,7 @@ otError MulticastRoutingManager::AddMulticastForwardingCache(const Ip6::Address 
     else
     {
         VerifyOrExit(!aSrcAddr.IsLinkLocal(), error = OT_ERROR_NONE);
-        VerifyOrExit(aSrcAddr.GetPrefix() != AsCoreType(otThreadGetMeshLocalPrefix(gInstance)), error = OT_ERROR_NONE);
+        VerifyOrExit(aSrcAddr.GetPrefix() != AsCoreType(otThreadGetMeshLocalPrefix(mInstance)), error = OT_ERROR_NONE);
         // Forward multicast traffic from Thread to Backbone if multicast scope > kRealmLocalScope
         // TODO: (MLR) allow scope configuration of outbound multicast routing
         if (aGroupAddr.GetScope() > Ip6::Address::kRealmLocalScope)
@@ -499,11 +514,14 @@ void MulticastRoutingManager::DumpMulticastForwardingCache(void) const
 #endif
 }
 
-void MulticastRoutingManager::HandleStateChange(otInstance *aInstance, otChangedFlags aFlags)
+void MulticastRoutingManager::HandleStateChanged(otChangedFlags aFlags)
 {
+    VerifyOrExit(otSysGetInfraNetifIndex() != 0);
+    VerifyOrExit(mInstance != nullptr);
+
     if (aFlags & OT_CHANGED_THREAD_BACKBONE_ROUTER_STATE)
     {
-        otBackboneRouterState state = otBackboneRouterGetState(aInstance);
+        otBackboneRouterState state = otBackboneRouterGetState(mInstance);
 
         switch (state)
         {
@@ -516,6 +534,9 @@ void MulticastRoutingManager::HandleStateChange(otInstance *aInstance, otChanged
             break;
         }
     }
+
+exit:
+    return;
 }
 
 void MulticastRoutingManager::MulticastForwardingCache::Set(MulticastRoutingManager::MifIndex aIif,

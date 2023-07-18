@@ -51,18 +51,17 @@ namespace Posix {
 class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
 {
 public:
-    explicit MulticastRoutingManager()
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
+    static MulticastRoutingManager &Get(void);
 
-        : mLastExpireTime(0)
-        , mMulticastRouterSock(-1)
-    {
-    }
-
-    void SetUp(void);
+    void SetUp(otInstance *aInstance);
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
-    void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
+    void HandleStateChanged(otChangedFlags aFlags);
 
 private:
     enum
@@ -132,9 +131,10 @@ private:
     void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
                                                             const Ip6::Address                    &aAddress);
 
+    otInstance              *mInstance = nullptr;
     MulticastForwardingCache mMulticastForwardingCacheTable[kMulticastForwardingCacheTableSize];
-    uint64_t                 mLastExpireTime;
-    int                      mMulticastRouterSock;
+    uint64_t                 mLastExpireTime      = 0;
+    int                      mMulticastRouterSock = -1;
 };
 
 } // namespace Posix

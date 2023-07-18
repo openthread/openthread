@@ -110,10 +110,6 @@ otError otPlatInfraIfDiscoverNat64Prefix(uint32_t aInfraIfIndex)
 #endif
 }
 
-bool platformInfraIfIsRunning(void) { return ot::Posix::InfraNetif::Get().IsRunning(); }
-
-const char *otSysGetInfraNetifName(void) { return ot::Posix::InfraNetif::Get().GetNetifName(); }
-
 uint32_t otSysGetInfraNetifFlags(void) { return ot::Posix::InfraNetif::Get().GetFlags(); }
 
 void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters)
@@ -405,14 +401,17 @@ exit:
     return;
 }
 
-void InfraNetif::SetUp(void)
+void InfraNetif::SetUp(otInstance *aInstance)
 {
-    OT_ASSERT(gInstance != nullptr);
+    OT_ASSERT(aInstance != nullptr);
     VerifyOrExit(mInfraIfIndex != 0);
 
-    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));
-    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, /* aEnabled */ true));
+    mInstance = aInstance;
     Mainloop::Manager::Get().Add(*this);
+
+    SuccessOrDie(otBorderRoutingInit(mInstance, mInfraIfIndex, IsRunning()));
+    SuccessOrDie(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+
 exit:
     return;
 }
@@ -422,6 +421,7 @@ void InfraNetif::TearDown(void)
     VerifyOrExit(mInfraIfIndex != 0);
 
     Mainloop::Manager::Get().Remove(*this);
+    mInstance = nullptr;
 
 exit:
     return;
@@ -476,6 +476,8 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         ExitNow();
     }
 
+    VerifyOrExit(mInstance != nullptr);
+
     for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
          header                  = NLMSG_NEXT(header, len))
     {
@@ -488,7 +490,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         case RTM_DELADDR:
         case RTM_NEWLINK:
         case RTM_DELLINK:
-            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));
+            SuccessOrDie(otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, IsRunning()));
             break;
         case NLMSG_ERROR:
         {
@@ -543,6 +545,8 @@ void InfraNetif::ReceiveIcmp6Message(void)
         ExitNow(error = OT_ERROR_DROP);
     }
 
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_INVALID_STATE);
+
     bufferLength = static_cast<uint16_t>(rval);
 
     for (cmh = CMSG_FIRSTHDR(&msg); cmh; cmh = CMSG_NXTHDR(&msg, cmh))
@@ -569,7 +573,7 @@ void InfraNetif::ReceiveIcmp6Message(void)
     // the hoplimit must be 255 and the source address must be a link-local address.
     VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr), error = OT_ERROR_DROP);
 
-    otPlatInfraIfRecvIcmp6Nd(gInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
+    otPlatInfraIfRecvIcmp6Nd(mInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                              bufferLength);
 
 exit:
@@ -593,6 +597,8 @@ void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
     otIp6Prefix prefix = {};
 
     VerifyOrExit((char *)req->ar_name == kWellKnownIpv4OnlyName);
+
+    VerifyOrExit(Get().mInstance != nullptr);
 
     otLogInfoPlat("Handling host address response for %s", kWellKnownIpv4OnlyName);
 
@@ -653,7 +659,7 @@ void InfraNetif::DiscoverNat64PrefixDone(union sigval sv)
         }
     }
 
-    otPlatInfraIfDiscoverNat64PrefixDone(gInstance, Get().mInfraIfIndex, &prefix);
+    otPlatInfraIfDiscoverNat64PrefixDone(Get().mInstance, Get().mInfraIfIndex, &prefix);
 
 exit:
     freeaddrinfo(res);

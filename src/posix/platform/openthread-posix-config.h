@@ -383,4 +383,19 @@
 #ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
 #define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (60 * 1000 * 1000)
 #endif
+
+#ifndef OPENTHREAD_POSIX_USE_MLD_MONITOR
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
+// on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
+// on NetBSD, MLD monitoring simply doesn't work
+#define OPENTHREAD_POSIX_USE_MLD_MONITOR 0
+#else
+// on some platforms (Linux, but others might be made to work), we do not get information about multicast
+// group joining via AF_NETLINK or AF_ROUTE sockets.  on those platform, we must listen for IPv6 ICMP
+// MLDv2 messages to know when mulicast memberships change
+// 		https://stackoverflow.com/questions/37346289/using-netlink-is-it-possible-to-listen-whenever-multicast-group-membership-is-ch
+#define OPENTHREAD_POSIX_USE_MLD_MONITOR 1
+#endif
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

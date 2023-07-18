@@ -41,7 +41,7 @@ class Daemon : public Mainloop::Source, private NonCopyable
 public:
     static Daemon &Get(void);
 
-    void SetUp(void);
+    void SetUp(otInstance *aInstance);
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
@@ -50,9 +50,10 @@ private:
     int  OutputFormatV(const char *aFormat, va_list aArguments);
     void InitializeSessionSocket(void);
 
-    int mListenSocket  = -1;
-    int mDaemonLock    = -1;
-    int mSessionSocket = -1;
+    otInstance *mInstance      = nullptr;
+    int         mListenSocket  = -1;
+    int         mDaemonLock    = -1;
+    int         mSessionSocket = -1;
 };
 
 } // namespace Posix

@@ -85,5 +85,26 @@ exit:
     return error;
 }
 
+void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError error)
+{
+    OT_UNUSED_VARIABLE(aAddress);
+
+    if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)) ||
+        ((!isAdd) && (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)))
+    {
+        otLogInfoPlat("[netif] %s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
+                      aAddress.ToString().AsCString(),
+                      error == OT_ERROR_ALREADY     ? " (already subscribed, ignored)"
+                      : error == OT_ERROR_REJECTED  ? " (rejected)"
+                      : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)"
+                                                    : "");
+    }
+    else
+    {
+        otLogWarnPlat("[netif] %s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
+                      aAddress.ToString().AsCString(), otThreadErrorToString(error));
+    }
+}
+
 } // namespace Posix
 } // namespace ot

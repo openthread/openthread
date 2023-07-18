@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,44 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef OT_POSIX_PLATFORM_UDP_HPP_
-#define OT_POSIX_PLATFORM_UDP_HPP_
 
-#include <openthread/instance.h>
+#ifndef POSIX_PLATFORM_MLD_MONITOR_HPP_
+#define POSIX_PLATFORM_MLD_MONITOR_HPP_
+
+#include "openthread-posix-config.h"
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
 
+#include <openthread/openthread-system.h>
+
+#if OPENTHREAD_POSIX_USE_MLD_MONITOR
+
 namespace ot {
 namespace Posix {
 
-class Udp : public Mainloop::Source, private NonCopyable
+class MldMonitor : public Mainloop::Source, private NonCopyable
 {
 public:
-    static Udp &Get(void);
+    /** Returns the singleton object of this class. */
+    static MldMonitor &Get(void);
 
     void SetUp(otInstance *aInstance);
     void TearDown(void);
+
+    // Implements ot::Posix::Mainloop::Source
+
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
 
 private:
+    int         mFd       = -1;
     otInstance *mInstance = nullptr;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_UDP_HPP_
+#endif // OPENTHREAD_POSIX_USE_MLD_MONITOR
+
+#endif // POSIX_PLATFORM_MLD_MONITOR_HPP_

@@ -103,7 +103,6 @@ endif()
 
 add_library(openthread-posix
     alarm.cpp
-    backbone.cpp
     backtrace.cpp
     config_file.cpp
     daemon.cpp
@@ -115,6 +114,7 @@ add_library(openthread-posix
     mainloop.cpp
     memory.cpp
     misc.cpp
+    mld_monitor.cpp
     multicast_routing.cpp
     netif.cpp
     power.cpp

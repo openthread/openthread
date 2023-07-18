@@ -29,7 +29,9 @@
 #ifndef OT_POSIX_PLATFORM_UTILS_HPP_
 #define OT_POSIX_PLATFORM_UTILS_HPP_
 
-#include "openthread/error.h"
+#include "net/ip6_address.hpp"
+
+#include <openthread/error.h>
 
 namespace ot {
 namespace Posix {
@@ -45,6 +47,9 @@ namespace Posix {
  *
  */
 otError ExecuteCommand(const char *aFormat, ...);
+
+/** Logs Thread address changes.  */
+void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError error);
 
 } // namespace Posix
 } // namespace ot

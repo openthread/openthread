@@ -55,6 +55,10 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#error "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE requires OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE to work"
+#endif
+
 #include "posix/platform/ip6_utils.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/udp.hpp"
@@ -98,7 +102,7 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
     if (IsLinkLocal(peerAddr.sin6_addr) && !aMessageInfo.mIsHostInterface)
     {
         // sin6_scope_id only works for link local destinations
-        peerAddr.sin6_scope_id = gNetifIndex;
+        peerAddr.sin6_scope_id = otSysGetThreadNetifIndex();
     }
 
     memset(control, 0, sizeof(control));
@@ -137,7 +141,7 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
 
-        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : gNetifIndex;
+        pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : otSysGetThreadNetifIndex();
 
         memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
@@ -205,7 +209,7 @@ otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageIn
 
                 memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
 
-                aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != gNetifIndex);
+                aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != otSysGetThreadNetifIndex());
                 memcpy(&aMessageInfo.mSockAddr, &pktinfo.ipi6_addr, sizeof(aMessageInfo.mSockAddr));
             }
         }
@@ -259,7 +263,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
     otError error = OT_ERROR_NONE;
     int     fd;
 
-    assert(gNetifIndex != 0);
+    assert(otSysGetThreadNetifIndex() != 0);
     assert(aUdpSocket->mHandle != nullptr);
     VerifyOrExit(aUdpSocket->mSockName.mPort != 0, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
@@ -304,6 +308,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, nullptr, 0) == 0, error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         unsigned int netifIndex = 0;
+
         VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
                                error = OT_ERROR_FAILED);
 #endif // __linux__
@@ -312,10 +317,13 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     case OT_NETIF_THREAD:
     {
 #ifdef __linux__
-        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &gNetifName, strlen(gNetifName)) == 0,
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, otSysGetThreadNetifName(),
+                                strlen(otSysGetThreadNetifName())) == 0,
                      error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &gNetifIndex, sizeof(gNetifIndex)) == 0,
+        unsigned int netifIndex = otSysGetThreadNetifIndex();
+
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
                                error = OT_ERROR_FAILED);
 #endif // __linux__
         break;
@@ -324,11 +332,13 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #if __linux__
-        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, gBackboneNetifName, strlen(gBackboneNetifName)) == 0,
+        VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, otSysGetInfraNetifName(),
+                                strlen(otSysGetInfraNetifName())) == 0,
                      error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &gBackboneNetifIndex, sizeof(gBackboneNetifIndex)) ==
-                         0,
+        unsigned int netifIndex = otSysGetInfraNetifIndex();
+
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
                      error = OT_ERROR_FAILED);
 #endif // __linux__
 #else
@@ -469,11 +479,11 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
     case OT_NETIF_UNSPECIFIED:
         break;
     case OT_NETIF_THREAD:
-        mreq.ipv6mr_interface = gNetifIndex;
+        mreq.ipv6mr_interface = otSysGetThreadNetifIndex();
         break;
     case OT_NETIF_BACKBONE:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        mreq.ipv6mr_interface = gBackboneNetifIndex;
+        mreq.ipv6mr_interface = otSysGetInfraNetifIndex();
 #else
         ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
 #endif
@@ -509,11 +519,11 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
     case OT_NETIF_UNSPECIFIED:
         break;
     case OT_NETIF_THREAD:
-        mreq.ipv6mr_interface = gNetifIndex;
+        mreq.ipv6mr_interface = otSysGetThreadNetifIndex();
         break;
     case OT_NETIF_BACKBONE:
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-        mreq.ipv6mr_interface = gBackboneNetifIndex;
+        mreq.ipv6mr_interface = otSysGetInfraNetifIndex();
 #else
         ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
 #endif
@@ -534,11 +544,27 @@ exit:
 namespace ot {
 namespace Posix {
 
+void Udp::SetUp(otInstance *aInstance)
+{
+    mInstance = aInstance;
+    Mainloop::Manager::Get().Add(*this);
+}
+
+void Udp::TearDown(void) { Mainloop::Manager::Get().Remove(*this); }
+
+Udp &Udp::Get(void)
+{
+    static Udp sInstance;
+
+    return sInstance;
+}
+
 void Udp::Update(otSysMainloopContext &aContext)
 {
-    VerifyOrExit(gNetifIndex != 0);
+    VerifyOrExit(otSysGetThreadNetifIndex() != 0);
+    VerifyOrExit(mInstance != nullptr);
 
-    for (otUdpSocket *socket = otUdpGetSockets(gInstance); socket != nullptr; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd;
 
@@ -560,46 +586,13 @@ exit:
     return;
 }
 
-void Udp::Init(const char *aIfName)
-{
-    if (aIfName == nullptr)
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-
-    if (aIfName != gNetifName)
-    {
-        VerifyOrDie(strlen(aIfName) < sizeof(gNetifName) - 1, OT_EXIT_INVALID_ARGUMENTS);
-        assert(gNetifIndex == 0);
-        strcpy(gNetifName, aIfName);
-        gNetifIndex = if_nametoindex(gNetifName);
-        VerifyOrDie(gNetifIndex != 0, OT_EXIT_ERROR_ERRNO);
-    }
-
-    assert(gNetifIndex != 0);
-}
-
-void Udp::SetUp(void) { Mainloop::Manager::Get().Add(*this); }
-
-void Udp::TearDown(void) { Mainloop::Manager::Get().Remove(*this); }
-
-void Udp::Deinit(void)
-{
-    // TODO All platform sockets should be closed
-}
-
-Udp &Udp::Get(void)
-{
-    static Udp sInstance;
-
-    return sInstance;
-}
-
 void Udp::Process(const otSysMainloopContext &aContext)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    for (otUdpSocket *socket = otUdpGetSockets(gInstance); socket != nullptr; socket = socket->mNext)
+    VerifyOrExit(mInstance != nullptr);
+
+    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd = FdFromHandle(socket->mHandle);
 
@@ -618,7 +611,7 @@ void Udp::Process(const otSysMainloopContext &aContext)
                 continue;
             }
 
-            message = otUdpNewMessage(gInstance, &msgSettings);
+            message = otUdpNewMessage(mInstance, &msgSettings);
 
             if (message == nullptr)
             {
@@ -638,6 +631,7 @@ void Udp::Process(const otSysMainloopContext &aContext)
         }
     }
 
+exit:
     return;
 }
 

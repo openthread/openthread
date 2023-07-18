@@ -61,7 +61,8 @@ typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
 void GetFilename(Filename &aFilename, const char *aPattern)
 {
     int         rval;
-    const char *netIfName = strlen(gNetifName) > 0 ? gNetifName : OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
+    const char *netIfName = strlen(otSysGetThreadNetifName()) > 0 ? otSysGetThreadNetifName()
+                                                                  : OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME;
 
     rval = snprintf(aFilename, sizeof(aFilename), aPattern, netIfName);
     if (rval < 0 && static_cast<size_t>(rval) >= sizeof(aFilename))
@@ -157,7 +158,7 @@ exit:
     }
 }
 
-void Daemon::SetUp(void)
+void Daemon::SetUp(otInstance *aInstance)
 {
     struct sockaddr_un sockname;
     int                ret;
@@ -187,6 +188,8 @@ void Daemon::SetUp(void)
         bool   mAllowAll = false;
         mode_t mMode     = 0;
     };
+
+    mInstance = aInstance;
 
     // This allows implementing pseudo reset.
     VerifyOrExit(mListenSocket == -1);
@@ -245,7 +248,7 @@ void Daemon::SetUp(void)
     }
 
     otCliInit(
-        gInstance,
+        mInstance,
         [](void *aContext, const char *aFormat, va_list aArguments) -> int {
             return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
         },

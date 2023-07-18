@@ -29,6 +29,9 @@
 #ifndef POSIX_PLATFORM_RESOLVER_HPP_
 #define POSIX_PLATFORM_RESOLVER_HPP_
 
+#include "core/common/non_copyable.hpp"
+#include "posix/platform/mainloop.hpp"
+
 #include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
 
@@ -40,18 +43,18 @@
 namespace ot {
 namespace Posix {
 
-class Resolver
+class Resolver : public Mainloop::Source, private NonCopyable
 {
 public:
     constexpr static ssize_t kMaxDnsMessageSize           = 512;
     constexpr static ssize_t kMaxUpstreamTransactionCount = 16;
     constexpr static ssize_t kMaxUpstreamServerCount      = 3;
 
-    /**
-     * Initialize the upstream DNS resolver.
-     *
-     */
-    void Init(void);
+    /** Returns the singleton object of this class. */
+    static Resolver &Get(void);
+
+    void SetUp(otInstance *aInstance);
+    void TearDown(void);
 
     /**
      * Sends the query to the upstream.
@@ -70,25 +73,10 @@ public:
      */
     void Cancel(otPlatDnsUpstreamQuery *aTxn);
 
-    /**
-     * Updates the file descriptor sets with file descriptors used by the radio driver.
-     *
-     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in,out]  aErrorFdSet  A reference to the error file descriptors.
-     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
-     * @param[in,out]  aTimeout     A reference to the timeout.
-     *
-     */
-    void UpdateFdSet(otSysMainloopContext &aContext);
+    // Implements ot::Posix::Mainloop::Source
 
-    /**
-     * Handles the result of select.
-     *
-     * @param[in]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in]  aErrorFdSet  A reference to the error file descriptors.
-     *
-     */
-    void Process(const otSysMainloopContext &aContext);
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute
@@ -110,9 +98,10 @@ private:
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
-    int       mUpstreamDnsServerCount = 0;
-    in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
-    uint64_t  mUpstreamDnsServerListFreshness = 0;
+    otInstance *mInstance               = nullptr;
+    int         mUpstreamDnsServerCount = 0;
+    in_addr_t   mUpstreamDnsServerList[kMaxUpstreamServerCount];
+    uint64_t    mUpstreamDnsServerListFreshness = 0;
 
     Transaction mUpstreamTransaction[kMaxUpstreamTransactionCount];
 };

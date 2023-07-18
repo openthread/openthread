@@ -320,11 +320,9 @@ void otTaskletsSignalPending(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstan
 
 void otPlatReset(otInstance *aInstance)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     gPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
 
-    otSysDeinit();
+    otSysDeinit(aInstance);
 
     longjmp(gResetJump, 1);
     assert(false);
@@ -422,7 +420,7 @@ int main(int argc, char *argv[])
 #endif
 
 exit:
-    otSysDeinit();
+    otSysDeinit(instance);
 
     return rval;
 }
