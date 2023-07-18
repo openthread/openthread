@@ -985,7 +985,7 @@ private:
     static bool IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord);
 
     void        HandleUpdate(Host &aHost, const MessageMetadata &aMetadata);
-    void        RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
+    void        RemoveHost(Host *aHost, RetainName aRetainName);
     bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader    &aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
