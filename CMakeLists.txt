@@ -106,65 +106,6 @@ if(OT_PACKAGE_VERSION STREQUAL "")
 endif()
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
-set(OT_THREAD_VERSION "1.3" CACHE STRING "Thread version chosen by the user at configure time")
-set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2" "1.3" "1.3.1")
-if(${OT_THREAD_VERSION} STREQUAL "1.1")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")
-    message(STATUS "Thread Version: 1.1 (OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1)")
-elseif(${OT_THREAD_VERSION} STREQUAL "1.2")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2")
-    message(STATUS "Thread Version: 1.2 (OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_2)")
-elseif(${OT_THREAD_VERSION} STREQUAL "1.3")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3")
-    message(STATUS "Thread Version: 1.3 (OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3)")
-elseif(${OT_THREAD_VERSION} STREQUAL "1.3.1")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3_1")
-    message(STATUS "Thread Version: 1.3.1 (OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_3_1)")
-else()
-    message(FATAL_ERROR "Thread version unknown: ${OT_THREAD_VERSION}")
-endif()
-
-set(OT_PLATFORM "NO" CACHE STRING "Target platform chosen by the user at configure time")
-ot_get_platforms(OT_PLATFORMS)
-set_property(CACHE OT_PLATFORM PROPERTY STRINGS ${OT_PLATFORMS})
-if(NOT OT_PLATFORM IN_LIST OT_PLATFORMS)
-    message(FATAL_ERROR "Platform unknown: ${OT_PLATFORM}")
-endif()
-
-set(OT_LOG_LEVEL "" CACHE STRING "set OpenThread log level")
-set(OT_LOG_LEVEL_VALUES
-    "NONE"
-    "CRIT"
-    "WARN"
-    "NOTE"
-    "INFO"
-    "DEBG"
-)
-set_property(CACHE OT_LOG_LEVEL PROPERTY STRINGS ${OT_LOG_LEVEL_VALUES})
-if(OT_LOG_LEVEL)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_${OT_LOG_LEVEL}")
-endif()
-
-set(OT_LOG_OUTPUT_VALUES
-    "APP"
-    "DEBUG_UART"
-    "NONE"
-    "PLATFORM_DEFINED"
-)
-if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
-    set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")
-else()
-    set(OT_LOG_OUTPUT "" CACHE STRING "Where log output goes to")
-endif()
-set_property(CACHE OT_LOG_OUTPUT PROPERTY STRINGS ${OT_LOG_OUTPUT_VALUES})
-if(OT_LOG_OUTPUT)
-    if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
-        message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
-    endif()
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
-    message(STATUS "Log output: ${OT_LOG_OUTPUT}")
-endif()
-
 # OT_CONFIG allows users to specify the path to a customized OpenThread
 # config header file. The default value of this parameter is empty string.
 # When not specified by user (value is ""), a platform cmake file may

@@ -26,22 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Get a list of the available platforms and output as a list to the 'arg_platforms' argument
-function(ot_get_platforms arg_platforms)
-    list(APPEND result "NO" "posix" "external")
-    set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
-    file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
-    foreach(platform IN LISTS platforms)
-        if(IS_DIRECTORY "${platforms_dir}/${platform}")
-            list(APPEND result "${platform}")
-        endif()
-    endforeach()
-
-    list(REMOVE_ITEM result utils)
-    list(SORT result)
-    set(${arg_platforms} "${result}" PARENT_SCOPE)
-endfunction()
-
 function(ot_git_version git_version)
     execute_process(
         COMMAND git describe --dirty --always
