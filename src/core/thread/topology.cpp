@@ -196,12 +196,6 @@ bool Neighbor::IsLastRxFragmentTagSet(void) const
 }
 #endif
 
-void Neighbor::GenerateChallenge(void)
-{
-    IgnoreError(
-        Random::Crypto::FillBuffer(mValidPending.mPending.mChallenge, sizeof(mValidPending.mPending.mChallenge)));
-}
-
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
@@ -491,11 +485,6 @@ exit:
     return addr;
 }
 #endif
-
-void Child::GenerateChallenge(void)
-{
-    IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
-}
 
 #if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const

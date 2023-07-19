@@ -1801,7 +1801,7 @@ Error Mle::SendChildIdRequest(void)
     }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildIdRequest)) != nullptr, error = kErrorNoBufs);
-    SuccessOrExit(error = message->AppendResponseTlv(mParentCandidate.mChallenge));
+    SuccessOrExit(error = message->AppendResponseTlv(mParentCandidate.mRxChallenge));
     SuccessOrExit(error = message->AppendLinkFrameCounterTlv());
     SuccessOrExit(error = message->AppendMleFrameCounterTlv());
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
@@ -2139,7 +2139,7 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge)
+Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const RxChallenge &aChallenge)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -3118,7 +3118,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 {
     Error            error = kErrorNone;
     int8_t           rss   = aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss();
-    Challenge        response;
+    RxChallenge      response;
     uint16_t         version;
     uint16_t         sourceAddress;
     LeaderData       leaderData;
@@ -3288,7 +3288,7 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
     // Challenge
-    SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidate.mChallenge));
+    SuccessOrExit(error = aRxInfo.mMessage.ReadChallengeTlv(mParentCandidate.mRxChallenge));
 
     InitNeighbor(mParentCandidate, aRxInfo);
     mParentCandidate.SetRloc16(sourceAddress);
@@ -3447,11 +3447,11 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    Error     error = kErrorNone;
-    uint16_t  sourceAddress;
-    Challenge challenge;
-    TlvList   requestedTlvList;
-    TlvList   tlvList;
+    Error       error = kErrorNone;
+    uint16_t    sourceAddress;
+    RxChallenge challenge;
+    TlvList     requestedTlvList;
+    TlvList     tlvList;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3467,7 +3467,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         tlvList.Add(Tlv::kLinkFrameCounter);
         break;
     case kErrorNotFound:
-        challenge.mLength = 0;
+        challenge.Clear();
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3531,7 +3531,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     ProcessKeySequence(aRxInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if ((aRxInfo.mNeighbor != nullptr) && (challenge.mLength != 0))
+    if ((aRxInfo.mNeighbor != nullptr) && !challenge.IsEmpty())
     {
         aRxInfo.mNeighbor->ClearLastRxFragmentTag();
     }
@@ -3545,14 +3545,14 @@ exit:
 
 void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
 {
-    Error     error = kErrorNone;
-    uint8_t   status;
-    uint8_t   mode;
-    Challenge response;
-    uint32_t  linkFrameCounter;
-    uint32_t  mleFrameCounter;
-    uint16_t  sourceAddress;
-    uint32_t  timeout;
+    Error       error = kErrorNone;
+    uint8_t     status;
+    uint8_t     mode;
+    RxChallenge response;
+    uint32_t    linkFrameCounter;
+    uint32_t    mleFrameCounter;
+    uint16_t    sourceAddress;
+    uint32_t    timeout;
 
     Log(kMessageReceive, kTypeChildUpdateResponseOfParent, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3561,7 +3561,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
     case kErrorNone:
         break;
     case kErrorNotFound:
-        response.mLength = 0;
+        response.Clear();
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3681,7 +3681,7 @@ void Mle::HandleChildUpdateResponse(RxInfo &aRxInfo)
         OT_ASSERT(false);
     }
 
-    aRxInfo.mClass = (response.mLength == 0) ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
+    aRxInfo.mClass = response.IsEmpty() ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
 
 exit:
 
@@ -4414,20 +4414,6 @@ void Mle::TlvList::AddElementsFrom(const TlvList &aTlvList)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// Challenge
-
-void Mle::Challenge::GenerateRandom(void)
-{
-    mLength = kMaxChallengeSize;
-    IgnoreError(Random::Crypto::FillBuffer(mBuffer, mLength));
-}
-
-bool Mle::Challenge::Matches(const uint8_t *aBuffer, uint8_t aLength) const
-{
-    return (mLength == aLength) && (memcmp(mBuffer, aBuffer, aLength) == 0);
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 // DelayedResponseMetadata
 
 void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
@@ -4529,19 +4515,14 @@ Error Mle::TxMessage::AppendModeTlv(DeviceMode aMode) { return Tlv::Append<ModeT
 
 Error Mle::TxMessage::AppendTimeoutTlv(uint32_t aTimeout) { return Tlv::Append<TimeoutTlv>(*this, aTimeout); }
 
-Error Mle::TxMessage::AppendChallengeTlv(const Challenge &aChallenge)
+Error Mle::TxMessage::AppendChallengeTlv(const TxChallenge &aChallenge)
 {
-    return Tlv::Append<ChallengeTlv>(*this, aChallenge.mBuffer, aChallenge.mLength);
+    return Tlv::Append<ChallengeTlv>(*this, &aChallenge, sizeof(aChallenge));
 }
 
-Error Mle::TxMessage::AppendChallengeTlv(const uint8_t *aChallenge, uint8_t aChallengeLength)
+Error Mle::TxMessage::AppendResponseTlv(const RxChallenge &aResponse)
 {
-    return Tlv::Append<ChallengeTlv>(*this, aChallenge, aChallengeLength);
-}
-
-Error Mle::TxMessage::AppendResponseTlv(const Challenge &aResponse)
-{
-    return Tlv::Append<ResponseTlv>(*this, aResponse.mBuffer, aResponse.mLength);
+    return Tlv::Append<ResponseTlv>(*this, aResponse.GetBytes(), aResponse.GetLength());
 }
 
 Error Mle::TxMessage::AppendLinkFrameCounterTlv(void)
@@ -4960,30 +4941,25 @@ Error Mle::TxMessage::AppendPendingDatasetTlv(void)
 //---------------------------------------------------------------------------------------------------------------------
 // RxMessage
 
-Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const
+Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
     Error    error;
     uint16_t offset;
     uint16_t length;
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(*this, aTlvType, offset, length));
-    VerifyOrExit(length >= kMinChallengeSize, error = kErrorParse);
-
-    length = Min(length, kMaxChallengeSize);
-
-    ReadBytes(offset, aBuffer.mBuffer, length);
-    aBuffer.mLength = static_cast<uint8_t>(length);
+    error = aRxChallenge.ReadFrom(*this, offset, length);
 
 exit:
     return error;
 }
 
-Error Mle::RxMessage::ReadChallengeTlv(Challenge &aChallenge) const
+Error Mle::RxMessage::ReadChallengeTlv(RxChallenge &aChallenge) const
 {
     return ReadChallengeOrResponse(Tlv::kChallenge, aChallenge);
 }
 
-Error Mle::RxMessage::ReadResponseTlv(Challenge &aResponse) const
+Error Mle::RxMessage::ReadResponseTlv(RxChallenge &aResponse) const
 {
     return ReadChallengeOrResponse(Tlv::kResponse, aResponse);
 }
