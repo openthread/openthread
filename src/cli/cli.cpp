@@ -2442,23 +2442,57 @@ exit:
 }
 #endif
 
+/**
+ * @cli detach
+ * @code
+ * detach
+ * Finished detaching
+ * Done
+ * @endcode
+ * @par
+ * Start the graceful detach process by first notifying other nodes (sending Address Release if acting as a router, or
+ * setting Child Timeout value to zero on parent if acting as a child) and then stopping Thread protocol operation.
+ * @sa otThreadDetachGracefully
+ */
 template <> otError Interpreter::Process<Cmd("detach")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli detach async
+     * @code
+     * detach async
+     * Done
+     * @endcode
+     * @par
+     * Start the graceful detach process similar to the `detach` command without blocking and waiting for the callback
+     * indicating that detach is finished.
+     * @csa{detach}
+     * @sa otThreadDetachGracefully
+     */
     if (aArgs[0] == "async")
     {
         SuccessOrExit(error = otThreadDetachGracefully(GetInstancePtr(), nullptr, nullptr));
     }
     else
     {
-        SuccessOrExit(error =
-                          otThreadDetachGracefully(GetInstancePtr(), &Interpreter::HandleDetachGracefullyResult, this));
+        SuccessOrExit(error = otThreadDetachGracefully(GetInstancePtr(), HandleDetachGracefullyResult, this));
         error = OT_ERROR_PENDING;
     }
 
 exit:
     return error;
+}
+
+void Interpreter::HandleDetachGracefullyResult(void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDetachGracefullyResult();
+}
+
+void Interpreter::HandleDetachGracefullyResult(void)
+{
+    OutputLine("Finished detaching");
+    OutputResult(OT_ERROR_NONE);
 }
 
 /**
@@ -7747,17 +7781,6 @@ void Interpreter::OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiag
     OutputMode(aIndentSize + kIndentSize, aChildEntry.mMode);
 }
 #endif // OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-
-void Interpreter::HandleDetachGracefullyResult(void *aContext)
-{
-    static_cast<Interpreter *>(aContext)->HandleDetachGracefullyResult();
-}
-
-void Interpreter::HandleDetachGracefullyResult(void)
-{
-    OutputLine("Finished detaching");
-    OutputResult(OT_ERROR_NONE);
-}
 
 #if OPENTHREAD_FTD
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
