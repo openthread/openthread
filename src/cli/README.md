@@ -983,10 +983,12 @@ Done
 
 Get the CSL configuration.
 
+CSL period is shown in microseconds.
+
 ```bash
 > csl
 Channel: 11
-Period: 1000 (in units of 10 symbols), 160ms
+Period: 160000us
 Timeout: 1000s
 Done
 ```
@@ -1002,10 +1004,12 @@ Done
 
 ### csl period \<period\>
 
-Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
+Set CSL period in microseconds. Disable CSL by setting this parameter to `0`.
+
+The CSL period MUST be a multiple 160 microseconds which is 802.15.4 "ten symbols time".
 
 ```bash
-> csl period 3000
+> csl period 30000000
 Done
 ```
 

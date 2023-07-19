@@ -2923,11 +2923,8 @@ class OpenThreadTHCI(object):
         Args:
             period: csl period in ms
 
-        note: OT command 'csl period' accepts parameter in unit of 10 symbols,
-        period is converted from unit ms to ten symbols (160us per 10 symbols).
-
         """
-        cmd = 'csl period %u' % (period * 6.25)
+        cmd = 'csl period %u' % (period * 1000)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @staticmethod
