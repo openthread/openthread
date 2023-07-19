@@ -31,6 +31,7 @@
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 #include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
@@ -43,18 +44,23 @@
 namespace ot {
 namespace Posix {
 
-class Resolver : public Mainloop::Source, private NonCopyable
+class Resolver : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     constexpr static ssize_t kMaxDnsMessageSize           = 512;
     constexpr static ssize_t kMaxUpstreamTransactionCount = 16;
     constexpr static ssize_t kMaxUpstreamServerCount      = 3;
 
-    /** Returns the singleton object of this class. */
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
     static Resolver &Get(void);
 
-    void SetUp(otInstance *aInstance);
-    void TearDown(void);
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
 
     /**
      * Sends the query to the upstream.
@@ -73,7 +79,7 @@ public:
      */
     void Cancel(otPlatDnsUpstreamQuery *aTxn);
 
-    // Implements ot::Posix::Mainloop::Source
+    // Implements Mainloop::Source
 
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
@@ -98,10 +104,9 @@ private:
     void TryRefreshDnsServerList(void);
     void LoadDnsServerListFromConf(void);
 
-    otInstance *mInstance               = nullptr;
-    int         mUpstreamDnsServerCount = 0;
-    in_addr_t   mUpstreamDnsServerList[kMaxUpstreamServerCount];
-    uint64_t    mUpstreamDnsServerListFreshness = 0;
+    int       mUpstreamDnsServerCount = 0;
+    in_addr_t mUpstreamDnsServerList[kMaxUpstreamServerCount];
+    uint64_t  mUpstreamDnsServerListFreshness = 0;
 
     Transaction mUpstreamTransaction[kMaxUpstreamTransactionCount];
 };

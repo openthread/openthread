@@ -44,11 +44,12 @@
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 namespace ot {
 namespace Posix {
 
-class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
+class MulticastRoutingManager : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     /**
@@ -57,10 +58,20 @@ public:
      */
     static MulticastRoutingManager &Get(void);
 
-    void SetUp(otInstance *aInstance);
-    void TearDown(void);
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
+
+    // Implements Mainloop::Source
+
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
+
+    /**
+     * Handles OpenThread state changes.
+     *
+     */
     void HandleStateChanged(otChangedFlags aFlags);
 
 private:

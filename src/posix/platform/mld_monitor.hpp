@@ -33,6 +33,7 @@
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 #include <openthread/openthread-system.h>
 
@@ -41,23 +42,27 @@
 namespace ot {
 namespace Posix {
 
-class MldMonitor : public Mainloop::Source, private NonCopyable
+class MldMonitor : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
-    /** Returns the singleton object of this class. */
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
     static MldMonitor &Get(void);
 
-    void SetUp(otInstance *aInstance);
-    void TearDown(void);
+    // Implements PlatformBase
 
-    // Implements ot::Posix::Mainloop::Source
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
+
+    // Implements Mainloop::Source
 
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
 
 private:
-    int         mFd       = -1;
-    otInstance *mInstance = nullptr;
+    int mFd = -1;
 };
 
 } // namespace Posix

@@ -33,6 +33,7 @@
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
@@ -51,27 +52,44 @@
 namespace ot {
 namespace Posix {
 
-class NetIf : public Mainloop::Source, private NonCopyable
+class NetIf : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     /** Returns the singleton object of this class. */
     static NetIf &Get(void);
 
+    /**
+     * Performs initialization work before OpenThread instance is created.
+     *
+     * @param aPlatformConfig  Configurations of the platform.
+     *
+     */
     void Init(const otPlatformConfig *aPlatformConfig);
+
+    /**
+     * Performs cleanup work after the OpenThread instance is destroyed.
+     *
+     */
     void Deinit(void);
 
     unsigned int GetIfIndex(void) const { return mIfIndex; }
     const char  *GetIfName(void) const { return mIfName; }
 
-    void SetUp(otInstance *aInstance);
-    void TearDown(void);
+    // Implements PlatformBase
 
-    void HandleStateChanged(otChangedFlags aFlags);
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
 
-    // Implements ot::Posix::Mainloop::Source
+    // Implements Mainloop::Source
 
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
+
+    /**
+     * Handles OpenThread state changes.
+     *
+     */
+    void HandleStateChanged(otChangedFlags aFlags);
 
 private:
     static constexpr size_t   kMaxIp6Size            = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;

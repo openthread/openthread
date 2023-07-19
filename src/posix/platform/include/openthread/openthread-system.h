@@ -122,6 +122,8 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.
  *
+ * @param aInstance  The OpenThread instance returned by `otSysInit`.
+ *
  */
 void otSysDeinit(otInstance *aInstance);
 
@@ -184,7 +186,7 @@ extern otPlatResetReason gPlatResetReason;
 const char *otSysGetThreadNetifName(void);
 
 /**
- * Returns the Thread network interface index..
+ * Returns the Thread network interface index.
  *
  */
 unsigned int otSysGetThreadNetifIndex(void);

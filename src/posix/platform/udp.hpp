@@ -32,22 +32,29 @@
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 namespace ot {
 namespace Posix {
 
-class Udp : public Mainloop::Source, private NonCopyable
+class Udp : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
     static Udp &Get(void);
 
-    void SetUp(otInstance *aInstance);
-    void TearDown(void);
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
+
+    // Implements Mainloop::Source
+
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
-
-private:
-    otInstance *mInstance = nullptr;
 };
 
 } // namespace Posix

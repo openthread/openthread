@@ -40,6 +40,7 @@
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
@@ -50,13 +51,11 @@ namespace Posix {
  * Manages infrastructure network interface.
  *
  */
-class InfraNetif : public Mainloop::Source, private NonCopyable
+class InfraNetif : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     /**
-     * Returns the infrastructure network interface singleton.
-     *
-     * @returns The singleton object.
+     * Returns the singleton object of this class.
      *
      */
     static InfraNetif &Get(void);
@@ -66,26 +65,10 @@ public:
      *
      * @note This method is called before OpenThread instance is created.
      *
-     * @param[in]  aIfName      A pointer to infrastructure network interface name.
+     * @param[in]  aIfName  A pointer to infrastructure network interface name.
      *
      */
     void Init(const char *aIfName);
-
-    /**
-     * Sets up the infrastructure network interface.
-     *
-     * @note This method is called after OpenThread instance is created.
-     *
-     */
-    void SetUp(otInstance *aInstance);
-
-    /**
-     * Tears down the infrastructure network interface.
-     *
-     * @note This method is called before OpenThread instance is destructed.
-     *
-     */
-    void TearDown(void);
 
     /**
      * Deinitializes the infrastructure network interface.
@@ -94,6 +77,11 @@ public:
      *
      */
     void Deinit(void);
+
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
 
     /**
      * Checks whether the infrastructure network interface is running.
@@ -168,7 +156,7 @@ public:
      */
     uint32_t GetNetifIndex(void) const { return mInfraIfIndex; }
 
-    // Implements Posix::Mainloop::Source
+    // Implements Mainloop::Source
 
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
@@ -184,11 +172,10 @@ private:
     bool        HasLinkLocalAddress(void) const;
     static void DiscoverNat64PrefixDone(union sigval sv);
 
-    char        mInfraIfName[IFNAMSIZ];
-    uint32_t    mInfraIfIndex       = 0;
-    int         mInfraIfIcmp6Socket = -1;
-    int         mNetLinkSocket      = -1;
-    otInstance *mInstance           = nullptr;
+    char     mInfraIfName[IFNAMSIZ];
+    uint32_t mInfraIfIndex       = 0;
+    int      mInfraIfIcmp6Socket = -1;
+    int      mNetLinkSocket      = -1;
 };
 
 } // namespace Posix

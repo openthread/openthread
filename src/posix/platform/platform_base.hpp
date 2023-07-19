@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,47 +25,45 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
-#define OT_POSIX_PLATFORM_DAEMON_HPP_
 
-#include "openthread-posix-config.h"
+#ifndef POSIX_PLATFORM_BASE_HPP_
+#define POSIX_PLATFORM_BASE_HPP_
 
-#include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
-#include "posix/platform/platform_base.hpp"
+#include <openthread/instance.h>
 
 namespace ot {
 namespace Posix {
 
-class Daemon : public PlatformBase, public Mainloop::Source, private NonCopyable
+/**
+ * Base interface that posix platform modules should implement to interact with
+ * OpenThread API.
+ *
+ */
+class PlatformBase
 {
 public:
     /**
-     * Returns the singleton object of this class.
+     * Performs platform-specific initialization work after the OpenThread
+     * instance is created/initialized.
+     *
+     * @param aInstance  The newly created OpenThread instance.
+     */
+    virtual void SetUp(otInstance *aInstance) = 0;
+
+    /**
+     * Performs platform-specific cleanup work before the OpenThread
+     * instance is destroyed.
      *
      */
-    static Daemon &Get(void);
+    virtual void TearDown(void) = 0;
 
-    // Implements PlatformBase
+    virtual ~PlatformBase(void) = default;
 
-    void SetUp(otInstance *aInstance) override;
-    void TearDown(void) override;
-
-    // Implements Mainloop::Source
-
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
-
-private:
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
-    void InitializeSessionSocket(void);
-
-    int mListenSocket  = -1;
-    int mDaemonLock    = -1;
-    int mSessionSocket = -1;
+protected:
+    otInstance *mInstance = nullptr;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_DAEMON_HPP_
+#endif // POSIX_PLATFORM_BASE_HPP_

@@ -550,7 +550,11 @@ void Udp::SetUp(otInstance *aInstance)
     Mainloop::Manager::Get().Add(*this);
 }
 
-void Udp::TearDown(void) { Mainloop::Manager::Get().Remove(*this); }
+void Udp::TearDown(void)
+{
+    Mainloop::Manager::Get().Remove(*this);
+    mInstance = nullptr;
+}
 
 Udp &Udp::Get(void)
 {

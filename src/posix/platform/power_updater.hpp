@@ -40,8 +40,6 @@
 #include <openthread/logging.h>
 #include <openthread/platform/radio.h>
 
-#include "config_file.hpp"
-#include "power.hpp"
 #include "common/code_utils.hpp"
 #include "posix/platform/config_file.hpp"
 #include "posix/platform/power.hpp"
@@ -57,8 +55,7 @@ class PowerUpdater
 {
 public:
     PowerUpdater(void)
-        : mInstance(nullptr)
-        , mFactoryConfigFile(kFactoryConfigFile)
+        : mFactoryConfigFile(kFactoryConfigFile)
         , mProductConfigFile(kProductConfigFile)
         , mRegionCode(0)
     {
@@ -108,10 +105,9 @@ private:
     otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
     otError UpdateCalibratedPower(otInstance *aInstance);
 
-    otInstance *mInstance;
-    ConfigFile  mFactoryConfigFile;
-    ConfigFile  mProductConfigFile;
-    uint16_t    mRegionCode;
+    ConfigFile mFactoryConfigFile;
+    ConfigFile mProductConfigFile;
+    uint16_t   mRegionCode;
 };
 
 } // namespace Posix

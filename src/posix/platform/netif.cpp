@@ -1606,13 +1606,13 @@ static int InitNetLink(void)
         OT_UNUSED_VARIABLE(enable);
 
 #if defined(NETLINK_EXT_ACK)
-        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) != 0)
+        if (setsockopt(netlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) != 0)
         {
             otLogWarnPlat("[netif] Failed to enable NETLINK_EXT_ACK: %s", strerror(errno));
         }
 #endif
 #if defined(NETLINK_CAP_ACK)
-        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) != 0)
+        if (setsockopt(netlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) != 0)
         {
             otLogWarnPlat("[netif] Failed to enable NETLINK_CAP_ACK: %s", strerror(errno));
         }
