@@ -443,6 +443,8 @@ public:
         friend class Heap::Allocatable<Host>;
 
     public:
+        typedef Crypto::Ecdsa::P256::PublicKey Key; ///< Host key (public ECDSA P256 key).
+
         /**
          * Tells whether the Host object has been deleted.
          *
@@ -511,13 +513,12 @@ public:
         void GetLeaseInfo(LeaseInfo &aLeaseInfo) const;
 
         /**
-         * Returns the KEY resource record of the host.
+         * Returns the key associated with this host.
          *
-         * @returns  A pointer to the ECDSA P 256 public key resource record
-         *           if there is valid one. `nullptr` if no valid key exists.
+         * @returns  The host key.
          *
          */
-        const Dns::Ecdsa256KeyRecord *GetKeyRecord(void) const { return mKeyRecord.IsValid() ? &mKeyRecord : nullptr; }
+        const Key &GetKey(void) const { return mKey; }
 
         /**
          * Returns the expire time (in milliseconds) of the host.
@@ -568,7 +569,6 @@ public:
         ~Host(void);
 
         Error SetFullName(const char *aFullName);
-        void  SetKeyRecord(Dns::Ecdsa256KeyRecord &aKeyRecord);
         void  SetTtl(uint32_t aTtl) { mTtl = aTtl; }
         void  SetLease(uint32_t aLease) { mLease = aLease; }
         void  SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
@@ -589,16 +589,14 @@ public:
         Host                     *mNext;
         Heap::String              mFullName;
         Heap::Array<Ip6::Address> mAddresses;
-
-        // TODO(wgtdkp): there is no necessary to save the entire resource
-        // record, saving only the ECDSA-256 public key should be enough.
-        Dns::Ecdsa256KeyRecord mKeyRecord;
-        uint32_t               mTtl;      // The TTL in seconds.
-        uint32_t               mLease;    // The LEASE time in seconds.
-        uint32_t               mKeyLease; // The KEY-LEASE time in seconds.
-        TimeMilli              mUpdateTime;
-        LinkedList<Service>    mServices;
-        bool                   mUseShortLeaseOption; // Use short lease option (lease only - 4 byte) when responding.
+        Key                       mKey;
+        uint32_t                  mTtl;      // The TTL in seconds.
+        uint32_t                  mLease;    // The LEASE time in seconds.
+        uint32_t                  mKeyLease; // The KEY-LEASE time in seconds.
+        TimeMilli                 mUpdateTime;
+        LinkedList<Service>       mServices;
+        bool                      mParsedKey : 1;
+        bool                      mUseShortLeaseOption : 1; // Use short lease option (lease only 4 bytes).
     };
 
     /**
@@ -966,13 +964,13 @@ private:
     void  ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata);
     Error ProcessUpdateSection(Host &aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
     Error ProcessAdditionalSection(Host *aHost, const Message &aMessage, MessageMetadata &aMetadata) const;
-    Error VerifySignature(const Dns::Ecdsa256KeyRecord &aKeyRecord,
-                          const Message                &aMessage,
-                          Dns::UpdateHeader             aDnsHeader,
-                          uint16_t                      aSigOffset,
-                          uint16_t                      aSigRdataOffset,
-                          uint16_t                      aSigRdataLength,
-                          const char                   *aSignerName) const;
+    Error VerifySignature(const Host::Key  &aKey,
+                          const Message    &aMessage,
+                          Dns::UpdateHeader aDnsHeader,
+                          uint16_t          aSigOffset,
+                          uint16_t          aSigRdataOffset,
+                          uint16_t          aSigRdataLength,
+                          const char       *aSignerName) const;
     Error ProcessZoneSection(const Message &aMessage, MessageMetadata &aMetadata) const;
     Error ProcessHostDescriptionInstruction(Host                  &aHost,
                                             const Message         &aMessage,
