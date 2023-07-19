@@ -2004,10 +2004,18 @@ static void platformConfigureNetLink(void)
     {
         int enable = 1;
 
-        VerifyOrDie(setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) == 0,
-                    OT_EXIT_ERROR_ERRNO);
-        VerifyOrDie(setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) == 0,
-                    OT_EXIT_ERROR_ERRNO);
+#if defined(NETLINK_EXT_ACK)
+        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) != 0)
+        {
+            otLogWarnPlat("[netif] Failed to enable NETLINK_EXT_ACK: %s", strerror(errno));
+        }
+#endif
+#if defined(NETLINK_CAP_ACK)
+        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) != 0)
+        {
+            otLogWarnPlat("[netif] Failed to enable NETLINK_CAP_ACK: %s", strerror(errno));
+        }
+#endif
     }
 #endif
 
