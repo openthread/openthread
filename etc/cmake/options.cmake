@@ -246,7 +246,7 @@ ot_option(OT_UDP_FORWARD OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE "UDP forward")
 ot_option(OT_UPTIME OPENTHREAD_CONFIG_UPTIME_ENABLE "uptime")
 
 option(OT_DOC "build OpenThread documentation")
-
+option(OT_MULTIPAN_RCP "Multi-PAN RCP" OFF)
 message(STATUS "- - - - - - - - - - - - - - - - ")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -82,6 +82,10 @@ jobs:
       run: ./script/cmake-build simulation
     - name: Test Simulation
       run: cd build/simulation && ninja test
+    - name: Build Multipan Simulation
+      run: ./script/cmake-build simulation -DOT_MULTIPAN_TEST=ON
+    - name: Test Multipan Simulation
+      run: cd build/simulation && ninja test
     - name: Build POSIX
       run: ./script/cmake-build posix
     - name: Test POSIX

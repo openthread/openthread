@@ -90,6 +90,16 @@ void otNcpHdlcReceive(const uint8_t *aBuf, uint16_t aBufLength);
 void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
 /**
+ * Initialize the NCP based on HDLC framing.
+ *
+ * @param[in]  aInstances       The OpenThread instance pointers array.
+ * @param[in]  aCount           Number of elements in the array.
+ * @param[in]  aSendCallback    The function pointer used to send NCP data.
+ *
+ */
+void otNcpHdlcInitMulti(otInstance **aInstance, uint8_t aCount, otNcpHdlcSendCallback aSendCallback);
+
+/**
  * Initialize the NCP based on SPI framing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.

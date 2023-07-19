@@ -45,6 +45,13 @@ if(OT_DAEMON)
     set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 endif()
 
+if(OT_MULTIPAN_RCP)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+    )
+endif()
+
+
 option(OT_POSIX_INSTALL_EXTERNAL_ROUTES "Install External Routes as IPv6 routes" ON)
 if(OT_POSIX_INSTALL_EXTERNAL_ROUTES)
     target_compile_definitions(ot-posix-config

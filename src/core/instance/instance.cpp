@@ -48,6 +48,16 @@ OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+
+#define INSTANCE_SIZE_ALIGNED OT_ALIGNED_VAR_SIZE(sizeof(ot::Instance), uint64_t)
+#define MULTI_INSTANCE_SIZE (OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM * INSTANCE_SIZE_ALIGNED)
+
+// Define the raw storage used for OpenThread instance (in multi-instance case).
+static uint64_t gMultiInstanceRaw[MULTI_INSTANCE_SIZE];
+
+#endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 OT_DEFINE_ALIGNED_VAR(sHeapRaw, sizeof(Utils::Heap), uint64_t);
@@ -288,6 +298,25 @@ Instance &Instance::Get(void)
 }
 
 #else // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+
+Instance *Instance::InitMultiple(uint8_t aIdx)
+{
+    size_t    bufferSize;
+    uint64_t *instanceBuffer = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    Instance *instance       = reinterpret_cast<Instance *>(instanceBuffer);
+
+    VerifyOrExit(aIdx < OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM);
+    VerifyOrExit(!instance->mIsInitialized);
+
+    bufferSize = (&gMultiInstanceRaw[MULTI_INSTANCE_SIZE] - instanceBuffer) * sizeof(uint64_t);
+    instance   = Instance::Init(instanceBuffer, &bufferSize);
+
+exit:
+    return instance;
+}
+
+#endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
 Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
 {

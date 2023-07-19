@@ -88,6 +88,7 @@ private:
     void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
 
     Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
+    void                     GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid]);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
     static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)

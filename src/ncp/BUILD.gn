@@ -31,6 +31,7 @@ openthread_ncp_sources = [
   "changed_props_set.cpp",
   "changed_props_set.hpp",
   "example_vendor_hook.cpp",
+  "multipan_platform.cpp",
   "ncp_base.cpp",
   "ncp_base.hpp",
   "ncp_base_dispatcher.cpp",

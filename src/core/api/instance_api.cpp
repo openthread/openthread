@@ -58,6 +58,16 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+otInstance *otInstanceInitMultiple(uint8_t aIdx)
+{
+    Instance *instance;
+
+    instance = Instance::InitMultiple(aIdx);
+
+    return instance;
+}
+#endif // OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 {
     Instance *instance;

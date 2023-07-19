@@ -77,6 +77,31 @@ extern "C" void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSend
     }
 }
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+
+extern "C" void otNcpHdlcInitMulti(otInstance **aInstances, uint8_t aCount, otNcpHdlcSendCallback aSendCallback)
+{
+    NcpHdlc      *ncpHdlc = nullptr;
+    ot::Instance *instances[SPINEL_HEADER_IID_MAX];
+
+    OT_ASSERT(aCount < SPINEL_HEADER_IID_MAX + 1);
+    OT_ASSERT(aCount > 0);
+    OT_ASSERT(aInstances[0] != nullptr);
+
+    for (int i = 0; i < aCount; i++)
+    {
+        instances[i] = static_cast<ot::Instance *>(aInstances[i]);
+    }
+
+    ncpHdlc = new (&sNcpRaw) NcpHdlc(instances, aCount, aSendCallback);
+
+    if (ncpHdlc == nullptr || ncpHdlc != NcpBase::GetNcpInstance())
+    {
+        OT_ASSERT(false);
+    }
+}
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+
 #endif // OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 
 NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
@@ -94,6 +119,26 @@ NcpHdlc::NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback)
     mFrameDecoder.Init(mRxBuffer, &NcpHdlc::HandleFrame, this);
     mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
 }
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+
+NcpHdlc::NcpHdlc(Instance **aInstances, uint8_t aCount, otNcpHdlcSendCallback aSendCallback)
+    : NcpBase(aInstances, aCount)
+    , mSendCallback(aSendCallback)
+    , mFrameEncoder(mHdlcBuffer)
+    , mState(kStartingFrame)
+    , mByte(0)
+    , mHdlcSendImmediate(false)
+    , mHdlcSendTask(*aInstances[0], EncodeAndSend)
+#if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+    , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
+#endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+{
+    mFrameDecoder.Init(mRxBuffer, &NcpHdlc::HandleFrame, this);
+    mTxFrameBuffer.SetFrameAddedCallback(HandleFrameAddedToNcpBuffer, this);
+}
+
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
 
 void NcpHdlc::HandleFrameAddedToNcpBuffer(void                    *aContext,
                                           Spinel::Buffer::FrameTag aTag,

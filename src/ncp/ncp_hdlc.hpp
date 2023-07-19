@@ -59,6 +59,19 @@ public:
      */
     explicit NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+    /**
+     * Constructor
+     *
+     * @param[in]  aInstancs      The OpenThread instance pointers array.
+     * @param[in]  aCount         Number of instances in the array.
+     * @param[in]  aSendCallback  Callback for sending data.
+     *
+     */
+    explicit NcpHdlc(Instance **aInstances, uint8_t aCount, otNcpHdlcSendCallback aSendCallback);
+
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE && OPENTHREAD_RADIO
+
     /**
      * Is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
      *
