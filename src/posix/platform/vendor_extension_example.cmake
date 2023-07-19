@@ -29,13 +29,13 @@
 # This file provides an example on how to implement a RCP vendor extension.
 
 # Set name of the cmake target to link with rcp-vendor-intf
-set(OT_POSIX_RCP_VENDOR_TARGET "vendor-lib")
+set(OT_POSIX_CONFIG_RCP_VENDOR_TARGET "vendor-lib")
 
 # Create library target using source file "vendor_source.cpp"
-add_library(${OT_POSIX_RCP_VENDOR_TARGET} vendor_source.cpp)
+add_library(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} vendor_source.cpp)
 
 # Include header files located at "${VENDOR_INCLUDE_PATH}"
-target_include_directories(${OT_POSIX_RCP_VENDOR_TARGET}
+target_include_directories(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET}
     PRIVATE
         ${VENDOR_INCLUDE_PATH}
 )
@@ -49,7 +49,7 @@ if (EXAMPLE_DEPS_ENABLE)
     find_package(ExampleRcpVendorDeps)
 
     if(ExampleRcpVendorDeps_FOUND)
-        target_link_libraries(${OT_POSIX_RCP_VENDOR_TARGET} 
+        target_link_libraries(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} 
             PRIVATE
             ${ExampleRcpVendorDeps::ExampleRcpVendorDeps}
         )
