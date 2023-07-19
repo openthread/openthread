@@ -308,7 +308,7 @@ const Server::Host *Server::GetNextHost(const Server::Host *aHost)
     return (aHost == nullptr) ? mHosts.GetHead() : aHost->GetNext();
 }
 
-void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler)
+void Server::RemoveHost(Host *aHost, RetainName aRetainName)
 {
     VerifyOrExit(aHost != nullptr);
 
@@ -326,7 +326,7 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyS
         LogInfo("Fully remove host %s", aHost->GetFullName());
     }
 
-    if (aNotifyServiceHandler && mServiceUpdateHandler.IsSet())
+    if (mServiceUpdateHandler.IsSet())
     {
         uint32_t updateId = AllocateId();
 
@@ -674,7 +674,7 @@ void Server::Stop(void)
 
     while (!mHosts.IsEmpty())
     {
-        RemoveHost(mHosts.GetHead(), kDeleteName, kNotifyServiceHandler);
+        RemoveHost(mHosts.GetHead(), kDeleteName);
     }
 
     // TODO: We should cancel any outstanding service updates, but current
@@ -1554,7 +1554,7 @@ void Server::HandleLeaseTimer(void)
             LogInfo("KEY LEASE of host %s expired", host->GetFullName());
 
             // Removes the whole host and all services if the KEY RR expired.
-            RemoveHost(host, kDeleteName, kNotifyServiceHandler);
+            RemoveHost(host, kDeleteName);
         }
         else if (host->IsDeleted())
         {
@@ -1593,7 +1593,7 @@ void Server::HandleLeaseTimer(void)
                 host->RemoveService(&service, kRetainName, kDoNotNotifyServiceHandler);
             }
 
-            RemoveHost(host, kRetainName, kNotifyServiceHandler);
+            RemoveHost(host, kRetainName);
 
             earliestExpireTime = Min(earliestExpireTime, host->GetKeyExpireTime());
         }
