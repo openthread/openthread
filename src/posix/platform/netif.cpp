@@ -155,10 +155,6 @@ extern int
 #include "common/debug.hpp"
 #include "net/ip6_address.hpp"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-static otIp4Cidr sNat64Cidr;
-#endif
-
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 #include "firewall.hpp"
@@ -789,7 +785,7 @@ exit:
     return res;
 }
 
-void NetIf::HandleNat64StateChanged(otNat64State aNewState)
+void NetIf::HandleNat64StateChanged(void)
 {
     otIp4Cidr translatorCidr;
 
@@ -810,7 +806,7 @@ void NetIf::HandleNat64StateChanged(otNat64State aNewState)
         otLogInfoPlat("[netif] NAT64 CIDR updated to %s.", cidrString);
     }
 
-    if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
+    if (otIp6IsEnabled(mInstance) && otNat64GetTranslatorState(mInstance) == OT_NAT64_STATE_ACTIVE)
     {
         AddIp4Route(mActiveNat64Cidr, kNat64RoutePriority);
         otLogInfoPlat("[netif] Adding route for NAT64");
@@ -847,7 +843,7 @@ void NetIf::HandleStateChanged(otChangedFlags aFlags)
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     if ((OT_CHANGED_NAT64_TRANSLATOR_STATE | OT_CHANGED_THREAD_NETIF_STATE) & aFlags)
     {
-        HandleNat64StateChanged(otNat64GetTranslatorState(mInstance));
+        HandleNat64StateChanged();
     }
 #endif
 }
@@ -959,7 +955,7 @@ exit:
 }
 
 static void ProcessNetifLinkEvent(otInstance      *aInstance,
-                                  bool             aIsSyncingState,
+                                  bool            &aIsSyncingState,
                                   unsigned int     aIfIndex,
                                   struct nlmsghdr *aNetlinkMessage)
 {
@@ -989,14 +985,6 @@ static void ProcessNetifLinkEvent(otInstance      *aInstance,
         SuccessOrExit(error = otIp6SetEnabled(aInstance, isUp));
         otLogInfoPlat("[netif] Succeeded to sync netif state with host");
     }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp && mActiveNat64Cidr.mLength > 0)
-    {
-        // Recover NAT64 route.
-        AddIp4Route(mActiveNat64Cidr, kNat64RoutePriority);
-    }
-#endif
 
 exit:
     if (error != OT_ERROR_NONE)
@@ -1671,6 +1659,13 @@ static int InitNetLink(void)
     return netlinkFd;
 }
 
+NetIf &NetIf::Get(void)
+{
+    static NetIf sNetIf;
+
+    return sNetIf;
+}
+
 void NetIf::Deinit(void)
 {
     Mainloop::Manager::Get().Remove(*this);
@@ -1701,22 +1696,8 @@ void NetIf::Deinit(void)
     mIfName[0] = '\0';
 }
 
-NetIf &NetIf::Get(void)
-{
-    static NetIf sNetIf;
-
-    return sNetIf;
-}
-
 void NetIf::Init(const otPlatformConfig *aPlatformConfig)
 {
-#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &sNat64Cidr) != OT_ERROR_NONE)
-    {
-        sNat64Cidr.mLength = 0;
-    }
-#endif
-
     mIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 

@@ -134,11 +134,8 @@ private:
     void    UpdateExternalRoutes(void);
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    void        HandleNat64StateChanged(otNat64State aNewState);
-    static void HandleNat64StateChanged(otNat64State aNewState, void *aNetIf)
-    {
-        static_cast<NetIf *>(aNetIf)->HandleNat64StateChanged(aNewState);
-    }
+    void        HandleNat64StateChanged(void);
+    static void HandleNat64StateChanged(void *aNetIf) { static_cast<NetIf *>(aNetIf)->HandleNat64StateChanged(); }
 #endif // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 #endif // defined(__linux__)
 
