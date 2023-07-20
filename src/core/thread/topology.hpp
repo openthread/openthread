@@ -652,7 +652,7 @@ public:
      * Generates a new challenge value for MLE Link Request/Response exchanges.
      *
      */
-    void GenerateChallenge(void);
+    void GenerateChallenge(void) { mValidPending.mPending.mChallenge.GenerateRandom(); }
 
     /**
      * Returns the current challenge value for MLE Link Request/Response exchanges.
@@ -660,15 +660,7 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
-
-    /**
-     * Returns the size (bytes) of the challenge value for MLE Link Request/Response exchanges.
-     *
-     * @returns The size (bytes) of the challenge value for MLE Link Request/Response exchanges.
-     *
-     */
-    uint8_t GetChallengeSize(void) const { return sizeof(mValidPending.mPending.mChallenge); }
+    const Mle::TxChallenge &GetChallenge(void) const { return mValidPending.mPending.mChallenge; }
 
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     /**
@@ -819,7 +811,7 @@ private:
         } mValid;
         struct
         {
-            uint8_t mChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
+            Mle::TxChallenge mChallenge; ///< The challenge value
         } mPending;
     } mValidPending;
 
@@ -1183,7 +1175,7 @@ public:
      * Generates a new challenge value to use during a child attach.
      *
      */
-    void GenerateChallenge(void);
+    void GenerateChallenge(void) { mAttachChallenge.GenerateRandom(); }
 
     /**
      * Gets the current challenge value used during attach.
@@ -1191,15 +1183,7 @@ public:
      * @returns The current challenge value.
      *
      */
-    const uint8_t *GetChallenge(void) const { return mAttachChallenge; }
-
-    /**
-     * Gets the challenge size (bytes) used during attach.
-     *
-     * @returns The challenge size (bytes).
-     *
-     */
-    uint8_t GetChallengeSize(void) const { return sizeof(mAttachChallenge); }
+    const Mle::TxChallenge &GetChallenge(void) const { return mAttachChallenge; }
 
     /**
      * Clears the requested TLV list.
@@ -1355,8 +1339,8 @@ private:
 
     union
     {
-        uint8_t mRequestTlvs[kMaxRequestTlvs];            ///< Requested MLE TLVs
-        uint8_t mAttachChallenge[Mle::kMaxChallengeSize]; ///< The challenge value
+        uint8_t          mRequestTlvs[kMaxRequestTlvs]; ///< Requested MLE TLVs
+        Mle::TxChallenge mAttachChallenge;              ///< The challenge value
     };
 
     uint16_t mSupervisionInterval;     // Supervision interval for the child (in sec).

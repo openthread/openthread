@@ -617,14 +617,14 @@ private:
     Error SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
                          Neighbor               *aNeighbor,
                          const TlvList          &aRequestedTlvList,
-                         const Challenge        &aChallenge);
-    void  SendParentResponse(Child *aChild, const Challenge &aChallenge, bool aRoutersOnlyRequest);
+                         const RxChallenge      &aChallenge);
+    void  SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
     Error SendChildIdResponse(Child &aChild);
     Error SendChildUpdateRequest(Child &aChild);
     void  SendChildUpdateResponse(Child                  *aChild,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   const TlvList          &aTlvList,
-                                  const Challenge        &aChallenge);
+                                  const RxChallenge      &aChallenge);
     void  SendDataResponse(const Ip6::Address &aDestination,
                            const TlvList      &aTlvList,
                            uint16_t            aDelay,
@@ -668,8 +668,8 @@ private:
     ChildTable  mChildTable;
     RouterTable mRouterTable;
 
-    uint8_t   mChallengeTimeout;
-    Challenge mChallenge;
+    uint8_t     mChallengeTimeout;
+    TxChallenge mChallenge;
 
     uint16_t mNextChildId;
     uint8_t  mNetworkIdTimeout;

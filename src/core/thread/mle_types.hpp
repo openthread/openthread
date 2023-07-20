@@ -45,6 +45,7 @@
 #include <openthread/thread_ftd.h>
 #endif
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
@@ -57,6 +58,9 @@
 #include "thread/network_data_types.hpp"
 
 namespace ot {
+
+class Message;
+
 namespace Mle {
 
 /**
@@ -130,8 +134,8 @@ constexpr uint16_t kMaxChildId = 511; ///< Maximum Child ID
 constexpr uint8_t kRouterIdOffset   = 10; ///< Bit offset of Router ID in RLOC16
 constexpr uint8_t kRlocPrefixLength = 14; ///< Prefix length of RLOC in bytes
 
-constexpr uint16_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
-constexpr uint16_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
+constexpr uint8_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
+constexpr uint8_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
 
 /*
  * Routing Protocol Constants
@@ -573,6 +577,97 @@ private:
 
     uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
 } OT_TOOL_PACKED_END;
+
+class RxChallenge;
+
+/**
+ * Represents a max-sized challenge data to send in MLE message.
+ *
+ * OpenThread always uses max size challenge when sending MLE messages.
+ *
+ */
+class TxChallenge : public Clearable<TxChallenge>
+{
+    friend class RxChallenge;
+
+public:
+    /**
+     * Generates a cryptographically secure random sequence to populate the challenge data.
+     *
+     */
+    void GenerateRandom(void);
+
+private:
+    uint8_t m8[kMaxChallengeSize];
+};
+
+/**
+ * Represents a received Challenge data from an MLE message.
+ *
+ */
+class RxChallenge
+{
+public:
+    /**
+     * Clears the challenge.
+     *
+     */
+    void Clear(void) { mArray.Clear(); }
+
+    /**
+     * Indicates whether or not the challenge data is empty.
+     *
+     * @retval TRUE  The challenge is empty.
+     * @retval FALSE The challenge is not empty.
+     *
+     */
+    bool IsEmpty(void) const { return mArray.GetLength() == 0; }
+
+    /**
+     * Gets a pointer to challenge data bytes.
+     *
+     * @return A pointer to the challenge data bytes.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mArray.GetArrayBuffer(); }
+
+    /**
+     * Gets the length of challenge data.
+     *
+     * @returns The length of challenge data in bytes.
+     *
+     */
+    uint8_t GetLength(void) const { return mArray.GetLength(); }
+
+    /**
+     * Reads the challenge bytes from given message.
+     *
+     * If the given @p aLength is longer than `kMaxChallengeSize`, only `kMaxChallengeSize` bytes will be read.
+     *
+     * @param[in] aMessage   The message to read the challenge from.
+     * @param[in] aOffset    The offset in @p aMessage to read from.
+     * @param[in] aLength    Number of bytes to read.
+     *
+     * @retval kErrorNone     Successfully read the challenge data from @p aMessage.
+     * @retval kErrorParse    Not enough bytes to read, or invalid @p aLength (smaller than `kMinChallgeSize`).
+     *
+     */
+    Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+
+    /**
+     * Compares the `RxChallenge` with a given `TxChallenge`.
+     *
+     * @param[in] aTxChallenge  The `TxChallenge` to compare with.
+     *
+     * @retval TRUE  The two challenges are equal.
+     * @retval FALSE The two challenges are not equal.
+     *
+     */
+    bool operator==(const TxChallenge &aTxChallenge) const;
+
+private:
+    Array<uint8_t, kMaxChallengeSize> mArray;
+};
 
 /**
  * Represents a MLE Key Material

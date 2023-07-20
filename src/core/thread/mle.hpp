@@ -882,45 +882,6 @@ protected:
     };
 
     /**
-     * Represents a Challenge (or Response) data.
-     *
-     */
-    struct Challenge
-    {
-        uint8_t mBuffer[kMaxChallengeSize]; ///< Buffer containing the challenge/response byte sequence.
-        uint8_t mLength;                    ///< Challenge length (in bytes).
-
-        /**
-         * Generates a cryptographically secure random sequence to populate the challenge data.
-         *
-         */
-        void GenerateRandom(void);
-
-        /**
-         * Indicates whether the Challenge matches a given buffer.
-         *
-         * @param[in] aBuffer   A pointer to a buffer to compare with the Challenge.
-         * @param[in] aLength   Length of @p aBuffer (in bytes).
-         *
-         * @retval TRUE  If the Challenge matches the given buffer.
-         * @retval FALSE If the Challenge does not match the given buffer.
-         *
-         */
-        bool Matches(const uint8_t *aBuffer, uint8_t aLength) const;
-
-        /**
-         * Indicates whether two Challenge data byte sequences are equal or not.
-         *
-         * @param[in] aOther   Another Challenge data to compare.
-         *
-         * @retval TRUE  If the two Challenges match.
-         * @retval FALSE If the two Challenges do not match.
-         *
-         */
-        bool operator==(const Challenge &aOther) const { return Matches(aOther.mBuffer, aOther.mLength); }
-    };
-
-    /**
      * Represents an MLE Tx message.
      *
      */
@@ -961,36 +922,24 @@ protected:
         /**
          * Appends a Challenge TLV to the message.
          *
-         * @param[in]  aChallenge        A pointer to the Challenge value.
-         * @param[in]  aChallengeLength  The length of the Challenge value in bytes.
-         *
-         * @retval kErrorNone    Successfully appended the Challenge TLV.
-         * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
-         *
-         */
-        Error AppendChallengeTlv(const uint8_t *aChallenge, uint8_t aChallengeLength);
-
-        /**
-         * Appends a Challenge TLV to the message.
-         *
          * @param[in] aChallenge A reference to the Challenge data.
          *
          * @retval kErrorNone    Successfully appended the Challenge TLV.
          * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
          *
          */
-        Error AppendChallengeTlv(const Challenge &aChallenge);
+        Error AppendChallengeTlv(const TxChallenge &aChallenge);
 
         /**
          * Appends a Response TLV to the message.
          *
-         * @param[in] aResponse  A reference to the Response data.
+         * @param[in] aResponse  The Response data.
          *
          * @retval kErrorNone    Successfully appended the Response TLV.
          * @retval kErrorNoBufs  Insufficient buffers available to append the Response TLV.
          *
          */
-        Error AppendResponseTlv(const Challenge &aResponse);
+        Error AppendResponseTlv(const RxChallenge &aResponse);
 
         /**
          * Appends a Link Frame Counter TLV to the message.
@@ -1299,26 +1248,26 @@ protected:
         /**
          * Reads Challenge TLV from the message.
          *
-         * @param[out] aChallenge        A reference to the Challenge data where to output the read value.
+         * @param[out] aChallenge   A `RxChallenge` to output the read challenge data.
          *
          * @retval kErrorNone       Successfully read the Challenge TLV.
          * @retval kErrorNotFound   Challenge TLV was not found in the message.
          * @retval kErrorParse      Challenge TLV was found but could not be parsed.
          *
          */
-        Error ReadChallengeTlv(Challenge &aChallenge) const;
+        Error ReadChallengeTlv(RxChallenge &aChallenge) const;
 
         /**
          * Reads Response TLV from the message.
          *
-         * @param[out] aResponse        A reference to the Response data where to output the read value.
+         * @param[out] aResponse    A `RxChallenge` to output the read challenge data.
          *
          * @retval kErrorNone       Successfully read the Response TLV.
          * @retval kErrorNotFound   Response TLV was not found in the message.
          * @retval kErrorParse      Response TLV was found but could not be parsed.
          *
          */
-        Error ReadResponseTlv(Challenge &aResponse) const;
+        Error ReadResponseTlv(RxChallenge &aResponse) const;
 
         /**
          * Reads Link and MLE Frame Counters from the message.
@@ -1391,7 +1340,7 @@ protected:
 #endif
 
     private:
-        Error ReadChallengeOrResponse(uint8_t aTlvType, Challenge &aBuffer) const;
+        Error ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const;
     };
 
     /**
@@ -1563,14 +1512,14 @@ protected:
     /**
      * Generates an MLE Child Update Response message.
      *
-     * @param[in]  aTlvList      A list of requested TLV types.
-     * @param[in]  aChallenge    The Challenge for the response.
+     * @param[in]  aTlvList     A list of requested TLV types.
+     * @param[in]  aChallenge   The challenge data to include in response.
      *
      * @retval kErrorNone     Successfully generated an MLE Child Update Response message.
      * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Response message.
      *
      */
-    Error SendChildUpdateResponse(const TlvList &aTlvList, const Challenge &aChallenge);
+    Error SendChildUpdateResponse(const TlvList &aTlvList, const RxChallenge &aChallenge);
 
     /**
      * Sets the RLOC16 assigned to the Thread interface.
@@ -1898,16 +1847,16 @@ private:
         void Clear(void);
         void CopyTo(Parent &aParent) const;
 
-        Challenge  mChallenge;
-        int8_t     mPriority;
-        uint8_t    mLinkQuality3;
-        uint8_t    mLinkQuality2;
-        uint8_t    mLinkQuality1;
-        uint16_t   mSedBufferSize;
-        uint8_t    mSedDatagramCount;
-        uint8_t    mLinkMargin;
-        LeaderData mLeaderData;
-        bool       mIsSingleton;
+        RxChallenge mRxChallenge;
+        int8_t      mPriority;
+        uint8_t     mLinkQuality3;
+        uint8_t     mLinkQuality2;
+        uint8_t     mLinkQuality1;
+        uint16_t    mSedBufferSize;
+        uint8_t     mSedDatagramCount;
+        uint8_t     mLinkMargin;
+        LeaderData  mLeaderData;
+        bool        mIsSingleton;
     };
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -2068,7 +2017,7 @@ private:
 
     MessageQueue mDelayedResponses;
 
-    Challenge mParentRequestChallenge;
+    TxChallenge mParentRequestChallenge;
 
     AttachMode      mAttachMode;
     ParentCandidate mParentCandidate;
