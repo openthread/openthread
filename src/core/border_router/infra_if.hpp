@@ -115,6 +115,14 @@ public:
     uint32_t GetIfIndex(void) const { return mIfIndex; }
 
     /**
+     * Sets the infrastructure interface index.
+     *
+     * @param[in]  aIfIndex        The infrastructure interface index.
+     *
+     */
+    void SetIfIndex(uint32_t aIfIndex) { mIfIndex = aIfIndex; }
+
+    /**
      * Indicates whether or not the infra interface has the given IPv6 address assigned.
      *
      * MUST be used when interface is initialized.

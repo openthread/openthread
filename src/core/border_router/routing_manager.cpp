@@ -94,16 +94,24 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Error error;
 
-    LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
+    VerifyOrExit(GetState() == kStateUninitialized || GetState() == kStateDisabled, error = kErrorInvalidState);
 
-    SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
-
-    SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
-    mOmrPrefixManager.Init(mBrUlaPrefix);
+    if (!mInfraIf.IsInitialized())
+    {
+        LogInfo("Initializing - InfraIfIndex:%lu", ToUlong(aInfraIfIndex));
+        SuccessOrExit(error = mInfraIf.Init(aInfraIfIndex));
+        SuccessOrExit(error = LoadOrGenerateRandomBrUlaPrefix());
+        mOmrPrefixManager.Init(mBrUlaPrefix);
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
+        mNat64PrefixManager.GenerateLocalPrefix(mBrUlaPrefix);
 #endif
-    mOnLinkPrefixManager.Init();
+        mOnLinkPrefixManager.Init();
+    }
+    else if (aInfraIfIndex != mInfraIf.GetIfIndex())
+    {
+        LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(mInfraIf.GetIfIndex()), ToUlong(aInfraIfIndex));
+        mInfraIf.SetIfIndex(aInfraIfIndex);
+    }
 
     error = mInfraIf.HandleStateChanged(mInfraIf.GetIfIndex(), aInfraIfIsRunning);
 
