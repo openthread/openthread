@@ -41,6 +41,7 @@ Done
 - [csl](#csl)
 - [dataset](README_DATASET.md)
 - [delaytimermin](#delaytimermin)
+- [detach](#detach)
 - [deviceprops](#deviceprops)
 - [diag](#diag)
 - [discover](#discover-channel)
@@ -1062,6 +1063,25 @@ Set the minimal delay timer (in seconds).
 
 ```bash
 > delaytimermin 60
+Done
+```
+
+### detach
+
+Start the graceful detach process by first notifying other nodes (sending Address Release if acting as a router, or setting Child Timeout value to zero on parent if acting as a child) and then stopping Thread protocol operation.
+
+```bash
+> detach
+Finished detaching
+Done
+```
+
+### detach async
+
+Start the graceful detach process similar to the `detach` command without blocking and waiting for the callback indicating that detach is finished.
+
+```bash
+> detach async
 Done
 ```
 
