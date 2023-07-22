@@ -438,6 +438,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     uint32_t hostKeyLease    = 0;
     uint32_t grantedLease    = 0;
     uint32_t grantedKeyLease = 0;
+    bool     useShortLease   = aHost.ShouldUseShortLeaseOption();
 
     if (aError != kErrorNone)
     {
@@ -448,7 +449,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     hostLease       = aHost.GetLease();
     hostKeyLease    = aHost.GetKeyLease();
     grantedLease    = aLeaseConfig.GrantLease(hostLease);
-    grantedKeyLease = aHost.ShouldUseShortLeaseOption() ? grantedLease : aLeaseConfig.GrantKeyLease(hostKeyLease);
+    grantedKeyLease = useShortLease ? grantedLease : aLeaseConfig.GrantKeyLease(hostKeyLease);
     grantedTtl      = aTtlConfig.GrantTtl(grantedLease, aHost.GetTtl());
 
     existingHost = mHosts.RemoveMatching(aHost.GetFullName());
@@ -465,6 +466,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     {
         VerifyOrExit(existingHost != nullptr);
         LogInfo("Fully remove host %s", aHost.GetFullName());
+        aHost.Free();
         ExitNow();
     }
 
@@ -537,7 +539,7 @@ exit:
     {
         if (aError == kErrorNone && !(grantedLease == hostLease && grantedKeyLease == hostKeyLease))
         {
-            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, aHost.ShouldUseShortLeaseOption(), *aMessageInfo);
+            SendResponse(aDnsHeader, grantedLease, grantedKeyLease, useShortLease, *aMessageInfo);
         }
         else
         {

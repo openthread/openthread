@@ -714,6 +714,122 @@ void TestSrpServerIgnore(void)
     Log("End of TestSrpServerIgnore");
 }
 
+void TestSrpServerClientRemove(bool aShouldRemoveKeyLease)
+{
+    Srp::Server         *srpServer;
+    Srp::Client         *srpClient;
+    Srp::Client::Service service1;
+    Srp::Client::Service service2;
+    uint16_t             heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerClientRemove(aShouldRemoveKeyLease:%u)", aShouldRemoveKeyLease);
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    PrepareService1(service1);
+    PrepareService2(service2);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicast);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    SuccessOrQuit(srpClient->SetHostName(kHostName));
+    SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Register two services, validate that update handler is called.
+
+    SuccessOrQuit(srpClient->AddService(service1));
+    SuccessOrQuit(srpClient->AddService(service2));
+
+    sUpdateHandlerMode       = kAccept;
+    sProcessedUpdateCallback = false;
+    sProcessedClientCallback = false;
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRegistered);
+    ValidateHost(*srpServer, kHostName);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove two services and clear key-lease, validate that update handler is called.
+
+    SuccessOrQuit(srpClient->RemoveHostAndServices(aShouldRemoveKeyLease));
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRemoved);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRemoved);
+
+    if (aShouldRemoveKeyLease)
+    {
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+    }
+    else
+    {
+        ValidateHost(*srpServer, kHostName);
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server, verify that all heap allocations by SRP server
+    // are freed.
+
+    Log("Disabling SRP server");
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(100);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerClientRemove");
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void TestUpdateLeaseShortVariant(void)
 {
@@ -918,6 +1034,8 @@ int main(void)
     TestSrpServerBase();
     TestSrpServerReject();
     TestSrpServerIgnore();
+    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
+    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     TestUpdateLeaseShortVariant();
 #endif
