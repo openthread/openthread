@@ -3776,7 +3776,7 @@ void Mle::HandleLinkMetricsManagementRequest(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorInvalidState);
 
     SuccessOrExit(
         error = Get<LinkMetrics::Subject>().HandleManagementRequest(aRxInfo.mMessage, *aRxInfo.mNeighbor, status));
@@ -3798,7 +3798,7 @@ void Mle::HandleLinkMetricsManagementResponse(RxInfo &aRxInfo)
 
     Log(kMessageReceive, kTypeLinkMetricsManagementResponse, aRxInfo.mMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(aRxInfo.mNeighbor != nullptr, error = kErrorInvalidState);
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorInvalidState);
 
     error =
         Get<LinkMetrics::Initiator>().HandleManagementResponse(aRxInfo.mMessage, aRxInfo.mMessageInfo.GetPeerAddr());
@@ -3817,6 +3817,8 @@ void Mle::HandleLinkProbe(RxInfo &aRxInfo)
     uint8_t seriesId;
 
     Log(kMessageReceive, kTypeLinkProbe, aRxInfo.mMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(aRxInfo.IsNeighborStateValid(), error = kErrorInvalidState);
 
     SuccessOrExit(error = Get<LinkMetrics::Subject>().HandleLinkProbe(aRxInfo.mMessage, seriesId));
     aRxInfo.mNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe,
