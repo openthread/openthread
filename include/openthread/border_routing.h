@@ -133,6 +133,8 @@ typedef enum
  * Initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
+ * @note  This method can be re-called to change the infrastructure interface, but the Border Routing Manager should be
+ *        disabled first, and re-enabled after.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex      The infrastructure interface index.
@@ -140,11 +142,12 @@ typedef enum
  *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager has already been initialized.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is in a state other than disabled or uninitialized.
  * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
  * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
+ * @sa otBorderRoutingSetEnabled.
  *
  */
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
