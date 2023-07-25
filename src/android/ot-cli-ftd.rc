@@ -1,0 +1,4 @@
+# The settings data directory for simulation `ot-cli-ftd` program
+on post-fs-data
+    mkdir /data/vendor/threadnetwork 0770 root root
+    mkdir /data/vendor/threadnetwork/simulation 0770 root root
