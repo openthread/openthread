@@ -109,7 +109,7 @@ extern "C" {
  * Updates the rtt uart. Must be called frequently to process receive and send done.
  *
  */
-void utilsUartRttUpdate(void);
+void utilsUartRttProcess(void);
 
 #ifdef __cplusplus
 } // extern "C"
