@@ -310,6 +310,13 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 #endif
         break;
 
+#if OPENTHREAD_FTD
+    case kRouterAdded:
+    case kRouterRemoved:
+        Get<RouterTable>().SignalTableChanged();
+        break;
+#endif
+
     default:
         break;
     }
