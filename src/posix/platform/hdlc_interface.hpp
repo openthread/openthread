@@ -235,7 +235,7 @@ private:
     {
         kMaxWaitTime   = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
         kResetTimeout  = 5000, ///< Maximum wait time in Milliseconds for file to become ready (see `ResetConnection`).
-        kOpenFileDelay = 500,  ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
+        kOpenFileDelay = 50,   ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
         kRemoveRcpDelay =
             2000, ///< Delay for removing RCP device from host OS after hard reset (see `ResetConnection`).
     };
