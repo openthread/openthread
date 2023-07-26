@@ -113,7 +113,7 @@ exit:
     return error;
 }
 
-void utilsUartRttUpdate(void)
+void utilsUartRttProcess(void)
 {
     uint8_t  buf[UART_RTT_READ_BUFFER_SIZE];
     unsigned count;
