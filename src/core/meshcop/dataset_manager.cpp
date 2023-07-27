@@ -772,6 +772,10 @@ void PendingDatasetManager::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
     Dataset        dataset;
+    Dataset        aDataset;
+    Tlv           *sTlv;
+    Tlv           *eTlv;
+    Tlv           *pTlv;
 
     IgnoreError(Read(dataset));
 
@@ -787,6 +791,18 @@ void PendingDatasetManager::HandleDelayTimer(void)
             mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
             ExitNow();
         }
+    }
+    // If pending dataset does not contain all required data, merge missing Tlv's from active dataset
+    sTlv = aDataset.GetTlvsStart();
+    eTlv = aDataset.GetTlvsEnd();
+    while(sTlv < eTlv)
+    {
+        pTlv = dataset.GetTlv(sTlv->GetType());
+        if(pTlv == nullptr || !Tlv::IsValid(*pTlv))
+        {
+            dataset.SetTlv(*sTlv);
+        }
+        sTlv = sTlv->GetNext();
     }
 
     LogInfo("pending delay timer expired");
