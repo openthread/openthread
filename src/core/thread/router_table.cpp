@@ -343,13 +343,13 @@ uint32_t RouterTable::GetLeaderAge(void) const
     return (!mRouters.IsEmpty()) ? Time::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated) : 0xffffffff;
 }
 
-uint8_t RouterTable::GetNeighborCount(void) const
+uint8_t RouterTable::GetNeighborCount(LinkQuality aLinkQuality) const
 {
     uint8_t count = 0;
 
     for (const Router &router : mRouters)
     {
-        if (router.IsStateValid())
+        if (router.IsStateValid() && (router.GetLinkQualityIn() >= aLinkQuality))
         {
             count++;
         }
@@ -881,6 +881,8 @@ void RouterTable::HandleTableChanged(void)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRouterTableChange();
 #endif
+
+    Get<Mle::MleRouter>().UpdateAdvertiseInterval();
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

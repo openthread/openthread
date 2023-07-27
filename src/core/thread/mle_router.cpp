@@ -482,14 +482,38 @@ exit:
 
 void MleRouter::StopAdvertiseTrickleTimer(void) { mAdvertiseTrickleTimer.Stop(); }
 
+uint32_t MleRouter::DetermineAdvertiseIntervalMax(void) const
+{
+    uint32_t interval;
+
+#if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+    interval = kAdvIntervalMaxLogRoutes;
+#else
+    // Determine the interval based on the number of router neighbors
+    // with link quality 2 or higher.
+
+    interval = (Get<RouterTable>().GetNeighborCount(kLinkQuality2) + 1) * kAdvIntervalNeighborMultiplier;
+    interval = Clamp(interval, kAdvIntervalMaxLowerBound, kAdvIntervalMaxUpperBound);
+#endif
+
+    return interval;
+}
+
+void MleRouter::UpdateAdvertiseInterval(void)
+{
+    if (IsRouterOrLeader() && mAdvertiseTrickleTimer.IsRunning())
+    {
+        mAdvertiseTrickleTimer.SetIntervalMax(DetermineAdvertiseIntervalMax());
+    }
+}
+
 void MleRouter::ResetAdvertiseInterval(void)
 {
     VerifyOrExit(IsRouterOrLeader());
 
     if (!mAdvertiseTrickleTimer.IsRunning())
     {
-        mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
-                                     Time::SecToMsec(kAdvertiseIntervalMax));
+        mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, kAdvIntervalMin, DetermineAdvertiseIntervalMax());
     }
 
     mAdvertiseTrickleTimer.IndicateInconsistent();
@@ -1312,7 +1336,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             VerifyOrExit(router != nullptr);
 
             if (!router->IsStateValid() && !router->IsStateLinkRequest() &&
-                (mRouterTable.GetNeighborCount() < mChildRouterLinks))
+                (mRouterTable.GetNeighborCount(kLinkQuality1) < mChildRouterLinks))
             {
                 InitNeighbor(*router, aRxInfo);
                 router->SetState(Neighbor::kStateLinkRequest);

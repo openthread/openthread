@@ -882,6 +882,16 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
 
 /**
+ * Gets the current Interval Max value used by Advertisement trickle timer.
+ *
+ * This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is intended for testing only.
+ *
+ * @returns The Interval Max of Advertisement trickle timer in milliseconds.
+ *
+ */
+uint32_t otThreadGetAdvertisementTrickleIntervalMax(otInstance *aInstance);
+
+/**
  * Indicates whether or not a Router ID is currently allocated.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
