@@ -66,7 +66,7 @@ namespace Mle {
 
 RegisterLogModule("Mle");
 
-const otMeshLocalPrefix Mle::sMeshLocalPrefixInit = {
+const otMeshLocalPrefix Mle::kMeshLocalPrefixInit = {
     {0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00},
 };
 
@@ -140,7 +140,7 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    SetMeshLocalPrefix(AsCoreType(&sMeshLocalPrefixInit));
+    SetMeshLocalPrefix(AsCoreType(&kMeshLocalPrefixInit));
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.
