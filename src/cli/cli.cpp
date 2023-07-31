@@ -2769,7 +2769,8 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
     /**
      * @cli log filename
      * @par
-     * Specifies filename to capture otPlatLog() messages, useful when debugging automated test scripts on Linux when logging disrupts the automated test scripts.
+     * Specifies filename to capture otPlatLog() messages, useful when debugging
+     * automated test scripts on Linux when logging disrupts the automated test scripts.
      * @par
      * Note: Simulation only and `OPENTHREAD_EXAMPLES_SIMULATION` is true.
      * @par
@@ -4113,9 +4114,11 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Locate the closest destination of an anycast address (i.e., find the destination's mesh local EID and RLOC16).
+     * Locate the closest destination of an anycast address (i.e., find the
+     * destination's mesh local EID and RLOC16).
      * @par
-     * The closest destination is determined based on the the current routing table and path costs within the Thread mesh.
+     * The closest destination is determined based on the the current routing
+     * table and path costs within the Thread mesh.
      * @par
      * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
      * @par api_copy
