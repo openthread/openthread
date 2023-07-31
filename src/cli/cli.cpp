@@ -2750,8 +2750,6 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
              * log level 4
              * Done
              * @endcode
-             * @par
-             * Set the log level.
              * @par api_copy
              * #otLoggingSetLevel
              * @cparam log level @ca{level}
@@ -2774,6 +2772,7 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
      * Note: Simulation only and `OPENTHREAD_EXAMPLES_SIMULATION` is true.
      * @par
      * Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
+     * and `OPENTHREAD_POSIX`.
      * @par api_copy
      * #otPlatDebugUart_logfile
      * @cparam log filename @ca{filename}
