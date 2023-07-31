@@ -2143,9 +2143,11 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
 
     if (mInstance != nullptr)
     {
-        SuccessOrDie(static_cast<Instance *>(mInstance)->template Get<Settings>().Read(networkInfo));
-        SuccessOrDie(
-            Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
+        if (static_cast<Instance *>(mInstance)->template Get<Settings>().Read(networkInfo) == OT_ERROR_NONE)
+        {
+            SuccessOrDie(
+                Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
+        }
     }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
