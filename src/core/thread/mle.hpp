@@ -1294,69 +1294,74 @@ private:
 
     static const otMeshLocalPrefix kMeshLocalPrefixInit;
 
-    Ip6::Netif::UnicastAddress mLeaderAloc;
-    LeaderData                 mLeaderData;
-    bool                       mRetrieveNewNetworkData : 1;
-    bool                       mRequestRouteTlv : 1;
-    DeviceRole                 mRole;
-    Parent                     mParent;
-    NeighborTable              mNeighborTable;
-    DeviceMode                 mDeviceMode;
-    AttachState                mAttachState;
-    uint8_t                    mParentRequestCounter;
-    ReattachState              mReattachState;
-    uint16_t                   mAttachCounter;
-    uint16_t                   mAnnounceDelay;
-    AttachTimer                mAttachTimer;
-    DelayTimer                 mDelayedResponseTimer;
-    MsgTxTimer                 mMessageTransmissionTimer;
+    bool mRetrieveNewNetworkData : 1;
+    bool mRequestRouteTlv : 1;
+    bool mHasRestored : 1;
+    bool mReceivedResponseFromParent : 1;
+    bool mInitiallyAttachedAsSleepy : 1;
 #if OPENTHREAD_FTD
-    uint8_t mLinkRequestAttempts;
-    bool    mWasLeader;
+    bool mWasLeader : 1;
 #endif
-    MessageQueue            mDelayedResponses;
-    TxChallenge             mParentRequestChallenge;
+
+    DeviceRole              mRole;
+    DeviceMode              mDeviceMode;
+    AttachState             mAttachState;
+    ReattachState           mReattachState;
     AttachMode              mAttachMode;
-    ParentCandidate         mParentCandidate;
-    uint8_t                 mChildUpdateAttempts;
-    ChildUpdateRequestState mChildUpdateRequestState;
-    uint8_t                 mDataRequestAttempts;
     DataRequestState        mDataRequestState;
     AddressRegistrationMode mAddressRegistrationMode;
-    bool                    mHasRestored;
-    bool                    mReceivedResponseFromParent;
-    bool                    mInitiallyAttachedAsSleepy;
-    Ip6::Udp::Socket        mSocket;
-    uint32_t                mTimeout;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint32_t mCslTimeout;
+    ChildUpdateRequestState mChildUpdateRequestState;
+
+    uint8_t mParentRequestCounter;
+    uint8_t mChildUpdateAttempts;
+    uint8_t mDataRequestAttempts;
+    uint8_t mAnnounceChannel;
+    uint8_t mAlternateChannel;
+#if OPENTHREAD_FTD
+    uint8_t mLinkRequestAttempts;
 #endif
     uint16_t mRloc16;
     uint16_t mPreviousParentRloc;
-#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    ParentSearch mParentSearch;
-#endif
-    uint8_t  mAnnounceChannel;
-    uint8_t  mAlternateChannel;
+    uint16_t mAttachCounter;
+    uint16_t mAnnounceDelay;
     uint16_t mAlternatePanId;
-    uint64_t mAlternateTimestamp;
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    ServiceAloc mServiceAlocs[kMaxServiceAlocs];
+    uint32_t mTimeout;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint32_t mCslTimeout;
 #endif
-    Counters mCounters;
+    uint64_t mAlternateTimestamp;
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     uint64_t mLastUpdatedTimestamp;
 #endif
-    Ip6::Netif::UnicastAddress           mLinkLocal64;
-    Ip6::Netif::UnicastAddress           mMeshLocal64;
-    Ip6::Netif::UnicastAddress           mMeshLocal16;
-    Ip6::Netif::MulticastAddress         mLinkLocalAllThreadNodes;
-    Ip6::Netif::MulticastAddress         mRealmLocalAllThreadNodes;
-    DetachGracefullyTimer                mDetachGracefullyTimer;
+
+    LeaderData       mLeaderData;
+    Parent           mParent;
+    NeighborTable    mNeighborTable;
+    MessageQueue     mDelayedResponses;
+    TxChallenge      mParentRequestChallenge;
+    ParentCandidate  mParentCandidate;
+    Ip6::Udp::Socket mSocket;
+    Counters         mCounters;
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    ParentSearch mParentSearch;
+#endif
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    ServiceAloc mServiceAlocs[kMaxServiceAlocs];
+#endif
     Callback<otDetachGracefullyCallback> mDetachGracefullyCallback;
 #if OPENTHREAD_CONFIG_MLE_PARENT_RESPONSE_CALLBACK_API_ENABLE
     Callback<otThreadParentResponseCallback> mParentResponseCallback;
 #endif
+    AttachTimer                  mAttachTimer;
+    DelayTimer                   mDelayedResponseTimer;
+    MsgTxTimer                   mMessageTransmissionTimer;
+    DetachGracefullyTimer        mDetachGracefullyTimer;
+    Ip6::Netif::UnicastAddress   mLinkLocal64;
+    Ip6::Netif::UnicastAddress   mMeshLocal64;
+    Ip6::Netif::UnicastAddress   mMeshLocal16;
+    Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
+    Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
+    Ip6::Netif::UnicastAddress   mLeaderAloc;
 };
 
 } // namespace Mle
