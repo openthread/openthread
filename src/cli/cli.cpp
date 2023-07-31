@@ -2768,7 +2768,7 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
     /**
      * @cli log filename
      * @par
-     * Specifies filename to capture otPlatLog() messages, useful when debugging
+     * Specifies filename to capture `otPlatLog()` messages, useful when debugging
      * automated test scripts on Linux when logging disrupts the automated test scripts.
      * @par
      * Note: Simulation only and `OPENTHREAD_EXAMPLES_SIMULATION` is true.
@@ -4091,24 +4091,6 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * @code
      * locate fdde:ad00:beef:0:0:ff:fe00:fc00
      * fdde:ad00:beef:0:d9d3:9000:16b:d03b 0xc800
-     * Done
-     * @endcode
-     * @code
-     * srp server enable
-     * Done
-     * @endcode
-     * @code
-     * netdata show
-     * Prefixes:
-     * Routes:
-     * Services:
-     * 44970 5d c002 s c800
-     * 44970 5d c002 s cc00
-     * Done
-     * @endcode
-     * @code
-     * locate fdde:ad00:beef:0:0:ff:fe00:fc10
-     * fdde:ad00:beef:0:a477:dc98:a4e4:71ea 0xcc00
      * Done
      * @endcode
      * @par
