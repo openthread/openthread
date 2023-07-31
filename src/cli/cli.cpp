@@ -2731,8 +2731,7 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
      * @endcode
      * @par
      * Get the log level.
-     * @par api_copy
-     * #otLoggingGetLevel
+     * @sa otLoggingGetLevel
      */
     if (aArgs[0] == "level")
     {
@@ -2746,7 +2745,7 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
             uint8_t level;
 
             /**
-             * @cli log level <level>
+             * @cli log level (set)
              * @code
              * log level 4
              * Done
@@ -4079,8 +4078,7 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * Gets the current state (`In Progress` or `Idle`) of anycast locator.
      * @par
      * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
-     * @par api_copy
-     * #otThreadIsAnycastLocateInProgress
+     * @sa otThreadIsAnycastLocateInProgress
      */
     if (aArgs[0].IsEmpty())
     {
@@ -4089,7 +4087,7 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
     }
 
     /**
-     * @cli locate <anycastaddr>
+     * @cli locate (set)
      * @code
      * locate fdde:ad00:beef:0:0:ff:fe00:fc00
      * fdde:ad00:beef:0:d9d3:9000:16b:d03b 0xc800
@@ -4121,8 +4119,7 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * table and path costs within the Thread mesh.
      * @par
      * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
-     * @par api_copy
-     * #otThreadLocateAnycastDestination
+     * @sa otThreadLocateAnycastDestination
      * @cparam locate @ca{anycastaddr}
      */
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(anycastAddress));
