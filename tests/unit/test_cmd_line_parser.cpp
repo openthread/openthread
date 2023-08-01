@@ -309,7 +309,7 @@ void TestParsingHexStrings(void)
 
     for (uint8_t testIter = 0; testIter <= 1; testIter++)
     {
-        for (uint8_t segmentLen = 1; segmentLen <= sizeof(buffer); segmentLen++)
+        for (size_t segmentLen = 1; segmentLen <= sizeof(buffer); segmentLen++)
         {
             if (testIter == 0)
             {
@@ -324,7 +324,7 @@ void TestParsingHexStrings(void)
 
             len = segmentLen;
 
-            printf("\"%s\" segLen:%d -> ", string, segmentLen);
+            printf("\"%s\" segLen:%zu -> ", string, segmentLen);
 
             while (true)
             {

@@ -64,7 +64,7 @@ bool JoinerPskd::operator==(const JoinerPskd &aOther) const
 {
     bool isEqual = true;
 
-    for (uint8_t i = 0; i < sizeof(m8); i++)
+    for (size_t i = 0; i < sizeof(m8); i++)
     {
         if (m8[i] != aOther.m8[i])
         {
