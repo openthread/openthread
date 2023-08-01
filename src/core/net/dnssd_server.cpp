@@ -169,13 +169,20 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     if (mEnableUpstreamQuery && ShouldForwardToUpstream(aRequestHeader, aRequestMessage))
     {
         error = ResolveByUpstream(aRequestMessage, aMessageInfo);
+
         if (error == kErrorNone)
         {
             shouldSendResponse = false;
             ExitNow();
         }
-        response = Header::kResponseServerFailure;
+
         LogWarn("Failed to forward DNS query to upstream: %s", ErrorToString(error));
+
+        error    = kErrorNone;
+        response = Header::kResponseServerFailure;
+
+        // Continue to allocate and prepare the response message
+        // to send the `kResponseServerFailure` response code.
     }
 #endif
 
@@ -195,8 +202,11 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
         responseHeader.SetRecursionDesiredFlag();
     }
 
-    // We may met errors when forwarding the query to the upstream
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    // Forwarding the query to the upstream may have already set the
+    // response error code.
     VerifyOrExit(response == Header::kResponseSuccess);
+#endif
 
     // Validate the query
     VerifyOrExit(aRequestHeader.GetQueryType() == Header::kQueryTypeStandard,
@@ -231,7 +241,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #endif
 
 exit:
-    if (error == kErrorNone && shouldSendResponse)
+    if ((error == kErrorNone) && shouldSendResponse)
     {
         SendResponse(responseHeader, response, *responseMessage, aMessageInfo, mSocket);
     }
