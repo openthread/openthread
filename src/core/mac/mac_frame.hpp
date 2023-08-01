@@ -383,8 +383,8 @@ public:
      * Determines and writes the Frame Control Field (FCF) and Security Control in the frame along with
      * given source and destination addresses and PAN IDs.
      *
-     * The Ack Request bit in FCF is set if there is destination and it is not broadcast. The Frame Pending and IE
-     * Present bits are not set.
+     * The Ack Request bit in FCF is set if there is destination and it is not broadcast and frame type @p aType is not
+     * ACK. The Frame Pending and IE Present bits are not set.
      *
      * @param[in] aType          Frame type.
      * @param[in] aVerion        Frame version.

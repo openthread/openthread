@@ -577,8 +577,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
         addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
     }
 
-    panIds.mSource      = Get<Mac::Mac>().GetPanId();
-    panIds.mDestination = Get<Mac::Mac>().GetPanId();
+    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     Get<MeshForwarder>().PrepareMacHeaders(*frame, Mac::Frame::kTypeMacCmd, addresses, panIds,
                                            Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);

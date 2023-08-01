@@ -193,8 +193,7 @@ void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &
     }
 
     addresses.mDestination = aMacDest;
-    panIds.mSource         = Get<Mac::Mac>().GetPanId();
-    panIds.mDestination    = Get<Mac::Mac>().GetPanId();
+    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     PrepareMacHeaders(aFrame, Mac::Frame::kTypeData, addresses, panIds, Mac::Frame::kSecurityEncMic32,
                       Mac::Frame::kKeyIdMode1, nullptr);
@@ -908,20 +907,19 @@ start:
         }
     }
 
-    panIds.mSource      = Get<Mac::Mac>().GetPanId();
-    panIds.mDestination = Get<Mac::Mac>().GetPanId();
+    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     switch (aMessage.GetSubType())
     {
     case Message::kSubTypeMleAnnounce:
         aFrame.SetChannel(aMessage.GetChannel());
         aFrame.SetRxChannelAfterTxDone(Get<Mac::Mac>().GetPanChannel());
-        panIds.mDestination = Mac::kPanIdBroadcast;
+        panIds.SetDestination(Mac::kPanIdBroadcast);
         break;
 
     case Message::kSubTypeMleDiscoverRequest:
     case Message::kSubTypeMleDiscoverResponse:
-        panIds.mDestination = aMessage.GetPanId();
+        panIds.SetDestination(aMessage.GetPanId());
         break;
 
     default:
