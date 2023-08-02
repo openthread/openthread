@@ -239,6 +239,8 @@ void Frame::InitMacHeader(Type             aType,
 
 uint16_t Frame::GetFrameControlField(void) const { return ReadUint16(mPsdu); }
 
+void Frame::SetFrameControlField(uint16_t aFcf) { WriteUint16(aFcf, mPsdu); }
+
 Error Frame::ValidatePsdu(void) const
 {
     Error   error = kErrorNone;
@@ -273,6 +275,22 @@ void Frame::SetFramePending(bool aFramePending)
     {
         mPsdu[0] &= ~kFcfFramePending;
     }
+}
+
+void Frame::SetIePresent(bool aIePresent)
+{
+    uint16_t fcf = GetFrameControlField();
+
+    if (aIePresent)
+    {
+        fcf |= kFcfIePresent;
+    }
+    else
+    {
+        fcf &= ~kFcfIePresent;
+    }
+
+    SetFrameControlField(fcf);
 }
 
 uint8_t Frame::FindDstPanIdIndex(void) const
@@ -1090,7 +1108,7 @@ Error Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize
 {
     Error error = kErrorNone;
 
-    WriteUint16(GetFrameControlField() | kFcfIePresent, mPsdu);
+    SetIePresent(true);
 
     if (aIndex == 0)
     {
@@ -1386,114 +1404,79 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
+Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    Error error = kErrorNone;
+    Error     error = kErrorNone;
+    Address   address;
+    PanId     panId;
+    Addresses addrs;
+    PanIds    panIds;
+    uint8_t   securityLevel = kSecurityNone;
+    uint8_t   keyIdMode     = kKeyIdMode0;
 
-    uint16_t fcf;
-    Address  address;
-    PanId    panId;
-    uint8_t  footerLength;
-    uint8_t  securityControlField;
-    uint8_t  keyId;
+    // Validate the received frame.
 
-    fcf = static_cast<uint16_t>(kTypeAck) | static_cast<uint16_t>(kVersion2015) | kFcfSrcAddrNone;
+    VerifyOrExit(aRxFrame.IsVersion2015(), error = kErrorParse);
+    VerifyOrExit(aRxFrame.GetAckRequest(), error = kErrorParse);
 
-    mChannel = aFrame.mChannel;
+    // Check `aRxFrame` has a valid destination address. The ack frame
+    // will not use this as its source though and will always use no
+    // source address.
+
+    SuccessOrExit(error = aRxFrame.GetDstAddr(address));
+    VerifyOrExit(!address.IsNone() && !address.IsBroadcast(), error = kErrorParse);
+
+    // Check `aRxFrame` has a valid source, which is then used as
+    // ack frames destination.
+
+    SuccessOrExit(error = aRxFrame.GetSrcAddr(addrs.mDestination));
+    VerifyOrExit(!addrs.mDestination.IsNone(), error = kErrorParse);
+
+    if (aRxFrame.GetSecurityEnabled())
+    {
+        SuccessOrExit(error = aRxFrame.GetSecurityLevel(securityLevel));
+        VerifyOrExit(securityLevel == kSecurityEncMic32, error = kErrorParse);
+
+        SuccessOrExit(error = aRxFrame.GetKeyIdMode(keyIdMode));
+    }
+
+    if (aRxFrame.IsSrcPanIdPresent())
+    {
+        SuccessOrExit(error = aRxFrame.GetSrcPanId(panId));
+        panIds.SetDestination(panId);
+    }
+    else if (aRxFrame.IsDstPanIdPresent())
+    {
+        SuccessOrExit(error = aRxFrame.GetDstPanId(panId));
+        panIds.SetDestination(panId);
+    }
+
+    // Prepare the ack frame
+
+    mChannel = aRxFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
 
-    // Set frame control field
-    if (aIsFramePending)
+    InitMacHeader(kTypeAck, kVersion2015, addrs, panIds, static_cast<SecurityLevel>(securityLevel),
+                  static_cast<KeyIdMode>(keyIdMode));
+
+    SetFramePending(aIsFramePending);
+    SetIePresent(aIeLength != 0);
+    SetSequence(aRxFrame.GetSequence());
+
+    if (aRxFrame.GetSecurityEnabled())
     {
-        fcf |= kFcfFramePending;
-    }
+        uint8_t keyId;
 
-    if (aFrame.GetSecurityEnabled())
-    {
-        fcf |= kFcfSecurityEnabled;
-    }
-
-    if (aFrame.IsPanIdCompressed())
-    {
-        fcf |= kFcfPanidCompression;
-    }
-
-    // Destination address mode
-    if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt)
-    {
-        fcf |= kFcfDstAddrExt;
-    }
-    else if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort)
-    {
-        fcf |= kFcfDstAddrShort;
-    }
-    else
-    {
-        fcf |= kFcfDstAddrNone;
-    }
-
-    if (aIeLength > 0)
-    {
-        fcf |= kFcfIePresent;
-    }
-
-    WriteUint16(fcf, mPsdu);
-
-    // Set sequence number
-    mPsdu[kSequenceIndex] = aFrame.GetSequence();
-
-    if (IsDstPanIdPresent())
-    {
-        // Set address field
-        if (aFrame.IsSrcPanIdPresent())
-        {
-            SuccessOrExit(error = aFrame.GetSrcPanId(panId));
-        }
-        else if (aFrame.IsDstPanIdPresent())
-        {
-            SuccessOrExit(error = aFrame.GetDstPanId(panId));
-        }
-        else
-        {
-            ExitNow(error = kErrorParse);
-        }
-
-        SetDstPanId(panId);
-    }
-
-    if (aFrame.IsSrcAddrPresent())
-    {
-        SuccessOrExit(error = aFrame.GetSrcAddr(address));
-        SetDstAddr(address);
-    }
-
-    // At this time the length of ACK hasn't been determined, set it to
-    // `kMaxPsduSize` to call methods that check frame length
-    mLength = kMaxPsduSize;
-
-    // Set security header
-    if (aFrame.GetSecurityEnabled())
-    {
-        SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-        SuccessOrExit(error = aFrame.GetKeyId(keyId));
-
-        VerifyOrExit((securityControlField & kSecLevelMask) == kSecurityEncMic32, error = kErrorParse);
-
-        SetSecurityControlField(securityControlField);
+        SuccessOrExit(error = aRxFrame.GetKeyId(keyId));
         SetKeyId(keyId);
     }
 
-    // Set header IE
     if (aIeLength > 0)
     {
         OT_ASSERT(aIeData != nullptr);
         memcpy(&mPsdu[FindHeaderIeIndex()], aIeData, aIeLength);
+        mLength += aIeLength;
     }
-
-    // Set frame length
-    footerLength = GetFooterLength();
-    OT_ASSERT(footerLength != kInvalidIndex);
-    mLength = SkipSecurityHeaderIndex() + aIeLength + footerLength;
 
 exit:
     return error;

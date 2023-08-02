@@ -505,6 +505,14 @@ public:
     bool IsIePresent(void) const { return (GetFrameControlField() & kFcfIePresent) != 0; }
 
     /**
+     * Sets the IE Present bit.
+     *
+     * @param[in]  aIePresent   The IE Present bit.
+     *
+     */
+    void SetIePresent(bool aIePresent);
+
+    /**
      * Returns the Sequence Number value.
      *
      * @returns The Sequence Number value.
@@ -1122,6 +1130,7 @@ protected:
     static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
     static constexpr uint8_t kSequenceIndex = kFcfSize;
 
+    void    SetFrameControlField(uint16_t aFcf);
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
     uint8_t FindSrcPanIdIndex(void) const;
@@ -1148,8 +1157,6 @@ protected:
     static uint8_t CalculateAddrFieldSize(uint16_t aFcf);
     static uint8_t CalculateSecurityHeaderSize(uint8_t aSecurityControl);
     static uint8_t CalculateMicSize(uint8_t aSecurityControl);
-
-public:
 };
 
 /**
@@ -1502,16 +1509,16 @@ public:
     /**
      * Generate Enh-Ack in this frame object.
      *
-     * @param[in]    aFrame             A reference to the frame received.
+     * @param[in]    aRxFrame           A reference to the received frame.
      * @param[in]    aIsFramePending    Value of the ACK's frame pending bit.
      * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
      * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
      *
      * @retval  kErrorNone           Successfully generated Enh Ack.
-     * @retval  kErrorParse          @p aFrame has incorrect format.
+     * @retval  kErrorParse          @p aRxFrame has incorrect format.
      *
      */
-    Error GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+    Error GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**

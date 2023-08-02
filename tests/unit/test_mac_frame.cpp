@@ -747,13 +747,14 @@ void TestMacFrameAckGeneration(void)
     uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
     Mac::CslIe *csl;
 
-    IgnoreError(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+    SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+
     csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
-    VerifyOrQuit(ackFrame.mLength == 23);
+    VerifyOrQuit(ackFrame.mLength == 25);
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
     VerifyOrQuit(ackFrame.GetSecurityEnabled());
     VerifyOrQuit(ackFrame.IsIePresent());
-    VerifyOrQuit(!ackFrame.IsDstPanIdPresent());
+    VerifyOrQuit(ackFrame.IsDstPanIdPresent());
     VerifyOrQuit(ackFrame.IsDstAddrPresent());
     VerifyOrQuit(!ackFrame.IsSrcAddrPresent());
     VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2015);
