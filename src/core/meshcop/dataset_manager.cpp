@@ -792,6 +792,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
             ExitNow();
         }
     }
+#if OPENTHREAD_CONFIG_DATASET_MANAGER_PARTIAL_DATASET_FIX
     // If pending dataset does not contain all required data, merge missing Tlv's from active dataset
     sTlv = aDataset.GetTlvsStart();
     eTlv = aDataset.GetTlvsEnd();
@@ -804,6 +805,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
         }
         sTlv = sTlv->GetNext();
     }
+#endif
 
     LogInfo("pending delay timer expired");
 
