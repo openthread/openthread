@@ -242,9 +242,10 @@ static const char kService1Name[]     = "_srv._udp";
 static const char kService1FullName[] = "_srv._udp.default.service.arpa.";
 static const char kInstance1Label[]   = "srv-instance";
 
-static const char kService2Name[]     = "_game._udp";
-static const char kService2FullName[] = "_game._udp.default.service.arpa.";
-static const char kInstance2Label[]   = "last-ninja";
+static const char kService2Name[]            = "_game._udp";
+static const char kService2FullName[]        = "_game._udp.default.service.arpa.";
+static const char kService2SubTypeFullName[] = "_best._sub._game._udp.default.service.arpa.";
+static const char kInstance2Label[]          = "last-ninja";
 
 void PrepareService1(Srp::Client::Service &aService)
 {
@@ -277,7 +278,7 @@ void PrepareService1(Srp::Client::Service &aService)
 
 void PrepareService2(Srp::Client::Service &aService)
 {
-    static const char  kSub4[]       = "_44444444";
+    static const char  kSub4[]       = "_best";
     static const char *kSubLabels2[] = {kSub4, nullptr};
 
     memset(&aService, 0, sizeof(aService));
@@ -593,6 +594,15 @@ void TestDnsClient(void)
 
     Log("Browse(%s)", kService2FullName);
     SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    sBrowseInfo.Reset();
+
+    Log("Browse(%s)", kService2SubTypeFullName);
+    SuccessOrQuit(dnsClient->Browse(kService2SubTypeFullName, BrowseCallback, sInstance));
     AdvanceTime(100);
     VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
     SuccessOrQuit(sBrowseInfo.mError);

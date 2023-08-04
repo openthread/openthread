@@ -687,26 +687,6 @@ public:
     static Error AppendLabel(const char *aLabel, Message &aMessage);
 
     /**
-     * Encodes and appends a single name label of specified length to a message.
-     *
-     * The @p aLabel is assumed to contain a single name label of given @p aLength.  @p aLabel must not contain
-     * '\0' characters within the length @p aLength. Unlike `AppendMultipleLabels()` which parses the label string
-     * and treats it as sequence of multiple (dot-separated) labels, this method always appends @p aLabel as a single
-     * whole label. This allows the label string to even contain dot '.' character, which, for example, is useful for
-     * "Service Instance Names" where <Instance> portion is a user-friendly name and can contain dot characters.
-     *
-     * @param[in] aLabel         The label string to append. MUST NOT be `nullptr`.
-     * @param[in] aLength        The length of the label to append.
-     * @param[in] aMessage       The message to append to.
-     *
-     * @retval kErrorNone         Successfully encoded and appended the name label to @p aMessage.
-     * @retval kErrorInvalidArgs  @p aLabel is not valid (e.g., label length is not within valid range).
-     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
-     *
-     */
-    static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
-
-    /**
      * Encodes and appends a sequence of name labels to a given message.
      *
      * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
@@ -727,33 +707,6 @@ public:
      *
      */
     static Error AppendMultipleLabels(const char *aLabels, Message &aMessage);
-
-    /**
-     * Encodes and appends a sequence of name labels within the specified length to a given message.
-     * Stops appending labels if @p aLength characters are read or '\0' is found before @p aLength
-     * characters.
-     *
-     * Is useful for appending a number of labels of the name instead of appending all labels.
-     *
-     * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
-     * E.g., "_http._tcp", "_http._tcp." (same as previous one), "host-1.test".
-     *
-     * Validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
-     * `kMaxLabelLength` (63) characters or less.
-     *
-     * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
-     * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
-     *
-     * @param[in]  aLabels            A name label string. Can be `nullptr` (then treated as "").
-     * @param[in]  aLength            The max length of the name labels to encode.
-     * @param[in]  aMessage           The message to which to append the encoded name.
-     *
-     * @retval kErrorNone         Successfully encoded and appended the name label(s) to @p aMessage.
-     * @retval kErrorInvalidArgs  Name label @p aLabels is not valid.
-     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
-     *
-     */
-    static Error AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage);
 
     /**
      * Appends a name label terminator to a message.
@@ -978,6 +931,25 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
     /**
+     * Extracts label(s) from a full name by checking that it contains a given suffix name (e.g., suffix name can be
+     * a domain name) and removing it.
+     *
+     * Both @p aName and @p aSuffixName must be full DNS name and end with ('.'), otherwise the behavior of this method
+     * is undefined.
+     *
+     * @param[in]   aName           The full name to extract labels from.
+     * @param[in]   aSuffixName     The suffix name (e.g. can be domain name).
+     * @param[out]  aLabels         Pointer to buffer to copy the extracted labels.
+     * @param[in]   aLabelsSize     Size of @p aLabels buffer.
+     *
+     * @retval kErrorNone     Successfully extracted the labels, @p aLabels is updated.
+     * @retval kErrorParse    @p aName does not contain @p aSuffixName.
+     * @retval kErrorNoBufs   Could not fit the labels in @p aLabelsSize.
+     *
+     */
+    static Error ExtractLabels(const char *aName, const char *aSuffixName, char *aLabels, uint16_t aLabelsSize);
+
+    /**
      * Tests if a DNS name is a sub-domain of a given domain.
      *
      * Both @p aName and @p aDomain can end without dot ('.').
@@ -1055,6 +1027,8 @@ private:
         , mOffset(aOffset)
     {
     }
+
+    static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
 
     const char    *mString;  // String containing the name or `nullptr` if name is not from string.
     const Message *mMessage; // Message containing the encoded name, or `nullptr` if `Name` is not from message.

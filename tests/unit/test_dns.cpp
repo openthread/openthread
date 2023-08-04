@@ -68,6 +68,8 @@ void TestDnsName(void)
     const char  *subDomain;
     const char  *domain;
     const char  *domain2;
+    const char  *fullName;
+    const char  *suffixName;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -246,6 +248,57 @@ void TestDnsName(void)
     domain  = "example.com.";
     domain2 = ".example.com.";
     VerifyOrQuit(!Dns::Name::IsSameDomain(domain, domain2));
+
+    printf("----------------------------------------------------------------\n");
+    printf("Extracting label(s) and removing domains:\n");
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "default.service.arpa.";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
+    fullName   = "my.service._ipps._tcp.default.service.arpa.";
+    suffixName = "_ipps._tcp.default.service.arpa.";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    VerifyOrQuit(strcmp(name, "my.service") == 0);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "DeFault.SerVice.ARPA.";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "efault.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "xdefault.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = ".default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "default.service.arp.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "default.service.arpa.";
+    suffixName = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "efault.service.arpa.";
+    suffixName = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "default.service.arpa.";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, 22));
+    VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, 21) == kErrorNoBufs);
 
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");

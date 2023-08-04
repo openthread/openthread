@@ -291,160 +291,99 @@ public:
     void SetTestMode(uint8_t aTestMode) { mTestMode = aTestMode; }
 
 private:
-    class NameCompressInfo : public Clearable<NameCompressInfo>
-    {
-    public:
-        static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
-
-        NameCompressInfo(void) { Clear(); }
-
-        uint16_t GetDomainNameOffset(void) const { return mDomainNameOffset; }
-
-        void SetDomainNameOffset(uint16_t aOffset) { mDomainNameOffset = aOffset; }
-
-        uint16_t GetServiceNameOffset(const Message &aMessage, const char *aServiceName) const
-        {
-            return MatchCompressedName(aMessage, mServiceNameOffset, aServiceName)
-                       ? mServiceNameOffset
-                       : static_cast<uint16_t>(kUnknownOffset);
-        };
-
-        void SetServiceNameOffset(uint16_t aOffset)
-        {
-            if (mServiceNameOffset == kUnknownOffset)
-            {
-                mServiceNameOffset = aOffset;
-            }
-        }
-
-        uint16_t GetInstanceNameOffset(const Message &aMessage, const char *aName) const
-        {
-            return MatchCompressedName(aMessage, mInstanceNameOffset, aName) ? mInstanceNameOffset
-                                                                             : static_cast<uint16_t>(kUnknownOffset);
-        }
-
-        void SetInstanceNameOffset(uint16_t aOffset)
-        {
-            if (mInstanceNameOffset == kUnknownOffset)
-            {
-                mInstanceNameOffset = aOffset;
-            }
-        }
-
-        uint16_t GetHostNameOffset(const Message &aMessage, const char *aName) const
-        {
-            return MatchCompressedName(aMessage, mHostNameOffset, aName) ? mHostNameOffset
-                                                                         : static_cast<uint16_t>(kUnknownOffset);
-        }
-
-        void SetHostNameOffset(uint16_t aOffset)
-        {
-            if (mHostNameOffset == kUnknownOffset)
-            {
-                mHostNameOffset = aOffset;
-            }
-        }
-
-    private:
-        static bool MatchCompressedName(const Message &aMessage, uint16_t aOffset, const char *aName)
-        {
-            return aOffset != kUnknownOffset && Name::CompareName(aMessage, aOffset, aName) == kErrorNone;
-        }
-
-        uint16_t mDomainNameOffset;   // Offset of domain name serialization into the response message.
-        uint16_t mServiceNameOffset;  // Offset of service name serialization into the response message.
-        uint16_t mInstanceNameOffset; // Offset of instance name serialization into the response message.
-        uint16_t mHostNameOffset;     // Offset of host name serialization into the response message.
-    };
-
     static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
     static constexpr uint8_t  kProtocolLabelLength          = 4;
     static constexpr uint8_t  kSubTypeLabelLength           = 4;
     static constexpr uint16_t kMaxConcurrentQueries         = 32;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
-    // This structure represents the splitting information of a full name.
-    struct NameComponentsOffsetInfo
+    typedef Header::Response ResponseCode;
+    typedef char             DnsName[Name::kMaxNameSize];
+    typedef char             DnsLabel[Name::kMaxLabelSize];
+
+    enum QueryType : uint8_t
     {
-        static constexpr uint8_t kNotPresent = 0xff; // Indicates the component is not present.
+        kPtrQuery,
+        kSrvQuery,
+        kTxtQuery,
+        kSrvTxtQuery,
+        kAaaaQuery,
+    };
 
-        explicit NameComponentsOffsetInfo(void)
-            : mDomainOffset(kNotPresent)
-            , mProtocolOffset(kNotPresent)
-            , mServiceOffset(kNotPresent)
-            , mSubTypeOffset(kNotPresent)
-            , mInstanceOffset(kNotPresent)
-        {
-        }
-
-        bool IsServiceInstanceName(void) const { return mInstanceOffset != kNotPresent; }
-
-        bool IsServiceName(void) const { return mServiceOffset != kNotPresent && mInstanceOffset == kNotPresent; }
-
-        bool IsHostName(void) const { return mProtocolOffset == kNotPresent && mDomainOffset != 0; }
-
-        uint8_t mDomainOffset;   // Offset to <Domain>.
-        uint8_t mProtocolOffset; // Offset to <Protocol> (i.e. _tcp or _udp) or `kNotPresent` if not service name.
-        uint8_t mServiceOffset;  // Offset to <Service> or `kNotPresent` if not service or instance.
-        uint8_t mSubTypeOffset;  // Offset to sub-type label or `kNotPresent` is not a sub-type.
-        uint8_t mInstanceOffset; // Offset to <Instance> or `kNotPresent` if the name is not a instance.
+    enum Section : uint8_t
+    {
+        kAnswerSection,
+        kAdditionalDataSection,
     };
 
     struct Request
     {
+        ResponseCode ParseQuestions(uint8_t aTestMode);
+
         const Message          *mMessage;
         const Ip6::MessageInfo *mMessageInfo;
         Header                  mHeader;
+        QueryType               mType;
     };
 
-    struct Response : public GetProvider<Response>
+    class Response : public GetProvider<Response>, public Clearable<Response>
     {
-        Response(void)
-            : mMessage(nullptr)
-            , mAdditional(false)
-        {
-        }
-
-        Instance &GetInstance(void) const { return mMessage->GetInstance(); }
-
-        Error AddQuestionsFrom(const Request &aRequest);
-        Error AppendQuestion(const char *aName, const Question &aQuestion);
-        Error AppendPtrRecord(const char *aServiceName, const char *aInstanceName, uint32_t aTtl);
-        Error AppendSrvRecord(const char *aInstanceName,
-                              const char *aHostName,
-                              uint32_t    aTtl,
-                              uint16_t    aPriority,
-                              uint16_t    aWeight,
-                              uint16_t    aPort);
-        Error AppendTxtRecord(const char *aInstanceName, const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
-        Error AppendAaaaRecord(const char *aHostName, const Ip6::Address &aAddress, uint32_t aTtl);
-        Error AppendServiceName(const char *aName);
-        Error AppendInstanceName(const char *aName);
-        Error AppendHostName(const char *aName);
-        void  IncResourceRecordCount(void);
-        bool  HasQuestion(const char *aName, uint16_t aQuestionType) const;
-        void  Send(const Ip6::MessageInfo &aMessageInfo);
-        void  GetQueryTypeAndName(DnsQueryType &aType, char (&aName)[Name::kMaxNameSize]) const;
-
+    public:
+        Response(void) { Clear(); }
+        Instance    &GetInstance(void) const { return mMessage->GetInstance(); }
+        void         SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
+        ResponseCode AddQuestionsFrom(const Request &aRequest);
+        Error        ParseQueryName(void);
+        void         ReadQueryName(DnsName &aName) const;
+        bool         QueryNameMatches(const char *aName) const;
+        Error        AppendQueryName(void) const;
+        Error        AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
+        Error        AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
+        Error        AppendSrvRecord(const char *aHostName,
+                                     uint32_t    aTtl,
+                                     uint16_t    aPriority,
+                                     uint16_t    aWeight,
+                                     uint16_t    aPort);
+        Error        AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
+        Error        AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
+        Error        AppendHostAddresses(const HostInfo &aHostInfo);
+        Error        AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
+        Error        AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
+        void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset) const;
+        void         IncResourceRecordCount(void);
+        void         Send(const Ip6::MessageInfo &aMessageInfo);
+        void         GetQueryTypeAndName(DnsQueryType &aType, DnsName &aName) const;
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-        void ResolveBySrp(void);
-        void ResolveQuestionBySrp(const char *aName, const Question &aQuestion);
+        Error ResolveBySrp(void);
+        bool  QueryNameMatchesService(const Srp::Server::Service &aService) const;
+        Error AppendSrvRecord(const Srp::Server::Service &aService);
+        Error AppendTxtRecord(const Srp::Server::Service &aService);
+        Error AppendHostAddresses(const Srp::Server::Host &aHost);
+#endif
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+        void               Log(void) const;
+        static const char *QueryTypeToString(QueryType aType);
 #endif
 
-        Message         *mMessage;
-        Header           mHeader;
-        NameCompressInfo mCompressInfo;
-        bool             mAdditional; // Whether or not appending new records in additional data section.
+        Message  *mMessage;
+        Header    mHeader;
+        QueryType mType;
+        Section   mSection;
+        uint16_t  mDomainOffset;
+        uint16_t  mServiceOffset;
+        uint16_t  mInstanceOffset;
+        uint16_t  mHostOffset;
     };
 
     struct QueryTransaction : public Response
     {
-        bool IsValid(void) const { return mMessage != nullptr; }
-        bool CanAnswer(const char *aServiceFullName, const ServiceInstanceInfo &aInstanceInfo) const;
-        bool CanAnswer(const char *aHostFullName) const;
-        void Answer(const char *aServiceFullName, const ServiceInstanceInfo &aInstanceInfo);
-        void Answer(const char *aHostFullName, const HostInfo &aHostInfo);
-        void Finalize(Header::Response aResponseCode);
+        bool  IsValid(void) const { return mMessage != nullptr; }
+        Error ExtractServiceInstanceLabel(const char *aInstanceName, DnsLabel &aLabel);
+        bool  CanAnswer(const char *aServiceFullName, const ServiceInstanceInfo &aInstanceInfo) const;
+        bool  CanAnswer(const char *aHostFullName) const;
+        void  Answer(const ServiceInstanceInfo &aInstanceInfo);
+        void  Answer(const HostInfo &aHostInfo);
+        void  Finalize(Error aError);
 
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
@@ -452,12 +391,11 @@ private:
 
     static constexpr uint32_t kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
 
-    bool         IsRunning(void) const { return mSocket.IsBound(); }
-    static void  HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void         HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void         ProcessQuery(const Request &aRequest);
-    static Error FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
-    static Error FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
+    bool           IsRunning(void) const { return mSocket.IsBound(); }
+    static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void           HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void           ProcessQuery(Request &aRequest);
+    static uint8_t GetNameLength(const char *aName);
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Request &aRequest);
@@ -472,14 +410,15 @@ private:
     void HandleTimer(void);
     void ResetTimer(void);
 
-    void UpdateResponseCounters(Header::Response aResponseCode);
+    void UpdateResponseCounters(ResponseCode aResponseCode);
 
     using ServerTimer = TimerMilliIn<Server, &Server::HandleTimer>;
 
-    static const char kDnssdProtocolUdp[];
-    static const char kDnssdProtocolTcp[];
-    static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
+    static const char kSubLabel[];
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    static const char *kBlockedDomains[];
+#endif
 
     Ip6::Udp::Socket mSocket;
 
@@ -487,7 +426,6 @@ private:
     Callback<SubscribeCallback>   mQuerySubscribe;
     Callback<UnsubscribeCallback> mQueryUnsubscribe;
 
-    static const char *kBlockedDomains[];
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     bool                     mEnableUpstreamQuery;
     UpstreamQueryTransaction mUpstreamQueryTransactions[kMaxConcurrentUpstreamQueries];
