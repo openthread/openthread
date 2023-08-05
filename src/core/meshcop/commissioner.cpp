@@ -766,10 +766,18 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMe
                                                      Error                   aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+    Error   error = kErrorParse;
+    uint8_t state;
 
     VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
-    LogInfo("Received %s response", UriToString<kUriCommissionerSet>());
 
+    if (Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending)
+    {
+        error = StateTlv::StateTlvToError(static_cast<StateTlv::State>(state));
+    }
+
+    OT_UNUSED_VARIABLE(error);
+    LogInfo("Received %s response: %s", UriToString<kUriCommissionerSet>(), ErrorToString(error));
 exit:
     return;
 }

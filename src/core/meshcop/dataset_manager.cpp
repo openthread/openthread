@@ -317,17 +317,9 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
     SuccessOrExit(error = aError);
     VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone, error = kErrorParse);
 
-    switch (state)
+    if (state != StateTlv::kPending)
     {
-    case StateTlv::kReject:
-        error = kErrorRejected;
-        break;
-    case StateTlv::kAccept:
-        error = kErrorNone;
-        break;
-    default:
-        error = kErrorParse;
-        break;
+        error = StateTlv::StateTlvToError(static_cast<StateTlv::State>(state));
     }
 
 exit:

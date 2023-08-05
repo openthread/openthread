@@ -1087,6 +1087,16 @@ public:
         kPending = 0,    ///< Pending
         kAccept  = 1,    ///< Accept
     };
+
+    /**
+     * Convert State value to Error code.
+     *
+     * @param[in]  aState  TLV state value that will be converted.
+     *
+     * @returns  Error code.
+     *
+     */
+    static Error StateTlvToError(StateTlv::State aState);
 };
 
 /**

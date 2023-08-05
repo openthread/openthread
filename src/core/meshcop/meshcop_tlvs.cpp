@@ -211,6 +211,28 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
     mChannel = HostSwap16(aChannel);
 }
 
+Error StateTlv::StateTlvToError(StateTlv::State aState)
+{
+    Error ret;
+
+    switch (aState)
+    {
+    case StateTlv::kReject:
+        ret = kErrorRejected;
+        break;
+    case StateTlv::kAccept:
+        ret = kErrorNone;
+        break;
+    case StateTlv::kPending:
+        ret = kErrorPending;
+        break;
+    default:
+        ret = kErrorParse;
+        break;
+    }
+    return ret;
+}
+
 bool ChannelMaskBaseTlv::IsValid(void) const
 {
     const ChannelMaskEntryBase *cur = GetFirstEntry();
