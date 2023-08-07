@@ -3575,7 +3575,7 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
-                                          uint8_t                    aStatus,
+                                          otLinkMetricsStatus        aStatus,
                                           void                      *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues, aStatus);
@@ -3608,7 +3608,7 @@ void Interpreter::PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValue
 
 void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
-                                          uint8_t                    aStatus)
+                                          otLinkMetricsStatus        aStatus)
 {
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6AddressLine(*aAddress);
@@ -3629,12 +3629,14 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
     }
 }
 
-void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus, void *aContext)
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress,
+                                                otLinkMetricsStatus aStatus,
+                                                void               *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsMgmtResponse(aAddress, aStatus);
 }
 
-void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus)
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus)
 {
     OutputFormat("Received Link Metrics Management Response from: ");
     OutputIp6AddressLine(*aAddress);
@@ -3664,7 +3666,7 @@ void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aS
     }
 }
 
-const char *Interpreter::LinkMetricsStatusToStr(uint8_t aStatus)
+const char *Interpreter::LinkMetricsStatusToStr(otLinkMetricsStatus aStatus)
 {
     static const char *const kStatusStrings[] = {
         "Success",                      // (0) OT_LINK_METRICS_STATUS_SUCCESS
