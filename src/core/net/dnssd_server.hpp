@@ -39,6 +39,7 @@
 #include "common/callback.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
@@ -292,14 +293,15 @@ public:
 
 private:
     static constexpr bool     kBindUnspecifiedNetif         = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
-    static constexpr uint8_t  kProtocolLabelLength          = 4;
-    static constexpr uint8_t  kSubTypeLabelLength           = 4;
-    static constexpr uint16_t kMaxConcurrentQueries         = 32;
+    static constexpr uint32_t kQueryTimeout                 = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
     typedef Header::Response ResponseCode;
     typedef char             DnsName[Name::kMaxNameSize];
     typedef char             DnsLabel[Name::kMaxLabelSize];
+
+    typedef Message      ProxyQuery;
+    typedef MessageQueue ProxyQueryList;
 
     enum QueryType : uint8_t
     {
@@ -326,17 +328,28 @@ private:
         QueryType               mType;
     };
 
-    class Response : public GetProvider<Response>, public Clearable<Response>
+    struct ProxyQueryInfo;
+
+    struct NameOffsets : public Clearable<NameOffsets>
+    {
+        uint16_t mDomainName;
+        uint16_t mServiceName;
+        uint16_t mInstanceName;
+        uint16_t mHostName;
+    };
+
+    class Response : public InstanceLocator, private NonCopyable
     {
     public:
-        Response(void) { Clear(); }
-        Instance    &GetInstance(void) const { return mMessage->GetInstance(); }
+        explicit Response(Instance &aInstance);
+        Error        AllocateAndInitFrom(const Request &aRequest);
+        void         InitFrom(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void         SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
         ResponseCode AddQuestionsFrom(const Request &aRequest);
         Error        ParseQueryName(void);
         void         ReadQueryName(DnsName &aName) const;
         bool         QueryNameMatches(const char *aName) const;
-        Error        AppendQueryName(void) const;
+        Error        AppendQueryName(void);
         Error        AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
         Error        AppendSrvRecord(const ServiceInstanceInfo &aInstanceInfo);
         Error        AppendSrvRecord(const char *aHostName,
@@ -349,10 +362,12 @@ private:
         Error        AppendHostAddresses(const HostInfo &aHostInfo);
         Error        AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
         Error        AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
-        void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset) const;
+        void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
         void         IncResourceRecordCount(void);
         void         Send(const Ip6::MessageInfo &aMessageInfo);
-        void         GetQueryTypeAndName(DnsQueryType &aType, DnsName &aName) const;
+        void         Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo);
+        void         Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip6::MessageInfo &aMessageInfo);
+        Error        ExtractServiceInstanceLabel(const char *aInstanceName, DnsLabel &aLabel);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
         Error ResolveBySrp(void);
         bool  QueryNameMatchesService(const Srp::Server::Service &aService) const;
@@ -365,31 +380,24 @@ private:
         static const char *QueryTypeToString(QueryType aType);
 #endif
 
-        Message  *mMessage;
-        Header    mHeader;
-        QueryType mType;
-        Section   mSection;
-        uint16_t  mDomainOffset;
-        uint16_t  mServiceOffset;
-        uint16_t  mInstanceOffset;
-        uint16_t  mHostOffset;
+        OwnedPtr<Message> mMessage;
+        Header            mHeader;
+        QueryType         mType;
+        Section           mSection;
+        NameOffsets       mOffsets;
     };
 
-    struct QueryTransaction : public Response
+    struct ProxyQueryInfo
     {
-        bool  IsValid(void) const { return mMessage != nullptr; }
-        Error ExtractServiceInstanceLabel(const char *aInstanceName, DnsLabel &aLabel);
-        bool  CanAnswer(const char *aServiceFullName, const ServiceInstanceInfo &aInstanceInfo) const;
-        bool  CanAnswer(const char *aHostFullName) const;
-        void  Answer(const ServiceInstanceInfo &aInstanceInfo);
-        void  Answer(const HostInfo &aHostInfo);
-        void  Finalize(Error aError);
+        void ReadFrom(const ProxyQuery &aQuery);
+        void RemoveFrom(ProxyQuery &aQuery) const;
+        void UpdateIn(ProxyQuery &aQuery) const;
 
+        QueryType        mType;
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
+        NameOffsets      mOffsets;
     };
-
-    static constexpr uint32_t kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
 
     bool           IsRunning(void) const { return mSocket.IsBound(); }
     static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -397,15 +405,18 @@ private:
     void           ProcessQuery(Request &aRequest);
     static uint8_t GetNameLength(const char *aName);
 
+    void        ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
+    void        RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Response &aResponse);
+    void        Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode);
+    static void ReadQueryName(const Message &aQuery, DnsName &aName);
+    static bool QueryNameMatches(const Message &aQuery, const char *aName);
+
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Request &aRequest);
     UpstreamQueryTransaction *AllocateUpstreamQueryTransaction(const Ip6::MessageInfo &aMessageInfo);
     void                      ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error aError);
     Error                     ResolveByUpstream(const Request &aRequest);
 #endif
-
-    Error             ResolveByQueryCallbacks(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
-    QueryTransaction *NewQuery(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
 
     void HandleTimer(void);
     void ResetTimer(void);
@@ -422,7 +433,7 @@ private:
 
     Ip6::Udp::Socket mSocket;
 
-    QueryTransaction              mQueryTransactions[kMaxConcurrentQueries];
+    ProxyQueryList                mProxyQueries;
     Callback<SubscribeCallback>   mQuerySubscribe;
     Callback<UnsubscribeCallback> mQueryUnsubscribe;
 

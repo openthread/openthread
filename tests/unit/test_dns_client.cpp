@@ -238,14 +238,16 @@ void FinalizeTest(void)
 static const char kHostName[]     = "elden";
 static const char kHostFullName[] = "elden.default.service.arpa.";
 
-static const char kService1Name[]     = "_srv._udp";
-static const char kService1FullName[] = "_srv._udp.default.service.arpa.";
-static const char kInstance1Label[]   = "srv-instance";
+static const char kService1Name[]      = "_srv._udp";
+static const char kService1FullName[]  = "_srv._udp.default.service.arpa.";
+static const char kInstance1Label[]    = "srv-instance";
+static const char kInstance1FullName[] = "srv-instance._srv._udp.default.service.arpa.";
 
 static const char kService2Name[]            = "_game._udp";
 static const char kService2FullName[]        = "_game._udp.default.service.arpa.";
 static const char kService2SubTypeFullName[] = "_best._sub._game._udp.default.service.arpa.";
 static const char kInstance2Label[]          = "last-ninja";
+static const char kInstance2FullName[]       = "last-ninja._game._udp.default.service.arpa.";
 
 void PrepareService1(Srp::Client::Service &aService)
 {
@@ -908,12 +910,225 @@ void TestDnsClient(void)
     Log("End of TestDnsClient");
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+char sLastSubscribeName[Dns::Name::kMaxNameSize];
+char sLastUnsubscribeName[Dns::Name::kMaxNameSize];
+
+void QuerySubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QuerySubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastSubscribeName, aFullName);
+}
+
+void QueryUnsubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QueryUnsubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastUnsubscribeName, aFullName);
+}
+
+void TestDnssdServerProxyCallback(void)
+{
+    Srp::Server                   *srpServer;
+    Srp::Client                   *srpClient;
+    Dns::Client                   *dnsClient;
+    Dns::ServiceDiscovery::Server *dnsServer;
+    otDnssdServiceInstanceInfo     instanceInfo;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdServerProxyCallback");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+    dnsServer = &sInstance->Get<Dns::ServiceDiscovery::Server>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set the query subscribe/unsubscribe callbacks on server
+
+    dnsServer->SetQueryCallbacks(QuerySubscribe, QueryUnsubscribe, sInstance);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService1FullName);
+    SuccessOrQuit(dnsClient->Browse(kService1FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService1FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService1FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Invoke subscribe callback for wrong name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback for correct name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance2FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService2FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Do not invoke subscribe callback and let query to timeout");
+
+    // Query timeout is set to 6 seconds
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    AdvanceTime(2000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 0);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Do not invoke subscribe callback and stop server");
+
+    dnsServer->Stop();
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    VerifyOrQuit(sBrowseInfo.mError != kErrorNone);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdServerProxyCallback");
+}
+
 #endif // ENABLE_DNS_TEST
 
 int main(void)
 {
 #if ENABLE_DNS_TEST
     TestDnsClient();
+    TestDnssdServerProxyCallback();
     printf("All tests passed\n");
 #else
     printf("DNS_CLIENT or DSNSSD_SERVER feature is not enabled\n");
