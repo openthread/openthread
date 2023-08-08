@@ -420,6 +420,21 @@ private:
         kAnycastService,
     };
 
+    /**
+     * This function pointer can be used to process messages dropped due to age.
+     *
+     * @param[in]  aMessage     A pointer to the dropped message.
+     * @param[in]  aContext     A pointer to callback context.
+     *
+     */
+    typedef void (*AgedMessageDroppedCallback)(Message *aMessage, void *aContext);
+
+    typedef struct
+    {
+        Message *mMessage;
+        bool    *mWasDropped;
+    } AgedMessageDroppedContext;
+
 #if OPENTHREAD_FTD
     class FragmentPriorityList : public Clearable<FragmentPriorityList>
     {
@@ -533,6 +548,7 @@ private:
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
     Error RemoveAgedMessages(void);
+    Error RemoveAgedMessages(AgedMessageDroppedCallback aCallback, void *aContext);
 #endif
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
     bool IsDirectTxQueueOverMaxFrameThreshold(void) const;
@@ -634,6 +650,8 @@ private:
                        Error               aError,
                        LogLevel            aLogLevel);
 #endif // #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_NOTE)
+
+    static void AgedMessageDropped(Message *aMessage, void *aContext);
 
     using TxTask = TaskletIn<MeshForwarder, &MeshForwarder::ScheduleTransmissionTask>;
 

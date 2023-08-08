@@ -395,7 +395,9 @@ exit:
     return error;
 }
 
-Error MeshForwarder::RemoveAgedMessages(void)
+Error MeshForwarder::RemoveAgedMessages(void) { return RemoveAgedMessages(nullptr, nullptr); }
+
+Error MeshForwarder::RemoveAgedMessages(AgedMessageDroppedCallback aCallback, void *aContext)
 {
     // This method goes through all messages in the send queue and
     // removes all aged messages determined based on the delay-aware
@@ -418,6 +420,10 @@ Error MeshForwarder::RemoveAgedMessages(void)
 
         if (UpdateEcnOrDrop(*message, /* aPreparingToSend */ false) == kErrorDrop)
         {
+            if (aCallback != nullptr)
+            {
+                aCallback(message, aContext);
+            }
             error = kErrorNone;
         }
     }
@@ -488,19 +494,33 @@ bool MeshForwarder::IsDirectTxQueueOverMaxFrameThreshold(void) const
     return (frameCount > OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE);
 }
 
+void MeshForwarder::AgedMessageDropped(Message *aMessage, void *aContext)
+{
+    AgedMessageDroppedContext *context = static_cast<AgedMessageDroppedContext *>(aContext);
+
+    if (context->mMessage == aMessage)
+    {
+        *context->mWasDropped = true;
+    }
+}
+
 void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 {
+    bool                      wasDropped = false;
+    AgedMessageDroppedContext context    = {&aMessage, &wasDropped};
+
     VerifyOrExit(aMessage.IsDirectTransmission());
     VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    if (RemoveAgedMessages() == kErrorNone)
+    if (RemoveAgedMessages(AgedMessageDropped, &context) == kErrorNone)
     {
         VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
     }
 #endif
 
     LogMessage(kMessageFullQueueDrop, aMessage);
+    VerifyOrExit(wasDropped == false);
     aMessage.ClearDirectTransmission();
     RemoveMessageIfNoPendingTx(aMessage);
 
