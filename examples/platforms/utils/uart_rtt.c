@@ -106,9 +106,6 @@ otError otPlatUartFlush(void)
     {
     }
 
-    sUartPendingUp = false;
-    otPlatUartSendDone();
-
 exit:
     return error;
 }
