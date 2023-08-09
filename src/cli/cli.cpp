@@ -237,10 +237,27 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+   /**
+    *@cli version
+    *@code
+    *version OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
+    *DONE
+    *@endcode
+    *@par api_copy
+    *#otGetVersionString
+    */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otGetVersionString());
     }
+
+    /**
+     * @code
+     * version API
+     * 28
+     * DONE
+     * @endcode
+     */
     else if (aArgs[0] == "api")
     {
         OutputLine("%u", OPENTHREAD_API_VERSION);
@@ -7212,13 +7229,34 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli uptime
+     * @code
+     * uptime
+     * 12:46:35:469
+     * Done
+     * @endcode
+     * @par api_copy
+     * #OtInstanceGet_Uptime_As_String
+     */
     if (aArgs[0].IsEmpty())
     {
         char string[OT_UPTIME_STRING_SIZE];
 
         otInstanceGetUptimeAsString(GetInstancePtr(), string, sizeof(string));
-        OutputLine("%s", string);
+        OutputLine("%s", string); 
     }
+    
+    /**
+     * @cli uptime ms
+     * @code
+     * uptime ms
+     * 426238
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otInstanceGetUptime
+     */
     else if (aArgs[0] == "ms")
     {
         OutputUint64Line(otInstanceGetUptime(GetInstancePtr()));
