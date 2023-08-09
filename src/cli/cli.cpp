@@ -240,9 +240,10 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
    /**
     * @cli version
     * @code
-    * version OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
+    * version
+    * OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
     * DONE
-    * @endcode
+    * @@endcode
     * @par api_copy
     * #otGetVersionString
     */
@@ -252,6 +253,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     }
 
     /**
+     * @cli version api
      * @code
      * version API
      * 28
