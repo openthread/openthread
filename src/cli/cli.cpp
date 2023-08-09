@@ -243,7 +243,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     * version
     * OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
     * DONE
-    * @@endcode
+    * @endcode
     * @par api_copy
     * #otGetVersionString
     */
