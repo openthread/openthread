@@ -287,4 +287,7 @@
 #define OPENTHREAD_CONFIG_SRP_SERVER_ENABLE 1
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
 
+// Disables built-in TCP support as TCP can be support on upper layer
+#define OPENTHREAD_CONFIG_TCP_ENABLE 0
+
 #endif // OPENTHREAD_CORE_ANDROID_CONFIG_H_

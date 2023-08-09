@@ -396,24 +396,6 @@ filegroup {
 }
 
 filegroup {
-    name: "openthread_tcplp_srcs",
-    srcs: [
-        "third_party/tcplp/bsdtcp/cc/cc_newreno.c",
-        "third_party/tcplp/bsdtcp/tcp_input.c",
-        "third_party/tcplp/bsdtcp/tcp_output.c",
-        "third_party/tcplp/bsdtcp/tcp_reass.c",
-        "third_party/tcplp/bsdtcp/tcp_sack.c",
-        "third_party/tcplp/bsdtcp/tcp_subr.c",
-        "third_party/tcplp/bsdtcp/tcp_timer.c",
-        "third_party/tcplp/bsdtcp/tcp_timewait.c",
-        "third_party/tcplp/bsdtcp/tcp_usrreq.c",
-        "third_party/tcplp/lib/bitmap.c",
-        "third_party/tcplp/lib/cbuf.c",
-        "third_party/tcplp/lib/lbuf.c",
-    ],
-}
-
-filegroup {
     name: "openthread_simulation_srcs",
     srcs: [
         "examples/platforms/simulation/alarm.c",
@@ -568,37 +550,6 @@ cc_library_static {
     ],
 }
 
-cc_defaults {
-    name: "openthread_tcplp_defaults",
-
-    local_include_dirs: [
-        "include",
-    ],
-
-    cflags: [
-        "-Wno-sign-compare",
-        "-Wno-conversion",
-        "-Wno-unused-parameter",
-    ],
-
-    srcs: [
-        ":openthread_tcplp_srcs"
-    ],
-}
-
-cc_library_static {
-    name: "openthread-tcplp",
-    defaults: ["openthread_tcplp_defaults"],
-    apex_available: [ "com.android.threadnetwork" ],
-    min_sdk_version: "33",
-}
-
-cc_library_static {
-    name: "openthread_tcplp_vendor",
-    defaults: ["openthread_tcplp_defaults"],
-    vendor_available: true,
-}
-
 cc_library_static {
     name: "libopenthread-cli",
 
@@ -703,6 +654,7 @@ cc_defaults {
         "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1",
         "-DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1",
         "-DOPENTHREAD_EXAMPLES_SIMULATION=1",
+        "-DOPENTHREAD_CONFIG_TCP_ENABLE=0",
         "-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"examples/platforms/simulation/openthread-core-simulation-config.h\"",
         "-DPACKAGE=\"openthread\"",
         "-DPACKAGE_BUGREPORT=\"openthread-devel@googlegroups.com\"",
@@ -1030,7 +982,6 @@ cc_binary {
 
     static_libs: [
         "openthread-platform",
-        "openthread_tcplp_vendor",
     ],
 
     shared_libs: [
