@@ -772,10 +772,12 @@ void PendingDatasetManager::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
     Dataset        dataset;
-    Dataset        aDataset;
-    Tlv           *sTlv;
-    Tlv           *eTlv;
-    Tlv           *pTlv;
+#if OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
+    Dataset        activeDataset;
+    Tlv           *currentTlv;
+    Tlv           *endTlv;
+    Tlv           *pendingTlv;
+#endif
 
     IgnoreError(Read(dataset));
 
@@ -792,18 +794,19 @@ void PendingDatasetManager::HandleDelayTimer(void)
             ExitNow();
         }
     }
-#if OPENTHREAD_CONFIG_DATASET_MANAGER_PARTIAL_DATASET_FIX
+#if OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
     // If pending dataset does not contain all required data, merge missing Tlv's from active dataset
-    sTlv = aDataset.GetTlvsStart();
-    eTlv = aDataset.GetTlvsEnd();
-    while(sTlv < eTlv)
+    IgnoreError(Get<ActiveDatasetManager>().Read(activeDataset));
+    currentTlv = activeDataset.GetTlvsStart();
+    endTlv = activeDataset.GetTlvsEnd();
+    while(currentTlv < endTlv)
     {
-        pTlv = dataset.GetTlv(sTlv->GetType());
-        if(pTlv == nullptr || !Tlv::IsValid(*pTlv))
+        pendingTlv = dataset.GetTlv(currentTlv->GetType());
+        if(pendingTlv == nullptr || !Tlv::IsValid(*currentTlv))
         {
-            dataset.SetTlv(*sTlv);
+            dataset.SetTlv(*currentTlv);
         }
-        sTlv = sTlv->GetNext();
+        currentTlv = currentTlv->GetNext();
     }
 #endif
 

@@ -542,4 +542,21 @@
 #define OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
+ *
+ * Define as 1 to allow device to amend a partially specified Pending Operational Dataset (which is itself
+ * identified as Dataset without a Network Key) with TLVs from the current Active Operational Dataset.
+ *
+ * Enabling this feature will make device non-conformant with the Thread specification.
+ *
+ * It is intended for use in specific use-cases to allow backward compatibility with devices running older firmware
+ * (in particular before commit 38ae36271cd and PR#6227) and if Channel Manager feature was enabled on older device
+ * which then can use partial Pending Dataset to switch channel.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
+#define OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET 0
+#endif
+
 #endif // CONFIG_MISC_H_
