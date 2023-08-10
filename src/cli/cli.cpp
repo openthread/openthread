@@ -251,6 +251,15 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     {
         OutputLine("%s", otGetVersionString());
     }
+    
+    /**
+     * @cli version api
+     * @code
+     * version api
+     * 28
+     * DONE
+     * @endcode
+     */
     else if (aArgs[0] == "api")
     {
         OutputLine("%u", OPENTHREAD_API_VERSION);
