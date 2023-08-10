@@ -251,7 +251,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     {
         OutputLine("%s", otGetVersionString());
     }
-    
+
     /**
      * @cli version api
      * @code
@@ -7248,7 +7248,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
         otInstanceGetUptimeAsString(GetInstancePtr(), string, sizeof(string));
         OutputLine("%s", string);
     }
-    
+
     /**
      * @cli uptime ms
      * @code
