@@ -242,7 +242,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
      * @code
      * version
      * OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
-     * DONE
+     * Done
      * @endcode
      * @par api_copy
      * #otGetVersionString
@@ -257,7 +257,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
      * @code
      * version api
      * 28
-     * DONE
+     * Done
      * @endcode
      * @par
      * Prints the API version number.
@@ -7237,7 +7237,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
      * @cli uptime
      * @code
      * uptime
-     * 12:46:35:469
+     * 12:46:35.469
      * Done
      * @endcode
      * @par api_copy
