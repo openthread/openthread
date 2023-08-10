@@ -7239,7 +7239,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * #OtInstanceGet_Uptime_As_String
+     * #OtInstanceGetUptimeAsString
      */
     if (aArgs[0].IsEmpty())
     {
