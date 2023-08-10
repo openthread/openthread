@@ -389,9 +389,9 @@ public:
     /**
      * Fills a Route TLV.
      *
-     * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `Mle::kLinkAcceptMaxRouters` when
-     * populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure to
-     * include router entries associated with @p aNeighbor, leader, and this device itself.
+     * When @p aNeighbor is not `nullptr`, we limit the number of router entries to `kMaxRoutersInRouteTlvForLinkAccept`
+     * when populating `aRouteTlv`, so that the TLV can be appended in a Link Accept message. In this case, we ensure
+     * to include router entries associated with @p aNeighbor, leader, and this device itself.
      *
      * @param[out] aRouteTlv    A Route TLV to be filled.
      * @param[in]  aNeighbor    A pointer to the receiver (in case TLV is for a Link Accept message).
@@ -442,6 +442,14 @@ public:
     const Router *end(void) const { return mRouters.end(); }
 
 private:
+    static constexpr uint32_t kRouterIdSequencePeriod     = 10; // in sec
+    static constexpr uint8_t  kLinkAcceptSequenceRollback = 64;
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    static constexpr uint8_t kMaxRoutersInRouteTlvForLinkAccept = 3;
+#else
+    static constexpr uint8_t kMaxRoutersInRouteTlvForLinkAccept = 20;
+#endif
+
     Router       *AddRouter(uint8_t aRouterId);
     void          RemoveRouter(Router &aRouter);
     Router       *FindNeighbor(uint16_t aRloc16);
@@ -471,7 +479,7 @@ private:
         uint8_t GetIndex(uint8_t aRouterId) const { return (mIndexes[aRouterId] & kIndexMask); }
         void    SetIndex(uint8_t aRouterId, uint8_t aIndex) { mIndexes[aRouterId] = kAllocatedFlag | aIndex; }
         bool    CanAllocate(uint8_t aRouterId) const { return (mIndexes[aRouterId] == 0); }
-        void    Release(uint8_t aRouterId) { mIndexes[aRouterId] = Mle::kRouterIdReuseDelay; }
+        void    Release(uint8_t aRouterId) { mIndexes[aRouterId] = kReuseDelay; }
         void    GetAsRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const;
         void    HandleTimeTick(void);
 
@@ -480,10 +488,11 @@ private:
         // not the router ID is allocated. The lower 7 bits give either
         // the index in `mRouter` array or remaining reuse delay time.
 
+        static constexpr uint8_t kReuseDelay    = 100; // in sec
         static constexpr uint8_t kAllocatedFlag = 1 << 7;
         static constexpr uint8_t kIndexMask     = 0x7f;
 
-        static_assert(Mle::kRouterIdReuseDelay <= kIndexMask, "Mle::kRouterIdReuseDelay does not fit in 7 bits");
+        static_assert(kReuseDelay <= kIndexMask, "kReuseDelay does not fit in 7 bits");
 
         uint8_t mIndexes[Mle::kMaxRouterId + 1];
     };

@@ -1106,7 +1106,7 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
     if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aIsDataPoll)
     {
         UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true,
-                                   /* aFailLimit */ Mle::kFailedCslDataPollTransmissions);
+                                   /* aFailLimit */ kFailedCslDataPollTransmissions);
     }
     else
 #endif

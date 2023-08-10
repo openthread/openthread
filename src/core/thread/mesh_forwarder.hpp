@@ -379,6 +379,9 @@ public:
 #endif
 
 private:
+    static constexpr uint8_t kFailedRouterTransmissions      = 4;
+    static constexpr uint8_t kFailedCslDataPollTransmissions = 15;
+
     static constexpr uint8_t kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT; // in seconds.
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
@@ -564,7 +567,7 @@ private:
     void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
                                              Error     aError,
                                              bool      aAllowNeighborRemove,
-                                             uint8_t   aFailLimit = Mle::kFailedRouterTransmissions);
+                                             uint8_t   aFailLimit = kFailedRouterTransmissions);
     void          HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
     void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void          RemoveMessageIfNoPendingTx(Message &aMessage);

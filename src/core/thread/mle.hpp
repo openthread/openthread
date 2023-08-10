@@ -713,15 +713,42 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Constants
 
-    static constexpr uint8_t kMleHopLimit        = 255;
-    static constexpr uint8_t kMleSecurityTagSize = 4; // Security tag size in bytes.
+    // All time intervals are in milliseconds
+    static constexpr uint32_t kParentRequestRouterTimeout     = 750;  // Wait time after tx of Parent Req to routers
+    static constexpr uint32_t kParentRequestReedTimeout       = 1250; // Wait timer after tx of Parent Req to REEDs
+    static constexpr uint32_t kParentRequestDuplicateMargin   = 50;   // Margin to detect duplicate received Parent Req
+    static constexpr uint32_t kChildIdResponseTimeout         = 1250; // Wait time to receive Child ID Response
+    static constexpr uint32_t kAttachStartJitter              = 50;   // Max jitter time added to start of attach
+    static constexpr uint32_t kAnnounceProcessTimeout         = 250;  // Delay after Announce rx before processing
+    static constexpr uint32_t kAnnounceTimeout                = 1400; // Total timeout for sending Announce messages
+    static constexpr uint16_t kMinAnnounceDelay               = 80;   // Min delay between Announcement messages
+    static constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  // Max response delay for Parent Req to routers
+    static constexpr uint32_t kParentResponseMaxDelayAll      = 1000; // Max response delay for Parent Req to all
+    static constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  // Delay for aggregating Child Update Req
+    static constexpr uint32_t kMaxLinkAcceptDelay             = 1000; // Max delay to tx Link Accept for multicast Req
+    static constexpr uint32_t kChildIdRequestTimeout          = 5000; // Max delay to rx a Child ID Req after Parent Res
+    static constexpr uint32_t kLinkRequestTimeout             = 2000; // Max delay to rx a Link Accept
+    static constexpr uint32_t kDetachGracefullyTimeout        = 1000; // Timeout for graceful detach
+    static constexpr uint32_t kUnicastRetxDelay               = 1000; // Base delay for MLE unicast retx
+    static constexpr uint32_t kMulticastRetxDelay             = 5000; // Base delay for MLE multicast retx
+    static constexpr uint32_t kMulticastRetxDelayMin          = kMulticastRetxDelay * 9 / 10;  // 0.9 * base delay
+    static constexpr uint32_t kMulticastRetxDelayMax          = kMulticastRetxDelay * 11 / 10; // 1.1 * base delay
 
-    // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
+    static constexpr uint8_t kMaxTxCount                = 3; // Max tx count for MLE message
+    static constexpr uint8_t kMaxCriticalTxCount        = 6; // Max tx count for critical MLE message
+    static constexpr uint8_t kMaxChildKeepAliveAttempts = 4; // Max keep alive attempts before reattach
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Attach backoff feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
+
     static constexpr uint32_t kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL;
     static constexpr uint32_t kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL;
     static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
     static constexpr uint32_t kAttachBackoffDelayToResetCounter =
         OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Number of Parent Requests in first and next attach cycles
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3
     // First attach cycle includes two Parent Requests to routers, followed by four to routers and REEDs.
@@ -737,10 +764,19 @@ private:
     static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
 
-    static constexpr uint32_t kDetachGracefullyTimeout = 1000;
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
+#else
+    static constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
+#endif
+
+    static constexpr uint8_t  kMleHopLimit              = 255;
+    static constexpr uint8_t  kMleSecurityTagSize       = 4;
     static constexpr uint32_t kStoreFrameCounterAhead   = OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD;
     static constexpr uint8_t  kMaxIpAddressesToRegister = OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER;
+    static constexpr uint32_t kDefaultChildTimeout      = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT;
     static constexpr uint32_t kDefaultCslTimeout        = OPENTHREAD_CONFIG_CSL_TIMEOUT;
 
     //------------------------------------------------------------------------------------------------------------------
