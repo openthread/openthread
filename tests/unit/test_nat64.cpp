@@ -50,7 +50,7 @@ void DumpMessageInHex(const char *prefix, const uint8_t *aBuf, size_t aBufLen)
 {
     // This function dumps all packets the output of this function can be imported to packet analyser for debugging.
     printf("%s", prefix);
-    for (uint16_t i = 0; i < aBufLen; i++)
+    for (size_t i = 0; i < aBufLen; i++)
     {
         printf("%02x", aBuf[i]);
     }
@@ -71,7 +71,7 @@ bool CheckMessage(const Message &aMessage, const uint8_t *aExpectedMessage, size
     if (!success)
     {
         printf("Expected Message\n");
-        for (uint16_t i = 0; i < aExpectedMessageLen; i++)
+        for (size_t i = 0; i < aExpectedMessageLen; i++)
         {
             printf("%02x%c", aExpectedMessage[i], " \n"[(i & 0xf) == 0xf]);
         }

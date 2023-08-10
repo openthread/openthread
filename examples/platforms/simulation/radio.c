@@ -236,7 +236,7 @@ otError ProcessNodeIdFilter(void *aContext, uint8_t aArgsLength, char *aArgs[])
             break;
         }
 
-        for (uint16_t nodeId = 0; nodeId <= MAX_NETWORK_SIZE; nodeId++)
+        for (uint16_t nodeId = 0; nodeId <= (uint16_t)MAX_NETWORK_SIZE; nodeId++)
         {
             if (FilterContainsId(nodeId))
             {

@@ -2,6 +2,7 @@
 Checks: >
   -*,
   bugprone-argument-comment,
+  bugprone-too-small-loop-variable,
   google-explicit-constructor,
   google-readability-casting,
   misc-unused-using-decls,

@@ -1362,6 +1362,8 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const
         SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
         SuccessOrExit(error = aFrame.GetKeyId(keyId));
 
+        VerifyOrExit((securityControlField & kSecLevelMask) == kSecurityEncMic32, error = kErrorParse);
+
         SetSecurityControlField(securityControlField);
         SetKeyId(keyId);
     }

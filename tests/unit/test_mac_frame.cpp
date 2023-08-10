@@ -442,7 +442,7 @@ void TestMacChannelMask(void)
     VerifyChannelMaskContent(mask1, allChannels, sizeof(allChannels));
 
     // Test ChannelMask::RemoveChannel()
-    for (uint8_t index = 0; index < sizeof(allChannels) - 1; index++)
+    for (size_t index = 0; index < sizeof(allChannels) - 1; index++)
     {
         mask1.RemoveChannel(allChannels[index]);
         VerifyChannelMaskContent(mask1, &allChannels[index + 1], sizeof(allChannels) - 1 - index);

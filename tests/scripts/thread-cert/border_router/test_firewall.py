@@ -178,6 +178,10 @@ class Firewall(thread_cert.TestCase):
         # 12. Host pings MA1 from router1's MLE-ID.
         self.assertFalse(host_ping_ether(MA1, ttl=10, interface=router1.get_mleid(), add_interface=True))
 
+        # 13. Router1 pings Host from router1's MLE-ID.
+        self.assertFalse(
+            router1.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0], interface=router1.get_mleid()))
+
         self.collect_ipaddrs()
         self.collect_rlocs()
         self.collect_rloc16s()
@@ -264,6 +268,10 @@ class Firewall(thread_cert.TestCase):
                                                                          MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
             vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
+
+        # 13. Router1 pings Host from router1's MLE-ID.
+        pkts.filter_eth_src(vars['BR_1_ETH']).filter_ipv6_src_dst(
+            vars['Router_1_MLEID'], vars['Host_BGUA']).filter_ping_request().must_not_next()
 
 
 if __name__ == '__main__':
