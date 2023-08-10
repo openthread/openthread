@@ -251,15 +251,6 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
     {
         OutputLine("%s", otGetVersionString());
     }
-
-    /**
-     * @cli version api
-     * @code
-     * version API
-     * 28
-     * DONE
-     * @endcode
-     */
     else if (aArgs[0] == "api")
     {
         OutputLine("%u", OPENTHREAD_API_VERSION);
@@ -271,7 +262,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 
     return error;
 }
-
+:
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
