@@ -7246,7 +7246,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
         char string[OT_UPTIME_STRING_SIZE];
 
         otInstanceGetUptimeAsString(GetInstancePtr(), string, sizeof(string));
-        OutputLine("%s", string); 
+        OutputLine("%s", string);
     }
     
     /**
