@@ -259,6 +259,8 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
      * 28
      * DONE
      * @endcode
+     * @par
+     * Prints the API version number.
      */
     else if (aArgs[0] == "api")
     {
@@ -7239,7 +7241,7 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * #OtInstanceGetUptimeAsString
+     * #otInstanceGetUptimeAsString
      */
     if (aArgs[0].IsEmpty())
     {
