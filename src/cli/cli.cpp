@@ -271,7 +271,7 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 
     return error;
 }
-:
+
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
