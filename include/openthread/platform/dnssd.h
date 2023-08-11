@@ -65,9 +65,22 @@ extern "C" {
  */
 typedef enum otPlatDnssdState
 {
-    OT_PLAT_DNSSD_STOPPED, ///< Stopped and unable to register any service or host.
+    OT_PLAT_DNSSD_STOPPED, ///< Stopped and unable to register any service or host, or start any browser/resolver.
     OT_PLAT_DNSSD_READY,   ///< Running and ready to register service or host.
 } otPlatDnssdState;
+
+/**
+ * Represents an event from infrastructure DNS-SD module.
+ *
+ * This is used in callbacks `otPlatDnssdHandleServiceBrowseResult()`, `otPlatDnssdHandleIp6AddressResolveResult()`, or
+ * `otPlatDnssdHandleIp4AddressResolveResult()`.
+ *
+ */
+typedef enum otPlatDnssdEvent
+{
+    OT_PLAT_DNSSD_EVENT_ENTRY_ADDED,   ///< Entry (service instance, or IPv6/IPv4 address) is added.
+    OT_PLAT_DNSSD_EVENT_ENTRY_REMOVED, ///< Entry (service instance, or IPv6/IPv6 address) is removed.
+} otPlatDnssdEvent;
 
 /**
  * Represents a request ID (for registering/unregistering a service or host).
@@ -90,9 +103,29 @@ typedef uint32_t otPlatDnssdRequestId;
 typedef void (*otPlatDnssdRegisterCallback)(otInstance *aInstance, otPlatDnssdRequestId aRequestId, otError aError);
 
 /**
+ * Represents a service instance.
+ *
+ * This type is used
+ * - to report service browser result in `otPlatDnssdHandleServiceBrowseResult()` callback, or
+ * - to start or stop a service resolver for a service instance in `otPlatDnssd{Start/Stop}ServiceResolver()`.
+ *
+ */
+typedef struct otPlatDnssdServiceInstance
+{
+    const char *mServiceType;     ///< Service type or sub-type (e.g., "_mt._udp", "_s1._sub._mt._udp")
+    const char *mServiceInstance; ///< Service instance label.
+    uint32_t    mTtl;             ///< TTL in seconds.
+    uint32_t    mInfraIfIndex;    ///< The infrastructure network interface index.
+} otPlatDnssdServiceInstance;
+
+/**
  * Represent a DNS-SD service.
  *
- * See `otPlatDnssdRegisterService()`, `otPlatDnssdUnregisterService()` for more details about fields in each case.
+ * This type is used
+ * - to register or unregister a service (`otPlatDnssdRegisterService()` and `otPlatDnssdRegisterService()`),
+ * - to report result of service resolver (`otPlatDnssdHandleServiceResolveResult()` callback).
+ *
+ * See the the description of each function/callback for more details on how different fields are used in each case.
  *
  */
 typedef struct otPlatDnssdService
@@ -114,7 +147,12 @@ typedef struct otPlatDnssdService
 /**
  * Represent a DNS-SD host.
  *
- * See `otPlatDnssdRegisterHost()`, `otPlatDnssdUnregisterHost()` for more details about fields in each case.
+ * This type is used
+ * - to register or unregister a host (`otPlatDnssdRegisterHost()` and `otPlatDnssdUnregisterHost()`),
+ * - to report result of an address resolver `otPlatDnssdHandleIp6AddressResolveResult()` or
+ *   `otPlatDnssdHandleIp4AddressResolveResult()` callbacks).
+ *
+ * See the the description of each function/callback for more details on how different fields are used in each case.
  *
  */
 typedef struct otPlatDnssdHost
@@ -410,6 +448,275 @@ void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
                               const otPlatDnssdKey       *aKey,
                               otPlatDnssdRequestId        aRequestId,
                               otPlatDnssdRegisterCallback aCallback);
+
+/**
+ * Starts a service browser for a service type or sub-type on the infrastructure network's DNS-SD module.
+ *
+ * The @p aServiceType string is only valid during this call. Platform MUST save a copy of the string if it wants
+ * to retain the information after returning from this function.
+ *
+ * Platform uses the `otPlatDnssdHandleServiceBrowseResult()` callback to report updates to the discovered service
+ * instances matching the browser service type. Until the browser is stopped, it must continue to browse for the given
+ * service type and can invoke the callback multiple times. The callback should be called with an "added" event for a
+ * newly discovered service instance, and with a "removed" event when a service instance is removed.
+ *
+ * If some results are already available, the platform implementation may invoke the callback before returning from
+ * this function. The OpenThread stack will ensure to handle such a situation.
+ *
+ * Platform implementation must treat browsers with different service types and/or different infrastructure network
+ * interface indices as separate and unrelated browsers. In particular, two browsers for the same service type but on
+ * different infrastructure network interfaces should be considered independent of each other and each one can be
+ * stopped separately. The OpenThread stack will not start a browser for the same service type and on the same
+ * infrastructure network interface that was started earlier and is already running. However, if this function is
+ * called in this way, the platform implementation can ignore the new request and do not need to restart the active
+ * browser.
+ *
+ * If the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using `otPlatDnssdStateHandleStateChange()`
+ * callback, all active browsers and resolvers are considered to be stopped.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aServiceType    The service type or sub-type (e.g., "_mt._udp", "_s1._sub._mt._udp") - does not include
+ *                            the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for the service browser.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStartServiceBrowser(otInstance *aInstance, const char *aServiceType, uint32_t aInfraIfIndex);
+
+/**
+ * Stops a service browser for a given service type or sub-type.
+ *
+ * The @p aServiceType string is only valid during this call. Platform MUST save a copy of the string if it wants
+ * to retain the information after returning from this function.
+ *
+ * Platform implementation must ignore a stop request if there are no active browser for the given service type and
+ * infrastructure network interface index.
+ *
+ * If the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using `otPlatDnssdStateHandleStateChange()`
+ * callback, all active browsers and resolvers are considered to be stopped. In this case, OpenThread stack will not
+ * call this function to stop the browser.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aServiceType    The service type or sub-type (e.g., "_mt._udp", "_s1._sub._mt._udp") - does not include
+ *                            the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for the service browser.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStopServiceBrowser(otInstance *aInstance, const char *aServiceType, uint32_t aInfraIfIndex);
+
+/**
+ * Callback from platform to notify OpenThread a service browse result.
+ *
+ * Platform uses the `otPlatDnssdHandleServiceBrowseResult()` callback to report updates to the discovered service
+ * instances for all active service browsers. See `otPlatDnssdStartServiceBrowser()`.
+ *
+ * The fields in @p aServiceInstance follow these rules:
+ *
+ * - The `mServiceType` specifies the service type or sub-type associated with the service browser. MUST not be NULL.
+ * - The `mServiceInstance` specifies the service instance label (can include dot `.` character). MUST not be NULL.
+ * - The mTtl` specifies the TTL associated with discovered instance. It can be zero for a removed instance.
+ * - The `mInfraIfIndex` specifies the interface index on which the the service browser is active.
+ *
+ * @param[in] aInstance          The OpenThread instance.
+ * @param[in] aEvent             The event to report, i.e., if this service is added or removed.
+ * @param[in] aServiceInstance   The service instance information.
+ *
+ */
+extern void otPlatDnssdHandleServiceBrowseResult(otInstance                       *aInstance,
+                                                 otPlatDnssdEvent                  aEvent,
+                                                 const otPlatDnssdServiceInstance *aServiceInstance);
+
+/**
+ * Starts a service resolver for a service instance on the infrastructure network's DNS-SD module.
+ *
+ * The @p aServiceInstance and all its contained information (strings and buffers) are only valid during this call. The
+ * platform MUST save a copy of the information if it wants to retain the information after returning from this
+ * function.
+ *
+ * The fields in @p aServiceInstance follow these rules:
+ *
+ * - The `mServiceType` specifies the service type (e.g., "_mt._udp")
+ * - The `mServiceInstance` specifies the service instance label (may include dot `.` character).
+ * - The `mInfraIfIndex` specifies the interface index on which the the service resolver should run.
+ * - The `mTtl` is not used and should be ignored.
+ *
+ * Platform uses the `otPlatDnssdHandleServiceResolveResult()` callback to report the result.
+ *
+ * OpenThread stack uses service resolver as a one-shot operation, that is, after the callback is invoked, the platform
+ * implementation does not need to continue to monitor the service instance and report changes (e.g., if any of service
+ * parameter or TXT data changes).
+ *
+ * If the result is already available, the platform implementation may invoke the callback before returning from
+ * this function. The OpenThread stack will ensure to handle such a situation.
+ *
+ * Similar to service browsers, service resolvers for different services instances and/or on different infrastructure
+ * network interfaces should be considered separate entities. Platform implementation can ignore a call to this
+ * function to start a service resolver when one with the exact same parameters is active.
+ *
+ * @param[in] aInstance         The OpenThread instance.
+ * @param[in] aServiceInstance  The service instance information.
+ *
+ */
+void otPlatDnssdStartServiceResolver(otInstance *aInstance, const otPlatDnssdServiceInstance *aServiceInstance);
+
+/**
+ * Stops a service resolver for a given service instance.
+ *
+ * The @p aServiceInstance fields follow the same rules as in `otPlatDnssdStartServiceResolver()`
+ *
+ * Platform implementation must ignore a stop request if there are no active service resolver matching the given
+ * service instance.
+ *
+ * If the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using `otPlatDnssdStateHandleStateChange()`
+ * callback, all active browsers and resolvers are considered to be stopped. In this case, OpenThread stack will not
+ * call this function to stop the resolver.
+ *
+ * @param[in] aInstance         The OpenThread instance.
+ * @param[in] aServiceInstance  The service instance information.
+ *
+ */
+void otPlatDnssdStopServiceResolver(otInstance *aInstance, const otPlatDnssdServiceInstance *aServiceInstance);
+
+/**
+ * Callback from platform to notify OpenThread of the result from a service resolver.
+ *
+ * The fields in @p aService follow these rules:
+ *
+ * - The `mServiceType` specifies the service type (e.g., "_mt._udp")
+ * - The `mServiceInstance` specifies the service instance label (may include dot `.` character).
+ * - The `mHostName` field specifies the host name of the service. MUST not be NULL.
+ * - The `mTxtData` and `mTxtDataLength` specify the encoded TXT data. MUST not be NULL.
+ * - The `mPort`, `mWeight`, and `mPriority` specify the service's parameters (as specified in DNS SRV record).
+ * - The `mTtl` specifies the TTL in seconds.
+ * - The `mInfraIfIndex` specifies the infrastructure network interface index of service resolver.
+ * - The other fields (e.g., `mSubTypeLabels`) are not used and are ignored (can be set to NULL).
+ *
+ * @param[in] aInstance     The OpenThread instance.
+ * @param[in] aSevice       The service information.
+ *
+ */
+extern void otPlatDnssdHandleServiceResolveResult(otInstance *aInstance, const otPlatDnssdService *aService);
+
+/**
+ * Starts an IPv6 address resolver for a given host name on the infrastructure network's DNS-SD module.
+ *
+ * The @p aHostName string is only valid during this call. Platform MUST save a copy of the string if it wants to
+ * retain the information after returning from this function.
+ *
+ * Platform uses the `otPlatDnssdHandleIp6AddressResolveResult()` callback to report updates to IPv6 addresses of the
+ * @p aHostName. Until the address resolver is stopped, it must continue to monitor for changes to addresses of the
+ * host and can invoke the callback multiple times. The callback should be called with an "added" event for a
+ * newly discovered/added address, and with a "removed" event when an address is removed.
+ *
+ * If some results are already available, the platform implementation may invoke the callback before returning from
+ * this function. The OpenThread stack will ensure to handle such a situation.
+ *
+ * Similar to service browsers and resolvers, address resolvers for different host names and/or on different
+ * infrastructure network interfaces should be considered separate entities. Platform implementation can ignore a call
+ * to this function to start an address resolver when one for same host and same network interface index is active.
+ *
+ * If the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using `otPlatDnssdStateHandleStateChange()`
+ * callback, all active browsers and resolvers are considered to be stopped.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aHostName       The host name - does not include the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for the address resolver.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStartIp6AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex);
+
+/**
+ * Stops an IPv6 address resolver for a given host name.
+ *
+ * The @p aHostName fields follow the same rules as in `otPlatDnssdStartIp6AddressResolver()`
+ *
+ * Platform implementation must ignore a stop request if there are no active address resolver for the given host name.
+ *
+ * If the platform signals a state change to `OT_PLAT_DNSSD_STOPPED` using `otPlatDnssdStateHandleStateChange()`
+ * callback, all active browsers and resolvers are considered to be stopped. In this case, OpenThread stack will not
+ * call this function to stop the resolver.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aHostName       The host name - does not include the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for address browser.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex);
+
+/**
+ * Callback from platform to notify OpenThread of the result from an IPv6 address resolver.
+ *
+ * The fields in @p aHost follow these rules:
+ *
+ * - The `mHostName` field specifies the host name from the address resolver.
+ * - The `mAddresses` field point to an array of IPv6 addresses of host.
+ * - The `mNumAddresses` field specifies the number of entries in `mAddresses` array.
+ * - The `mTtl` specifies the TTL in seconds.
+ * - The `mInfraIfIndex` specifies the infrastructure network interface index of address resolver.
+ *
+ * @p aEvent applies to all addresses in `mAddresses`, i.e. all are added or removed.
+ *
+ * Platform implementation MUST not filter any addresses when reporting the result. In particular link-local IPv6
+ * addresses must be included. OpenThread stack will filter the result according to how the result is used.
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aEvent      The event to report, i.e., if added or removed.
+ * @param[in] aHost       The host information.
+ *
+ */
+extern void otPlatDnssdHandleIp6AddressResolveResult(otInstance            *aInstance,
+                                                     otPlatDnssdEvent       aEvent,
+                                                     const otPlatDnssdHost *aHost);
+
+/**
+ * Starts an IPv4 address resolver for a given host name on the infrastructure network's DNS-SD module.
+ *
+ * This function behaves similarly to `otPlatDnssdStartIp6AddressResolver()` and follows the same rules except that
+ * it is for IPv4 addresses and `otPlatDnssdHandleIp4AddressResolveResult()` is used to report the result.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aHostName       The host name - does not include the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for the address resolver.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex);
+
+/**
+ * Stops an IPv4 address resolver for a given host name on the infrastructure network's DNS-SD module.
+ *
+ * This function behaves similarly to `otPlatDnssdStopIp6AddressResolver()` and follows the same rules.
+ *
+ * @param[in] aInstance       The OpenThread instance.
+ * @param[in] aHostName       The host name - does not include the domain name.
+ * @param[in] aInfraIfIndex   The infrastructure network interface index for the address resolver.
+ *                            If zero, the platform implementation can decide the interface.
+ *
+ */
+void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex);
+
+/**
+ * Callback from platform to notify OpenThread of the result from an Ipv4 address resolver.
+ *
+ * This callback is similar to `otPlatDnssdHandleIp6AddressResolveResult()` and follows the same rules except that
+ * addresses in `mAddresses` fields use the "IPv4-mapped IPv6 addresses" format, i.e.,
+ *
+ * - `mAddresses` field in @p aHost is an array of `otIp6Address` entries.
+ * - The `mNumAddresses` field specifies the number of entries in `mAddresses` array.
+ * - The `mAddresses` entries use "IPv4-mapped IPv6 address" format (e.g. `::ffff:192.0.2.128`).
+ *
+ *
+ * @param[in] aInstance   The OpenThread instance.
+ * @param[in] aEvent      The event to report, i.e., if added or removed.
+ * @param[in] aHost       The host information.
+ *
+ */
+extern void otPlatDnssdHandleIp4AddressResolveResult(otInstance            *aInstance,
+                                                     otPlatDnssdEvent       aEvent,
+                                                     const otPlatDnssdHost *aHost);
 
 /**
  * @}

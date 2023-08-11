@@ -141,16 +141,145 @@ void Dnssd::UnregisterKey(const Key &aKey, RequestId aRequestId, RegisterCallbac
     }
 }
 
+void Dnssd::StartServiceBrowser(const char *aServiceType, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStartServiceBrowser(&GetInstance(), aServiceType, aInfraIfIndex);
+    }
+}
+
+void Dnssd::StopServiceBrowser(const char *aServiceType, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStopServiceBrowser(&GetInstance(), aServiceType, aInfraIfIndex);
+    }
+}
+
+void Dnssd::StartServiceResolver(const ServiceInstance &aServiceInstance)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStartServiceResolver(&GetInstance(), &aServiceInstance);
+    }
+}
+
+void Dnssd::StopServiceResolver(const ServiceInstance &aServiceInstance)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStopServiceResolver(&GetInstance(), &aServiceInstance);
+    }
+}
+
+void Dnssd::StartIp6AddressResolver(const char *aHostName, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStartIp6AddressResolver(&GetInstance(), aHostName, aInfraIfIndex);
+    }
+}
+
+void Dnssd::StopIp6AddressResolver(const char *aHostName, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStopIp6AddressResolver(&GetInstance(), aHostName, aInfraIfIndex);
+    }
+}
+
+void Dnssd::StartIp4AddressResolver(const char *aHostName, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStartIp4AddressResolver(&GetInstance(), aHostName, aInfraIfIndex);
+    }
+}
+
+void Dnssd::StopIp4AddressResolver(const char *aHostName, uint32_t aInfraIfIndex)
+{
+    if (IsReady())
+    {
+        otPlatDnssdStopIp4AddressResolver(&GetInstance(), aHostName, aInfraIfIndex);
+    }
+}
+
 void Dnssd::HandleStateChange(void)
 {
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
     Get<Srp::AdvertisingProxy>().HandleDnssdPlatformStateChange();
 #endif
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().HandleDnssdPlatformStateChange();
+#endif
+}
+
+void Dnssd::HandleServiceBrowseResult(Event aEvent, const ServiceInstance &aServiceInstance)
+{
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().mDiscoveryProxy.HandleServiceBrowseResult(aEvent, aServiceInstance);
+#else
+    OT_UNUSED_VARIABLE(aEvent);
+    OT_UNUSED_VARIABLE(aServiceInstance);
+#endif
+}
+
+void Dnssd::HandleServiceResolveResult(const Service &aService)
+{
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().mDiscoveryProxy.HandleServiceResolveResult(aService);
+#else
+    OT_UNUSED_VARIABLE(aService);
+#endif
+}
+
+void Dnssd::HandleIp6AddressResolveResult(Event aEvent, const Host &aHost)
+{
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().mDiscoveryProxy.HandleIp6AddressResolveResult(aEvent, aHost);
+#else
+    OT_UNUSED_VARIABLE(aEvent);
+    OT_UNUSED_VARIABLE(aHost);
+#endif
+}
+
+void Dnssd::HandleIp4AddressResolveResult(Event aEvent, const Host &aHost)
+{
+    OT_UNUSED_VARIABLE(aEvent);
+    OT_UNUSED_VARIABLE(aHost);
 }
 
 extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance)
 {
     AsCoreType(aInstance).Get<Dnssd>().HandleStateChange();
+}
+
+extern "C" void otPlatDnssdHandleServiceBrowseResult(otInstance                       *aInstance,
+                                                     otPlatDnssdEvent                  aEvent,
+                                                     const otPlatDnssdServiceInstance *aServiceInstance)
+{
+    AsCoreType(aInstance).Get<Dnssd>().HandleServiceBrowseResult(MapEnum(aEvent), AsCoreType(aServiceInstance));
+}
+
+extern "C" void otPlatDnssdHandleServiceResolveResult(otInstance *aInstance, const otPlatDnssdService *aService)
+{
+    AsCoreType(aInstance).Get<Dnssd>().HandleServiceResolveResult(AsCoreType(aService));
+}
+
+extern "C" void otPlatDnssdHandleIp6AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost)
+{
+    AsCoreType(aInstance).Get<Dnssd>().HandleIp6AddressResolveResult(MapEnum(aEvent), AsCoreType(aHost));
+}
+
+extern "C" void otPlatDnssdHandleIp4AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost)
+{
+    AsCoreType(aInstance).Get<Dnssd>().HandleIp4AddressResolveResult(MapEnum(aEvent), AsCoreType(aHost));
 }
 
 } // namespace ot

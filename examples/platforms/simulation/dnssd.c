@@ -104,4 +104,58 @@ void otPlatDnssdUnregisterKey(otInstance                 *aInstance,
     OT_UNUSED_VARIABLE(aCallback);
 }
 
+void otPlatDnssdStartServiceBrowser(otInstance *aInstance, const char *aServiceType, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aServiceType);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatDnssdStopServiceBrowser(otInstance *aInstance, const char *aServiceType, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aServiceType);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatDnssdStartServiceResolver(otInstance *aInstance, const otPlatDnssdServiceInstance *aServiceInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aServiceInstance);
+}
+
+void otPlatDnssdStopServiceResolver(otInstance *aInstance, const otPlatDnssdServiceInstance *aServiceInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aServiceInstance);
+}
+
+void otPlatDnssdStartIp6AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHostName);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHostName);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHostName);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const char *aHostName, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHostName);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
 #endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE

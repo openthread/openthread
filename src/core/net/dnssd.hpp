@@ -58,6 +58,16 @@ namespace ot {
  */
 
 extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance);
+extern "C" void otPlatDnssdHandleServiceBrowseResult(otInstance                       *aInstance,
+                                                     otPlatDnssdEvent                  aEvent,
+                                                     const otPlatDnssdServiceInstance *aServiceInstance);
+extern "C" void otPlatDnssdHandleServiceResolveResult(otInstance *aInstance, const otPlatDnssdService *aService);
+extern "C" void otPlatDnssdHandleIp6AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost);
+extern "C" void otPlatDnssdHandleIp4AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost);
 
 /**
  * Represents DNS-SD (mDNS) platform.
@@ -66,6 +76,16 @@ extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance);
 class Dnssd : public InstanceLocator, private NonCopyable
 {
     friend void otPlatDnssdStateHandleStateChange(otInstance *aInstance);
+    friend void otPlatDnssdHandleServiceBrowseResult(otInstance                       *aInstance,
+                                                     otPlatDnssdEvent                  aEvent,
+                                                     const otPlatDnssdServiceInstance *aServiceInstance);
+    friend void otPlatDnssdHandleServiceResolveResult(otInstance *aInstance, const otPlatDnssdService *aService);
+    friend void otPlatDnssdHandleIp6AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost);
+    friend void otPlatDnssdHandleIp4AddressResolveResult(otInstance            *aInstance,
+                                                         otPlatDnssdEvent       aEvent,
+                                                         const otPlatDnssdHost *aHost);
 
 public:
     /**
@@ -80,6 +100,20 @@ public:
 
     typedef otPlatDnssdRequestId        RequestId;        ///< A request ID.
     typedef otPlatDnssdRegisterCallback RegisterCallback; ///< The registration request callback
+
+    /**
+     * Represents an event from infrastructure DNS-SD module.
+     *
+     */
+    enum Event : uint8_t
+    {
+        kEventAdded   = OT_PLAT_DNSSD_EVENT_ENTRY_ADDED,   ///< Entry (service instance, IPv6/IPv6 address) is added.
+        kEventRemoved = OT_PLAT_DNSSD_EVENT_ENTRY_REMOVED, ///< Entry (service instance, IPv6/IPv6 address) is removed.
+    };
+
+    class ServiceInstance : public otPlatDnssdServiceInstance, public Clearable<ServiceInstance> ///< Service instance.
+    {
+    };
 
     class Host : public otPlatDnssdHost, public Clearable<Host> ///< Host information.
     {
@@ -260,8 +294,106 @@ public:
      */
     void UnregisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback);
 
+    /**
+     * Starts a service browser for a service type or sub-type on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStartServiceBrowser()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aServiceType    The service type or sub-type (e.g., "_mt._udp", "_s1._sub._mt._udp").
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the service browser.
+     *
+     */
+    void StartServiceBrowser(const char *aServiceType, uint32_t aInfraIfIndex);
+
+    /**
+     * Stops a service browser for a service type or sub-type on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStopServiceBrowser()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aServiceType    The service type or sub-type (e.g., "_mt._udp", "_s1._sub._mt._udp").
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the service browser.
+     *
+     */
+    void StopServiceBrowser(const char *aServiceType, uint32_t aInfraIfIndex);
+
+    /**
+     * Starts a service resolver for a given service instance on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStartServiceResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aServiceInstance    The service instance.
+     *
+     */
+    void StartServiceResolver(const ServiceInstance &aServiceInstance);
+
+    /**
+     * Stops a service resolver for a given service instance on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStopServiceResolver()` for a more detailed description of the behavior
+     * of this method.
+     *
+     * @param[in] aServiceInstance    The service instance.
+     *
+     */
+    void StopServiceResolver(const ServiceInstance &aServiceInstance);
+
+    /**
+     * Starts an IPv6 address resolver for a given host name on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStartIp6AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aHostName       The host name.
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the address browser.
+     *
+     */
+    void StartIp6AddressResolver(const char *aHostName, uint32_t aInfraIfIndex);
+
+    /**
+     * Stops an IPv6 address resolver for a given host name on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStopIp6AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aHostName       The host name.
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the address browser.
+     *
+     */
+    void StopIp6AddressResolver(const char *aHostName, uint32_t aInfraIfIndex);
+
+    /**
+     * Starts an IPv4 address resolver for a given host name on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStartIp4AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aHostName       The host name.
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the address browser.
+     *
+     */
+    void StartIp4AddressResolver(const char *aHostName, uint32_t aInfraIfIndex);
+
+    /**
+     * Stops an IPv4 address resolver for a given host name on the infrastructure network's DNS-SD module.
+     *
+     * Refer to the documentation for `otPlatDnssdStopIp4AddressResolver()` for a more detailed description of the
+     * behavior of this method.
+     *
+     * @param[in] aHostName       The host name.
+     * @param[in] aInfraIfIndex   The infrastructure network interface index for the address browser.
+     *
+     */
+    void StopIp4AddressResolver(const char *aHostName, uint32_t aInfraIfIndex);
+
 private:
     void HandleStateChange(void);
+    void HandleServiceBrowseResult(Event aEvent, const ServiceInstance &aServiceInstance);
+    void HandleServiceResolveResult(const Service &aService);
+    void HandleIp6AddressResolveResult(Event aEvent, const Host &aHost);
+    void HandleIp4AddressResolveResult(Event aEvent, const Host &aHost);
 };
 
 /**
@@ -270,9 +402,11 @@ private:
  */
 
 DefineMapEnum(otPlatDnssdState, Dnssd::State);
+DefineMapEnum(otPlatDnssdEvent, Dnssd::Event);
 DefineCoreType(otPlatDnssdService, Dnssd::Service);
 DefineCoreType(otPlatDnssdHost, Dnssd::Host);
 DefineCoreType(otPlatDnssdKey, Dnssd::Key);
+DefineCoreType(otPlatDnssdServiceInstance, Dnssd::ServiceInstance);
 
 } // namespace ot
 

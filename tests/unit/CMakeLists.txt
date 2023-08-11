@@ -278,6 +278,27 @@ target_link_libraries(ot-test-dns-client
 
 add_test(NAME ot-test-dns-client COMMAND ot-test-dns-client)
 
+add_executable(ot-test-dnssd-discovery-proxy
+    test_dnssd_discovery_proxy.cpp
+)
+
+target_include_directories(ot-test-dnssd-discovery-proxy
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-dnssd-discovery-proxy
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-dnssd-discovery-proxy
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-dnssd-discovery-proxy COMMAND ot-test-dnssd-discovery-proxy)
+
 add_executable(ot-test-dso
     test_dso.cpp
 )
