@@ -411,7 +411,7 @@ Error MeshForwarder::RemoveAgedMessages(void)
         nextMessage = message->GetNext();
 
         // Exclude the current message being sent `mSendMessage`.
-        if ((message == mSendMessage) || !message->IsDirectTransmission())
+        if ((message == mSendMessage) || !message->IsDirectTransmission() || message->GetDoNotEvict())
         {
             continue;
         }
@@ -494,9 +494,27 @@ void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
     VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    if (RemoveAgedMessages() == kErrorNone)
     {
-        VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
+        bool  originalEvictFlag = aMessage.GetDoNotEvict();
+        Error error;
+
+        // We mark the "do not evict" flag on the new `aMessage` so
+        // that it will not be removed from `RemoveAgedMessages()`.
+        // This protects against the unlikely case where the newly
+        // queued `aMessage` may already be aged due to execution
+        // being interrupted for a long time between the queuing of
+        // the message and the `ApplyDirectTxQueueLimit()` call. We
+        // do not want the message to be potentially removed and
+        // freed twice.
+
+        aMessage.SetDoNotEvict(true);
+        error = RemoveAgedMessages();
+        aMessage.SetDoNotEvict(originalEvictFlag);
+
+        if (error == kErrorNone)
+        {
+            VerifyOrExit(IsDirectTxQueueOverMaxFrameThreshold());
+        }
     }
 #endif
 
