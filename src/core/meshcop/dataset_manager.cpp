@@ -772,12 +772,6 @@ void PendingDatasetManager::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
     Dataset        dataset;
-#if OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
-    Dataset        activeDataset;
-    Tlv           *currentTlv;
-    Tlv           *endTlv;
-    Tlv           *pendingTlv;
-#endif
 
     IgnoreError(Read(dataset));
 
@@ -795,18 +789,17 @@ void PendingDatasetManager::HandleDelayTimer(void)
         }
     }
 #if OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
-    // If pending dataset does not contain all required data, merge missing Tlv's from active dataset
-    IgnoreError(Get<ActiveDatasetManager>().Read(activeDataset));
-    currentTlv = activeDataset.GetTlvsStart();
-    endTlv = activeDataset.GetTlvsEnd();
-    while(currentTlv < endTlv)
+    if (dataset.GetTlv(Tlv::kNetworkKey) == nullptr)
     {
-        pendingTlv = dataset.GetTlv(currentTlv->GetType());
-        if(pendingTlv == nullptr || !Tlv::IsValid(*currentTlv))
+        Dataset activeDataset;
+        IgnoreError(Get<ActiveDatasetManager>().Read(activeDataset));
+        for (Tlv *cur = activeDataset.GetTlvsStart(); cur < activeDataset.GetTlvsEnd(); cur = cur->GetNext())
         {
-            dataset.SetTlv(*currentTlv);
+            if (dataset.GetTlv(cur->GetType()) == nullptr)
+            {
+                IgnoreError(dataset.SetTlv(*cur));
+            }
         }
-        currentTlv = currentTlv->GetNext();
     }
 #endif
 
