@@ -4230,7 +4230,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
                                            const otLinkMetricsValues *aMetricsValues,
-                                           uint8_t                    aStatus,
+                                           otLinkMetricsStatus        aStatus,
                                            void                      *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleLinkMetricsReport(aSource, aMetricsValues, aStatus);
@@ -4238,7 +4238,7 @@ void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
 
 void NcpBase::HandleLinkMetricsReport(const otIp6Address        *aSource,
                                       const otLinkMetricsValues *aMetricsValues,
-                                      uint8_t                    aStatus)
+                                      otLinkMetricsStatus        aStatus)
 {
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT));
@@ -4253,12 +4253,14 @@ exit:
     return;
 }
 
-void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext)
+void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
+                                                 otLinkMetricsStatus aStatus,
+                                                 void               *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleLinkMetricsMgmtResponse(aSource, aStatus);
 }
 
-void NcpBase::HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus)
+void NcpBase::HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, otLinkMetricsStatus aStatus)
 {
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE));
