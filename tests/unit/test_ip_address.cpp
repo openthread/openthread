@@ -366,7 +366,7 @@ bool CheckInterfaceId(const ot::Ip6::Address &aAddress1, const ot::Ip6::Address 
 
     bool matches = true;
 
-    for (uint8_t bit = aPrefixLength; bit < sizeof(ot::Ip6::Address) * CHAR_BIT; bit++)
+    for (size_t bit = aPrefixLength; bit < sizeof(ot::Ip6::Address) * CHAR_BIT; bit++)
     {
         uint8_t index = bit / CHAR_BIT;
         uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
@@ -403,14 +403,14 @@ void TestIp6AddressSetPrefix(void)
         memcpy(address.mFields.m8, prefix, sizeof(address));
         printf("Prefix is %s\n", address.ToString().AsCString());
 
-        for (uint8_t prefixLength = 0; prefixLength <= sizeof(ot::Ip6::Address) * CHAR_BIT; prefixLength++)
+        for (size_t prefixLength = 0; prefixLength <= sizeof(ot::Ip6::Address) * CHAR_BIT; prefixLength++)
         {
             ip6Prefix.Clear();
             ip6Prefix.Set(prefix, prefixLength);
 
             address = allZeroAddress;
             address.SetPrefix(ip6Prefix);
-            printf("   prefix-len:%-3d --> %s\n", prefixLength, address.ToString().AsCString());
+            printf("   prefix-len:%-3zu --> %s\n", prefixLength, address.ToString().AsCString());
             VerifyOrQuit(CheckPrefix(address, prefix, prefixLength), "Prefix does not match after SetPrefix()");
             VerifyOrQuit(CheckInterfaceId(address, allZeroAddress, prefixLength),
                          "SetPrefix changed bits beyond the prefix length");

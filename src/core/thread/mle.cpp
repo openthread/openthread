@@ -66,7 +66,7 @@ namespace Mle {
 
 RegisterLogModule("Mle");
 
-const otMeshLocalPrefix Mle::sMeshLocalPrefixInit = {
+const otMeshLocalPrefix Mle::kMeshLocalPrefixInit = {
     {0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00},
 };
 
@@ -74,42 +74,43 @@ Mle::Mle(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRetrieveNewNetworkData(false)
     , mRequestRouteTlv(false)
-    , mRole(kRoleDisabled)
-    , mNeighborTable(aInstance)
-    , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
-    , mAttachState(kAttachStateIdle)
-    , mReattachState(kReattachStop)
-    , mAttachCounter(0)
-    , mAnnounceDelay(kAnnounceTimeout)
-    , mAttachTimer(aInstance)
-    , mDelayedResponseTimer(aInstance)
-    , mMessageTransmissionTimer(aInstance)
-#if OPENTHREAD_FTD
-    , mWasLeader(false)
-#endif
-    , mAttachMode(kAnyPartition)
-    , mChildUpdateAttempts(0)
-    , mChildUpdateRequestState(kChildUpdateRequestNone)
-    , mDataRequestAttempts(0)
-    , mDataRequestState(kDataRequestNone)
-    , mAddressRegistrationMode(kAppendAllAddresses)
     , mHasRestored(false)
     , mReceivedResponseFromParent(false)
     , mInitiallyAttachedAsSleepy(false)
-    , mSocket(aInstance)
+#if OPENTHREAD_FTD
+    , mWasLeader(false)
+#endif
+    , mRole(kRoleDisabled)
+    , mDeviceMode(DeviceMode::kModeRxOnWhenIdle)
+    , mAttachState(kAttachStateIdle)
+    , mReattachState(kReattachStop)
+    , mAttachMode(kAnyPartition)
+    , mDataRequestState(kDataRequestNone)
+    , mAddressRegistrationMode(kAppendAllAddresses)
+    , mChildUpdateRequestState(kChildUpdateRequestNone)
+    , mParentRequestCounter(0)
+    , mChildUpdateAttempts(0)
+    , mDataRequestAttempts(0)
+    , mAnnounceChannel(0)
+    , mAlternateChannel(0)
+    , mRloc16(Mac::kShortAddrInvalid)
+    , mPreviousParentRloc(Mac::kShortAddrInvalid)
+    , mAttachCounter(0)
+    , mAnnounceDelay(kAnnounceTimeout)
+    , mAlternatePanId(Mac::kPanIdBroadcast)
     , mTimeout(kMleEndDeviceTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(kDefaultCslTimeout)
 #endif
-    , mRloc16(Mac::kShortAddrInvalid)
-    , mPreviousParentRloc(Mac::kShortAddrInvalid)
+    , mAlternateTimestamp(0)
+    , mNeighborTable(aInstance)
+    , mSocket(aInstance)
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     , mParentSearch(aInstance)
 #endif
-    , mAnnounceChannel(0)
-    , mAlternateChannel(0)
-    , mAlternatePanId(Mac::kPanIdBroadcast)
-    , mAlternateTimestamp(0)
+    , mAttachTimer(aInstance)
+    , mDelayedResponseTimer(aInstance)
+    , mMessageTransmissionTimer(aInstance)
     , mDetachGracefullyTimer(aInstance)
 {
     mParent.Init(aInstance);
@@ -140,7 +141,7 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    SetMeshLocalPrefix(AsCoreType(&sMeshLocalPrefixInit));
+    SetMeshLocalPrefix(AsCoreType(&kMeshLocalPrefixInit));
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
     // to the Link- and Realm-Local All Thread Nodes multicast addresses.

@@ -524,7 +524,7 @@ exit:
  * Done
  * @endcode
  * @code
- * dataset meshlocalprefix fd00:db8:0:0::/64
+ * dataset meshlocalprefix fd00:db8:0:0::
  * Done
  * @endcode
  * @cparam dataset meshlocalprefix [@ca{meshlocalprefix}]

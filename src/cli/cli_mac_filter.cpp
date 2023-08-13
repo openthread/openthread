@@ -173,7 +173,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
             "denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
         };
 
-        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kModeCommands); index++)
+        for (size_t index = 0; index < OT_ARRAY_LENGTH(kModeCommands); index++)
         {
             if (aArgs[0] == kModeCommands[index])
             {

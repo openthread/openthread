@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes compile-time configurations for Border Agent.
- *
- */
+#include "platform-simulation.h"
 
-#ifndef CONFIG_BORDER_AGENT_H_
-#define CONFIG_BORDER_AGENT_H_
+#include <openthread/platform/dns.h>
 
-/**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
- *
- * Define to 1 to enable Border Agent support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 0
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxn);
+    OT_UNUSED_VARIABLE(aQuery);
+}
+
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+{
+    otPlatDnsUpstreamQueryDone(aInstance, aTxn, NULL);
+}
+
 #endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
- *
- * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
-#define OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT 0
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
- *
- * Define to 1 to enable Border Agent ID support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE 0
-#endif
-
-#endif // CONFIG_BORDER_AGENT_H_
