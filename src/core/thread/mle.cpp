@@ -98,7 +98,7 @@ Mle::Mle(Instance &aInstance)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
     , mAlternatePanId(Mac::kPanIdBroadcast)
-    , mTimeout(kMleEndDeviceTimeout)
+    , mTimeout(kDefaultChildTimeout)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     , mCslTimeout(kDefaultCslTimeout)
 #endif
@@ -782,6 +782,13 @@ exit:
 
 void Mle::SetTimeout(uint32_t aTimeout)
 {
+    // Determine `kMinTimeout` based on other parameters
+    static constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
+    static constexpr uint32_t kRetxPollPeriod      = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
+    static constexpr uint32_t kMinTimeoutDataPoll  = kMinPollPeriod + kFailedChildTransmissions * kRetxPollPeriod;
+    static constexpr uint32_t kMinTimeoutKeepAlive = (kMaxChildKeepAliveAttempts + 1) * kUnicastRetxDelay;
+    static constexpr uint32_t kMinTimeout          = Time::MsecToSec(OT_MAX(kMinTimeoutKeepAlive, kMinTimeoutDataPoll));
+
     aTimeout = Max(aTimeout, kMinTimeout);
 
     VerifyOrExit(mTimeout != aTimeout);
@@ -1932,8 +1939,7 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 #if OPENTHREAD_FTD
     if (mRole == kRoleDetached && mLinkRequestAttempts > 0)
     {
-        ExitNow(interval = Random::NonCrypto::GetUint32InRange(kMulticastTransmissionDelayMin,
-                                                               kMulticastTransmissionDelayMax));
+        ExitNow(interval = Random::NonCrypto::GetUint32InRange(kMulticastRetxDelayMin, kMulticastRetxDelayMax));
     }
 #endif
 
@@ -1949,12 +1955,12 @@ void Mle::ScheduleMessageTransmissionTimer(void)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         if (Get<Mac::Mac>().IsCslEnabled())
         {
-            ExitNow(interval = Get<Mac::Mac>().GetCslPeriodInMsec() + kUnicastRetransmissionDelay);
+            ExitNow(interval = Get<Mac::Mac>().GetCslPeriodInMsec() + kUnicastRetxDelay);
         }
         else
 #endif
         {
-            ExitNow(interval = kUnicastRetransmissionDelay);
+            ExitNow(interval = kUnicastRetxDelay);
         }
     }
 
@@ -1964,13 +1970,12 @@ void Mle::ScheduleMessageTransmissionTimer(void)
         break;
 
     case kDataRequestActive:
-        ExitNow(interval = kUnicastRetransmissionDelay);
+        ExitNow(interval = kUnicastRetxDelay);
     }
 
     if (IsChild() && IsRxOnWhenIdle())
     {
-        interval =
-            Time::SecToMsec(mTimeout) - static_cast<uint32_t>(kUnicastRetransmissionDelay) * kMaxChildKeepAliveAttempts;
+        interval = Time::SecToMsec(mTimeout) - kUnicastRetxDelay * kMaxChildKeepAliveAttempts;
     }
 
 exit:
