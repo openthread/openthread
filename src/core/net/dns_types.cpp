@@ -167,11 +167,6 @@ exit:
 
 Error Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
 {
-    return AppendMultipleLabels(aLabels, kMaxNameLength, aMessage);
-}
-
-Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage)
-{
     Error    error           = kErrorNone;
     uint16_t index           = 0;
     uint16_t labelStartIndex = 0;
@@ -181,7 +176,7 @@ Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &
 
     do
     {
-        ch = index < aLength ? aLabels[index] : static_cast<char>(kNullChar);
+        ch = aLabels[index];
 
         if ((ch == kNullChar) || (ch == kLabelSeparatorChar))
         {
@@ -628,6 +623,35 @@ Error Name::LabelIterator::AppendLabel(Message &aMessage) const
     VerifyOrExit((0 < mLabelLength) && (mLabelLength <= kMaxLabelLength), error = kErrorInvalidArgs);
     SuccessOrExit(error = aMessage.Append(mLabelLength));
     error = aMessage.AppendBytesFromMessage(mMessage, mLabelStartOffset, mLabelLength);
+
+exit:
+    return error;
+}
+
+Error Name::ExtractLabels(const char *aName, const char *aSuffixName, char *aLabels, uint16_t aLabelsSize)
+{
+    Error       error        = kErrorParse;
+    uint16_t    nameLength   = StringLength(aName, kMaxNameSize);
+    uint16_t    suffixLength = StringLength(aSuffixName, kMaxNameSize);
+    const char *suffixStart;
+
+    VerifyOrExit(nameLength < kMaxNameSize);
+    VerifyOrExit(suffixLength < kMaxNameSize);
+
+    VerifyOrExit(nameLength > suffixLength);
+
+    suffixStart = aName + nameLength - suffixLength;
+    VerifyOrExit(StringMatch(suffixStart, aSuffixName, kStringCaseInsensitiveMatch));
+    suffixStart--;
+    VerifyOrExit(*suffixStart == kLabelSeparatorChar);
+
+    // Determine the labels length to copy
+    nameLength -= (suffixLength + 1);
+    VerifyOrExit(nameLength < aLabelsSize, error = kErrorNoBufs);
+
+    memcpy(aLabels, aName, nameLength);
+    aLabels[nameLength] = kNullChar;
+    error               = kErrorNone;
 
 exit:
     return error;
