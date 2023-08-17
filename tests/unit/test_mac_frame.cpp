@@ -33,7 +33,7 @@
 #include "radio/radio.hpp"
 
 #include "test_platform.h"
-#include "test_util.h"
+#include "test_util.hpp"
 
 namespace ot {
 
@@ -189,16 +189,18 @@ void TestMacHeader(void)
 
     enum PanIdMode
     {
-        kSamePanIds,
-        kDiffPanIds,
+        kNoPanId,
+        kUsePanId1,
+        kUsePanId2,
     };
 
     struct TestCase
     {
         Mac::Frame::Version       mVersion;
         AddrType                  mSrcAddrType;
+        PanIdMode                 mSrcPanIdMode;
         AddrType                  mDstAddrType;
-        PanIdMode                 mPanIdMode;
+        PanIdMode                 mDstPanIdMode;
         Mac::Frame::SecurityLevel mSecurity;
         Mac::Frame::KeyIdMode     mKeyIdMode;
         uint8_t                   mHeaderLength;
@@ -214,37 +216,55 @@ void TestMacHeader(void)
     static constexpr Mac::Frame::KeyIdMode kModeId1 = Mac::Frame::kKeyIdMode1;
     static constexpr Mac::Frame::KeyIdMode kModeId2 = Mac::Frame::kKeyIdMode2;
 
-    static constexpr TestCase kTestCases[] = {
-        {kVer2006, kNoneAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 3, 2},
-        {kVer2006, kShrtAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 7, 2},
-        {kVer2006, kExtdAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 13, 2},
-        {kVer2006, kNoneAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 7, 2},
-        {kVer2006, kNoneAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 13, 2},
-        {kVer2006, kShrtAddr, kShrtAddr, kDiffPanIds, kNoSec, kModeId1, 11, 2},
-        {kVer2006, kShrtAddr, kExtdAddr, kDiffPanIds, kNoSec, kModeId1, 17, 2},
-        {kVer2006, kExtdAddr, kShrtAddr, kDiffPanIds, kNoSec, kModeId1, 17, 2},
-        {kVer2006, kExtdAddr, kExtdAddr, kDiffPanIds, kNoSec, kModeId1, 23, 2},
-        {kVer2006, kShrtAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 9, 2},
-        {kVer2006, kShrtAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 15, 2},
-        {kVer2006, kExtdAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 15, 2},
-        {kVer2006, kExtdAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 21, 2},
-        {kVer2006, kShrtAddr, kShrtAddr, kSamePanIds, kMic32, kModeId1, 15, 6},
-        {kVer2006, kShrtAddr, kShrtAddr, kSamePanIds, kMic32, kModeId2, 19, 6},
+    static const char *kAddrTypeStrings[]  = {"None", "Short", "Extd"};
+    static const char *kPanIdModeStrings[] = {"No", "Id1", "Id2"};
 
-        {kVer2015, kNoneAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 3, 2},
-        {kVer2015, kShrtAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 7, 2},
-        {kVer2015, kExtdAddr, kNoneAddr, kSamePanIds, kNoSec, kModeId1, 13, 2},
-        {kVer2015, kNoneAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 7, 2},
-        {kVer2015, kNoneAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 13, 2},
-        {kVer2015, kShrtAddr, kShrtAddr, kDiffPanIds, kNoSec, kModeId1, 11, 2},
-        {kVer2015, kShrtAddr, kExtdAddr, kDiffPanIds, kNoSec, kModeId1, 17, 2},
-        {kVer2015, kExtdAddr, kShrtAddr, kDiffPanIds, kNoSec, kModeId1, 17, 2},
-        {kVer2015, kShrtAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 9, 2},
-        {kVer2015, kShrtAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 15, 2},
-        {kVer2015, kExtdAddr, kShrtAddr, kSamePanIds, kNoSec, kModeId1, 15, 2},
-        {kVer2015, kExtdAddr, kExtdAddr, kSamePanIds, kNoSec, kModeId1, 21, 2},
-        {kVer2015, kShrtAddr, kShrtAddr, kSamePanIds, kMic32, kModeId1, 15, 6},
-        {kVer2015, kShrtAddr, kShrtAddr, kSamePanIds, kMic32, kModeId2, 19, 6},
+    static constexpr TestCase kTestCases[] = {
+        {kVer2006, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
+        {kVer2006, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
+        {kVer2006, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
+        {kVer2006, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 23, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kVer2006, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kVer2006, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
+        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
+        {kVer2006, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+
+        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 3, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 7, 2},
+        {kVer2015, kExtdAddr, kUsePanId1, kNoneAddr, kNoPanId, kNoSec, kModeId1, 13, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 7, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 13, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 11, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId2, kNoSec, kModeId1, 17, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 9, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kVer2015, kExtdAddr, kUsePanId1, kShrtAddr, kUsePanId1, kNoSec, kModeId1, 15, 2},
+        {kVer2015, kExtdAddr, kUsePanId1, kExtdAddr, kUsePanId1, kNoSec, kModeId1, 21, 2},
+        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId1, 15, 6},
+        {kVer2015, kShrtAddr, kUsePanId1, kShrtAddr, kUsePanId1, kMic32, kModeId2, 19, 6},
+
+        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kNoSec, kModeId1, 5, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kNoneAddr, kUsePanId1, kMic32, kModeId1, 11, 6},
+        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
+        {kVer2015, kNoneAddr, kNoPanId, kShrtAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kVer2015, kNoneAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 17, 6},
+        {kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 5, 2},
+        {kVer2015, kShrtAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 11, 6},
+        {kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kNoSec, kModeId1, 11, 2},
+        {kVer2015, kExtdAddr, kNoPanId, kNoneAddr, kNoPanId, kMic32, kModeId1, 17, 6},
+        {kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kNoSec, kModeId1, 19, 2},
+        {kVer2015, kExtdAddr, kNoPanId, kExtdAddr, kNoPanId, kMic32, kModeId1, 25, 6},
     };
 
     const uint16_t kPanId1     = 0xbaba;
@@ -254,6 +274,7 @@ void TestMacHeader(void)
     const uint8_t  kExtAddr1[] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
     const uint8_t  kExtAddr2[] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
 
+    char            string[100];
     Mac::ExtAddress extAddr1;
     Mac::ExtAddress extAddr2;
 
@@ -274,6 +295,11 @@ void TestMacHeader(void)
         frame.mPsdu      = psdu;
         frame.mLength    = 0;
         frame.mRadioType = 0;
+
+        VerifyOrQuit(addresses.mSource.IsNone());
+        VerifyOrQuit(addresses.mDestination.IsNone());
+        VerifyOrQuit(!panIds.IsSourcePresent());
+        VerifyOrQuit(!panIds.IsDestinationPresent());
 
         switch (testCase.mSrcAddrType)
         {
@@ -301,14 +327,27 @@ void TestMacHeader(void)
             break;
         }
 
-        switch (testCase.mPanIdMode)
+        switch (testCase.mSrcPanIdMode)
         {
-        case kSamePanIds:
-            panIds.mSource = panIds.mDestination = kPanId1;
+        case kNoPanId:
             break;
-        case kDiffPanIds:
-            panIds.mSource      = kPanId1;
-            panIds.mDestination = kPanId2;
+        case kUsePanId1:
+            panIds.SetSource(kPanId1);
+            break;
+        case kUsePanId2:
+            panIds.SetSource(kPanId2);
+            break;
+        }
+
+        switch (testCase.mDstPanIdMode)
+        {
+        case kNoPanId:
+            break;
+        case kUsePanId1:
+            panIds.SetDestination(kPanId1);
+            break;
+        case kUsePanId2:
+            panIds.SetDestination(kPanId2);
             break;
         }
 
@@ -334,17 +373,20 @@ void TestMacHeader(void)
         SuccessOrQuit(frame.GetDstAddr(address));
         VerifyOrQuit(CompareAddresses(address, addresses.mDestination));
 
-        if (testCase.mDstAddrType != kNoneAddr)
+        VerifyOrQuit(frame.IsDstPanIdPresent() == (testCase.mDstPanIdMode != kNoPanId));
+
+        if (frame.IsDstPanIdPresent())
         {
-            VerifyOrQuit(frame.IsDstPanIdPresent());
             SuccessOrQuit(frame.GetDstPanId(panId));
-            VerifyOrQuit(panId == panIds.mDestination);
+            VerifyOrQuit(panId == panIds.GetDestination());
+            VerifyOrQuit(panIds.IsDestinationPresent());
         }
 
         if (frame.IsSrcPanIdPresent())
         {
             SuccessOrQuit(frame.GetSrcPanId(panId));
-            VerifyOrQuit(panId == panIds.mSource);
+            VerifyOrQuit(panId == panIds.GetSource());
+            VerifyOrQuit(panIds.IsSourcePresent());
         }
 
         if (frame.GetSecurityEnabled())
@@ -359,7 +401,12 @@ void TestMacHeader(void)
             VerifyOrQuit(keyIdMode == testCase.mKeyIdMode);
         }
 
-        printf(" %d, %d\n", testCase.mHeaderLength, testCase.mFooterLength);
+        snprintf(string, sizeof(string), "\nver:%s, src[addr:%s, pan:%s], dst[addr:%s, pan:%s], sec:%s",
+                 (testCase.mVersion == kVer2006) ? "2006" : "2015", kAddrTypeStrings[testCase.mSrcAddrType],
+                 kPanIdModeStrings[testCase.mSrcPanIdMode], kAddrTypeStrings[testCase.mDstAddrType],
+                 kPanIdModeStrings[testCase.mDstPanIdMode], testCase.mSecurity == kNoSec ? "no" : "mic32");
+
+        DumpBuffer(string, frame.GetPsdu(), frame.GetLength());
     }
 }
 
@@ -700,13 +747,14 @@ void TestMacFrameAckGeneration(void)
     uint8_t     ie_data[6] = {0x04, 0x0d, 0x21, 0x0c, 0x35, 0x0c};
     Mac::CslIe *csl;
 
-    IgnoreError(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+    SuccessOrQuit(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
+
     csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
-    VerifyOrQuit(ackFrame.mLength == 23);
+    VerifyOrQuit(ackFrame.mLength == 25);
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kTypeAck);
     VerifyOrQuit(ackFrame.GetSecurityEnabled());
     VerifyOrQuit(ackFrame.IsIePresent());
-    VerifyOrQuit(!ackFrame.IsDstPanIdPresent());
+    VerifyOrQuit(ackFrame.IsDstPanIdPresent());
     VerifyOrQuit(ackFrame.IsDstAddrPresent());
     VerifyOrQuit(!ackFrame.IsSrcAddrPresent());
     VerifyOrQuit(ackFrame.GetVersion() == Mac::Frame::kVersion2015);

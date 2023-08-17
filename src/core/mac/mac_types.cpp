@@ -110,6 +110,24 @@ Address::InfoString Address::ToString(void) const
     return string;
 }
 
+void PanIds::SetSource(PanId aPanId)
+{
+    mSource          = aPanId;
+    mIsSourcePresent = true;
+}
+
+void PanIds::SetDestination(PanId aPanId)
+{
+    mDestination          = aPanId;
+    mIsDestinationPresent = true;
+}
+
+void PanIds::SetBothSourceDestination(PanId aPanId)
+{
+    SetSource(aPanId);
+    SetDestination(aPanId);
+}
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 const RadioType RadioTypes::kAllRadioTypes[kNumRadioTypes] = {

@@ -183,6 +183,9 @@ public:
 private:
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
 
+    static constexpr uint8_t kMinServiceId = 0x00;
+    static constexpr uint8_t kMaxServiceId = 0x0f;
+
     class ChangedFlags
     {
     public:

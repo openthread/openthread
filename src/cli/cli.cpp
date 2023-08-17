@@ -237,10 +237,31 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli version
+     * @code
+     * version
+     * OPENTHREAD/gf4f2f04; Jul 1 2016 17:00:09
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otGetVersionString
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otGetVersionString());
     }
+
+    /**
+     * @cli version api
+     * @code
+     * version api
+     * 28
+     * Done
+     * @endcode
+     * @par
+     * Prints the API version number.
+     */
     else if (aArgs[0] == "api")
     {
         OutputLine("%u", OPENTHREAD_API_VERSION);
@@ -3575,7 +3596,7 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
-                                          uint8_t                    aStatus,
+                                          otLinkMetricsStatus        aStatus,
                                           void                      *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsReport(aAddress, aMetricsValues, aStatus);
@@ -3608,7 +3629,7 @@ void Interpreter::PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValue
 
 void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
-                                          uint8_t                    aStatus)
+                                          otLinkMetricsStatus        aStatus)
 {
     OutputFormat("Received Link Metrics Report from: ");
     OutputIp6AddressLine(*aAddress);
@@ -3629,12 +3650,14 @@ void Interpreter::HandleLinkMetricsReport(const otIp6Address        *aAddress,
     }
 }
 
-void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus, void *aContext)
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress,
+                                                otLinkMetricsStatus aStatus,
+                                                void               *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkMetricsMgmtResponse(aAddress, aStatus);
 }
 
-void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus)
+void Interpreter::HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus)
 {
     OutputFormat("Received Link Metrics Management Response from: ");
     OutputIp6AddressLine(*aAddress);
@@ -3664,7 +3687,7 @@ void Interpreter::HandleLinkMetricsEnhAckProbingIe(otShortAddress             aS
     }
 }
 
-const char *Interpreter::LinkMetricsStatusToStr(uint8_t aStatus)
+const char *Interpreter::LinkMetricsStatusToStr(otLinkMetricsStatus aStatus)
 {
     static const char *const kStatusStrings[] = {
         "Success",                      // (0) OT_LINK_METRICS_STATUS_SUCCESS
@@ -7212,6 +7235,16 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli uptime
+     * @code
+     * uptime
+     * 12:46:35.469
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otInstanceGetUptimeAsString
+     */
     if (aArgs[0].IsEmpty())
     {
         char string[OT_UPTIME_STRING_SIZE];
@@ -7219,6 +7252,17 @@ template <> otError Interpreter::Process<Cmd("uptime")>(Arg aArgs[])
         otInstanceGetUptimeAsString(GetInstancePtr(), string, sizeof(string));
         OutputLine("%s", string);
     }
+
+    /**
+     * @cli uptime ms
+     * @code
+     * uptime ms
+     * 426238
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otInstanceGetUptime
+     */
     else if (aArgs[0] == "ms")
     {
         OutputUint64Line(otInstanceGetUptime(GetInstancePtr()));

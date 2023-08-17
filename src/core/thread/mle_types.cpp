@@ -166,8 +166,8 @@ Error RxChallenge::ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t 
 
     Clear();
 
-    aLength = Min<uint16_t>(aLength, kMaxChallengeSize);
-    VerifyOrExit(kMinChallengeSize <= aLength, error = kErrorParse);
+    aLength = Min<uint16_t>(aLength, kMaxSize);
+    VerifyOrExit(kMinSize <= aLength, error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(aOffset, mArray.GetArrayBuffer(), aLength));
     mArray.SetLength(static_cast<uint8_t>(aLength));
@@ -178,8 +178,7 @@ exit:
 
 bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
 {
-    return (mArray.GetLength() == kMaxChallengeSize) &&
-           (memcmp(mArray.GetArrayBuffer(), aTxChallenge.m8, kMaxChallengeSize) == 0);
+    return (mArray.GetLength() == kMaxSize) && (memcmp(mArray.GetArrayBuffer(), aTxChallenge.m8, kMaxSize) == 0);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

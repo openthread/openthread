@@ -259,7 +259,11 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::ResetRcp(bool
     }
 
     hardwareReset = (mSpinelInterface.HardwareReset() == OT_ERROR_NONE);
-    SuccessOrExit(WaitResponse(false));
+
+    if (hardwareReset)
+    {
+        SuccessOrExit(WaitResponse(false));
+    }
 
     resetDone = true;
 
