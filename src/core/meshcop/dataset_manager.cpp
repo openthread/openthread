@@ -792,6 +792,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
     if (dataset.GetTlv(Tlv::kNetworkKey) == nullptr)
     {
         Dataset activeDataset;
+        
         IgnoreError(Get<ActiveDatasetManager>().Read(activeDataset));
         for (Tlv *cur = activeDataset.GetTlvsStart(); cur < activeDataset.GetTlvsEnd(); cur = cur->GetNext())
         {
