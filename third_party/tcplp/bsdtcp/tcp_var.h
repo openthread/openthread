@@ -50,6 +50,8 @@
 #include "types.h"
 #include "ip6.h"
 
+#define TCP_RFC7413
+
 /* Implement byte-order-specific functions using OpenThread. */
 uint16_t tcplp_sys_hostswap16(uint16_t hostport);
 uint32_t tcplp_sys_hostswap32(uint32_t hostport);
@@ -351,6 +353,14 @@ struct tcpcb {
 
 //	uint32_t t_ispare[8];		/* 5 UTO, 3 TBD */
 //	void	*t_pspare2[4];		/* 1 TCP_SIGNATURE, 3 TBD */
+
+    /* samkumar: TFO fields from FreeBSD 12.0. */
+	uint64_t t_tfo_client_cookie_len; /* TCP Fast Open client cookie length */
+//	unsigned int *t_tfo_pending;	/* TCP Fast Open server pending counter */
+	union {
+		uint8_t client[TCP_FASTOPEN_MAX_COOKIE_LEN];
+		uint64_t server;
+	} t_tfo_cookie;			/* TCP Fast Open cookie to send */
 #if 0
 #if defined(_KERNEL) && defined(TCPPCAP)
 	struct mbufq t_inpkts;		/* List of saved input packets. */
@@ -384,7 +394,7 @@ void	cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type);
 
 /* Added, since there is no header file for tcp_usrreq.c. */
 int tcp6_usr_connect(struct tcpcb* tp, struct sockaddr_in6* sinp6);
-int tcp_usr_send(struct tcpcb* tp, int moretocome, struct otLinkedBuffer* data, size_t extendby);
+int tcp_usr_send(struct tcpcb* tp, int moretocome, struct otLinkedBuffer* data, size_t extendby, struct sockaddr_in6* nam);
 int tcp_usr_rcvd(struct tcpcb* tp);
 int tcp_usr_shutdown(struct tcpcb* tp);
 void tcp_usr_abort(struct tcpcb* tp);
@@ -421,6 +431,7 @@ void tcp_usr_abort(struct tcpcb* tp);
 #define	TF_ECN_SND_ECE	0x10000000	/* ECN ECE in queue */
 #define	TF_CONGRECOVERY	0x20000000	/* congestion recovery mode */
 #define	TF_WASCRECOVERY	0x40000000	/* was in congestion recovery */
+#define	TF_FASTOPEN	0x80000000	/* TCP Fast Open indication */
 
 #define	IN_FASTRECOVERY(t_flags)	(t_flags & TF_FASTRECOVERY)
 #define	ENTER_FASTRECOVERY(t_flags)	t_flags |= TF_FASTRECOVERY
@@ -433,6 +444,12 @@ void tcp_usr_abort(struct tcpcb* tp);
 #define	IN_RECOVERY(t_flags) (t_flags & (TF_CONGRECOVERY | TF_FASTRECOVERY))
 #define	ENTER_RECOVERY(t_flags) t_flags |= (TF_CONGRECOVERY | TF_FASTRECOVERY)
 #define	EXIT_RECOVERY(t_flags) t_flags &= ~(TF_CONGRECOVERY | TF_FASTRECOVERY)
+
+#ifndef TCP_RFC7413
+#define	IS_FASTOPEN(t_flags)		(false)
+#else
+#define	IS_FASTOPEN(t_flags)		(t_flags & TF_FASTOPEN)
+#endif
 
 #define	BYTES_THIS_ACK(tp, th)	(th->th_ack - tp->snd_una)
 
@@ -480,14 +497,17 @@ struct tcpopt {
 #define	TOF_TS		0x0010		/* timestamp */
 #define	TOF_SIGNATURE	0x0040		/* TCP-MD5 signature option (RFC2385) */
 #define	TOF_SACK	0x0080		/* Peer sent SACK option */
-#define	TOF_MAXOPT	0x0100
+#define	TOF_FASTOPEN	0x0100		/* TCP Fast Open (TFO) cookie */
+#define	TOF_MAXOPT	0x0200
 	u_int32_t	to_tsval;	/* new timestamp */
 	u_int32_t	to_tsecr;	/* reflected timestamp */
 	uint8_t		*to_sacks;	/* pointer to the first SACK blocks */
 	uint8_t		*to_signature;	/* pointer to the TCP-MD5 signature */
+	u_int8_t	*to_tfo_cookie; /* pointer to the TFO cookie */
 	u_int16_t	to_mss;		/* maximum segment size */
 	u_int8_t	to_wscale;	/* window scaling */
 	u_int8_t	to_nsacks;	/* number of SACK blocks */
+	u_int8_t	to_tfo_len;	/* TFO cookie length */
 	u_int32_t	to_spare;	/* UTO */
 };
 
