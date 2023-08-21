@@ -516,25 +516,25 @@ private:
     void     HandleFragment(FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
     void HandleLowpanHC(const FrameData &aFrameData, const Mac::Addresses &aMacAddrs, const ThreadLinkInfo &aLinkInfo);
 
-    void PrepareMacHeaders(Mac::TxFrame             &aFrame,
-                           Mac::Frame::Type          aFrameType,
-                           const Mac::Addresses     &aMacAddr,
-                           const Mac::PanIds        &aPanIds,
-                           Mac::Frame::SecurityLevel aSecurityLevel,
-                           Mac::Frame::KeyIdMode     aKeyIdMode,
-                           const Message            *aMessage);
-
+    void     PrepareMacHeaders(Mac::TxFrame             &aFrame,
+                               Mac::Frame::Type          aFrameType,
+                               const Mac::Addresses     &aMacAddr,
+                               const Mac::PanIds        &aPanIds,
+                               Mac::Frame::SecurityLevel aSecurityLevel,
+                               Mac::Frame::KeyIdMode     aKeyIdMode,
+                               const Message            *aMessage);
     uint16_t PrepareDataFrame(Mac::TxFrame         &aFrame,
                               Message              &aMessage,
                               const Mac::Addresses &aMacAddrs,
-                              bool                  aAddMeshHeader = false,
-                              uint16_t              aMeshSource    = 0xffff,
-                              uint16_t              aMeshDest      = 0xffff,
-                              bool                  aAddFragHeader = false);
+                              bool                  aAddMeshHeader,
+                              uint16_t              aMeshSource,
+                              uint16_t              aMeshDest,
+                              bool                  aAddFragHeader);
+    uint16_t PrepareDataFrameWithNoMeshHeader(Mac::TxFrame &aFrame, Message &aMessage, const Mac::Addresses &aMacAddrs);
     void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-    Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend = true);
+    Error UpdateEcnOrDrop(Message &aMessage, bool aPreparingToSend);
     Error RemoveAgedMessages(void);
 #endif
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
@@ -563,14 +563,11 @@ private:
     Neighbor     *UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
                                             Error               aError,
                                             const Mac::Address &aMacDest,
-                                            bool                aIsDataPoll = false);
-    void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
-                                             Error     aError,
-                                             bool      aAllowNeighborRemove,
-                                             uint8_t   aFailLimit = kFailedRouterTransmissions);
-    void          HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
-    void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
-    void          RemoveMessageIfNoPendingTx(Message &aMessage);
+                                            bool                aIsDataPoll);
+    void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
+    void HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
+    void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
+    void RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
@@ -596,10 +593,9 @@ private:
     void HandleTxDelayTimer(void);
 #endif
 
-    void LogMessage(MessageAction       aAction,
-                    const Message      &aMessage,
-                    Error               aError   = kErrorNone,
-                    const Mac::Address *aAddress = nullptr);
+    void LogMessage(MessageAction aAction, const Message &aMessage);
+    void LogMessage(MessageAction aAction, const Message &aMessage, Error aError);
+    void LogMessage(MessageAction aAction, const Message &aMessage, Error aError, const Mac::Address *aAddress);
     void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
     void LogFragmentFrameDrop(Error                         aError,
                               uint16_t                      aFrameLength,

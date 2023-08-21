@@ -586,7 +586,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
         }
 
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        if (UpdateEcnOrDrop(*curMessage) == kErrorDrop)
+        if (UpdateEcnOrDrop(*curMessage, /* aPreparingToSend */ true) == kErrorDrop)
         {
             continue;
         }
@@ -1090,6 +1090,14 @@ start:
     return nextOffset;
 }
 
+uint16_t MeshForwarder::PrepareDataFrameWithNoMeshHeader(Mac::TxFrame         &aFrame,
+                                                         Message              &aMessage,
+                                                         const Mac::Addresses &aMacAddrs)
+{
+    return PrepareDataFrame(aFrame, aMessage, aMacAddrs, /* aAddMeshHeader */ false, /* aMeshSource */ 0xffff,
+                            /* aMeshDest */ 0xffff, /* aAddFragHeader */ false);
+}
+
 Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
                                                    Error               aError,
                                                    const Mac::Address &aMacDest,
@@ -1097,7 +1105,8 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
 {
     OT_UNUSED_VARIABLE(aIsDataPoll);
 
-    Neighbor *neighbor = nullptr;
+    Neighbor *neighbor  = nullptr;
+    uint8_t   failLimit = kFailedRouterTransmissions;
 
     VerifyOrExit(mEnabled);
 
@@ -1121,14 +1130,11 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame       &aFrame,
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aIsDataPoll)
     {
-        UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true,
-                                   /* aFailLimit */ kFailedCslDataPollTransmissions);
+        failLimit = kFailedCslDataPollTransmissions;
     }
-    else
 #endif
-    {
-        UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true);
-    }
+
+    UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true, failLimit);
 
 exit:
     return neighbor;
@@ -1175,7 +1181,7 @@ void MeshForwarder::HandleDeferredAck(Neighbor &aNeighbor, Error aError)
     // link failure counter and removes the neighbor if required.
     Get<RadioSelector>().UpdateOnDeferredAck(aNeighbor, aError, allowNeighborRemove);
 #else
-    UpdateNeighborLinkFailures(aNeighbor, aError, allowNeighborRemove);
+    UpdateNeighborLinkFailures(aNeighbor, aError, allowNeighborRemove, kFailedRouterTransmissions);
 #endif
 
 exit:
@@ -1210,7 +1216,7 @@ void MeshForwarder::HandleSentFrame(Mac::TxFrame &aFrame, Error aError)
     if (!aFrame.IsEmpty())
     {
         IgnoreError(aFrame.GetDstAddr(macDest));
-        neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest);
+        neighbor = UpdateNeighborOnSentFrame(aFrame, aError, macDest, /* aIsDataPoll */ false);
     }
 
     UpdateSendMessage(aError, macDest, neighbor);
@@ -1928,6 +1934,16 @@ exit:
     return;
 }
 
+void MeshForwarder::LogMessage(MessageAction aAction, const Message &aMessage)
+{
+    LogMessage(aAction, aMessage, kErrorNone);
+}
+
+void MeshForwarder::LogMessage(MessageAction aAction, const Message &aMessage, Error aError)
+{
+    LogMessage(aAction, aMessage, aError, nullptr);
+}
+
 void MeshForwarder::LogMessage(MessageAction       aAction,
                                const Message      &aMessage,
                                Error               aError,
@@ -2017,6 +2033,10 @@ void MeshForwarder::LogLowpanHcFrameDrop(Error                 aError,
 }
 
 #else // #if OT_SHOULD_LOG_AT( OT_LOG_LEVEL_NOTE)
+
+void MeshForwarder::LogMessage(MessageAction, const Message &) {}
+
+void MeshForwarder::LogMessage(MessageAction, const Message &, Error) {}
 
 void MeshForwarder::LogMessage(MessageAction, const Message &, Error, const Mac::Address *) {}
 

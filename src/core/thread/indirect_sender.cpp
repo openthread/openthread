@@ -384,7 +384,7 @@ uint16_t IndirectSender::PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, M
     directTxOffset = aMessage.GetOffset();
     aMessage.SetOffset(aChild.GetIndirectFragmentOffset());
 
-    nextOffset = Get<MeshForwarder>().PrepareDataFrame(aFrame, aMessage, macAddrs);
+    nextOffset = Get<MeshForwarder>().PrepareDataFrameWithNoMeshHeader(aFrame, aMessage, macAddrs);
 
     aMessage.SetOffset(directTxOffset);
 
