@@ -340,7 +340,7 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
         tlv.Init();
 
-        for (uint8_t page = 0; page < sizeof(Radio::kSupportedChannelPages) * CHAR_BIT; page++)
+        for (uint8_t page = 0; page < static_cast<uint8_t>(sizeof(Radio::kSupportedChannelPages) * CHAR_BIT); page++)
         {
             if (Radio::kSupportedChannelPages & (1 << page))
             {

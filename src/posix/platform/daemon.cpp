@@ -72,6 +72,18 @@ void GetFilename(Filename &aFilename, const char *aPattern)
 
 } // namespace
 
+int Daemon::OutputFormat(const char *aFormat, ...)
+{
+    int     ret;
+    va_list ap;
+
+    va_start(ap, aFormat);
+    ret = OutputFormatV(aFormat, ap);
+    va_end(ap);
+
+    return ret;
+}
+
 int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 {
     static constexpr char truncatedMsg[] = "(truncated ...)";
@@ -244,12 +256,14 @@ void Daemon::SetUp(void)
         DieNowWithMessage("listen", OT_EXIT_ERROR_ERRNO);
     }
 
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
     otCliInit(
         gInstance,
         [](void *aContext, const char *aFormat, va_list aArguments) -> int {
             return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
         },
         this);
+#endif
 
     Mainloop::Manager::Get().Add(*this);
 
@@ -349,7 +363,11 @@ void Daemon::Process(const otSysMainloopContext &aContext)
         if (rval > 0)
         {
             buffer[rval] = '\0';
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
             otCliInputLine(reinterpret_cast<char *>(buffer));
+#else
+            OutputFormat("Error: CLI is disabled!\n");
+#endif
         }
         else
         {

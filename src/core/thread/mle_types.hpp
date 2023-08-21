@@ -73,102 +73,30 @@ namespace Mle {
  *
  */
 
-constexpr uint16_t kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
-constexpr uint8_t  kMaxChildKeepAliveAttempts = 4; ///< Max keep alive attempts before reattach to a new Parent.
-constexpr uint8_t  kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-// Extra one for core Backbone Router Service.
-constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
-#else
-constexpr uint8_t kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
-#endif
-
 constexpr uint16_t kUdpPort = 19788; ///< MLE UDP Port
 
-/*
- * MLE Protocol delays and timeouts.
- *
- */
-constexpr uint32_t kParentRequestRouterTimeout     = 750;  ///< Router Parent Request timeout (in msec)
-constexpr uint32_t kParentRequestDuplicateMargin   = 50;   ///< Margin for duplicate parent request
-constexpr uint32_t kParentRequestReedTimeout       = 1250; ///< Router and REEDs Parent Request timeout (in msec)
-constexpr uint32_t kChildIdResponseTimeout         = 1250; ///< Wait time to receive Child ID Response (in msec)
-constexpr uint32_t kAttachStartJitter              = 50;   ///< Max jitter time added to start of attach (in msec)
-constexpr uint32_t kAnnounceProcessTimeout         = 250;  ///< Delay after Announce rx before channel/pan-id change
-constexpr uint32_t kAnnounceTimeout                = 1400; ///< Total timeout for sending Announce messages (in msec)
-constexpr uint16_t kMinAnnounceDelay               = 80;   ///< Min delay between Announcement messages (in msec)
-constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  ///< Max response delay for Parent Req to routers (in msec)
-constexpr uint32_t kParentResponseMaxDelayAll      = 1000; ///< Max response delay for Parent Req to all (in msec)
-constexpr uint32_t kUnicastRetransmissionDelay     = 1000; ///< Base delay before an MLE unicast retx (in msec)
-constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  ///< Delay for aggregating Child Update Req (in msec)
-constexpr uint8_t  kMaxTransmissionCount           = 3;    ///< Max number of times an MLE message may be transmitted
-constexpr uint32_t kMaxResponseDelay               = 1000; ///< Max response delay for a multicast request (in msec)
-constexpr uint32_t kChildIdRequestTimeout          = 5000; ///< Max delay to rx a Child ID Request (in msec)
-constexpr uint32_t kLinkRequestTimeout             = 2000; ///< Max delay to rx a Link Accept
-constexpr uint8_t  kMulticastLinkRequestDelay      = 5;    ///< Max delay for sending a mcast Link Request (in sec)
-constexpr uint8_t kMaxCriticalTransmissionCount = 6; ///< Max number of times an critical MLE message may be transmitted
-
-constexpr uint32_t kMulticastTransmissionDelay = 5000; ///< Delay for retransmitting a multicast packet (in msec)
-constexpr uint32_t kMulticastTransmissionDelayMin =
-    kMulticastTransmissionDelay * 9 / 10; ///< Min delay for retransmitting a multicast packet (in msec)
-constexpr uint32_t kMulticastTransmissionDelayMax =
-    kMulticastTransmissionDelay * 11 / 10; ///< Max delay for retransmitting a multicast packet (in msec)
-
-constexpr uint32_t kMinTimeoutKeepAlive = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000);
-constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
-constexpr uint32_t kRetxPollPeriod      = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
-constexpr uint32_t kMinTimeoutDataPoll  = (kMinPollPeriod + kFailedChildTransmissions * kRetxPollPeriod) / 1000;
-constexpr uint32_t kMinTimeout          = OT_MAX(kMinTimeoutKeepAlive, kMinTimeoutDataPoll); ///< Min timeout (in sec)
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-constexpr uint8_t kLinkAcceptMaxRouters = 3; ///< Max Route TLV entries in a Link Accept message
-#else
-constexpr uint8_t kLinkAcceptMaxRouters = 20; ///< Max Route TLV entries in a Link Accept message
-#endif
-constexpr uint8_t kLinkAcceptSequenceRollback = 64; ///< Route Sequence value rollback in a Link Accept message.
-
-constexpr uint16_t kMinChildId = 1;   ///< Minimum Child ID
-constexpr uint16_t kMaxChildId = 511; ///< Maximum Child ID
-
-constexpr uint8_t kRouterIdOffset   = 10; ///< Bit offset of Router ID in RLOC16
-constexpr uint8_t kRlocPrefixLength = 14; ///< Prefix length of RLOC in bytes
-
-constexpr uint8_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
-constexpr uint8_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
-
-/*
- * Routing Protocol Constants
- *
- */
-constexpr uint8_t kFailedRouterTransmissions = 4;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-constexpr uint8_t kFailedCslDataPollTransmissions = 15;
-#endif
-
-constexpr uint8_t  kRouterIdReuseDelay     = 100; ///< (in sec)
-constexpr uint32_t kRouterIdSequencePeriod = 10;  ///< (in sec)
-constexpr uint32_t kMaxNeighborAge         = 100; ///< (in sec)
+constexpr uint16_t kMaxChildren     = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN; ///< Maximum number of children
+constexpr uint16_t kMinChildId      = 1;                                  ///< Minimum Child ID
+constexpr uint16_t kMaxChildId      = 511;                                ///< Maximum Child ID
+constexpr uint8_t  kMaxRouters      = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS;  ///< Maximum number of routers
+constexpr uint8_t  kMaxRouterId     = OT_NETWORK_MAX_ROUTER_ID;           ///< Max Router ID
+constexpr uint8_t  kInvalidRouterId = kMaxRouterId + 1;                   ///< Value indicating invalid Router ID
+constexpr uint8_t  kRouterIdOffset  = 10;                                 ///< Bit offset of router ID in RLOC16
+constexpr uint16_t kInvalidRloc16   = Mac::kShortAddrInvalid;             ///< Invalid RLOC16.
 
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-constexpr uint8_t kMaxRouteCost = 127;
+constexpr uint8_t kMaxRouteCost = 127; ///< Maximum path cost
 #else
-constexpr uint8_t kMaxRouteCost         = 16;
+constexpr uint8_t kMaxRouteCost = 16; ///< Maximum path cost
 #endif
 
-constexpr uint8_t kMaxRouterId           = OT_NETWORK_MAX_ROUTER_ID; ///< Max Router ID
-constexpr uint8_t kInvalidRouterId       = kMaxRouterId + 1;         ///< Value indicating incorrect Router ID
-constexpr uint8_t kMaxRouters            = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS;
-constexpr uint8_t kMinDowngradeNeighbors = 7;
+constexpr uint8_t kMeshLocalPrefixContextId = 0; ///< Reserved 6lowpan context ID for Mesh Local Prefix
 
-constexpr uint8_t kNetworkIdTimeout           = 120; ///< (in sec)
-constexpr uint8_t kParentRouteToLeaderTimeout = 20;  ///< (in sec)
-constexpr uint8_t kRouterSelectionJitter      = 120; ///< (in sec)
-
-constexpr uint8_t kRouterDowngradeThreshold = 23;
-constexpr uint8_t kRouterUpgradeThreshold   = 16;
-
-constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid; ///< Invalid RLOC16.
+/**
+ * Number of consecutive tx failures to child (with no-ack error) to consider child-parent link broken.
+ *
+ */
+constexpr uint8_t kFailedChildTransmissions = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
 
 /**
  * Threshold to accept a router upgrade request with reason `kBorderRouterRequest` (number of BRs acting as router in
@@ -176,18 +104,6 @@ constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid; ///< Invalid RLOC16.
  *
  */
 constexpr uint8_t kRouterUpgradeBorderRouterRequestThreshold = 2;
-
-constexpr uint32_t kMaxLeaderToRouterTimeout = 90;  ///< (in sec)
-constexpr uint32_t kReedAdvertiseInterval    = 570; ///< (in sec)
-constexpr uint32_t kReedAdvertiseJitter      = 60;  ///< (in sec)
-
-constexpr uint32_t kMleEndDeviceTimeout      = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT; ///< (in sec)
-constexpr uint8_t  kMeshLocalPrefixContextId = 0; ///< 0 is reserved for Mesh Local Prefix
-
-constexpr int8_t kParentPriorityHigh        = 1;  ///< Parent Priority High
-constexpr int8_t kParentPriorityMedium      = 0;  ///< Parent Priority Medium (default)
-constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
-constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
 
 /**
  * Represents a Thread device role.
@@ -213,9 +129,6 @@ constexpr uint16_t kAloc16BackboneRouterPrimary       = 0xfc38;
 constexpr uint16_t kAloc16CommissionerMask            = 0x0007;
 constexpr uint16_t kAloc16NeighborDiscoveryAgentStart = 0xfc40;
 constexpr uint16_t kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e;
-
-constexpr uint8_t kServiceMinId = 0x00; ///< Minimal Service ID.
-constexpr uint8_t kServiceMaxId = 0x0f; ///< Maximal Service ID.
 
 /**
  * Specifies the leader role start mode.
@@ -571,28 +484,7 @@ private:
     uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
 } OT_TOOL_PACKED_END;
 
-class RxChallenge;
-
-/**
- * Represents a max-sized challenge data to send in MLE message.
- *
- * OpenThread always uses max size challenge when sending MLE messages.
- *
- */
-class TxChallenge : public Clearable<TxChallenge>
-{
-    friend class RxChallenge;
-
-public:
-    /**
-     * Generates a cryptographically secure random sequence to populate the challenge data.
-     *
-     */
-    void GenerateRandom(void);
-
-private:
-    uint8_t m8[kMaxChallengeSize];
-};
+class TxChallenge;
 
 /**
  * Represents a received Challenge data from an MLE message.
@@ -601,6 +493,9 @@ private:
 class RxChallenge
 {
 public:
+    static constexpr uint8_t kMinSize = 4; ///< Minimum Challenge size in bytes.
+    static constexpr uint8_t kMaxSize = 8; ///< Maximum Challenge size in bytes.
+
     /**
      * Clears the challenge.
      *
@@ -635,14 +530,14 @@ public:
     /**
      * Reads the challenge bytes from given message.
      *
-     * If the given @p aLength is longer than `kMaxChallengeSize`, only `kMaxChallengeSize` bytes will be read.
+     * If the given @p aLength is longer than `kMaxSize`, only `kMaxSize` bytes will be read.
      *
      * @param[in] aMessage   The message to read the challenge from.
      * @param[in] aOffset    The offset in @p aMessage to read from.
      * @param[in] aLength    Number of bytes to read.
      *
      * @retval kErrorNone     Successfully read the challenge data from @p aMessage.
-     * @retval kErrorParse    Not enough bytes to read, or invalid @p aLength (smaller than `kMinChallgeSize`).
+     * @retval kErrorParse    Not enough bytes to read, or invalid @p aLength (smaller than `kMinSize`).
      *
      */
     Error ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
@@ -659,7 +554,28 @@ public:
     bool operator==(const TxChallenge &aTxChallenge) const;
 
 private:
-    Array<uint8_t, kMaxChallengeSize> mArray;
+    Array<uint8_t, kMaxSize> mArray;
+};
+
+/**
+ * Represents a max-sized challenge data to send in MLE message.
+ *
+ * OpenThread always uses max size challenge when sending MLE messages.
+ *
+ */
+class TxChallenge : public Clearable<TxChallenge>
+{
+    friend class RxChallenge;
+
+public:
+    /**
+     * Generates a cryptographically secure random sequence to populate the challenge data.
+     *
+     */
+    void GenerateRandom(void);
+
+private:
+    uint8_t m8[RxChallenge::kMaxSize];
 };
 
 /**

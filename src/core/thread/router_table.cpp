@@ -731,11 +731,11 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
         uint8_t routerCount = mRouters.GetLength();
 
-        if (routerCount > Mle::kLinkAcceptMaxRouters)
+        if (routerCount > kMaxRoutersInRouteTlvForLinkAccept)
         {
             for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
             {
-                if (routerCount <= Mle::kLinkAcceptMaxRouters)
+                if (routerCount <= kMaxRoutersInRouteTlvForLinkAccept)
                 {
                     break;
                 }
@@ -758,7 +758,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
             // Ensure that the neighbor will process the current
             // Route64 TLV in a subsequent message exchange
-            routerIdSequence -= Mle::kLinkAcceptSequenceRollback;
+            routerIdSequence -= kLinkAcceptSequenceRollback;
         }
     }
 
@@ -812,7 +812,7 @@ void RouterTable::HandleTimeTick(void)
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     // Update router id sequence
-    if (GetLeaderAge() >= Mle::kRouterIdSequencePeriod)
+    if (GetLeaderAge() >= kRouterIdSequencePeriod)
     {
         mRouterIdSequence++;
         mRouterIdSequenceLastUpdated = TimerMilli::GetNow();

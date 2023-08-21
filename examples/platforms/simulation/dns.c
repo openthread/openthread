@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,38 +25,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
-#define OT_POSIX_PLATFORM_DAEMON_HPP_
 
-#include "openthread-posix-config.h"
+#include "platform-simulation.h"
 
-#include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+#include <openthread/platform/dns.h>
 
-namespace ot {
-namespace Posix {
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
-class Daemon : public Mainloop::Source, private NonCopyable
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
 {
-public:
-    static Daemon &Get(void);
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxn);
+    OT_UNUSED_VARIABLE(aQuery);
+}
 
-    void SetUp(void);
-    void TearDown(void);
-    void Update(otSysMainloopContext &aContext) override;
-    void Process(const otSysMainloopContext &aContext) override;
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+{
+    otPlatDnsUpstreamQueryDone(aInstance, aTxn, NULL);
+}
 
-private:
-    int  OutputFormat(const char *aFormat, ...);
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
-    void InitializeSessionSocket(void);
-
-    int mListenSocket  = -1;
-    int mDaemonLock    = -1;
-    int mSessionSocket = -1;
-};
-
-} // namespace Posix
-} // namespace ot
-
-#endif // OT_POSIX_PLATFORM_DAEMON_HPP_
+#endif

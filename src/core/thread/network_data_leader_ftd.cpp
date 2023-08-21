@@ -1018,13 +1018,13 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     if (mIsClone)
     {
-        aServiceId = Mle::kServiceMinId;
+        aServiceId = kMinServiceId;
         error      = kErrorNone;
         ExitNow();
     }
 #endif
 
-    for (serviceId = Mle::kServiceMinId; serviceId <= Mle::kServiceMaxId; serviceId++)
+    for (serviceId = kMinServiceId; serviceId <= kMaxServiceId; serviceId++)
     {
         if (FindServiceById(serviceId) == nullptr)
         {

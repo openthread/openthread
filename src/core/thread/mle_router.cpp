@@ -242,8 +242,8 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
         // Request as a critical message.
         mLinkRequestAttempts =
             (mWasLeader || mChildTable.GetNumChildren(Child::kInStateValidOrRestoring) >= kMinCriticalChildrenCount)
-                ? kMaxCriticalTransmissionCount
-                : kMaxTransmissionCount;
+                ? kMaxCriticalTxCount
+                : kMaxTxCount;
 
         SuccessOrExit(error = SendLinkRequest(nullptr));
         mLinkRequestAttempts--;
@@ -833,7 +833,7 @@ Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     if (aMessageInfo.GetSockAddr().IsMulticast())
     {
         SuccessOrExit(error = message->SendAfterDelay(aMessageInfo.GetPeerAddr(),
-                                                      1 + Random::NonCrypto::GetUint16InRange(0, kMaxResponseDelay)));
+                                                      1 + Random::NonCrypto::GetUint16InRange(0, kMaxLinkAcceptDelay)));
 
         Log(kMessageDelay, (command == kCommandLinkAccept) ? kTypeLinkAccept : kTypeLinkAcceptAndRequest,
             aMessageInfo.GetPeerAddr());
@@ -1617,8 +1617,7 @@ void MleRouter::HandleTimeTick(void)
             {
                 SendAdvertisement();
 
-                mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, Time::SecToMsec(kReedAdvertiseInterval),
-                                             Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
+                mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, kReedAdvIntervalMin, kReedAdvIntervalMax);
             }
 
             ExitNow();
@@ -1718,7 +1717,7 @@ void MleRouter::HandleTimeTick(void)
         {
 #if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT == 0
 
-            if (age >= Time::SecToMsec(kMaxNeighborAge))
+            if (age >= kMaxNeighborAge)
             {
                 LogInfo("Router timeout expired");
                 RemoveNeighbor(router);
@@ -1727,9 +1726,9 @@ void MleRouter::HandleTimeTick(void)
 
 #else
 
-            if (age >= Time::SecToMsec(kMaxNeighborAge))
+            if (age >= kMaxNeighborAge)
             {
-                if (age < Time::SecToMsec(kMaxNeighborAge) + kMaxTransmissionCount * kUnicastRetransmissionDelay)
+                if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
                 {
                     LogInfo("Router timeout expired");
                     IgnoreError(SendLinkRequest(&router));
@@ -1756,7 +1755,7 @@ void MleRouter::HandleTimeTick(void)
         if (IsLeader())
         {
             if (mRouterTable.FindNextHopOf(router) == nullptr && mRouterTable.GetLinkCost(router) >= kMaxRouteCost &&
-                age >= Time::SecToMsec(kMaxLeaderToRouterTimeout))
+                age >= kMaxLeaderToRouterTimeout)
             {
                 LogInfo("Router ID timeout expired (no route)");
                 IgnoreError(mRouterTable.Release(router.GetRouterId()));

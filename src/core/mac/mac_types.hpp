@@ -425,10 +425,78 @@ struct Addresses
  * Represents two PAN IDs corresponding to source and destination.
  *
  */
-struct PanIds
+class PanIds : public Clearable<PanIds>
 {
-    PanId mSource;      ///< Source PAN ID.
-    PanId mDestination; ///< Destination PAN ID.
+public:
+    /**
+     * Initializes PAN IDs as empty (no source or destination PAN ID).
+     *
+     */
+    PanIds(void) { Clear(); }
+
+    /**
+     * Indicates whether or not source PAN ID is present.
+     *
+     * @retval TRUE   The source PAN ID is present.
+     * @retval FALSE  The source PAN ID is not present.
+     *
+     */
+    bool IsSourcePresent(void) const { return mIsSourcePresent; }
+
+    /**
+     * Gets the source PAN ID when it is present.
+     *
+     * @returns The source PAN ID.
+     *
+     */
+    PanId GetSource(void) const { return mSource; }
+
+    /**
+     * Indicates whether or not destination PAN ID is present.
+     *
+     * @retval TRUE   The destination PAN ID is present.
+     * @retval FALSE  The destination PAN ID is not present.
+     *
+     */
+    bool IsDestinationPresent(void) const { return mIsDestinationPresent; }
+
+    /**
+     * Gets the destination PAN ID when it is present.
+     *
+     * @returns The destination PAN ID.
+     *
+     */
+    PanId GetDestination(void) const { return mDestination; }
+
+    /**
+     * Sets the source PAN ID.
+     *
+     * @param[in] aPanId  The source PAN ID.
+     *
+     */
+    void SetSource(PanId aPanId);
+
+    /**
+     * Sets the destination PAN ID.
+     *
+     * @param[in] aPanId  The source PAN ID.
+     *
+     */
+    void SetDestination(PanId aPanId);
+
+    /**
+     * Sets both source and destination PAN IDs to the same value.
+     *
+     * @param[in] aPanId  The PAN ID.
+     *
+     */
+    void SetBothSourceDestination(PanId aPanId);
+
+private:
+    PanId mSource;
+    PanId mDestination;
+    bool  mIsSourcePresent;
+    bool  mIsDestinationPresent;
 };
 
 /**

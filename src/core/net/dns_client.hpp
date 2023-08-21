@@ -770,6 +770,8 @@ public:
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 private:
+    static constexpr uint16_t kMaxCnameAliasNameChanges = 40;
+
     enum QueryType : uint8_t
     {
         kIp6AddressQuery, // IPv6 Address resolution.

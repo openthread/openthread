@@ -586,10 +586,19 @@ private:
     static constexpr uint32_t kAdvIntervalNeighborMultiplier = 4000;  // Multiplier for I_MAX per router neighbor
     static constexpr uint32_t kAdvIntervalMaxLowerBound      = 12000; // Lower bound for I_MAX
     static constexpr uint32_t kAdvIntervalMaxUpperBound      = 32000; // Upper bound for I_MAX
+    static constexpr uint32_t kReedAdvIntervalMin            = 570000;
+    static constexpr uint32_t kReedAdvIntervalMax            = 630000;
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-    constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
+    static constexpr uint32_t kAdvIntervalMaxLogRoutes = 5000;
 #endif
 
+    static constexpr uint32_t kMaxNeighborAge                = 100000; // Max neighbor age (in msec)
+    static constexpr uint32_t kMaxLeaderToRouterTimeout      = 90000;  // (in msec)
+    static constexpr uint8_t  kMinDowngradeNeighbors         = 7;
+    static constexpr uint8_t  kNetworkIdTimeout              = 120; // (in sec)
+    static constexpr uint8_t  kRouterSelectionJitter         = 120; // (in sec)
+    static constexpr uint8_t  kRouterDowngradeThreshold      = 23;
+    static constexpr uint8_t  kRouterUpgradeThreshold        = 16;
     static constexpr uint16_t kDiscoveryMaxJitter            = 250; // Max jitter delay Discovery Responses (in msec).
     static constexpr uint16_t kChallengeTimeout              = 2;   // Challenge timeout (in sec).
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
@@ -610,6 +619,11 @@ private:
 
     static constexpr uint16_t kChildSupervisionDefaultIntervalForOlderVersion =
         OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL;
+
+    static constexpr int8_t kParentPriorityHigh        = 1;
+    static constexpr int8_t kParentPriorityMedium      = 0;
+    static constexpr int8_t kParentPriorityLow         = -1;
+    static constexpr int8_t kParentPriorityUnspecified = -2;
 
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);

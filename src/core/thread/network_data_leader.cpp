@@ -244,6 +244,11 @@ Error LeaderBase::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &a
 
     while ((prefixTlv = FindNextMatchingPrefixTlv(aSource, prefixTlv)) != nullptr)
     {
+        if (prefixTlv->FindSubTlv<BorderRouterTlv>() == nullptr)
+        {
+            continue;
+        }
+
         if (ExternalRouteLookup(prefixTlv->GetDomainId(), aDestination, aRloc16) == kErrorNone)
         {
             ExitNow(error = kErrorNone);

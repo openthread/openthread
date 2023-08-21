@@ -738,7 +738,7 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
     addrs.mSource.SetNone();
     addrs.mDestination.SetShort(kShortAddrBroadcast);
-    panIds.mDestination = kShortAddrBroadcast;
+    panIds.SetDestination(kShortAddrBroadcast);
 
     frame.InitMacHeader(Frame::kTypeMacCmd, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);
 
@@ -769,7 +769,7 @@ TxFrame *Mac::PrepareBeacon(void)
 #endif
 
     addrs.mSource.SetExtended(GetExtAddress());
-    panIds.mSource = mPanId;
+    panIds.SetSource(mPanId);
     addrs.mDestination.SetNone();
 
     frame->InitMacHeader(Frame::kTypeBeacon, Frame::kVersion2003, addrs, panIds, Frame::kSecurityNone);

@@ -496,7 +496,7 @@ otError Dns::ParseDnsServiceMode(const Arg &aArg, otDnsServiceMode &aMode) const
         ExitNow();
     }
 
-    for (uint8_t index = 0; index < OT_ARRAY_LENGTH(kServiceModeStrings); index++)
+    for (size_t index = 0; index < OT_ARRAY_LENGTH(kServiceModeStrings); index++)
     {
         if (aArg == kServiceModeStrings[index])
         {
