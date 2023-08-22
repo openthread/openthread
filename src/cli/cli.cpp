@@ -4169,17 +4169,50 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     otPskc  pskc;
 
+    /**
+     *@cli pskc
+     *@code
+     *pskc
+     *00000000000000000000000000000000
+     *Done
+     *@endcode
+     *@par api_copy
+     *#otThreadGetPskc
+     */
     if (aArgs[0].IsEmpty())
     {
         otThreadGetPskc(GetInstancePtr(), &pskc);
         OutputBytesLine(pskc.m8);
     }
     else
+
+    /**
+     *@cli pskc <key>
+     *@code
+     *pskc 67c0c203aa0b042bfb5381c47aef4d9e
+     *Done
+     *@endcode
+     *@cparm pskc @ca{<key>}
+     *@par
+     *Sets the pskc as <key> in hexadecimal format.
+     */
     {
         if (aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.m8));
         }
+
+        /**
+         *@cli pskc -p <passphrase>
+         *@code
+         *pskc -p 123456
+         *Done
+         *@endcode
+         *@cparm pskc @ca{<passphrase>}
+         *@par
+         *Generates the pskc from the passphrase (UTF-8 encoded), together with the current network name and extended
+         *PAN ID
+         */
         else if (aArgs[0] == "-p")
         {
             SuccessOrExit(error = otDatasetGeneratePskc(
@@ -4204,6 +4237,15 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**@cli pskcref
+     *@code
+     *pskcref
+     *0x80000000
+     *Done
+     *@endcode
+     *@par
+     *Returns the pskc key reference.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("0x%08lx", ToUlong(otThreadGetPskcRef(GetInstancePtr())));
@@ -4212,6 +4254,17 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
     {
         otPskcRef pskcRef;
 
+        /**
+         *@cli pskc <keyref>
+         *@code
+         *pskc 0x20017
+         *Done
+         *@cparam pskc @ca{<keyref>}
+         *@par
+         *Sets the pskc key reference as <keyref>.
+         *@par
+         *OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is required.
+         */
         if (aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[0].ParseAsUint32(pskcRef));
@@ -5917,6 +5970,16 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     *@cli promiscuous
+     *@code
+     *promiscuous
+     *Disabled
+     *Done
+     *@endcode
+     *@par api_copy
+     *#otLinkIsPromiscuous
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(otLinkIsPromiscuous(GetInstancePtr()) &&
@@ -5928,6 +5991,20 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
 
         SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
 
+        /**
+         *@cli promiscuous (enable/disable)
+         *@code
+         *promiscuous enable
+         *Done
+         *@endcode
+         *@code
+         *promiscuous disable
+         *Done
+         *@endcode
+         *@cparam promiscuous @ca{enable|disable}
+         *@par api_copy
+         *#otPlatRadioGetPromiscuous
+         */
         if (!enable)
         {
             otLinkSetPcapCallback(GetInstancePtr(), nullptr, nullptr);
@@ -5945,12 +6022,12 @@ exit:
     return error;
 }
 
-void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
+void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
+void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
     OT_UNUSED_VARIABLE(aIsTx);
 
@@ -6019,7 +6096,7 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
+otError Cli::Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
 {
     otError error = OT_ERROR_NONE;
 
@@ -6093,7 +6170,7 @@ exit:
     return error;
 }
 
-template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
+template <> otError Cli::Interpreter::Process<Cli::Cmd("prefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -6209,14 +6286,25 @@ exit:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
-template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
+template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aArgs[])
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
+template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs[])
+
+/**
+ *@cli preferrouterid <routerid>
+ *@code
+ *preferrouterid 16
+ *Done
+ *@endcode
+ *@cparam preferrouterid {<routerid>}
+ *@par
+ *Specifies the preferred router ID that the leader should provide when solicited.
+ */
 {
     return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
 }
@@ -6226,7 +6314,7 @@ template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 inline unsigned long UsToSInt(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs / 1000000)); }
 inline unsigned long UsToSDec(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs % 1000000)); }
 
-void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
+void Cli::Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
 {
     uint32_t timePercentInt = static_cast<uint32_t>(aTimeUs * 100 / aTotalTimeUs);
     uint32_t timePercentDec = static_cast<uint32_t>((aTimeUs * 100 % aTotalTimeUs) * 100 / aTotalTimeUs);
@@ -6236,7 +6324,7 @@ void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, 
 }
 #endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
 
-template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
+template <> otError Cli::Interpreter::Process<Cli::Cmd("radio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -6250,7 +6338,7 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
      * radio disable
      * Done
      * @endcode
-     * @cparam radio [@ca{enable|disable}]
+     * @cparam radio @ca{enable|disable}
      * @sa otLinkSetEnabled
      * @par
      * Enables or disables the radio.
@@ -6323,7 +6411,7 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
     return error;
 }
 
-template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
+template <> otError Cli::Interpreter::Process<Cli::Cmd("rcp")>(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
     const char *version = otPlatRadioGetVersionString(GetInstancePtr());
