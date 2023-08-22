@@ -4170,14 +4170,14 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
     otPskc  pskc;
 
     /**
-     *@cli pskc
-     *@code
-     *pskc
-     *00000000000000000000000000000000
-     *Done
-     *@endcode
-     *@par api_copy
-     *#otThreadGetPskc
+     * @cli pskc
+     * @code
+     * pskc
+     * 00000000000000000000000000000000
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetPskc
      */
     if (aArgs[0].IsEmpty())
     {
@@ -4187,14 +4187,14 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
     else
 
     /**
-     *@cli pskc <key>
-     *@code
-     *pskc 67c0c203aa0b042bfb5381c47aef4d9e
-     *Done
-     *@endcode
-     *@cparm pskc @ca{<key>}
-     *@par
-     *Sets the pskc as <key> in hexadecimal format.
+     * @cli pskc (set)
+     * @code
+     * pskc 67c0c203aa0b042bfb5381c47aef4d9e
+     * Done
+     * @endcode
+     * @cparam pskc @ca{key}
+     * @par
+     * Sets the pskc as <key> in hexadecimal format.
      */
     {
         if (aArgs[1].IsEmpty())
@@ -4203,15 +4203,15 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
         }
 
         /**
-         *@cli pskc -p <passphrase>
-         *@code
-         *pskc -p 123456
-         *Done
-         *@endcode
-         *@cparm pskc @ca{<passphrase>}
-         *@par
-         *Generates the pskc from the passphrase (UTF-8 encoded), together with the current network name and extended
-         *PAN ID
+         * @cli pskc -p
+         * @code
+         * pskc -p 123456
+         * Done
+         * @endcode
+         * @cparam pskc @ca{passphrase}
+         * @par
+         * Generates the pskc from the passphrase (UTF-8 encoded), together with the current network name and extended
+         * PAN ID.
          */
         else if (aArgs[0] == "-p")
         {
@@ -4237,14 +4237,14 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    /**@cli pskcref
-     *@code
-     *pskcref
-     *0x80000000
-     *Done
-     *@endcode
-     *@par
-     *Returns the pskc key reference.
+    /** @cli pskcref
+     * @code
+     * pskcref
+     * 0x80000000
+     * Done
+     * @endcode
+     * @par api_copy
+     * #orThreadGetPskcRef
      */
     if (aArgs[0].IsEmpty())
     {
@@ -4255,15 +4255,15 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
         otPskcRef pskcRef;
 
         /**
-         *@cli pskc <keyref>
-         *@code
-         *pskc 0x20017
-         *Done
-         *@cparam pskc @ca{<keyref>}
-         *@par
-         *Sets the pskc key reference as <keyref>.
-         *@par
-         *OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is required.
+         * @cli pskcref (set)
+         * @code
+         * pskc 0x20017
+         * Done
+         * @cparam pskc @ca{keyref}
+         * @par api_copy
+         * #otThreadSetPskcRef
+         * @par
+         * OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is required.
          */
         if (aArgs[1].IsEmpty())
         {
@@ -5971,14 +5971,16 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     /**
-     *@cli promiscuous
-     *@code
-     *promiscuous
-     *Disabled
-     *Done
-     *@endcode
-     *@par api_copy
-     *#otLinkIsPromiscuous
+     * @cli promiscuous
+     * @code
+     * promiscuous
+     * Disabled
+     * Done
+     * @endcode
+     * @par
+     * Gets the radio promiscuous property.
+     * @sa otLinkIsPromiscuous
+     * @sa otPlatRadioGetPromiscuous
      */
     if (aArgs[0].IsEmpty())
     {
@@ -5992,18 +5994,18 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
         SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
 
         /**
-         *@cli promiscuous (enable/disable)
-         *@code
-         *promiscuous enable
-         *Done
-         *@endcode
-         *@code
-         *promiscuous disable
-         *Done
-         *@endcode
-         *@cparam promiscuous @ca{enable|disable}
-         *@par api_copy
-         *#otPlatRadioGetPromiscuous
+         * @cli promiscuous (enable,disable)
+         * @code
+         * promiscuous enable
+         * Done
+         * @endcode
+         * @code
+         * promiscuous disable
+         * Done
+         * @endcode
+         * @cparam promiscuous @ca{enable|disable}
+         * @par api_copy
+         * #otLinkSetPromiscuous
          */
         if (!enable)
         {
@@ -6027,7 +6029,7 @@ void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aI
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
     OT_UNUSED_VARIABLE(aIsTx);
 
@@ -6296,14 +6298,16 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aA
 template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs[])
 
 /**
- *@cli preferrouterid <routerid>
- *@code
- *preferrouterid 16
- *Done
- *@endcode
- *@cparam preferrouterid {<routerid>}
- *@par
- *Specifies the preferred router ID that the leader should provide when solicited.
+ * @cli preferrouterid
+ * @code
+ * preferrouterid 16
+ * Done
+ * @endcode
+ * @cparam preferrouterid {routerid}
+ * @par
+ * Specifies the preferred router ID that the leader should provide when solicited.
+ * @sa otLinkIsRadioFilterEnabled
+ * @sa otLinkSetRadioFilterEnabled
  */
 {
     return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
