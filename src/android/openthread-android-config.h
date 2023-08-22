@@ -56,4 +56,9 @@
  */
 #define OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 0
 
-#define OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 1
+/**
+ * Temporarily disable PLATFORM_UDP to make ot-daemon usable with the command line "ot-ctl" tool.
+ */
+// FIXME(296975198): refactor to skip posix/udp.cpp when the tunnel interface is not
+// available, instead of crash
+#define OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 0
