@@ -71,12 +71,21 @@ public:
     /**
      * Initializes the infrastructure network interface.
      *
+     * To specify the infrastructure network interface, you need to call SetInfraNetif() after Init().
+     *
      * @note This method is called before OpenThread instance is created.
      *
-     * @param[in]  aIfName      A pointer to infrastructure network interface name.
+     */
+    void Init(void);
+
+    /**
+     * Sets the infrastructure network interface.
+     *
+     * @param[in]  aIfName       A pointer to infrastructure network interface name.
+     * @param[in]  aIcmp6Socket  A SOCK_RAW socket for sending/receiving ICMPv6 messages.
      *
      */
-    void Init(const char *aIfName);
+    void SetInfraNetif(const char *aIfName, int aIcmp6Socket);
 
     /**
      * Sets up the infrastructure network interface.
@@ -174,6 +183,16 @@ public:
      *
      */
     static InfraNetif &Get(void);
+
+    /**
+     * Creates a socket for sending/receiving ICMPv6 messages.
+     *
+     * @param[in] aInfraIfName  The infrastructure network interface name.
+     *
+     * @returns The file descriptor of the socket.
+     *
+     */
+    static int CreateIcmp6Socket(const char *aInfraIfName);
 
 private:
     static const char         kWellKnownIpv4OnlyName[];   // "ipv4only.arpa"

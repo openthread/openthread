@@ -226,6 +226,18 @@ typedef struct otSysInfraNetIfAddressCounters
  */
 void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters);
 
+/**
+ * Sets the infrastructure network interface and the ICMPv6 socket.
+ *
+ * This function specifies the network interface name and the ICMPv6 socket on that interface. After calling this
+ * function, the caller can call otBorderRoutingInit() to let Border Routing work on that interface.
+ *
+ * @param[in] aInfraNetifName  The name of the infrastructure network interface.
+ * @param[in] aIcmp6Socket     A SOCK_RAW socket running on the infrastructure network interface.
+ *
+ */
+void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
