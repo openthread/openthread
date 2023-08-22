@@ -121,6 +121,8 @@ void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCount
     ot::Posix::InfraNetif::Get().CountAddresses(*aAddressCounters);
 }
 
+void otSysInfraNetifSetIcmp6Socket(int aFd) { ot::Posix::InfraNetif::Get().SetIcmp6Socket(aFd); }
+
 namespace ot {
 namespace Posix {
 namespace {
@@ -280,23 +282,41 @@ bool InfraNetif::IsRunning(void) const { return (GetFlags() & IFF_RUNNING) && Ha
 
 uint32_t InfraNetif::GetFlags(void) const
 {
+    uint32_t     flags = 0;
     int          sock;
     struct ifreq ifReq;
 
     OT_ASSERT(mInfraIfIndex != 0);
 
     sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
-    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
+    VerifyOrExit(sock != -1, otLogWarnPlat("Failed to create socket: %s", strerror(errno)));
 
     memset(&ifReq, 0, sizeof(ifReq));
     static_assert(sizeof(ifReq.ifr_name) >= sizeof(mInfraIfName), "mInfraIfName is not of appropriate size.");
     strcpy(ifReq.ifr_name, mInfraIfName);
 
-    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
+    VerifyOrExit(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, otLogWarnPlat("Failed to call ioctl: %s", strerror(errno)));
 
     close(sock);
 
-    return static_cast<uint32_t>(ifReq.ifr_flags);
+    flags = static_cast<uint32_t>(ifReq.ifr_flags);
+
+exit:
+    return flags;
+}
+
+void InfraNetif::SetIcmp6Socket(int aFd)
+{
+    VerifyOrExit(mInfraIfIcmp6Socket != aFd);
+
+    if (mInfraIfIcmp6Socket != -1)
+    {
+        close(mInfraIfIcmp6Socket);
+    }
+    mInfraIfIcmp6Socket = aFd;
+
+exit:
+    return;
 }
 
 void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const
@@ -391,6 +411,9 @@ void InfraNetif::Init(const char *aIfName)
     }
     mInfraIfIndex = ifIndex;
 
+    mInfraIfIcmp6Socket = -1;
+
+#if OPENTHREAD_POSIX_CONFIG_CREATE_ICMP6_SOCKET_ON_INFRA_IF
     mInfraIfIcmp6Socket = CreateIcmp6Socket();
 #ifdef __linux__
     rval = setsockopt(mInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, mInfraIfName, strlen(mInfraIfName));
@@ -398,6 +421,7 @@ void InfraNetif::Init(const char *aIfName)
     rval = setsockopt(mInfraIfIcmp6Socket, IPPROTO_IPV6, IPV6_BOUND_IF, &mInfraIfIndex, sizeof(mInfraIfIndex));
 #endif // __linux__
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+#endif // OPENTHREAD_POSIX_CONFIG_CREATE_ICMP6_SOCKET_ON_INFRA_IF
 
     mNetLinkSocket = CreateNetLinkSocket();
 
@@ -446,17 +470,17 @@ void InfraNetif::Deinit(void)
 
 void InfraNetif::Update(otSysMainloopContext &aContext)
 {
-    VerifyOrExit(mInfraIfIcmp6Socket != -1);
-    VerifyOrExit(mNetLinkSocket != -1);
+    if (mInfraIfIcmp6Socket != -1)
+    {
+        FD_SET(mInfraIfIcmp6Socket, &aContext.mReadFdSet);
+        aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mInfraIfIcmp6Socket);
+    }
 
-    FD_SET(mInfraIfIcmp6Socket, &aContext.mReadFdSet);
-    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mInfraIfIcmp6Socket);
-
-    FD_SET(mNetLinkSocket, &aContext.mReadFdSet);
-    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mNetLinkSocket);
-
-exit:
-    return;
+    if (mNetLinkSocket != -1)
+    {
+        FD_SET(mNetLinkSocket, &aContext.mReadFdSet);
+        aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mNetLinkSocket);
+    }
 }
 
 void InfraNetif::ReceiveNetLinkMessage(void)
@@ -710,21 +734,15 @@ exit:
 
 void InfraNetif::Process(const otSysMainloopContext &aContext)
 {
-    VerifyOrExit(mInfraIfIcmp6Socket != -1);
-    VerifyOrExit(mNetLinkSocket != -1);
-
-    if (FD_ISSET(mInfraIfIcmp6Socket, &aContext.mReadFdSet))
+    if (mInfraIfIcmp6Socket != -1 && FD_ISSET(mInfraIfIcmp6Socket, &aContext.mReadFdSet))
     {
         ReceiveIcmp6Message();
     }
 
-    if (FD_ISSET(mNetLinkSocket, &aContext.mReadFdSet))
+    if (mNetLinkSocket != -1 && FD_ISSET(mNetLinkSocket, &aContext.mReadFdSet))
     {
         ReceiveNetLinkMessage();
     }
-
-exit:
-    return;
 }
 
 InfraNetif &InfraNetif::Get(void)

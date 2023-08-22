@@ -420,4 +420,17 @@
 #ifndef OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
 #define OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL (60 * 1000 * 1000)
 #endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_CREATE_ICMP6_SOCKET_ON_INFRA_IF
+ *
+ * Defines whether to create the ICMPv6 socket on infrastructure network interface.
+ * If not, OpenThread depends on the otSysInfraNetifSetIcmp6Socket() API to get an ICMPv6
+ * socket to support border routing.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_CREATE_ICMP6_SOCKET_ON_INFRA_IF
+#define OPENTHREAD_POSIX_CONFIG_CREATE_ICMP6_SOCKET_ON_INFRA_IF 1
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_

@@ -168,6 +168,14 @@ public:
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
     /**
+     * Sets the ICMPv6 socket on the infrastructure network interface.
+     *
+     * @param[in] aFd  The file descriptor of the ICMPv6 socket.
+     *
+     */
+    void SetIcmp6Socket(int aFd);
+
+    /**
      * Gets the infrastructure network interface singleton.
      *
      * @returns The singleton object.

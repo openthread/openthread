@@ -242,6 +242,14 @@ typedef struct otSysInfraNetIfAddressCounters
  */
 void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCounters);
 
+/**
+ * This function sets the ICMPv6 socket on the infrastructure network interface.
+ *
+ * @param[in] aFd  The file descriptor of the ICMPv6 socket on the infrastructure network interface.
+ *
+ */
+void otSysInfraNetifSetIcmp6Socket(int aFd);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif
