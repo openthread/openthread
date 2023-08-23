@@ -2743,6 +2743,17 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli log level
+     * @code
+     * log level
+     * 1
+     * Done
+     * @endcode
+     * @par
+     * Get the log level.
+     * @sa otLoggingGetLevel
+     */
     if (aArgs[0] == "level")
     {
         if (aArgs[1].IsEmpty())
@@ -2754,6 +2765,16 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
             uint8_t level;
 
+            /**
+             * @cli log level (set)
+             * @code
+             * log level 4
+             * Done
+             * @endcode
+             * @par api_copy
+             * #otLoggingSetLevel
+             * @cparam log level @ca{level}
+             */
             VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = aArgs[1].ParseAsUint8(level));
             error = otLoggingSetLevel(static_cast<otLogLevel>(level));
@@ -2763,6 +2784,18 @@ template <> otError Interpreter::Process<Cmd("log")>(Arg aArgs[])
         }
     }
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
+    /**
+     * @cli log filename
+     * @par
+     * Specifies filename to capture `otPlatLog()` messages, useful when debugging
+     * automated test scripts on Linux when logging disrupts the automated test scripts.
+     * @par
+     * Requires `OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART`
+     * and `OPENTHREAD_POSIX`.
+     * @par api_copy
+     * #otPlatDebugUart_logfile
+     * @cparam log filename @ca{filename}
+     */
     else if (aArgs[0] == "filename")
     {
         VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -4046,12 +4079,51 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
     otError      error = OT_ERROR_INVALID_ARGS;
     otIp6Address anycastAddress;
 
+    /**
+     * @cli locate
+     * @code
+     * locate
+     * Idle
+     * Done
+     * @endcode
+     * @code
+     * locate fdde:ad00:beef:0:0:ff:fe00:fc10
+     * @endcode
+     * @code
+     * locate
+     * In Progress
+     * Done
+     * @endcode
+     * @par
+     * Gets the current state (`In Progress` or `Idle`) of anycast locator.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
+     * @sa otThreadIsAnycastLocateInProgress
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine(otThreadIsAnycastLocateInProgress(GetInstancePtr()) ? "In Progress" : "Idle");
         ExitNow(error = OT_ERROR_NONE);
     }
 
+    /**
+     * @cli locate (set)
+     * @code
+     * locate fdde:ad00:beef:0:0:ff:fe00:fc00
+     * fdde:ad00:beef:0:d9d3:9000:16b:d03b 0xc800
+     * Done
+     * @endcode
+     * @par
+     * Locate the closest destination of an anycast address (i.e., find the
+     * destination's mesh local EID and RLOC16).
+     * @par
+     * The closest destination is determined based on the the current routing
+     * table and path costs within the Thread mesh.
+     * @par
+     * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
+     * @sa otThreadLocateAnycastDestination
+     * @cparam locate @ca{anycastaddr}
+     */
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(anycastAddress));
     SuccessOrExit(error =
                       otThreadLocateAnycastDestination(GetInstancePtr(), &anycastAddress, HandleLocateResult, this));
