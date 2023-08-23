@@ -4173,7 +4173,7 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
      * @cli pskc
      * @code
      * pskc
-     * 00000000000000000000000000000000
+     * 67c0c203aa0b042bfb5381c47aef4d9e
      * Done
      * @endcode
      * @par api_copy
@@ -4194,7 +4194,7 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
      * @endcode
      * @cparam pskc @ca{key}
      * @par
-     * Sets the pskc as <key> in hexadecimal format.
+     * Sets the pskc in hexadecimal format.
      */
     {
         if (aArgs[1].IsEmpty())
@@ -5977,9 +5977,8 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
      * Disabled
      * Done
      * @endcode
-     * @par
-     * Gets the radio promiscuous property.
-     * @sa otLinkIsPromiscuous
+     * @par api_copy
+     * #otLinkIsPromiscuous
      * @sa otPlatRadioGetPromiscuous
      */
     if (aArgs[0].IsEmpty())
@@ -6029,7 +6028,7 @@ void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aI
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
+void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
     OT_UNUSED_VARIABLE(aIsTx);
 
