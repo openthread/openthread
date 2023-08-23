@@ -4237,14 +4237,15 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    /** @cli pskcref
+    /**
+     *@cli pskcref
      * @code
      * pskcref
      * 0x80000000
      * Done
      * @endcode
      * @par api_copy
-     * #orThreadGetPskcRef
+     * #otThreadGetPskcRef
      */
     if (aArgs[0].IsEmpty())
     {
@@ -4259,6 +4260,7 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
          * @code
          * pskc 0x20017
          * Done
+         * @endcode
          * @cparam pskc @ca{keyref}
          * @par api_copy
          * #otThreadSetPskcRef
