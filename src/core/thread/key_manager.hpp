@@ -220,6 +220,14 @@ public:
     explicit KeyManager(Instance &aInstance);
 
     /**
+     * Initializes the Crypto module, generates Network Key and resets all link Frame Counters.
+     *
+     * This should be called before any other method from this class.
+     *
+     */
+    void Init(void);
+
+    /**
      * Starts KeyManager rotation timer and sets guard timer to initial value.
      *
      */

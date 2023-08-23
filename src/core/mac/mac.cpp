@@ -108,6 +108,10 @@ Mac::Mac(Instance &aInstance)
     , mTxError(kErrorNone)
 #endif
 {
+}
+
+void Mac::Init(void)
+{
     ExtAddress randomExtAddress;
 
     static const otMacKey sMode2Key = {

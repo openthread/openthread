@@ -130,6 +130,15 @@ public:
     explicit Mac(Instance &aInstance);
 
     /**
+     * Resets CCA Success Rate Tracker and MAC counters, updates MAC and MLE keys, sets IEEE 802.15.4 PAN ID,
+     * IEEE 802.15.4 Extended Address, IEEE 802.15.4 Short Address and MAC Key Material.
+     *
+     * This should be called before any other method from this class.
+     *
+     */
+    void Init(void);
+
+    /**
      * Starts an IEEE 802.15.4 Active Scan.
      *
      * @param[in]  aScanChannels  A bit vector indicating which channels to scan. Zero is mapped to all channels.

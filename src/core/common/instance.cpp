@@ -322,9 +322,12 @@ void Instance::AfterInit(void)
     mIsInitialized = true;
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 
-    // Restore datasets and network information
+    // Restore datasets and network information, initialize KeyManager and Mac
 
     Get<Settings>().Init();
+    Get<KeyManager>().Init();
+    Get<Mac::Mac>().Init();
+
     Get<Mle::MleRouter>().Restore();
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
