@@ -74,7 +74,53 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    using Command = CommandEntry<Dataset>;
+    using Command    = CommandEntry<Dataset>;
+    using Components = otOperationalDatasetComponents;
+
+    struct ComponentMapper
+    {
+        int Compare(const char *aName) const { return strcmp(aName, mName); }
+
+        constexpr static bool AreInOrder(const ComponentMapper &aFirst, const ComponentMapper &aSecond)
+        {
+            return AreStringsInOrder(aFirst.mName, aSecond.mName);
+        }
+
+        const char *mName;
+        bool Components::*mIsPresentPtr;
+        void (Dataset::*mOutput)(const otOperationalDataset &aDataset);
+        otError (Dataset::*mParse)(Arg *&aArgs, otOperationalDataset &aDataset);
+    };
+
+    const ComponentMapper *LookupMapper(const char *aName) const;
+
+    void OutputActiveTimestamp(const otOperationalDataset &aDataset);
+    void OutputChannel(const otOperationalDataset &aDataset);
+    void OutputChannelMask(const otOperationalDataset &aDataset);
+    void OutputDelay(const otOperationalDataset &aDataset);
+    void OutputExtendedPanId(const otOperationalDataset &aDataset);
+    void OutputMeshLocalPrefix(const otOperationalDataset &aDataset);
+    void OutputNetworkKey(const otOperationalDataset &aDataset);
+    void OutputNetworkName(const otOperationalDataset &aDataset);
+    void OutputPanId(const otOperationalDataset &aDataset);
+    void OutputPendingTimestamp(const otOperationalDataset &aDataset);
+    void OutputPskc(const otOperationalDataset &aDataset);
+    void OutputSecurityPolicy(const otOperationalDataset &aDataset);
+
+    otError ParseActiveTimestamp(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseChannel(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseChannelMask(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseDelay(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseExtendedPanId(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseMeshLocalPrefix(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseNetworkKey(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseNetworkName(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParsePanId(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParsePendingTimestamp(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParsePskc(Arg *&aArgs, otOperationalDataset &aDataset);
+    otError ParseSecurityPolicy(Arg *&aArgs, otOperationalDataset &aDataset);
+
+    otError ProcessCommand(const ComponentMapper &aMapper, Arg aArgs[]);
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
