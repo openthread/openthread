@@ -4264,8 +4264,6 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
          * @cparam pskc @ca{keyref}
          * @par api_copy
          * #otThreadSetPskcRef
-         * @par
-         * OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is required.
          */
         if (aArgs[1].IsEmpty())
         {
@@ -6304,7 +6302,7 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs
  * preferrouterid 16
  * Done
  * @endcode
- * @cparam preferrouterid {routerid}
+ * @cparam preferrouterid @ca{routerid}
  * @par
  * Specifies the preferred router ID that the leader should provide when solicited.
  * @sa otLinkIsRadioFilterEnabled
