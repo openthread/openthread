@@ -6288,13 +6288,6 @@ exit:
 
 #if OPENTHREAD_FTD
 template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aArgs[])
-{
-    return ProcessSet(aArgs, otThreadSetPreferredRouterId);
-}
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs[])
 
 /**
  * @cli preferrouterid
@@ -6308,6 +6301,14 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs
  * @sa otLinkIsRadioFilterEnabled
  * @sa otLinkSetRadioFilterEnabled
  */
+{
+    return ProcessSet(aArgs, otThreadSetPreferredRouterId);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs[])
+
 {
     return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
 }
