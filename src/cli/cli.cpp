@@ -6286,9 +6286,6 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
-#if OPENTHREAD_FTD
-template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
-
 /**
  * @cli preferrouterid
  * @code
@@ -6299,7 +6296,11 @@ template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
  * @par
  * Specifies the preferred router ID that the leader should provide when solicited.
  * @sa otThreadSetPreferredRouterId
- */
+ */#
+if OPENTHREAD_FTD
+template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
+
+
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
 }
