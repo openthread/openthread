@@ -6023,12 +6023,12 @@ exit:
     return error;
 }
 
-void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext)
 {
     static_cast<Interpreter *>(aContext)->HandleLinkPcapReceive(aFrame, aIsTx);
 }
 
-void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
+void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
     OT_UNUSED_VARIABLE(aIsTx);
 
@@ -6097,7 +6097,7 @@ void Cli::Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aI
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-otError Cli::Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
+otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
 {
     otError error = OT_ERROR_NONE;
 
@@ -6171,7 +6171,7 @@ exit:
     return error;
 }
 
-template <> otError Cli::Interpreter::Process<Cli::Cmd("prefix")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("prefix")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -6287,7 +6287,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_FTD
-template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 
 /**
  * @cli preferrouterid
@@ -6298,8 +6298,7 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aA
  * @cparam preferrouterid @ca{routerid}
  * @par
  * Specifies the preferred router ID that the leader should provide when solicited.
- * @sa otLinkIsRadioFilterEnabled
- * @sa otLinkSetRadioFilterEnabled
+ * @sa otThreadSetPreferredRouterId
  */
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
@@ -6307,7 +6306,7 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("preferrouterid")>(Arg aA
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 
 {
     return ProcessEnableDisable(aArgs, otLinkIsRadioFilterEnabled, otLinkSetRadioFilterEnabled);
@@ -6318,7 +6317,7 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("radiofilter")>(Arg aArgs
 inline unsigned long UsToSInt(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs / 1000000)); }
 inline unsigned long UsToSDec(uint64_t aUs) { return ToUlong(static_cast<uint32_t>(aUs % 1000000)); }
 
-void Cli::Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
+void Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTimeUs, uint64_t aTotalTimeUs)
 {
     uint32_t timePercentInt = static_cast<uint32_t>(aTimeUs * 100 / aTotalTimeUs);
     uint32_t timePercentDec = static_cast<uint32_t>((aTimeUs * 100 % aTotalTimeUs) * 100 / aTotalTimeUs);
@@ -6328,7 +6327,7 @@ void Cli::Interpreter::OutputRadioStatsTime(const char *aTimeName, uint64_t aTim
 }
 #endif // OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
 
-template <> otError Cli::Interpreter::Process<Cli::Cmd("radio")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -6415,7 +6414,7 @@ template <> otError Cli::Interpreter::Process<Cli::Cmd("radio")>(Arg aArgs[])
     return error;
 }
 
-template <> otError Cli::Interpreter::Process<Cli::Cmd("rcp")>(Arg aArgs[])
+template <> otError Interpreter::Process<Cmd("rcp")>(Arg aArgs[])
 {
     otError     error   = OT_ERROR_NONE;
     const char *version = otPlatRadioGetVersionString(GetInstancePtr());
