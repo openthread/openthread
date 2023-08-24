@@ -1593,6 +1593,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         {
             aNeighbor->SetKeySequence(keySequence);
             aNeighbor->SetMleFrameCounter(0);
+            aNeighbor->GetLinkFrameCounters().Reset();
         }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
