@@ -693,8 +693,8 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
  *
  * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
- * Will only succeed when Thread protocols are disabled.  Upon  success,
- * this  will also invalidate the Active and Pending Operational Datasets in
+ * Will only succeed when Thread protocols are disabled.  Upon success,
+ * this will also invalidate the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.

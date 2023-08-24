@@ -4117,7 +4117,7 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * Locate the closest destination of an anycast address (i.e., find the
      * destination's mesh local EID and RLOC16).
      * @par
-     * The closest destination is determined based on the the current routing
+     * The closest destination is determined based on the current routing
      * table and path costs within the Thread mesh.
      * @par
      * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
@@ -4200,7 +4200,6 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
         {
             SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.m8));
         }
-
         /**
          * @cli pskc -p
          * @code
@@ -4237,7 +4236,7 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     /**
-     *@cli pskcref
+     * @cli pskcref
      * @code
      * pskcref
      * 0x80000000
