@@ -6300,7 +6300,6 @@ exit:
 if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 
-
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
 }
