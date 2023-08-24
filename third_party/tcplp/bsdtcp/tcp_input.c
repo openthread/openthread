@@ -81,6 +81,7 @@
 #include "tcp_seq.h"
 #include "tcp_timer.h"
 #include "tcp_var.h"
+#include "tcp_fastopen.h"
 #include "../lib/bitmap.h"
 #include "../lib/cbuf.h"
 #include "icmp_var.h"
@@ -640,6 +641,10 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	 */
 
 	if (/*so->so_options & SO_ACCEPTCONN*/tp == NULL) {
+		int tfo_cookie_valid = 0;
+		uint64_t tfo_response_cookie;
+		// int tfo_response_cookie_valid = 0;
+
 		/* samkumar: NULL check isn't needed but prevents a compiler warning */
 		KASSERT(tpl != NULL && tpl->t_state == TCP6S_LISTEN, ("listen socket must be in listening state!"));
 
@@ -768,8 +773,43 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		 * syncache, so we initialize the new socket right away. The code to
 		 * initialize the socket is taken from the syncache_socket function.
 		 */
-
+		/*
+		 * samkumar: As of FreeBSD 10.3, the syncache_add function returns
+		 * a flag indicating if a "fast open" code path should be taken.
+		 * In that case, there is a "goto" statement to the removed logic
+		 * above that calls tcp_do_segment after expanding a syncache entry.
+		 * Analogous logic is implemented below.
+		 */
 		tcp_dooptions(&to, optp, optlen, TO_SYN);
+
+		/*
+		 * samkumar: TCP Fast Open logic taken from syncache_add in
+		 * FreeBSD 12.0.
+		 */
+		if (V_tcp_fastopen_server_enable && /*IS_FASTOPEN(tp->t_flags) &&
+			(tp->t_tfo_pending != NULL) && */
+			(to.to_flags & TOF_FASTOPEN)) {
+			/*
+			 * Limit the number of pending TFO connections to
+			 * approximately half of the queue limit.  This prevents TFO
+			 * SYN floods from starving the service by filling the
+			 * listen queue with bogus TFO connections.
+			 */
+			/*
+			 * samkumar: Since we let the application handle the listen
+			 * queue it doesn't make sense to limit the number of pending
+			 * TFO connections as above. Long term, I think the best fix
+			 * is to let applications know if an incoming connection is
+			 * TFO, so that they can handle the case appropriately (e.g.,
+			 * by disabling TFO or by declining the connection).
+			 */
+			int result = tcp_fastopen_check_cookie(NULL,
+				to.to_tfo_cookie, to.to_tfo_len,
+				&tfo_response_cookie);
+			tfo_cookie_valid = (result > 0);
+			// tfo_response_cookie_valid = (result >= 0);
+		}
+
 		tp = tcplp_sys_accept_ready(tpl, &ip6->ip6_src, th->th_sport); // Try to allocate an active socket to accept into
 		if (tp == NULL) {
 			/* If we couldn't allocate, just ignore the SYN. */
@@ -780,14 +820,23 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 			tp = NULL;
 			goto dropwithreset;
 		}
+		sig->accepted_connection = tp;
 		tcp_state_change(tp, TCPS_SYN_RECEIVED);
 		tpmarkpassiveopen(tp);
-		tp->t_flags |= TF_ACKNOW; // samkumar: my addition
 		tp->iss = tcp_new_isn(tp);
 		tp->irs = th->th_seq;
 		tcp_rcvseqinit(tp);
 		tcp_sendseqinit(tp);
 		tp->snd_wl1 = th->th_seq;
+		/*
+		 * samkumar: We remove the "+ 1"s below since we use
+		 * tcp_output to send the appropriate SYN-ACK. For
+		 * example, syncache_tfo_expand eliminates the "+ 1"s
+		 * too. My understanding is that syncache_socket has
+		 * the "+ 1"s because it's normally called once the
+		 * SYN-ACK has already been ACKed, which is not how
+		 * TCPlp operates.
+		 */
 		tp->snd_max = tp->iss/* + 1*/;
 		tp->snd_nxt = tp->iss/* + 1*/;
 		tp->rcv_up = th->th_seq + 1;
@@ -890,6 +939,26 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 		 */
 		tcp_mss(tp, /*sc->sc_peer_mss*/(to.to_flags & TOF_MSS) ? to.to_mss : 0);
 
+		if (tfo_cookie_valid) {
+			/*
+			 * samkumar: The code below is taken from syncache_tfo_socket.
+			 * It calls syncache_socket (upon which the above code is based)
+			 * so it makes sense for this logic to go here.
+			 */
+			tp->t_flags |= TF_FASTOPEN;
+			tp->t_tfo_cookie.server = tfo_response_cookie;
+			tp->snd_max = tp->iss;
+			tp->snd_nxt = tp->iss;
+			// tp->tfo_pending = pending_counter;
+			/* This would normally "goto" labeled code that calls tcp_do_segment. */
+			tcp_do_segment(ip6, th, msg, tp, drop_hdrlen, tlen, iptos, sig);
+
+			tp->accepted_from = tpl;
+			return (IPPROTO_DONE);
+		} else {
+			tp->t_flags |= TF_ACKNOW; // samkumar: my addition
+		}
+
 		tcp_output(tp); // to send the SYN-ACK
 
 		tp->accepted_from = tpl;
@@ -964,6 +1033,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	int rstreason, todrop, win;
 	uint64_t tiwin;
 	struct tcpopt to;
+	int tfo_syn;
 	uint32_t ticks = tcplp_sys_get_ticks();
 	otInstance* instance = tp->instance;
 	thflags = th->th_flags;
@@ -1093,6 +1163,29 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		if ((tp->t_flags & TF_SACK_PERMIT) &&
 		    (to.to_flags & TOF_SACKPERM) == 0)
 			tp->t_flags &= ~TF_SACK_PERMIT;
+		/*
+		 * samkumar: TCP Fast Open logic from FreeBSD 12.0.
+		 */
+		if (IS_FASTOPEN(tp->t_flags)) {
+			if (to.to_flags & TOF_FASTOPEN) {
+				uint16_t mss;
+
+				if (to.to_flags & TOF_MSS)
+					mss = to.to_mss;
+				else
+					/*
+					 * samkumar: The original code here would set
+					 * mss to either TCP6_MSS or TCP_MSS depending
+					 * on whether the INP_IPV6 flag is present in
+					 * tp->t_inpcb->inp_vflag. In TCPlp, we always
+					 * assume IPv6.
+					 */
+					mss = TCP6_MSS;
+				tcp_fastopen_update_cache(tp, mss,
+				    to.to_tfo_len, to.to_tfo_cookie);
+			} else
+				tcp_fastopen_disable_path(tp);
+		}
 	}
 	/*
 	 * Header prediction: check for the two common cases
@@ -1403,8 +1496,31 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		     SEQ_GT(th->th_ack, tp->snd_max))) {
 				rstreason = BANDLIM_RST_OPENPORT;
 				goto dropwithreset;
-		} else if ((thflags & TH_SYN) && !(thflags & TH_ACK) && (th->th_seq == tp->irs)) {
+		} else if (!IS_FASTOPEN(tp->t_flags) && (thflags & TH_SYN) && !(thflags & TH_ACK) && (th->th_seq == tp->irs)) {
 			tp->t_flags |= TF_ACKNOW;
+		}
+		/*
+		 * samkumar: TCP Fast Open Logic from FreeBSD 12.0.
+		 */
+		if (IS_FASTOPEN(tp->t_flags)) {
+			/*
+			 * When a TFO connection is in SYN_RECEIVED, the
+			 * only valid packets are the initial SYN, a
+			 * retransmit/copy of the initial SYN (possibly with
+			 * a subset of the original data), a valid ACK, a
+			 * FIN, or a RST.
+			 */
+			if ((thflags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) {
+				rstreason = BANDLIM_RST_OPENPORT;
+				goto dropwithreset;
+			} else if (thflags & TH_SYN) {
+				/* non-initial SYN is ignored */
+				if ((tcp_timer_active(tp, TT_DELACK) || 
+				     tcp_timer_active(tp, TT_REXMT)))
+					goto drop;
+			} else if (!(thflags & (TH_ACK|TH_FIN|TH_RST))) {
+				goto drop;
+			}
 		}
 		break;
 
@@ -1440,6 +1556,8 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		tp->irs = th->th_seq;
 		tcp_rcvseqinit(tp);
 		if (thflags & TH_ACK) {
+			int tfo_partial_ack = 0;
+
 			/*
 			 * samkumar: Removed call to soisconnected(so), since TCPlp has its
 			 * own buffering.
@@ -1454,10 +1572,19 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			    TCP_MAXWIN << tp->rcv_scale);
 			tp->snd_una++;		/* SYN is acked */
 			/*
+			 * If not all the data that was sent in the TFO SYN
+			 * has been acked, resend the remainder right away.
+			 */
+			if (IS_FASTOPEN(tp->t_flags) &&
+			    (tp->snd_una != tp->snd_max)) {
+				tp->snd_nxt = th->th_ack;
+				tfo_partial_ack = 1;
+			}
+			/*
 			 * If there's data, delay ACK; if there's also a FIN
 			 * ACKNOW will be turned on later.
 			 */
-			if (DELAY_ACK(tp, tlen) && tlen != 0)
+			if (DELAY_ACK(tp, tlen) && tlen != 0 && !tfo_partial_ack)
 				tcp_timer_activate(tp, TT_DELACK,
 				    tcp_delacktime);
 			else
@@ -1802,9 +1929,14 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	 */
 	if ((thflags & TH_ACK) == 0) {
 		if (tp->t_state == TCPS_SYN_RECEIVED ||
-		    (tp->t_flags & TF_NEEDSYN))
+		    (tp->t_flags & TF_NEEDSYN)) {
+			if (tp->t_state == TCPS_SYN_RECEIVED &&
+			    IS_FASTOPEN(tp->t_flags)) {
+				tp->snd_wnd = tiwin;
+				cc_conn_init(tp);
+			}
 			goto step6;
-		else if (tp->t_flags & TF_ACKNOW)
+		} else if (tp->t_flags & TF_ACKNOW)
 			goto dropafterack;
 		else
 			goto drop;
@@ -1839,6 +1971,21 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		 *      SYN-RECEIVED* -> FIN-WAIT-1
 		 */
 		tp->t_starttime = ticks;
+		/*
+		 * samkumar: I'm eliminating the TFO pending counter.
+		 */
+		if (IS_FASTOPEN(tp->t_flags)/* && tp->t_tfo_pending */) {\
+			/*
+			tcp_fastopen_decrement_counter(tp->t_tfo_pending);
+			tp->t_tfo_pending = NULL;
+			*/
+
+			/*
+			 * Account for the ACK of our SYN prior to
+			 * regular ACK processing below.
+			 */ 
+			tp->snd_una++;
+		}
 		if (tp->t_flags & TF_NEEDFIN) {
 			tcp_state_change(tp, TCPS_FIN_WAIT_1);
 			tp->t_flags &= ~TF_NEEDFIN;
@@ -1846,7 +1993,15 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			tcp_state_change(tp, TCPS_ESTABLISHED);
 			/* samkumar: Set conn_established signal for TCPlp. */
 			sig->conn_established = true;
-			cc_conn_init(tp);
+			/*
+			 * TFO connections call cc_conn_init() during SYN
+			 * processing.  Calling it again here for such
+			 * connections is not harmless as it would undo the
+			 * snd_cwnd reduction that occurs when a TFO SYN|ACK
+			 * is retransmitted.
+			 */
+			if (!IS_FASTOPEN(tp->t_flags))
+				cc_conn_init(tp);
 			tcp_timer_activate(tp, TT_KEEP, TP_KEEPIDLE(tp));
 			/*
 			 * samkumar: I added this check to account for simultaneous open.
@@ -2383,7 +2538,9 @@ step6:
 	 * case PRU_RCVD).  If a FIN has already been received on this
 	 * connection then we just ignore the text.
 	 */
-	if ((tlen || (thflags & TH_FIN)) &&
+	tfo_syn = ((tp->t_state == TCPS_SYN_RECEIVED) &&
+		   IS_FASTOPEN(tp->t_flags));
+	if ((tlen || (thflags & TH_FIN) || tfo_syn) &&
 	    TCPS_HAVERCVDFIN(tp->t_state) == 0) {
 		tcp_seq save_start = th->th_seq;
 		/*
@@ -2411,8 +2568,9 @@ step6:
 		 */
 		if (th->th_seq == tp->rcv_nxt &&
 		    (tpiscantrcv(tp) || bmp_isempty(tp->reassbmp, REASSBMP_SIZE(tp))) &&
-		    TCPS_HAVEESTABLISHED(tp->t_state)) {
-			if (DELAY_ACK(tp, tlen))
+		    (TCPS_HAVEESTABLISHED(tp->t_state) ||
+			 tfo_syn)) {
+			if (DELAY_ACK(tp, tlen) || tfo_syn)
 				tp->t_flags |= TF_DELACK;
 			else
 				tp->t_flags |= TF_ACKNOW;
@@ -2693,6 +2851,21 @@ tcp_dooptions(struct tcpopt *to, uint8_t *cp, int cnt, int flags)
 			to->to_flags |= TOF_SACK;
 			to->to_nsacks = (optlen - 2) / TCPOLEN_SACK;
 			to->to_sacks = cp + 2;
+			break;
+		case TCPOPT_FAST_OPEN:
+			/*
+			 * Cookie length validation is performed by the
+			 * server side cookie checking code or the client
+			 * side cookie cache update code.
+			 */
+			if (!(flags & TO_SYN))
+				continue;
+			if (!V_tcp_fastopen_client_enable &&
+			    !V_tcp_fastopen_server_enable)
+				continue;
+			to->to_flags |= TOF_FASTOPEN;
+			to->to_tfo_len = optlen - 2;
+			to->to_tfo_cookie = to->to_tfo_len ? cp + 2 : NULL;
 			break;
 		default:
 			continue;

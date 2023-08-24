@@ -201,18 +201,18 @@ typedef uint32_t otChannelMask;
  */
 typedef struct otOperationalDatasetComponents
 {
-    bool mIsActiveTimestampPresent : 1;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
-    bool mIsPendingTimestampPresent : 1; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
-    bool mIsNetworkKeyPresent : 1;       ///< TRUE if Network Key is present, FALSE otherwise.
-    bool mIsNetworkNamePresent : 1;      ///< TRUE if Network Name is present, FALSE otherwise.
-    bool mIsExtendedPanIdPresent : 1;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
-    bool mIsMeshLocalPrefixPresent : 1;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
-    bool mIsDelayPresent : 1;            ///< TRUE if Delay Timer is present, FALSE otherwise.
-    bool mIsPanIdPresent : 1;            ///< TRUE if PAN ID is present, FALSE otherwise.
-    bool mIsChannelPresent : 1;          ///< TRUE if Channel is present, FALSE otherwise.
-    bool mIsPskcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
-    bool mIsSecurityPolicyPresent : 1;   ///< TRUE if Security Policy is present, FALSE otherwise.
-    bool mIsChannelMaskPresent : 1;      ///< TRUE if Channel Mask is present, FALSE otherwise.
+    bool mIsActiveTimestampPresent;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
+    bool mIsPendingTimestampPresent; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
+    bool mIsNetworkKeyPresent;       ///< TRUE if Network Key is present, FALSE otherwise.
+    bool mIsNetworkNamePresent;      ///< TRUE if Network Name is present, FALSE otherwise.
+    bool mIsExtendedPanIdPresent;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
+    bool mIsMeshLocalPrefixPresent;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
+    bool mIsDelayPresent;            ///< TRUE if Delay Timer is present, FALSE otherwise.
+    bool mIsPanIdPresent;            ///< TRUE if PAN ID is present, FALSE otherwise.
+    bool mIsChannelPresent;          ///< TRUE if Channel is present, FALSE otherwise.
+    bool mIsPskcPresent;             ///< TRUE if PSKc is present, FALSE otherwise.
+    bool mIsSecurityPolicyPresent;   ///< TRUE if Security Policy is present, FALSE otherwise.
+    bool mIsChannelMaskPresent;      ///< TRUE if Channel Mask is present, FALSE otherwise.
 } otOperationalDatasetComponents;
 
 /**

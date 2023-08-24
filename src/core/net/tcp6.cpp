@@ -168,17 +168,28 @@ exit:
 
 Error Tcp::Endpoint::Connect(const SockAddr &aSockName, uint32_t aFlags)
 {
-    Error               error = kErrorNone;
-    struct tcpcb       &tp    = GetTcb();
-    struct sockaddr_in6 sin6p;
-
-    OT_UNUSED_VARIABLE(aFlags);
+    Error         error = kErrorNone;
+    struct tcpcb &tp    = GetTcb();
 
     VerifyOrExit(tp.t_state == TCP6S_CLOSED, error = kErrorInvalidState);
 
-    memcpy(&sin6p.sin6_addr, &aSockName.mAddress, sizeof(sin6p.sin6_addr));
-    sin6p.sin6_port = HostSwap16(aSockName.mPort);
-    error           = BsdErrorToOtError(tcp6_usr_connect(&tp, &sin6p));
+    if (aFlags & OT_TCP_CONNECT_NO_FAST_OPEN)
+    {
+        struct sockaddr_in6 sin6p;
+
+        tp.t_flags &= ~TF_FASTOPEN;
+        memcpy(&sin6p.sin6_addr, &aSockName.mAddress, sizeof(sin6p.sin6_addr));
+        sin6p.sin6_port = HostSwap16(aSockName.mPort);
+        error           = BsdErrorToOtError(tcp6_usr_connect(&tp, &sin6p));
+    }
+    else
+    {
+        tp.t_flags |= TF_FASTOPEN;
+
+        /* Stash the destination address in tp. */
+        memcpy(&tp.faddr, &aSockName.mAddress, sizeof(tp.faddr));
+        tp.fport = HostSwap16(aSockName.mPort);
+    }
 
 exit:
     return error;
@@ -192,7 +203,17 @@ Error Tcp::Endpoint::SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags)
     size_t backlogBefore = GetBacklogBytes();
     size_t sent          = aBuffer.mLength;
 
-    SuccessOrExit(error = BsdErrorToOtError(tcp_usr_send(&tp, (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0, &aBuffer, 0)));
+    struct sockaddr_in6  sin6p;
+    struct sockaddr_in6 *name = nullptr;
+
+    if (IS_FASTOPEN(tp.t_flags))
+    {
+        memcpy(&sin6p.sin6_addr, &tp.faddr, sizeof(sin6p.sin6_addr));
+        sin6p.sin6_port = tp.fport;
+        name            = &sin6p;
+    }
+    SuccessOrExit(
+        error = BsdErrorToOtError(tcp_usr_send(&tp, (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0, &aBuffer, 0, name)));
 
     PostCallbacksAfterSend(sent, backlogBefore);
 
@@ -208,9 +229,19 @@ Error Tcp::Endpoint::SendByExtension(size_t aNumBytes, uint32_t aFlags)
     size_t        backlogBefore = GetBacklogBytes();
     int           bsdError;
 
+    struct sockaddr_in6  sin6p;
+    struct sockaddr_in6 *name = nullptr;
+
     VerifyOrExit(lbuf_head(&tp.sendbuf) != nullptr, error = kErrorInvalidState);
 
-    bsdError = tcp_usr_send(&tp, moreToCome ? 1 : 0, nullptr, aNumBytes);
+    if (IS_FASTOPEN(tp.t_flags))
+    {
+        memcpy(&sin6p.sin6_addr, &tp.faddr, sizeof(sin6p.sin6_addr));
+        sin6p.sin6_port = tp.fport;
+        name            = &sin6p;
+    }
+
+    bsdError = tcp_usr_send(&tp, moreToCome ? 1 : 0, nullptr, aNumBytes, name);
     SuccessOrExit(error = BsdErrorToOtError(bsdError));
 
     PostCallbacksAfterSend(aNumBytes, backlogBefore);
@@ -614,6 +645,9 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     Listener *listener;
     Listener *listenerPrev;
 
+    struct tcplp_signals sig;
+    int                  nextAction;
+
     VerifyOrExit(length == aMessage.GetLength() - aMessage.GetOffset(), error = kErrorParse);
     VerifyOrExit(length >= sizeof(Tcp::Header), error = kErrorParse);
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset() + offsetof(struct tcphdr, th_off_x2), headerSize));
@@ -634,9 +668,7 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     endpoint = mEndpoints.FindMatching(aMessageInfo, endpointPrev);
     if (endpoint != nullptr)
     {
-        struct tcplp_signals sig;
-        int                  nextAction;
-        struct tcpcb        *tp = &endpoint->GetTcb();
+        struct tcpcb *tp = &endpoint->GetTcb();
 
         otLinkedBuffer *priorHead    = lbuf_head(&tp->sendbuf);
         size_t          priorBacklog = endpoint->GetSendBufferBytes() - endpoint->GetInFlightBytes();
@@ -656,7 +688,13 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
     {
         struct tcpcb_listen *tpl = &listener->GetTcbListen();
 
-        tcp_input(ip6Header, tcpHeader, &aMessage, nullptr, tpl, nullptr);
+        memset(&sig, 0x00, sizeof(sig));
+        nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, nullptr, tpl, &sig);
+        OT_ASSERT(nextAction != RELOOKUP_REQUIRED);
+        if (sig.accepted_connection != nullptr)
+        {
+            ProcessSignals(Tcp::Endpoint::FromTcb(*sig.accepted_connection), nullptr, 0, sig);
+        }
         ExitNow();
     }
 
@@ -682,6 +720,8 @@ void Tcp::ProcessSignals(Endpoint             &aEndpoint,
     if (aEndpoint.mSendDoneCallback != nullptr)
     {
         otLinkedBuffer *curr = aPriorHead;
+
+        OT_ASSERT(curr != nullptr || aSignals.links_popped == 0);
 
         for (uint32_t i = 0; i != aSignals.links_popped; i++)
         {
