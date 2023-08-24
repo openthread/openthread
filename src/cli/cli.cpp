@@ -4185,7 +4185,6 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
         OutputBytesLine(pskc.m8);
     }
     else
-
     /**
      * @cli pskc (set)
      * @code
@@ -4208,7 +4207,7 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
          * pskc -p 123456
          * Done
          * @endcode
-         * @cparam pskc @ca{passphrase}
+         * @cparam pskc -p @ca{passphrase}
          * @par
          * Generates the pskc from the passphrase (UTF-8 encoded), together with the current network name and extended
          * PAN ID.
@@ -6297,14 +6296,12 @@ exit:
  * Specifies the preferred router ID that the leader should provide when solicited.
  * @sa otThreadSetPreferredRouterId
  */
-if OPENTHREAD_FTD
+#if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
-
 {
     return ProcessSet(aArgs, otThreadSetPreferredRouterId);
 }
 #endif
-
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 template <> otError Interpreter::Process<Cmd("radiofilter")>(Arg aArgs[])
 
