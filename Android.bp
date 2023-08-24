@@ -892,6 +892,9 @@ cc_binary {
     ],
 
     static_libs: [
+        "libbase",
+        "libcutils",
+        "libutils",
         "openthread-hdlc",
         "openthread-radio",
         "openthread-spinel-rcp",
@@ -900,11 +903,7 @@ cc_binary {
         "openthread-radio",
     ],
 
-    shared_libs: [
-        "libbase",
-        "libcutils",
-        "libutils",
-    ],
+    stl: "c++_static",
 }
 
 cc_library_static {
