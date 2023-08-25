@@ -566,7 +566,7 @@ struct TxtResolverInfo : public Clearable<TxtResolverInfo>
     otPlatDnssdTxtCallback mCallback;
 };
 
-struct Ip6AddrResolverInfo : public Clearable<Ip6AddrResolverInfo>
+struct IpAddrResolverInfo : public Clearable<IpAddrResolverInfo>
 {
     bool HostNameMatches(const char *aName) const { return !strcmp(mHostName, aName); }
 
@@ -592,16 +592,19 @@ struct InvokeOnStart : public Clearable<InvokeOnStart>
     const otPlatDnssdSrvResult     *mSrvResult;
     const otPlatDnssdTxtResult     *mTxtResult;
     const otPlatDnssdAddressResult *mIp6AddrResult;
+    const otPlatDnssdAddressResult *mIp4AddrResult;
 };
 
-static BrowserInfo         sStartBrowserInfo;
-static BrowserInfo         sStopBrowserInfo;
-static SrvResolverInfo     sStartSrvResolverInfo;
-static SrvResolverInfo     sStopSrvResolverInfo;
-static TxtResolverInfo     sStartTxtResolverInfo;
-static TxtResolverInfo     sStopTxtResolverInfo;
-static Ip6AddrResolverInfo sStartIp6AddrResolverInfo;
-static Ip6AddrResolverInfo sStopIp6AddrResolverInfo;
+static BrowserInfo        sStartBrowserInfo;
+static BrowserInfo        sStopBrowserInfo;
+static SrvResolverInfo    sStartSrvResolverInfo;
+static SrvResolverInfo    sStopSrvResolverInfo;
+static TxtResolverInfo    sStartTxtResolverInfo;
+static TxtResolverInfo    sStopTxtResolverInfo;
+static IpAddrResolverInfo sStartIp6AddrResolverInfo;
+static IpAddrResolverInfo sStopIp6AddrResolverInfo;
+static IpAddrResolverInfo sStartIp4AddrResolverInfo;
+static IpAddrResolverInfo sStopIp4AddrResolverInfo;
 
 static InvokeOnStart sInvokeOnStart;
 
@@ -615,6 +618,8 @@ void ResetPlatDnssdApiInfo(void)
     sStopTxtResolverInfo.Clear();
     sStartIp6AddrResolverInfo.Clear();
     sStopIp6AddrResolverInfo.Clear();
+    sStartIp4AddrResolverInfo.Clear();
+    sStopIp4AddrResolverInfo.Clear();
     sInvokeOnStart.Clear();
 }
 
@@ -662,6 +667,21 @@ void InvokeTxtResolverCallback(otPlatDnssdTxtCallback aCallback, const otPlatDns
 void InvokeIp6AddrResolverCallback(const otPlatDnssdAddressCallback aCallback, const otPlatDnssdAddressResult &aResult)
 {
     Log("Invoking Ip6 resolver callback");
+    Log("    hostName       : %s", aResult.mHostName);
+    Log("    if-index       : %u", aResult.mInfraIfIndex);
+    Log("    numAddresses   : %u", aResult.mAddressesLength);
+    for (uint16_t index = 0; index < aResult.mAddressesLength; index++)
+    {
+        Log("    address[%u]     : %s", index, AsCoreType(&aResult.mAddresses[index].mAddress).ToString().AsCString());
+        Log("    ttl[%u]         : %u", index, aResult.mAddresses[index].mTtl);
+    }
+
+    aCallback(sInstance, &aResult);
+}
+
+void InvokeIp4AddrResolverCallback(const otPlatDnssdAddressCallback aCallback, const otPlatDnssdAddressResult &aResult)
+{
+    Log("Invoking Ip4 resolver callback");
     Log("    hostName       : %s", aResult.mHostName);
     Log("    if-index       : %u", aResult.mInfraIfIndex);
     Log("    numAddresses   : %u", aResult.mAddressesLength);
@@ -802,6 +822,40 @@ void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const otPlatDnssdA
     }
 }
 
+void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    VerifyOrQuit(aResolver != nullptr);
+
+    Log("otPlatDnssdStartIp4AddressResolver(\"%s\")", aResolver->mHostName);
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResolver->mInfraIfIndex == kInfraIfIndex);
+
+    sStartIp4AddrResolverInfo.UpdateFrom(aResolver);
+
+    if (sInvokeOnStart.mIp4AddrResult != nullptr)
+    {
+        InvokeIp6AddrResolverCallback(aResolver->mCallback, *sInvokeOnStart.mIp4AddrResult);
+    }
+}
+
+void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+{
+    VerifyOrQuit(aResolver != nullptr);
+
+    Log("otPlatDnssdStopIp4AddressResolver(\"%s\")", aResolver->mHostName);
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResolver->mInfraIfIndex == kInfraIfIndex);
+
+    sStopIp4AddrResolverInfo.UpdateFrom(aResolver);
+
+    if (sInvokeOnStart.mIp6AddrResult != nullptr)
+    {
+        InvokeIp4AddrResolverCallback(aResolver->mCallback, *sInvokeOnStart.mIp4AddrResult);
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 void TestProxyBasic(void)
@@ -810,15 +864,18 @@ void TestProxyBasic(void)
 
     const uint8_t kTxtData[] = {3, 'A', '=', '1', 0};
 
-    Srp::Server                   *srpServer;
-    Srp::Client                   *srpClient;
-    Dns::Client                   *dnsClient;
-    Dns::ServiceDiscovery::Server *dnsServer;
-    Dnssd::BrowseResult            browseResult;
-    Dnssd::SrvResult               srvResult;
-    Dnssd::TxtResult               txtResult;
-    Dnssd::AddressResult           ip6AddrrResult;
-    Dnssd::AddressAndTtl           addressAndTtl;
+    Srp::Server                     *srpServer;
+    Srp::Client                     *srpClient;
+    Dns::Client                     *dnsClient;
+    Dns::ServiceDiscovery::Server   *dnsServer;
+    Dnssd::BrowseResult              browseResult;
+    Dnssd::SrvResult                 srvResult;
+    Dnssd::TxtResult                 txtResult;
+    Dnssd::AddressResult             ip6AddrrResult;
+    Dnssd::AddressResult             ip4AddrrResult;
+    Dnssd::AddressAndTtl             addressAndTtl;
+    NetworkData::ExternalRouteConfig routeConfig;
+    Ip6::Address                     address;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestProxyBasic");
@@ -854,6 +911,19 @@ void TestProxyBasic(void)
     VerifyOrQuit(srpClient->IsRunning());
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Add a route prefix (with NAT64 flag) to network data");
+
+    routeConfig.Clear();
+    SuccessOrQuit(AsCoreType(&routeConfig.mPrefix.mPrefix).FromString("64:ff9b::"));
+    routeConfig.mPrefix.mLength = 96;
+    routeConfig.mPreference     = NetworkData::kRoutePreferenceMedium;
+    routeConfig.mNat64          = true;
+    routeConfig.mStable         = true;
+
+    SuccessOrQuit(otBorderRouterAddRoute(sInstance, &routeConfig));
+    SuccessOrQuit(otBorderRouterRegister(sInstance));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
     sBrowseInfo.Reset();
     ResetPlatDnssdApiInfo();
@@ -870,6 +940,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartBrowserInfo.ServiceTypeMatches("_avenger._udp"));
 
@@ -896,6 +968,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopBrowserInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopBrowserInfo.mCallback == sStartBrowserInfo.mCallback);
@@ -959,6 +1033,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopTxtResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStopTxtResolverInfo.ServiceInstanceMatches("hulk"));
@@ -991,6 +1067,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("compound"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1034,6 +1112,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartSrvResolverInfo.ServiceTypeMatches("_avenger._udp"));
     VerifyOrQuit(sStartSrvResolverInfo.ServiceInstanceMatches("iron.man"));
@@ -1062,6 +1142,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 0);
 
@@ -1120,6 +1202,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 0);
 
@@ -1147,6 +1231,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("starktower"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1185,6 +1271,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStartIp6AddrResolverInfo.HostNameMatches("earth"));
 
@@ -1214,6 +1302,8 @@ void TestProxyBasic(void)
     VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
     VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 1);
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
 
     VerifyOrQuit(sStopIp6AddrResolverInfo.HostNameMatches("earth"));
     VerifyOrQuit(sStopIp6AddrResolverInfo.mCallback == sStartIp6AddrResolverInfo.mCallback);
@@ -1227,6 +1317,84 @@ void TestProxyBasic(void)
     VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
     VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == AsCoreType(&addressAndTtl.mAddress));
     VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+
+    Log("--------------------------------------------------------------------------------------------");
+
+    ResetPlatDnssdApiInfo();
+    sResolveAddressInfo.Reset();
+
+    Log("ResolveIp4Address()");
+    SuccessOrQuit(dnsClient->ResolveIp4Address("shield.default.service.arpa.", AddressCallback, sInstance));
+    AdvanceTime(10);
+
+    // Check that an IPv4 address resolver is started
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 0);
+
+    VerifyOrQuit(sStartIp4AddrResolverInfo.HostNameMatches("shield"));
+
+    VerifyOrQuit(sResolveAddressInfo.mCallbackCount == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Invoke IPv4 Address Resolver callback");
+
+    SuccessOrQuit(AsCoreType(&addressAndTtl.mAddress).FromString("::ffff:1.2.3.4"));
+    addressAndTtl.mTtl              = kTtl;
+    ip4AddrrResult.mHostName        = "shield";
+    ip4AddrrResult.mInfraIfIndex    = kInfraIfIndex;
+    ip4AddrrResult.mAddresses       = &addressAndTtl;
+    ip4AddrrResult.mAddressesLength = 1;
+
+    InvokeIp4AddrResolverCallback(sStartIp4AddrResolverInfo.mCallback, ip4AddrrResult);
+
+    AdvanceTime(10);
+
+    // Check that the IPv4 address resolver is stopped
+
+    VerifyOrQuit(sStartBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStopBrowserInfo.mCallCount == 0);
+    VerifyOrQuit(sStartSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopSrvResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopTxtResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStopIp6AddrResolverInfo.mCallCount == 0);
+    VerifyOrQuit(sStartIp4AddrResolverInfo.mCallCount == 1);
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallCount == 1);
+
+    VerifyOrQuit(sStopIp4AddrResolverInfo.HostNameMatches("shield"));
+    VerifyOrQuit(sStopIp4AddrResolverInfo.mCallback == sStartIp4AddrResolverInfo.mCallback);
+
+    // Check that response is sent to client and validate it
+
+    VerifyOrQuit(sResolveAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveAddressInfo.mError);
+
+    VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "shield.default.service.arpa."));
+    VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
+
+    // The 1.2.3.4 address with the NAT64 prefix
+    SuccessOrQuit(address.FromString("64:ff9b:0:0:0:0:102:304"));
+    VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == address);
+    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+
+    VerifyOrQuit(sResolveAddressInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveAddressInfo.mError);
+
+    VerifyOrQuit(!strcmp(sResolveAddressInfo.mHostName, "shield.default.service.arpa."));
+    VerifyOrQuit(sResolveAddressInfo.mNumHostAddresses == 1);
+    VerifyOrQuit(sResolveAddressInfo.mTtl == kTtl);
+
+    VerifyOrQuit(sResolveAddressInfo.mHostAddresses[0] == address);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
     Log("Stop DNS-SD server");
