@@ -4117,7 +4117,7 @@ template <> otError Interpreter::Process<Cmd("locate")>(Arg aArgs[])
      * Locate the closest destination of an anycast address (i.e., find the
      * destination's mesh local EID and RLOC16).
      * @par
-     * The closest destination is determined based on the the current routing
+     * The closest destination is determined based on the current routing
      * table and path costs within the Thread mesh.
      * @par
      * Available when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled.
@@ -4169,17 +4169,48 @@ template <> otError Interpreter::Process<Cmd("pskc")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     otPskc  pskc;
 
+    /**
+     * @cli pskc
+     * @code
+     * pskc
+     * 67c0c203aa0b042bfb5381c47aef4d9e
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetPskc
+     */
     if (aArgs[0].IsEmpty())
     {
         otThreadGetPskc(GetInstancePtr(), &pskc);
         OutputBytesLine(pskc.m8);
     }
     else
+    /**
+     * @cli pskc (set)
+     * @code
+     * pskc 67c0c203aa0b042bfb5381c47aef4d9e
+     * Done
+     * @endcode
+     * @cparam pskc @ca{key}
+     * @par
+     * Sets the pskc in hexadecimal format.
+     */
     {
         if (aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.m8));
         }
+        /**
+         * @cli pskc -p
+         * @code
+         * pskc -p 123456
+         * Done
+         * @endcode
+         * @cparam pskc -p @ca{passphrase}
+         * @par
+         * Generates the pskc from the passphrase (UTF-8 encoded), together with the current network name and extended
+         * PAN ID.
+         */
         else if (aArgs[0] == "-p")
         {
             SuccessOrExit(error = otDatasetGeneratePskc(
@@ -4204,6 +4235,16 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli pskcref
+     * @code
+     * pskcref
+     * 0x80000000
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetPskcRef
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("0x%08lx", ToUlong(otThreadGetPskcRef(GetInstancePtr())));
@@ -4212,6 +4253,16 @@ template <> otError Interpreter::Process<Cmd("pskcref")>(Arg aArgs[])
     {
         otPskcRef pskcRef;
 
+        /**
+         * @cli pskcref (set)
+         * @code
+         * pskc 0x20017
+         * Done
+         * @endcode
+         * @cparam pskc @ca{keyref}
+         * @par api_copy
+         * #otThreadSetPskcRef
+         */
         if (aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[0].ParseAsUint32(pskcRef));
@@ -5917,6 +5968,17 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli promiscuous
+     * @code
+     * promiscuous
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkIsPromiscuous
+     * @sa otPlatRadioGetPromiscuous
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(otLinkIsPromiscuous(GetInstancePtr()) &&
@@ -5928,6 +5990,20 @@ template <> otError Interpreter::Process<Cmd("promiscuous")>(Arg aArgs[])
 
         SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
 
+        /**
+         * @cli promiscuous (enable,disable)
+         * @code
+         * promiscuous enable
+         * Done
+         * @endcode
+         * @code
+         * promiscuous disable
+         * Done
+         * @endcode
+         * @cparam promiscuous @ca{enable|disable}
+         * @par api_copy
+         * #otLinkSetPromiscuous
+         */
         if (!enable)
         {
             otLinkSetPcapCallback(GetInstancePtr(), nullptr, nullptr);
@@ -6208,6 +6284,17 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
+/**
+ * @cli preferrouterid
+ * @code
+ * preferrouterid 16
+ * Done
+ * @endcode
+ * @cparam preferrouterid @ca{routerid}
+ * @par
+ * Specifies the preferred router ID that the leader should provide when solicited.
+ * @sa otThreadSetPreferredRouterId
+ */
 #if OPENTHREAD_FTD
 template <> otError Interpreter::Process<Cmd("preferrouterid")>(Arg aArgs[])
 {
@@ -6250,7 +6337,7 @@ template <> otError Interpreter::Process<Cmd("radio")>(Arg aArgs[])
      * radio disable
      * Done
      * @endcode
-     * @cparam radio [@ca{enable|disable}]
+     * @cparam radio @ca{enable|disable}
      * @sa otLinkSetEnabled
      * @par
      * Enables or disables the radio.
