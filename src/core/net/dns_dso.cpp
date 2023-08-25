@@ -991,7 +991,8 @@ Error Dso::Connection::ProcessKeepAliveMessage(const Dns::Header &aHeader, const
     AdjustInactivityTimeout(keepAliveTlv.GetInactivityTimeout());
     mKeepAlive.SetInterval(keepAliveTlv.GetKeepAliveInterval());
 
-    LogInfo("Timeouts Inactivity:%u, KeepAlive:%u", mInactivity.GetInterval(), mKeepAlive.GetInterval());
+    LogInfo("Timeouts Inactivity:%lu, KeepAlive:%lu", ToUlong(mInactivity.GetInterval()),
+            ToUlong(mKeepAlive.GetInterval()));
 
     error = kErrorNone;
 
@@ -1020,7 +1021,7 @@ Error Dso::Connection::ProcessRetryDelayMessage(const Dns::Header &aHeader, cons
     mRetryDelay          = retryDelayTlv.GetRetryDelay();
 
     LogInfo("Received Retry Delay message from server %s", mPeerSockAddr.ToString().AsCString());
-    LogInfo("   RetryDelay:%u ms, ResponseCode:%d", mRetryDelay, mRetryDelayErrorCode);
+    LogInfo("   RetryDelay:%lu ms, ResponseCode:%d", ToUlong(mRetryDelay), mRetryDelayErrorCode);
 
     Disconnect(kGracefullyClose, kReasonServerRetryDelayRequest);
 
@@ -1509,5 +1510,33 @@ void Dso::HandleTimer(void)
 
 } // namespace Dns
 } // namespace ot
+
+#if OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE
+
+OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+}
+
+OT_TOOL_WEAK void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+}
+
+OT_TOOL_WEAK void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMessage);
+}
+
+OT_TOOL_WEAK void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMode);
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE
 
 #endif // OPENTHREAD_CONFIG_DNS_DSO_ENABLE

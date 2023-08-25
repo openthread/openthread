@@ -1291,4 +1291,18 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
 } // namespace Dns
 } // namespace ot
 
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_MOCK_PLAT_APIS_ENABLE
+void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxn);
+    OT_UNUSED_VARIABLE(aQuery);
+}
+
+void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
+{
+    otPlatDnsUpstreamQueryDone(aInstance, aTxn, nullptr);
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_DNS_SERVER_ENABLE

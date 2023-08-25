@@ -656,7 +656,7 @@ main()
 {
     envsetup "$@"
 
-    if [[ -z ${1:-} ]]; then
+    if [[ -z ${1-} ]]; then
         print_usage 1
     fi
 

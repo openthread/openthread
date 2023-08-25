@@ -117,4 +117,16 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+ *
+ * Define to 1 to add mock (empty) implementation of infra-if platform APIs.
+ *
+ * This is intended for generating code size report only and should not be used otherwise.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE 0
+#endif
+
 #endif // CONFIG_BORDER_ROUTING_H_

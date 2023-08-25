@@ -504,9 +504,9 @@ Error Translator::SetIp4Cidr(const Ip4::Cidr &aCidr)
         IgnoreError(mIp4AddressPool.PushBack(addr));
     }
 
-    LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %u addresses)", aCidr.ToString().AsCString(),
+    LogInfo("IPv4 CIDR for NAT64: %s (actual address pool: %s - %s, %lu addresses)", aCidr.ToString().AsCString(),
             mIp4AddressPool.Front()->ToString().AsCString(), mIp4AddressPool.Back()->ToString().AsCString(),
-            numberOfHosts);
+            ToUlong(numberOfHosts));
     mIp4Cidr = aCidr;
 
     // Always notify the platform when the CIDR is changed.
