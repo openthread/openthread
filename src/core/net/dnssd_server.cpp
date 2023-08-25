@@ -334,6 +334,9 @@ Server::ResponseCode Server::Request::ParseQuestions(uint8_t aTestMode)
     case ResourceRecord::kTypeAaaa:
         mType = kAaaaQuery;
         break;
+    case ResourceRecord::kTypeA:
+        mType = kAQuery;
+        break;
     default:
         ExitNow(rcode = Header::kResponseNotImplemented);
     }
@@ -445,6 +448,7 @@ Error Server::Response::ParseQueryName(void)
         break;
 
     case kAaaaQuery:
+    case kAQuery:
         mOffsets.mHostName = sizeof(Header);
         break;
     }
@@ -577,27 +581,49 @@ Error Server::Response::AppendHostAddresses(const Srp::Server::Host &aHost)
     addrs = aHost.GetAddresses(addrsLength);
     ttl   = TimeMilli::MsecToSec(aHost.GetExpireTime() - TimerMilli::GetNow());
 
-    return AppendHostAddresses(addrs, addrsLength, ttl);
+    return AppendHostAddresses(kIp6AddrType, addrs, addrsLength, ttl, kNoAddrFilter);
 }
 #endif
 
-Error Server::Response::AppendHostAddresses(const HostInfo &aHostInfo)
+Error Server::Response::AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo)
 {
-    return AppendHostAddresses(AsCoreTypePtr(aHostInfo.mAddresses), aHostInfo.mAddressNum, aHostInfo.mTtl);
+    return AppendHostAddresses(aAddrType, AsCoreTypePtr(aHostInfo.mAddresses), aHostInfo.mAddressNum, aHostInfo.mTtl,
+                               kNoAddrFilter);
 }
 
 Error Server::Response::AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo)
 {
-    return AppendHostAddresses(AsCoreTypePtr(aInstanceInfo.mAddresses), aInstanceInfo.mAddressNum, aInstanceInfo.mTtl);
+    return AppendHostAddresses(kIp6AddrType, AsCoreTypePtr(aInstanceInfo.mAddresses), aInstanceInfo.mAddressNum,
+                               aInstanceInfo.mTtl, kNoAddrFilter);
 }
 
-Error Server::Response::AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl)
+Error Server::Response::AppendHostAddresses(AddrType            aAddrType,
+                                            const Ip6::Address *aAddrs,
+                                            uint16_t            aAddrsLength,
+                                            uint32_t            aTtl,
+                                            AddrFilter          mAddrFilter)
 {
     Error error = kErrorNone;
 
     for (uint16_t index = 0; index < aAddrsLength; index++)
     {
-        SuccessOrExit(error = AppendAaaaRecord(aAddrs[index], aTtl));
+        const Ip6::Address &address = aAddrs[index];
+
+        if ((mAddrFilter != nullptr) && mAddrFilter(address))
+        {
+            continue;
+        }
+
+        switch (aAddrType)
+        {
+        case kIp6AddrType:
+            SuccessOrExit(error = AppendAaaaRecord(address, aTtl));
+            break;
+
+        case kIp4AddrType:
+            SuccessOrExit(error = AppendARecord(address, aTtl));
+            break;
+        }
     }
 
 exit:
@@ -606,8 +632,10 @@ exit:
 
 Error Server::Response::AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl)
 {
-    Error      error;
+    Error      error = kErrorNone;
     AaaaRecord aaaaRecord;
+
+    VerifyOrExit(!aAddress.IsIp4Mapped());
 
     aaaaRecord.Init();
     aaaaRecord.SetTtl(aTtl);
@@ -615,6 +643,26 @@ Error Server::Response::AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t 
 
     SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
     SuccessOrExit(error = mMessage->Append(aaaaRecord));
+    IncResourceRecordCount();
+
+exit:
+    return error;
+}
+
+Error Server::Response::AppendARecord(const Ip6::Address &aAddress, uint32_t aTtl)
+{
+    Error        error = kErrorNone;
+    ARecord      aRecord;
+    Ip4::Address ip4Address;
+
+    SuccessOrExit(aAddress.ExtractMappedIp4(ip4Address));
+
+    aRecord.Init();
+    aRecord.SetTtl(aTtl);
+    aRecord.SetAddress(ip4Address);
+
+    SuccessOrExit(error = Name::AppendPointerLabel(mOffsets.mHostName, *mMessage));
+    SuccessOrExit(error = mMessage->Append(aRecord));
     IncResourceRecordCount();
 
 exit:
@@ -707,6 +755,7 @@ const char *Server::Response::QueryTypeToString(QueryType aType)
         "TXT",       // (2) kTxtQuery
         "SRV & TXT", // (3) kSrvTxtQuery
         "AAAA",      // (4) kAaaaQuery
+        "A",         // (5) kAQuery
     };
 
     static_assert(0 == kPtrQuery, "kPtrQuery value is incorrect");
@@ -714,6 +763,7 @@ const char *Server::Response::QueryTypeToString(QueryType aType)
     static_assert(2 == kTxtQuery, "kTxtQuery value is incorrect");
     static_assert(3 == kSrvTxtQuery, "kSrvTxtQuery value is incorrect");
     static_assert(4 == kAaaaQuery, "kAaaaQuery value is incorrect");
+    static_assert(5 == kAQuery, "kAQuery value is incorrect");
 
     return kTypeNames[aType];
 }
@@ -740,11 +790,12 @@ Error Server::Response::ResolveBySrp(void)
             continue;
         }
 
-        if (mType == kAaaaQuery)
+        if ((mType == kAaaaQuery) || (mType == kAQuery))
         {
             if (QueryNameMatches(host.GetFullName()))
             {
-                error = AppendHostAddresses(host);
+                mSection = (mType == kAaaaQuery) ? kAnswerSection : kAdditionalDataSection;
+                error    = AppendHostAddresses(host);
                 ExitNow();
             }
 
@@ -1160,9 +1211,14 @@ exit:
 
 void Server::Response::Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo)
 {
+    // Caller already ensures that `mType` is either `kAaaaQuery` or
+    // `kAQuery`.
+
+    AddrType addrType = (mType == kAaaaQuery) ? kIp6AddrType : kIp4AddrType;
+
     mSection = kAnswerSection;
 
-    if (AppendHostAddresses(aHostInfo) != kErrorNone)
+    if (AppendHostAddresses(addrType, aHostInfo) != kErrorNone)
     {
         SetResponseCode(Header::kResponseServerFailure);
     }
@@ -1207,6 +1263,7 @@ void Server::HandleDiscoveredServiceInstance(const char *aServiceFullName, const
             break;
 
         case kAaaaQuery:
+        case kAQuery:
             break;
         }
 
@@ -1230,12 +1287,22 @@ void Server::HandleDiscoveredHost(const char *aHostFullName, const HostInfo &aHo
 
         info.ReadFrom(query);
 
-        if ((info.mType == kAaaaQuery) && QueryNameMatches(query, aHostFullName))
+        switch (info.mType)
         {
-            Response response(GetInstance());
+        case kAaaaQuery:
+        case kAQuery:
+            if (QueryNameMatches(query, aHostFullName))
+            {
+                Response response(GetInstance());
 
-            RemoveQueryAndPrepareResponse(query, info, response);
-            response.Answer(aHostInfo, info.mMessageInfo);
+                RemoveQueryAndPrepareResponse(query, info, response);
+                response.Answer(aHostInfo, info.mMessageInfo);
+            }
+
+            break;
+
+        default:
+            break;
         }
     }
 }
@@ -1270,6 +1337,7 @@ Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, cha
         break;
 
     case kAaaaQuery:
+    case kAQuery:
         type = kDnsQueryResolveHost;
         break;
     }
@@ -1451,6 +1519,9 @@ void Server::DiscoveryProxy::Resolve(ProxyQuery &aQuery, ProxyQueryInfo &aInfo)
     case kAaaaQuery:
         action = kResolvingIp6Address;
         break;
+    case kAQuery:
+        action = kResolvingIp4Address;
+        break;
     }
 
     Perform(action, aQuery, aInfo);
@@ -1504,6 +1575,7 @@ void Server::DiscoveryProxy::ReadNameFor(ProxyAction     aAction,
         ReadQueryInstanceName(aQuery, aInfo, aName);
         break;
     case kResolvingIp6Address:
+    case kResolvingIp4Address:
         ReadQueryHostName(aQuery, aInfo, aName);
         break;
     }
@@ -1559,6 +1631,9 @@ void Server::DiscoveryProxy::UpdateProxy(Command               aCommand,
         break;
     case kResolvingIp6Address:
         UpdateIp6AddressResolver(aCommand, aName);
+        break;
+    case kResolvingIp4Address:
+        UpdateIp4AddressResolver(aCommand, aName);
         break;
     }
 }
@@ -1645,6 +1720,29 @@ void Server::DiscoveryProxy::UpdateIp6AddressResolver(Command aCommand, const Dn
     }
 }
 
+void Server::DiscoveryProxy::UpdateIp4AddressResolver(Command aCommand, const DnsName &aHostName)
+{
+    // Start or stop an IPv4 address resolver for a given host name
+    // on infra-if network.
+
+    DnsName  hostLabels;
+    uint32_t infraIfIndex;
+
+    IgnoreError(StripDomainName(aHostName, hostLabels));
+    infraIfIndex = Get<BorderRouter::InfraIf>().GetIfIndex();
+
+    switch (aCommand)
+    {
+    case kStart:
+        Get<Dnssd>().StartIp4AddressResolver(hostLabels, infraIfIndex);
+        break;
+
+    case kStop:
+        Get<Dnssd>().StopIp4AddressResolver(hostLabels, infraIfIndex);
+        break;
+    }
+}
+
 bool Server::DiscoveryProxy::QueryMatches(const ProxyQuery     &aQuery,
                                           const ProxyQueryInfo &aInfo,
                                           ProxyAction           aAction,
@@ -1666,6 +1764,7 @@ bool Server::DiscoveryProxy::QueryMatches(const ProxyQuery     &aQuery,
         VerifyOrExit(QueryInstanceNameMatches(aQuery, aInfo, aName));
         break;
     case kResolvingIp6Address:
+    case kResolvingIp4Address:
         VerifyOrExit(QueryHostNameMatches(aQuery, aInfo, aName));
         break;
     case kNoAction:
@@ -1744,7 +1843,7 @@ void Server::DiscoveryProxy::HandleIp6AddressResolveResult(Dnssd::Event aEvent, 
     {
         const Ip6::Address &address = AsCoreType(&aHost.mAddresses[index]);
 
-        if (IsProxyAddressValid(address))
+        if (!ShouldFilterProxyAddress(address))
         {
             hasValidAddress = true;
             break;
@@ -1754,7 +1853,22 @@ void Server::DiscoveryProxy::HandleIp6AddressResolveResult(Dnssd::Event aEvent, 
     VerifyOrExit(hasValidAddress);
 
     ConstructFullName(aHost.mHostName, fullHostName);
-    HandleResult(kResolvingIp6Address, fullHostName, &Response::AppendHostAddresses, ProxyResult(aHost));
+    HandleResult(kResolvingIp6Address, fullHostName, &Response::AppendHostIp6Addresses, ProxyResult(aHost));
+
+exit:
+    return;
+}
+
+void Server::DiscoveryProxy::HandleIp4AddressResolveResult(Dnssd::Event aEvent, const Dnssd::Host &aHost)
+{
+    DnsName fullHostName;
+
+    VerifyOrExit(mIsRunning);
+    VerifyOrExit(aEvent == Dnssd::kEventAdded);
+    VerifyOrExit(aHost.mInfraIfIndex == Get<BorderRouter::InfraIf>().GetIfIndex());
+
+    ConstructFullName(aHost.mHostName, fullHostName);
+    HandleResult(kResolvingIp4Address, fullHostName, &Response::AppendHostIp4Addresses, ProxyResult(aHost));
 
 exit:
     return;
@@ -1778,12 +1892,14 @@ void Server::DiscoveryProxy::HandleResult(ProxyAction        aAction,
         /* (1) kBrowsing            -> */ kResolvingService,
         /* (2) kResolvingService    -> */ kResolvingIp6Address,
         /* (3) kResolvingIp6Address -> */ kNoAction,
+        /* (4) kResolvingIp6Address -> */ kNoAction,
     };
 
     static_assert(0 == kNoAction, "kNoAction value is incorrect");
     static_assert(1 == kBrowsing, "kBrowsing value is incorrect");
     static_assert(2 == kResolvingService, "kResolvingService value is incorrect");
     static_assert(3 == kResolvingIp6Address, "kResolvingIp6Address value is incorrect");
+    static_assert(4 == kResolvingIp4Address, "kResolvingIp4Address value is incorrect");
 
     ProxyQueryList nextActionQueries;
     ProxyQueryInfo info;
@@ -1925,31 +2041,25 @@ Error Server::Response::AppendTxtRecord(const Dnssd::Service &aService)
     return AppendTxtRecord(aService.mTxtData, aService.mTxtDataLength, aService.mTtl);
 }
 
-Error Server::Response::AppendHostAddresses(const ProxyResult &aResult)
+Error Server::Response::AppendHostIp6Addresses(const ProxyResult &aResult)
 {
-    Error error = kErrorNone;
-
     mSection = (mType == kAaaaQuery) ? kAnswerSection : kAdditionalDataSection;
 
-    for (uint16_t index = 0; index < aResult.mHost->mNumAddresses; index++)
-    {
-        const Ip6::Address &address = AsCoreType(&aResult.mHost->mAddresses[index]);
-
-        if (!IsProxyAddressValid(address))
-        {
-            continue;
-        }
-
-        SuccessOrExit(error = AppendAaaaRecord(address, aResult.mHost->mTtl));
-    }
-
-exit:
-    return error;
+    return AppendHostAddresses(kIp6AddrType, AsCoreTypePtr(aResult.mHost->mAddresses), aResult.mHost->mNumAddresses,
+                               aResult.mHost->mTtl, &Server::ShouldFilterProxyAddress);
 }
 
-bool Server::IsProxyAddressValid(const Ip6::Address &aAddress)
+Error Server::Response::AppendHostIp4Addresses(const ProxyResult &aResult)
 {
-    return !aAddress.IsLinkLocal() && !aAddress.IsMulticast() && !aAddress.IsUnspecified() && !aAddress.IsLoopback();
+    mSection = (mType == kAQuery) ? kAnswerSection : kAdditionalDataSection;
+
+    return AppendHostAddresses(kIp4AddrType, AsCoreTypePtr(aResult.mHost->mAddresses), aResult.mHost->mNumAddresses,
+                               aResult.mHost->mTtl, kNoAddrFilter);
+}
+
+bool Server::ShouldFilterProxyAddress(const Ip6::Address &aAddress)
+{
+    return aAddress.IsLinkLocal() || aAddress.IsMulticast() || aAddress.IsUnspecified() || aAddress.IsLoopback();
 }
 
 #endif // OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE

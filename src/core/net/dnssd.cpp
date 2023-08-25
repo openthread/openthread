@@ -247,8 +247,12 @@ void Dnssd::HandleIp6AddressResolveResult(Event aEvent, const Host &aHost)
 
 void Dnssd::HandleIp4AddressResolveResult(Event aEvent, const Host &aHost)
 {
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().mDiscoveryProxy.HandleIp4AddressResolveResult(aEvent, aHost);
+#else
     OT_UNUSED_VARIABLE(aEvent);
     OT_UNUSED_VARIABLE(aHost);
+#endif
 }
 
 extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance)

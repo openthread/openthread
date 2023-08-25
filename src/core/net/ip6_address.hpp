@@ -811,6 +811,38 @@ public:
     }
 
     /**
+     * Indicates whether or not the IPv6 address follows the IPv4-mapped IPV6 address format.
+     *
+     * The IPv4-mapped IPv6 address uses 96 bit length prefix `::ffff:0:0/96` (e.g., `::ffff:192.0.2.128`).
+     *
+     * @retval TRUE   If the IPv6 address follows the IPv4-mapped format.
+     * @retval FALSE  If the IPv6 address does not follow the IPv4-mapped format.
+     *
+     */
+    bool IsIp4Mapped(void) const;
+
+    /**
+     * Sets the IPv6 address to use IPv4-mapped format using a given IPv4 address.
+     *
+     * The IPv4-mapped IPv6 address uses 96 bit length prefix `::ffff:0:0/96` (e.g., `::ffff:192.0.2.128`).
+     *
+     * @param[in] aIp4Adress  An IPv4 address.
+     *
+     */
+    void SetToIp4Mapped(const Ip4::Address &aIp4Address);
+
+    /**
+     * Extracts the mapped IPv4 address when the IPv6 address follows IPv4-mapped format.
+     *
+     * @param[out] aIp4Address   The IPv4 address to populate.
+     *
+     * @retval kErrorNone   IPv6 address follows the IPv4-mapped format and @p aIp4Address is updated.
+     * @retval kErrorParse  The IPv6 address does not follow the IPv4-mapped format.
+     *
+     */
+    Error ExtractMappedIp4(Ip4::Address &aIp4Address) const;
+
+    /**
      * Returns the Network Prefix of the IPv6 address (most significant 64 bits of the address).
      *
      * @returns A reference to the Network Prefix.

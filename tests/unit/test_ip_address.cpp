@@ -758,6 +758,58 @@ void TestIp6PrefixTidy(void)
     }
 }
 
+void TestIp4MappedIp6Address(void)
+{
+    struct TestCase
+    {
+        const char *mIp6Address;
+        const char *mIp4Address;
+    };
+
+    const TestCase kTestCases[] = {
+        {"::ffff:1.2.3.4", "1.2.3.4"},         {"::ffff:0102:0304", "1.2.3.4"},
+        {"::ffff:192.0.2.128", "192.0.2.128"}, {"::", nullptr},
+        {"::fffe:1122:3344", nullptr},         {"::1:ffff:1.2.3.4", nullptr},
+        {"1::ffff:1.2.3.4", nullptr},
+    };
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        ot::Ip6::Address ip6Address;
+        ot::Ip4::Address ip4Address;
+
+        SuccessOrQuit(ip6Address.FromString(testCase.mIp6Address));
+
+        printf("IPv6Addr: %-28s %-28s -> ", testCase.mIp6Address, ip6Address.ToString().AsCString());
+
+        if (testCase.mIp4Address == nullptr)
+        {
+            printf("not IPv4-mapped");
+
+            VerifyOrQuit(!ip6Address.IsIp4Mapped());
+            VerifyOrQuit(ip6Address.ExtractMappedIp4(ip4Address) != ot::kErrorNone);
+        }
+        else
+        {
+            ot::Ip4::Address expectedIp4Address;
+            ot::Ip6::Address constructedIp6Address;
+
+            VerifyOrQuit(ip6Address.IsIp4Mapped());
+
+            SuccessOrQuit(expectedIp4Address.FromString(testCase.mIp4Address));
+            printf("%s", expectedIp4Address.ToString().AsCString());
+
+            SuccessOrQuit(ip6Address.ExtractMappedIp4(ip4Address));
+            VerifyOrQuit(expectedIp4Address == ip4Address);
+
+            constructedIp6Address.SetToIp4Mapped(ip4Address);
+            VerifyOrQuit(constructedIp6Address == ip6Address);
+        }
+
+        printf("\n");
+    }
+}
+
 void TestIp4Ip6Translation(void)
 {
     struct TestCase
@@ -883,6 +935,7 @@ int main(void)
     TestIp6PrefixFromString();
     TestIp6Prefix();
     TestIp6PrefixTidy();
+    TestIp4MappedIp6Address();
     TestIp4Ip6Translation();
     TestIp4Cidr();
     TestIp4CidrFromString();

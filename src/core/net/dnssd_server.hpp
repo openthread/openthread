@@ -320,6 +320,10 @@ private:
     typedef Message      ProxyQuery;
     typedef MessageQueue ProxyQueryList;
 
+    typedef bool (*AddrFilter)(const Ip6::Address &aAddress);
+
+    static constexpr AddrFilter kNoAddrFilter = nullptr;
+
     enum QueryType : uint8_t
     {
         kPtrQuery,
@@ -327,12 +331,19 @@ private:
         kTxtQuery,
         kSrvTxtQuery,
         kAaaaQuery,
+        kAQuery,
     };
 
     enum Section : uint8_t
     {
         kAnswerSection,
         kAdditionalDataSection,
+    };
+
+    enum AddrType : uint8_t
+    {
+        kIp6AddrType,
+        kIp4AddrType,
     };
 
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
@@ -342,6 +353,7 @@ private:
         kBrowsing,
         kResolvingService,
         kResolvingIp6Address,
+        kResolvingIp4Address
     };
 #endif
 
@@ -399,10 +411,15 @@ private:
                                      uint16_t    aPort);
         Error        AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
         Error        AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
-        Error        AppendHostAddresses(const HostInfo &aHostInfo);
+        Error        AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo);
         Error        AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
-        Error        AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
+        Error        AppendHostAddresses(AddrType            aAddrType,
+                                         const Ip6::Address *aAddrs,
+                                         uint16_t            aAddrsLength,
+                                         uint32_t            aTtl,
+                                         AddrFilter          mAddrFilter);
         Error        AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
+        Error        AppendARecord(const Ip6::Address &aAddress, uint32_t aTtl);
         void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
         void         IncResourceRecordCount(void);
         void         Send(const Ip6::MessageInfo &aMessageInfo);
@@ -419,7 +436,8 @@ private:
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
         Error AppendPtrRecord(const ProxyResult &aResult);
         Error AppendService(const ProxyResult &aResult);
-        Error AppendHostAddresses(const ProxyResult &aResult);
+        Error AppendHostIp6Addresses(const ProxyResult &aResult);
+        Error AppendHostIp4Addresses(const ProxyResult &aResult);
         Error AppendSrvRecord(const Dnssd::Service &aService);
         Error AppendTxtRecord(const Dnssd::Service &aService);
 #endif
@@ -490,6 +508,7 @@ private:
         void UpdateServiceBrowser(Command aCommand, const DnsName &aServiceName);
         void UpdateServiceResolver(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
         void UpdateIp6AddressResolver(Command aCommand, const DnsName &aHostName);
+        void UpdateIp4AddressResolver(Command aCommand, const DnsName &aHostName);
         void HandleResult(ProxyAction        aAction,
                           const DnsName     &aName,
                           ResponseAppender   aAppender,
@@ -499,6 +518,7 @@ private:
         void HandleServiceBrowseResult(Dnssd::Event aEvent, const Dnssd::ServiceInstance &aServiceInstance);
         void HandleServiceResolveResult(const Dnssd::Service &aService);
         void HandleIp6AddressResolveResult(Dnssd::Event aEvent, const Dnssd::Host &aHost);
+        void HandleIp4AddressResolveResult(Dnssd::Event aEvent, const Dnssd::Host &aHost);
 
         bool mIsRunning;
     };
@@ -527,7 +547,7 @@ private:
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
     void        HandleInfraIfStateChanged(void) { mDiscoveryProxy.UpdateState(); }
     void        HandleDnssdPlatformStateChange(void) { mDiscoveryProxy.UpdateState(); }
-    static bool IsProxyAddressValid(const Ip6::Address &aAddress);
+    static bool ShouldFilterProxyAddress(const Ip6::Address &aAddress);
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
