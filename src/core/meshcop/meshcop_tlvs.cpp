@@ -211,26 +211,18 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
     mChannel = HostSwap16(aChannel);
 }
 
-Error StateTlv::StateTlvToError(StateTlv::State aState)
+const char *StateTlv::StateToString(StateTlv::State aState)
 {
-    Error ret;
+    static const char *const kStateStrings[] = {
+        "Pending",              // (0) kPending,
+        "Accept",               // (1) kAccept
+        "Reject",               // (2) kReject,
+    };
 
-    switch (aState)
-    {
-    case StateTlv::kReject:
-        ret = kErrorRejected;
-        break;
-    case StateTlv::kAccept:
-        ret = kErrorNone;
-        break;
-    case StateTlv::kPending:
-        ret = kErrorPending;
-        break;
-    default:
-        ret = kErrorParse;
-        break;
-    }
-    return ret;
+    static_assert(0 == kPending, "kPending value is incorrect");
+    static_assert(1 == kAccept, "kAccept value is incorrect");
+
+    return aState == kReject ? kStateStrings[2] : kStateStrings[aState];
 }
 
 bool ChannelMaskBaseTlv::IsValid(void) const

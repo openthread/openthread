@@ -1089,14 +1089,14 @@ public:
     };
 
     /**
-     * Convert State value to Error code.
+     * Converts a `StateTlv::State` to a string.
      *
-     * @param[in]  aState  TLV state value that will be converted.
+     * @param[in] aState  An item state.
      *
-     * @returns  Error code.
+     * @returns A string representation of @p aState.
      *
      */
-    static Error StateTlvToError(StateTlv::State aState);
+    static const char *StateToString(StateTlv::State aState); // todo probably I don't need to add StateTlv I guess, check it
 };
 
 /**
