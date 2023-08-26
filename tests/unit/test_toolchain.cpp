@@ -33,7 +33,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include "test_util.h"
-#include "thread/topology.hpp"
+#include "thread/neighbor.hpp"
 
 extern "C" {
 uint32_t       otNetifAddress_Size_c();

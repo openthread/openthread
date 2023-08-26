@@ -49,8 +49,8 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 namespace Utils {

@@ -48,11 +48,12 @@
 #include "crypto/sha256.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
+#include "thread/child.hpp"
 #include "thread/child_table.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_router.hpp"
+#include "thread/neighbor.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mac {

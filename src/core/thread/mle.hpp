@@ -48,13 +48,14 @@
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/udp6.hpp"
+#include "thread/child.hpp"
 #include "thread/link_metrics.hpp"
 #include "thread/link_metrics_tlvs.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
 #include "thread/network_data_types.hpp"
-#include "thread/topology.hpp"
+#include "thread/router.hpp"
 
 namespace ot {
 

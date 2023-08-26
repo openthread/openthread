@@ -45,10 +45,11 @@
 #include "common/tlvs.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
+#include "thread/child.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
-#include "thread/topology.hpp"
+#include "thread/router.hpp"
 
 namespace ot {
 namespace NetworkDiagnostic {
