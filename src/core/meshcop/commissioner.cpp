@@ -771,12 +771,14 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMe
     uint8_t state;
 
     SuccessOrExit(error = aResult);
-    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged && Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending, error = kErrorParse);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged && Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone &&
+                     state != StateTlv::kPending,
+                 error = kErrorParse);
 
     OT_UNUSED_VARIABLE(error);
 exit:
-    LogInfo("Received %s response: %s", UriToString<kUriCommissionerSet>(), error == kErrorNone ? StateTlv::StateToString(static_cast<StateTlv::State>(state)) : ErrorToString(error));
-    return;
+    LogInfo("Received %s response: %s", UriToString<kUriCommissionerSet>(),
+            error == kErrorNone ? StateTlv::StateToString(static_cast<StateTlv::State>(state)) : ErrorToString(error));
 }
 
 Error Commissioner::SendPetition(void)

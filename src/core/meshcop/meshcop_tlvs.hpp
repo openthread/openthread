@@ -1089,14 +1089,14 @@ public:
     };
 
     /**
-     * Converts a `StateTlv::State` to a string.
+     * Converts a `State` to a string.
      *
      * @param[in] aState  An item state.
      *
      * @returns A string representation of @p aState.
      *
      */
-    static const char *StateToString(StateTlv::State aState); // todo probably I don't need to add StateTlv I guess, check it
+    static const char *StateToString(State aState);
 };
 
 /**

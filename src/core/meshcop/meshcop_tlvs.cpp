@@ -211,12 +211,12 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
     mChannel = HostSwap16(aChannel);
 }
 
-const char *StateTlv::StateToString(StateTlv::State aState)
+const char *StateTlv::StateToString(State aState)
 {
     static const char *const kStateStrings[] = {
-        "Pending",              // (0) kPending,
-        "Accept",               // (1) kAccept
-        "Reject",               // (2) kReject,
+        "Pending", // (0) kPending,
+        "Accept",  // (1) kAccept
+        "Reject",  // (2) kReject,
     };
 
     static_assert(0 == kPending, "kPending value is incorrect");
