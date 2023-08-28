@@ -58,11 +58,12 @@ public:
      * @param[in,out]  aIterator     A reference to an iterator. MUST be initialized to 0 or the behavior is undefined.
      * @param[out]     aValue        A pointer to where the new value string of the configuration should be read from.
      *                               The @p aValue string will be terminated with `\0` if this method returns success.
+     *                               May be `nullptr` if performing a presence check.
      * @param[in]      aValueLength  The max length of the data pointed to by @p aValue.
      *
      * @retval OT_ERROR_NONE          The given configuration was found and fetched successfully.
      * @retval OT_ERROR_NOT_FOUND     The given key or iterator was not found in the configuration file.
-     * @retval OT_ERROR_INVALID_ARGS  If @p aKey or @p aValue was NULL.
+     * @retval OT_ERROR_INVALID_ARGS  If @p aKey was NULL.
      *
      */
     otError Get(const char *aKey, int &aIterator, char *aValue, int aValueLength);
@@ -89,6 +90,16 @@ public:
      *
      */
     otError Clear(const char *aKey);
+
+    /**
+     * Indicates whether the given key exists.
+     *
+     * @param[in]  aKey  The key string associated with the requested configuration.
+     *
+     * @returns TRUE if the key exists in the configuration file, FALSE otherwise.
+     *
+     */
+    bool HasKey(const char *aKey);
 
 private:
     const char               *kCommentDelimiter = "#";

@@ -60,9 +60,9 @@ static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface> sRadioSpinel;
     "OT_POSIX_RCP_BUS_VENDOR!"
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#include "power_updater.hpp"
-static ot::Posix::PowerUpdater sPowerUpdater;
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+#include "config.hpp"
+static ot::Posix::Config sConfig;
 #endif
 
 namespace ot {
@@ -762,13 +762,21 @@ void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstan
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    return sConfig.GetSupportedChannelMask();
+#else
     return sRadioSpinel.GetRadioChannelMask(false);
+#endif
 }
 
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    return sConfig.GetPreferredChannelMask();
+#else
     return sRadioSpinel.GetRadioChannelMask(true);
+#endif
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -865,8 +873,8 @@ otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    return sPowerUpdater.SetRegion(aRegionCode);
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    return sConfig.SetRegion(aRegionCode);
 #else
     return sRadioSpinel.SetRadioRegion(aRegionCode);
 #endif
@@ -875,8 +883,8 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    *aRegionCode = sPowerUpdater.GetRegion();
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    *aRegionCode = sConfig.GetRegion();
     return OT_ERROR_NONE;
 #else
     return sRadioSpinel.GetRadioRegion(aRegionCode);

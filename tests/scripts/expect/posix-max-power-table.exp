@@ -31,12 +31,6 @@ source "tests/scripts/expect/_common.exp"
 
 # allows 11-25 and forbidden 26
 spawn_node 1 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,-1,0x7f&forkpty-arg=1"
-send "channel supported\n"
-expect "0x3fff800"
-expect_line "Done"
-send "channel preferred\n"
-expect "0x3fff800"
-expect_line "Done"
 send "txpower 20\n"
 expect_line "Done"
 send "txpower\n"

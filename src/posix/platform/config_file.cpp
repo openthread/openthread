@@ -50,6 +50,13 @@ ConfigFile::ConfigFile(const char *aFilePath)
     VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFileNameMaxSize, OT_EXIT_FAILURE);
 }
 
+bool ConfigFile::HasKey(const char *aKey)
+{
+    int iterator = 0;
+
+    return (Get(aKey, iterator, nullptr, 0) == OT_ERROR_NONE);
+}
+
 otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength)
 {
     otError  error = OT_ERROR_NONE;
@@ -58,7 +65,7 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
     char    *ret;
     long int pos;
 
-    VerifyOrExit((aKey != nullptr) && (aValue != nullptr), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit((fp = fopen(mFilePath, "r")) != nullptr, error = OT_ERROR_NOT_FOUND);
     VerifyOrDie(fseek(fp, aIterator, SEEK_SET) == 0, OT_EXIT_ERROR_ERRNO);
 
@@ -91,11 +98,14 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
 
         if (strcmp(aKey, key) == 0)
         {
-            value = str + 1;
-            Strip(value);
-            aValueLength = OT_MIN(static_cast<int>(strlen(value)), (aValueLength - 1));
-            memcpy(aValue, value, static_cast<size_t>(aValueLength));
-            aValue[aValueLength] = '\0';
+            if (aValue != nullptr)
+            {
+                value = str + 1;
+                Strip(value);
+                aValueLength = OT_MIN(static_cast<int>(strlen(value)), (aValueLength - 1));
+                memcpy(aValue, value, static_cast<size_t>(aValueLength));
+                aValue[aValueLength] = '\0';
+            }
             break;
         }
     }

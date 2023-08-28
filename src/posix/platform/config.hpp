@@ -26,12 +26,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_POWER_UPDATER_HPP_
-#define POSIX_PLATFORM_POWER_UPDATER_HPP_
+#ifndef POSIX_PLATFORM_CONFIG_HPP_
+#define POSIX_PLATFORM_CONFIG_HPP_
 
 #include "openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
 
 #include <stdio.h>
 #include <string.h>
@@ -51,13 +51,15 @@ namespace Posix {
  * Updates the target power table and calibrated power table to the RCP.
  *
  */
-class PowerUpdater
+class Config
 {
 public:
-    PowerUpdater(void)
+    Config(void)
         : mFactoryConfigFile(kFactoryConfigFile)
         , mProductConfigFile(kProductConfigFile)
         , mRegionCode(0)
+        , mSupportedChannelMask(kDefaultChannelMask)
+        , mPreferredChannelMask(kDefaultChannelMask)
     {
     }
 
@@ -86,31 +88,57 @@ public:
      */
     uint16_t GetRegion(void) const { return mRegionCode; }
 
+    /**
+     * Get the radio supported channel mask that the device is allowed to be on.
+     *
+     * @returns The radio supported channel mask.
+     *
+     */
+    uint32_t GetSupportedChannelMask(void) { return mSupportedChannelMask; }
+
+    /**
+     * Gets the radio preferred channel mask that the device prefers to form on.
+     *
+     * @returns The radio preferred channel mask.
+     *
+     */
+    uint32_t GetPreferredChannelMask(void) { return mPreferredChannelMask; }
+
 private:
-    const char               *kFactoryConfigFile      = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
-    const char               *kProductConfigFile      = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;
-    const char               *kKeyCalibratedPower     = "calibrated_power";
-    const char               *kKeyTargetPower         = "target_power";
-    const char               *kKeyRegionDomainMapping = "region_domain_mapping";
-    const char               *kCommaDelimiter         = ",";
-    static constexpr uint16_t kMaxValueSize           = 512;
-    static constexpr uint16_t kRegionCodeWorldWide    = 0x5757; // Region Code: "WW"
+    const char               *kFactoryConfigFile       = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
+    const char               *kProductConfigFile       = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;
+    const char               *kKeyCalibratedPower      = "calibrated_power";
+    const char               *kKeyTargetPower          = "target_power";
+    const char               *kKeyRegionDomainMapping  = "region_domain_mapping";
+    const char               *kKeySupportedChannelMask = "supported_channel_mask";
+    const char               *kKeyPreferredChannelMask = "preferred_channel_mask";
+    const char               *kCommaDelimiter          = ",";
+    static constexpr uint16_t kMaxValueSize            = 512;
+    static constexpr uint16_t kRegionCodeWorldWide     = 0x5757;    // Region Code: "WW"
+    static constexpr uint32_t kDefaultChannelMask      = 0x7fff800; // Channel 11 ~ 26
 
     uint16_t StringToRegionCode(const char *aString) const
     {
         return static_cast<uint16_t>(((aString[0] & 0xFF) << 8) | ((aString[1] & 0xFF) << 0));
     }
     otError GetDomain(uint16_t aRegionCode, Power::Domain &aDomain);
-    otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
+    otError GetChannelMask(const char *aKey, const Power::Domain &aDomain, uint32_t &aChannelMask);
+    otError UpdateChannelMasks(const Power::Domain &aDomain);
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    otError UpdateTargetPower(const Power::Domain &aDomain);
     otError UpdateCalibratedPower(void);
+    otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
+#endif
 
     ConfigFile mFactoryConfigFile;
     ConfigFile mProductConfigFile;
     uint16_t   mRegionCode;
+    uint32_t   mSupportedChannelMask;
+    uint32_t   mPreferredChannelMask;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#endif // POSIX_PLATFORM_POWER_UPDATER_HPP_
+#endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+#endif // POSIX_PLATFORM_CONFIG_HPP_
