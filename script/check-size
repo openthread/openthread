@@ -38,8 +38,14 @@ readonly OT_SHA_NEW
 OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
 readonly OT_SHA_OLD
 
-OT_REPORT_FILE=/tmp/size_report
-readonly OT_REPORT_FILE
+OT_REPORT_FILE_TABLE="${OT_TMP_DIR}/report_table"
+readonly OT_REPORT_FILE_TABLE
+
+OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
+readonly OT_REPORT_FILE_TABLE
+
+OT_REPORTER="${OT_SIZE_REPORTER-}"
+readonly OT_REPORTER
 
 setup_arm_gcc_7()
 {
@@ -64,51 +70,6 @@ setup()
 {
     setup_arm_gcc_7
     setup_ninja_build
-}
-
-markdown_init()
-{
-    echo '|  name  |  branch  |  text  | data  | bss  | total |'
-    echo '| :----: | :------: | -----: | ----: | ---: | ----: |'
-}
-
-markdown_size()
-{
-    local name
-    name=$(basename "$1")
-
-    read -r -a size_old <<<"$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-    read -r -a size_new <<<"$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-
-    local -a size_diff
-
-    for i in 0 1 2 3; do
-        size_diff[$i]="$((size_new["$i"] - size_old["$i"]))"
-        if [[ ${size_diff["$i"]} != 0 ]]; then
-            size_diff["$i"]=$(printf '%+d' "${size_diff["$i"]}")
-        fi
-    done
-
-    echo "| ${name} | -${OT_SHA_OLD:0:7} | ${size_old[0]} | ${size_old[1]} | ${size_old[2]} | ${size_old[3]} |"
-    echo "|  | +${OT_SHA_NEW:0:7} | ${size_new[0]} | ${size_new[1]} | ${size_new[2]} | ${size_new[3]} |"
-    echo "|  | +/- | ${size_diff[0]} | ${size_diff[1]} | ${size_diff[2]} | ${size_diff[3]} |"
-}
-
-markdown()
-{
-    case "$1" in
-        init)
-            shift
-            markdown_init "$@" >"${OT_REPORT_FILE}"
-            ;;
-        size)
-            shift
-            markdown_size "$@" >>"${OT_REPORT_FILE}"
-            ;;
-        post)
-            mdv "${OT_REPORT_FILE}"
-            ;;
-    esac
 }
 
 nm_size()
@@ -197,6 +158,96 @@ build_nrf52840()
     cd "${cur_dir}"
 }
 
+generate_table_header()
+{
+    printf "+----------------------------+----------+----------+----------+----------+----------+\n" >"${OT_REPORT_FILE_TABLE}"
+    printf "| name                       | branch   | text     | data     | bss      | total    |\n" >>"${OT_REPORT_FILE_TABLE}"
+    printf "+============================+==========+==========+==========+==========+==========+\n" >>"${OT_REPORT_FILE_TABLE}"
+
+    printf "# Size Report of **OpenThread**\n" >"${OT_REPORT_FILE_PR}"
+    printf "Merging PR into main\n\n" >>"${OT_REPORT_FILE_PR}"
+    printf "|  name  |  branch  |  text  | data  | bss  | total |\n" >>"${OT_REPORT_FILE_PR}"
+    printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n" >>"${OT_REPORT_FILE_PR}"
+
+    printf "\n<details><summary>Library files</summary>\n\n\n" >"${OT_REPORT_FILE_PR}_libs"
+    printf "|  name  |  branch  |  text  | data  | bss  | total |\n" >>"${OT_REPORT_FILE_PR}_libs"
+    printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n" >>"${OT_REPORT_FILE_PR}_libs"
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" init OpenThread
+    fi
+
+}
+
+generate_size_diff()
+{
+    local name
+    local old_file
+    local new_file
+
+    old_file="$1"
+    new_file="$2"
+
+    name=$(basename "${old_file}")
+
+    case "${name}" in
+        lib*)
+            table_report_file="${OT_REPORT_FILE_TABLE}_libs"
+            pr_report_file="${OT_REPORT_FILE_PR}"_libs
+            ;;
+        *)
+            table_report_file="${OT_REPORT_FILE_TABLE}"
+            pr_report_file="${OT_REPORT_FILE_PR}"
+            ;;
+    esac
+
+    read -r -a size_old <<<"$(size "${old_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_new <<<"$(size "${new_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+
+    local -a size_diff
+
+    for i in 0 1 2 3; do
+        size_diff[$i]="$((size_new["$i"] - size_old["$i"]))"
+        if [[ ${size_diff["$i"]} != 0 ]]; then
+            size_diff["$i"]=$(printf '%+d' "${size_diff["$i"]}")
+        fi
+    done
+
+    # Generate table format report
+
+    printf "| %-26s | %-8s " "${name}" "${OT_SHA_OLD:0:8}" >>${table_report_file}
+    printf "| %8u | %8u | %8u | %8u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}" >>"${table_report_file}"
+    printf "\n" >>"${table_report_file}"
+
+    printf "| %-26s | %-8s " "" "${OT_SHA_NEW:0:8}" >>"${table_report_file}"
+    printf "| %8u | %8u | %8u | %8u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}" >>"${table_report_file}"
+    printf "\n" >>"${table_report_file}"
+
+    printf "| %-26s | %-8s " "" "+/-" >>"${table_report_file}"
+    printf "| %+8d | %+8d | %+8d | %+8d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}" >>"${table_report_file}"
+    printf "\n" >>"${table_report_file}"
+
+    printf "+----------------------------+----------+----------+----------+----------+----------+\n" >>"${table_report_file}"
+
+    # Generate PR post format report
+
+    printf "| %s | %s " "${name}" "${OT_SHA_OLD:0:8}" >>${pr_report_file}
+    printf "| %u | %u | %u | %u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}" >>"${pr_report_file}"
+    printf "\n" >>"${pr_report_file}"
+
+    printf "|  | %s " "${OT_SHA_NEW:0:8}" >>"${pr_report_file}"
+    printf "| %u | %u | %u | %u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}" >>"${pr_report_file}"
+    printf "\n" >>"${pr_report_file}"
+
+    printf "|  | %s " "+/-" >>"${pr_report_file}"
+    printf "| %+d | %+d | %+d | %+d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}" >>"${pr_report_file}"
+    printf "\n" >>"${pr_report_file}"
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" size "${old_file}" "${new_file}"
+    fi
+}
+
 generate_report()
 {
     local type="${1}"
@@ -217,11 +268,29 @@ generate_report()
                 ;;
         esac
 
-        "${reporter}" size "${old_file}" "${new_file}"
+        generate_size_diff "${old_file}" "${new_file}"
+
         echo "nm_size ${old_file} ${new_file}"
         nm_size "${old_file}" "${new_file}"
     done
+}
 
+final_report()
+{
+    cat "${OT_REPORT_FILE_TABLE}"
+    cat "${OT_REPORT_FILE_TABLE}_libs"
+
+    printf "</details>" >>${OT_REPORT_FILE_PR}_libs
+    cat "${OT_REPORT_FILE_PR}_libs" >>${OT_REPORT_FILE_PR}
+
+    # TODO: Remove this later (for testing now)
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    cat "${OT_REPORT_FILE_PR}"
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" post
+    fi
 }
 
 size_nrf52840()
@@ -229,13 +298,13 @@ size_nrf52840()
     export OT_SHA_NEW OT_SHA_OLD
 
     rm -rf "${OT_TMP_DIR}"
+    mkdir -p "${OT_TMP_DIR}"
 
     if [[ "${GITHUB_ACTIONS+x}" ]]; then
         git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
     fi
 
-    local reporter="${OT_SIZE_REPORTER:-markdown}"
-    "${reporter}" init OpenThread
+    generate_table_header
 
     build_nrf52840 ftd new
     build_nrf52840 mtd new
@@ -279,7 +348,7 @@ size_nrf52840()
     generate_report br "${br_files[@]}"
     generate_report ftd "${rcp_files[@]}"
 
-    "${reporter}" post
+    final_report
 }
 
 main()
