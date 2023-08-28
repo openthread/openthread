@@ -785,7 +785,7 @@ public:
 
     Error SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
 
-    Error CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header)
+    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
     {
         return Mle::CheckReachability(aMeshDest, aIp6Header);
     }
