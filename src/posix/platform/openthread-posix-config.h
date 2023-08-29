@@ -76,6 +76,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+ *
+ * Define to 1 to enable CLI for the posix daemon.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE 1
+#endif
+
+/**
  * RCP bus UART.
  *
  * @note This value is also for simulated UART bus.
