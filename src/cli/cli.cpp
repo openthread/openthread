@@ -6986,8 +6986,8 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
      * @code
      * scan
      * | PAN  | MAC Address      | Ch | dBm | LQI |
-     *   +------+------------------+----+-----+-----+
-     *   | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+     * +------+------------------+----+-----+-----+
+     * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
      * Done
      * @endcode
      * @cparam scan [@ca{channel}]
