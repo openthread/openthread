@@ -42,7 +42,7 @@
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "thread/topology.hpp"
+#include "thread/child.hpp"
 
 namespace ot {
 

@@ -195,6 +195,7 @@ set(COMMON_SOURCES
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
     thread/anycast_locator.cpp
+    thread/child.cpp
     thread/child_supervision.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
@@ -215,6 +216,7 @@ set(COMMON_SOURCES
     thread/mle_tlvs.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
+    thread/neighbor.cpp
     thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
@@ -229,12 +231,12 @@ set(COMMON_SOURCES
     thread/network_diagnostic_tlvs.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp
+    thread/router.cpp
     thread/router_table.cpp
     thread/src_match_controller.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
-    thread/topology.cpp
     thread/uri_paths.cpp
     utils/channel_manager.cpp
     utils/channel_monitor.cpp

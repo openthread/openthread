@@ -56,9 +56,9 @@
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
 #include "net/netif.hpp"
+#include "thread/child.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/tmf.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 

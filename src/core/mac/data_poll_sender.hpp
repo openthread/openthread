@@ -42,7 +42,7 @@
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
-#include "thread/topology.hpp"
+#include "thread/neighbor.hpp"
 
 namespace ot {
 

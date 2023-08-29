@@ -47,13 +47,14 @@
 #include "meshcop/meshcop_tlvs.hpp"
 #include "net/icmp6.hpp"
 #include "net/udp6.hpp"
+#include "thread/child.hpp"
 #include "thread/child_table.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
+#include "thread/router.hpp"
 #include "thread/router_table.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/tmf.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 namespace Mle {
