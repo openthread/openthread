@@ -498,7 +498,11 @@ filegroup {
 
 cc_library_static {
     name: "ot-core",
-    defaults: ["ot_posix_cflags_defaults", "ot_config_defaults"],
+    defaults: [
+        "ot_config_defaults",
+        "ot-daemon-release-cc-defaults",
+        "ot_posix_cflags_defaults",
+    ],
     generated_headers: ["ot_version_header"],
 
     local_include_dirs: [
@@ -553,7 +557,11 @@ cc_library_static {
 cc_library_static {
     name: "libopenthread-cli",
 
-    defaults: ["ot_posix_cflags_defaults", "ot_config_defaults"],
+    defaults: [
+        "ot_config_defaults",
+        "ot-daemon-release-cc-defaults",
+        "ot_posix_cflags_defaults",
+    ],
     generated_headers: ["ot_version_header"],
 
     local_include_dirs: [
