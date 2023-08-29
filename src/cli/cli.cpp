@@ -6965,7 +6965,7 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
      * | 20 |  -82 |
      * Done
      * @endcode
-     * @cparam scan energy[@ca{duration}] [@ca{channel}]
+     * @cparam scan energy [@ca{duration}] [@ca{channel}]
      * @par
      * Performs an IEEE 802.15.4 energy scan, and displays the time in milliseconds
      * to use for scanning each channel. All channels are shown unless you specify a certain channel
