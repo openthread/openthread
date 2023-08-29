@@ -6989,7 +6989,7 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
      * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
      * Done
      * @endcode
-     * @cparam scan @ca[{channel}]
+     * @cparam scan [@ca{channel}]
      * @par
      * Performs an active IEEE 802.15.4 scan. The scan covers all channels if no channel is specified; otherwise the
      * span covers only the channel specified.
