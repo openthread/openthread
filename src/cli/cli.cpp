@@ -6934,6 +6934,44 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
         scanChannels = 1 << channel;
     }
 
+    /**
+     * @cli scan energy
+     * @code
+     * scan energy 10
+     * | Ch | RSSI |
+     * +----+------+
+     * | 11 |  -59 |
+     * | 12 |  -62 |
+     * | 13 |  -67 |
+     * | 14 |  -61 |
+     * | 15 |  -87 |
+     * | 16 |  -86 |
+     * | 17 |  -86 |
+     * | 18 |  -52 |
+     * | 19 |  -58 |
+     * | 20 |  -82 |
+     * | 21 |  -76 |
+     * | 22 |  -82 |
+     * | 23 |  -74 |
+     * | 24 |  -81 |
+     * | 25 |  -88 |
+     * | 26 |  -71 |
+     * Done
+     * @endcode
+     * @code
+     * scan energy 10 20
+     * | Ch | RSSI |
+     * +----+------+
+     * | 20 |  -82 |
+     * Done
+     * @endcode
+     * @cparam scan energy[@ca{duration}] [@ca{channel}]
+     * @par
+     * Performs an IEEE 802.15.4 energy scan, and displays the time in milliseconds
+     * to use for scanning each channel. All channels are shown unless you specify a certain channel
+     * by using the channel option.
+     * @sa otLinkEnergyScan
+     */
     if (energyScan)
     {
         static const char *const kEnergyScanTableTitles[]       = {"Ch", "RSSI"};
@@ -6943,6 +6981,20 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
         SuccessOrExit(error = otLinkEnergyScan(GetInstancePtr(), scanChannels, scanDuration,
                                                &Interpreter::HandleEnergyScanResult, this));
     }
+    /**
+     * @cli scan
+     * @code
+     * | PAN  | MAC Address      | Ch | dBm | LQI |
+     * +------+------------------+----+-----+-----+
+     * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+     * Done
+     * @endcode
+     * @cparam scan @ca[{channel}]
+     * @par
+     * Performs an active IEEE 802.15.4 scan. The scan covers all channels if no channel is specified; otherwise the
+     * span covers only the channel specified.
+     * @sa otLinkActiveScan
+     */
     else
     {
         static const char *const kScanTableTitles[]       = {"PAN", "MAC Address", "Ch", "dBm", "LQI"};
