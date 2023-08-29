@@ -1087,6 +1087,16 @@ public:
         kPending = 0,    ///< Pending
         kAccept  = 1,    ///< Accept
     };
+
+    /**
+     * Converts a `State` to a string.
+     *
+     * @param[in] aState  An item state.
+     *
+     * @returns A string representation of @p aState.
+     *
+     */
+    static const char *StateToString(State aState);
 };
 
 /**
