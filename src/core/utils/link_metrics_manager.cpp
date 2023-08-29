@@ -37,7 +37,6 @@
 #include "common/notifier.hpp"
 #include "thread/mle.hpp"
 #include "thread/neighbor_table.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 namespace Utils {
@@ -78,19 +77,17 @@ exit:
     return;
 }
 
-Error LinkMetricsManager::GetLinkMetricsValueByExtAddr(const Mac::ExtAddress      *aExtAddress,
-                                                       LinkMetrics::MetricsValues *aMetricsValues)
+Error LinkMetricsManager::GetLinkMetricsValueByExtAddr(const Mac::ExtAddress      &aExtAddress,
+                                                       LinkMetrics::MetricsValues &aMetricsValues)
 {
     Error    error = kErrorNone;
     Subject *subject;
 
-    VerifyOrExit(aExtAddress != nullptr && aMetricsValues != nullptr, error = kErrorInvalidArgs);
-
-    subject = mSubjectList.FindMatching(*aExtAddress);
+    subject = mSubjectList.FindMatching(aExtAddress);
     VerifyOrExit(subject != nullptr, error = kErrorNotFound);
 
-    aMetricsValues->mLinkMarginValue = subject->mData.mLinkMargin;
-    aMetricsValues->mRssiValue       = subject->mData.mRssi;
+    aMetricsValues.mLinkMarginValue = subject->mData.mLinkMargin;
+    aMetricsValues.mRssiValue       = subject->mData.mRssi;
 
 exit:
     return error;
@@ -116,8 +113,8 @@ void LinkMetricsManager::Stop(void)
 
     mTimer.Stop();
 
-    initiator.SetMgmtResponseCallback(nullptr, this);
-    initiator.SetEnhAckProbingCallback(nullptr, this);
+    initiator.SetMgmtResponseCallback(nullptr, nullptr);
+    initiator.SetEnhAckProbingCallback(nullptr, nullptr);
 
     UnregisterAllSubjects();
     ReleaseAllSubjects();
@@ -135,12 +132,13 @@ void LinkMetricsManager::UpdateSubjects(void)
     Neighbor::Info         neighborInfo;
     otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
 
-    while (Get<NeighborTable>().GetNextNeighborInfo(iterator, neighborInfo) == OT_ERROR_NONE)
+    while (Get<NeighborTable>().GetNextNeighborInfo(iterator, neighborInfo) == kErrorNone)
     {
         // if not in the subject list, allocate and add
         if (!mSubjectList.ContainsMatching(AsCoreType(&neighborInfo.mExtAddress)))
         {
             Subject *subject = mPool.Allocate();
+
             if (subject != nullptr)
             {
                 subject->Clear();
@@ -163,7 +161,8 @@ void LinkMetricsManager::UpdateLinkMetricsStates(void)
     for (prev = nullptr, entry = mSubjectList.GetHead(); entry != nullptr; entry = next)
     {
         Error error = UpdateStateForSingleSubject(*entry);
-        next        = entry->GetNext();
+
+        next = entry->GetNext();
 
         if (error == kErrorUnknownNeighbor || error == kErrorNotCapable)
         {
@@ -179,6 +178,7 @@ void LinkMetricsManager::UpdateLinkMetricsStates(void)
     while (!staleSubjects.IsEmpty())
     {
         Subject *subject = staleSubjects.Pop();
+
         mPool.Free(*subject);
     }
 }
@@ -196,6 +196,7 @@ void LinkMetricsManager::ReleaseAllSubjects(void)
     while (!mSubjectList.IsEmpty())
     {
         Subject *subject = mSubjectList.Pop();
+
         mPool.Free(*subject);
     }
 }
@@ -208,9 +209,9 @@ Error LinkMetricsManager::UpdateStateForSingleSubject(Subject &aSubject)
 
     switch (aSubject.mState)
     {
-    case SubjectState::kNotConfigured:
-    case SubjectState::kConfiguring:
-    case SubjectState::kRenewing:
+    case kNotConfigured:
+    case kConfiguring:
+    case kRenewing:
         if (aSubject.mAttempts >= kConfigureLinkMetricsMaxAttempts)
         {
             aSubject.mState = kNotSupported;
@@ -220,14 +221,14 @@ Error LinkMetricsManager::UpdateStateForSingleSubject(Subject &aSubject)
             shouldConfigure = true;
         }
         break;
-    case SubjectState::kActive:
+    case kActive:
         pastTimeMs = TimerMilli::GetNow() - aSubject.mLastUpdateTime;
         if (pastTimeMs >= kStateUpdateIntervalMilliSec)
         {
             shouldConfigure = true;
         }
         break;
-    case SubjectState::kNotSupported:
+    case kNotSupported:
         ExitNow(error = kErrorNotCapable);
         break;
     default:
@@ -359,8 +360,10 @@ void LinkMetricsManager::HandleEnhAckIe(otShortAddress             aShortAddress
                                         const otLinkMetricsValues *aMetricsValues)
 {
     OT_UNUSED_VARIABLE(aShortAddress);
+
     Error    error   = kErrorNone;
     Subject *subject = mSubjectList.FindMatching(AsCoreType(aExtAddress));
+
     VerifyOrExit(subject != nullptr, error = kErrorNotFound);
 
     VerifyOrExit(subject->mState == SubjectState::kActive || subject->mState == SubjectState::kRenewing);

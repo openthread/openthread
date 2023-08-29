@@ -108,8 +108,14 @@ otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInsta
                                                      const otExtAddress  *aExtAddress,
                                                      otLinkMetricsValues *aLinkMetricsValues)
 {
-    return AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().GetLinkMetricsValueByExtAddr(
-        AsCoreTypePtr(aExtAddress), AsCoreTypePtr(aLinkMetricsValues));
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aExtAddress != nullptr && aLinkMetricsValues != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    error = AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().GetLinkMetricsValueByExtAddr(
+        AsCoreType(aExtAddress), AsCoreType(aLinkMetricsValues));
+exit:
+    return error;
 }
 #endif
 

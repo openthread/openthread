@@ -3885,13 +3885,8 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * #otLinkMetricsManagerSetEnabled
      *
      */
-    if (aArgs[0] == "enable")
+    if (ProcessEnableDisable(aArgs, otLinkMetricsManagerSetEnabled) == OT_ERROR_NONE)
     {
-        otLinkMetricsManagerSetEnabled(GetInstancePtr(), true);
-    }
-    else if (aArgs[0] == "disable")
-    {
-        otLinkMetricsManagerSetEnabled(GetInstancePtr(), false);
     }
     /**
      * @cli linkmetricsmgr show
@@ -3912,6 +3907,7 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
         while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
         {
             otLinkMetricsValues linkMetricsValues;
+
             if (otLinkMetricsManagerGetMetricsValueByExtAddr(GetInstancePtr(), &neighborInfo.mExtAddress,
                                                              &linkMetricsValues) != OT_ERROR_NONE)
             {

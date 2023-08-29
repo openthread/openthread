@@ -26,14 +26,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
-
 #ifndef LINK_METRICS_MANAGER_HPP_
 #define LINK_METRICS_MANAGER_HPP_
 
+#include "openthread-core-config.h"
+
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
 
-#include "openthread/link_metrics.h"
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE == 0
+#error \
+    "OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE can only be used when OPENTHREAD_CONFIG_LINK_METRICS_INITIATOR_ENABLE is true"
+#endif
+
+#include <openthread/link_metrics.h>
 
 #include "common/clearable.hpp"
 #include "common/linked_list.hpp"
@@ -150,20 +155,21 @@ public:
     /**
      * Get Link Metrics data of subject by the extended address.
      *
-     * @param[in]  aExtAddress  A pointer to the extended address of the subject.
-     * @param[out] aMetricsValues  A pointer to the MetricsValues struct to place the result.
+     * @param[in]  aExtAddress     A reference to the extended address of the subject.
+     * @param[out] aMetricsValues  A reference to the MetricsValues object to place the result.
      *
      * @retval kErrorNone             Successfully got the metrics value.
      * @retval kErrorInvalidArgs      The arguments are invalid.
      * @retval kNotFound              No neighbor with the given extended address is found.
      *
      */
-    Error GetLinkMetricsValueByExtAddr(const Mac::ExtAddress *aExtAddress, LinkMetrics::MetricsValues *aMetricsValues);
+    Error GetLinkMetricsValueByExtAddr(const Mac::ExtAddress &aExtAddress, LinkMetrics::MetricsValues &aMetricsValues);
 
 private:
     static constexpr uint16_t kTimeBeforeStartMilliSec         = 5000;
     static constexpr uint32_t kStateUpdateIntervalMilliSec     = 150000;
     static constexpr uint8_t  kConfigureLinkMetricsMaxAttempts = 3;
+    static constexpr uint8_t  kMaximumSubjectToTrack           = 128;
 
     void  Start(void);
     void  Stop(void);
@@ -190,10 +196,10 @@ private:
 
     using LinkMetricsMgrTimer = TimerMilliIn<LinkMetricsManager, &LinkMetricsManager::HandleTimer>;
 
-    ot::Pool<Subject, 128>  mPool;
-    ot::LinkedList<Subject> mSubjectList;
-    LinkMetricsMgrTimer     mTimer;
-    bool                    mEnabled;
+    Pool<Subject, kMaximumSubjectToTrack> mPool;
+    LinkedList<Subject>                   mSubjectList;
+    LinkMetricsMgrTimer                   mTimer;
+    bool                                  mEnabled;
 };
 
 /**

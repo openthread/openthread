@@ -611,7 +611,7 @@ private:
     Utils::HistoryTracker mHistoryTracker;
 #endif
 
-#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
     Utils::LinkMetricsManager mLinkMetricsManager;
 #endif
 

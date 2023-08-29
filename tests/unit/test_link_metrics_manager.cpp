@@ -107,8 +107,11 @@ void UnitTester::TestLinkMetricsManager(void)
     ChildTable                  *childTable;
     const uint16_t               testListLength = GetArrayLength(mTestChildList);
     Ip6::Address                 linkLocalAddr;
-    LinkMetricsManager::Subject *subject1 = nullptr;
-    LinkMetricsManager::Subject *subject2 = nullptr;
+    LinkMetricsManager::Subject *subject1       = nullptr;
+    LinkMetricsManager::Subject *subject2       = nullptr;
+    LinkMetricsManager          *linkMetricsMgr = nullptr;
+    otLinkMetricsValues          linkMetricsValues;
+    otShortAddress               anyShortAddress = 0x1234;
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr);
@@ -129,77 +132,79 @@ void UnitTester::TestLinkMetricsManager(void)
         child->SetVersion(mTestChildList[i].mThreadVersion);
     }
 
-    LinkMetricsManager &linkMetricsMgr = sInstance->Get<LinkMetricsManager>();
-    linkMetricsMgr.SetEnabled(true);
+    linkMetricsMgr = &sInstance->Get<LinkMetricsManager>();
+    linkMetricsMgr->SetEnabled(true);
     // Update the subjects for the first time.
-    linkMetricsMgr.UpdateSubjects();
+    linkMetricsMgr->UpdateSubjects();
 
     // Expect there are 2 subjects in NotConfigured state.
-    uint16_t index = 0;
-    for (LinkMetricsManager::Subject &subject : linkMetricsMgr.mSubjectList)
     {
-        VerifyOrQuit(subject.mExtAddress == AsCoreType(&mTestChildList[1 - index].mExtAddress));
-        VerifyOrQuit(subject.mState == LinkMetricsManager::SubjectState::kNotConfigured);
-        index++;
+        uint16_t index = 0;
+        for (LinkMetricsManager::Subject &subject : linkMetricsMgr->mSubjectList)
+        {
+            VerifyOrQuit(subject.mExtAddress == AsCoreType(&mTestChildList[1 - index].mExtAddress));
+            VerifyOrQuit(subject.mState == LinkMetricsManager::SubjectState::kNotConfigured);
+            index++;
+        }
     }
-    subject1 = linkMetricsMgr.mSubjectList.FindMatching(AsCoreType(&mTestChildList[0].mExtAddress));
-    subject2 = linkMetricsMgr.mSubjectList.FindMatching(AsCoreType(&mTestChildList[1].mExtAddress));
+    subject1 = linkMetricsMgr->mSubjectList.FindMatching(AsCoreType(&mTestChildList[0].mExtAddress));
+    subject2 = linkMetricsMgr->mSubjectList.FindMatching(AsCoreType(&mTestChildList[1].mExtAddress));
     VerifyOrQuit(subject1 != nullptr);
     VerifyOrQuit(subject2 != nullptr);
 
     // Update the state of the subjects
-    linkMetricsMgr.UpdateLinkMetricsStates();
+    linkMetricsMgr->UpdateLinkMetricsStates();
     // Expect the 2 subjects are in Configuring state.
-    for (LinkMetricsManager::Subject &subject : linkMetricsMgr.mSubjectList)
+    for (LinkMetricsManager::Subject &subject : linkMetricsMgr->mSubjectList)
     {
         VerifyOrQuit(subject.mState == LinkMetricsManager::SubjectState::kConfiguring);
     }
 
     // subject1 received a response with a success status code
     linkLocalAddr.SetToLinkLocalAddress(AsCoreType(&mTestChildList[0].mExtAddress));
-    linkMetricsMgr.HandleMgmtResponse(&linkLocalAddr, MapEnum(LinkMetrics::Status::kStatusSuccess));
+    linkMetricsMgr->HandleMgmtResponse(&linkLocalAddr, MapEnum(LinkMetrics::Status::kStatusSuccess));
     VerifyOrQuit(subject1->mState == LinkMetricsManager::SubjectState::kActive);
 
     // subject1 received Enhanced ACK IE and updated the link metrics data
-    otLinkMetricsValues linkMetricsValues;
-    constexpr uint8_t   kTestLinkMargin = 100;
-    constexpr int8_t    kTestRssi       = -30;
-    otShortAddress      anyShortAddress = 0x1234;
-    SetTestLinkMetricsValues(linkMetricsValues, kTestLinkMargin, kTestRssi);
-    linkMetricsMgr.HandleEnhAckIe(anyShortAddress, &mTestChildList[0].mExtAddress, &linkMetricsValues);
-    VerifyOrQuit(subject1->mData.mLinkMargin == kTestLinkMargin);
-    VerifyOrQuit(subject1->mData.mRssi == kTestRssi);
+    {
+        constexpr uint8_t kTestLinkMargin = 100;
+        constexpr int8_t  kTestRssi       = -30;
+        SetTestLinkMetricsValues(linkMetricsValues, kTestLinkMargin, kTestRssi);
+        linkMetricsMgr->HandleEnhAckIe(anyShortAddress, &mTestChildList[0].mExtAddress, &linkMetricsValues);
+        VerifyOrQuit(subject1->mData.mLinkMargin == kTestLinkMargin);
+        VerifyOrQuit(subject1->mData.mRssi == kTestRssi);
+    }
 
     // subject2 didn't receive any responses after a few attempts and marked as UnSupported.
     for (uint8_t i = 0; i < LinkMetricsManager::kConfigureLinkMetricsMaxAttempts; i++)
     {
-        linkMetricsMgr.Update();
+        linkMetricsMgr->Update();
     }
     VerifyOrQuit(subject2->mState == LinkMetricsManager::SubjectState::kNotSupported);
 
     // neighbor2 is removed and subject2 should also be removed.
     Child *child2 = childTable->FindChild(subject2->mExtAddress, Child::kInStateValid);
     child2->SetState(Child::kStateInvalid);
-    linkMetricsMgr.Update();
-    subject2 = linkMetricsMgr.mSubjectList.FindMatching(AsCoreType(&mTestChildList[1].mExtAddress));
+    linkMetricsMgr->Update();
+    subject2 = linkMetricsMgr->mSubjectList.FindMatching(AsCoreType(&mTestChildList[1].mExtAddress));
     VerifyOrQuit(subject2 == nullptr);
 
     // subject1 still existed
-    subject1 = linkMetricsMgr.mSubjectList.FindMatching(AsCoreType(&mTestChildList[0].mExtAddress));
+    subject1 = linkMetricsMgr->mSubjectList.FindMatching(AsCoreType(&mTestChildList[0].mExtAddress));
     VerifyOrQuit(subject1 != nullptr);
 
     // Make subject1 renew
     sNow += LinkMetricsManager::kStateUpdateIntervalMilliSec + 1;
-    linkMetricsMgr.Update();
+    linkMetricsMgr->Update();
     VerifyOrQuit(subject1->mState == LinkMetricsManager::SubjectState::kRenewing);
 
     // subject1 got Enh-ACK IE when in kRenewing state
     sNow += 1;
-    linkMetricsMgr.HandleEnhAckIe(anyShortAddress, &mTestChildList[0].mExtAddress, &linkMetricsValues);
+    linkMetricsMgr->HandleEnhAckIe(anyShortAddress, &mTestChildList[0].mExtAddress, &linkMetricsValues);
     VerifyOrQuit(subject1->mLastUpdateTime == TimeMilli(sNow));
 
     // subject1 got response and become active again
-    linkMetricsMgr.HandleMgmtResponse(&linkLocalAddr, MapEnum(LinkMetrics::Status::kStatusSuccess));
+    linkMetricsMgr->HandleMgmtResponse(&linkLocalAddr, MapEnum(LinkMetrics::Status::kStatusSuccess));
     VerifyOrQuit(subject1->mState == LinkMetricsManager::SubjectState::kActive);
 }
 
