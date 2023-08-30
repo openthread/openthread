@@ -4849,7 +4849,7 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * Note: For each change in service registration to take effect, run
          * the `netdata register` command after running the `service add` command to notify the leader.
          * @sa otServerAddService
-	 * @csa{netdata register}
+         * @csa{netdata register}
          */
         if (aArgs[0] == "add")
         {
@@ -4882,7 +4882,7 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * Note: For each change in service registration to take effect, run
          * the `netdata register` command after running the `service remove` command to notify the leader.
          * @sa otServerRemoveService
-	 * @csa{netdata register}
+         * @csa{netdata register}
          */
         else if (aArgs[0] == "remove")
         {
