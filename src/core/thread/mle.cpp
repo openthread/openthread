@@ -88,7 +88,7 @@ Mle::Mle(Instance &aInstance)
     , mDataRequestState(kDataRequestNone)
     , mAddressRegistrationMode(kAppendAllAddresses)
     , mChildUpdateRequestState(kChildUpdateRequestNone)
-    , mParentRequestCounter(0)
+    , mParentOrChildIdRequestCounter(0)
     , mChildUpdateAttempts(0)
     , mDataRequestAttempts(0)
     , mAnnounceChannel(0)
@@ -1349,7 +1349,7 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 {
     // This method determines the Parent Request type to use during an
     // attach cycle based on `mAttachMode`, `mAttachCounter` and
-    // `mParentRequestCounter`. This method MUST be used while in
+    // `mParentOrChildIdRequestCounter`. This method MUST be used while in
     // `kAttachStateParentRequest` state.
     //
     // On success it returns `kErrorNone` and sets `aType`. It returns
@@ -1373,22 +1373,22 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 
     if ((mAttachCounter <= 1) && (mAttachMode != kBetterParent))
     {
-        VerifyOrExit(mParentRequestCounter <= kFirstAttachCycleTotalParentRequests, error = kErrorNotFound);
+        VerifyOrExit(mParentOrChildIdRequestCounter <= kFirstAttachCycleTotalParentRequests, error = kErrorNotFound);
 
         // During reattach to the same partition all the Parent
         // Request are sent to Routers and REEDs.
 
         if ((mAttachMode != kSamePartition) && (mAttachMode != kSamePartitionRetry) &&
-            (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
+            (mParentOrChildIdRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
         {
             aType = kToRouters;
         }
     }
     else
     {
-        VerifyOrExit(mParentRequestCounter <= kNextAttachCycleTotalParentRequests, error = kErrorNotFound);
+        VerifyOrExit(mParentOrChildIdRequestCounter <= kNextAttachCycleTotalParentRequests, error = kErrorNotFound);
 
-        if (mParentRequestCounter <= kNextAttachCycleNumParentRequestToRouters)
+        if (mParentOrChildIdRequestCounter <= kNextAttachCycleNumParentRequestToRouters)
         {
             aType = kToRouters;
         }
@@ -1458,8 +1458,9 @@ void Mle::HandleAttachTimer(void)
 
     if (HasAcceptableParentCandidate() && (SendChildIdRequest() == kErrorNone))
     {
+        mParentOrChildIdRequestCounter = 0;
         SetAttachState(kAttachStateChildIdRequest);
-        delay = kChildIdResponseTimeout;
+        delay = kChildIdResponseTimeout / kChildIdRequestAttempts;
         ExitNow();
     }
 
@@ -1479,14 +1480,14 @@ void Mle::HandleAttachTimer(void)
 
         SetAttachState(kAttachStateParentRequest);
         mParentCandidate.SetState(Neighbor::kStateInvalid);
-        mReceivedResponseFromParent = false;
-        mParentRequestCounter       = 0;
+        mReceivedResponseFromParent    = false;
+        mParentOrChildIdRequestCounter = 0;
         Get<MeshForwarder>().SetRxOnWhenIdle(true);
 
         OT_FALL_THROUGH;
 
     case kAttachStateParentRequest:
-        mParentRequestCounter++;
+        mParentOrChildIdRequestCounter++;
         if (DetermineParentRequestType(type) == kErrorNone)
         {
             SendParentRequest(type);
@@ -1523,9 +1524,20 @@ void Mle::HandleAttachTimer(void)
             break;
         }
 
-        OT_FALL_THROUGH;
+        SetAttachState(kAttachStateIdle);
+        mParentCandidate.Clear();
+        delay = Reattach();
+        break;
 
     case kAttachStateChildIdRequest:
+        mParentOrChildIdRequestCounter++;
+        if (mParentOrChildIdRequestCounter < kChildIdRequestAttempts)
+        {
+            delay = kChildIdResponseTimeout / kChildIdRequestAttempts;
+            IgnoreError(SendChildIdRequest());
+            break;
+        }
+
         SetAttachState(kAttachStateIdle);
         mParentCandidate.Clear();
         delay = Reattach();

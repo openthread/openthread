@@ -765,6 +765,9 @@ private:
     static constexpr uint8_t kNextAttachCycleTotalParentRequests       = 2;
     static constexpr uint8_t kNextAttachCycleNumParentRequestToRouters = 1;
 
+    // Number of Child ID Request tx attempts during `kChildIdResponseTimeout`.
+    static constexpr uint8_t kChildIdRequestAttempts = 2;
+
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -824,9 +827,9 @@ private:
         kAttachStateIdle,            // Not currently searching for a parent.
         kAttachStateProcessAnnounce, // Waiting to process a received Announce (to switch channel/pan-id).
         kAttachStateStart,           // Starting to look for a parent.
-        kAttachStateParentRequest,   // Send Parent Request (current number tracked by `mParentRequestCounter`).
-        kAttachStateAnnounce,        // Send Announce messages
-        kAttachStateChildIdRequest,  // Sending a Child ID Request message.
+        kAttachStateParentRequest,   // Send Parent Request (attempts tracked by `mParentOrChildIdRequestCounter`).
+        kAttachStateAnnounce,        // Send Announce messages.
+        kAttachStateChildIdRequest,  // Send Child ID Request (attempts tracked by `mParentOrChildIdRequestCounter`).
     };
 
     enum ReattachState : uint8_t
@@ -1349,7 +1352,7 @@ private:
     AddressRegistrationMode mAddressRegistrationMode;
     ChildUpdateRequestState mChildUpdateRequestState;
 
-    uint8_t mParentRequestCounter;
+    uint8_t mParentOrChildIdRequestCounter;
     uint8_t mChildUpdateAttempts;
     uint8_t mDataRequestAttempts;
     uint8_t mAnnounceChannel;
