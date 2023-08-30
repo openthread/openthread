@@ -4841,11 +4841,11 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * @cparam service add @ca{enterpriseNumber} @ca{serviceData} @ca{serverData}
          * @par
          * Adds service to the network data.
-	 * @par
+         * @par
          * - enterpriseNumber: IANA enterprise number
          * - serviceData: Hex-encoded binary service data
          * - serverData: Hex-encoded binary server data
-	 * @par
+         * @par
          * Note: For each change in service registration to take effect, run
          * the `netdata register` command to notify the leader.
          * @sa otServerAddService
