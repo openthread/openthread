@@ -4842,13 +4842,13 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * @par
          * Adds service to the network data.
 	 * @par
-         * enterpriseNumber: IANA enterprise number
-         * serviceData: Hex-encoded binary service data
-         * serverData: Hex-encoded binary server data
+         * - enterpriseNumber: IANA enterprise number
+         * - serviceData: Hex-encoded binary service data
+         * - serverData: Hex-encoded binary server data
 	 * @par
          * Note: For each change in service registration to take effect, run
-         * the ~netdata register~ command to notify the leader.
-         * @sa ototServerAddService
+         * the `netdata register` command to notify the leader.
+         * @sa otServerAddService
          */
         if (aArgs[0] == "add")
         {
@@ -4875,11 +4875,11 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * @par
          * Removes service from the network data.
          * @par
-         * enterpriseNumber: IANA enterprise number
-         * serviceData: Hex-encoded binary service data
+         * - enterpriseNumber: IANA enterprise number
+         * - serviceData: Hex-encoded binary service data
          * @par
          * Note: For each change in service registration to take effect, run
-         * the ~netdata register~ command to notify the leader.
+         * the `netdata register` command to notify the leader.
          * @sa otServerRemoveService
          */
         else if (aArgs[0] == "remove")
