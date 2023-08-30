@@ -4847,8 +4847,9 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * - serverData: Hex-encoded binary server data
          * @par
          * Note: For each change in service registration to take effect, run
-         * the `netdata register` command to notify the leader.
+         * the `netdata register` command after running the `service add` command to notify the leader.
          * @sa otServerAddService
+	 * @csa{netdata register}
          */
         if (aArgs[0] == "add")
         {
@@ -4879,8 +4880,9 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
          * - serviceData: Hex-encoded binary service data
          * @par
          * Note: For each change in service registration to take effect, run
-         * the `netdata register` command to notify the leader.
+         * the `netdata register` command after running the `service remove` command to notify the leader.
          * @sa otServerRemoveService
+	 * @csa{netdata register}
          */
         else if (aArgs[0] == "remove")
         {
@@ -7027,7 +7029,7 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
     /**
      * @cli scan
      * @code
-     * scan 11
+     * scan
      * | PAN  | MAC Address      | Ch | dBm | LQI |
      * +------+------------------+----+-----+-----+
      * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
