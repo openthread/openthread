@@ -3712,6 +3712,9 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
     const MeshCoP::Timestamp *localTimestamp;
     uint8_t                   channel;
     uint16_t                  panId;
+    bool                      isFromOrphan;
+    bool                      channelAndPanIdMatch;
+    int                       timestampCompare;
 
     Log(kMessageReceive, kTypeAnnounce, aRxInfo.mMessageInfo.GetPeerAddr());
 
@@ -3727,22 +3730,33 @@ void Mle::HandleAnnounce(RxInfo &aRxInfo)
 
     localTimestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
 
-    if (timestamp.IsOrphanTimestamp() || MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) < 0)
+    isFromOrphan         = timestamp.IsOrphanTimestamp();
+    timestampCompare     = MeshCoP::Timestamp::Compare(&timestamp, localTimestamp);
+    channelAndPanIdMatch = (channel == Get<Mac::Mac>().GetPanChannel()) && (panId == Get<Mac::Mac>().GetPanId());
+
+    if (isFromOrphan || (timestampCompare < 0))
     {
+        if (isFromOrphan)
+        {
+            VerifyOrExit(!channelAndPanIdMatch);
+        }
+
         SendAnnounce(channel);
 
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
         SendAnnounce(channel, aRxInfo.mMessageInfo.GetPeerAddr());
 #endif
     }
-    else if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) > 0)
+    else if (timestampCompare > 0)
     {
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
         // Announce message.
 
-        VerifyOrExit(!IsDetached() || (Get<Mac::Mac>().GetPanChannel() != channel) ||
-                     (Get<Mac::Mac>().GetPanId() != panId));
+        if (IsDetached())
+        {
+            VerifyOrExit(!channelAndPanIdMatch);
+        }
 
         if (mAttachState == kAttachStateProcessAnnounce)
         {
