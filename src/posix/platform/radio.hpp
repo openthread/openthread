@@ -64,6 +64,9 @@ public:
     static void *GetSpinelInstance(void);
 
 private:
+    void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
+    void ProcessRadioUrl(const RadioUrl &aRadioUrl);
+
     RadioUrl mRadioUrl;
 };
 

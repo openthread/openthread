@@ -452,9 +452,8 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         struct termios tios;
         const char    *value;
         speed_t        speed;
-
-        int      stopBit  = 1;
-        uint32_t baudrate = 115200;
+        uint8_t        stopBit  = 1;
+        uint32_t       baudrate = 115200;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -479,10 +478,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             }
         }
 
-        if ((value = aRadioUrl.GetValue("uart-stop")) != nullptr)
-        {
-            stopBit = atoi(value);
-        }
+        IgnoreError(aRadioUrl.ParseUint8("uart-stop", stopBit));
 
         switch (stopBit)
         {
@@ -497,10 +493,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             break;
         }
 
-        if ((value = aRadioUrl.GetValue("uart-baudrate")))
-        {
-            baudrate = static_cast<uint32_t>(atoi(value));
-        }
+        IgnoreError(aRadioUrl.ParseUint32("uart-baudrate", baudrate));
 
         switch (baudrate)
         {
@@ -591,7 +584,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 
         mBaudRate = baudrate;
 
-        if (aRadioUrl.GetValue("uart-flow-control") != nullptr)
+        if (aRadioUrl.HasParam("uart-flow-control"))
         {
             tios.c_cflag |= CRTSCTS;
         }
@@ -718,7 +711,7 @@ otError HdlcInterface::ResetConnection(void)
     otError  error = OT_ERROR_NONE;
     uint64_t end;
 
-    if (mRadioUrl->GetValue("uart-reset") != nullptr)
+    if (mRadioUrl->HasParam("uart-reset"))
     {
         usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
         CloseFile();
