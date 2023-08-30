@@ -4828,6 +4828,28 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
         VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
         cfg.mServiceDataLength = static_cast<uint8_t>(length);
 
+        /**
+         * @cli service add
+         * @code
+         * service add 44970 112233 aabbcc
+         * Done
+         * @endcode
+         * @code
+         * netdata register
+         * Done
+         * @endcode
+         * @cparam service add @ca{enterpriseNumber} @ca{serviceData} @ca{serverData}
+         * @par
+         * Adds service to the network data.
+         *
+         * enterpriseNumber: IANA enterprise number
+         * serviceData: Hex-encoded binary service data
+         * serverData: Hex-encoded binary server data
+         *
+         * Note: For each change in service registration to take effect, run
+         * the ~netdata register~ command to notify the leader.
+         * @sa ototServerAddService
+         */
         if (aArgs[0] == "add")
         {
             length = sizeof(cfg.mServerConfig.mServerData);
@@ -4839,6 +4861,27 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
 
             error = otServerAddService(GetInstancePtr(), &cfg);
         }
+        /**
+         * @cli service remove
+         * @code
+         * service remove 44970 112233
+         * Done
+         * @endcode
+         * @code
+         * netdata register
+         * Done
+         * @endcode
+         * @cparam service remove @ca{enterpriseNumber} @ca{serviceData}
+         * @par
+         * Removes service from the network data.
+         *
+         * enterpriseNumber: IANA enterprise number
+         * serviceData: Hex-encoded binary service data
+         *
+         * Note: For each change in service registration to take effect, run
+         * the ~netdata register~ command to notify the leader.
+         * @sa otServerRemoveService
+         */
         else if (aArgs[0] == "remove")
         {
             error = otServerRemoveService(GetInstancePtr(), cfg.mEnterpriseNumber, cfg.mServiceData,
