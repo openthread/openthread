@@ -89,6 +89,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+ *
+ * Define as 1 to enable feature to set device properties which are used for calculating the local leader weight on a
+ * device.
+ *
+ * It is enabled by default on Thread Version 1.3.1 or later.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+#define OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE \
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
  *
  * Specifies the default value for `mLeaderWeightAdjustment` in `otDeviceProperties`. MUST be from -16 up to +16.

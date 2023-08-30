@@ -36,7 +36,7 @@
 
 namespace ot {
 
-#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 void TestDefaultDeviceProperties(void)
 {
@@ -170,13 +170,13 @@ void TestLeaderWeightCalculation(void)
     printf("TestLeaderWeightCalculation passed\n");
 }
 
-#endif // #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 } // namespace ot
 
 int main(void)
 {
-#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     ot::TestDefaultDeviceProperties();
     ot::TestLeaderWeightCalculation();
 #endif

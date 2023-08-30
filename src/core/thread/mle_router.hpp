@@ -144,7 +144,7 @@ public:
      */
     Error BecomeLeader(void);
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     /**
      * Gets the device properties which are used to determine the Leader Weight.
      *
@@ -705,7 +705,7 @@ private:
 
     TrickleTimer mAdvertiseTrickleTimer;
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
     DeviceProperties mDeviceProperties;
 #endif
 
