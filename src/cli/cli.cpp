@@ -7027,7 +7027,7 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
     /**
      * @cli scan
      * @code
-     * scan
+     * scan 11
      * | PAN  | MAC Address      | Ch | dBm | LQI |
      * +------+------------------+----+-----+-----+
      * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
