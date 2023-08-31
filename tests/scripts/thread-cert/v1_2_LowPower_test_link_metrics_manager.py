@@ -42,6 +42,9 @@ LEADER = 1
 ROUTER = 2
 CHILD = 3
 """
+Acronyms:
+- EAP - Enhanced-ACK Based Probing
+
 Test Process:
 1. Initiate a leader and a router at the beginning.
 2. Enable Link Metrics Manager on leader.

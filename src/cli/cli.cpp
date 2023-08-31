@@ -3880,7 +3880,7 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * linkmetricmgr disable
      * Done
      * @endcode
-     * @cparam nat64 @ca{enable|disable}
+     * @cparam linkmetricsmgr @ca{enable|disable}
      * @par api_copy
      * #otLinkMetricsManagerSetEnabled
      *
@@ -3895,8 +3895,8 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * ExtAddr:827aa7f7f63e1234, LinkMargin:80, Rssi:-20
      * Done
      * @endcode
-     * @par
-     * Show the link metrics data of all the subjects.
+     * @api_copy
+     * #otLinkMetricsManagerGetMetricsValueByExtAddr
      *
      */
     else if (aArgs[0] == "show")

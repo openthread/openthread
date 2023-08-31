@@ -139,41 +139,24 @@ void LinkMetricsManager::UpdateSubjects(void)
         {
             Subject *subject = mPool.Allocate();
 
-            if (subject != nullptr)
-            {
-                subject->Clear();
-                subject->mExtAddress = AsCoreType(&neighborInfo.mExtAddress);
-                IgnoreError(mSubjectList.Add(*subject));
-            }
+            VerifyOrExit(subject != nullptr);
+
+            subject->Clear();
+            subject->mExtAddress = AsCoreType(&neighborInfo.mExtAddress);
+            IgnoreError(mSubjectList.Add(*subject));
         }
     }
+
+exit:
+    return;
 }
 
 // This method updates the state and take corresponding actions for all subjects and removes stale subjects.
 void LinkMetricsManager::UpdateLinkMetricsStates(void)
 {
-    ot::LinkedList<Subject> staleSubjects;
+    LinkedList<Subject> staleSubjects;
 
-    Subject *entry;
-    Subject *prev;
-    Subject *next;
-
-    for (prev = nullptr, entry = mSubjectList.GetHead(); entry != nullptr; entry = next)
-    {
-        Error error = UpdateStateForSingleSubject(*entry);
-
-        next = entry->GetNext();
-
-        if (error == kErrorUnknownNeighbor || error == kErrorNotCapable)
-        {
-            mSubjectList.PopAfter(prev);
-            IgnoreError(staleSubjects.Add(*entry));
-        }
-        else
-        {
-            prev = entry;
-        }
-    }
+    mSubjectList.RemoveAllMatching(*this, staleSubjects);
 
     while (!staleSubjects.IsEmpty())
     {
@@ -187,7 +170,7 @@ void LinkMetricsManager::UnregisterAllSubjects(void)
 {
     for (Subject &subject : mSubjectList)
     {
-        IgnoreError(UnregisterEapForSingleSubject(subject));
+        IgnoreError(subject.UnregisterEap(GetInstance()));
     }
 }
 
@@ -199,96 +182,6 @@ void LinkMetricsManager::ReleaseAllSubjects(void)
 
         mPool.Free(*subject);
     }
-}
-
-Error LinkMetricsManager::UpdateStateForSingleSubject(Subject &aSubject)
-{
-    bool     shouldConfigure = false;
-    uint32_t pastTimeMs;
-    Error    error = kErrorNone;
-
-    switch (aSubject.mState)
-    {
-    case kNotConfigured:
-    case kConfiguring:
-    case kRenewing:
-        if (aSubject.mAttempts >= kConfigureLinkMetricsMaxAttempts)
-        {
-            aSubject.mState = kNotSupported;
-        }
-        else
-        {
-            shouldConfigure = true;
-        }
-        break;
-    case kActive:
-        pastTimeMs = TimerMilli::GetNow() - aSubject.mLastUpdateTime;
-        if (pastTimeMs >= kStateUpdateIntervalMilliSec)
-        {
-            shouldConfigure = true;
-        }
-        break;
-    case kNotSupported:
-        ExitNow(error = kErrorNotCapable);
-        break;
-    default:
-        break;
-    }
-
-    if (shouldConfigure)
-    {
-        error = ConfigureEapForSingleSubject(aSubject);
-    }
-
-exit:
-    return error;
-}
-
-Error LinkMetricsManager::ConfigureEapForSingleSubject(Subject &aSubject)
-{
-    Error                    error    = kErrorNone;
-    Neighbor                *neighbor = Get<NeighborTable>().FindNeighbor(aSubject.mExtAddress);
-    Ip6::Address             destination;
-    LinkMetrics::EnhAckFlags enhAckFlags = LinkMetrics::kEnhAckRegister;
-    LinkMetrics::Metrics     metricsFlags;
-
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
-
-    metricsFlags.Clear();
-    metricsFlags.mLinkMargin = 1;
-    metricsFlags.mRssi       = 1;
-    error = Get<LinkMetrics::Initiator>().SendMgmtRequestEnhAckProbing(destination, enhAckFlags, &metricsFlags);
-
-    aSubject.mAttempts++;
-exit:
-    if (error == kErrorNone)
-    {
-        if (aSubject.mState == SubjectState::kActive)
-        {
-            aSubject.mState = SubjectState::kRenewing;
-        }
-        else
-        {
-            aSubject.mState = SubjectState::kConfiguring;
-        }
-    }
-    return error;
-}
-
-Error LinkMetricsManager::UnregisterEapForSingleSubject(Subject &aSubject)
-{
-    Error                    error    = kErrorNone;
-    Neighbor                *neighbor = Get<NeighborTable>().FindNeighbor(aSubject.mExtAddress);
-    Ip6::Address             destination;
-    LinkMetrics::EnhAckFlags enhAckFlags = LinkMetrics::kEnhAckClear;
-
-    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
-    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
-
-    error = Get<LinkMetrics::Initiator>().SendMgmtRequestEnhAckProbing(destination, enhAckFlags, nullptr);
-exit:
-    return error;
 }
 
 void LinkMetricsManager::HandleNotifierEvents(Events aEvents)
@@ -379,7 +272,98 @@ exit:
     {
         LogWarn("Metrics received are unexpected!");
     }
-    return;
+}
+
+// This special Match method is used for "iterating over list while removing some items"
+bool LinkMetricsManager::Subject::Matches(const LinkMetricsManager &aLinkMetricsMgr)
+{
+    Error error = UpdateState(aLinkMetricsMgr.GetInstance());
+
+    return error == kErrorUnknownNeighbor || error == kErrorNotCapable;
+}
+
+Error LinkMetricsManager::Subject::ConfigureEap(Instance &aInstance)
+{
+    Error                    error    = kErrorNone;
+    Neighbor                *neighbor = aInstance.Get<NeighborTable>().FindNeighbor(mExtAddress);
+    Ip6::Address             destination;
+    LinkMetrics::EnhAckFlags enhAckFlags = LinkMetrics::kEnhAckRegister;
+    LinkMetrics::Metrics     metricsFlags;
+
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
+
+    metricsFlags.Clear();
+    metricsFlags.mLinkMargin = 1;
+    metricsFlags.mRssi       = 1;
+    error =
+        aInstance.Get<LinkMetrics::Initiator>().SendMgmtRequestEnhAckProbing(destination, enhAckFlags, &metricsFlags);
+
+exit:
+    if (error == kErrorNone)
+    {
+        mState = (mState == SubjectState::kActive) ? SubjectState::kRenewing : SubjectState::kConfiguring;
+        mAttempts++;
+    }
+    return error;
+}
+
+Error LinkMetricsManager::Subject::UnregisterEap(Instance &aInstance)
+{
+    Error                    error    = kErrorNone;
+    Neighbor                *neighbor = aInstance.Get<NeighborTable>().FindNeighbor(mExtAddress);
+    Ip6::Address             destination;
+    LinkMetrics::EnhAckFlags enhAckFlags = LinkMetrics::kEnhAckClear;
+
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    destination.SetToLinkLocalAddress(neighbor->GetExtAddress());
+
+    error = aInstance.Get<LinkMetrics::Initiator>().SendMgmtRequestEnhAckProbing(destination, enhAckFlags, nullptr);
+exit:
+    return error;
+}
+
+Error LinkMetricsManager::Subject::UpdateState(Instance &aInstance)
+{
+    bool     shouldConfigure = false;
+    uint32_t pastTimeMs;
+    Error    error = kErrorNone;
+
+    switch (mState)
+    {
+    case kNotConfigured:
+    case kConfiguring:
+    case kRenewing:
+        if (mAttempts >= kConfigureLinkMetricsMaxAttempts)
+        {
+            mState = kNotSupported;
+        }
+        else
+        {
+            shouldConfigure = true;
+        }
+        break;
+    case kActive:
+        pastTimeMs = TimerMilli::GetNow() - mLastUpdateTime;
+        if (pastTimeMs >= kStateUpdateIntervalMilliSec)
+        {
+            shouldConfigure = true;
+        }
+        break;
+    case kNotSupported:
+        ExitNow(error = kErrorNotCapable);
+        break;
+    default:
+        break;
+    }
+
+    if (shouldConfigure)
+    {
+        error = ConfigureEap(aInstance);
+    }
+
+exit:
+    return error;
 }
 
 /**

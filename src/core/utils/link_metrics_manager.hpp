@@ -67,8 +67,9 @@ namespace Utils {
 /**
  *
  * Link Metrics Manager feature utilizes the Enhanced-ACK Based
- * Probing to get the Link Metrics data of neighboring devices.
- * It is a user of the Link Metrics feature.
+ * Probing (abbreviated as "EAP" below) to get the Link Metrics
+ * data of neighboring devices. It is a user of the Link Metrics
+ * feature.
  *
  * The feature works as follow:
  * - Start/Stop
@@ -78,7 +79,8 @@ namespace Utils {
  *
  *   A CLI interface is provided to enable/disable this feature.
  *
- *   Once enabled, it will regularly check current neighbors
+ *   Once enabled, it will regularly check current neighbors (all
+ *   devices in the neighbor table, including 'Child' and 'Router')
  *   and configure the probing with them if haven't done that.
  *   If disabled, it will clear the configuration with its subjects
  *   and the local data.
@@ -90,7 +92,7 @@ namespace Utils {
  *   EAP with the subject again.
  *   The manager may find that some subject (neighbor) no longer
  *   exist when trying to configure EAP. It will remove the stale
- *   subject.
+ *   subject then.
  *
  * - Show data
  *   An OT API is provided to get the link metrics data of any
@@ -133,6 +135,11 @@ class LinkMetricsManager : public InstanceLocator, private NonCopyable
         Subject *mNext;
 
         bool Matches(const Mac::ExtAddress &aExtAddress) const { return mExtAddress == aExtAddress; }
+        bool Matches(const LinkMetricsManager &aLinkMetricsMgr);
+
+        Error ConfigureEap(Instance &aInstance);
+        Error UnregisterEap(Instance &aInstance);
+        Error UpdateState(Instance &aInstance);
     };
 
 public:
@@ -169,18 +176,19 @@ private:
     static constexpr uint16_t kTimeBeforeStartMilliSec         = 5000;
     static constexpr uint32_t kStateUpdateIntervalMilliSec     = 150000;
     static constexpr uint8_t  kConfigureLinkMetricsMaxAttempts = 3;
-    static constexpr uint8_t  kMaximumSubjectToTrack           = 128;
+#if OPENTHREAD_FTD
+    static constexpr uint8_t kMaximumSubjectToTrack = 128;
+#elif OPENTHREAD_MTD
+    static constexpr uint8_t kMaximumSubjectToTrack = 1;
+#endif
 
-    void  Start(void);
-    void  Stop(void);
-    void  Update(void);
-    void  UpdateSubjects(void);
-    void  UpdateLinkMetricsStates(void);
-    void  UnregisterAllSubjects(void);
-    void  ReleaseAllSubjects(void);
-    Error UpdateStateForSingleSubject(Subject &aSubject);
-    Error ConfigureEapForSingleSubject(Subject &aSubject);
-    Error UnregisterEapForSingleSubject(Subject &aSubject);
+    void Start(void);
+    void Stop(void);
+    void Update(void);
+    void UpdateSubjects(void);
+    void UpdateLinkMetricsStates(void);
+    void UnregisterAllSubjects(void);
+    void ReleaseAllSubjects(void);
 
     void        HandleNotifierEvents(Events aEvents);
     void        HandleTimer(void);
