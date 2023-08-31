@@ -4828,6 +4828,29 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
         VerifyOrExit(length > 0, error = OT_ERROR_INVALID_ARGS);
         cfg.mServiceDataLength = static_cast<uint8_t>(length);
 
+        /**
+         * @cli service add
+         * @code
+         * service add 44970 112233 aabbcc
+         * Done
+         * @endcode
+         * @code
+         * netdata register
+         * Done
+         * @endcode
+         * @cparam service add @ca{enterpriseNumber} @ca{serviceData} @ca{serverData}
+         * @par
+         * Adds service to the network data.
+         * @par
+         * - enterpriseNumber: IANA enterprise number
+         * - serviceData: Hex-encoded binary service data
+         * - serverData: Hex-encoded binary server data
+         * @par
+         * Note: For each change in service registration to take effect, run
+         * the `netdata register` command after running the `service add` command to notify the leader.
+         * @sa otServerAddService
+         * @csa{netdata register}
+         */
         if (aArgs[0] == "add")
         {
             length = sizeof(cfg.mServerConfig.mServerData);
@@ -4839,6 +4862,28 @@ template <> otError Interpreter::Process<Cmd("service")>(Arg aArgs[])
 
             error = otServerAddService(GetInstancePtr(), &cfg);
         }
+        /**
+         * @cli service remove
+         * @code
+         * service remove 44970 112233
+         * Done
+         * @endcode
+         * @code
+         * netdata register
+         * Done
+         * @endcode
+         * @cparam service remove @ca{enterpriseNumber} @ca{serviceData}
+         * @par
+         * Removes service from the network data.
+         * @par
+         * - enterpriseNumber: IANA enterprise number
+         * - serviceData: Hex-encoded binary service data
+         * @par
+         * Note: For each change in service registration to take effect, run
+         * the `netdata register` command after running the `service remove` command to notify the leader.
+         * @sa otServerRemoveService
+         * @csa{netdata register}
+         */
         else if (aArgs[0] == "remove")
         {
             error = otServerRemoveService(GetInstancePtr(), cfg.mEnterpriseNumber, cfg.mServiceData,
@@ -6934,6 +6979,44 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
         scanChannels = 1 << channel;
     }
 
+    /**
+     * @cli scan energy
+     * @code
+     * scan energy 10
+     * | Ch | RSSI |
+     * +----+------+
+     * | 11 |  -59 |
+     * | 12 |  -62 |
+     * | 13 |  -67 |
+     * | 14 |  -61 |
+     * | 15 |  -87 |
+     * | 16 |  -86 |
+     * | 17 |  -86 |
+     * | 18 |  -52 |
+     * | 19 |  -58 |
+     * | 20 |  -82 |
+     * | 21 |  -76 |
+     * | 22 |  -82 |
+     * | 23 |  -74 |
+     * | 24 |  -81 |
+     * | 25 |  -88 |
+     * | 26 |  -71 |
+     * Done
+     * @endcode
+     * @code
+     * scan energy 10 20
+     * | Ch | RSSI |
+     * +----+------+
+     * | 20 |  -82 |
+     * Done
+     * @endcode
+     * @cparam scan energy [@ca{duration}] [@ca{channel}]
+     * @par
+     * Performs an IEEE 802.15.4 energy scan, and displays the time in milliseconds
+     * to use for scanning each channel. All channels are shown unless you specify a certain channel
+     * by using the channel option.
+     * @sa otLinkEnergyScan
+     */
     if (energyScan)
     {
         static const char *const kEnergyScanTableTitles[]       = {"Ch", "RSSI"};
@@ -6943,6 +7026,21 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
         SuccessOrExit(error = otLinkEnergyScan(GetInstancePtr(), scanChannels, scanDuration,
                                                &Interpreter::HandleEnergyScanResult, this));
     }
+    /**
+     * @cli scan
+     * @code
+     * scan
+     * | PAN  | MAC Address      | Ch | dBm | LQI |
+     * +------+------------------+----+-----+-----+
+     * | ffff | f1d92a82c8d8fe43 | 11 | -20 |   0 |
+     * Done
+     * @endcode
+     * @cparam scan [@ca{channel}]
+     * @par
+     * Performs an active IEEE 802.15.4 scan. The scan covers all channels if no channel is specified; otherwise the
+     * span covers only the channel specified.
+     * @sa otLinkActiveScan
+     */
     else
     {
         static const char *const kScanTableTitles[]       = {"PAN", "MAC Address", "Ch", "dBm", "LQI"};
