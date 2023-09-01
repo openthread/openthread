@@ -7182,8 +7182,10 @@ exit:
  * true
  * Done
  * @endcode
- * @par api_copy
- * #otThreadIsSingleton
+ * @par
+ * Indicates whether a node is the only router on the network.
+ * Returns either `true` or `false`.
+ * @sa otThreadIsSingleton
  */
 template <> otError Interpreter::Process<Cmd("singleton")>(Arg aArgs[])
 {
