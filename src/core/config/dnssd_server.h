@@ -76,6 +76,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+ *
+ * Define to 1 to enable DNS-SD Discovery Proxy support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+#define OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
  *
  * Define to 1 to enable upstream forwarding support. The platform MUST implement `otPlatDnsStartUpstreamQuery` and

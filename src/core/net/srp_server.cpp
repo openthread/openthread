@@ -328,7 +328,7 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName)
 
     if (mServiceUpdateHandler.IsSet())
     {
-        uint32_t updateId = AllocateId();
+        uint32_t updateId = AllocateServiceUpdateId();
 
         LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
         mServiceUpdateHandler.Invoke(updateId, aHost, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
@@ -338,6 +338,12 @@ void Server::RemoveHost(Host *aHost, RetainName aRetainName)
         // only when there is system failure of the platform mDNS implementation
         // and in which case the host is not expected to be still registered.
     }
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    else
+    {
+        Get<AdvertisingProxy>().AdvertiseRemovalOf(*aHost);
+    }
+#endif
 
     if (!aRetainName)
     {
@@ -440,7 +446,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     uint32_t grantedKeyLease = 0;
     bool     useShortLease   = aHost.ShouldUseShortLeaseOption();
 
-    if (aError != kErrorNone)
+    if (aError != kErrorNone || (mState != kStateRunning))
     {
         aHost.Free();
         ExitNow();
@@ -509,7 +515,27 @@ void Server::CommitSrpUpdate(Error                    aError,
             if (!aHost.HasService(existingService->GetInstanceName()))
             {
                 aHost.AddService(*existingService);
-                existingService->Log(Service::kKeepUnchanged);
+
+                // If host is deleted we make sure to add any existing
+                // service that is not already included as deleted.
+                // When processing an SRP update message that removes
+                // a host, we construct `aHost` and add any existing
+                // services that we have for the same host name as
+                // deleted. However, due to asynchronous nature
+                // of "update handler" (advertising proxy), by the
+                // time we get the callback to commit `aHost`, there
+                // may be new services added that were not included
+                // when constructing `aHost`.
+
+                if (aHost.IsDeleted() && !existingService->IsDeleted())
+                {
+                    existingService->mIsDeleted = true;
+                    existingService->Log(Service::kRemoveButRetainName);
+                }
+                else
+                {
+                    existingService->Log(Service::kKeepUnchanged);
+                }
             }
             else
             {
@@ -582,6 +608,10 @@ void Server::Start(void)
     mState = kStateRunning;
     PrepareSocket();
     LogInfo("Start listening on port %u", mPort);
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    Get<AdvertisingProxy>().HandleServerStateChange();
+#endif
 
 exit:
     return;
@@ -691,6 +721,10 @@ void Server::Stop(void)
     LogInfo("Stop listening on %u", mPort);
     IgnoreError(mSocket.Close());
     mHasRegisteredAnyService = false;
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    Get<AdvertisingProxy>().HandleServerStateChange();
+#endif
 
 exit:
     return;
@@ -1188,18 +1222,25 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     aHost->SetLease(leaseOption.GetLeaseInterval());
     aHost->SetKeyLease(leaseOption.GetKeyLeaseInterval());
 
+    for (Service &service : aHost->mServices)
+    {
+        if (aHost->GetLease() == 0)
+        {
+            service.mIsDeleted = true;
+        }
+
+        service.mLease    = service.mIsDeleted ? 0 : leaseOption.GetLeaseInterval();
+        service.mKeyLease = leaseOption.GetKeyLeaseInterval();
+    }
+
     // If the client included the short variant of Lease Option,
     // server must also use the short variant in its response.
     aHost->SetUseShortLeaseOption(leaseOption.IsShortVariant());
 
     if (aHost->GetLease() > 0)
     {
-        uint8_t hostAddressesNum;
-
-        aHost->GetAddresses(hostAddressesNum);
-
         // There MUST be at least one valid address if we have nonzero lease.
-        VerifyOrExit(hostAddressesNum > 0, error = kErrorFailed);
+        VerifyOrExit(aHost->mAddresses.GetLength() > 0, error = kErrorFailed);
     }
 
     // SIG(0).
@@ -1326,6 +1367,7 @@ void Server::HandleUpdate(Host &aHost, const MessageMetadata &aMetadata)
 
         SuccessOrExit(error = service->mServiceName.Set(existingService.GetServiceName()));
         service->mIsDeleted = true;
+        service->mKeyLease  = existingService.mKeyLease;
     }
 
 exit:
@@ -1396,6 +1438,17 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
 
         aError = kErrorNoBufs;
     }
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    else if (aError == kErrorNone)
+    {
+        // Ask `AdvertisingProxy` to advertise the new update.
+        // Proxy will report the outcome by calling
+        // `Server::CommitSrpUpdate()` directly.
+
+        Get<AdvertisingProxy>().Advertise(aHost, aMetadata);
+        ExitNow();
+    }
+#endif
 
     CommitSrpUpdate(aError, aHost, aMetadata);
 
@@ -1407,9 +1460,11 @@ void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
                           Dns::UpdateHeader::Response aResponseCode,
                           const Ip6::MessageInfo     &aMessageInfo)
 {
-    Error             error;
+    Error             error    = kErrorNone;
     Message          *response = nullptr;
     Dns::UpdateHeader header;
+
+    VerifyOrExit(mState == kStateRunning, error = kErrorInvalidState);
 
     response = GetSocket().NewMessage();
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
@@ -1726,6 +1781,15 @@ Error Server::Service::Init(const char *aInstanceName, const char *aInstanceLabe
     mUpdateTime  = aUpdateTime;
     mIsDeleted   = false;
     mIsCommitted = false;
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    mIsRegistered      = false;
+    mIsKeyRegistered   = false;
+    mIsReplaced        = false;
+    mShouldAdvertise   = false;
+    mShouldRegisterKey = false;
+    mAdvId             = kInvalidRequestId;
+    mKeyAdvId          = kInvalidRequestId;
+#endif
 
     mParsedDeleteAllRrset = false;
     mParsedSrv            = false;
@@ -1904,6 +1968,15 @@ Server::Host::Host(Instance &aInstance, TimeMilli aUpdateTime)
     , mUpdateTime(aUpdateTime)
     , mParsedKey(false)
     , mUseShortLeaseOption(false)
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    , mIsRegistered(false)
+    , mIsKeyRegistered(false)
+    , mIsReplaced(false)
+    , mShouldAdvertise(false)
+    , mShouldRegisterKey(false)
+    , mAdvId(kInvalidRequestId)
+    , mKeyAdvId(kInvalidRequestId)
+#endif
 {
 }
 
@@ -2015,12 +2088,18 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
     VerifyOrExit(aService != nullptr);
 
     aService->mIsDeleted = true;
+    aService->mLease     = 0;
+
+    if (!aRetainName)
+    {
+        aService->mKeyLease = 0;
+    }
 
     aService->Log(aRetainName ? Service::kRemoveButRetainName : Service::kFullyRemove);
 
     if (aNotifyServiceHandler && server.mServiceUpdateHandler.IsSet())
     {
-        uint32_t updateId = server.AllocateId();
+        uint32_t updateId = server.AllocateServiceUpdateId();
 
         LogInfo("SRP update handler is notified (updatedId = %lu)", ToUlong(updateId));
         server.mServiceUpdateHandler.Invoke(updateId, this, static_cast<uint32_t>(kDefaultEventsHandlerTimeout));
@@ -2030,6 +2109,12 @@ void Server::Host::RemoveService(Service *aService, RetainName aRetainName, Noti
         // failure of the platform mDNS implementation and in which case the
         // service is not expected to be still registered.
     }
+#if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+    else if (aNotifyServiceHandler)
+    {
+        Get<AdvertisingProxy>().AdvertiseRemovalOf(*aService);
+    }
+#endif
 
     if (!aRetainName)
     {
@@ -2093,7 +2178,7 @@ Server::UpdateMetadata::UpdateMetadata(Instance &aInstance, Host &aHost, const M
     , mNext(nullptr)
     , mExpireTime(TimerMilli::GetNow() + kDefaultEventsHandlerTimeout)
     , mDnsHeader(aMessageMetadata.mDnsHeader)
-    , mId(Get<Server>().AllocateId())
+    , mId(Get<Server>().AllocateServiceUpdateId())
     , mTtlConfig(aMessageMetadata.mTtlConfig)
     , mLeaseConfig(aMessageMetadata.mLeaseConfig)
     , mHost(aHost)
