@@ -33,8 +33,20 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+
+#if !OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#error "OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE requires OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE"
+#endif
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#error "OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE requires OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
+
+#endif // OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+
 #include <openthread/dnssd_server.h>
 
+#include "border_router/infra_if.hpp"
 #include "common/as_core_type.hpp"
 #include "common/callback.hpp"
 #include "common/message.hpp"
@@ -42,6 +54,7 @@
 #include "common/owned_ptr.hpp"
 #include "common/timer.hpp"
 #include "net/dns_types.hpp"
+#include "net/dnssd.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "net/srp_server.hpp"
@@ -71,6 +84,10 @@ namespace ServiceDiscovery {
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class Srp::Server;
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    friend class ot::Dnssd;
+    friend class ot::BorderRouter::InfraIf;
+#endif
 
 public:
     /**
@@ -303,6 +320,10 @@ private:
     typedef Message      ProxyQuery;
     typedef MessageQueue ProxyQueryList;
 
+    typedef bool (*AddrFilter)(const Ip6::Address &aAddress);
+
+    static constexpr AddrFilter kNoAddrFilter = nullptr;
+
     enum QueryType : uint8_t
     {
         kPtrQuery,
@@ -310,6 +331,7 @@ private:
         kTxtQuery,
         kSrvTxtQuery,
         kAaaaQuery,
+        kAQuery,
     };
 
     enum Section : uint8_t
@@ -317,6 +339,23 @@ private:
         kAnswerSection,
         kAdditionalDataSection,
     };
+
+    enum AddrType : uint8_t
+    {
+        kIp6AddrType,
+        kIp4AddrType,
+    };
+
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    enum ProxyAction : uint8_t
+    {
+        kNoAction,
+        kBrowsing,
+        kResolvingService,
+        kResolvingIp6Address,
+        kResolvingIp4Address
+    };
+#endif
 
     struct Request
     {
@@ -337,6 +376,19 @@ private:
         uint16_t mInstanceName;
         uint16_t mHostName;
     };
+
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    union ProxyResult
+    {
+        explicit ProxyResult(const Dnssd::ServiceInstance &aServiceInstance) { mServiceInstance = &aServiceInstance; }
+        explicit ProxyResult(const Dnssd::Service &aService) { mService = &aService; }
+        explicit ProxyResult(const Dnssd::Host &aHost) { mHost = &aHost; }
+
+        const Dnssd::ServiceInstance *mServiceInstance;
+        const Dnssd::Service         *mService;
+        const Dnssd::Host            *mHost;
+    };
+#endif
 
     class Response : public InstanceLocator, private NonCopyable
     {
@@ -359,9 +411,15 @@ private:
                                      uint16_t    aPort);
         Error        AppendTxtRecord(const ServiceInstanceInfo &aInstanceInfo);
         Error        AppendTxtRecord(const void *aTxtData, uint16_t aTxtLength, uint32_t aTtl);
-        Error        AppendHostAddresses(const HostInfo &aHostInfo);
+        Error        AppendHostAddresses(AddrType aAddrType, const HostInfo &aHostInfo);
         Error        AppendHostAddresses(const ServiceInstanceInfo &aInstanceInfo);
-        Error        AppendHostAddresses(const Ip6::Address *aAddrs, uint16_t aAddrsLength, uint32_t aTtl);
+        Error        AppendHostAddresses(AddrType            aAddrType,
+                                         const Ip6::Address *aAddrs,
+                                         uint16_t            aAddrsLength,
+                                         uint32_t            aTtl,
+                                         AddrFilter          mAddrFilter);
+        Error        AppendAaaaRecord(const Ip6::Address &aAddress, uint32_t aTtl);
+        Error        AppendARecord(const Ip6::Address &aAddress, uint32_t aTtl);
         void         UpdateRecordLength(ResourceRecord &aRecord, uint16_t aOffset);
         void         IncResourceRecordCount(void);
         void         Send(const Ip6::MessageInfo &aMessageInfo);
@@ -375,6 +433,15 @@ private:
         Error AppendTxtRecord(const Srp::Server::Service &aService);
         Error AppendHostAddresses(const Srp::Server::Host &aHost);
 #endif
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+        Error AppendPtrRecord(const ProxyResult &aResult);
+        Error AppendService(const ProxyResult &aResult);
+        Error AppendHostIp6Addresses(const ProxyResult &aResult);
+        Error AppendHostIp4Addresses(const ProxyResult &aResult);
+        Error AppendSrvRecord(const Dnssd::Service &aService);
+        Error AppendTxtRecord(const Dnssd::Service &aService);
+#endif
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
         void               Log(void) const;
         static const char *QueryTypeToString(QueryType aType);
@@ -397,7 +464,65 @@ private:
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mExpireTime;
         NameOffsets      mOffsets;
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+        ProxyAction mAction;
+#endif
     };
+
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    class DiscoveryProxy : public InstanceLocator, private NonCopyable
+    {
+        friend ot::Dnssd;
+
+    public:
+        explicit DiscoveryProxy(Instance &aInstance);
+
+        bool IsRunning(void) const { return mIsRunning; }
+        void UpdateState(void);
+        void Start(void);
+        void Stop(void);
+        void Resolve(ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
+        void CancelAction(ProxyQuery &aProxy, ProxyQueryInfo &aInfo);
+
+    private:
+        enum Command : uint8_t
+        {
+            kStart,
+            kStop,
+        };
+
+        typedef Error (Response::*ResponseAppender)(const ProxyResult &aResult);
+
+        void Perform(ProxyAction aAction, ProxyQuery &aQuery, ProxyQueryInfo &aInfo);
+        void ReadNameFor(ProxyAction aAction, ProxyQuery &aQuery, ProxyQueryInfo &aInfo, DnsName &aName) const;
+        bool HasActive(ProxyAction aAction, const DnsName &aName) const;
+        bool QueryMatches(const ProxyQuery     &aQuery,
+                          const ProxyQueryInfo &aInfo,
+                          ProxyAction           aAction,
+                          const DnsName        &aName) const;
+        void UpdateProxy(Command               aCommand,
+                         ProxyAction           aAction,
+                         const ProxyQuery     &aQuery,
+                         const ProxyQueryInfo &aInfo,
+                         const DnsName        &aName);
+        void UpdateServiceBrowser(Command aCommand, const DnsName &aServiceName);
+        void UpdateServiceResolver(Command aCommand, const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo);
+        void UpdateIp6AddressResolver(Command aCommand, const DnsName &aHostName);
+        void UpdateIp4AddressResolver(Command aCommand, const DnsName &aHostName);
+        void HandleResult(ProxyAction        aAction,
+                          const DnsName     &aName,
+                          ResponseAppender   aAppender,
+                          const ProxyResult &aResult);
+
+        // Callbacks from `Dnssd` platform
+        void HandleServiceBrowseResult(Dnssd::Event aEvent, const Dnssd::ServiceInstance &aServiceInstance);
+        void HandleServiceResolveResult(const Dnssd::Service &aService);
+        void HandleIp6AddressResolveResult(Dnssd::Event aEvent, const Dnssd::Host &aHost);
+        void HandleIp4AddressResolveResult(Dnssd::Event aEvent, const Dnssd::Host &aHost);
+
+        bool mIsRunning;
+    };
+#endif
 
     bool           IsRunning(void) const { return mSocket.IsBound(); }
     static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -405,11 +530,25 @@ private:
     void           ProcessQuery(Request &aRequest);
     static uint8_t GetNameLength(const char *aName);
 
-    void        ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
-    void        RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Response &aResponse);
-    void        Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode);
-    static void ReadQueryName(const Message &aQuery, DnsName &aName);
-    static bool QueryNameMatches(const Message &aQuery, const char *aName);
+    void ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
+    void RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, ProxyQueryInfo &aInfo, Response &aResponse);
+    void Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode);
+
+    static void  ReadQueryName(const Message &aQuery, DnsName &aName);
+    static bool  QueryNameMatches(const Message &aQuery, const char *aName);
+    static void  ReadQueryInstanceName(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, DnsName &aName);
+    static bool  QueryInstanceNameMatches(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, const char *aName);
+    static void  ReadQueryHostName(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, DnsName &aName);
+    static bool  QueryHostNameMatches(const ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, const char *aName);
+    static Error StripDomainName(const char *aFullName, DnsName &aLabels);
+    static void  ConstructFullName(const char *aLabels, DnsName &aFullName);
+    static void  ConstructFullInstanceName(const char *aInstanceLabel, const char *aServiceType, DnsName &aFullName);
+
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    void        HandleInfraIfStateChanged(void) { mDiscoveryProxy.UpdateState(); }
+    void        HandleDnssdPlatformStateChange(void) { mDiscoveryProxy.UpdateState(); }
+    static bool ShouldFilterProxyAddress(const Ip6::Address &aAddress);
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     static bool               ShouldForwardToUpstream(const Request &aRequest);
@@ -436,6 +575,10 @@ private:
     ProxyQueryList                mProxyQueries;
     Callback<SubscribeCallback>   mQuerySubscribe;
     Callback<UnsubscribeCallback> mQueryUnsubscribe;
+
+#if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+    DiscoveryProxy mDiscoveryProxy;
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     bool                     mEnableUpstreamQuery;

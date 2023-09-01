@@ -385,6 +385,30 @@ bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRea
 
 void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
 
+bool Address::IsIp4Mapped(void) const
+{
+    return (mFields.m32[0] == 0 && mFields.m32[1] == 0 && mFields.m32[2] == HostSwap32(0xffff));
+}
+
+void Address::SetToIp4Mapped(const Ip4::Address &aIp4Address)
+{
+    mFields.m32[0] = 0;
+    mFields.m32[1] = 0;
+    mFields.m32[2] = HostSwap32(0xffff);
+    memcpy(&mFields.m8[12], aIp4Address.GetBytes(), sizeof(aIp4Address));
+}
+
+Error Address::ExtractMappedIp4(Ip4::Address &aIp4Address) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsIp4Mapped(), error = kErrorParse);
+    aIp4Address.SetBytes(&mFields.m8[12]);
+
+exit:
+    return error;
+}
+
 bool Address::MatchesPrefix(const Prefix &aPrefix) const
 {
     return Prefix::MatchLength(mFields.m8, aPrefix.GetBytes(), aPrefix.GetBytesSize()) >= aPrefix.GetLength();

@@ -68,6 +68,7 @@ set -euxo pipefail
         -DOT_SERVICE=ON \
         -DOT_SLAAC=ON \
         -DOT_SNTP_CLIENT=ON \
+        -DOT_SRN_ADV_PROXY=ON \
         -DOT_SRP_CLIENT=ON \
         -DOT_SRP_SERVER=ON \
         -DOT_THREAD_VERSION=1.3 \
