@@ -7219,7 +7219,7 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
      * @cparam sntp query [@ca{SNTP server IP}] [@ca{SNTP server port}]
      * @par api_copy
      * #otSntpClientQuery
-     * @ssa otThreadErrorToString
+     * @sa otThreadErrorToString
      */
     if (aArgs[0] == "query")
     {
