@@ -7337,9 +7337,9 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * state leader
      * Done
      * @endcode
-     * @cparam [@ca{state}]
+     * @cparam state [@ca{state}]
      * @par api_copy
-     * #otThreadDeviceRoleToString
+     * #ototThreadGetDeviceRole
      */
     if (aArgs[0].IsEmpty())
     {
