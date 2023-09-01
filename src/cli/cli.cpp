@@ -7182,7 +7182,7 @@ exit:
  * true
  * Done
  * @endcode
- * @api_copy
+ * @par api_copy
  * #otThreadIsSingleton
  */
 template <> otError Interpreter::Process<Cmd("singleton")>(Arg aArgs[])
