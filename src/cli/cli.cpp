@@ -7175,6 +7175,16 @@ exit:
     return;
 }
 
+/**
+ * @cli singleton
+ * @code
+ * singleton
+ * true
+ * Done
+ * @endcode
+ * @api_copy
+ * #otThreadIsSingleton
+ */
 template <> otError Interpreter::Process<Cmd("singleton")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
