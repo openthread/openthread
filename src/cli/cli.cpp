@@ -7326,6 +7326,21 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli state
+     * @code
+     * state
+     * child
+     * Done
+     * @endcode
+     * @code
+     * state leader
+     * Done
+     * @endcode
+     * @cparam [@ca{state}]
+     * @par api_copy
+     * #otThreadDeviceRoleToString
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadDeviceRoleToString(otThreadGetDeviceRole(GetInstancePtr())));
