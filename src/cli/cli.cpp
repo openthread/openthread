@@ -7204,6 +7204,23 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
     Ip6::MessageInfo messageInfo;
     otSntpQuery      query;
 
+    /**
+     * @cli sntp query
+     * @code
+     * sntp query
+     * SNTP response - Unix time: 1540894725 (era: 0)
+     * Done
+     * @endcode
+     * @code
+     * sntp query 64:ff9b::d8ef:2308
+     * SNTP response - Unix time: 1540898611 (era: 0)
+     * Done
+     * @endcode
+     * @cparam sntp query [@ca{SNTP server IP}] [@ca{SNTP server port}]
+     * @par api_copy
+     * #otSntpClientQuery
+     * @ssa otThreadErrorToString
+     */
     if (aArgs[0] == "query")
     {
         VerifyOrExit(!mSntpQueryingInProgress, error = OT_ERROR_BUSY);
