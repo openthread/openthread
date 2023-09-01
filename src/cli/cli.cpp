@@ -7222,6 +7222,7 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
      * - SNTP server default IP address: 2001:4860:4806:8:: (Google IPv6 NTP Server)
      * - SNTP server default port: 123
      * @note This command is available only if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE is enabled.
+     * @sa #otSntpClientQuery
      */
     if (aArgs[0] == "query")
     {
