@@ -7217,9 +7217,11 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam sntp query [@ca{SNTP server IP}] [@ca{SNTP server port}]
-     * @par api_copy
-     * #otSntpClientQuery
-     * @sa otThreadErrorToString
+     * @par
+     * Sends an SNTP query to obtain the current unix epoch time (from January 1, 1970).
+     * - SNTP server default IP address: 2001:4860:4806:8:: (Google IPv6 NTP Server)
+     * - SNTP server default port: 123
+     * @note This command is available only if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE is enabled.
      */
     if (aArgs[0] == "query")
     {
