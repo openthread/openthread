@@ -3895,7 +3895,7 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * ExtAddr:827aa7f7f63e1234, LinkMargin:80, Rssi:-20
      * Done
      * @endcode
-     * @api_copy
+     * @par api_copy
      * #otLinkMetricsManagerGetMetricsValueByExtAddr
      *
      */
