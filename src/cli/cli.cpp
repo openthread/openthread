@@ -7337,7 +7337,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * state leader
      * Done
      * @endcode
-     * @cparam state [@ca{child} @ca{router} @ca{leader} @ca{detached}]
+     * @cparam state [@ca{child} | @ca{router} | @ca{leader} | @ca{detached}]
      * @par
      * Returns the current role of the Thread device, or changes the role as specified with one of the  options.
      * Possible values returned when inquiring about the device role:
