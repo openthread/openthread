@@ -86,8 +86,6 @@ cc_defaults {
         "-DPACKAGE_URL=\"http://github.com/openthread/openthread\"",
         "-DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"",
     ],
-    apex_available: [ "com.android.threadnetwork" ],
-    min_sdk_version: "33",
 }
 
 genrule {
@@ -498,6 +496,8 @@ filegroup {
 
 cc_library_static {
     name: "ot-core",
+    apex_available: [ "com.android.threadnetwork" ],
+    min_sdk_version: "33",
     defaults: [
         "ot_config_defaults",
         "ot-daemon-debuggable-cc-defaults",
@@ -556,7 +556,8 @@ cc_library_static {
 
 cc_library_static {
     name: "libopenthread-cli",
-
+    apex_available: [ "com.android.threadnetwork" ],
+    min_sdk_version: "33",
     defaults: [
         "ot_config_defaults",
         "ot-daemon-debuggable-cc-defaults",
@@ -606,7 +607,7 @@ cc_library_static {
 
 cc_binary {
     name: "ot-ctl",
-
+    vendor: true,
     defaults: ["ot_posix_cflags_defaults"],
     generated_headers: ["ot_version_header"],
 
