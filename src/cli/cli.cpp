@@ -7338,8 +7338,22 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam state [@ca{state}]
-     * @par api_copy
-     * #otThreadGetDeviceRole
+     * @par
+     * Returns the current role of the Thread device, or changes the role as specified with the `state` option.
+     * Possible values returned when inquiring about the device role:
+     * - `child`: The device is currently operating as a Thread child.
+     * - `router`: The device is currently operating as a Thread router.
+     * - `leader`: The device is currently operating as a Thread leader.
+     * - `detached`: The device is not currently participating in a Thread network/partition.
+     * - `disabled`: The Thread stack is currently disabled.
+     * @par
+     * Using the `state` option allows you to change the current role of a device, with the excluson of
+     * changing to or from `disabled` state.
+     * @sa otThreadGetDeviceRole
+     * @sa otThreadBecomeChild
+     * @sa otThreadBecomeRouter
+     * @sa otThreadBecomeLeader
+     * @sa otThreadBecomeDetached
      */
     if (aArgs[0].IsEmpty())
     {
