@@ -186,6 +186,9 @@ void Notifier::EmitEvents(void)
     // being published (if needed).
     Get<NetworkData::Publisher>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+    Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {

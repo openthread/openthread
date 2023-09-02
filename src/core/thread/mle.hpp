@@ -75,6 +75,7 @@ namespace ot {
  */
 
 class SupervisionListener;
+class UnitTester;
 
 /**
  * @namespace ot::Mle
@@ -111,6 +112,7 @@ class Mle : public InstanceLocator, private NonCopyable
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     friend class ot::LinkMetrics::Initiator;
 #endif
+    friend class ot::UnitTester;
 
 public:
     /**

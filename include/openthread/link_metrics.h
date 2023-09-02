@@ -250,6 +250,31 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
                                    uint8_t             aLength);
 
 /**
+ * Enable or disable Link Metrics Manager.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ * @param[in] aEnable         A boolean indicating to enable or disable.
+ *
+ */
+void otLinkMetricsManagerSetEnabled(otInstance *aInstance, bool aEnable);
+
+/**
+ * Get Link Metrics data of a neighbor by its extended address.
+ *
+ * @param[in]  aInstance           A pointer to an OpenThread instance.
+ * @param[in]  aExtAddress         A pointer to the Mac extended address of the Probing Subject.
+ * @param[out] aLinkMetricsValues  A pointer to the Link Metrics values of the subject.
+ *
+ * @retval OT_ERROR_NONE              Successfully got the Link Metrics data.
+ * @retval OT_ERROR_INVALID_ARGS      The arguments are invalid.
+ * @retval OT_ERROR_NOT_FOUND         No neighbor with the given extended address is found.
+ *
+ */
+otError otLinkMetricsManagerGetMetricsValueByExtAddr(otInstance          *aInstance,
+                                                     const otExtAddress  *aExtAddress,
+                                                     otLinkMetricsValues *aLinkMetricsValues);
+
+/**
  * @}
  *
  */

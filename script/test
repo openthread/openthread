@@ -129,6 +129,7 @@ build_simulation()
         options+=("-DOT_CSL_RECEIVER=ON")
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
+        options+=("-DOT_LINK_METRICS_MANAGER=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -162,6 +163,9 @@ build_posix()
     if [[ ${version} != "1.1" ]]; then
         options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
+        options+=("-DOT_LINK_METRICS_INITIATOR=ON")
+        options+=("-DOT_LINK_METRICS_SUBJECT=ON")
+        options+=("-DOT_LINK_METRICS_MANAGER=ON")
     fi
 
     if [[ ${FULL_LOGS} == 1 ]]; then

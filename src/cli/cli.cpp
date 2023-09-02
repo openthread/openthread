@@ -3863,6 +3863,72 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    /**
+     * @cli linkmetricsmgr (enable,disable)
+     * @code
+     * linkmetricmgr enable
+     * Done
+     * @endcode
+     * @code
+     * linkmetricmgr disable
+     * Done
+     * @endcode
+     * @cparam linkmetricsmgr @ca{enable|disable}
+     * @par api_copy
+     * #otLinkMetricsManagerSetEnabled
+     *
+     */
+    if (ProcessEnableDisable(aArgs, otLinkMetricsManagerSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+    /**
+     * @cli linkmetricsmgr show
+     * @code
+     * linkmetricsmgr show
+     * ExtAddr:827aa7f7f63e1234, LinkMargin:80, Rssi:-20
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkMetricsManagerGetMetricsValueByExtAddr
+     *
+     */
+    else if (aArgs[0] == "show")
+    {
+        otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+        otNeighborInfo         neighborInfo;
+
+        while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
+        {
+            otLinkMetricsValues linkMetricsValues;
+
+            if (otLinkMetricsManagerGetMetricsValueByExtAddr(GetInstancePtr(), &neighborInfo.mExtAddress,
+                                                             &linkMetricsValues) != OT_ERROR_NONE)
+            {
+                continue;
+            }
+
+            OutputFormat("ExtAddr:");
+            OutputExtAddress(neighborInfo.mExtAddress);
+            OutputLine(", LinkMargin:%u, Rssi:%d", linkMetricsValues.mLinkMarginValue, linkMetricsValues.mRssiValue);
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+
 otError Interpreter::ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags)
 {
     otError error = OT_ERROR_NONE;
@@ -8352,6 +8418,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         CmdEntry("linkmetrics"),
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+        CmdEntry("linkmetricsmgr"),
+#endif
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
         CmdEntry("locate"),
