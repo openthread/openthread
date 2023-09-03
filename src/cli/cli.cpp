@@ -7395,8 +7395,9 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
      * thread start
      * Done
      * @endcode
-     * @par api_copy
-     * #otThreadSetEnabled
+     * @par
+     * Starts the Thread protocol operation. 
+     * sa otThreadSetEnabled
      */
     if (aArgs[0] == "start")
     {
@@ -7408,8 +7409,8 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
      * thread stop
      * Done
      * @endcode
-     * @par api_copy
-     * #otThreadSetDisabled
+     * @par
+     * Stops the Thread protocol operation.
      */
     else if (aArgs[0] == "stop")
     {
