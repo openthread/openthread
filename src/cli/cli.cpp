@@ -7389,10 +7389,28 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli thread start
+     * @code
+     * thread start
+     * Done
+     * @endcode
+     * @par api_copy
+     * otThreadSetEnabled
+     */
     if (aArgs[0] == "start")
     {
         error = otThreadSetEnabled(GetInstancePtr(), true);
     }
+    /**
+     * @cli thread stop
+     * @code
+     * thread stop
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSetDisabled
+     */
     else if (aArgs[0] == "stop")
     {
         error = otThreadSetEnabled(GetInstancePtr(), false);
