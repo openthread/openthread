@@ -912,6 +912,8 @@ private:
         const LeaseConfig       &GetLeaseConfig(void) const { return mLeaseConfig; }
         Host                    &GetHost(void) { return mHost; }
         const Ip6::MessageInfo  &GetMessageInfo(void) const { return mMessageInfo; }
+        Error                    GetError(void) const { return mError; }
+        void                     SetError(Error aError) { mError = aError; }
         bool                     IsDirectRxFromClient(void) const { return mIsDirectRxFromClient; }
         bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
@@ -926,6 +928,7 @@ private:
         LeaseConfig       mLeaseConfig; // Lease config to use when processing the message.
         Host             &mHost;        // The `UpdateMetadata` has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // Valid when `mIsDirectRxFromClient` is true.
+        Error             mError;
         bool              mIsDirectRxFromClient;
     };
 
@@ -948,7 +951,7 @@ private:
 
     void  InformUpdateHandlerOrCommit(Error aError, Host &aHost, const MessageMetadata &aMetadata);
     void  CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &aMessageMetadata);
-    void  CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata);
+    void  CommitSrpUpdate(UpdateMetadata &aUpdateMetadata);
     void  CommitSrpUpdate(Error                    aError,
                           Host                    &aHost,
                           const Dns::UpdateHeader &aDnsHeader,
@@ -998,15 +1001,16 @@ private:
     void        HandleLeaseTimer(void);
     static void HandleOutstandingUpdatesTimer(Timer &aTimer);
     void        HandleOutstandingUpdatesTimer(void);
+    void        ProcessCompletedUpdates(void);
 
-    void                  HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError);
     const UpdateMetadata *FindOutstandingUpdate(const MessageMetadata &aMessageMetadata) const;
     static const char    *AddressModeToString(AddressMode aMode);
 
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
 
-    using LeaseTimer  = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
-    using UpdateTimer = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
+    using LeaseTimer           = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
+    using UpdateTimer          = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
+    using CompletedUpdatesTask = TaskletIn<Server, &Server::ProcessCompletedUpdates>;
 
     Ip6::Udp::Socket mSocket;
 
@@ -1022,6 +1026,8 @@ private:
 
     UpdateTimer                mOutstandingUpdatesTimer;
     LinkedList<UpdateMetadata> mOutstandingUpdates;
+    LinkedList<UpdateMetadata> mCompletedUpdates;
+    CompletedUpdatesTask       mCompletedUpdateTask;
 
     ServiceUpdateId mServiceUpdateId;
     uint16_t        mPort;
