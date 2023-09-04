@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import logging
+import time
 import unittest
 import ipaddress
 
@@ -45,12 +46,13 @@ import thread_cert
 #    ----------------(eth)----------------------
 #           |                  |
 #          BR1 (Leader)      HOST
-#           |
-#         ROUTER1
+#           |      \
+#         ROUTER1  ROUTER2
 
 BR1 = 1
 ROUTER1 = 2
-HOST = 3
+ROUTER2 = 3
+HOST = 4
 
 
 class Firewall(thread_cert.TestCase):
@@ -59,14 +61,19 @@ class Firewall(thread_cert.TestCase):
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [ROUTER1],
+            'allowlist': [ROUTER1, ROUTER2],
             'is_otbr': True,
-            'version': '1.2',
+            'version': '1.3',
         },
         ROUTER1: {
             'name': 'Router_1',
             'allowlist': [BR1],
-            'version': '1.2',
+            'version': '1.3',
+        },
+        ROUTER2: {
+            'name': 'Router_2',
+            'allowlist': [BR1],
+            'version': '1.3',
         },
         HOST: {
             'name': 'Host',
@@ -78,16 +85,20 @@ class Firewall(thread_cert.TestCase):
         br1 = self.nodes[BR1]
         self.br1 = br1
         router1 = self.nodes[ROUTER1]
+        router2 = self.nodes[ROUTER2]
         host = self.nodes[HOST]
 
         br1.start()
         self.simulator.go(config.LEADER_STARTUP_DELAY)
         self.assertEqual('leader', br1.get_state())
+        br1.set_log_level(5)
 
         router1.start()
+        router2.start()
         host.start(start_radvd=True)
         self.simulator.go(config.ROUTER_STARTUP_DELAY)
         self.assertEqual('router', router1.get_state())
+        self.assertEqual('router', router2.get_state())
 
         br1.set_domain_prefix(config.DOMAIN_PREFIX, 'prosD')
         br1.register_netdata()
@@ -125,13 +136,13 @@ class Firewall(thread_cert.TestCase):
                             interface=router1.get_rloc(),
                             add_interface=True))
 
-        # 4. Host pings router1's OMR from BR1's OMR.
+        # 4. Host pings router1's OMR from router2's OMR.
         self.assertFalse(
             host_ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                            interface=br1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                            interface=router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                             add_interface=True))
 
-        # 5. Host pings router1's OMR from router1's MLE-ID.
+        # 5. Host pings router1's OMR from router1's ML-EID.
         self.assertFalse(
             host_ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                             interface=router1.get_mleid(),
@@ -147,7 +158,7 @@ class Firewall(thread_cert.TestCase):
                             add_route=True,
                             gateway=br1.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA)))
 
-        # 7. Host pings router1's MLE-ID from host's ULA address.
+        # 7. Host pings router1's ML-EID from host's ULA address.
         self.assertFalse(
             host_ping_ether(router1.get_mleid(),
                             interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0],
@@ -175,12 +186,20 @@ class Firewall(thread_cert.TestCase):
                             interface=router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                             add_interface=True))
 
-        # 12. Host pings MA1 from router1's MLE-ID.
+        # 12. Host pings MA1 from router1's ML-EID.
         self.assertFalse(host_ping_ether(MA1, ttl=10, interface=router1.get_mleid(), add_interface=True))
 
-        # 13. Router1 pings Host from router1's MLE-ID.
+        # 13. Router1 pings Host from router1's ML-EID.
         self.assertFalse(
             router1.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0], interface=router1.get_mleid()))
+
+        # 14. BR pings router1's ML-EID from BR's ML-EID.
+        self.assertTrue(br1.ping_ether(router1.get_mleid(), interface=br1.get_mleid()))
+
+        # 15. BR pings router1's OMR from BR's infra interface.
+        self.assertTrue(
+            br1.ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                           interface=br1.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
 
         self.collect_ipaddrs()
         self.collect_rlocs()
@@ -215,13 +234,13 @@ class Firewall(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
             vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
-        # 4. Host pings router1's OMR from BR1's OMR.
+        # 4. Host pings router1's OMR from router2's OMR.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(
-            vars['BR_1_OMR'][0], vars['Router_1_OMR'][0]).filter_ping_request().must_next()
+            vars['Router_2_OMR'][0], vars['Router_1_OMR'][0]).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst64(
             vars['Router_1']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
-        # 5. Host pings router1's OMR from router1's MLE-ID.
+        # 5. Host pings router1's OMR from router1's ML-EID.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(
             vars['Router_1_MLEID'], vars['Router_1_OMR'][0]).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
@@ -233,7 +252,7 @@ class Firewall(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
             vars['Router_1_RLOC16']).filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
-        # 7. Host pings router1's MLE-ID from host's ULA address.
+        # 7. Host pings router1's ML-EID from host's ULA address.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(
             vars['Router_1_MLEID']).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['BR_1']).filter_wpan_dst16(
@@ -263,15 +282,24 @@ class Firewall(thread_cert.TestCase):
         pkts.filter_wpan_src64(
             vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
-        # 12. Host pings MA1 from router1's MLE-ID.
+        # 12. Host pings MA1 from router1's ML-EID.
         _pkt = pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_src_dst(vars['Router_1_MLEID'],
                                                                          MA1).filter_ping_request().must_next()
         pkts.filter_wpan_src64(
             vars['BR_1']).filter_AMPLFMA().filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).must_not_next()
 
-        # 13. Router1 pings Host from router1's MLE-ID.
+        # 13. Router1 pings Host from router1's ML-EID.
         pkts.filter_eth_src(vars['BR_1_ETH']).filter_ipv6_src_dst(
             vars['Router_1_MLEID'], vars['Host_BGUA']).filter_ping_request().must_not_next()
+
+        # 14. BR pings router1's ML-EID from BR's infra interface.
+        _pkt = pkts.filter_wpan_src64(vars['BR_1']).filter_ipv6_src_dst(
+            vars['BR_1_MLEID'], vars['Router_1_MLEID']).filter_ping_request().must_next()
+        pkts.filter_wpan_src64(vars['Router_1']).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
+
+        # 15. BR pings router1's OMR from BR's infra interface.
+        _pkt = pkts.filter_wpan_src64(vars['BR_1']).filter_ping_request().must_next()
+        pkts.filter_wpan_src64(vars['Router_1']).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
 
 
 if __name__ == '__main__':

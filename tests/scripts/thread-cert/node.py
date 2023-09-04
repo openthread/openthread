@@ -3630,6 +3630,24 @@ class LinuxHost():
 
         return resp_count
 
+    def get_ip6_address(self, address_type: config.ADDRESS_TYPE):
+        """Get specific type of IPv6 address configured on thread device.
+
+        Args:
+            address_type: the config.ADDRESS_TYPE type of IPv6 address.
+
+        Returns:
+            IPv6 address string.
+        """
+        if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
+            return self._getBackboneGua()
+        elif address_type == config.ADDRESS_TYPE.ONLINK_ULA:
+            return self._getInfraUla()
+        elif address_type == config.ADDRESS_TYPE.ONLINK_GUA:
+            return self._getInfraGua()
+        else:
+            raise ValueError(f'unsupported address type: {address_type}')
+
     def _getBackboneGua(self) -> Optional[str]:
         for addr in self.get_ether_addrs():
             if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, addr, re.I):
@@ -3885,6 +3903,12 @@ class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
         cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.TUN_DEV} {ip} &'
         self.bash(cmd)
 
+    def get_ip6_address(self, address_type: config.ADDRESS_TYPE):
+        try:
+            return super(OtbrNode, self).get_ip6_address(address_type)
+        except Exception as e:
+            return super(LinuxHost, self).get_ip6_address(address_type)
+
 
 class HostNode(LinuxHost, OtbrDocker):
     is_host = True
@@ -3921,25 +3945,6 @@ class HostNode(LinuxHost, OtbrDocker):
                 addrs.append(addr)
 
         return addrs
-
-    def get_ip6_address(self, address_type: config.ADDRESS_TYPE):
-        """Get specific type of IPv6 address configured on thread device.
-
-        Args:
-            address_type: the config.ADDRESS_TYPE type of IPv6 address.
-
-        Returns:
-            IPv6 address string.
-        """
-
-        if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
-            return self._getBackboneGua()
-        elif address_type == config.ADDRESS_TYPE.ONLINK_ULA:
-            return self._getInfraUla()
-        elif address_type == config.ADDRESS_TYPE.ONLINK_GUA:
-            return self._getInfraGua()
-        else:
-            raise ValueError(f'unsupported address type: {address_type}')
 
 
 if __name__ == '__main__':
