@@ -62,3 +62,15 @@
 // FIXME(296975198): refactor to skip posix/udp.cpp when the tunnel interface is not
 // available, instead of crash
 #define OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE 0
+
+/**
+ * Disables the DAEMON_CLI feature because the Android build system default is built with "Release"
+ * type all build buid variants (user, userdebug and eng), but we want to disable CLI for OT daemon
+ * in product.
+ *
+ * This flag will be overriden in "product_variables.debuggable.cflags" to enable CLI in userdebug
+ * or eng build, see "ot-daemon-debuggable-cc-defaults".
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE 0
+#endif

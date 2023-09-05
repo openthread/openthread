@@ -500,7 +500,7 @@ cc_library_static {
     name: "ot-core",
     defaults: [
         "ot_config_defaults",
-        "ot-daemon-release-cc-defaults",
+        "ot-daemon-debuggable-cc-defaults",
         "ot_posix_cflags_defaults",
     ],
     generated_headers: ["ot_version_header"],
@@ -559,7 +559,7 @@ cc_library_static {
 
     defaults: [
         "ot_config_defaults",
-        "ot-daemon-release-cc-defaults",
+        "ot-daemon-debuggable-cc-defaults",
         "ot_posix_cflags_defaults",
     ],
     generated_headers: ["ot_version_header"],
