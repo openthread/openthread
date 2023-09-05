@@ -7348,7 +7348,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * - `disabled`: The Thread stack is currently disabled.
      * @par
      * Using one of the options allows you to change the current role of a device, with the excluson of
-     * changing to or from a `disabled' state.
+     * changing to or from a `disabled` state.
      * @sa otThreadGetDeviceRole
      * @sa otThreadBecomeChild
      * @sa otThreadBecomeRouter
