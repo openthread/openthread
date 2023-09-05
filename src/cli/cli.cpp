@@ -7397,7 +7397,7 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
      * @endcode
      * @par
      * Starts the Thread protocol operation.
-     * @note The interface must be up when running this command. 
+     * @note The interface must be up when running this command.
      * @sa otThreadSetEnabled
      */
     if (aArgs[0] == "start")
