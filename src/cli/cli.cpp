@@ -7219,8 +7219,8 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
      * @cparam sntp query [@ca{SNTP server IP}] [@ca{SNTP server port}]
      * @par
      * Sends an SNTP query to obtain the current unix epoch time (from January 1, 1970).
-     * - SNTP server default IP address: 2001:4860:4806:8:: (Google IPv6 NTP Server)
-     * - SNTP server default port: 123
+     * - SNTP server default IP address: `2001:4860:4806:8::` (Google IPv6 NTP Server)
+     * - SNTP server default port: `123`
      * @note This command is available only if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE is enabled.
      * @sa #otSntpClientQuery
      */
@@ -7337,7 +7337,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * state leader
      * Done
      * @endcode
-     * @cparam state [@ca{child} | @ca{router} | @ca{leader} | @ca{detached}]
+     * @cparam state [@ca{child}|@ca{router}|@ca{leader}|@ca{detached}]
      * @par
      * Returns the current role of the Thread device, or changes the role as specified with one of the  options.
      * Possible values returned when inquiring about the device role:
@@ -7348,7 +7348,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * - `disabled`: The Thread stack is currently disabled.
      * @par
      * Using one of the options allows you to change the current role of a device, with the excluson of
-     * changing to or from `disabled` state.
+     * changing to or from a `disabled' state.
      * @sa otThreadGetDeviceRole
      * @sa otThreadBecomeChild
      * @sa otThreadBecomeRouter
@@ -7418,7 +7418,7 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
         error = otThreadSetEnabled(GetInstancePtr(), false);
     }
     /**
-     * @cli thread version (get)
+     * @cli thread version
      * @code thread version
      * 2
      * Done
