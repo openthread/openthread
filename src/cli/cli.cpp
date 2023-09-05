@@ -7417,6 +7417,15 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
     {
         error = otThreadSetEnabled(GetInstancePtr(), false);
     }
+    /**
+     * @cli thread version (get)
+     * @code thread version
+     * 2
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVersion
+     */
     else if (aArgs[0] == "version")
     {
         OutputLine("%u", otThreadGetVersion());
