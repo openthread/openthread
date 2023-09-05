@@ -64,8 +64,13 @@ inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::TxFram
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
 }
 
-inline void DataPollHandler::Callbacks::HandleFrameChangeDone(Child &aChild)
+void DataPollHandler::Callbacks::HandleFrameChangeDone(Child &aChild)
 {
+    aChild.ResetIndirectTxAttempts();
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    aChild.ResetCslTxAttempts();
+#endif
+
     Get<IndirectSender>().HandleFrameChangeDone(aChild);
 }
 
@@ -235,7 +240,6 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
     {
         aChild.SetFramePurgePending(false);
         aChild.SetFrameReplacePending(false);
-        aChild.ResetIndirectTxAttempts();
         mCallbacks.HandleFrameChangeDone(aChild);
         ExitNow();
     }
@@ -265,7 +269,6 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
         if (aChild.IsFrameReplacePending())
         {
             aChild.SetFrameReplacePending(false);
-            aChild.ResetIndirectTxAttempts();
             mCallbacks.HandleFrameChangeDone(aChild);
             ExitNow();
         }
