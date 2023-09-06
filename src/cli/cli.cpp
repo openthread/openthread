@@ -7339,7 +7339,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * @endcode
      * @cparam state [@ca{child}|@ca{router}|@ca{leader}|@ca{detached}]
      * @par
-     * Returns the current role of the Thread device, or changes the role as specified with one of the  options.
+     * Returns the current role of the Thread device, or changes the role as specified with one of the options.
      * Possible values returned when inquiring about the device role:
      * - `child`: The device is currently operating as a Thread child.
      * - `router`: The device is currently operating as a Thread router.
@@ -7347,7 +7347,7 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
      * - `detached`: The device is not currently participating in a Thread network/partition.
      * - `disabled`: The Thread stack is currently disabled.
      * @par
-     * Using one of the options allows you to change the current role of a device, with the excluson of
+     * Using one of the options allows you to change the current role of a device, with the exclusion of
      * changing to or from a `disabled` state.
      * @sa otThreadGetDeviceRole
      * @sa otThreadBecomeChild
