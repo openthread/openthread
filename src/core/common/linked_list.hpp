@@ -181,6 +181,26 @@ public:
     }
 
     /**
+     * Pushes an entry after the tail in the linked list.
+     *
+     * @param[in] aEntry       A reference to an entry to push into the list.
+     *
+     */
+    void PushAfterTail(Type &aEntry)
+    {
+        Type *tail = GetTail();
+
+        if (tail == nullptr)
+        {
+            Push(aEntry);
+        }
+        else
+        {
+            PushAfter(aEntry, *tail);
+        }
+    }
+
+    /**
      * Pops an entry from head of the linked list.
      *
      * @note This method does not change the popped entry itself, i.e., the popped entry next pointer stays as before.

@@ -89,6 +89,7 @@ Server::Server(Instance &aInstance)
     , mSocket(aInstance)
     , mLeaseTimer(aInstance)
     , mOutstandingUpdatesTimer(aInstance)
+    , mCompletedUpdateTask(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mPort(kUdpPortMin)
     , mState(kStateDisabled)
@@ -381,26 +382,26 @@ exit:
 
 void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
 {
-    UpdateMetadata *update = mOutstandingUpdates.FindMatching(aId);
+    UpdateMetadata *update = mOutstandingUpdates.RemoveMatching(aId);
 
-    if (update != nullptr)
-    {
-        HandleServiceUpdateResult(update, aError);
-    }
-    else
+    if (update == nullptr)
     {
         LogInfo("Delayed SRP host update result, the SRP update has been committed (updateId = %lu)", ToUlong(aId));
+        ExitNow();
     }
-}
 
-void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
-{
-    LogInfo("Handler result of SRP update (id = %lu) is received: %s", ToUlong(aUpdate->GetId()),
-            ErrorToString(aError));
+    update->SetError(aError);
 
-    IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
-    CommitSrpUpdate(aError, *aUpdate);
-    aUpdate->Free();
+    LogInfo("Handler result of SRP update (id = %lu) is received: %s", ToUlong(update->GetId()), ErrorToString(aError));
+
+    // We add new `update` at the tail of the `mCompletedUpdates` list
+    // so that updates are processed in the order we receive the
+    // `HandleServiceUpdateResult()` callbacks for them. The
+    // completed updates are processed from `mCompletedUpdateTask`
+    // and `ProcessCompletedUpdates()`.
+
+    mCompletedUpdates.PushAfterTail(*update);
+    mCompletedUpdateTask.Post();
 
     if (mOutstandingUpdates.IsEmpty())
     {
@@ -410,6 +411,19 @@ void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
     {
         mOutstandingUpdatesTimer.FireAt(mOutstandingUpdates.GetTail()->GetExpireTime());
     }
+
+exit:
+    return;
+}
+
+void Server::ProcessCompletedUpdates(void)
+{
+    UpdateMetadata *update;
+
+    while ((update = mCompletedUpdates.Pop()) != nullptr)
+    {
+        CommitSrpUpdate(*update);
+    }
 }
 
 void Server::CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &aMessageMetadata)
@@ -418,11 +432,13 @@ void Server::CommitSrpUpdate(Error aError, Host &aHost, const MessageMetadata &a
                     aMessageMetadata.mTtlConfig, aMessageMetadata.mLeaseConfig);
 }
 
-void Server::CommitSrpUpdate(Error aError, UpdateMetadata &aUpdateMetadata)
+void Server::CommitSrpUpdate(UpdateMetadata &aUpdateMetadata)
 {
-    CommitSrpUpdate(aError, aUpdateMetadata.GetHost(), aUpdateMetadata.GetDnsHeader(),
+    CommitSrpUpdate(aUpdateMetadata.GetError(), aUpdateMetadata.GetHost(), aUpdateMetadata.GetDnsHeader(),
                     aUpdateMetadata.IsDirectRxFromClient() ? &aUpdateMetadata.GetMessageInfo() : nullptr,
                     aUpdateMetadata.GetTtlConfig(), aUpdateMetadata.GetLeaseConfig());
+
+    aUpdateMetadata.Free();
 }
 
 void Server::CommitSrpUpdate(Error                    aError,
@@ -1663,10 +1679,22 @@ void Server::HandleLeaseTimer(void)
 
 void Server::HandleOutstandingUpdatesTimer(void)
 {
-    while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
+    TimeMilli       now = TimerMilli::GetNow();
+    UpdateMetadata *update;
+
+    while ((update = mOutstandingUpdates.GetTail()) != nullptr)
     {
-        LogInfo("Outstanding service update timeout (updateId = %lu)", ToUlong(mOutstandingUpdates.GetTail()->GetId()));
-        HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), kErrorResponseTimeout);
+        if (update->GetExpireTime() > now)
+        {
+            mOutstandingUpdatesTimer.FireAtIfEarlier(update->GetExpireTime());
+            break;
+        }
+
+        LogInfo("Outstanding service update timeout (updateId = %lu)", ToUlong(update->GetId()));
+
+        IgnoreError(mOutstandingUpdates.Remove(*update));
+        update->SetError(kErrorResponseTimeout);
+        CommitSrpUpdate(*update);
     }
 }
 
@@ -2097,6 +2125,7 @@ Server::UpdateMetadata::UpdateMetadata(Instance &aInstance, Host &aHost, const M
     , mTtlConfig(aMessageMetadata.mTtlConfig)
     , mLeaseConfig(aMessageMetadata.mLeaseConfig)
     , mHost(aHost)
+    , mError(kErrorNone)
     , mIsDirectRxFromClient(aMessageMetadata.IsDirectRxFromClient())
 {
     if (aMessageMetadata.mMessageInfo != nullptr)
