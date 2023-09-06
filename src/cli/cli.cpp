@@ -7175,6 +7175,18 @@ exit:
     return;
 }
 
+/**
+ * @cli singleton
+ * @code
+ * singleton
+ * true
+ * Done
+ * @endcode
+ * @par
+ * Indicates whether a node is the only router on the network.
+ * Returns either `true` or `false`.
+ * @sa otThreadIsSingleton
+ */
 template <> otError Interpreter::Process<Cmd("singleton")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -7192,6 +7204,26 @@ template <> otError Interpreter::Process<Cmd("sntp")>(Arg aArgs[])
     Ip6::MessageInfo messageInfo;
     otSntpQuery      query;
 
+    /**
+     * @cli sntp query
+     * @code
+     * sntp query
+     * SNTP response - Unix time: 1540894725 (era: 0)
+     * Done
+     * @endcode
+     * @code
+     * sntp query 64:ff9b::d8ef:2308
+     * SNTP response - Unix time: 1540898611 (era: 0)
+     * Done
+     * @endcode
+     * @cparam sntp query [@ca{SNTP server IP}] [@ca{SNTP server port}]
+     * @par
+     * Sends an SNTP query to obtain the current unix epoch time (from January 1, 1970).
+     * - SNTP server default IP address: `2001:4860:4806:8::` (Google IPv6 NTP Server)
+     * - SNTP server default port: `123`
+     * @note This command is available only if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE is enabled.
+     * @sa #otSntpClientQuery
+     */
     if (aArgs[0] == "query")
     {
         VerifyOrExit(!mSntpQueryingInProgress, error = OT_ERROR_BUSY);
@@ -7294,6 +7326,35 @@ template <> otError Interpreter::Process<Cmd("state")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli state
+     * @code
+     * state
+     * child
+     * Done
+     * @endcode
+     * @code
+     * state leader
+     * Done
+     * @endcode
+     * @cparam state [@ca{child}|@ca{router}|@ca{leader}|@ca{detached}]
+     * @par
+     * Returns the current role of the Thread device, or changes the role as specified with one of the options.
+     * Possible values returned when inquiring about the device role:
+     * - `child`: The device is currently operating as a Thread child.
+     * - `router`: The device is currently operating as a Thread router.
+     * - `leader`: The device is currently operating as a Thread leader.
+     * - `detached`: The device is not currently participating in a Thread network/partition.
+     * - `disabled`: The Thread stack is currently disabled.
+     * @par
+     * Using one of the options allows you to change the current role of a device, with the exclusion of
+     * changing to or from a `disabled` state.
+     * @sa otThreadGetDeviceRole
+     * @sa otThreadBecomeChild
+     * @sa otThreadBecomeRouter
+     * @sa otThreadBecomeLeader
+     * @sa otThreadBecomeDetached
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputLine("%s", otThreadDeviceRoleToString(otThreadGetDeviceRole(GetInstancePtr())));
@@ -7328,14 +7389,43 @@ template <> otError Interpreter::Process<Cmd("thread")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli thread start
+     * @code
+     * thread start
+     * Done
+     * @endcode
+     * @par
+     * Starts the Thread protocol operation.
+     * @note The interface must be up when running this command.
+     * @sa otThreadSetEnabled
+     */
     if (aArgs[0] == "start")
     {
         error = otThreadSetEnabled(GetInstancePtr(), true);
     }
+    /**
+     * @cli thread stop
+     * @code
+     * thread stop
+     * Done
+     * @endcode
+     * @par
+     * Stops the Thread protocol operation.
+     */
     else if (aArgs[0] == "stop")
     {
         error = otThreadSetEnabled(GetInstancePtr(), false);
     }
+    /**
+     * @cli thread version
+     * @code thread version
+     * 2
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVersion
+     */
     else if (aArgs[0] == "version")
     {
         OutputLine("%u", otThreadGetVersion());
