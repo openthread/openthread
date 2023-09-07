@@ -7805,9 +7805,10 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
      * trel disable
      * Done
      * @endcode
-     * @cparam trel @ca{enable}|@cadisable}
-     * @par api_copy
-     * #otTrelSetEnabled
+     * @cparam trel @ca{enable}|@ca{disable}
+     * @par
+     * Enables or disables the TREL radio operation.
+     * @sa otTrelSetEnabled
      */
     if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
