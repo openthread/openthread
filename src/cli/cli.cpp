@@ -7789,7 +7789,7 @@ exit:
  * Indicates whether the TREL radio operation is enabled.
  * @note `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
  * @sa otTrelIsEnabled
- */ 
+ */
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
@@ -7813,6 +7813,36 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
     if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
     }
+    /**
+     * @cli trel filter
+     * @code
+     * trel filter
+     * Disabled
+     * Done
+     * @endcode
+     * @par
+     * Indicates whether TREL filter mode is enabled.
+     * @par
+     * When filter mode is enabled, all Rx and Tx traffic sent through the TREL interface gets silently dropped.
+     * @note This mode is used mostly for testing.
+     * @sa otTrelIsFilterEnabled
+     */
+
+    /**
+     * @cli trel filter (enable,disable)
+     * @code
+     * trel filter enable
+     * Done
+     * @endcode
+     * @code
+     * trel filter disable
+     * Done
+     * @endcode
+     * @cparam trel filter @ca{enable}|@ca{disable}
+     * @par
+     * Enables or disables TREL filter mode.
+     * @sa otTrelSetFilterEnabled
+     */
     else if (aArgs[0] == "filter")
     {
         error = ProcessEnableDisable(aArgs + 1, otTrelIsFilterEnabled, otTrelSetFilterEnabled);
