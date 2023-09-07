@@ -7785,14 +7785,30 @@ exit:
  * Enabled
  * Done
  * @endcode
- * @par api_copy
- * #otTrelIsEnabled
+ * @par
+ * Indicates whether the TREL radio operation is enabled.
+ * @note `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
+ * @sa otTrelIsEnabled
  */ 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli trel (enable,disable)
+     * @code
+     * trel enable
+     * Done
+     * @endcode
+     * @code
+     * trel disable
+     * Done
+     * @endcode
+     * @cparam trel @ca{enable}|@cadisable}
+     * @par api_copy
+     * #otTrelSetEnabled
+     */
     if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
     }
