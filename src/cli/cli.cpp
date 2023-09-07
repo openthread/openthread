@@ -7778,6 +7778,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli trel
+ * @code
+ * trel
+ * Enabled
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otTrelInitPeerIterator
+ */ 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
