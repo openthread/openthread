@@ -1097,6 +1097,7 @@ private:
     int8_t       mCcaEnergyDetectThreshold;
     int8_t       mTransmitPower;
     int8_t       mFemLnaGain;
+    uint32_t     mMacFrameCounter;
     bool         mCoexEnabled : 1;
 
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
@@ -1106,6 +1107,7 @@ private:
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mRcpFailed : 1;                   ///< RCP failure happened, should recover and retry operation.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
+    bool mMacFrameCounterSet : 1;          ///< Whether the MAC frame counter has been set.
 
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 

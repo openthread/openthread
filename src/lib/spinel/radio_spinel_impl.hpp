@@ -42,14 +42,11 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/new.hpp"
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
-#include "radio/radio.hpp"
-#include "thread/key_manager.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -198,6 +195,7 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     , mFemLnaGainSet(false)
     , mRcpFailed(false)
     , mEnergyScanning(false)
+    , mMacFrameCounterSet(false)
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
@@ -1034,6 +1032,11 @@ otError RadioSpinel<InterfaceType>::SetMacFrameCounter(uint32_t aMacFrameCounter
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_BOOL_S,
                               aMacFrameCounter, aSetIfLarger));
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mMacFrameCounterSet = true;
+    mMacFrameCounter    = aMacFrameCounter;
+#endif
+
 exit:
     return error;
 }
@@ -1743,6 +1746,14 @@ void RadioSpinel<InterfaceType>::HandleTransmitDone(uint32_t          aCommand,
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        mMacFrameCounterSet = true;
+        // If we directly save the `frameCounter`, the RCP will use the `frameCounter` to send the next frame after the
+        // RCP is restored. The peer will consider a duplicate frame received and then drop the frame. Here saves the
+        // `frameCounter + 1` to avoid this case from happening.
+        mMacFrameCounter = frameCounter + 1;
+#endif
     }
 
 exit:
@@ -2129,8 +2140,6 @@ exit:
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProperties(void)
 {
-    Settings::NetworkInfo networkInfo;
-
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_LADDR, SPINEL_DATATYPE_EUI64_S, mExtendedAddress.m8));
@@ -2145,13 +2154,9 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
                          sizeof(otMacKey)));
     }
 
-    if (mInstance != nullptr)
+    if (mMacFrameCounterSet)
     {
-        if (static_cast<Instance *>(mInstance)->template Get<Settings>().Read(networkInfo) == OT_ERROR_NONE)
-        {
-            SuccessOrDie(
-                Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
-        }
+        SuccessOrDie(Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, mMacFrameCounter));
     }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
