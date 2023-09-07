@@ -7851,16 +7851,15 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
      * @code
      * trel peers
      * | No  | Ext MAC Address  | Ext PAN Id       | IPv6 Socket Address                              |
-       +-----+------------------+------------------+--------------------------------------------------+
-       |   1 | 5e5785ba3a63adb9 | f0d9c001f00d2e43 | [fe80:0:0:0:cc79:2a29:d311:1aea]:9202            |
-       |   2 | ce792a29d3111aea | dead00beef00cafe | [fe80:0:0:0:5c57:85ba:3a63:adb9]:9203            |
+     * +-----+------------------+------------------+--------------------------------------------------+
+     * |   1 | 5e5785ba3a63adb9 | f0d9c001f00d2e43 | [fe80:0:0:0:cc79:2a29:d311:1aea]:9202            |
+     * |   2 | ce792a29d3111aea | dead00beef00cafe | [fe80:0:0:0:5c57:85ba:3a63:adb9]:9203            |
      * Done
      * @endcode
      * @code
      * trel peers list
      * 001 ExtAddr:5e5785ba3a63adb9 ExtPanId:f0d9c001f00d2e43 SockAddr:[fe80:0:0:0:cc79:2a29:d311:1aea]:9202
-       002 ExtAddr:ce792a29d3111aea ExtPanId:dead00beef00cafe SockAddr:[fe80:0:0:0:5c57:85ba:3a63:adb9]:9203
-       >>>>>>> [trel] implement new TREL model using DNS-SD
+     * 002 ExtAddr:ce792a29d3111aea ExtPanId:dead00beef00cafe SockAddr:[fe80:0:0:0:5c57:85ba:3a63:adb9]:9203
      * Done
      * @endcode
      * @cparam trel peers [@ca{list}]
