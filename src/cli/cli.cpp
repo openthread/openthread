@@ -7826,7 +7826,7 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
      * @note This mode is used mostly for testing.
      * @sa otTrelIsFilterEnabled
      */
-
+    else if (aArgs[0] == "filter")
     /**
      * @cli trel filter (enable,disable)
      * @code
@@ -7842,7 +7842,6 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
      * Enables or disables TREL filter mode.
      * @sa otTrelSetFilterEnabled
      */
-    else if (aArgs[0] == "filter")
     {
         error = ProcessEnableDisable(aArgs + 1, otTrelIsFilterEnabled, otTrelSetFilterEnabled);
     }
