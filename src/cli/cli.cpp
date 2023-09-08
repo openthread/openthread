@@ -7778,18 +7778,94 @@ exit:
     return error;
 }
 
+/**
+ * @cli trel
+ * @code
+ * trel
+ * Enabled
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otTrelIsEnabled
+ * @note `OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required for all `trel` sub-commands.
+ */
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli trel (enable,disable)
+     * @code
+     * trel enable
+     * Done
+     * @endcode
+     * @code
+     * trel disable
+     * Done
+     * @endcode
+     * @cparam trel @ca{enable}|@ca{disable}
+     * @par
+     * Enables or disables the TREL radio operation.
+     * @sa otTrelSetEnabled
+     */
     if (ProcessEnableDisable(aArgs, otTrelIsEnabled, otTrelSetEnabled) == OT_ERROR_NONE)
     {
     }
+    /**
+     * @cli trel filter
+     * @code
+     * trel filter
+     * Disabled
+     * Done
+     * @endcode
+     * @par
+     * Indicates whether TREL filter mode is enabled.
+     * @par
+     * When filter mode is enabled, all Rx and Tx traffic sent through the TREL interface gets silently dropped.
+     * @note This mode is used mostly for testing.
+     * @sa otTrelIsFilterEnabled
+     */
     else if (aArgs[0] == "filter")
+    /**
+     * @cli trel filter (enable,disable)
+     * @code
+     * trel filter enable
+     * Done
+     * @endcode
+     * @code
+     * trel filter disable
+     * Done
+     * @endcode
+     * @cparam trel filter @ca{enable}|@ca{disable}
+     * @par
+     * Enables or disables TREL filter mode.
+     * @sa otTrelSetFilterEnabled
+     */
     {
         error = ProcessEnableDisable(aArgs + 1, otTrelIsFilterEnabled, otTrelSetFilterEnabled);
     }
+    /**
+     * @cli trel peers
+     * @code
+     * trel peers
+     * | No  | Ext MAC Address  | Ext PAN Id       | IPv6 Socket Address                              |
+     * +-----+------------------+------------------+--------------------------------------------------+
+     * |   1 | 5e5785ba3a63adb9 | f0d9c001f00d2e43 | [fe80:0:0:0:cc79:2a29:d311:1aea]:9202            |
+     * |   2 | ce792a29d3111aea | dead00beef00cafe | [fe80:0:0:0:5c57:85ba:3a63:adb9]:9203            |
+     * Done
+     * @endcode
+     * @code
+     * trel peers list
+     * 001 ExtAddr:5e5785ba3a63adb9 ExtPanId:f0d9c001f00d2e43 SockAddr:[fe80:0:0:0:cc79:2a29:d311:1aea]:9202
+     * 002 ExtAddr:ce792a29d3111aea ExtPanId:dead00beef00cafe SockAddr:[fe80:0:0:0:5c57:85ba:3a63:adb9]:9203
+     * Done
+     * @endcode
+     * @cparam trel peers [@ca{list}]
+     * @par
+     * Gets the TREL peer table in table or list format.
+     * @sa otTrelGetNextPeer
+     */
     else if (aArgs[0] == "peers")
     {
         uint16_t           index = 0;
