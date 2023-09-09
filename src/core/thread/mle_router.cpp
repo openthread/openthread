@@ -3426,6 +3426,8 @@ Error MleRouter::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6He
 
     error = kErrorNoRoute;
 
+    Get<AddressResolver>().RemoveEntriesForRloc16(aMeshDest);
+
 exit:
     return error;
 }
