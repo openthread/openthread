@@ -158,9 +158,10 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
 {
     uint64_t radioNow   = otPlatRadioGetNow(&GetInstance());
     uint32_t periodInUs = aChild.GetCslPeriod() * kUsPerTenSymbols;
-    uint64_t firstTxWindow =
-        aChild.GetLastRxTimestamp() - kRadioHeaderShrDuration + aChild.GetCslPhase() * kUsPerTenSymbols;
-    uint64_t nextTxWindow = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
+
+    /* see CslTxScheduler::ChildInfo::mCslPhase */
+    uint64_t firstTxWindow = aChild.GetLastRxTimestamp() + aChild.GetCslPhase() * kUsPerTenSymbols;
+    uint64_t nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
     while (nextTxWindow < radioNow + aAheadUs)
     {
