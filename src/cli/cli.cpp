@@ -1157,6 +1157,19 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
     return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
 
+/**
+ * @cli tvcheck(enable,disable)
+ * @code
+ * tvcheck enable
+ * Done
+ * @endcode
+ * @code
+ * tvcheck disable
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otThreadSetThreadVersionCheckEnabled
+ */
 template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
