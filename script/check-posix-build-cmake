@@ -72,7 +72,7 @@ main()
 
     if [[ $OSTYPE != "darwin"* ]]; then
         reset_source
-        build -DOT_RCP_RESTORATION_MAX_COUNT=2 -DOT_POSIX_CONFIG_RCP_BUS=SPI "$@"
+        build -DOT_RCP_RESTORATION_MAX_COUNT=2 -DOT_POSIX_RCP_SPI_BUS=ON "$@"
     fi
 
     reset_source
