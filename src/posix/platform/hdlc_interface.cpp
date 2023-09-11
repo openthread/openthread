@@ -146,15 +146,12 @@ otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackConte
     otError     error = OT_ERROR_NONE;
     struct stat st;
 
-    otLogCritPlat("HdlcInterface::Init() TP1");
     VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
 
-    otLogCritPlat("HdlcInterface::Init() TP2 Path=%s", mRadioUrl.GetPath());
     VerifyOrDie(stat(mRadioUrl.GetPath(), &st) == 0, OT_EXIT_ERROR_ERRNO);
 
     if (S_ISCHR(st.st_mode))
     {
-        otLogCritPlat("HdlcInterface::Init() TP2.1");
         mSockFd = OpenFile(mRadioUrl);
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
@@ -162,7 +159,6 @@ otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackConte
     else if (S_ISREG(st.st_mode))
     {
         mSockFd = ForkPty(mRadioUrl);
-        otLogCritPlat("HdlcInterface::Init() TP2.2");
         VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
     }
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
@@ -178,7 +174,6 @@ otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackConte
     mReceiveFrameBuffer   = &aFrameBuffer;
 
 exit:
-    otLogCritPlat("HdlcInterface::Init() TP3 error=%d", error);
     return error;
 }
 

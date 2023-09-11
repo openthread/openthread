@@ -31,7 +31,7 @@
  *   This file implements the spinel based radio transceiver.
  */
 
-#include "lib/spinel/radio_spinel.hpp"
+#include "radio_spinel.hpp"
 
 #include <assert.h>
 #include <errno.h>

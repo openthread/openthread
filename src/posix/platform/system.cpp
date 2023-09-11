@@ -128,7 +128,6 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
-    otLogCritPlat("URL=%s", get802154RadioUrl(aPlatformConfig));
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 
     // For Dry-Run option, only init the radio.
