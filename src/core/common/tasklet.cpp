@@ -94,4 +94,54 @@ void Tasklet::Scheduler::ProcessQueuedTasklets(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+void GenericTasklet::HandleGenericTasklet(Tasklet &aTasklet)
+{
+    GenericTasklet  *currentTasklet = static_cast<GenericTasklet *>(&aTasklet);
+    InternalContext *entry          = currentTasklet->mEventList.GetHead();
+
+    while (entry != nullptr)
+    {
+        entry->mCallback(entry->mContext);
+        currentTasklet->mEventList.Remove(*entry);
+        entry->Free();
+        entry = currentTasklet->mEventList.GetHead();
+    }
+}
+
+Error GenericTasklet::PostWithCb(TaskletCallback aCallback, void *aContext)
+{
+    Error            error    = kErrorNone;
+    InternalContext *tmpEntry = nullptr;
+    InternalContext *entry    = InternalContext::AllocateAndInit(aCallback, aContext);
+
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
+
+    tmpEntry = mEventList.GetTail();
+    if (tmpEntry != nullptr)
+    {
+        // Put the new element at the end of the list so it's easier to iterate from older to newer using list get head
+        mEventList.PushAfter(*entry, *tmpEntry);
+    }
+    else
+    {
+        // Push to head since there is no element in the list
+        mEventList.Push(*entry);
+    }
+    this->Post();
+
+exit:
+    return error;
+}
+
+Error GenericTasklet::InternalContext::Init(GenericTasklet::TaskletCallback aCallback, void *aContext)
+{
+    mCallback = aCallback;
+    mContext  = aContext;
+    mNext     = nullptr;
+
+    return kErrorNone;
+}
+#endif /*OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE*/
+
 } // namespace ot

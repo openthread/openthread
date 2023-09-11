@@ -610,6 +610,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+ *
+ * Define as 1 to enable support for Generic Tasklet.
+ *
+ * @note This functionality requires 'heap.cpp' to be included in the build files.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+#define OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE 0
+#endif
+
+/**
  * @}
  *
  */

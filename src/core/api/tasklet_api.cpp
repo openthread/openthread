@@ -60,4 +60,16 @@ exit:
     return retval;
 }
 
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+otError otTaskletExecute(otInstance *aInstance, otTaskletCb callback, void *context)
+{
+    Error error = kErrorNone;
+    VerifyOrExit(otInstanceIsInitialized(aInstance), error = kErrorInvalidState);
+    error = AsCoreType(aInstance).Get<GenericTasklet>().PostWithCb(callback, context);
+
+exit:
+    return error;
+}
+#endif /*OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE*/
+
 OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *) {}

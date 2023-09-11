@@ -42,6 +42,10 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+#include "common/heap_allocatable.hpp"
+#include "common/linked_list.hpp"
+#endif
 
 namespace ot {
 
@@ -211,6 +215,74 @@ public:
 private:
     void *mContext;
 };
+
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+/**
+ * Defines a generic tasklet that can be used to execute a callback function from the context of the OpenThread task
+ *
+ * The GenericTasklet is used by the OpenThread instance to execute an API-provided function from the context
+ * of the OpenThread task. It maintains an internal list of entries that contain the callback function and
+ * a context parameter for the callback function. It introduces a new method, `PostWithCb` that takes the
+ * callback function and the context as parameters and pushes them to list and then calls `Post` internally.
+ * Then, it uses `HandleGenericTasklet` to call the callback function when the tasklet executes. Since the
+ * Tasklet can be posted only once until it is processed. The internal queue handles this by storing all received
+ * messages and executing all of them from the queue when the tasklet posts.
+ *
+ */
+class GenericTasklet : public Tasklet
+{
+public:
+    /**
+     * Creates a generic tasklet instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     *
+     */
+    GenericTasklet(Instance &aInstance)
+        : Tasklet(aInstance, GenericTasklet::HandleGenericTasklet)
+    {
+    }
+
+    typedef void (*TaskletCallback)(void *aContext);
+
+    struct InternalContext : public LinkedListEntry<InternalContext>, public Heap::Allocatable<InternalContext>
+    {
+        friend class LinkedListEntry<InternalContext>;
+        friend class Heap::Allocatable<InternalContext>;
+
+    public:
+        TaskletCallback mCallback;
+        void           *mContext;
+
+    private:
+        Error            Init(TaskletCallback aCallback, void *aContext);
+        InternalContext *mNext;
+    };
+    /**
+     * Puts the tasklet on the tasklet scheduler run queue and the callback/context on the internal
+     * list.
+     * If the tasklet is already posted, no change is made.
+     *
+     * @param[in] aCallback The callback function that executes from the context of the OpenThread task.
+     * @param[in] aContext  A pointer to a context that will be used by the callback function.
+     *
+     * @retval kErrorNone             Successfully allocated InternalContext.
+     * @retval kErrorNoBufs           Insufficient space to store the InternalContext.
+     *
+     */
+    Error PostWithCb(TaskletCallback aCallback, void *aContext);
+    /**
+     *
+     * Static function used as the handler for the tasklet.
+     *
+     * @param[in] aTasklet The Tasklet object.
+     *
+     */
+    static void HandleGenericTasklet(Tasklet &aTasklet);
+
+    LinkedList<InternalContext> mEventList;
+};
+#endif /*OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE*/
 
 /**
  * @}

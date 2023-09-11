@@ -77,6 +77,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     , mTimerMicroScheduler(*this)
 #endif
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+    , mGenericTasklet(*this)
+#endif
     , mRadio(*this)
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     , mUptime(*this)

@@ -451,6 +451,10 @@ private:
     TimerMicro::Scheduler mTimerMicroScheduler;
 #endif
 
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+    GenericTasklet mGenericTasklet;
+#endif // OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Random::Manager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
@@ -1094,6 +1098,10 @@ template <> inline Mac::SubMac &Instance::Get(void) { return mLinkRaw.mSubMac; }
 template <> inline Tasklet::Scheduler &Instance::Get(void) { return mTaskletScheduler; }
 
 template <> inline TimerMilli::Scheduler &Instance::Get(void) { return mTimerMilliScheduler; }
+
+#if OPENTHREAD_CONFIG_GENERIC_TASKLET_ENABLE
+template <> inline GenericTasklet &Instance::Get(void) { return mGenericTasklet; }
+#endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 template <> inline TimerMicro::Scheduler &Instance::Get(void) { return mTimerMicroScheduler; }
