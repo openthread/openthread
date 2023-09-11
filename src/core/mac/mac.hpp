@@ -315,7 +315,7 @@ public:
      * @returns The supported channel mask.
      *
      */
-    const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
+    ChannelMask GetSupportedChannelMask(void) const;
 
     /**
      * Sets the supported channel mask
@@ -833,7 +833,6 @@ private:
     PanId       mPanId;
     uint8_t     mPanChannel;
     uint8_t     mRadioChannel;
-    ChannelMask mSupportedChannelMask;
     uint8_t     mScanChannel;
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;

@@ -679,7 +679,7 @@ public:
      * @returns The radio supported channel mask.
      *
      */
-    uint32_t GetSupportedChannelMask(void);
+    uint32_t GetSupportedChannelMask(void) const;
 
     /**
      * Gets the radio preferred channel mask that the device prefers to form on.
@@ -752,7 +752,10 @@ inline void Radio::GetIeeeEui64(Mac::ExtAddress &aIeeeEui64)
     otPlatRadioGetIeeeEui64(GetInstancePtr(), aIeeeEui64.m8);
 }
 
-inline uint32_t Radio::GetSupportedChannelMask(void) { return otPlatRadioGetSupportedChannelMask(GetInstancePtr()); }
+inline uint32_t Radio::GetSupportedChannelMask(void) const
+{
+    return otPlatRadioGetSupportedChannelMask(GetInstancePtr());
+}
 
 inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPreferredChannelMask(GetInstancePtr()); }
 

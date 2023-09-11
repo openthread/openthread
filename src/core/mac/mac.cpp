@@ -84,7 +84,6 @@ Mac::Mac(Instance &aInstance)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-    , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
@@ -182,16 +181,18 @@ exit:
 
 void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration)
 {
+    ChannelMask supportedChannelMask = GetSupportedChannelMask();
+
     mScanDuration = aScanDuration;
     mScanChannel  = ChannelMask::kChannelIteratorFirst;
 
     if (aScanChannels == 0)
     {
-        aScanChannels = GetSupportedChannelMask().GetMask();
+        aScanChannels = supportedChannelMask.GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
-    mScanChannelMask.Intersect(mSupportedChannelMask);
+    mScanChannelMask.Intersect(supportedChannelMask);
     StartOperation(aScanOperation);
 }
 
@@ -423,9 +424,10 @@ exit:
 
 Error Mac::SetPanChannel(uint8_t aChannel)
 {
-    Error error = kErrorNone;
+    Error       error                = kErrorNone;
+    ChannelMask supportedChannelMask = GetSupportedChannelMask();
 
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    VerifyOrExit(supportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
     SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, kEventThreadChannelChanged));
 
@@ -447,9 +449,10 @@ exit:
 
 Error Mac::SetTemporaryChannel(uint8_t aChannel)
 {
-    Error error = kErrorNone;
+    Error       error                = kErrorNone;
+    ChannelMask supportedChannelMask = GetSupportedChannelMask();
 
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
+    VerifyOrExit(supportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
     mUsingTemporaryChannel = true;
     mRadioChannel          = aChannel;
@@ -470,12 +473,15 @@ void Mac::ClearTemporaryChannel(void)
     }
 }
 
+ChannelMask Mac::GetSupportedChannelMask(void) const { return ChannelMask(Get<Radio>().GetSupportedChannelMask()); }
+
 void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
-    ChannelMask newMask = aMask;
+    ChannelMask supportedChannelMask = GetSupportedChannelMask();
+    ChannelMask newMask              = aMask;
 
-    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
-    IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
+    newMask.Intersect(supportedChannelMask);
+    IgnoreError(Get<Notifier>().Update(supportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
 void Mac::SetPanId(PanId aPanId)
