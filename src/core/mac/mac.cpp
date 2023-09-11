@@ -2329,7 +2329,7 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
     VerifyOrExit(child != nullptr);
 
     csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
-    VerifyOrExit(csl->GetPeriod() != 0);
+    VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
 
     child->SetCslPeriod(csl->GetPeriod());
     child->SetCslPhase(csl->GetPhase());

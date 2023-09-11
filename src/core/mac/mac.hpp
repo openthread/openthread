@@ -73,7 +73,7 @@ namespace Mac {
 
 constexpr uint32_t kDataPollTimeout =
     OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT; ///< Timeout for receiving Data Frame (in msec).
-constexpr uint32_t kSleepDelay = 300;        ///< Max sleep delay when frame is pending (in msec)
+constexpr uint32_t kSleepDelay = 300;        ///< Max sleep delay when frame is pending (in msec).
 
 constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
 
@@ -86,6 +86,8 @@ constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAUL
 constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 
 constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
+
+constexpr uint16_t kMinCslIePeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD;
 
 /**
  * Defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
