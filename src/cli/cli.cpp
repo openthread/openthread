@@ -1167,8 +1167,11 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
  * tvcheck disable
  * Done
  * @endcode
- * @par api_copy
- * #otThreadSetThreadVersionCheckEnabled
+ * @par
+ * Enables or disables the  thread-version check when upgrading to router or leader.
+ * This check is enabled by default.
+ * @note `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+ * @sa otThreadSetThreadVersionCheckEnabled
  */
 template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
@@ -7586,6 +7589,24 @@ template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
 
+/**
+ * @cli txpower(get,set)
+ * @code
+ * txpower
+ * -10 dBm
+ * Done
+ * @endcode
+ * @code 
+ * txpower -10
+ * Done
+ * @endcode
+ * @cparam txpower [@ca{txpower}]
+ * @par
+ * Use the optional `txpower` argument to set the transmit power in dBm.
+ * @par api_copy
+ * #otPlatRadioGetTransmitPower
+ * @sa otPlatRadioSetTransmitPower
+ */
 template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
