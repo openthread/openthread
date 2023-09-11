@@ -31,5 +31,5 @@ supported_channel_mask=FCC,0x7fff000
 
 # The radio preferred channel mask that the device prefers to form on.
 # preferred_channel_mask=<RegulatoryDomain>,<ChannelMask>
-preferred_channel_mask=ETSI,0x7fff800
+preferred_channel_mask=ETSI,0x7fff000
 preferred_channel_mask=FCC,0x7ff7000

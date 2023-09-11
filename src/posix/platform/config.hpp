@@ -94,7 +94,7 @@ public:
      * @returns The radio supported channel mask.
      *
      */
-    uint32_t GetSupportedChannelMask(void) { return mSupportedChannelMask; }
+    uint32_t GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
 
     /**
      * Gets the radio preferred channel mask that the device prefers to form on.
@@ -102,7 +102,7 @@ public:
      * @returns The radio preferred channel mask.
      *
      */
-    uint32_t GetPreferredChannelMask(void) { return mPreferredChannelMask; }
+    uint32_t GetPreferredChannelMask(void) const { return mPreferredChannelMask; }
 
 private:
     const char               *kFactoryConfigFile       = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
