@@ -26,7 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.hpp"
+#include "configuration.hpp"
 
 #include "platform-posix.h"
 #include <openthread/platform/radio.h>
@@ -43,7 +43,7 @@
 namespace ot {
 namespace Posix {
 
-otError Config::SetRegion(uint16_t aRegionCode)
+otError Configuration::SetRegion(uint16_t aRegionCode)
 {
     otError       error = OT_ERROR_NONE;
     Power::Domain domain;
@@ -76,7 +76,7 @@ exit:
     return error;
 }
 
-otError Config::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
+otError Configuration::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
 {
     otError error    = OT_ERROR_NOT_FOUND;
     int     iterator = 0;
@@ -108,7 +108,7 @@ exit:
     return error;
 }
 
-otError Config::GetChannelMask(const char *aKey, const Power::Domain &aDomain, uint32_t &aChannelMask)
+otError Configuration::GetChannelMask(const char *aKey, const Power::Domain &aDomain, uint32_t &aChannelMask)
 {
     otError       error    = OT_ERROR_NOT_FOUND;
     int           iterator = 0;
@@ -137,7 +137,7 @@ exit:
     return error;
 }
 
-otError Config::UpdateChannelMasks(const Power::Domain &aDomain)
+otError Configuration::UpdateChannelMasks(const Power::Domain &aDomain)
 {
     otError error = OT_ERROR_NONE;
 
@@ -161,7 +161,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-otError Config::UpdateTargetPower(const Power::Domain &aDomain)
+otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 {
     otError            error    = OT_ERROR_NONE;
     int                iterator = 0;
@@ -188,7 +188,7 @@ exit:
     return error;
 }
 
-otError Config::UpdateCalibratedPower(void)
+otError Configuration::UpdateCalibratedPower(void)
 {
     otError                error    = OT_ERROR_NONE;
     int                    iterator = 0;
@@ -230,7 +230,9 @@ exit:
     return error;
 }
 
-otError Config::GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower)
+otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
+                                          int                 &aIterator,
+                                          Power::TargetPower  &aTargetPower)
 {
     otError error = OT_ERROR_NOT_FOUND;
     char    value[kMaxValueSize];

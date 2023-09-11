@@ -105,7 +105,7 @@ add_library(openthread-posix
     alarm.cpp
     backbone.cpp
     backtrace.cpp
-    config.cpp
+    configuration.cpp
     config_file.cpp
     daemon.cpp
     entropy.cpp

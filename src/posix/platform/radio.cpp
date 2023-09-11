@@ -61,8 +61,8 @@ static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface> sRadioSpinel;
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-#include "config.hpp"
-static ot::Posix::Config sConfig;
+#include "configuration.hpp"
+static ot::Posix::Configuration sConfig;
 #endif
 
 namespace ot {

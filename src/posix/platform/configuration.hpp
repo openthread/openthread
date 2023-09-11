@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_CONFIG_HPP_
-#define POSIX_PLATFORM_CONFIG_HPP_
+#ifndef POSIX_PLATFORM_CONFIGURATION_HPP_
+#define POSIX_PLATFORM_CONFIGURATION_HPP_
 
 #include "openthread-posix-config.h"
 
@@ -51,10 +51,10 @@ namespace Posix {
  * Updates the target power table and calibrated power table to the RCP.
  *
  */
-class Config
+class Configuration
 {
 public:
-    Config(void)
+    Configuration(void)
         : mFactoryConfigFile(kFactoryConfigFile)
         , mProductConfigFile(kProductConfigFile)
         , mRegionCode(0)
@@ -141,4 +141,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-#endif // POSIX_PLATFORM_CONFIG_HPP_
+#endif // POSIX_PLATFORM_CONFIGURATION_HPP_
