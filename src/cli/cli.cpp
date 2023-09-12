@@ -7601,7 +7601,6 @@ template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return m
  * Done
  * @endcode
  * @cparam txpower [@ca{txpower}]
- * @par
  * Use the optional `txpower` argument to set the transmit power in dBm.
  * @par api_copy
  * #otPlatRadioGetTransmitPower
@@ -7641,6 +7640,22 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
     {
         error = ProcessSet(aArgs + 1, otIp6AddUnsecurePort);
     }
+    /**
+     * @cli unsecureport remove
+     * @code
+     * unsecureport remove 1234
+     * Done
+     * @endcode
+     * @code
+     * unsecureport remove all
+     * Done
+     * @endcode
+     * @cparam unsecureport remove [@ca{port}|{all}]
+     * @par
+     * Removes a specified port or all ports from the allowed unsecured port list.
+     * @sa otIp6AddUnsecurePort
+     * @sa ototIp6RemoveAllUnsecurePorts
+     */
     else if (aArgs[0] == "remove")
     {
         if (aArgs[1] == "all")
