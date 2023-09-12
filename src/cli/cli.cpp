@@ -7600,7 +7600,7 @@ template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return m
  * txpower -10
  * Done
  * @endcode
- * @cparam txpower @ca[{txpower}]
+ * @cparam txpower [@ca{txpower}]
  * Use the optional `txpower` argument to set the transmit power in dBm.
  * @par api_copy
  * #otPlatRadioGetTransmitPower
