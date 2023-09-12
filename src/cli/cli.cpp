@@ -1158,7 +1158,7 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
 }
 
 /**
- * @cli tvcheck(enable,disable)
+ * @cli tvcheck (enable,disable)
  * @code
  * tvcheck enable
  * Done
@@ -1168,7 +1168,7 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Enables or disables the  thread-version check when upgrading to router or leader.
+ * Enables or disables the thread-version check when upgrading to router or leader.
  * This check is enabled by default.
  * @note `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
  * @sa otThreadSetThreadVersionCheckEnabled
@@ -7590,20 +7590,20 @@ template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
 template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
 
 /**
- * @cli txpower(get,set)
+ * @cli txpower (get,set)
+ * @code
+ * txpower -10
+ * Done
+ * @endcode
  * @code
  * txpower
  * -10 dBm
  * Done
  * @endcode
- * @code
- * txpower -10
- * Done
- * @endcode
  * @cparam txpower [@ca{txpower}]
- * Use the optional `txpower` argument to set the transmit power in dBm.
- * @par api_copy
- * #otPlatRadioGetTransmitPower
+ * @par
+ * Gets (or sets with the use of the optional `txpower` argument) the transmit power in dBm.
+ * @sa otPlatRadioGetTransmitPower
  * @sa otPlatRadioSetTransmitPower
  */
 template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
@@ -7642,7 +7642,7 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
      * unsecureport add 1234
      * Done
      * @endcode
-     * @cparam unsecure add @ca{port}
+     * @cparam unsecureport add @ca{port}
      * @par api_copy
      * #otIp6AddUnsecurePort
      */
@@ -7684,8 +7684,9 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
      * 1234
      * Done
      * @endcode
-     * @par api_copy
-     * #otIp6GetUnsecurePorts
+     * @par
+     * Lists all ports from the allowed unsecured port list.
+     * @sa otIp6GetUnsecurePorts
      */
     else if (aArgs[0] == "get")
     {
