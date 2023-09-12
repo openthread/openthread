@@ -7636,6 +7636,16 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli unsecureport add
+     * @code
+     * unsecureport add 1234
+     * Done
+     * @endcode
+     * @cparam unsecure add @ca{port}
+     * @par api_copy
+     * #otIp6AddUnsecurePort
+     */
     if (aArgs[0] == "add")
     {
         error = ProcessSet(aArgs + 1, otIp6AddUnsecurePort);
@@ -7650,11 +7660,11 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
      * unsecureport remove all
      * Done
      * @endcode
-     * @cparam unsecureport remove [@ca{port}|{all}]
+     * @cparam unsecureport remove [@ca{port}|all]
      * @par
      * Removes a specified port or all ports from the allowed unsecured port list.
      * @sa otIp6AddUnsecurePort
-     * @sa ototIp6RemoveAllUnsecurePorts
+     * @sa otIp6RemoveAllUnsecurePorts
      */
     else if (aArgs[0] == "remove")
     {
@@ -7667,6 +7677,16 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
             error = ProcessSet(aArgs + 1, otIp6RemoveUnsecurePort);
         }
     }
+    /**
+     * @cli unsecure get
+     * @code
+     * unsecure get
+     * 1234
+     * Done 
+     * @endcode
+     * @par api_copy
+     * #otIp6GetUnsecurePorts
+     */
     else if (aArgs[0] == "get")
     {
         const uint16_t *ports;
