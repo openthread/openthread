@@ -35,8 +35,6 @@
 #ifndef LINK_METRICS_H_
 #define LINK_METRICS_H_
 
-#include "openthread-core-config.h"
-
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 #include <openthread/platform/radio.h>
