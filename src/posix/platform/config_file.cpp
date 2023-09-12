@@ -50,14 +50,16 @@ ConfigFile::ConfigFile(const char *aFilePath)
     VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFileNameMaxSize, OT_EXIT_FAILURE);
 }
 
-bool ConfigFile::HasKey(const char *aKey)
+bool ConfigFile::HasKey(const char *aKey) const
 {
     int iterator = 0;
 
     return (Get(aKey, iterator, nullptr, 0) == OT_ERROR_NONE);
 }
 
-otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength)
+bool ConfigFile::Exist(void) const { return (access(mFilePath, 0) == 0); }
+
+otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength) const
 {
     otError  error = OT_ERROR_NONE;
     char     line[kLineMaxSize + 1];
@@ -207,7 +209,7 @@ exit:
     return error;
 }
 
-void ConfigFile::Strip(char *aString)
+void ConfigFile::Strip(char *aString) const
 {
     int count = 0;
 

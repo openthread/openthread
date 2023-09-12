@@ -102,7 +102,7 @@ otError Configuration::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Get domain failed, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to get power domain, Error: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -154,7 +154,7 @@ otError Configuration::UpdateChannelMasks(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Update channel mask failed, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update channel mask, Error: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -182,7 +182,7 @@ otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Update target power failed, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update target power, Error: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -224,7 +224,7 @@ otError Configuration::UpdateCalibratedPower(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Update calibrated power table failed, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update calibrated power table, Error: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -248,7 +248,7 @@ otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
 
         if ((error = aTargetPower.FromString(psave)) != OT_ERROR_NONE)
         {
-            otLogCritPlat("Read target power failed, Error: %s", otThreadErrorToString(error));
+            otLogCritPlat("Failed to read target power, Error: %s", otThreadErrorToString(error));
         }
         break;
     }
@@ -256,6 +256,24 @@ otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
     return error;
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+
+bool Configuration::IsValid(void) const
+{
+    bool ret;
+
+    VerifyOrExit(mProductConfigFile.Exist(), ret = false);
+
+    ret = mProductConfigFile.HasKey(kKeySupportedChannelMask) || mProductConfigFile.HasKey(kKeyPreferredChannelMask) ||
+          mProductConfigFile.HasKey(kKeyRegionDomainMapping);
+    VerifyOrExit(!ret);
+
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    ret = (mProductConfigFile.HasKey(kKeyCalibratedPower) || mProductConfigFile.HasKey(kKeyTargetPower));
+#endif
+
+exit:
+    return ret;
+}
 
 } // namespace Posix
 } // namespace ot

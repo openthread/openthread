@@ -104,6 +104,14 @@ public:
      */
     uint32_t GetPreferredChannelMask(void) const { return mPreferredChannelMask; }
 
+    /**
+     * Indicates whether the configuration file are valid.
+     *
+     * @returns TRUE if there are any valid configuration keys in the configuration file, FALSE otherwise.
+     *
+     */
+    bool IsValid(void) const;
+
 private:
     const char               *kFactoryConfigFile       = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
     const char               *kProductConfigFile       = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;

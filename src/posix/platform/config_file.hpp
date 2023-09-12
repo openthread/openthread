@@ -66,7 +66,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  If @p aKey was NULL.
      *
      */
-    otError Get(const char *aKey, int &aIterator, char *aValue, int aValueLength);
+    otError Get(const char *aKey, int &aIterator, char *aValue, int aValueLength) const;
 
     /**
      * Adds a configuration to the configuration file.
@@ -99,7 +99,15 @@ public:
      * @returns TRUE if the key exists in the configuration file, FALSE otherwise.
      *
      */
-    bool HasKey(const char *aKey);
+    bool HasKey(const char *aKey) const;
+
+    /**
+     * Indicates whether the configuration file exists.
+     *
+     * @returns TRUE if the configuration file exists, FALSE otherwise.
+     *
+     */
+    bool Exist(void) const;
 
 private:
     const char               *kCommentDelimiter = "#";
@@ -107,7 +115,7 @@ private:
     static constexpr uint16_t kLineMaxSize      = 512;
     static constexpr uint16_t kFileNameMaxSize  = 255;
 
-    void Strip(char *aString);
+    void Strip(char *aString) const;
 
     const char *mFilePath;
 };

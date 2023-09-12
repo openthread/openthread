@@ -762,21 +762,29 @@ void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstan
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-    return sConfig.GetSupportedChannelMask();
-#else
-    return sRadioSpinel.GetRadioChannelMask(false);
+    if (sConfig.IsValid())
+    {
+        return sConfig.GetSupportedChannelMask();
+    }
 #endif
+
+    return sRadioSpinel.GetRadioChannelMask(false);
 }
 
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-    return sConfig.GetPreferredChannelMask();
-#else
-    return sRadioSpinel.GetRadioChannelMask(true);
+    if (sConfig.IsValid())
+    {
+        return sConfig.GetPreferredChannelMask();
+    }
 #endif
+
+    return sRadioSpinel.GetRadioChannelMask(true);
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -874,21 +882,31 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-    return sConfig.SetRegion(aRegionCode);
-#else
-    return sRadioSpinel.SetRadioRegion(aRegionCode);
+    if (sConfig.IsValid())
+    {
+        return sConfig.SetRegion(aRegionCode);
+    }
 #endif
+
+    return sRadioSpinel.SetRadioRegion(aRegionCode);
 }
 
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-    *aRegionCode = sConfig.GetRegion();
-    return OT_ERROR_NONE;
-#else
-    return sRadioSpinel.GetRadioRegion(aRegionCode);
+    if (sConfig.IsValid())
+    {
+        otError error = OT_ERROR_NONE;
+        VerifyOrExit(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
+        *aRegionCode = sConfig.GetRegion();
+
+    exit:
+        return error;
+    }
 #endif
+
+    return sRadioSpinel.GetRadioRegion(aRegionCode);
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
