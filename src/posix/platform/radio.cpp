@@ -162,23 +162,35 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     otError          error;
     constexpr int8_t kPowerDefault = 30; // Default power 1 watt (30 dBm).
     const char      *str           = nullptr;
+    char            *pSave         = nullptr;
     uint8_t          channel       = ot::Radio::kChannelMin;
     int8_t           power         = kPowerDefault;
     const char      *maxPowerTable;
 
     VerifyOrExit((maxPowerTable = aRadioUrl.GetValue("max-power-table")) != nullptr);
 
-    for (str = strtok(const_cast<char *>(maxPowerTable), ","); channel <= ot::Radio::kChannelMax;
-         str = strtok(nullptr, ","))
+    for (str = strtok_r(const_cast<char *>(maxPowerTable), ",", &pSave);
+         str != nullptr && channel <= ot::Radio::kChannelMax; str = strtok_r(nullptr, ",", &pSave))
     {
-        // Use the last power if omitted.
-        power = (str != nullptr) ? static_cast<int8_t>(strtol(str, nullptr, 0)) : power;
+        power = static_cast<int8_t>(strtol(str, nullptr, 0));
         error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
             otLogWarnPlat("The RCP doesn't support setting the max transmit power");
-            ExitNow();
+        }
+
+        ++channel;
+    }
+
+    // Use the last power if omitted.
+    while (channel <= ot::Radio::kChannelMax)
+    {
+        error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
+        if (error == OT_ERROR_NOT_IMPLEMENTED)
+        {
+            otLogWarnPlat("The RCP doesn't support setting the max transmit power");
         }
 
         ++channel;
