@@ -102,6 +102,7 @@ void CslTxScheduler::Clear(void)
     {
         child.ResetCslTxAttempts();
         child.SetCslSynchronized(false);
+        child.SetCslPrevSnValid(false);
         child.SetCslChannel(0);
         child.SetCslTimeout(0);
         child.SetCslPeriod(0);
@@ -292,6 +293,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         {
             // CSL transmission attempts reach max, consider child out of sync
             aChild.SetCslSynchronized(false);
+            aChild.SetCslPrevSnValid(false);
             aChild.ResetCslTxAttempts();
         }
 

@@ -82,6 +82,12 @@ public:
         bool IsCslSynchronized(void) const { return mCslSynchronized && mCslPeriod > 0; }
         void SetCslSynchronized(bool aCslSynchronized) { mCslSynchronized = aCslSynchronized; }
 
+        bool IsCslPrevSnValid(void) const { return mCslPrevSnValid; }
+        void SetCslPrevSnValid(bool aCslPrevSnValid) { mCslPrevSnValid = aCslPrevSnValid; }
+
+        uint8_t GetCslPrevSn(void) const { return mCslPrevSn; }
+        void    SetCslPrevSn(uint8_t aCslPrevSn) { mCslPrevSn = aCslPrevSn; }
+
         uint8_t GetCslChannel(void) const { return mCslChannel; }
         void    SetCslChannel(uint8_t aChannel) { mCslChannel = aChannel; }
 
@@ -101,8 +107,10 @@ public:
         void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
-        uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
+        uint8_t  mCslTxAttempts : 6;   ///< Number of CSL triggered tx attempts.
         bool     mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
+        bool     mCslPrevSnValid : 1;  ///< Indicates whether or not the previous MAC frame sequence number was set.
+        uint8_t  mCslPrevSn;           ///< The previous MAC frame sequence number (for MAC-level frame deduplication).
         uint8_t  mCslChannel;          ///< The channel the device will listen on.
         uint32_t mCslTimeout;          ///< The sync timeout, in seconds.
         uint16_t mCslPeriod; ///< CSL sampled listening period between consecutive channel samples in units of 10

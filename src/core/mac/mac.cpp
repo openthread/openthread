@@ -1305,7 +1305,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
                 ProcessEnhAckProbing(*aAckFrame, *neighbor);
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-                ProcessCsl(*aAckFrame, dstAddr);
+                IgnoreError(ProcessCsl(*aAckFrame, dstAddr));
 #endif
             }
         }
@@ -1855,7 +1855,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    ProcessCsl(*aFrame, srcaddr);
+    SuccessOrExit(error = ProcessCsl(*aFrame, srcaddr));
 #endif
 
     Get<DataPollSender>().ProcessRxFrame(*aFrame);
@@ -2314,19 +2314,31 @@ bool Mac::IsCslSupported(void) const
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
+Error Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
+    Error          error = kErrorNone;
     const uint8_t *cur;
     Child         *child;
     const CslIe   *csl;
+    bool           prevSnValid = false;
 
-    VerifyOrExit(aFrame.IsVersion2015() && aFrame.GetSecurityEnabled());
-
-    cur = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
-    VerifyOrExit(cur != nullptr);
+    VerifyOrExit(aFrame.GetSecurityEnabled());
 
     child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     VerifyOrExit(child != nullptr);
+
+    if (!aFrame.IsAck())
+    {
+        // Save and reset prevSNValid flag just in case the function exits early because the frame
+        // does not contain CSL IE. See Thread 1.3.0 Spec, "Deduplication of SSED Retransmissions".
+        prevSnValid = child->IsCslPrevSnValid();
+        child->SetCslPrevSnValid(false);
+    }
+
+    VerifyOrExit(aFrame.IsVersion2015());
+
+    cur = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
+    VerifyOrExit(cur != nullptr);
 
     csl = reinterpret_cast<const CslIe *>(cur + sizeof(HeaderIe));
     VerifyOrExit(csl->GetPeriod() >= kMinCslIePeriod);
@@ -2342,8 +2354,19 @@ void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 
     Get<CslTxScheduler>().Update();
 
+    if (!aFrame.IsAck())
+    {
+        // When a frame with CSL IE is retransmitted, the CSL phase must be recalculated, and the
+        // frame must be re-secured with a new frame counter. Therefore, the MAC-level deduplication
+        // of such a frame should rely on the sequence number rather than the frame counter.
+        // See Thread 1.3.0 Spec, "Deduplication of SSED Retransmissions".
+        VerifyOrExit(!prevSnValid || aFrame.GetSequence() != child->GetCslPrevSn(), error = kErrorDuplicated);
+        child->SetCslPrevSnValid(true);
+        child->SetCslPrevSn(aFrame.GetSequence());
+    }
+
 exit:
-    return;
+    return error;
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
