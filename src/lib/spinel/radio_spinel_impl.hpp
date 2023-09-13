@@ -834,6 +834,11 @@ otError RadioSpinel<InterfaceType>::ParseRadioFrame(otRadioFrame   &aFrame,
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         aUnpacked += unpacked;
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        mMacFrameCounterSet = true;
+        mMacFrameCounter    = aFrame.mInfo.mRxInfo.mAckFrameCounter;
+#endif
     }
 
     if (receiveError == OT_ERROR_NONE)
@@ -1749,10 +1754,7 @@ void RadioSpinel<InterfaceType>::HandleTransmitDone(uint32_t          aCommand,
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         mMacFrameCounterSet = true;
-        // If we directly save the `frameCounter`, the RCP will use the `frameCounter` to send the next frame after the
-        // RCP is restored. The peer will consider a duplicate frame received and then drop the frame. Here saves the
-        // `frameCounter + 1` to avoid this case from happening.
-        mMacFrameCounter = frameCounter + 1;
+        mMacFrameCounter    = frameCounter;
 #endif
     }
 
@@ -2156,7 +2158,13 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
 
     if (mMacFrameCounterSet)
     {
-        SuccessOrDie(Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, mMacFrameCounter));
+        const uint8_t kFrameCounterGuard = 10;
+
+        // There is a chance that radio/RCP has used some counters after `mMacFrameCounter` (for enh ack) and they
+        // are in queue to be sent to host (not yet processed by host RadioSpinel). Here we add some guard jump
+        // when we restore the frame counter.
+        SuccessOrDie(
+            Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, mMacFrameCounter + kFrameCounterGuard));
     }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
