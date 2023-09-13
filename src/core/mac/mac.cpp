@@ -340,7 +340,7 @@ void Mac::PerformEnergyScan(void)
     }
     else
     {
-        if(!GetRxOnWhenIdle())
+        if (!GetRxOnWhenIdle())
         {
             mLinks.Receive(mScanChannel);
         }
