@@ -491,6 +491,34 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
 
     entry = FindCacheEntry(aEid, list, prev);
 
+    if ((entry != nullptr) && ((list == &mCachedList) || (list == &mSnoopedList)))
+    {
+        list->PopAfter(prev);
+
+        if (Get<RouterTable>().GetNextHop(entry->GetRloc16()) == Mle::kInvalidRloc16)
+        {
+            // If the `entry->GetRloc16()` is unreachable (there is no valid
+            // next hop towards it), we clear the entry so to start a new
+            // address query.
+
+            mCacheEntryPool.Free(*entry);
+            entry = nullptr;
+        }
+        else
+        {
+            // Push the entry at the head of cached list.
+
+            if (list == &mSnoopedList)
+            {
+                entry->MarkLastTransactionTimeAsInvalid();
+            }
+
+            mCachedList.Push(*entry);
+            aRloc16 = entry->GetRloc16();
+            ExitNow();
+        }
+    }
+
     if (entry == nullptr)
     {
         // If the entry is not present in any of the lists, try to
@@ -508,23 +536,6 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
         entry->SetCanEvict(false);
         list = nullptr;
-    }
-
-    if ((list == &mCachedList) || (list == &mSnoopedList))
-    {
-        // Remove the entry from its current list and push it at the
-        // head of cached list.
-
-        list->PopAfter(prev);
-
-        if (list == &mSnoopedList)
-        {
-            entry->MarkLastTransactionTimeAsInvalid();
-        }
-
-        mCachedList.Push(*entry);
-        aRloc16 = entry->GetRloc16();
-        ExitNow();
     }
 
     // Note that if `aAllowAddressQuery` is `false` then the `entry`
