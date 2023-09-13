@@ -65,11 +65,11 @@ otError Configuration::SetRegion(uint16_t aRegionCode)
 exit:
     if (error == OT_ERROR_NONE)
     {
-        otLogInfoPlat("Set region \"%c%c\" successfully", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff));
+        otLogInfoPlat("Successfully set region \"%c%c\"", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff));
     }
     else
     {
-        otLogCritPlat("Set region \"%c%c\" failed, Error: %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
+        otLogCritPlat("Failed to set region \"%c%c\": %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
                       otThreadErrorToString(error));
     }
 
@@ -102,7 +102,7 @@ otError Configuration::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to get power domain, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to get power domain: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -154,7 +154,7 @@ otError Configuration::UpdateChannelMasks(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update channel mask, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update channel mask: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -182,7 +182,7 @@ otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update target power, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update target power: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -224,7 +224,7 @@ otError Configuration::UpdateCalibratedPower(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update calibrated power table, Error: %s", otThreadErrorToString(error));
+        otLogCritPlat("Failed to update calibrated power table: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -248,7 +248,7 @@ otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
 
         if ((error = aTargetPower.FromString(psave)) != OT_ERROR_NONE)
         {
-            otLogCritPlat("Failed to read target power, Error: %s", otThreadErrorToString(error));
+            otLogCritPlat("Failed to read target power: %s", otThreadErrorToString(error));
         }
         break;
     }
