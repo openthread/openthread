@@ -340,6 +340,10 @@ void Mac::PerformEnergyScan(void)
     }
     else
     {
+        if (!GetRxOnWhenIdle())
+        {
+            mLinks.Receive(mScanChannel);
+        }
         error = mLinks.EnergyScan(mScanChannel, mScanDuration);
     }
 
