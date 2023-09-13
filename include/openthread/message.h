@@ -70,6 +70,17 @@ typedef enum otMessagePriority
 } otMessagePriority;
 
 /**
+ * Defines the OpenThread message origins.
+ *
+ */
+typedef enum otMessageOrigin
+{
+    OT_MESSAGE_ORIGIN_THREAD_NETIF   = 0, ///< Message from Thread Netif.
+    OT_MESSAGE_ORIGIN_HOST_TRUSTED   = 1, ///< Message from a trusted source on host.
+    OT_MESSAGE_ORIGIN_HOST_UNTRUSTED = 2, ///< Message from an untrusted source on host.
+} otMessageOrigin;
+
+/**
  * Represents a message settings.
  *
  */
@@ -179,6 +190,45 @@ void otMessageSetOffset(otMessage *aMessage, uint16_t aOffset);
  *
  */
 bool otMessageIsLinkSecurityEnabled(const otMessage *aMessage);
+
+/**
+ * Indicates whether or not the message is allowed to be looped back to host.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ *
+ * @retval TRUE   If the message is allowed to be looped back to host.
+ * @retval FALSE  If the message is not allowed to be looped back to host.
+ *
+ */
+bool otMessageIsLoopbackToHostAllowed(const otMessage *aMessage);
+
+/**
+ * Sets whether or not the message is allowed to be looped back to host.
+ *
+ * @param[in]  aMessage              A pointer to a message buffer.
+ * @param[in]  aAllowLoopbackToHost  Whether to allow the message to be looped back to host.
+ *
+ */
+void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackToHost);
+
+/**
+ * Gets the message origin.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ *
+ * @returns The message origin.
+ *
+ */
+otMessageOrigin otMessageGetOrigin(const otMessage *aMessage);
+
+/**
+ * Sets the message origin.
+ *
+ * @param[in]  aMessage  A pointer to a message buffer.
+ * @param[in]  aOrigin   The message origin.
+ *
+ */
+void otMessageSetOrigin(otMessage *aMessage, otMessageOrigin aOrigin);
 
 /**
  * Sets/forces the message to be forwarded using direct transmission.

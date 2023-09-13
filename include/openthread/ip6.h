@@ -527,6 +527,8 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @retval OT_ERROR_NO_ROUTE                No route to host.
  * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
+ * @retval OT_ERROR_INVALID_ARGS            The message's metadata is invalid, e.g. the message uses
+ * `OT_MESSAGE_ORIGIN_THREAD_NETIF` as the origin.
  *
  */
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage);

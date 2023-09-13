@@ -207,16 +207,18 @@ protected:
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
 #endif
 
-        uint8_t mType : 3;             // The message type.
-        uint8_t mSubType : 4;          // The message sub type.
-        bool    mDirectTx : 1;         // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;     // Whether link security is enabled.
-        uint8_t mPriority : 2;         // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;      // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;        // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;       // Whether this message may be evicted.
-        bool    mMulticastLoop : 1;    // Whether this multicast message may be looped back.
-        bool    mResolvingAddress : 1; // Whether the message is pending an address query resolution.
+        uint8_t mType : 3;                // The message type.
+        uint8_t mSubType : 4;             // The message sub type.
+        bool    mDirectTx : 1;            // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;        // Whether link security is enabled.
+        uint8_t mPriority : 2;            // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;           // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;          // Whether this message may be evicted.
+        bool    mMulticastLoop : 1;       // Whether this multicast message may be looped back.
+        bool    mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
+        bool    mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
+        uint8_t mOrigin : 2;              // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -347,6 +349,17 @@ public:
          *
          */
         kCopyToUse,
+    };
+
+    /**
+     * Represents an IPv6 message origin.
+     *
+     */
+    enum Origin : uint8_t
+    {
+        kOriginThreadNetif   = OT_MESSAGE_ORIGIN_THREAD_NETIF,   // Message from Thread Netif.
+        kOriginHostTrusted   = OT_MESSAGE_ORIGIN_HOST_TRUSTED,   // Message from a trusted source on host.
+        kOriginHostUntrusted = OT_MESSAGE_ORIGIN_HOST_UNTRUSTED, // Message from an untrusted source on host.
     };
 
     /**
@@ -1136,6 +1149,42 @@ public:
     void SetResolvingAddress(bool aResolvingAddress) { GetMetadata().mResolvingAddress = aResolvingAddress; }
 
     /**
+     * Indicates whether the message is allowed to be looped back to host.
+     *
+     * @retval TRUE   If the message is allowed to be looped back to host.
+     * @retval FALSE  If the message is not allowed to be looped back to host.
+     *
+     */
+    bool IsLoopbackToHostAllowed(void) const { return GetMetadata().mAllowLookbackToHost; }
+
+    /**
+     * Sets whether or not allow the message to be looped back to host.
+     *
+     * @param[in] aAllowLoopbackToHost  Whether or not allow the message to be looped back to host.
+     *
+     */
+    void SetLoopbackToHostAllowed(bool aAllowLoopbackToHost)
+    {
+        GetMetadata().mAllowLookbackToHost = aAllowLoopbackToHost;
+    }
+
+    /**
+     * Gets the message origin.
+     *
+     * @returns An enum representing the origin of the message.
+     *
+     */
+    Origin GetOrigin(void) const { return static_cast<Origin>(GetMetadata().mOrigin); }
+
+    /**
+     * Sets the message origin.
+     *
+     * @param[in]  aOrigin  An enum representing the origin of the message.
+     *
+     */
+    void SetOrigin(Origin aOrigin) { GetMetadata().mOrigin = aOrigin; }
+
+    /**
      * Indicates whether or not link security is enabled for the message.
      *
      * @retval TRUE   If link security is enabled.
@@ -1797,6 +1846,8 @@ DefineCoreType(otMessageBuffer, Buffer);
 DefineCoreType(otMessageSettings, Message::Settings);
 DefineCoreType(otMessage, Message);
 DefineCoreType(otMessageQueue, MessageQueue);
+
+DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 

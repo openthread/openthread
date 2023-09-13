@@ -184,8 +184,10 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
             IgnoreError(message.Read(Ip6::Header::kHopLimitFieldOffset, hopLimit));
             hopLimit++;
             message.Write(Ip6::Header::kHopLimitFieldOffset, hopLimit);
+            message.SetLoopbackToHostAllowed(true);
+            message.SetOrigin(Message::kOriginHostTrusted);
 
-            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(message, Ip6::Ip6::kFromHostAllowLoopBack));
+            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(message));
             continue;
         }
 #endif

@@ -99,7 +99,7 @@ Error Translator::SendMessage(Message &aMessage)
 
     VerifyOrExit(result == kForward);
 
-    error = Get<Ip6::Ip6>().SendRaw(aMessage, !OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    error = Get<Ip6::Ip6>().SendRaw(aMessage);
     freed = true;
 
 exit:

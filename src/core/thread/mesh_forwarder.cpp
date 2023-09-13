@@ -1660,7 +1660,10 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
         mIpCounters.mRxSuccess++;
     }
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, Ip6::Ip6::kFromThreadNetif, &aLinkInfo);
+    aMessage.SetLoopbackToHostAllowed(true);
+    aMessage.SetOrigin(Message::kOriginThreadNetif);
+
+    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &aLinkInfo);
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,

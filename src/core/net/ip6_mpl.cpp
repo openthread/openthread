@@ -406,6 +406,8 @@ void Mpl::HandleRetransmissionTimer(void)
                         messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
                     }
 
+                    messageCopy->SetLoopbackToHostAllowed(true);
+                    messageCopy->SetOrigin(Message::kOriginHostTrusted);
                     Get<Ip6>().EnqueueDatagram(*messageCopy);
                 }
 
@@ -426,6 +428,8 @@ void Mpl::HandleRetransmissionTimer(void)
                     }
 
                     metadata.RemoveFrom(message);
+                    message.SetLoopbackToHostAllowed(true);
+                    message.SetOrigin(Message::kOriginHostTrusted);
                     Get<Ip6>().EnqueueDatagram(message);
                 }
                 else

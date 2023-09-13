@@ -104,8 +104,9 @@ otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver);
  * @param[in]  aMessage      A pointer to a message without UDP header.
  * @param[in]  aMessageInfo  A pointer to a message info associated with @p aMessage.
  *
- * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
- * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
+ * @retval OT_ERROR_NONE          Successfully enqueued the message into an output interface.
+ * @retval OT_ERROR_NO_BUFS       Insufficient available buffer to add the IPv6 headers.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments are given.
  *
  */
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo);

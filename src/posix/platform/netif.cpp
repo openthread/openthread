@@ -1132,6 +1132,8 @@ static void processTransmit(otInstance *aInstance)
         message = otIp6NewMessage(aInstance, &settings);
 #endif
         VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+        otMessageSetLoopbackToHostAllowed(message, true);
+        otMessageSetOrigin(message, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
     }
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
