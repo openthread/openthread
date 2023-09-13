@@ -143,7 +143,7 @@ void Radio::Init(void)
 
         VerifyOrDie(strnlen(region, 3) == 2, OT_EXIT_INVALID_ARGUMENTS);
         regionCode = static_cast<uint16_t>(static_cast<uint16_t>(region[0]) << 8) + static_cast<uint16_t>(region[1]);
-        SuccessOrDie(otPlatRadioSetRegion(gInstance, regionCode));
+        SuccessOrDie(otPlatRadioSetRegion(/* aInstance */ nullptr, regionCode));
     }
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
@@ -866,7 +866,7 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    return sPowerUpdater.SetRegion(aRegionCode);
+    return sPowerUpdater.SetRegion(aInstance, aRegionCode);
 #else
     return sRadioSpinel.SetRadioRegion(aRegionCode);
 #endif

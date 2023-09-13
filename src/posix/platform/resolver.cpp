@@ -56,15 +56,30 @@ constexpr char kResolvConfFullPath[] = "/etc/resolv.conf";
 constexpr char kNameserverItem[]     = "nameserver";
 } // namespace
 
-extern ot::Posix::Resolver gResolver;
-
 namespace ot {
 namespace Posix {
 
-void Resolver::Init(void)
+Resolver &Resolver::Get(void)
 {
+    static Resolver sResolver;
+
+    return sResolver;
+}
+
+void Resolver::SetUp(otInstance *aInstance)
+{
+    mInstance = aInstance;
+    Mainloop::Manager::Get().Add(*this);
+
     memset(mUpstreamTransaction, 0, sizeof(mUpstreamTransaction));
     LoadDnsServerListFromConf();
+}
+
+void Resolver::TearDown(void)
+{
+    memset(mUpstreamTransaction, 0, sizeof(mUpstreamTransaction));
+    Mainloop::Manager::Get().Remove(*this);
+    mInstance = nullptr;
 }
 
 void Resolver::TryRefreshDnsServerList(void)
@@ -149,14 +164,21 @@ exit:
 
 void Resolver::Cancel(otPlatDnsUpstreamQuery *aTxn)
 {
-    Transaction *txn = GetTransaction(aTxn);
+    Transaction *txn;
+
+    VerifyOrExit(mInstance != nullptr);
+
+    txn = GetTransaction(aTxn);
 
     if (txn != nullptr)
     {
         CloseTransaction(txn);
     }
 
-    otPlatDnsUpstreamQueryDone(gInstance, aTxn, nullptr);
+    otPlatDnsUpstreamQueryDone(mInstance, aTxn, nullptr);
+
+exit:
+    return;
 }
 
 Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aThreadTxn)
@@ -191,13 +213,14 @@ void Resolver::ForwardResponse(Transaction *aTxn)
     otError    error   = OT_ERROR_NONE;
     otMessage *message = nullptr;
 
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_NONE);
     VerifyOrExit((readSize = read(aTxn->mUdpFd, response, sizeof(response))) > 0);
 
-    message = otUdpNewMessage(gInstance, nullptr);
+    message = otUdpNewMessage(mInstance, nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = otMessageAppend(message, response, readSize));
 
-    otPlatDnsUpstreamQueryDone(gInstance, aTxn->mThreadTxn, message);
+    otPlatDnsUpstreamQueryDone(mInstance, aTxn->mThreadTxn, message);
     message = nullptr;
 
 exit:
@@ -257,7 +280,7 @@ void Resolver::CloseTransaction(Transaction *aTxn)
     aTxn->mThreadTxn = nullptr;
 }
 
-void Resolver::UpdateFdSet(otSysMainloopContext &aContext)
+void Resolver::Update(otSysMainloopContext &aContext)
 {
     for (Transaction &txn : mUpstreamTransaction)
     {
@@ -296,14 +319,14 @@ void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    gResolver.Query(aTxn, aQuery);
+    ot::Posix::Resolver::Get().Query(aTxn, aQuery);
 }
 
 void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    gResolver.Cancel(aTxn);
+    ot::Posix::Resolver::Get().Cancel(aTxn);
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE

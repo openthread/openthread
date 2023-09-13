@@ -32,6 +32,9 @@
  *   This file includes posix-specific system methods.
  */
 
+#ifndef POSIX_PLATFORM_SYSTEM_HPP_
+#define POSIX_PLATFORM_SYSTEM_HPP_
+
 /*
  * Returns if the system will run in dry-run mode.
  *
@@ -39,3 +42,5 @@
  *
  */
 bool IsSystemDryRun(void);
+
+#endif // POSIX_PLATFORM_SYSTEM_HPP_

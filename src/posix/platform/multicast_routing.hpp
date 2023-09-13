@@ -44,25 +44,35 @@
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 namespace ot {
 namespace Posix {
 
-class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
+class MulticastRoutingManager : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
-    explicit MulticastRoutingManager()
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
+    static MulticastRoutingManager &Get(void);
 
-        : mLastExpireTime(0)
-        , mMulticastRouterSock(-1)
-    {
-    }
+    // Implements PlatformBase
 
-    void SetUp(void);
-    void TearDown(void);
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
+
+    // Implements Mainloop::Source
+
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
-    void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+    /**
+     * Handles OpenThread state changes.
+     *
+     */
+    void HandleStateChanged(otChangedFlags aFlags);
 
 private:
     enum
@@ -132,9 +142,10 @@ private:
     void               HandleBackboneMulticastListenerEvent(otBackboneRouterMulticastListenerEvent aEvent,
                                                             const Ip6::Address                    &aAddress);
 
+    otInstance              *mInstance = nullptr;
     MulticastForwardingCache mMulticastForwardingCacheTable[kMulticastForwardingCacheTableSize];
-    uint64_t                 mLastExpireTime;
-    int                      mMulticastRouterSock;
+    uint64_t                 mLastExpireTime      = 0;
+    int                      mMulticastRouterSock = -1;
 };
 
 } // namespace Posix

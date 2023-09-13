@@ -29,6 +29,10 @@
 #ifndef POSIX_PLATFORM_RESOLVER_HPP_
 #define POSIX_PLATFORM_RESOLVER_HPP_
 
+#include "core/common/non_copyable.hpp"
+#include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
+
 #include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
 
@@ -40,7 +44,7 @@
 namespace ot {
 namespace Posix {
 
-class Resolver
+class Resolver : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     constexpr static ssize_t kMaxDnsMessageSize           = 512;
@@ -48,10 +52,15 @@ public:
     constexpr static ssize_t kMaxUpstreamServerCount      = 3;
 
     /**
-     * Initialize the upstream DNS resolver.
+     * Returns the singleton object of this class.
      *
      */
-    void Init(void);
+    static Resolver &Get(void);
+
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
 
     /**
      * Sends the query to the upstream.
@@ -70,25 +79,10 @@ public:
      */
     void Cancel(otPlatDnsUpstreamQuery *aTxn);
 
-    /**
-     * Updates the file descriptor sets with file descriptors used by the radio driver.
-     *
-     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in,out]  aErrorFdSet  A reference to the error file descriptors.
-     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
-     * @param[in,out]  aTimeout     A reference to the timeout.
-     *
-     */
-    void UpdateFdSet(otSysMainloopContext &aContext);
+    // Implements Mainloop::Source
 
-    /**
-     * Handles the result of select.
-     *
-     * @param[in]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in]  aErrorFdSet  A reference to the error file descriptors.
-     *
-     */
-    void Process(const otSysMainloopContext &aContext);
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
 private:
     static constexpr uint64_t kDnsServerListNullCacheTimeoutMs = 1 * 60 * 1000;  // 1 minute

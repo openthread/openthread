@@ -28,21 +28,31 @@
 #ifndef OT_POSIX_PLATFORM_UDP_HPP_
 #define OT_POSIX_PLATFORM_UDP_HPP_
 
+#include <openthread/instance.h>
+
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
 namespace ot {
 namespace Posix {
 
-class Udp : public Mainloop::Source, private NonCopyable
+class Udp : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
+    /**
+     * Returns the singleton object of this class.
+     *
+     */
     static Udp &Get(void);
 
-    void Init(const char *aIfName);
-    void SetUp(void);
-    void TearDown(void);
-    void Deinit(void);
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
+
+    // Implements Mainloop::Source
+
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
 };

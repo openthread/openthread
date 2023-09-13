@@ -36,8 +36,7 @@
 
 namespace ot {
 namespace Posix {
-
-otError PowerUpdater::SetRegion(uint16_t aRegionCode)
+otError PowerUpdater::SetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     otError            error    = OT_ERROR_NONE;
     int                iterator = 0;
@@ -56,11 +55,11 @@ otError PowerUpdater::SetRegion(uint16_t aRegionCode)
 
         for (uint8_t ch = targetPower.GetChannelStart(); ch <= targetPower.GetChannelEnd(); ch++)
         {
-            SuccessOrExit(error = otPlatRadioSetChannelTargetPower(gInstance, ch, targetPower.GetTargetPower()));
+            SuccessOrExit(error = otPlatRadioSetChannelTargetPower(aInstance, ch, targetPower.GetTargetPower()));
         }
     }
 
-    SuccessOrExit(error = UpdateCalibratedPower());
+    SuccessOrExit(error = UpdateCalibratedPower(aInstance));
 
     mRegionCode = aRegionCode;
 
@@ -78,7 +77,7 @@ exit:
     return error;
 }
 
-otError PowerUpdater::UpdateCalibratedPower(void)
+otError PowerUpdater::UpdateCalibratedPower(otInstance *aInstance)
 {
     otError                error    = OT_ERROR_NONE;
     int                    iterator = 0;
@@ -86,7 +85,7 @@ otError PowerUpdater::UpdateCalibratedPower(void)
     Power::CalibratedPower calibratedPower;
     ConfigFile            *calibrationFile = &mFactoryConfigFile;
 
-    SuccessOrExit(error = otPlatRadioClearCalibratedPowers(gInstance));
+    SuccessOrExit(error = otPlatRadioClearCalibratedPowers(aInstance));
 
     // If the distribution of output power is large, the factory needs to measure the power calibration data
     // for each device individually, and the power calibration data will be written to the factory config file.
@@ -104,7 +103,7 @@ otError PowerUpdater::UpdateCalibratedPower(void)
 
         for (uint8_t ch = calibratedPower.GetChannelStart(); ch <= calibratedPower.GetChannelEnd(); ch++)
         {
-            SuccessOrExit(error = otPlatRadioAddCalibratedPower(gInstance, ch, calibratedPower.GetActualPower(),
+            SuccessOrExit(error = otPlatRadioAddCalibratedPower(aInstance, ch, calibratedPower.GetActualPower(),
                                                                 calibratedPower.GetRawPowerSetting().GetData(),
                                                                 calibratedPower.GetRawPowerSetting().GetLength()));
         }

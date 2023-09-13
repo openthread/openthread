@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
-#define OT_POSIX_PLATFORM_DAEMON_HPP_
+
+#ifndef POSIX_PLATFORM_MLD_MONITOR_HPP_
+#define POSIX_PLATFORM_MLD_MONITOR_HPP_
 
 #include "openthread-posix-config.h"
 
@@ -34,17 +35,21 @@
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/platform_base.hpp"
 
+#include <openthread/openthread-system.h>
+
+#if OPENTHREAD_POSIX_USE_MLD_MONITOR
+
 namespace ot {
 namespace Posix {
 
-class Daemon : public PlatformBase, public Mainloop::Source, private NonCopyable
+class MldMonitor : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     /**
      * Returns the singleton object of this class.
      *
      */
-    static Daemon &Get(void);
+    static MldMonitor &Get(void);
 
     // Implements PlatformBase
 
@@ -57,16 +62,12 @@ public:
     void Process(const otSysMainloopContext &aContext) override;
 
 private:
-    int  OutputFormat(const char *aFormat, ...);
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
-    void InitializeSessionSocket(void);
-
-    int mListenSocket  = -1;
-    int mDaemonLock    = -1;
-    int mSessionSocket = -1;
+    int mFd = -1;
 };
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_DAEMON_HPP_
+#endif // OPENTHREAD_POSIX_USE_MLD_MONITOR
+
+#endif // POSIX_PLATFORM_MLD_MONITOR_HPP_

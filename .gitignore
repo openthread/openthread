@@ -17,7 +17,7 @@
 *~
 .DS_Store
 .vagrant
-build
+build*
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake

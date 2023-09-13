@@ -34,13 +34,15 @@
 #include "openthread-posix-config.h"
 
 #include <net/if.h>
+#include <openthread/instance.h>
 #include <openthread/nat64.h>
 #include <openthread/openthread-system.h>
 
 #include "core/common/non_copyable.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/platform_base.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 namespace ot {
 namespace Posix {
@@ -49,50 +51,24 @@ namespace Posix {
  * Manages infrastructure network interface.
  *
  */
-class InfraNetif : public Mainloop::Source, private NonCopyable
+class InfraNetif : public PlatformBase, public Mainloop::Source, private NonCopyable
 {
 public:
     /**
-     * Updates the fd_set and timeout for mainloop.
-     *
-     * @param[in,out]   aContext    A reference to the mainloop context.
+     * Returns the singleton object of this class.
      *
      */
-    void Update(otSysMainloopContext &aContext) override;
-
-    /**
-     * Performs infrastructure network interface processing.
-     *
-     * @param[in]   aContext   A reference to the mainloop context.
-     *
-     */
-    void Process(const otSysMainloopContext &aContext) override;
+    static InfraNetif &Get(void);
 
     /**
      * Initializes the infrastructure network interface.
      *
      * @note This method is called before OpenThread instance is created.
      *
-     * @param[in]  aIfName      A pointer to infrastructure network interface name.
+     * @param[in]  aIfName  A pointer to infrastructure network interface name.
      *
      */
     void Init(const char *aIfName);
-
-    /**
-     * Sets up the infrastructure network interface.
-     *
-     * @note This method is called after OpenThread instance is created.
-     *
-     */
-    void SetUp(void);
-
-    /**
-     * Tears down the infrastructure network interface.
-     *
-     * @note This method is called before OpenThread instance is destructed.
-     *
-     */
-    void TearDown(void);
 
     /**
      * Deinitializes the infrastructure network interface.
@@ -101,6 +77,11 @@ public:
      *
      */
     void Deinit(void);
+
+    // Implements PlatformBase
+
+    void SetUp(otInstance *aInstance) override;
+    void TearDown(void) override;
 
     /**
      * Checks whether the infrastructure network interface is running.
@@ -117,7 +98,7 @@ public:
     uint32_t GetFlags(void) const;
 
     /**
-     * This functions counts the number of addresses on the infrastructure network interface.
+     * Counts the number of addresses on the infrastructure network interface.
      *
      * @param[out] aAddressCounters  The counters of addresses on infrastructure network interface.
      *
@@ -160,7 +141,7 @@ public:
     otError DiscoverNat64Prefix(uint32_t aInfraIfIndex);
 
     /**
-     * Gets the infrastructure network interface name.
+     * Returns the infrastructure network interface name.
      *
      * @returns The infrastructure network interface name, or `nullptr` if not specified.
      *
@@ -168,12 +149,17 @@ public:
     const char *GetNetifName(void) const { return (mInfraIfIndex != 0) ? mInfraIfName : nullptr; }
 
     /**
-     * Gets the infrastructure network interface singleton.
+     * Returns the infrastructure network interface index.
      *
-     * @returns The singleton object.
+     * @returns The infrastructure network interface index, or `0` if not specified.
      *
      */
-    static InfraNetif &Get(void);
+    uint32_t GetNetifIndex(void) const { return mInfraIfIndex; }
+
+    // Implements Mainloop::Source
+
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
 private:
     static const char         kWellKnownIpv4OnlyName[];   // "ipv4only.arpa"
@@ -181,17 +167,17 @@ private:
     static const otIp4Address kWellKnownIpv4OnlyAddress2; // 192.0.0.171
     static const uint8_t      kValidNat64PrefixLength[];
 
-    char     mInfraIfName[IFNAMSIZ];
-    uint32_t mInfraIfIndex       = 0;
-    int      mInfraIfIcmp6Socket = -1;
-    int      mNetLinkSocket      = -1;
-
     void        ReceiveNetLinkMessage(void);
     void        ReceiveIcmp6Message(void);
     bool        HasLinkLocalAddress(void) const;
     static void DiscoverNat64PrefixDone(union sigval sv);
+
+    char     mInfraIfName[IFNAMSIZ];
+    uint32_t mInfraIfIndex       = 0;
+    int      mInfraIfIcmp6Socket = -1;
+    int      mNetLinkSocket      = -1;
 };
 
 } // namespace Posix
 } // namespace ot
-#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

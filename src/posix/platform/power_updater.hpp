@@ -40,9 +40,9 @@
 #include <openthread/logging.h>
 #include <openthread/platform/radio.h>
 
-#include "config_file.hpp"
-#include "power.hpp"
 #include "common/code_utils.hpp"
+#include "posix/platform/config_file.hpp"
+#include "posix/platform/power.hpp"
 
 namespace ot {
 namespace Posix {
@@ -67,13 +67,14 @@ public:
      * The radio region format is the 2-bytes ascii representation of the
      * ISO 3166 alpha-2 code.
      *
+     * @param[in]  aInstance    The OpenThread instance.
      * @param[in]  aRegionCode  The radio region.
      *
      * @retval  OT_ERROR_NONE             Successfully set region code.
      * @retval  OT_ERROR_FAILED           Failed to set the region code.
      *
      */
-    otError SetRegion(uint16_t aRegionCode);
+    otError SetRegion(otInstance *aInstance, uint16_t aRegionCode);
 
     /**
      * Get the region code.
@@ -102,7 +103,7 @@ private:
     }
     otError GetDomain(uint16_t aRegionCode, Power::Domain &aDomain);
     otError GetNextTargetPower(const Power::Domain &aDomain, int &aIterator, Power::TargetPower &aTargetPower);
-    otError UpdateCalibratedPower(void);
+    otError UpdateCalibratedPower(otInstance *aInstance);
 
     ConfigFile mFactoryConfigFile;
     ConfigFile mProductConfigFile;
