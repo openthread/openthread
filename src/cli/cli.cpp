@@ -1168,7 +1168,7 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Enables or disables the thread-version check when upgrading to router or leader.
+ * Enables or disables the Thread version check when upgrading to router or leader.
  * This check is enabled by default.
  * @note `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
  * @sa otThreadSetThreadVersionCheckEnabled
