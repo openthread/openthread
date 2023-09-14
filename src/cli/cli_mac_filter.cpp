@@ -288,6 +288,17 @@ exit:
     return error;
 }
 
+/**
+ * @cli macfilter rss
+ * @code
+ * macfilter rss
+ * 0f6127e33af6b403 : rss -95 (lqi 1)
+ * Default rss: -50 (lqi 3)
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otLinkFilterGetRssIn
+ */
 template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
