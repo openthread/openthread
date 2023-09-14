@@ -7806,8 +7806,8 @@ template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
  * Default rss: -50 (lqi 3)
  * Done
  * @endcode
- * @par 
- * Lists the macfilter status, including the address settings and the received signal-strength filter settings. 
+ * @par
+ * Lists the macfilter status, including the address settings and the received signal-strength filter settings.
  */
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[]) { return mMacFilter.Process(aArgs); }

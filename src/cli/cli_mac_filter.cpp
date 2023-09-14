@@ -46,7 +46,7 @@ void MacFilter::OutputFilter(uint8_t aFilters)
     otMacFilterIterator iterator;
 
     if (aFilters & kAddressFilter)
-    { 
+    {
         if ((aFilters & ~kAddressFilter) != 0)
         {
             OutputFormat("Address Mode: ");
@@ -137,20 +137,20 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
     otError      error = OT_ERROR_NONE;
     otExtAddress extAddr;
 
-        /**
-         * @cli macfilter addr
-         * @code
-         * macfilter addr
-         * Allowlist
-         * 0f6127e33af6b403 : rss -95 (lqi 1)
-         * 0f6127e33af6b402
-         * Done
-         * @endcode
-         * @par api_copy
-	 * @par
-	 * Possible modes are `Disabled`, `Allowlist`, or `Denylist`.
-         * #otLinkFilterGetAddressMode
-	 */
+    /**
+     * @cli macfilter addr
+     * @code
+     * macfilter addr
+     * Allowlist
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @par api_copy
+     * @par
+     * Possible modes are `Disabled`, `Allowlist`, or `Denylist`.
+     * #otLinkFilterGetAddressMode
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputFilter(kAddressFilter);
@@ -175,8 +175,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
         error = otLinkFilterAddAddress(GetInstancePtr(), &extAddr);
 
         VerifyOrExit(error == OT_ERROR_NONE || error == OT_ERROR_ALREADY);
- 
-	if (!aArgs[2].IsEmpty())
+
+        if (!aArgs[2].IsEmpty())
         {
             int8_t rss;
 
