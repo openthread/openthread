@@ -42,7 +42,7 @@
 
 char         gBackboneNetifName[IFNAMSIZ] = "";
 unsigned int gBackboneNetifIndex          = 0;
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
 #endif
 
@@ -69,14 +69,14 @@ exit:
 
 void platformBackboneSetUp(void)
 {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.SetUp();
 #endif
 }
 
 void platformBackboneTearDown(void)
 {
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.TearDown();
 #endif
 }
@@ -93,7 +93,7 @@ void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aFlags);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.HandleStateChange(aInstance, aFlags);
 #endif
 }
