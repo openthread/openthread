@@ -90,11 +90,29 @@ void Radio::Init(void)
     bool resetRadio             = !mRadioUrl.HasParam("no-reset");
     bool skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    VirtualTimeInit();
+#endif
+
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(mRadioUrl));
     sRadioSpinel.Init(resetRadio, skipCompatibilityCheck);
 
     ProcessRadioUrl(mRadioUrl);
 }
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+void Radio::VirtualTimeInit(void)
+{
+    // The last argument must be the node id
+    const char *nodeId = nullptr;
+
+    for (const char *arg = nullptr; (arg = mRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
+    {
+    }
+
+    virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
+}
+#endif
 
 void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
 {
@@ -106,19 +124,6 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
         otLogCritPlat("The argument \"ncp-dataset\" is no longer supported");
         DieNow(OT_ERROR_FAILED);
     }
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    // The last argument must be the node id
-    {
-        const char *nodeId = nullptr;
-
-        for (const char *arg = nullptr; (arg = aRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
-        {
-        }
-
-        virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
-    }
-#endif
 
     if (aRadioUrl.HasParam("fem-lnagain"))
     {
@@ -174,7 +179,7 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     {
         power = static_cast<int8_t>(strtol(str, nullptr, 0));
         error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
-        VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
+        VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
             otLogWarnPlat("The RCP doesn't support setting the max transmit power");
