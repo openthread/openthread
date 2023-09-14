@@ -64,6 +64,12 @@ public:
     static void *GetSpinelInstance(void);
 
 private:
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    void VirtualTimeInit(void);
+#endif
+    void ProcessRadioUrl(const RadioUrl &aRadioUrl);
+    void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
+
     RadioUrl mRadioUrl;
 };
 

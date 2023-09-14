@@ -29,6 +29,7 @@
 #ifndef OT_LIB_URL_URL_HPP_
 #define OT_LIB_URL_URL_HPP_
 
+#include <stdint.h>
 #include <openthread/error.h>
 
 /**
@@ -92,6 +93,116 @@ public:
      *
      */
     const char *GetProtocol(void) const { return mProtocol; }
+
+    /**
+     * Indicates whether or not the url contains the parameter.
+     *
+     * @param[in]  aName  A pointer to the parameter name.
+     *
+     * @retval TRUE   The url contains the parameter.
+     * @retval FALSE  The url doesn't support the parameter.
+     *
+     */
+    bool HasParam(const char *aName) const { return (GetValue(aName) != nullptr); }
+
+    /**
+     * Parses a `uint32_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `uint32_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseUint32(const char *aName, uint32_t &aValue) const;
+
+    /**
+     * Parses a `uint16_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `uint16_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseUint16(const char *aName, uint16_t &aValue) const;
+
+    /**
+     * Parses a `uint8_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix).
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `uint16_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseUint8(const char *aName, uint8_t &aValue) const;
+
+    /**
+     * Parses a `int32_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string
+     * can start with `+`/`-` sign.
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `int32_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseInt32(const char *aName, int32_t &aValue) const;
+
+    /**
+     * Parses a `int16_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string
+     * can start with `+`/`-` sign.
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `int16_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseInt16(const char *aName, int16_t &aValue) const;
+
+    /**
+     * Parses a `int8_t` parameter value.
+     *
+     * The parameter value in string is parsed as decimal or hex format (if contains `0x` or `0X` prefix). The string
+     * can start with `+`/`-` sign.
+     *
+     * @param[in]  aName    A pointer to the parameter name.
+     * @param[out] aValue   A reference to an `int8_t` variable to output the parameter value.
+     *                      The original value of @p aValue won't change if failed to get the value.
+     *
+     * @retval OT_ERROR_NONE          The parameter value was parsed successfully.
+     * @retval OT_ERROR_NOT_FOUND     The parameter name was not found.
+     * @retval OT_ERROR_INVALID_ARGS  The parameter value was not contain valid number (e.g., value out of range).
+     *
+     */
+    otError ParseInt8(const char *aName, int8_t &aValue) const;
 };
 
 } // namespace Url

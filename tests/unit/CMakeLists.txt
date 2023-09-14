@@ -1229,3 +1229,21 @@ target_link_libraries(ot-test-address-sanitizer
         ${COMMON_LIBS}
 )
 add_test(NAME ot-test-address-sanitizer COMMAND ot-test-address-sanitizer)
+
+add_executable(ot-test-url
+    test_url.cpp
+)
+target_include_directories(ot-test-url
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-url
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-url
+    PRIVATE
+        ${COMMON_LIBS}
+        openthread-url
+)
+add_test(NAME ot-test-url COMMAND ot-test-url)

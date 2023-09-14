@@ -119,7 +119,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
-    const char *value;
 
     spiGpioIntDevice   = aRadioUrl.GetValue("gpio-int-device");
     spiGpioResetDevice = aRadioUrl.GetValue("gpio-reset-device");
@@ -128,48 +127,18 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    if ((value = aRadioUrl.GetValue("gpio-int-line")))
-    {
-        spiGpioIntLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("gpio-reset-line")))
-    {
-        spiGpioResetLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("spi-mode")))
-    {
-        spiMode = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-speed")))
-    {
-        spiSpeed = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
-    {
-        spiResetDelay = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-cs-delay")))
-    {
-        spiCsDelay = static_cast<uint16_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-align-allowance")))
-    {
-        spiAlignAllowance = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-small-packet")))
-    {
-        spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
-    }
-
-    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
+    SuccessOrDie(aRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
+    SuccessOrDie(aRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint16("spi-cs-delay", spiCsDelay) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-align-allowance", spiAlignAllowance) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-small-packet", spiSmallPacketSize) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_INVALID_ARGUMENTS);
 
     mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
