@@ -142,7 +142,7 @@ void MacFilter::OutputEntry(const otMacFilterEntry &aEntry)
  * Done
  * @endcode
  * @par api_copy
- * #otLinkFilterAddAddress
+ * #otLinkFilterAddRssIn
  */
 template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
 {
