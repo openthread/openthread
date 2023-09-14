@@ -168,7 +168,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * @cparam macfilter addr add @ca{extaddr} [@ca{rss}]
      * @par
      * Adds an IEEE 802.15.4 Extended Address to the address filter.
-     * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the address.
+     * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the
+     * address.
      * @note This command is available only when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
      * @sa otLinkFilterAddAddress
      */
