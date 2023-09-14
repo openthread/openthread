@@ -7804,11 +7804,46 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 
     if (aArgs[0] == "retries")
     {
+        /**
+         * @cli mac retries direct (get,set)
+         * @code
+         * mac retries direct
+         * 3
+         * Done
+         * @endcode
+         * @code
+         * mac retries direct 5
+         * Done
+         * @endcode
+         * @cparam mac retries direct [@ca{number}]
+         * Use the optional `number` argument to set the number of direct TX retries.
+         * @par
+         * Gets or sets the number of direct TX retries on the MAC layer.
+         * @sa otLinkGetMaxFrameRetriesDirect
+         * @sa otLinkSetMaxFrameRetriesDirect
+         */
         if (aArgs[1] == "direct")
         {
             error = ProcessGetSet(aArgs + 2, otLinkGetMaxFrameRetriesDirect, otLinkSetMaxFrameRetriesDirect);
         }
 #if OPENTHREAD_FTD
+        /**
+         * @cli mac retries indirect (get,set)
+         * @code
+         * mac retries indirect
+         * 3
+         * Done
+         * @endcode
+         * @code max retries indirect 5
+         * Done
+         * @endcode
+         * @cparam mac retries indirect [@ca{number}]
+         * Use the optional `number` argument to set the number of indirect Tx retries.
+         * @par
+         * Gets or sets the number of indirect TX retries on the MAC layer.
+         * @sa otLinkGetMaxFrameRetriesIndirect
+         * @sa otLinkSetMaxFrameRetriesIndirect
+         */
         else if (aArgs[1] == "indirect")
         {
             error = ProcessGetSet(aArgs + 2, otLinkGetMaxFrameRetriesIndirect, otLinkSetMaxFrameRetriesIndirect);
@@ -7820,6 +7855,27 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
         }
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * @cli mac send
+     * @code
+     * mac send datarequest
+     * Done
+     * @endcode
+     * @code
+     * mac send emptydata
+     * Done
+     * @endcode
+     * @cparam mac send @ca{datarequest} | @ca{emptydata}
+     * You must choose one of these two arguments:
+     * - `datarequest`: Enqueues an IEEE 802.15.4 Data Request message for transmission.
+     * - `emptydata`: Instructs the device to send an empty IEEE 802.15.4 data frame.
+     * @par
+     * Instructs an `Rx-Off-When-Idle` device to send a MAC frame to its parent.
+     * This command is for certification, and can only be used when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is
+     * enabled.
+     * @sa otLinkSendDataRequest
+     * @sa otLinkSendEmptyData
+     */
     else if (aArgs[0] == "send")
     {
         VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
