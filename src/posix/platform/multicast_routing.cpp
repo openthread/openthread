@@ -28,7 +28,7 @@
 
 #include "posix/platform/multicast_routing.hpp"
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #include <assert.h>
 #include <net/if.h>
@@ -615,4 +615,4 @@ void MulticastRoutingManager::RemoveMulticastForwardingCache(
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
