@@ -836,8 +836,11 @@ otError RadioSpinel<InterfaceType>::ParseRadioFrame(otRadioFrame   &aFrame,
         aUnpacked += unpacked;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-        mMacFrameCounterSet = true;
-        mMacFrameCounter    = aFrame.mInfo.mRxInfo.mAckFrameCounter;
+        if (flags & SPINEL_MD_FLAG_ACKED_SEC)
+        {
+            mMacFrameCounterSet = true;
+            mMacFrameCounter    = aFrame.mInfo.mRxInfo.mAckFrameCounter;
+        }
 #endif
     }
 
@@ -2158,7 +2161,7 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
 
     if (mMacFrameCounterSet)
     {
-        const uint8_t kFrameCounterGuard = 10;
+        static constexpr uint8_t kFrameCounterGuard = 10;
 
         // There is a chance that radio/RCP has used some counters after `mMacFrameCounter` (for enh ack) and they
         // are in queue to be sent to host (not yet processed by host RadioSpinel). Here we add some guard jump
