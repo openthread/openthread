@@ -132,6 +132,18 @@ void MacFilter::OutputEntry(const otMacFilterEntry &aEntry)
     OutputNewLine();
 }
 
+/**
+ * @cli macfilter addr
+ * @code
+ * macfilter addr
+ * Allowlist
+ * 0f6127e33af6b403 : rss -95 (lqi 1)
+ * 0f6127e33af6b402
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otLinkFilterAddAddress
+ */
 template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
