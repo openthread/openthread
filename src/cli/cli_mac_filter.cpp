@@ -147,18 +147,28 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
          * Done
          * @endcode
          * @par api_copy
+	 * @par
+	 * Possible modes are `Disabled`, `Allowlist`, or `Denylist`.
          * #otLinkFilterGetAddressMode
-	 * @sa otLinkFilterGetNextAddress
-	 * @sa otLinkFilterGetNextRssIn
-	 * @sa otLinkConvertRssToLinkQuality
-	 * @sa otLinkFilterRemoveAddress
-	 * @sa otLinkFilterClearAddresses
-	 * @sa otLinkFilterSetAddressMode
 	 */
     if (aArgs[0].IsEmpty())
     {
         OutputFilter(kAddressFilter);
     }
+    /**
+     * @cli macfilter addr add
+     * @code
+     * macfilter addr add 0f6127e33af6b403 -95
+     * Done
+     * @endcode
+     * @code
+     * macfilter addr add 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @cparam macfilter addr add @ca{extaddr} [@ca{rss}]
+     * @par api_copy
+     * #otLinkFilterAddAddress
+     */
     else if (aArgs[0] == "add")
     {
         SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
@@ -174,15 +184,65 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
             SuccessOrExit(error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss));
         }
     }
+    /**
+     * @cli macfilter addr remove
+     * @code
+     * macfilter addr remove 0f6127e33af6b402
+     * Done
+     * @endcode
+     * @cparam macfilter addr remove @ca{extaddr}
+     * @par api_copy
+     * #otLinkFilterRemoveAddress
+     */
     else if (aArgs[0] == "remove")
     {
         SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
         otLinkFilterRemoveAddress(GetInstancePtr(), &extAddr);
     }
+    /**
+     * @cli macfilter addr clear
+     * @code
+     * macfilter addr clear
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkFilterClearAddresses
+     */
     else if (aArgs[0] == "clear")
     {
         otLinkFilterClearAddresses(GetInstancePtr());
     }
+    /**
+     * @cli macfilter addr disable
+     * @code
+     * macfilter addr disable
+     * Done
+     * @endcode
+     * @par
+     * Disables address filter mode.
+     */
+
+    /**
+     * @cli macfilter addr allowlist
+     * @code
+     * macfilter addr allowlist
+     * Done
+     * @endcode
+     * @par
+     * Enables `allowlist` address filter mode.
+     * @sa otlinkfiltersetaddressmode
+     */
+
+    /**
+     * @cli macfilter addr denylist
+     * @code
+     * macfilter addr denylist
+     * Done
+     * @endcode
+     * @par
+     * Enables `denylist` address filter mode.
+     * @sa otlinkfiltersetaddressmode
+     */
     else
     {
         static const char *const kModeCommands[] = {
