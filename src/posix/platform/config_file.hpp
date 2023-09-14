@@ -96,7 +96,8 @@ public:
      *
      * @param[in]  aKey  The key string associated with the requested configuration.
      *
-     * @returns TRUE if the key exists in the configuration file, FALSE otherwise.
+     * @retval TRUE  If the key exists in the configuration file.
+     * @retval FALSE If the key does not exist in the configuration file.
      *
      */
     bool HasKey(const char *aKey) const;
@@ -104,7 +105,8 @@ public:
     /**
      * Indicates whether the configuration file exists.
      *
-     * @returns TRUE if the configuration file exists, FALSE otherwise.
+     * @retval TRUE  If the configuration file exists.
+     * @retval FALSE If the configuration file does not exist.
      *
      */
     bool Exist(void) const;

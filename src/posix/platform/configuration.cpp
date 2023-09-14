@@ -82,15 +82,16 @@ otError Configuration::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
     int     iterator = 0;
     char    value[kMaxValueSize];
     char   *str;
+    char   *psave;
 
     while (mProductConfigFile.Get(kKeyRegionDomainMapping, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
-        if ((str = strtok(value, kCommaDelimiter)) == nullptr)
+        if ((str = strtok_r(value, kCommaDelimiter, &psave)) == nullptr)
         {
             continue;
         }
 
-        while ((str = strtok(nullptr, kCommaDelimiter)) != nullptr)
+        while ((str = strtok_r(nullptr, kCommaDelimiter, &psave)) != nullptr)
         {
             if ((strlen(str) == 2) && (StringToRegionCode(str) == aRegionCode))
             {
@@ -116,15 +117,16 @@ otError Configuration::GetChannelMask(const char *aKey, const Power::Domain &aDo
     char         *str;
     Power::Domain domain;
     uint32_t      channelMask;
+    char         *psave;
 
     while (mProductConfigFile.Get(aKey, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
-        if (((str = strtok(value, kCommaDelimiter)) == nullptr) || (aDomain != str))
+        if (((str = strtok_r(value, kCommaDelimiter, &psave)) == nullptr) || (aDomain != str))
         {
             continue;
         }
 
-        if ((str = strtok(nullptr, kCommaDelimiter)) != nullptr)
+        if ((str = strtok_r(nullptr, kCommaDelimiter, &psave)) != nullptr)
         {
             SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(str, channelMask));
             aChannelMask = channelMask;

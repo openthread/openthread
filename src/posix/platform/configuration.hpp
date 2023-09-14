@@ -107,7 +107,8 @@ public:
     /**
      * Indicates whether the configuration file are valid.
      *
-     * @returns TRUE if there are any valid configuration keys in the configuration file, FALSE otherwise.
+     * @retval TRUE  If there are any valid configuration keys in the configuration file.
+     * @retval FALSE If the configuration file doesn't exist or there is no key in the configuration file.
      *
      */
     bool IsValid(void) const;
