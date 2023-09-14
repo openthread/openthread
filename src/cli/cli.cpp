@@ -1157,6 +1157,22 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
     return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
 
+/**
+ * @cli tvcheck (enable,disable)
+ * @code
+ * tvcheck enable
+ * Done
+ * @endcode
+ * @code
+ * tvcheck disable
+ * Done
+ * @endcode
+ * @par
+ * Enables or disables the Thread version check when upgrading to router or leader.
+ * This check is enabled by default.
+ * @note `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+ * @sa otThreadSetThreadVersionCheckEnabled
+ */
 template <> otError Interpreter::Process<Cmd("tvcheck")>(Arg aArgs[])
 {
     return ProcessEnableDisable(aArgs, otThreadSetThreadVersionCheckEnabled);
@@ -7573,6 +7589,23 @@ template <> otError Interpreter::Process<Cmd("timeinqueue")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("dataset")>(Arg aArgs[]) { return mDataset.Process(aArgs); }
 
+/**
+ * @cli txpower (get,set)
+ * @code
+ * txpower -10
+ * Done
+ * @endcode
+ * @code
+ * txpower
+ * -10 dBm
+ * Done
+ * @endcode
+ * @cparam txpower [@ca{txpower}]
+ * @par
+ * Gets (or sets with the use of the optional `txpower` argument) the transmit power in dBm.
+ * @sa otPlatRadioGetTransmitPower
+ * @sa otPlatRadioSetTransmitPower
+ */
 template <> otError Interpreter::Process<Cmd("txpower")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -7603,10 +7636,36 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli unsecureport add
+     * @code
+     * unsecureport add 1234
+     * Done
+     * @endcode
+     * @cparam unsecureport add @ca{port}
+     * @par api_copy
+     * #otIp6AddUnsecurePort
+     */
     if (aArgs[0] == "add")
     {
         error = ProcessSet(aArgs + 1, otIp6AddUnsecurePort);
     }
+    /**
+     * @cli unsecureport remove
+     * @code
+     * unsecureport remove 1234
+     * Done
+     * @endcode
+     * @code
+     * unsecureport remove all
+     * Done
+     * @endcode
+     * @cparam unsecureport remove @ca{port}|all
+     * @par
+     * Removes a specified port or all ports from the allowed unsecured port list.
+     * @sa otIp6AddUnsecurePort
+     * @sa otIp6RemoveAllUnsecurePorts
+     */
     else if (aArgs[0] == "remove")
     {
         if (aArgs[1] == "all")
@@ -7618,6 +7677,17 @@ template <> otError Interpreter::Process<Cmd("unsecureport")>(Arg aArgs[])
             error = ProcessSet(aArgs + 1, otIp6RemoveUnsecurePort);
         }
     }
+    /**
+     * @cli unsecure get
+     * @code
+     * unsecure get
+     * 1234
+     * Done
+     * @endcode
+     * @par
+     * Lists all ports from the allowed unsecured port list.
+     * @sa otIp6GetUnsecurePorts
+     */
     else if (aArgs[0] == "get")
     {
         const uint16_t *ports;
