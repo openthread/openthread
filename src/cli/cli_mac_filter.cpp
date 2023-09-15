@@ -170,7 +170,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * Adds an IEEE 802.15.4 Extended Address to the address filter.
      * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the
      * address.
-     * @note This command is available only when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+     * @par
+     * This command is available only when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @sa otLinkFilterAddAddress
      */
     else if (aArgs[0] == "add")
@@ -216,43 +217,41 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
     {
         otLinkFilterClearAddresses(GetInstancePtr());
     }
-    /**
-     * @cli macfilter addr disable
-     * @code
-     * macfilter addr disable
-     * Done
-     * @endcode
-     * @par
-     * Disables address filter mode.
-     */
-
-    /**
-     * @cli macfilter addr allowlist
-     * @code
-     * macfilter addr allowlist
-     * Done
-     * @endcode
-     * @par
-     * Enables `allowlist` address filter mode.
-     * @sa otLinkFilterSetAddressMode
-     */
-
-    /**
-     * @cli macfilter addr denylist
-     * @code
-     * macfilter addr denylist
-     * Done
-     * @endcode
-     * @par
-     * Enables `denylist` address filter mode.
-     * @sa otLinkFilterSetAddressMode
-     */
     else
     {
         static const char *const kModeCommands[] = {
-            "disable",   // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
+            /**
+             * @cli macfilter addr disable
+             * @code
+             * macfilter addr disable
+             * Done
+             * @endcode
+             * @par
+             * Disables address filter mode.
+             */
+            "disable", // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
+            /**
+             * @cli macfilter addr allowlist
+             * @code
+             * macfilter addr allowlist
+             * Done
+             * @endcode
+             * @par
+             * Enables `allowlist` address filter mode.
+             * @sa otLinkFilterSetAddressMode
+             */
             "allowlist", // (1) OT_MAC_FILTER_ADDRESS_MODE_ALLOWLIST
-            "denylist",  // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
+            /**
+             * @cli macfilter addr denylist
+             * @code
+             * macfilter addr denylist
+             * Done
+             * @endcode
+             * @par
+             * Enables `denylist` address filter mode.
+             * @sa otLinkFilterSetAddressMode
+             */
+            "denylist", // (2) OT_MAC_FILTER_ADDRESS_MODE_DENYLIST
         };
 
         for (size_t index = 0; index < OT_ARRAY_LENGTH(kModeCommands); index++)
@@ -358,6 +357,21 @@ otError MacFilter::Process(Arg aArgs[])
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
+    /**
+     * @cli macfilter
+     * @code
+     * macfilter
+     * Address Mode: Allowlist
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * 0f6127e33af6b402
+     * RssIn List:
+     * 0f6127e33af6b403 : rss -95 (lqi 1)
+     * Default rss: -50 (lqi 3)
+     * Done
+     * @endcode
+     * @par
+     * Lists the mac filter address settings and mode, as well as the recived signal-strength filter settings.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputFilter(kAddressFilter | kRssFilter);

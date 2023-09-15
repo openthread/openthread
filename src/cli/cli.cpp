@@ -7794,21 +7794,6 @@ template <> otError Interpreter::Process<Cmd("joinerport")>(Arg aArgs[])
 }
 #endif
 
-/**
- * @cli macfilter
- * @code
- * macfilter
- * Address Mode: Allowlist
- * 0f6127e33af6b403 : rss -95 (lqi 1)
- * 0f6127e33af6b402
- * RssIn List:
- * 0f6127e33af6b403 : rss -95 (lqi 1)
- * Default rss: -50 (lqi 3)
- * Done
- * @endcode
- * @par
- * Lists the macfilter status, including the address settings and the received signal-strength filter settings.
- */
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> otError Interpreter::Process<Cmd("macfilter")>(Arg aArgs[]) { return mMacFilter.Process(aArgs); }
 #endif
