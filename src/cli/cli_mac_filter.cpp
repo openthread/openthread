@@ -296,8 +296,8 @@ exit:
  * Default rss: -50 (lqi 3)
  * Done
  * @endcode
- * @par api_copy
- * #otLinkFilterGetRssIn
+ * @par
+ * Lists the status for the received signal strength (rss) and the link quality indicator (lqi).
  */
 template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
 {
@@ -309,6 +309,19 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
     {
         OutputFilter(kRssFilter);
     }
+    /**
+     * @cli macfilter rss add-lqi
+     * @code
+     * macfilter rss add-lqi * 3
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add 0f6127e33af6b404 2
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkConvertLinkQualityToRss
+     */ 
     else if (aArgs[0] == "add-lqi")
     {
         uint8_t linkQuality;
@@ -327,6 +340,19 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss add
+     * @code macfilter rss add * -50
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add 0f6127e33af6b404 -85
+     * Done
+     * @endcode
+     * @cparam macfilter rss add @ca{extaddr} [@ca{rss}]
+     * @par api_copy
+     * #otLinkFilterAddRssIn
+     */
     else if (aArgs[0] == "add")
     {
         SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
@@ -341,6 +367,20 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss remove
+     * @code
+     * macfilter rss remove
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss remove 0f6127e33af6b404
+     * Done
+     * @endcode
+     * @cparam macfilter rss remove @ca{extaddr}
+     * @par api_copy
+     * #otLinkFilterRemoveRssIn
+     */
     else if (aArgs[0] == "remove")
     {
         if (aArgs[1] == "*")
@@ -352,6 +392,15 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
             otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
         }
+    /**
+     * @cli macfilter rss clear
+     * @code
+     * macfilter rss clear
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkFilterClearAllRssIn
+     */
     }
     else if (aArgs[0] == "clear")
     {
