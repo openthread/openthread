@@ -2164,7 +2164,7 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
         // There is a chance that radio/RCP has used some counters after `mMacFrameCounter` (for enh ack) and they
         // are in queue to be sent to host (not yet processed by host RadioSpinel). Here we add some guard jump
         // when we restore the frame counter.
-        // Consider the worst case: the radio/RCP continuously receives the shortest data frame and replys with the
+        // Consider the worst case: the radio/RCP continuously receives the shortest data frame and replies with the
         // shortest enhanced ACK. The radio/RCP consumes at most 992 frame counters during the timeout time.
         // The frame counter guard is set to 1000 which should ensure that the restored frame counter is unused.
         //
