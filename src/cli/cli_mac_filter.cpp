@@ -370,7 +370,7 @@ otError MacFilter::Process(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Lists the mac filter address settings and mode, as well as the recived signal-strength filter settings.
+     * Lists the mac filter address settings and mode, as well as the received signal-strength filter settings.
      */
     if (aArgs[0].IsEmpty())
     {
