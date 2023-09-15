@@ -847,7 +847,7 @@ Error Ip6::HandleExtensionHeaders(Message      &aMessage,
 
         case kProtoFragment:
             IgnoreError(PassToHost(aMessage, aOrigin, aMessageInfo, aNextHeader,
-                                   /* aApplyFilter */ false, Message::kCopyToUse));
+                                   /* aApplyFilter */ false, aReceive, Message::kCopyToUse));
             SuccessOrExit(error = HandleFragment(aMessage, aOrigin, aMessageInfo));
             break;
 
@@ -947,6 +947,7 @@ Error Ip6::PassToHost(Message           &aMessage,
                       const MessageInfo &aMessageInfo,
                       uint8_t            aIpProto,
                       bool               aApplyFilter,
+                      bool               aReceive,
                       Message::Ownership aMessageOwnership)
 {
     // This method passes the message to host by invoking the
@@ -976,6 +977,13 @@ Error Ip6::PassToHost(Message           &aMessage,
 
     // Do not pass IPv6 packets that exceed kMinimalMtu.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
+
+    // If the sender used mesh-local address as source, do not pass to
+    // host unless this message is intended for this device itself.
+    if (Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr()))
+    {
+        VerifyOrExit(aReceive, error = kErrorDrop);
+    }
 
     if (mIsReceiveIp6FilterEnabled && aApplyFilter)
     {
@@ -1090,6 +1098,20 @@ Error Ip6::SendRaw(Message &aMessage, bool aAllowLoopBackToHost)
 
     SuccessOrExit(error = header.ParseFrom(aMessage));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    // The filtering rules don't apply to packets from DUA.
+    if (!Get<BackboneRouter::Leader>().IsDomainUnicast(header.GetSource()))
+#endif
+    {
+        // When the packet is forwarded from host to Thread, if its source is on-mesh or its destination is
+        // mesh-local, we'll drop the packet unless the packet originates from this device.
+        if (Get<NetworkData::Leader>().IsOnMesh(header.GetSource()) ||
+            Get<Mle::Mle>().IsMeshLocalAddress(header.GetDestination()))
+        {
+            VerifyOrExit(Get<ThreadNetif>().HasUnicastAddress(header.GetSource()), error = kErrorDrop);
+        }
+    }
 
     if (header.GetDestination().IsMulticast())
     {
@@ -1217,7 +1239,7 @@ start:
     if ((forwardHost || receive) && !aIsReassembled)
     {
         error = PassToHost(aMessage, aOrigin, messageInfo, nextHeader,
-                           /* aApplyFilter */ !forwardHost,
+                           /* aApplyFilter */ !forwardHost, receive,
                            (receive || forwardThread) ? Message::kCopyToUse : Message::kTakeCustody);
 
         // Need to free the message if we did not pass its

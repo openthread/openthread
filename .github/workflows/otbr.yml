@@ -156,6 +156,13 @@ jobs:
             packet_verification: 2
             nat64: 0
             description: ""
+          - otbr_mdns: "avahi"
+            otbr_trel: 0
+            cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
+            packet_verification: 1
+            nat64: 0
+            use_core_firewall: 1
+            description: "core firewall"
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
@@ -173,6 +180,10 @@ jobs:
       MAX_JOBS: 3
     steps:
     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+    - name: Set firewall environment variables
+      if: ${{ matrix.use_core_firewall }}
+      run: |
+        echo "FIREWALL=0" >> $GITHUB_ENV
     - name: Build OTBR Docker
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
