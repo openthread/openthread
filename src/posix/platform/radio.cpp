@@ -769,15 +769,12 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
     if (sConfig.IsValid())
     {
         channelMask = sConfig.GetSupportedChannelMask();
-        ExitNow();
     }
+    else
 #endif
-
-    channelMask = sRadioSpinel.GetRadioChannelMask(false);
-
-#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-exit:
-#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(false);
+    }
 
     return channelMask;
 }
@@ -792,15 +789,12 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
     if (sConfig.IsValid())
     {
         channelMask = sConfig.GetPreferredChannelMask();
-        ExitNow();
     }
+    else
 #endif
-
-    channelMask = sRadioSpinel.GetRadioChannelMask(true);
-
-#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-exit:
-#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(true);
+    }
 
     return channelMask;
 }
@@ -906,15 +900,12 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
     if (sConfig.IsValid())
     {
         error = sConfig.SetRegion(aRegionCode);
-        ExitNow();
     }
+    else
 #endif
-
-    error = sRadioSpinel.SetRadioRegion(aRegionCode);
-
-#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-exit:
-#endif
+    {
+        error = sRadioSpinel.SetRadioRegion(aRegionCode);
+    }
 
     return error;
 }
@@ -925,19 +916,18 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 
     otError error;
 
-    VerifyOrExit(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
-
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
     if (sConfig.IsValid())
     {
         *aRegionCode = sConfig.GetRegion();
-        ExitNow(error = OT_ERROR_NONE);
+        error        = OT_ERROR_NONE;
     }
+    else
 #endif
+    {
+        error = sRadioSpinel.GetRadioRegion(aRegionCode);
+    }
 
-    error = sRadioSpinel.GetRadioRegion(aRegionCode);
-
-exit:
     return error;
 }
 
