@@ -2161,11 +2161,18 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
 
     if (mMacFrameCounterSet)
     {
-        static constexpr uint8_t kFrameCounterGuard = 10;
-
         // There is a chance that radio/RCP has used some counters after `mMacFrameCounter` (for enh ack) and they
         // are in queue to be sent to host (not yet processed by host RadioSpinel). Here we add some guard jump
         // when we restore the frame counter.
+        // Consider the worst case: the radio/RCP continuously receives the shortest data frame and replys with the
+        // shortest enhanced ACK. The radio/RCP consumes at most 992 frame counters during the timeout time.
+        // The frame counter guard is set to 1000 which should ensure that the restored frame counter is unused.
+        //
+        // DataFrame: 6(PhyHeader) + 2(Fcf) + 1(Seq) + 6(AddrInfo) + 6(SecHeader) + 1(Payload) + 4(Mic) + 2(Fcs) = 28
+        // AckFrame : 6(PhyHeader) + 2(Fcf) + 1(Seq) + 6(AddrInfo) + 6(SecHeader) + 2(Ie) + 4(Mic) + 2(Fcs) = 29
+        // CounterGuard: 2000ms(Timeout) / [(28bytes(Data) + 29bytes(Ack)) * 32us/byte + 192us(Ifs)] = 992
+        static constexpr uint16_t kFrameCounterGuard = 1000;
+
         SuccessOrDie(
             Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, mMacFrameCounter + kFrameCounterGuard));
     }
