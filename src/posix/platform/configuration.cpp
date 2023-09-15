@@ -263,7 +263,7 @@ bool Configuration::IsValid(void) const
 {
     bool ret;
 
-    VerifyOrExit(mProductConfigFile.Exist(), ret = false);
+    VerifyOrExit(mProductConfigFile.DoesExist(), ret = false);
 
     ret = mProductConfigFile.HasKey(kKeySupportedChannelMask) || mProductConfigFile.HasKey(kKeyPreferredChannelMask) ||
           mProductConfigFile.HasKey(kKeyRegionDomainMapping);

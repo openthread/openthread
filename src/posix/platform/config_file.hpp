@@ -109,7 +109,7 @@ public:
      * @retval FALSE If the configuration file does not exist.
      *
      */
-    bool Exist(void) const;
+    bool DoesExist(void) const;
 
 private:
     const char               *kCommentDelimiter = "#";

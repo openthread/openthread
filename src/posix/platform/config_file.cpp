@@ -57,7 +57,7 @@ bool ConfigFile::HasKey(const char *aKey) const
     return (Get(aKey, iterator, nullptr, 0) == OT_ERROR_NONE);
 }
 
-bool ConfigFile::Exist(void) const { return (access(mFilePath, 0) == 0); }
+bool ConfigFile::DoesExist(void) const { return (access(mFilePath, 0) == 0); }
 
 otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength) const
 {
