@@ -392,7 +392,7 @@ otError MacFilter::Process(Arg aArgs[])
      * @note An extended address can be in the `RssIn` list without being in the mac filter list.
      * @sa otLinkFilterSetAddressMode
      * @sa otLinkFilterGetNextAddress
-     * @sa otLinkFilterGetNextRssin
+     * @sa otLinkFilterGetNextRssIn
      */
     if (aArgs[0].IsEmpty())
     {
