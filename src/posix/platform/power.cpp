@@ -50,14 +50,15 @@ otError TargetPower::FromString(char *aString)
 {
     otError error = OT_ERROR_NONE;
     char   *str;
+    char   *psave;
 
-    VerifyOrExit((str = strtok(aString, ",")) != nullptr, error = OT_ERROR_PARSE);
+    VerifyOrExit((str = strtok_r(aString, ",", &psave)) != nullptr, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(str, mChannelStart));
 
-    VerifyOrExit((str = strtok(nullptr, ",")) != nullptr, error = OT_ERROR_PARSE);
+    VerifyOrExit((str = strtok_r(nullptr, ",", &psave)) != nullptr, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(str, mChannelEnd));
 
-    VerifyOrExit((str = strtok(nullptr, ",")) != nullptr, error = OT_ERROR_PARSE);
+    VerifyOrExit((str = strtok_r(nullptr, ",", &psave)) != nullptr, error = OT_ERROR_PARSE);
     SuccessOrExit(error = Utils::CmdLineParser::ParseAsInt16(str, mTargetPower));
 
 exit:

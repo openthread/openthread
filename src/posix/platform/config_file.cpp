@@ -50,15 +50,25 @@ ConfigFile::ConfigFile(const char *aFilePath)
     VerifyOrDie(strlen(mFilePath) + strlen(kSwapSuffix) < kFileNameMaxSize, OT_EXIT_FAILURE);
 }
 
-otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength)
+bool ConfigFile::HasKey(const char *aKey) const
+{
+    int iterator = 0;
+
+    return (Get(aKey, iterator, nullptr, 0) == OT_ERROR_NONE);
+}
+
+bool ConfigFile::DoesExist(void) const { return (access(mFilePath, 0) == 0); }
+
+otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aValueLength) const
 {
     otError  error = OT_ERROR_NONE;
     char     line[kLineMaxSize + 1];
     FILE    *fp = nullptr;
     char    *ret;
+    char    *psave;
     long int pos;
 
-    VerifyOrExit((aKey != nullptr) && (aValue != nullptr), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aKey != nullptr, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit((fp = fopen(mFilePath, "r")) != nullptr, error = OT_ERROR_NOT_FOUND);
     VerifyOrDie(fseek(fp, aIterator, SEEK_SET) == 0, OT_EXIT_ERROR_ERRNO);
 
@@ -77,7 +87,7 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
         }
 
         // Remove comments
-        strtok(line, kCommentDelimiter);
+        strtok_r(line, kCommentDelimiter, &psave);
 
         if ((str = strstr(line, "=")) == nullptr)
         {
@@ -91,11 +101,14 @@ otError ConfigFile::Get(const char *aKey, int &aIterator, char *aValue, int aVal
 
         if (strcmp(aKey, key) == 0)
         {
-            value = str + 1;
-            Strip(value);
-            aValueLength = OT_MIN(static_cast<int>(strlen(value)), (aValueLength - 1));
-            memcpy(aValue, value, static_cast<size_t>(aValueLength));
-            aValue[aValueLength] = '\0';
+            if (aValue != nullptr)
+            {
+                value = str + 1;
+                Strip(value);
+                aValueLength = OT_MIN(static_cast<int>(strlen(value)), (aValueLength - 1));
+                memcpy(aValue, value, static_cast<size_t>(aValueLength));
+                aValue[aValueLength] = '\0';
+            }
             break;
         }
     }
@@ -197,7 +210,7 @@ exit:
     return error;
 }
 
-void ConfigFile::Strip(char *aString)
+void ConfigFile::Strip(char *aString) const
 {
     int count = 0;
 

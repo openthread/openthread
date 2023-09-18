@@ -60,9 +60,9 @@ static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface> sRadioSpinel;
     "OT_POSIX_RCP_BUS_VENDOR!"
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#include "power_updater.hpp"
-static ot::Posix::PowerUpdater sPowerUpdater;
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+#include "configuration.hpp"
+static ot::Posix::Configuration sConfig;
 #endif
 
 namespace ot {
@@ -767,13 +767,41 @@ void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstan
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(false);
+
+    uint32_t channelMask;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        channelMask = sConfig.GetSupportedChannelMask();
+    }
+    else
+#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(false);
+    }
+
+    return channelMask;
 }
 
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(true);
+
+    uint32_t channelMask;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        channelMask = sConfig.GetPreferredChannelMask();
+    }
+    else
+#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(true);
+    }
+
+    return channelMask;
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -870,22 +898,42 @@ otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    return sPowerUpdater.SetRegion(aRegionCode);
-#else
-    return sRadioSpinel.SetRadioRegion(aRegionCode);
+
+    otError error;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        error = sConfig.SetRegion(aRegionCode);
+    }
+    else
 #endif
+    {
+        error = sRadioSpinel.SetRadioRegion(aRegionCode);
+    }
+
+    return error;
 }
 
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    *aRegionCode = sPowerUpdater.GetRegion();
-    return OT_ERROR_NONE;
-#else
-    return sRadioSpinel.GetRadioRegion(aRegionCode);
+
+    otError error;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        *aRegionCode = sConfig.GetRegion();
+        error        = OT_ERROR_NONE;
+    }
+    else
 #endif
+    {
+        error = sRadioSpinel.GetRadioRegion(aRegionCode);
+    }
+
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

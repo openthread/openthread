@@ -400,6 +400,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+ *
+ * Define as 1 to enable the configuration file support.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_TIME_SYNC_INTERVAL
  *
  * This setting configures the interval (in units of microseconds) for host-rcp

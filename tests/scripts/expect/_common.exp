@@ -86,6 +86,9 @@ proc spawn_node {id {type ""} {radio_url ""}} {
 
     switch -regexp ${type} {
         {rcp|rcp-cli} {
+            # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
+            # avoid the error: "bind(sTxFd): Address already in use"
+            sleep 0.2
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_POSIX_APPS)/ot-cli $radio_url
             send "factoryreset\n"
             wait_for "state" "disabled"
