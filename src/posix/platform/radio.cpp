@@ -152,13 +152,13 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
     if (aRadioUrl.HasParam("fem-lnagain"))
     {
         SuccessOrDie(aRadioUrl.ParseInt8("fem-lnagain", value));
-        SuccessOrDie(sRadioSpinel.SetFemLnaGain(value));
+        SuccessOrDie(mRadioSpinel.SetFemLnaGain(value));
     }
 
     if (aRadioUrl.HasParam("cca-threshold"))
     {
         SuccessOrDie(aRadioUrl.ParseInt8("cca-threshold", value));
-        SuccessOrDie(sRadioSpinel.SetCcaEnergyDetectThreshold(value));
+        SuccessOrDie(mRadioSpinel.SetCcaEnergyDetectThreshold(value));
     }
 
     if ((region = aRadioUrl.GetValue("region")) != nullptr)
@@ -202,7 +202,7 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
          str != nullptr && channel <= ot::Radio::kChannelMax; str = strtok_r(nullptr, ",", &pSave))
     {
         power = static_cast<int8_t>(strtol(str, nullptr, 0));
-        error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
@@ -215,7 +215,7 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
     // Use the last power if omitted.
     while (channel <= ot::Radio::kChannelMax)
     {
-        error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        error = mRadioSpinel.SetChannelMaxTransmitPower(channel, power);
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
@@ -806,7 +806,7 @@ uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
     else
 #endif
     {
-        channelMask = sRadioSpinel.GetRadioChannelMask(false);
+        channelMask = GetRadioSpinel().GetRadioChannelMask(false);
     }
 
     return channelMask;
@@ -826,7 +826,7 @@ uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
     else
 #endif
     {
-        channelMask = sRadioSpinel.GetRadioChannelMask(true);
+        channelMask = GetRadioSpinel().GetRadioChannelMask(true);
     }
 
     return channelMask;
@@ -937,7 +937,7 @@ otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
     else
 #endif
     {
-        error = sRadioSpinel.SetRadioRegion(aRegionCode);
+        error = GetRadioSpinel().SetRadioRegion(aRegionCode);
     }
 
     return error;
@@ -958,7 +958,7 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     else
 #endif
     {
-        error = sRadioSpinel.GetRadioRegion(aRegionCode);
+        error = GetRadioSpinel().GetRadioRegion(aRegionCode);
     }
 
     return error;

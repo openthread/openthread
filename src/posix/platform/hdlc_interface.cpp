@@ -726,7 +726,7 @@ otError HdlcInterface::ResetConnection(void)
     otError  error = OT_ERROR_NONE;
     uint64_t end;
 
-    if (mRadioUrl->HasParam("uart-reset"))
+    if (mRadioUrl.HasParam("uart-reset"))
     {
         usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
         CloseFile();
