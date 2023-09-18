@@ -146,10 +146,17 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * 0f6127e33af6b402
      * Done
      * @endcode
-     * @par api_copy
-     * #otLinkFilterGetAddressMode
      * @par
-     * Possible modes are `Disabled`, `Allowlist`, or `Denylist`.
+     * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+     * @par
+     * Provides the following information:
+     * - Current mode of the mac filter: Either `AllowList`, `DenyList,` or `Disabled`. 
+     * - A list of all the extended addresses in the filter. The received signal strenth (rss) and 
+     *   link quality indicator (lqi) are listed next to the address if these values have been set to be
+     *   different from the default values.
+     * @par  
+     * Possible modes are `Disabled`, `Allowlist`, or `Denylist`.r
+     * @sa #otLinkFilterGetAddressMode
      */
     if (aArgs[0].IsEmpty())
     {
@@ -169,7 +176,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * @par
      * Adds an IEEE 802.15.4 Extended Address to the address filter.
      * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the
-     * address.
+     * address. If you do not use the `rss` option, the address will use whatever default setting you have set. 
+     * If you have not set a default setting, the signal strength will be the over-air signal.
      * @par
      * This command is available only when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @sa otLinkFilterAddAddress
@@ -212,6 +220,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * @endcode
      * @par api_copy
      * #otLinkFilterClearAddresses
+     * @par
+     * Does not affect entries in the `RssIn` list.
      */
     else if (aArgs[0] == "clear")
     {
@@ -370,7 +380,18 @@ otError MacFilter::Process(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Lists the mac filter address settings and mode, as well as the received signal-strength filter settings.
+     * Provides the following information:
+     * - `Address Mode`: Current mode of the mac filter: Either `AllowList`, `DenyList,` or `Disabled`. 
+     * - A list of all the extended addresses in the filter. The received signal strenth (rss) and 
+     *   link quality indicator (lqi) are listed next to the address if these values have been set to be
+     *   different from the default values.
+     * - A separate list (`RssIn List`) that shows all the extended addresses where the rss has been set to
+     *   be different from the default value.
+     *   @note An extended address can be in the `RssIn` list without being in the mac filter list.
+     * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi`.
+     * @sa otlinkfiltergetaddressmode
+     * @sa otlinkfiltergetnextaddress
+     * @sa otlinkfiltergetnextrssin
      */
     if (aArgs[0].IsEmpty())
     {
