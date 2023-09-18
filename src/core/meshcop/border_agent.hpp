@@ -156,6 +156,9 @@ public:
     uint16_t GetUdpProxyPort(void) const { return mUdpProxyPort; }
 
 private:
+    static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
+    static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
+
     class ForwardContext : public InstanceLocatorInit
     {
     public:
@@ -176,6 +179,7 @@ private:
     void HandleNotifierEvents(Events aEvents);
 
     Coap::Message::Code CoapCodeFromError(Error aError);
+    Error               SendMessage(Coap::Message &aMessage);
     void                SendErrorMessage(ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
@@ -191,27 +195,24 @@ private:
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult);
     void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
-
     Error       ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
     Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
-    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo)
-    {
-        return static_cast<BorderAgent *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
-    }
-    bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner.
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+    void LogError(const char *aActionText, Error aError);
+#else
+    void LogError(const char *, Error) {}
+#endif
 
     using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
 
-    Ip6::MessageInfo mMessageInfo;
-
-    Ip6::Udp::Receiver         mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
+    State                      mState;
+    uint16_t                   mUdpProxyPort;
+    Ip6::Udp::Receiver         mUdpReceiver;
     Ip6::Netif::UnicastAddress mCommissionerAloc;
-
-    TimeoutTimer mTimer;
-    State        mState;
-    uint16_t     mUdpProxyPort;
+    TimeoutTimer               mTimer;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
     Id   mId;
     bool mIdInitialized;
