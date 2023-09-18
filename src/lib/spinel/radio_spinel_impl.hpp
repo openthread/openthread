@@ -42,14 +42,11 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/new.hpp"
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
-#include "radio/radio.hpp"
-#include "thread/key_manager.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -198,6 +195,7 @@ RadioSpinel<InterfaceType>::RadioSpinel(void)
     , mFemLnaGainSet(false)
     , mRcpFailed(false)
     , mEnergyScanning(false)
+    , mMacFrameCounterSet(false)
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
@@ -836,6 +834,14 @@ otError RadioSpinel<InterfaceType>::ParseRadioFrame(otRadioFrame   &aFrame,
 
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         aUnpacked += unpacked;
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        if (flags & SPINEL_MD_FLAG_ACKED_SEC)
+        {
+            mMacFrameCounterSet = true;
+            mMacFrameCounter    = aFrame.mInfo.mRxInfo.mAckFrameCounter;
+        }
+#endif
     }
 
     if (receiveError == OT_ERROR_NONE)
@@ -1033,6 +1039,11 @@ otError RadioSpinel<InterfaceType>::SetMacFrameCounter(uint32_t aMacFrameCounter
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_BOOL_S,
                               aMacFrameCounter, aSetIfLarger));
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mMacFrameCounterSet = true;
+    mMacFrameCounter    = aMacFrameCounter;
+#endif
 
 exit:
     return error;
@@ -1743,6 +1754,11 @@ void RadioSpinel<InterfaceType>::HandleTransmitDone(uint32_t          aCommand,
         VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+        mMacFrameCounterSet = true;
+        mMacFrameCounter    = frameCounter;
+#endif
     }
 
 exit:
@@ -2129,8 +2145,6 @@ exit:
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProperties(void)
 {
-    Settings::NetworkInfo networkInfo;
-
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, mPanId));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, mShortAddress));
     SuccessOrDie(Set(SPINEL_PROP_MAC_15_4_LADDR, SPINEL_DATATYPE_EUI64_S, mExtendedAddress.m8));
@@ -2145,13 +2159,22 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RestoreProper
                          sizeof(otMacKey)));
     }
 
-    if (mInstance != nullptr)
+    if (mMacFrameCounterSet)
     {
-        if (static_cast<Instance *>(mInstance)->template Get<Settings>().Read(networkInfo) == OT_ERROR_NONE)
-        {
-            SuccessOrDie(
-                Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
-        }
+        // There is a chance that radio/RCP has used some counters after `mMacFrameCounter` (for enh ack) and they
+        // are in queue to be sent to host (not yet processed by host RadioSpinel). Here we add some guard jump
+        // when we restore the frame counter.
+        // Consider the worst case: the radio/RCP continuously receives the shortest data frame and replies with the
+        // shortest enhanced ACK. The radio/RCP consumes at most 992 frame counters during the timeout time.
+        // The frame counter guard is set to 1000 which should ensure that the restored frame counter is unused.
+        //
+        // DataFrame: 6(PhyHeader) + 2(Fcf) + 1(Seq) + 6(AddrInfo) + 6(SecHeader) + 1(Payload) + 4(Mic) + 2(Fcs) = 28
+        // AckFrame : 6(PhyHeader) + 2(Fcf) + 1(Seq) + 6(AddrInfo) + 6(SecHeader) + 2(Ie) + 4(Mic) + 2(Fcs) = 29
+        // CounterGuard: 2000ms(Timeout) / [(28bytes(Data) + 29bytes(Ack)) * 32us/byte + 192us(Ifs)] = 992
+        static constexpr uint16_t kFrameCounterGuard = 1000;
+
+        SuccessOrDie(
+            Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, mMacFrameCounter + kFrameCounterGuard));
     }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
