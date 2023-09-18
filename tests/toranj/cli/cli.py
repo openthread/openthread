@@ -472,6 +472,24 @@ class Node(object):
         return self._cli_single_output('mleadvimax')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Border Agent
+
+    def ba_get_state(self):
+        return self._cli_single_output('ba state')
+
+    def ba_get_port(self):
+        return self._cli_single_output('ba port')
+
+    def ba_is_ephemeral_key_active(self):
+        return self._cli_single_output('ba ephemeralkey')
+
+    def ba_set_ephemeral_key(self, keystring, timeout=None, port=None):
+        self._cli_no_output('ba ephemeralkey set', keystring, timeout, port)
+
+    def ba_clear_ephemeral_key(self):
+        self._cli_no_output('ba ephemeralkey clear')
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
 
     def udp_open(self):
