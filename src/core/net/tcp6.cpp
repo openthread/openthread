@@ -432,7 +432,7 @@ bool Tcp::Endpoint::FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, Tim
                  * this only happens if the connection is dropped (e.g., it
                  * times out).
                  */
-                int dropped;
+                int dropped = 0;
 
                 switch (timerIndex)
                 {
