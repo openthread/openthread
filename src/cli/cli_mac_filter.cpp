@@ -322,11 +322,14 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * Done
      * @endcode
      * @code
-     * macfilter rss add 0f6127e33af6b404 2
+     * macfilter rss add-lqi 0f6127e33af6b404 2
      * Done
      * @endcode
-     * @par api_copy
-     * #otLinkConvertLinkQualityToRss
+     * @par
+     * To set a default value for the link quality indicator for all received messages,
+     * use the `*` for the `extaddr` argument, as shown in the example.
+     * @sa otLinkConvertLinkQualityToRss
+     * @sa otLinkFilterSetDefaultRssIn
      */ 
     else if (aArgs[0] == "add-lqi")
     {
