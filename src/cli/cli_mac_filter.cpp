@@ -355,8 +355,11 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * macfilter rss add 0f6127e33af6b404 -85
      * Done
      * @endcode
-     * @cparam macfilter rss add @ca{extaddr} [@ca{rss}]
+     * @cparam macfilter rss add @ca{extaddr} @ca{rss}
      * @par api_copy
+     * @par
+     * To set a default value for the received signal strength for all received messages,
+     * use the `*` for the `extaddr` argument, as shown in the example.
      * #otLinkFilterAddRssIn
      */
     else if (aArgs[0] == "add")
