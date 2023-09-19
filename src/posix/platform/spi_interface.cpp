@@ -128,16 +128,16 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    SuccessOrDie(aRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
-    SuccessOrDie(aRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
-    VerifyOrDie(aRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
+    SuccessOrDie(mRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
+    SuccessOrDie(mRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
                 OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aRadioUrl.ParseUint16("spi-cs-delay", spiCsDelay) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aRadioUrl.ParseUint8("spi-align-allowance", spiAlignAllowance) != OT_ERROR_INVALID_ARGS,
+    VerifyOrDie(mRadioUrl.ParseUint16("spi-cs-delay", spiCsDelay) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-align-allowance", spiAlignAllowance) != OT_ERROR_INVALID_ARGS,
                 OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(aRadioUrl.ParseUint8("spi-small-packet", spiSmallPacketSize) != OT_ERROR_INVALID_ARGS,
+    VerifyOrDie(mRadioUrl.ParseUint8("spi-small-packet", spiSmallPacketSize) != OT_ERROR_INVALID_ARGS,
                 OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_INVALID_ARGUMENTS);
 
