@@ -150,7 +150,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
      * @par
      * Provides the following information:
-     * - Current mode of the mac filter: Either `AllowList`, `DenyList,` or `Disabled`.
+     * - Current mode of the mac filter list: Either `AllowList`, `DenyList,` or `Disabled`.
      * - A list of all the extended addresses in the filter. The received signal strenth (rss) and
      *   link quality indicator (lqi) are listed next to the address if these values have been set to be
      *   different from the default values.
@@ -174,10 +174,10 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * @par
      * Is available only when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @par
-     * Adds an IEEE 802.15.4 Extended Address to the address filter.
+     * Adds an IEEE 802.15.4 Extended Address to the mac filter list.
      * If you specify the optional `rss` argument, this fixes the received signal strength for messages from the
-     * address. If you do not use the `rss` option, the address will use whatever default values you have set.
-     * If you have not set a default setting, the signal strength will be the over-air signal.
+     * address. If you do not use the `rss` option, the address will use whatever default value you have set.
+     * If you have not set a default, the signal strength will be the over-air signal.
      * @sa otLinkFilterAddAddress
      */
     else if (aArgs[0] == "add")
@@ -236,7 +236,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
              * Done
              * @endcode
              * @par
-             * Disables mac address filter modes.
+             * Disables mac filter modes.
              */
             "disable", // (0) OT_MAC_FILTER_ADDRESS_MODE_DISABLED
             /**
@@ -246,7 +246,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
              * Done
              * @endcode
              * @par
-             * Enables the `allowlist` mac address filter mode, which means that all mac addresses in the filter list
+             * Enables the `allowlist` mac filter mode, which means that all mac addresses in the mac filter list
              * will be allowed access.
              * @sa otLinkFilterSetAddressMode
              */
@@ -258,7 +258,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
              * Done
              * @endcode
              * @par
-             * Enables the `denylist` address filter mode, which means that all mac addresses in the filter list
+             * Enables the `denylist` filter mode, which means that all mac addresses in the mac filter list
              * will be denied access.
              * @sa otLinkFilterSetAddressMode
              */
