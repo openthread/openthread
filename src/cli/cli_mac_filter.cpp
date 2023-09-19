@@ -297,7 +297,13 @@ exit:
  * Done
  * @endcode
  * @par
- * Lists the status for the received signal strength (rss) and the link quality indicator (lqi).
+ * Provides the following information:
+ * - Listing of all the extended addresses
+ * where the received signal strength (`rss`) has been set to be different from the default value.
+ * The link quality indicator (`lqi`) is also shown if different from the default.
+ * This list of addresses is called the `RssIn List`.
+ * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
+ * @sa otLinkFilterGetNextRssIn
  */
 template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
 {
