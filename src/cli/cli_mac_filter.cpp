@@ -150,7 +150,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
      * @par
      * Provides the following information:
-     * - Current mode of the mac filter list: Either `AllowList`, `DenyList,` or `Disabled`.
+     * - Current mode of the mac filter list: Either `AllowList`, `DenyList,` or `Disabled`
      * - A list of all the extended addresses in the filter. The received signal strenth (rss) and
      *   link quality indicator (lqi) are listed next to the address if these values have been set to be
      *   different from the default values.
@@ -216,11 +216,13 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * macfilter addr clear
      * Done
      * @endcode
-     * @par api_copy
-     * #otLinkFilterClearAddresses
      * @par
-     * Does not affect entries in the `RssIn` list. That list contains extended addresses where the `rss` has
-     * been set to a fixed value that differs from the currently set default.
+     * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @par
+     * This command clears all the extended addresses from the mac filter list.
+     * @note This command does not affect entries in the `RssIn` list. That list contains extended addresses where the `rss` has
+     * been set to a fixed value that differs from the default.
+     * @sa otLinkFilterClearAddresses
      */
     else if (aArgs[0] == "clear")
     {
@@ -386,7 +388,7 @@ otError MacFilter::Process(Arg aArgs[])
      * - A list of all the extended addresses in the mac filter list. The received signal strenth (rss) and
      *   link quality indicator (lqi) are listed next to the address if these values have been set to be
      *   different from the default values.
-     * - A separate list (`RssIn List`) that shows all the extended addresses where the rss has been set to
+     * - A separate list (`RssIn List`) that shows all the extended addresses where the `rss` has been set to
      *   be different from the default value.
      * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
      * @note An extended address can be in the `RssIn` list without being in the mac filter list.
