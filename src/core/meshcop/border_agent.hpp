@@ -41,6 +41,7 @@
 #include <openthread/border_agent.h>
 
 #include "common/as_core_type.hpp"
+#include "common/heap_allocatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -159,13 +160,13 @@ private:
     static constexpr uint16_t kUdpPort          = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT;
     static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner (in msec)
 
-    class ForwardContext : public InstanceLocatorInit
+    class ForwardContext : public InstanceLocatorInit, public Heap::Allocatable<ForwardContext>
     {
     public:
-        void     Init(Instance &aInstance, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
+        Error    Init(Instance &aInstance, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
         bool     IsPetition(void) const { return mPetition; }
         uint16_t GetMessageId(void) const { return mMessageId; }
-        Error    ToHeader(Coap::Message &aMessage, uint8_t aCode);
+        Error    ToHeader(Coap::Message &aMessage, uint8_t aCode) const;
 
     private:
         uint16_t mMessageId;                             // The CoAP Message ID of the original request.
@@ -180,7 +181,7 @@ private:
 
     Coap::Message::Code CoapCodeFromError(Error aError);
     Error               SendMessage(Coap::Message &aMessage);
-    void                SendErrorMessage(ForwardContext &aForwardContext, Error aError);
+    void                SendErrorMessage(const ForwardContext &aForwardContext, Error aError);
     void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
     static void HandleConnected(bool aConnected, void *aContext);
@@ -194,9 +195,9 @@ private:
                                    otMessage           *aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aResult);
-    void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
-    Error       ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
-    Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+    void  HandleCoapResponse(const ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
+    Error ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri);
+    Error ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
