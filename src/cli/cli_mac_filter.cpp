@@ -224,8 +224,8 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @par
      * This command clears all the extended addresses from the mac filter list.
-     * @note This command does not affect entries in the `RssIn` list. That list contains extended addresses where the `rss` has
-     * been set to a fixed value that differs from the default.
+     * @note This command does not affect entries in the `RssIn` list. That list contains extended addresses where the
+     * `rss` has been set to a fixed value that differs from the default.
      * @sa otLinkFilterClearAddresses
      */
     else if (aArgs[0] == "clear")
