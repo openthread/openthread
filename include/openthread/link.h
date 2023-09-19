@@ -789,7 +789,8 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 
 /**
  * Adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
- * MAC Filter.
+ * MAC Filter.The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
+ * to set the `rss`.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
  *
