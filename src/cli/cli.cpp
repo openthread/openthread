@@ -567,7 +567,7 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
     else if (aArgs[0] == "state")
     {
         static const char *const kStateStrings[] = {
-            "Stopped"  // (0) OT_BORDER_AGENT_STATE_STOPPED
+            "Stopped", // (0) OT_BORDER_AGENT_STATE_STOPPED
             "Started", // (1) OT_BORDER_AGENT_STATE_STARTED
             "Active",  // (2) OT_BORDER_AGENT_STATE_ACTIVE
         };
