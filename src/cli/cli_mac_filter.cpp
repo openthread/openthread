@@ -202,8 +202,12 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam macfilter addr remove @ca{extaddr}
-     * @par api_copy
-     * #otLinkFilterRemoveAddress
+     * @par
+     * Is available when OPENTHREAD_CONFIG_MAC_FILTER_ENABLE configuration is enabled.
+     * @par
+     * This command removes the specified extended address from the mac filter list.
+     * @note No action is performed if the specified extended address does not match an entry in the mac filter list.
+     * @sa otLinkFilterRemoveAddress
      */
     else if (aArgs[0] == "remove")
     {
