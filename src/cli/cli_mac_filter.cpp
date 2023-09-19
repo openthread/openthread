@@ -151,7 +151,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
      * @par
      * Provides the following information:
      * - Current mode of the MAC filter list: Either `AllowList`, `DenyList,` or `Disabled`
-     * - A list of all the extended addresses in the filter. The received signal strenth (rss) and
+     * - A list of all the extended addresses in the filter. The received signal strength (rss) and
      *   link quality indicator (lqi) are listed next to the address if these values have been set to be
      *   different from the default values.
      * @sa otLinkFilterGetAddressMode
@@ -389,7 +389,7 @@ otError MacFilter::Process(Arg aArgs[])
      * @par
      * Provides the following information:
      * - `Address Mode`: Current mode of the MAC filter: Either `AllowList`, `DenyList,` or `Disabled`
-     * - A list of all the extended addresses in the MAC filter list. The received signal strenth (rss) and
+     * - A list of all the extended addresses in the MAC filter list. The received signal strength (rss) and
      *   link quality indicator (lqi) are listed next to the address if these values have been set to be
      *   different from the default values.
      * - A separate list (`RssIn List`) that shows all the extended addresses where the `rss` has been set to
