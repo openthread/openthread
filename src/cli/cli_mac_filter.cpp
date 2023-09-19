@@ -252,7 +252,7 @@ template <> otError MacFilter::Process<Cmd("addr")>(Arg aArgs[])
              * Done
              * @endcode
              * @par
-             * Enables the `allowlist` MAC filter mode, which means that all MAC addresses in the MAC filter list
+             * Enables the `allowlist` MAC filter mode, which means that only the MAC addresses in the MAC filter list
              * will be allowed access.
              * @sa otLinkFilterSetAddressMode
              */
