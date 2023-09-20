@@ -1191,8 +1191,8 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
             ExitNow();
         }
 
+        router->Clear();
         router->mAddress = aSrcAddress;
-        router->mEntries.Clear();
     }
 
     // RA message can indicate router provides default route in the RA
@@ -1201,7 +1201,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
     // in a `::/0` RIO override the preference and lifetime values in
     // the RA header (per RFC 4191 section 3.1).
 
-    ProcessDefaultRoute(aRaMessage.GetHeader(), *router);
+    ProcessRaHeader(aRaMessage.GetHeader(), *router);
 
     for (const Ip6::Nd::Option &option : aRaMessage)
     {
@@ -1213,6 +1213,10 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
 
         case Ip6::Nd::Option::kTypeRouteInfo:
             ProcessRouteInfoOption(static_cast<const Ip6::Nd::RouteInfoOption &>(option), *router);
+            break;
+
+        case Ip6::Nd::Option::kTypeRaFlagsExtension:
+            ProcessRaFlagsExtOption(static_cast<const Ip6::Nd::RaFlagsExtOption &>(option), *router);
             break;
 
         default:
@@ -1228,11 +1232,15 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
-                                                                Router                                     &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
+                                                            Router                                     &aRouter)
 {
     Entry      *entry;
     Ip6::Prefix prefix;
+
+    aRouter.mManagedAddressConfigFlag = aRaHeader.IsManagedAddressConfigFlagSet();
+    aRouter.mOtherConfigFlag          = aRaHeader.IsOtherConfigFlagSet();
+    LogInfo("- RA Header - flags - M:%u O:%u", aRouter.mManagedAddressConfigFlag, aRouter.mOtherConfigFlag);
 
     prefix.Clear();
     entry = aRouter.mEntries.FindMatching(Entry::Matcher(prefix, Entry::kTypeRoute));
@@ -1351,6 +1359,18 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd
     mEntryTimer.FireAtIfEarlier(entry->GetExpireTime());
 
     SignalTableChanged();
+
+exit:
+    return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::ProcessRaFlagsExtOption(const Ip6::Nd::RaFlagsExtOption &aRaFlagsOption,
+                                                                    Router                          &aRouter)
+{
+    VerifyOrExit(aRaFlagsOption.IsValid());
+    aRouter.mStubRouterFlag = aRaFlagsOption.IsStubRouterFlagSet();
+
+    LogInfo("- FlagsExt - StubRouter:%u", aRouter.mStubRouterFlag);
 
 exit:
     return;

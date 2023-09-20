@@ -725,7 +725,7 @@ private:
             } mShared;
         };
 
-        struct Router
+        struct Router : public Clearable<Router>
         {
             // The timeout (in msec) for router staying in active state
             // before starting the Neighbor Solicitation (NS) probes.
@@ -750,6 +750,9 @@ private:
             LinkedList<Entry> mEntries;
             TimeMilli         mTimeout;
             uint8_t           mNsProbeCount;
+            bool              mManagedAddressConfigFlag : 1;
+            bool              mOtherConfigFlag : 1;
+            bool              mStubRouterFlag : 1;
         };
 
         class Iterator : public PrefixTableIterator
@@ -763,9 +766,10 @@ private:
             void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
-        void         ProcessDefaultRoute(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
+        void         ProcessRaHeader(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
         void         ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
         void         ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
+        void         ProcessRaFlagsExtOption(const Ip6::Nd::RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool         Contains(const Entry::Checker &aChecker) const;
         void         RemovePrefix(const Entry::Matcher &aMatcher);
         void         RemoveOrDeprecateEntriesFromInactiveRouters(void);

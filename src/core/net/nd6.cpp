@@ -171,6 +171,16 @@ uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// RaFlagsExtOption
+
+void RaFlagsExtOption::Init(void)
+{
+    Clear();
+    SetType(kTypeRaFlagsExtension);
+    SetSize(sizeof(RaFlagsExtOption));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RouterAdverMessage::Header
 
 void RouterAdvertMessage::Header::SetToDefault(void)
