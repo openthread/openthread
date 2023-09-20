@@ -328,9 +328,10 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Adds a fixed link quality indicator entry for the messages
-     * from a given Extended Address in MAC Filter. The Extended Address
+     * Adds a fixed link quality indicator for the messages
+     * from the specified  Extended Address. The Extended Address
      * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
+     * The `lqi` will automatically get converted to a correspodning received signal strength (`rss`) value.
      * @par
      * This Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @par
@@ -403,7 +404,8 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * #otLinkFilterRemoveRssIn
      * @par
      * If you wish to remove the default received signal strength and link quality indicator settings,
-     * use the `*` as the `extaddr`, as shown in the example. This unsets the defaults.
+     * use the `*` as the `extaddr`, as shown in the example. This unsets the defaults but does not remove
+     * entries from the `RssIn` list.
      */
     else if (aArgs[0] == "remove")
     {

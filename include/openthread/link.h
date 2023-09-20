@@ -788,8 +788,9 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * Adds a fixed received signal strength (in dBm) entry for the messages from a given Extended Address in
- * MAC Filter. The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
+ * Adds the specified Extended Address to the `RssIn` list, and sets the
+ * received signal strength (in dBm) entry for messages from that address.
+ * The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
  * to set the `rss`.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
@@ -805,11 +806,14 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
- * Removes a MAC Filter entry for fixed received signal strength setting for a given Extended Address.
+ * Removes the specified Extended Address from the `RssIn` list.
+ * Once removed from the `RssIn` list, this MAC address
+ * will instead use the default `rss` and `lqi` settings, assuming defaults have been set.
+ * (If no defaults have been set, the over-air signal is used.)
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
  *
- * No action is performed if there is no existing entry in Filter matching the given Extended Address.
+ * No action is performed if there is no existing entry in the RssIN list matching the specified Extended Address.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address. MUST NOT be NULL.
@@ -842,7 +846,8 @@ void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
 void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
 
 /**
- * Clears all the received signal strength entries (including default `RssIn`) on MAC Filter.
+ * Clears all the received signal strength entries (including default `RssIn`) from the `RssIn` list.
+ * Performing this action means that all Extended Addresses will use the on-air signal.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
  *
