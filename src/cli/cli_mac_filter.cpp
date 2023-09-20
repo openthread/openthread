@@ -301,9 +301,9 @@ exit:
  * - Listing of all the extended addresses
  * where the received signal strength (`rss`) has been set to be different from the default value.
  * The link quality indicator (`lqi`) is also shown if different from the default. The `rss` and `lqi`
- * settings map to each other; if you set one, the value of the other gets set automatically. 
+ * settings map to each other; if you set one, the value of the other gets set automatically.
  * This list of addresses is called the `RssIn List`. Setting either the `rsi` or the `lqi`
- * adds the correspondng MAC address to the ~RssIn` list.
+ * adds the correspondng MAC address to the `RssIn` list.
  * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
  * @sa otLinkFilterGetNextRssIn
  */
@@ -338,7 +338,7 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * use the `*` for the `extaddr` argument, as shown in the example. The allowed range is 0 to 3.
      * @sa otLinkConvertLinkQualityToRss
      * @sa otLinkFilterSetDefaultRssIn
-     */ 
+     */
     else if (aArgs[0] == "add-lqi")
     {
         uint8_t linkQuality;
@@ -403,7 +403,7 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * #otLinkFilterRemoveRssIn
      * @par
      * If you wish to remove the default received signal strength and link quality indicator settings,
-     * use the `*` as the `extaddr`, as shown in the example. This unsets the defaults. 
+     * use the `*` as the `extaddr`, as shown in the example. This unsets the defaults.
      */
     else if (aArgs[0] == "remove")
     {
@@ -416,15 +416,15 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[1].ParseAsHexString(extAddr.m8));
             otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
         }
-    /**
-     * @cli macfilter rss clear
-     * @code
-     * macfilter rss clear
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otLinkFilterClearAllRssIn
-     */
+        /**
+         * @cli macfilter rss clear
+         * @code
+         * macfilter rss clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otLinkFilterClearAllRssIn
+         */
     }
     else if (aArgs[0] == "clear")
     {
