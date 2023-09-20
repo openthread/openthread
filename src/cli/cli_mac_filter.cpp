@@ -327,16 +327,20 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * macfilter rss add-lqi 0f6127e33af6b404 2
      * Done
      * @endcode
-     * @par
-     * Adds a fixed link quality indicator for the messages
-     * from the specified  Extended Address. The Extended Address
-     * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
-     * The `lqi` will automatically get converted to a corresponding received signal strength (`rss`) value.
-     * @par
-     * This Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @cparam macfilter rss add-lqi @ca{extaddr} @ca{lqi}
      * @par
      * To set a default value for the link quality indicator for all received messages,
-     * use the `*` for the `extaddr` argument, as shown in the example. The allowed range is 0 to 3.
+     * use the `*` for the `extaddr` argument. The allowed range is 0 to 3.
+     * @par
+     * Adds the specified Extended Address to the `RssIn` list (or modifies an existing address in the `RssIn` list)
+     * and sets the fixed link quality indicator for messages from that address.
+     * The Extended Address
+     * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
+     * @note The `RssIn` list contains Extended Addresses whose `lqi` or
+     * received signal strength (`rss`) values have been set to be different from the defaults.
+     * The `lqi` will automatically get converted to a corresponding `rss` value.
+     * @par
+     * This Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @sa otLinkConvertLinkQualityToRss
      * @sa otLinkFilterSetDefaultRssIn
      */
@@ -369,11 +373,11 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam macfilter rss add @ca{extaddr} @ca{rss}
-     * @par api_copy
-     * #otLinkFilterAddRssIn
      * @par
      * To set a default value for the received signal strength for all received messages,
-     * use the `*` for the `extaddr` argument, as shown in the example.
+     * use the `*` for the `extaddr` argument.
+     * @par api_copy
+     * #otLinkFilterAddRssIn
      */
     else if (aArgs[0] == "add")
     {
@@ -404,7 +408,7 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * #otLinkFilterRemoveRssIn
      * @par
      * If you wish to remove the default received signal strength and link quality indicator settings,
-     * use the `*` as the `extaddr`, as shown in the example. This unsets the defaults but does not remove
+     * use the `*` as the `extaddr`. This unsets the defaults but does not remove
      * entries from the `RssIn` list.
      */
     else if (aArgs[0] == "remove")

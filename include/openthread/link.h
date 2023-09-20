@@ -793,6 +793,8 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
  * received signal strength (in dBm) entry for messages from that address.
  * The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
  * to set the `rss`.
+ * @note The `RssIn` list contains Extended Addresses whose `rss` or link quality indicator (`lqi`)
+ * values have been set to be different from the defaults.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
  *
