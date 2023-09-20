@@ -300,10 +300,10 @@ exit:
  * Provides the following information:
  * - Listing of all the extended addresses
  * where the received signal strength (`rss`) has been set to be different from the default value.
- * The link quality indicator (`lqi`) is also shown if different from the default. The `rss` and `lqi`
+ * The link quality indicator (`lqi`) is also shown. The `rss` and `lqi`
  * settings map to each other; if you set one, the value of the other gets set automatically.
  * This list of addresses is called the `RssIn List`. Setting either the `rsi` or the `lqi`
- * adds the corresponding MAC address to the `RssIn` list.
+ * adds the corresponding extended address to the `RssIn` list.
  * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
  * @sa otLinkFilterGetNextRssIn
  */
@@ -328,7 +328,6 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam macfilter rss add-lqi @ca{extaddr} @ca{lqi}
-     * @par
      * To set a default value for the link quality indicator for all received messages,
      * use the `*` for the `extaddr` argument. The allowed range is 0 to 3.
      * @par

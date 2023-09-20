@@ -816,7 +816,7 @@ otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddr
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
  *
- * No action is performed if there is no existing entry in the RssIN list matching the specified Extended Address.
+ * No action is performed if there is no existing entry in the `RssIn` list matching the specified Extended Address.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aExtAddress  A pointer to the IEEE 802.15.4 Extended Address. MUST NOT be NULL.
@@ -849,7 +849,8 @@ void otLinkFilterSetDefaultRssIn(otInstance *aInstance, int8_t aRss);
 void otLinkFilterClearDefaultRssIn(otInstance *aInstance);
 
 /**
- * Clears all the received signal strength entries (including default `RssIn`) from the `RssIn` list.
+ * Clears all the received signal strength (`rss`) and link quality
+ * indicator (`lqi`) entries (including defaults) from the `RssIn` list.
  * Performing this action means that all Extended Addresses will use the on-air signal.
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
