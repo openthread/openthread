@@ -788,7 +788,8 @@ void otLinkFilterClearAddresses(otInstance *aInstance);
 otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *aIterator, otMacFilterEntry *aEntry);
 
 /**
- * Adds the specified Extended Address to the `RssIn` list, and sets the
+ * Adds the specified Extended Address to the `RssIn` list (or modifies an existing
+ * address in the `RssIn` list) and sets the
  * received signal strength (in dBm) entry for messages from that address.
  * The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
  * to set the `rss`.

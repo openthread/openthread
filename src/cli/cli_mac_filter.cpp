@@ -331,7 +331,7 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
      * Adds a fixed link quality indicator for the messages
      * from the specified  Extended Address. The Extended Address
      * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
-     * The `lqi` will automatically get converted to a correspodning received signal strength (`rss`) value.
+     * The `lqi` will automatically get converted to a corresponding received signal strength (`rss`) value.
      * @par
      * This Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
      * @par
