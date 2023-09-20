@@ -41,6 +41,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/settings.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -56,10 +57,10 @@ RegisterLogModule("BorderAgent");
 //----------------------------------------------------------------------------------------------------------------------
 // `BorderAgent::ForwardContext`
 
-void BorderAgent::ForwardContext::Init(Instance            &aInstance,
-                                       const Coap::Message &aMessage,
-                                       bool                 aPetition,
-                                       bool                 aSeparate)
+Error BorderAgent::ForwardContext::Init(Instance            &aInstance,
+                                        const Coap::Message &aMessage,
+                                        bool                 aPetition,
+                                        bool                 aSeparate)
 {
     InstanceLocatorInit::Init(aInstance);
     mMessageId   = aMessage.GetMessageId();
@@ -68,9 +69,11 @@ void BorderAgent::ForwardContext::Init(Instance            &aInstance,
     mType        = aMessage.GetType();
     mTokenLength = aMessage.GetTokenLength();
     memcpy(mToken, aMessage.GetToken(), mTokenLength);
+
+    return kErrorNone;
 }
 
-Error BorderAgent::ForwardContext::ToHeader(Coap::Message &aMessage, uint8_t aCode)
+Error BorderAgent::ForwardContext::ToHeader(Coap::Message &aMessage, uint8_t aCode) const
 {
     if ((mType == Coap::kTypeNonConfirmable) || mSeparate)
     {
@@ -114,7 +117,7 @@ Coap::Message::Code BorderAgent::CoapCodeFromError(Error aError)
     return code;
 }
 
-void BorderAgent::SendErrorMessage(ForwardContext &aForwardContext, Error aError)
+void BorderAgent::SendErrorMessage(const ForwardContext &aForwardContext, Error aError)
 {
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
@@ -170,12 +173,14 @@ void BorderAgent::HandleCoapResponse(void                *aContext,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    ForwardContext &forwardContext = *static_cast<ForwardContext *>(aContext);
+    OwnedPtr<ForwardContext> forwardContext(static_cast<ForwardContext *>(aContext));
 
-    forwardContext.Get<BorderAgent>().HandleCoapResponse(forwardContext, AsCoapMessagePtr(aMessage), aResult);
+    forwardContext->Get<BorderAgent>().HandleCoapResponse(*forwardContext.Get(), AsCoapMessagePtr(aMessage), aResult);
 }
 
-void BorderAgent::HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult)
+void BorderAgent::HandleCoapResponse(const ForwardContext &aForwardContext,
+                                     const Coap::Message  *aResponse,
+                                     Error                 aResult)
 {
     Coap::Message *message = nullptr;
     Error          error;
@@ -223,8 +228,6 @@ exit:
 
         SendErrorMessage(aForwardContext, error);
     }
-
-    Heap::Free(&aForwardContext);
 }
 
 BorderAgent::BorderAgent(Instance &aInstance)
@@ -516,12 +519,12 @@ exit:
 
 Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Uri aUri)
 {
-    Error            error          = kErrorNone;
-    ForwardContext  *forwardContext = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Coap::Message   *message  = nullptr;
-    bool             petition = false;
-    bool             separate = false;
+    Error                    error = kErrorNone;
+    OwnedPtr<ForwardContext> forwardContext;
+    Tmf::MessageInfo         messageInfo(GetInstance());
+    Coap::Message           *message  = nullptr;
+    bool                     petition = false;
+    bool                     separate = false;
 
     VerifyOrExit(mState != kStateStopped);
 
@@ -543,10 +546,8 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::Mes
         SuccessOrExit(error = Get<Tmf::SecureAgent>().SendAck(aMessage, aMessageInfo));
     }
 
-    forwardContext = static_cast<ForwardContext *>(Heap::CAlloc(1, sizeof(ForwardContext)));
-    VerifyOrExit(forwardContext != nullptr, error = kErrorNoBufs);
-
-    forwardContext->Init(GetInstance(), aMessage, petition, separate);
+    forwardContext.Reset(ForwardContext::AllocateAndInit(GetInstance(), aMessage, petition, separate));
+    VerifyOrExit(!forwardContext.IsNull(), error = kErrorNoBufs);
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(aUri);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
@@ -557,10 +558,14 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &aMessage, const Ip6::Mes
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     messageInfo.SetSockPortToTmf();
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext));
+    SuccessOrExit(error =
+                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext.Get()));
 
-    // HandleCoapResponse is responsible to free this forward context.
-    forwardContext = nullptr;
+    // Release the ownership of `forwardContext` since `SendMessage()`
+    // will own it. We take back ownership from `HandleCoapResponse()`
+    // callback.
+
+    forwardContext.Release();
 
     LogInfo("Forwarded request to leader on %s", PathForUri(aUri));
 
@@ -569,11 +574,6 @@ exit:
 
     if (error != kErrorNone)
     {
-        if (forwardContext != nullptr)
-        {
-            Heap::Free(forwardContext);
-        }
-
         FreeMessage(message);
         SendErrorMessage(aMessage, separate, error);
     }
