@@ -303,7 +303,7 @@ exit:
  * The link quality indicator (`lqi`) is also shown if different from the default. The `rss` and `lqi`
  * settings map to each other; if you set one, the value of the other gets set automatically.
  * This list of addresses is called the `RssIn List`. Setting either the `rsi` or the `lqi`
- * adds the correspondng MAC address to the `RssIn` list.
+ * adds the corresponding MAC address to the `RssIn` list.
  * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
  * @sa otLinkFilterGetNextRssIn
  */
