@@ -338,6 +338,7 @@ do_build_otbr_docker()
         "REST_API=0"
         "WEB_GUI=0"
         "MDNS=${OTBR_MDNS:-mDNSResponder}"
+        "FIREWALL=${FIREWALL:-1}"
     )
 
     if [[ ${NAT64} != 1 ]]; then
