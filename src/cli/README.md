@@ -3954,7 +3954,7 @@ Done
 ```
 
 ```bash
-> macfilter rss add 0f6127e33af6b404 2
+> macfilter rss add-lqi 0f6127e33af6b404 2
 Done
 ```
 
