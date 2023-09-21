@@ -2115,6 +2115,8 @@ template <typename InterfaceType> void RadioSpinel<InterfaceType>::RecoverFromRc
     switch (recoveringState)
     {
     case kStateDisabled:
+        mState = kStateDisabled;
+        break;
     case kStateSleep:
         break;
     case kStateReceive:
