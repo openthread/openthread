@@ -789,10 +789,9 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 
 /**
  * Adds the specified Extended Address to the `RssIn` list (or modifies an existing
- * address in the `RssIn` list) and sets the
- * received signal strength (in dBm) entry for messages from that address.
- * The Extended Address does not necessarily have to be in the `address allowlist/denylist` filter
- * to set the `rss`.
+ * address in the `RssIn` list) and sets the received signal strength (in dBm) entry
+ * for messages from that address. The Extended Address does not necessarily have
+ * to be in the `address allowlist/denylist` filter to set the `rss`.
  * @note The `RssIn` list contains Extended Addresses whose `rss` or link quality indicator (`lqi`)
  * values have been set to be different from the defaults.
  *
@@ -809,9 +808,9 @@ otError otLinkFilterGetNextAddress(otInstance *aInstance, otMacFilterIterator *a
 otError otLinkFilterAddRssIn(otInstance *aInstance, const otExtAddress *aExtAddress, int8_t aRss);
 
 /**
- * Removes the specified Extended Address from the `RssIn` list.
- * Once removed from the `RssIn` list, this MAC address
- * will instead use the default `rss` and `lqi` settings, assuming defaults have been set.
+ * Removes the specified Extended Address from the `RssIn` list. Once removed
+ * from the `RssIn` list, this MAC address will instead use the default `rss`
+ * and `lqi` settings, assuming defaults have been set.
  * (If no defaults have been set, the over-air signal is used.)
  *
  * Is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.

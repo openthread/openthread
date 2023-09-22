@@ -299,11 +299,12 @@ exit:
  * @par
  * Provides the following information:
  * - Listing of all the extended addresses
- * where the received signal strength (`rss`) has been set to be different from the default value.
- * The link quality indicator (`lqi`) is also shown. The `rss` and `lqi`
- * settings map to each other. If you set one, the value of the other gets set automatically.
- * This list of addresses is called the `RssIn List`. Setting either the `rsi` or the `lqi`
- * adds the corresponding extended address to the `RssIn` list.
+ * where the received signal strength (`rss`) has been set to be different from
+ * the default value. The link quality indicator (`lqi`) is also shown. The `rss`
+ * and `lqi` settings map to each other. If you set one, the value of the other
+ * gets set automatically. This list of addresses is called the `RssIn List`.
+ * Setting either the `rsi` or the `lqi adds the corresponding extended address
+ * to the `RssIn` list.
  * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
  * @sa otLinkFilterGetNextRssIn
  */
