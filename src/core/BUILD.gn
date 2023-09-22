@@ -237,6 +237,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1" ]
     }
 
+    if (openthread_config_srp_replication_enable) {
+      defines += [ "OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE=1" ]
+    }
+
     if (openthread_config_srp_server_enable) {
       defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
     }
@@ -345,6 +349,7 @@ openthread_core_files = [
   "api/sntp_api.cpp",
   "api/srp_client_api.cpp",
   "api/srp_client_buffers_api.cpp",
+  "api/srp_replication_api.cpp",
   "api/srp_server_api.cpp",
   "api/tasklet_api.cpp",
   "api/tcp_api.cpp",
@@ -577,6 +582,8 @@ openthread_core_files = [
   "net/socket.hpp",
   "net/srp_client.cpp",
   "net/srp_client.hpp",
+  "net/srp_replication.cpp",
+  "net/srp_replication.hpp",
   "net/srp_server.cpp",
   "net/srp_server.hpp",
   "net/tcp6.cpp",
@@ -814,6 +821,7 @@ source_set("libopenthread_core_config") {
     "config/radio_link.h",
     "config/sntp_client.h",
     "config/srp_client.h",
+    "config/srp_replication.h",
     "config/srp_server.h",
     "config/time_sync.h",
     "config/tmf.h",

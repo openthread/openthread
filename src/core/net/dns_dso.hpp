@@ -446,6 +446,14 @@ public:
         bool IsServer(void) const { return mIsServer; }
 
         /**
+         * Sets the `Connection` peer socket address.
+         *
+         * @param[in] aPeerSockAddr       The peer socket address.
+         *
+         */
+        void SetPeerSockAddr(const Ip6::SockAddr &aPeerSockAddr) { mPeerSockAddr = aPeerSockAddr; }
+
+        /**
          * Indicates whether or not the device is acting as a DSO client on this `Connection`.
          *
          * Client is the software entity that initiates a connection to the server's listening socket.

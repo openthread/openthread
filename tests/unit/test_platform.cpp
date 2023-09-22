@@ -623,4 +623,23 @@ void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery 
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+
+OT_TOOL_WEAK void otPlatSrplDnssdBrowse(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+}
+
+OT_TOOL_WEAK void otPlatSrplRegisterDnssdService(otInstance *aInstance, const uint8_t *aTxtData, uint16_t aTxtLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aTxtData);
+    OT_UNUSED_VARIABLE(aTxtLength);
+}
+
+OT_TOOL_WEAK void otPlatSrplUnregisterDnssdService(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstance); }
+
+#endif // OPENTHREAD_CONFIG_SRP_REPLICATION_ENABLE
+
 } // extern "C"

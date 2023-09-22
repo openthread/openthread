@@ -543,7 +543,7 @@ void TestDnsClient(void)
     SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
     VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
 
-    srpServer->SetEnabled(true);
+    SuccessOrQuit(srpServer->SetEnabled(true));
     VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
 
     AdvanceTime(10000);
@@ -894,7 +894,7 @@ void TestDnsClient(void)
 
     Log("Disabling SRP server");
 
-    srpServer->SetEnabled(false);
+    SuccessOrQuit(srpServer->SetEnabled(false));
     AdvanceTime(100);
 
     VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
@@ -961,7 +961,7 @@ void TestDnssdServerProxyCallback(void)
     SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
     VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
 
-    srpServer->SetEnabled(true);
+    SuccessOrQuit(srpServer->SetEnabled(true));
     VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
 
     AdvanceTime(10000);
