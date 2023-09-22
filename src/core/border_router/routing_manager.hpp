@@ -53,6 +53,7 @@
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
 #include "common/error.hpp"
+#include "common/heap_allocatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -624,10 +625,17 @@ private:
         void HandleRouterTimer(void);
 
     private:
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
         static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
+#endif
 
-        class Entry : public LinkedListEntry<Entry>, public Unequatable<Entry>, private Clearable<Entry>
+        class Entry : public LinkedListEntry<Entry>,
+                      public Unequatable<Entry>,
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+                      public Heap::Allocatable<Entry>,
+#endif
+                      private Clearable<Entry>
         {
             friend class LinkedListEntry<Entry>;
             friend class Clearable<Entry>;
@@ -725,7 +733,11 @@ private:
             } mShared;
         };
 
-        struct Router : public Clearable<Router>
+        struct Router : public LinkedListEntry<Router>,
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+                        public Heap::Allocatable<Router>,
+#endif
+                        public Clearable<Router>
         {
             // The timeout (in msec) for router staying in active state
             // before starting the Neighbor Solicitation (NS) probes.
@@ -746,6 +758,7 @@ private:
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker) const { return mEntries.IsEmpty(); }
 
+            Router           *mNext;
             Ip6::Address      mAddress;
             LinkedList<Entry> mEntries;
             TimeMilli         mTimeout;
@@ -774,8 +787,7 @@ private:
         void         RemovePrefix(const Entry::Matcher &aMatcher);
         void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
         void         RemoveRoutersWithNoEntries(void);
-        Entry       *AllocateEntry(void) { return mEntryPool.Allocate(); }
-        void         FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
+        void         FreeRouters(LinkedList<Router> &aRouters);
         void         FreeEntries(LinkedList<Entry> &aEntries);
         void         UpdateNetworkDataOnChangeTo(Entry &aEntry);
         const Entry *FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix) const;
@@ -783,16 +795,30 @@ private:
         void         SignalTableChanged(void);
         void         UpdateRouterOnRx(Router &aRouter);
         void         SendNeighborSolicitToRouter(const Router &aRouter);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+        Router *AllocateRouter(void) { return Router::Allocate(); }
+        Entry  *AllocateEntry(void) { return Entry::Allocate(); }
+        void    FreeRouter(Router &aRouter) { aRouter.Free(); }
+        void    FreeEntry(Entry &aEntry) { aEntry.Free(); }
+#else
+        Router *AllocateRouter(void) { return mRouterPool.Allocate(); }
+        Entry  *AllocateEntry(void) { return mEntryPool.Allocate(); }
+        void    FreeRouter(Router &aRouter) { mRouterPool.Free(aRouter); }
+        void    FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
+#endif
 
         using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
         using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableEntryTimer>;
         using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableRouterTimer>;
 
-        Array<Router, kMaxRouters> mRouters;
-        Pool<Entry, kMaxEntries>   mEntryPool;
-        EntryTimer                 mEntryTimer;
-        RouterTimer                mRouterTimer;
-        SignalTask                 mSignalTask;
+        LinkedList<Router> mRouters;
+        EntryTimer         mEntryTimer;
+        RouterTimer        mRouterTimer;
+        SignalTask         mSignalTask;
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+        Pool<Entry, kMaxEntries>  mEntryPool;
+        Pool<Router, kMaxRouters> mRouterPool;
+#endif
     };
 
     class OmrPrefixManager;

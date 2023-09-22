@@ -1183,7 +1183,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
 
     if (router == nullptr)
     {
-        router = mRouters.PushBack();
+        router = AllocateRouter();
 
         if (router == nullptr)
         {
@@ -1193,6 +1193,8 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
 
         router->Clear();
         router->mAddress = aSrcAddress;
+
+        mRouters.Push(*router);
     }
 
     // RA message can indicate router provides default route in the RA
@@ -1471,13 +1473,12 @@ void RoutingManager::DiscoveredPrefixTable::RemoveAllEntries(void)
 
     for (Router &router : mRouters)
     {
-        Entry *entry;
-
-        while ((entry = router.mEntries.Pop()) != nullptr)
+        if (!router.mEntries.IsEmpty())
         {
-            FreeEntry(*entry);
             SignalTableChanged();
         }
+
+        FreeEntries(router.mEntries);
     }
 
     RemoveRoutersWithNoEntries();
@@ -1579,13 +1580,27 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::CalculateNextStaleTime(TimeMill
 
 void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntries(void)
 {
-    mRouters.RemoveAllMatching(Router::kContainsNoEntries);
+    LinkedList<Router> routersToFree;
+
+    mRouters.RemoveAllMatching(Router::kContainsNoEntries, routersToFree);
+    FreeRouters(routersToFree);
+}
+
+void RoutingManager::DiscoveredPrefixTable::FreeRouters(LinkedList<Router> &aRouters)
+{
+    // Frees all routers in the given list `aRouters`
+
+    Router *router;
+
+    while ((router = aRouters.Pop()) != nullptr)
+    {
+        FreeRouter(*router);
+    }
 }
 
 void RoutingManager::DiscoveredPrefixTable::FreeEntries(LinkedList<Entry> &aEntries)
 {
-    // Frees all entries in the given list `aEntries` (put them back
-    // in the entry pool).
+    // Frees all entries in the given list `aEntries`.
 
     Entry *entry;
 
@@ -1768,8 +1783,8 @@ void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aI
     Iterator &iterator = static_cast<Iterator &>(aIterator);
 
     iterator.SetInitTime();
-    iterator.SetRouter(mRouters.Front());
-    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters[0].mEntries.GetHead());
+    iterator.SetRouter(mRouters.GetHead());
+    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters.GetHead()->mEntries.GetHead());
 }
 
 Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
@@ -1795,14 +1810,11 @@ Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &a
 
     if (iterator.GetEntry() == nullptr)
     {
-        if (iterator.GetRouter() != mRouters.Back())
+        iterator.SetRouter(iterator.GetRouter()->GetNext());
+
+        if (iterator.GetRouter() != nullptr)
         {
-            iterator.SetRouter(iterator.GetRouter() + 1);
             iterator.SetEntry(iterator.GetRouter()->mEntries.GetHead());
-        }
-        else
-        {
-            iterator.SetRouter(nullptr);
         }
     }
 

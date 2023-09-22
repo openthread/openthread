@@ -476,6 +476,37 @@ exit:
     return;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+Array<void *, 500> sHeapAllocatedPtrs;
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    void *ptr = calloc(aNum, aSize);
+
+    SuccessOrQuit(sHeapAllocatedPtrs.PushBack(ptr));
+
+    return ptr;
+}
+
+void otPlatFree(void *aPtr)
+{
+    if (aPtr != nullptr)
+    {
+        void **entry = sHeapAllocatedPtrs.Find(aPtr);
+
+        VerifyOrQuit(entry != nullptr, "A heap allocated item is freed twice");
+        sHeapAllocatedPtrs.Remove(*entry);
+    }
+
+    free(aPtr);
+}
+#endif
+
+//----------------------------------------------------------------------------------------------------------------------
+
 void LogRouterAdvert(const Icmp6Packet &aPacket)
 {
     Ip6::Nd::RouterAdvertMessage raMsg(aPacket);
@@ -1014,6 +1045,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     Ip6::Prefix  routePrefix    = PrefixFromString("2000:1234:5678::", 64);
     Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
     Ip6::Address routerAddressB = AddressFromString("fd00::bbbb");
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestSamePrefixesFromMultipleRouters");
@@ -1028,6 +1060,7 @@ void TestSamePrefixesFromMultipleRouters(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1135,6 +1168,9 @@ void TestSamePrefixesFromMultipleRouters(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestSamePrefixesFromMultipleRouters");
 
     FinalizeTest();
@@ -1146,6 +1182,7 @@ void TestOmrSelection(void)
     Ip6::Prefix                     localOmr;
     Ip6::Prefix                     omrPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestOmrSelection");
@@ -1160,6 +1197,7 @@ void TestOmrSelection(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1250,6 +1288,9 @@ void TestOmrSelection(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestOmrSelection");
     FinalizeTest();
 }
@@ -1262,6 +1303,7 @@ void TestDefaultRoute(void)
     Ip6::Prefix                     defaultRoute   = PrefixFromString("::", 0);
     Ip6::Address                    routerAddressA = AddressFromString("fd00::aaaa");
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDefaultRoute");
@@ -1276,6 +1318,7 @@ void TestDefaultRoute(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1410,6 +1453,9 @@ void TestDefaultRoute(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestDefaultRoute");
 
     FinalizeTest();
@@ -1423,6 +1469,7 @@ void TestAdvNonUlaRoute(void)
     Ip6::Prefix                     routePrefix    = PrefixFromString("2000:1234:5678::", 64);
     Ip6::Address                    routerAddressA = AddressFromString("fd00::aaaa");
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestAdvNonUlaRoute");
@@ -1437,6 +1484,7 @@ void TestAdvNonUlaRoute(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1571,6 +1619,9 @@ void TestAdvNonUlaRoute(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestAdvNonUlaRoute");
 
     FinalizeTest();
@@ -1585,6 +1636,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     Ip6::Prefix  onLinkPrefix   = PrefixFromString("fd00:abba:baba::", 64);
     Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
     uint32_t     localOnLinkLifetime;
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestLocalOnLinkPrefixDeprecation");
@@ -1594,6 +1646,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager. Check emitted RS and RA messages.
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1705,6 +1758,9 @@ void TestLocalOnLinkPrefixDeprecation(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestLocalOnLinkPrefixDeprecation");
 
     FinalizeTest();
@@ -1717,6 +1773,7 @@ void TestDomainPrefixAsOmr(void)
     Ip6::Prefix                     localOmr;
     Ip6::Prefix                     domainPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDomainPrefixAsOmr");
@@ -1731,6 +1788,7 @@ void TestDomainPrefixAsOmr(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -1852,6 +1910,9 @@ void TestDomainPrefixAsOmr(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestDomainPrefixAsOmr");
     FinalizeTest();
 }
@@ -1875,6 +1936,7 @@ void TestExtPanIdChange(void)
     uint32_t             oldPrefixLifetime;
     Ip6::Prefix          oldPrefixes[4];
     otOperationalDataset dataset;
+    uint16_t             heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestExtPanIdChange");
@@ -1884,6 +1946,7 @@ void TestExtPanIdChange(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager. Check emitted RS and RA messages.
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -2356,6 +2419,9 @@ void TestExtPanIdChange(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestExtPanIdChange");
     FinalizeTest();
 }
@@ -2368,6 +2434,7 @@ void TestRouterNsProbe(void)
     Ip6::Prefix  routePrefix    = PrefixFromString("2000:1234:5678::", 64);
     Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
     Ip6::Address routerAddressB = AddressFromString("fd00::bbbb");
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestRouterNsProbe");
@@ -2382,6 +2449,7 @@ void TestRouterNsProbe(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -2504,6 +2572,9 @@ void TestRouterNsProbe(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
+
     Log("End of TestRouterNsProbe");
     FinalizeTest();
 }
@@ -2519,6 +2590,7 @@ void TestConflictingPrefix(void)
     Ip6::Address         routerAddressA = AddressFromString("fd00::aaaa");
     Ip6::Address         routerAddressB = AddressFromString("fd00::bbbb");
     otOperationalDataset dataset;
+    uint16_t             heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestConflictingPrefix");
@@ -2533,6 +2605,7 @@ void TestConflictingPrefix(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
     sExpectedRios.Clear();
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
@@ -2717,6 +2790,9 @@ void TestConflictingPrefix(void)
     VerifyExternalRouteInNetData(kDefaultRoute, kWithAdvPioFlagSet);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(heapAllocations = sHeapAllocatedPtrs.GetLength());
 
     Log("End of TestConflictingPrefix");
 
@@ -2945,11 +3021,14 @@ void TestAutoEnableOfSrpServer(void)
     Ip6::Prefix  localOmr;
     Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
     Ip6::Prefix  onLinkPrefix   = PrefixFromString("2000:abba:baba::", 64);
+    uint16_t     heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestAutoEnableOfSrpServer");
 
     InitTest();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check SRP Server state and enable auto-enable mode
@@ -3140,6 +3219,8 @@ void TestAutoEnableOfSrpServer(void)
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
+
     Log("End of TestAutoEnableOfSrpServer");
     FinalizeTest();
 }
@@ -3153,6 +3234,7 @@ void TestNat64PrefixSelection(void)
     Ip6::Prefix                     localOmr;
     Ip6::Prefix                     omrPrefix = PrefixFromString("2000:0000:1111:4444::", 64);
     NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint16_t                        heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestNat64PrefixSelection");
@@ -3162,6 +3244,7 @@ void TestNat64PrefixSelection(void)
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager. Check local NAT64 prefix generation.
 
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetNat64Prefix(localNat64));
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
@@ -3222,6 +3305,9 @@ void TestNat64PrefixSelection(void)
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
     VerifyNat64PrefixInNetData(localNat64);
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
+
     Log("End of TestNat64PrefixSelection");
     FinalizeTest();
 }
@@ -3246,11 +3332,13 @@ void VerifyNoPdOmrPrefix()
 void TestBorderRoutingProcessPlatfromGeneratedNd(void)
 {
     Ip6::Prefix localOmr;
+    uint16_t    heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestBorderRoutingProcessPlatfromGeneratedNd");
 
     InitTest(/* aEnableBorderRouting */ true);
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
 
     otBorderRoutingDhcp6PdSetEnabled(sInstance, true);
 
@@ -3433,6 +3521,10 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
         VerifyNoPdOmrPrefix();
         VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
     }
+
+    SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, false));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
+
     Log("End of TestBorderRoutingProcessPlatfromGeneratedNd");
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
