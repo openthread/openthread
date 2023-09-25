@@ -85,6 +85,9 @@ target_compile_definitions(mbedtls
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
+if(OT_MULTITHREAD)
+target_compile_options(mbedtls PRIVATE -fPIC)
+endif()
 target_include_directories(mbedtls
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/repo/include>
@@ -99,6 +102,9 @@ target_compile_definitions(mbedx509
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
+if(OT_MULTITHREAD)
+target_compile_options(mbedx509 PRIVATE -fPIC)
+endif()
 target_include_directories(mbedx509
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/repo/include>
@@ -113,6 +119,9 @@ target_compile_definitions(mbedcrypto
     PRIVATE
         $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
+if(OT_MULTITHREAD)
+target_compile_options(mbedcrypto PRIVATE -fPIC)
+endif()
 target_include_directories(mbedcrypto
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/repo/include>

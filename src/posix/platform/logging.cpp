@@ -33,6 +33,12 @@
 #include <stdarg.h>
 #include <syslog.h>
 
+#if OPENTHREAD_POSIX_CONFIG_LOG_OUTPUT_STDOUT_PRINTF
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#endif
+
 #include <openthread/platform/logging.h>
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
@@ -69,7 +75,49 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
     }
 
     va_start(args, aFormat);
+#if OPENTHREAD_POSIX_CONFIG_LOG_OUTPUT_STDOUT_PRINTF
+    {
+        const uint16_t kBufferSize = 4096;
+        char           buffer[kBufferSize];
+        OT_UNUSED_VARIABLE(aLogLevel);
+        if ((vsnprintf(buffer, sizeof(buffer), aFormat, args) > 0))
+        {
+            struct timeval tv;
+            time_t         nowtime;
+            struct tm     *nowtm;
+            char           tmbuf[64], buf[64];
+            int            ret;
+            gettimeofday(&tv, nullptr);
+            nowtime = tv.tv_sec;
+            nowtm   = localtime(&nowtime);
+            strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+
+#if defined(__APPLE__)
+            ret = snprintf(buf, sizeof buf, "%s.%06d", tmbuf, tv.tv_usec);
+#else
+            ret = snprintf(buf, sizeof buf, "%s.%06ld", tmbuf, tv.tv_usec);
+#endif
+            if (ret < 0)
+            {
+#if defined(__APPLE__)
+                printf("[%s][%d] openthread: %s\n", buf, getpid(), "failed to make log");
+#else
+                printf("[%s][%d:%d] openthread: %s\n", buf, getpid(), gettid(), "failed to make log");
+#endif
+            }
+            else
+            {
+#if defined(__APPLE__)
+                printf("[%s][%d] openthread: %s\n", buf, getpid(), buffer);
+#else
+                printf("[%s][%d:%d] openthread: %s\n", buf, getpid(), gettid(), buffer);
+#endif
+            }
+        }
+    }
+#else
     vsyslog(aLogLevel, aFormat, args);
+#endif // OPENTHREAD_POSIX_CONFIG_LOG_OUTPUT_STDOUT_PRINTF
     va_end(args);
 }
 #endif // OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
