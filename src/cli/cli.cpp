@@ -4725,7 +4725,21 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
         while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
         {
-            if (isTable)
+            /**
+	     * @cli neighbor table
+	     * @code
+	     * neighbor table
+	     * | Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
+             * +------+--------+-----+----------+-----------+-+-+-+------------------+
+             * |   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1| 1eb9ba8a6522636b |
+             * |   R  | 0xc800 |   2 |      -29 |       -29 |1|1|1| 9a91556102c39ddb |
+             * |   R  | 0xf000 |   3 |      -28 |       -28 |1|1|1| 0ad7ed6beaa6016d |
+             * Done
+	     * @endcode
+	     * @par
+	     * Prints information in table format about all neighbors.
+	     */
+	    if (isTable)
             {
                 OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
                 OutputFormat("| 0x%04x ", neighborInfo.mRloc16);
@@ -4747,6 +4761,19 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
         OutputNewLine();
     }
+    /**
+     * @cli neighbor linkquality
+     * @code
+     * neighbor linkquality
+     * | RLOC16 | Extended MAC     | Frame Error | Msg Error | Avg RSS | Last RSS | Age   |
+     * +--------+------------------+-------------+-----------+---------+----------+-------+
+     * | 0xe800 | 9e2fa4e1b84f92db |      0.00 % |    0.00 % |     -46 |      -48 |     1 |
+     * | 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
+     * Done
+     * @endcode
+     * @api_copy
+     * #otThreadGetNextNeighborInfo
+     */
     else if (aArgs[0] == "linkquality")
     {
         static const char *const kLinkQualityTableTitles[] = {
