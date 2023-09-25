@@ -552,6 +552,12 @@ bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 #if OPENTHREAD_FTD
             && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
 #endif
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+            && aPort != Dhcp6::kDhcpServerPort
+#endif
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+            && aPort != Dhcp6::kDhcpClientPort
+#endif
     );
 }
 
