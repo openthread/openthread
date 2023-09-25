@@ -288,6 +288,26 @@ exit:
     return error;
 }
 
+/**
+ * @cli macfilter rss
+ * @code
+ * macfilter rss
+ * 0f6127e33af6b403 : rss -95 (lqi 1)
+ * Default rss: -50 (lqi 3)
+ * Done
+ * @endcode
+ * @par
+ * Provides the following information:
+ * - Listing of all the extended addresses
+ * where the received signal strength (`rss`) has been set to be different from
+ * the default value. The link quality indicator (`lqi`) is also shown. The `rss`
+ * and `lqi` settings map to each other. If you set one, the value of the other
+ * gets set automatically. This list of addresses is called the `RssIn List`.
+ * Setting either the `rsi` or the `lqi` adds the corresponding extended address
+ * to the `RssIn` list.
+ * - `Default rss`: Shows the default values, if applicable, for the `rss` and `lqi` settings.
+ * @sa otLinkFilterGetNextRssIn
+ */
 template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
 {
     otError      error = OT_ERROR_NONE;
@@ -298,6 +318,32 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
     {
         OutputFilter(kRssFilter);
     }
+    /**
+     * @cli macfilter rss add-lqi
+     * @code
+     * macfilter rss add-lqi * 3
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add-lqi 0f6127e33af6b404 2
+     * Done
+     * @endcode
+     * @cparam macfilter rss add-lqi @ca{extaddr} @ca{lqi}
+     * To set a default value for the link quality indicator for all received messages,
+     * use the `*` for the `extaddr` argument. The allowed range is 0 to 3.
+     * @par
+     * Adds the specified Extended Address to the `RssIn` list (or modifies an existing address in the `RssIn` list)
+     * and sets the fixed link quality indicator for messages from that address.
+     * The Extended Address
+     * does not necessarily have to be in the `address allowlist/denylist` filter to set the `lqi`.
+     * @note The `RssIn` list contains Extended Addresses whose `lqi` or
+     * received signal strength (`rss`) values have been set to be different from the defaults.
+     * The `lqi` will automatically get converted to a corresponding `rss` value.
+     * @par
+     * This is available when `OPENTHREAD_CONFIG_MAC_FILTER_ENABLE` configuration is enabled.
+     * @sa otLinkConvertLinkQualityToRss
+     * @sa otLinkFilterSetDefaultRssIn
+     */
     else if (aArgs[0] == "add-lqi")
     {
         uint8_t linkQuality;
@@ -316,6 +362,22 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss add
+     * @code
+     * macfilter rss add * -50
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss add 0f6127e33af6b404 -85
+     * Done
+     * @endcode
+     * @cparam macfilter rss add @ca{extaddr} @ca{rss}
+     * To set a default value for the received signal strength for all received messages,
+     * use the `*` for the `extaddr` argument.
+     * @par api_copy
+     * #otLinkFilterAddRssIn
+     */
     else if (aArgs[0] == "add")
     {
         SuccessOrExit(error = aArgs[2].ParseAsInt8(rss));
@@ -330,6 +392,23 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             error = otLinkFilterAddRssIn(GetInstancePtr(), &extAddr, rss);
         }
     }
+    /**
+     * @cli macfilter rss remove
+     * @code
+     * macfilter rss remove *
+     * Done
+     * @endcode
+     * @code
+     * macfilter rss remove 0f6127e33af6b404
+     * Done
+     * @endcode
+     * @cparam macfilter rss remove @ca{extaddr}
+     * If you wish to remove the default received signal strength and link quality indicator settings,
+     * use the `*` as the `extaddr`. This unsets the defaults but does not remove
+     * entries from the `RssIn` list.
+     * @par api_copy
+     * #otLinkFilterRemoveRssIn
+     */
     else if (aArgs[0] == "remove")
     {
         if (aArgs[1] == "*")
@@ -342,6 +421,15 @@ template <> otError MacFilter::Process<Cmd("rss")>(Arg aArgs[])
             otLinkFilterRemoveRssIn(GetInstancePtr(), &extAddr);
         }
     }
+    /**
+     * @cli macfilter rss clear
+     * @code
+     * macfilter rss clear
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otLinkFilterClearAllRssIn
+     */
     else if (aArgs[0] == "clear")
     {
         otLinkFilterClearAllRssIn(GetInstancePtr());
