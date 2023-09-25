@@ -166,7 +166,7 @@ public:
     static bool IsInterfaceNameMatch(const char *aInterfaceName)
     {
         static const char kInterfaceName[] = "spinel+hdlc";
-        return (memcmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
+        return (strncmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
     }
 
 private:

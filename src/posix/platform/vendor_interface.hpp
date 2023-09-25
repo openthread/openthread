@@ -164,7 +164,7 @@ public:
     static bool IsInterfaceNameMatch(const char *aInterfaceName)
     {
         static const char *kInterfaceName = OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_URL_PROTOCOL_NAME;
-        return (memcmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
+        return (strncmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
     }
 };
 

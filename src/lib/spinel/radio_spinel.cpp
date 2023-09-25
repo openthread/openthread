@@ -2859,11 +2859,11 @@ exit:
     }
 }
 
-otError RadioSpinel::SpinelStatusToOtError(spinel_status_t aError)
+otError RadioSpinel::SpinelStatusToOtError(spinel_status_t aStatus)
 {
     otError ret;
 
-    switch (aError)
+    switch (aStatus)
     {
     case SPINEL_STATUS_OK:
         ret = OT_ERROR_NONE;
@@ -2922,9 +2922,9 @@ otError RadioSpinel::SpinelStatusToOtError(spinel_status_t aError)
         break;
 
     default:
-        if (aError >= SPINEL_STATUS_STACK_NATIVE__BEGIN && aError <= SPINEL_STATUS_STACK_NATIVE__END)
+        if (aStatus >= SPINEL_STATUS_STACK_NATIVE__BEGIN && aStatus <= SPINEL_STATUS_STACK_NATIVE__END)
         {
-            ret = static_cast<otError>(aError - SPINEL_STATUS_STACK_NATIVE__BEGIN);
+            ret = static_cast<otError>(aStatus - SPINEL_STATUS_STACK_NATIVE__BEGIN);
         }
         else
         {

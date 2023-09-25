@@ -37,9 +37,9 @@
 
 const char *otSysGetRadioUrlHelpString(void)
 {
-#define OT_RADIO_URL_HELP_BUS                           \
-    "Radio Url format:"                                 \
-    "    {Protocol}//${PATH_TO_DEVICE}?${Parameters}\n" \
+#define OT_RADIO_URL_HELP_BUS                            \
+    "Radio Url format:"                                  \
+    "    {Protocol}://${PATH_TO_DEVICE}?${Parameters}\n" \
     "\n"
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
