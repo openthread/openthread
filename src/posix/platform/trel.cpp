@@ -497,7 +497,9 @@ void platformTrelInit(const char *aTrelUrl)
 
     if (aTrelUrl != nullptr)
     {
-        ot::Posix::RadioUrl url(aTrelUrl);
+        ot::Posix::RadioUrl url;
+
+        url.Init(aTrelUrl);
         strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName) - 1);
         sInterfaceName[sizeof(sInterfaceName) - 1] = '\0';
     }
