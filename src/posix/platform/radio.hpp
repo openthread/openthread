@@ -49,16 +49,16 @@ public:
     /**
      * Creates the radio manager.
      *
-     * @param[in]   aUrl    A pointer to the null-terminated URL.
-     *
      */
-    explicit Radio(const char *aUrl);
+    Radio(void);
 
     /**
      * Initialize the Thread radio.
      *
+     * @param[in]   aUrl    A pointer to the null-terminated URL.
+     *
      */
-    void Init(void);
+    void Init(const char *aUrl);
 
     /**
      * Acts as an accessor to the spinel interface instance used by the radio.
@@ -66,7 +66,11 @@ public:
      * @returns A reference to the radio's spinel interface instance.
      *
      */
-    Spinel::SpinelInterface &GetSpinelInterface(void) { return *mSpinelInterface; }
+    Spinel::SpinelInterface &GetSpinelInterface(void)
+    {
+        OT_ASSERT(mSpinelInterface != nullptr);
+        return *mSpinelInterface;
+    }
 
     /**
      * Acts as an accessor to the radio spinel instance used by the radio.

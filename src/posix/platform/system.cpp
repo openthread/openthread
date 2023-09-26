@@ -82,11 +82,12 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 
 static const char *get802154RadioUrl(otPlatformConfig *aPlatformConfig)
 {
-    const char *radioUrl = nullptr;
+    const char         *radioUrl = nullptr;
+    ot::Posix::RadioUrl url;
 
     for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
     {
-        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+        url.Init(aPlatformConfig->mRadioUrls[i]);
 
         if (strcmp(url.GetProtocol(), "trel") == 0)
         {
@@ -104,11 +105,12 @@ static const char *get802154RadioUrl(otPlatformConfig *aPlatformConfig)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 {
-    const char *radioUrl = nullptr;
+    const char         *radioUrl = nullptr;
+    ot::Posix::RadioUrl url;
 
     for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
     {
-        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+        url.Init(aPlatformConfig->mRadioUrls[i]);
 
         if (strcmp(url.GetProtocol(), "trel") == 0)
         {

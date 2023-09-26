@@ -126,7 +126,7 @@ const char *otSysGetRadioUrlHelpString(void)
 namespace ot {
 namespace Posix {
 
-RadioUrl::RadioUrl(const char *aUrl)
+void RadioUrl::Init(const char *aUrl)
 {
     VerifyOrDie(strnlen(aUrl, sizeof(mUrl)) < sizeof(mUrl), OT_EXIT_INVALID_ARGUMENTS);
     strncpy(mUrl, aUrl, sizeof(mUrl) - 1);

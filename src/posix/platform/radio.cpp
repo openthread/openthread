@@ -48,34 +48,29 @@
 static ot::Posix::Configuration sConfig;
 #endif
 
-ot::Posix::Radio *sRadio = nullptr;
+static ot::Posix::Radio sRadio;
 
 namespace ot {
 namespace Posix {
 
 namespace {
-alignas(alignof(ot::Posix::Radio)) char sRadioRaw[sizeof(ot::Posix::Radio)];
-
-extern "C" void platformRadioInit(const char *aUrl)
-{
-    sRadio = new (&sRadioRaw) Radio(aUrl);
-
-    sRadio->Init();
-}
+extern "C" void platformRadioInit(const char *aUrl) { sRadio.Init(aUrl); }
 } // namespace
 
-Radio::Radio(const char *aUrl)
-    : mRadioUrl(aUrl)
+Radio::Radio(void)
+    : mRadioUrl()
     , mRadioSpinel()
     , mSpinelInterface(nullptr)
 {
-    VerifyOrDie(mRadioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
 }
 
-void Radio::Init(void)
+void Radio::Init(const char *aUrl)
 {
-    bool resetRadio             = !mRadioUrl.HasParam("no-reset");
-    bool skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
+    bool resetRadio;
+    bool skipCompatibilityCheck;
+
+    mRadioUrl.Init(aUrl);
+    VerifyOrDie(mRadioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     VirtualTimeInit();
@@ -84,6 +79,8 @@ void Radio::Init(void)
     mSpinelInterface = CreateSpinelInterface(mRadioUrl.GetProtocol());
     VerifyOrDie(mSpinelInterface != nullptr, OT_EXIT_FAILURE);
 
+    resetRadio             = !mRadioUrl.HasParam("no-reset");
+    skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
     mRadioSpinel.Init(*mSpinelInterface, resetRadio, skipCompatibilityCheck);
 
     ProcessRadioUrl(mRadioUrl);
@@ -235,11 +232,7 @@ exit:
 } // namespace Posix
 } // namespace ot
 
-static ot::Spinel::RadioSpinel &GetRadioSpinel(void)
-{
-    OT_ASSERT(sRadio != nullptr);
-    return sRadio->GetRadioSpinel();
-}
+static ot::Spinel::RadioSpinel &GetRadioSpinel(void) { return sRadio.GetRadioSpinel(); }
 
 void platformRadioDeinit(void) { GetRadioSpinel().Deinit(); }
 
@@ -380,7 +373,7 @@ void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
         aContext->mTimeout.tv_usec = 0;
     }
 
-    sRadio->GetSpinelInterface().UpdateFdSet(aContext);
+    sRadio.GetSpinelInterface().UpdateFdSet(aContext);
 
     if (GetRadioSpinel().HasPendingFrame() || GetRadioSpinel().IsTransmitDone())
     {
@@ -989,6 +982,5 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void) { return GetRadioSp
 
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
 {
-    OT_ASSERT(sRadio != nullptr);
-    return sRadio->GetSpinelInterface().GetRcpInterfaceMetrics();
+    return sRadio.GetSpinelInterface().GetRcpInterfaceMetrics();
 }

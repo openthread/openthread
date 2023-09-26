@@ -341,7 +341,12 @@ exit:
 
 void RadioSpinel::Deinit(void)
 {
-    mSpinelInterface->Deinit();
+    if (mSpinelInterface != nullptr)
+    {
+        mSpinelInterface->Deinit();
+        mSpinelInterface = nullptr;
+    }
+
     // This allows implementing pseudo reset.
     new (this) RadioSpinel();
 }

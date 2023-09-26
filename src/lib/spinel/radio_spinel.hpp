@@ -61,8 +61,15 @@ public:
     RadioSpinel(void);
 
     /**
+     * Deinitializes the spinel based OpenThread transceiver.
+     *
+     */
+    ~RadioSpinel(void) { Deinit(); }
+
+    /**
      * Initialize this radio transceiver.
      *
+     * @param[in]  aSpinelInterface            A reference to the Spinel interface.
      * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
@@ -871,20 +878,20 @@ public:
      *
      * @param[in]  aStatus  The Spinel status code.
      *
-     * @retval  OT_ERROR_NONE             The operation has completed successfully.
-     * @retval  OT_ERROR_DROP             The packet was dropped.
-     * @retval  OT_ERROR_NO_BUFS          The operation has been prevented due to memory pressure.
-     * @retval  OT_ERROR_BUSY             The device is currently performing a mutuallyexclusive operation.
-     * @retval  OT_ERROR_PARSE            An error has occurred while parsing the command.
-     * @retval  OT_ERROR_INVALID_ARGS     An argument to the given operation is invalid.
-     * @retval  OT_ERROR_NOT_IMPLEMENTED  The given operation has not been implemented.
-     * @retval  OT_ERROR_INVALID_STATE    The given operation is invalid for the current state of the device.
-     * @retval  OT_ERROR_NO_ACK           The packet was not acknowledged.
-     * @retval  OT_ERROR_NOT_FOUND        The given property is not recognized.
-     * @retval  OT_ERROR_FAILED           The given operation has failed for some undefined reason.
-     * @retval  OT_ERROR_ALREADY          The operation is already in progress or the property was already set
-     *                                    to the given value.
+     * @retval  OT_ERROR_NONE                    The operation has completed successfully.
+     * @retval  OT_ERROR_DROP                    The packet was dropped.
+     * @retval  OT_ERROR_NO_BUFS                 The operation has been prevented due to memory pressure.
+     * @retval  OT_ERROR_BUSY                    The device is currently performing a mutuallyexclusive operation.
+     * @retval  OT_ERROR_PARSE                   An error has occurred while parsing the command.
+     * @retval  OT_ERROR_INVALID_ARGS            An argument to the given operation is invalid.
+     * @retval  OT_ERROR_NOT_IMPLEMENTED         The given operation has not been implemented.
+     * @retval  OT_ERROR_INVALID_STATE           The given operation is invalid for the current state of the device.
+     * @retval  OT_ERROR_NO_ACK                  The packet was not acknowledged.
+     * @retval  OT_ERROR_NOT_FOUND               The given property is not recognized.
+     * @retval  OT_ERROR_FAILED                  The given operation has failed for some undefined reason.
      * @retval  OT_ERROR_CHANNEL_ACCESS_FAILURE  The packet was not sent due to a CCA failure.
+     * @retval  OT_ERROR_ALREADY                 The operation is already in progress or the property was already set
+     *                                           to the given value.
      */
     static otError SpinelStatusToOtError(spinel_status_t aStatus);
 
