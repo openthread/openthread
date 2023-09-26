@@ -4726,20 +4726,28 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
         while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
         {
             /**
-	     * @cli neighbor table
-	     * @code
-	     * neighbor table
-	     * | Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
+             * @cli neighbor table
+             * @code
+             * neighbor table
+             * | Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
              * +------+--------+-----+----------+-----------+-+-+-+------------------+
              * |   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1| 1eb9ba8a6522636b |
              * |   R  | 0xc800 |   2 |      -29 |       -29 |1|1|1| 9a91556102c39ddb |
              * |   R  | 0xf000 |   3 |      -28 |       -28 |1|1|1| 0ad7ed6beaa6016d |
              * Done
-	     * @endcode
-	     * @par
-	     * Prints information in table format about all neighbors.
-	     */
-	    if (isTable)
+             * @endcode
+             * @par
+             * Prints information in table format about all neighbors.
+             * @par
+             * For `Role`. the only possible values for this table are `C` (Child) or `R` (Router).
+             * @par
+             * The following columns provide information about neighbors' device modes.
+             * Each column has a value of `0` (off) or `1` (on).
+             * - `R`: `RxOnWhenIdle`
+             * - `D`: Full Thread device
+             * - `N`: Full network data
+             */
+            if (isTable)
             {
                 OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
                 OutputFormat("| 0x%04x ", neighborInfo.mRloc16);
@@ -4753,6 +4761,16 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
                 OutputExtAddress(neighborInfo.mExtAddress);
                 OutputLine(" | %7d |", neighborInfo.mVersion);
             }
+            /**
+             * @cli neighbor list
+             * @code
+             * neighbor list
+             * 0xcc01 0xc800 0xf000
+             * Done
+             * @endcode
+             * @par
+             * Lists the RLOC16 of each neighbor.
+             */
             else
             {
                 OutputFormat("0x%04x ", neighborInfo.mRloc16);
