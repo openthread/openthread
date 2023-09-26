@@ -7866,7 +7866,7 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam mac send @ca{datarequest} | @ca{emptydata}
-     * You must choose one of these two arguments:
+     * You must choose one of the following two arguments:
      * - `datarequest`: Enqueues an IEEE 802.15.4 Data Request message for transmission.
      * - `emptydata`: Instructs the device to send an empty IEEE 802.15.4 data frame.
      * @par
