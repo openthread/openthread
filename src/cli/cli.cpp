@@ -4789,7 +4789,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * | 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
      * Done
      * @endcode
-     * @api_copy
+     * @par api_copy
      * #otThreadGetNextNeighborInfo
      */
     else if (aArgs[0] == "linkquality")
