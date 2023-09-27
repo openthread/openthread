@@ -901,8 +901,10 @@ Error Ip6::HandlePayload(Header            &aIp6Header,
 
     if (aMessageOwnership == Message::kCopyToUse)
     {
-        VerifyOrExit((message = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
+        message = aMessage.Clone();
     }
+
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     switch (aIpProto)
     {
