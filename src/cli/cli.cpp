@@ -5055,9 +5055,9 @@ template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return m
  * Done
  * @endcode
  * @cparam networkidtimeout [@ca{timeout}]
- * Use the optional `timeout` parameter to set the timeout for the Router role.
+ * Use the optional `timeout` argument to set the value of the `NETWORK_ID_TIMEOUT` parameter.
  * @par
- * Gets or sets the `timeout` parameter for the Router role.
+ * Gets or sets the `NETWORK_ID_TIMEOUT` parameter.
  * @sa otThreadGetNetworkIdTimeout
  * @sa otThreadSetNetworkIdTimeout
  */
@@ -8304,7 +8304,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `34`: MLE Counters TLV
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
-     * for the specified addresses(es). 
+     * for the specified addresses(es).
      * @sa otThreadSendDiagnosticGet
      */
 

@@ -368,7 +368,7 @@ uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance);
 void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 
 /**
- * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
+ * Get the NETWORK_ID_TIMEOUT parameter.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
  * this API will render a production application non-compliant with the Thread Specification.
@@ -383,7 +383,7 @@ void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 uint8_t otThreadGetNetworkIdTimeout(otInstance *aInstance);
 
 /**
- * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
+ * Set the NETWORK_ID_TIMEOUT parameter.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
