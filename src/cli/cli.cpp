@@ -4746,6 +4746,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
              * - `R`: `RxOnWhenIdle`
              * - `D`: Full Thread device
              * - `N`: Full network data
+             * @sa otThreadGetNextNeighborInfo
              */
             if (isTable)
             {
@@ -4789,8 +4790,8 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * | 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
      * Done
      * @endcode
-     * @par api_copy
-     * #otThreadGetNextNeighborInfo
+     * @par
+     * Prints link quality information about all neighbors.
      */
     else if (aArgs[0] == "linkquality")
     {
@@ -4830,7 +4831,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Print the connection time and age of neighbors. Info per neighbor:
+     * Prints the connection time and age of neighbors. Information per neighbor:
      * - RLOC16
      * - Extended MAC address
      * - Last Heard (seconds since last heard from neighbor)
@@ -4850,7 +4851,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
          * Done
          * @endcode
          * @par
-         * Print connection time and age of neighbors.
+         * Prints the connection time and age of neighbors.
          * This command is similar to `neighbor conntime`, but it displays the information in a list format. The age
          * and connection time are both displayed in seconds.
          */
@@ -4904,6 +4905,22 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 }
 #endif // OPENTHREAD_FTD
 
+/**
+ * @cli netstat
+ * @code
+ * netstat
+ * > netstat
+ * | Local Address                                   | Peer Address                                    |
+ * +-------------------------------------------------+-------------------------------------------------+
+ * | [0:0:0:0:0:0:0:0]:49153                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:49152                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:61631                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:19788                         | [0:0:0:0:0:0:0:0]:0                             |
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otUdpGetSockets
+ */
 template <> otError Interpreter::Process<Cmd("netstat")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -8213,6 +8230,26 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
         VerifyOrExit(count < sizeof(tlvTypes), error = OT_ERROR_INVALID_ARGS);
         SuccessOrExit(error = arg->ParseAsUint8(tlvTypes[count++]));
     }
+
+    /**
+     * @cli networkdiagnostic get
+     * @code
+     * networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6
+     * @code
+     * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
+     * Ext Address: '0e336e1c41494e1c'
+     * Rloc16: 0x0c00
+     * Leader Data:
+     * PartitionId: 0x640b0f67
+     * Weighting: 64
+     * DataVersion: 116
+     * StableDataVersion: 197
+     * LeaderRouterId: 0x03
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadSendDiagnosticGet
+     */
 
     if (aArgs[0] == "get")
     {
