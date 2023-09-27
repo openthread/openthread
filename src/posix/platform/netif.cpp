@@ -1724,7 +1724,9 @@ static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
 
-    sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    sMLDMonitorFd = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    VerifyOrDie(sMLDMonitorFd != -1, OT_EXIT_FAILURE);
+
     mreq6.ipv6mr_interface = gNetifIndex;
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
 
