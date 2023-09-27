@@ -5043,6 +5043,24 @@ exit:
 template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return mNetworkData.Process(aArgs); }
 
 #if OPENTHREAD_FTD
+/**
+ * @cli networkidtimeout (get,set)
+ * @code
+ * networkidtimeout 120
+ * Done
+ * @endcode
+ * @code
+ * networkidtimeout
+ * 120
+ * Done
+ * @endcode
+ * @cparam networkidtimeout [@ca{timeout}]
+ * Use the optional `timeout` parameter to set the timeout for the Router role.
+ * @par
+ * Gets or sets the `timeout` parameter for the Router role.
+ * @sa otThreadGetNetworkIdTimeout
+ * @sa otThreadSetNetworkIdTimeout
+ */
 template <> otError Interpreter::Process<Cmd("networkidtimeout")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
@@ -8235,19 +8253,59 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * @cli networkdiagnostic get
      * @code
      * networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6e
-     * > DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
+     * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
      * Ext Address: '0e336e1c41494e1c'
      * Rloc16: 0x0c00
      * Leader Data:
-     * PartitionId: 0x640b0f67
-     * Weighting: 64
-     * DataVersion: 116
-     * StableDataVersion: 197
-     * LeaderRouterId: 0x03
+     *     PartitionId: 0x640b0f67
+     *     Weighting: 64
+     *     DataVersion: 116
+     *     StableDataVersion: 197
+     *     LeaderRouterId: 0x03
      * Done
      * @endcode
-     * @par api_copy
-     * #otThreadSendDiagnosticGet
+     * @code
+     * networkdiagnostic get ff02::1 0 1
+     * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
+     * Ext Address: '0e336e1c41494e1c'
+     * Rloc16: 0x0c00
+     * Done
+     * @endcode
+     * @code
+     * DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
+     * Ext Address: '3efcdb7e3f9eb0f2'
+     * Rloc16: 0x1800
+     * Done
+     * @endcode
+     * @cparam networkdiagnostic get @ca{addr} @ca{type(s)}
+     * For `addr`, a unicast address triggers a `Diagnostic Get`.
+     * A multicast adddress triggers a `Diagnostic Query`.
+     * TLV values you can specify (separated by a space if you specify more than one TLV):
+     * - `0`: MAC Extended Address TLV
+     * - `1`: Address16 TLV
+     * - `2`: Mode TLV
+     * - `3`: Timeout TLV (the maximum polling time period for SEDs)
+     * - `4`: Connectivity TLV
+     *   `5`: Route64 TLV
+     * - `6`: Leader Data TLV
+     * - `7`: Network Data TLV
+     * - `8`: IPv6 Address List TLV
+     * - `9`: MAC Counters TLV
+     * - `14`: Battery Level TLV
+     * - `15`: Supply Voltage TLV
+     * - `16`: Child Table TLV
+     * - `17`: Channel Pages TLV
+     * - `19`: Max Child Timeout TLV
+     * - `25`: Vendor Name TLV
+     * - `26`: Vendor Model TLV
+     *   `27`: Vendor SW Version TLV
+     * - `28`: Thread Stack Version TLV
+     * - `29`: Child TLV
+     * - `34`: MLE Counters TLV
+     * @par
+     * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
+     * for the specified addresses(es). 
+     * @sa otThreadSendDiagnosticGet
      */
 
     if (aArgs[0] == "get")
@@ -8257,6 +8315,19 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
         SetCommandTimeout(kNetworkDiagnosticTimeoutMsecs);
         error = OT_ERROR_PENDING;
     }
+    /**
+     * @cli networkdiagnostic reset
+     * @code
+     * diagnostic reset fd00:db8::ff:fe00:0 9
+     * Done
+     * @endcode
+     * @cparam networkdiagnostic reset @ca{addr} @ca{type(s)}
+     * @par
+     * Sends a network diagnostic request to reset the specified Type Length Values (TLVs)
+     * on the specified address(es). The only supported TLV value at this time for this
+     * command is `9` (MAC Counters TLV).
+     * @sa otThreadSendDiagnosticReset
+     */
     else if (aArgs[0] == "reset")
     {
         IgnoreError(otThreadSendDiagnosticReset(GetInstancePtr(), &address, tlvTypes, count));
