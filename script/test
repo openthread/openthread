@@ -382,6 +382,8 @@ do_build_otbr_docker()
         rm -rf third_party/openthread/repo
         rsync -r \
             --exclude=build \
+            --exclude=ot_testing \
+            --exclude=__pycache__ \
             "${otdir}/." \
             third_party/openthread/repo
         rm -rf .git
