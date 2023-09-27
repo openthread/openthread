@@ -1277,33 +1277,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
 
     if (aRxInfo.IsNeighborStateValid() && mRouterTable.IsRouteTlvIdSequenceMoreRecent(routeTlv))
     {
-        bool processRouteTlv = false;
-
-        if (IsChild())
-        {
-            if (aSourceAddress == mParent.GetRloc16())
-            {
-                processRouteTlv = true;
-            }
-            else
-            {
-                router = mRouterTable.FindRouterById(routerId);
-
-                if (router != nullptr && router->IsStateValid())
-                {
-                    processRouteTlv = true;
-                }
-            }
-        }
-        else // Device is router or leader
-        {
-            processRouteTlv = true;
-        }
-
-        if (processRouteTlv)
-        {
-            SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
-        }
+        SuccessOrExit(error = ProcessRouteTlv(routeTlv, aRxInfo));
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
