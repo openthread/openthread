@@ -154,6 +154,47 @@ public:
      */
     bool SetNextHopToInvalid(void);
 
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    /**
+     * Indicates whether or not this router can be selected as parent.
+     *
+     * @retval TRUE  The router is selectable as parent.
+     * @retval FALSE The router is not selectable as parent.
+     *
+     */
+    bool IsSelectableAsParent(void) const { return mIsSelectableAsParent; }
+
+    /**
+     * Sets whether or not this router is selectable as parent.
+     *
+     * @param[in] aIsSelectable   Boolean indicating whether or not router is selectable as parent.
+     *
+     */
+    void SetSelectableAsParent(bool aIsSelectable) { mIsSelectableAsParent = aIsSelectable; }
+
+    /**
+     * Sets timeout duration in seconds to block reselecting this router as parent.
+     *
+     * @param[in] aTimeout   The timeout duration in seconds.
+     *
+     */
+    void SetParentReselectTimeout(uint16_t aTimeout) { mParentReselectTimeout = aTimeout; }
+
+    /**
+     * Gets the remaining timeout duration in seconds to block reselecting this router parent.
+     *
+     * @returns The remaining timeout duration in seconds.
+     *
+     */
+    uint16_t GetParentReselectTimeout(void) const { return mParentReselectTimeout; }
+
+    /**
+     * Decrements the reselect timeout duration (if non-zero).
+     *
+     */
+    void DecrementParentReselectTimeout(void) { (mParentReselectTimeout > 0) ? mParentReselectTimeout-- : 0; }
+#endif
+
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
@@ -162,6 +203,10 @@ private:
     uint8_t mCost; ///< The cost to this router via neighbor router
 #else
     uint8_t mCost : 4; ///< The cost to this router via neighbor router
+#endif
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    bool     mIsSelectableAsParent : 1;
+    uint16_t mParentReselectTimeout;
 #endif
 };
 

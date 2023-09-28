@@ -856,6 +856,7 @@ private:
         kBetterPartition, // Attach to a better (i.e. higher weight/partition id) Thread partition.
         kDowngradeToReed, // Attach to the same Thread partition during downgrade process.
         kBetterParent,    // Attach to a better parent.
+        kSelectedParent,  // Attach to a selected parent.
     };
 
     enum AttachState : uint8_t
@@ -906,6 +907,7 @@ private:
     {
         kToRouters,         // Parent Request to routers only.
         kToRoutersAndReeds, // Parent Request to all routers and REEDs.
+        kToSelectedRouter,  // Parent Request to a selected router (e.g., by `ParentSearch` module).
     };
 
     enum ChildUpdateRequestState : uint8_t
@@ -1196,6 +1198,7 @@ private:
     public:
         explicit ParentSearch(Instance &aInstance)
             : InstanceLocator(aInstance)
+            , mEnabled(false)
             , mIsInBackoff(false)
             , mBackoffWasCanceled(false)
             , mRecentlyDetached(false)
@@ -1204,10 +1207,14 @@ private:
         {
         }
 
-        void StartTimer(void);
+        void SetEnabled(bool aEnabled);
+        bool IsEnabled(void) const { return mEnabled; }
         void UpdateState(void);
         void SetRecentlyDetached(void) { mRecentlyDetached = true; }
         void HandleTimer(void);
+#if OPENTHREAD_FTD
+        const Neighbor &GetSelectedParent(void) const { return *mSelectedParent; }
+#endif
 
     private:
         // All timer intervals are converted to milliseconds.
@@ -1216,13 +1223,26 @@ private:
         static constexpr uint32_t kJitterInterval  = (15 * 1000u);
         static constexpr int8_t   kRssThreshold    = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
 
+#if OPENTHREAD_FTD
+        static constexpr int8_t   kRssMarginOverParent   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN;
+        static constexpr uint16_t kParentReselectTimeout = OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT; // in sec
+
+        Error SelectBetterParent(void);
+        void  CompareAndUpdateSelectedParent(Router &aRouter);
+#endif
+        void StartTimer(void);
+
         using SearchTimer = TimerMilliIn<Mle, &Mle::HandleParentSearchTimer>;
 
+        bool        mEnabled : 1;
         bool        mIsInBackoff : 1;
         bool        mBackoffWasCanceled : 1;
         bool        mRecentlyDetached : 1;
         TimeMilli   mBackoffCancelTime;
         SearchTimer mTimer;
+#if OPENTHREAD_FTD
+        Router *mSelectedParent;
+#endif
     };
 #endif // OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 

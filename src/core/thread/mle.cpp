@@ -154,7 +154,7 @@ Error Mle::Enable(void)
     SuccessOrExit(error = mSocket.Bind(kUdpPort));
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
-    mParentSearch.StartTimer();
+    mParentSearch.SetEnabled(true);
 #endif
 exit:
     return error;
@@ -1327,6 +1327,13 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
 
     OT_ASSERT(mAttachState == kAttachStateParentRequest);
 
+    if (mAttachMode == kSelectedParent)
+    {
+        aType = kToSelectedRouter;
+        VerifyOrExit(mParentRequestCounter <= 1, error = kErrorNotFound);
+        ExitNow();
+    }
+
     aType = kToRoutersAndReeds;
 
     // If device is not yet attached, `mAttachCounter` will track the
@@ -1395,14 +1402,23 @@ bool Mle::HasAcceptableParentCandidate(void) const
 
     if (IsChild())
     {
-        // If already attached, accept the parent candidate if
-        // we are trying to attach to a better partition or if a
-        // Parent Response was also received from the current parent
-        // to which the device is attached. This ensures that the
-        // new parent candidate is compared with the current parent
-        // and that it is indeed preferred over the current one.
+        switch (mAttachMode)
+        {
+        case kBetterPartition:
+        case kSelectedParent:
+            break;
 
-        VerifyOrExit(mReceivedResponseFromParent || (mAttachMode == kBetterPartition));
+        case kAnyPartition:
+        case kSamePartition:
+        case kDowngradeToReed:
+        case kBetterParent:
+            // Ensure that a Parent Response was received from the
+            // current parent to which the device is attached, so
+            // that the new parent candidate can be compared with the
+            // current parent and confirmed to be preferred.
+            VerifyOrExit(mReceivedResponseFromParent);
+            break;
+        }
     }
 
     hasAcceptableParent = true;
@@ -1454,7 +1470,18 @@ void Mle::HandleAttachTimer(void)
         if (DetermineParentRequestType(type) == kErrorNone)
         {
             SendParentRequest(type);
-            delay = (type == kToRouters) ? kParentRequestRouterTimeout : kParentRequestReedTimeout;
+
+            switch (type)
+            {
+            case kToRouters:
+            case kToSelectedRouter:
+                delay = kParentRequestRouterTimeout;
+                break;
+            case kToRoutersAndReeds:
+                delay = kParentRequestReedTimeout;
+                break;
+            }
+
             break;
         }
 
@@ -1555,6 +1582,7 @@ uint32_t Mle::Reattach(void)
     {
     case kAnyPartition:
     case kBetterParent:
+    case kSelectedParent:
         if (!IsChild())
         {
             if (mAlternatePanId != Mac::kPanIdBroadcast)
@@ -1697,6 +1725,7 @@ void Mle::SendParentRequest(ParentRequestType aType)
     switch (aType)
     {
     case kToRouters:
+    case kToSelectedRouter:
         scanMask = ScanMaskTlv::kRouterFlag;
         break;
 
@@ -1714,12 +1743,23 @@ void Mle::SendParentRequest(ParentRequestType aType)
     SuccessOrExit(error = message->AppendTimeRequestTlv());
 #endif
 
-    destination.SetToLinkLocalAllRoutersMulticast();
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+    if (aType == kToSelectedRouter)
+    {
+        destination.SetToLinkLocalAddress(mParentSearch.GetSelectedParent().GetExtAddress());
+    }
+    else
+#endif
+    {
+        destination.SetToLinkLocalAllRoutersMulticast();
+    }
+
     SuccessOrExit(error = message->SendTo(destination));
 
     switch (aType)
     {
     case kToRouters:
+    case kToSelectedRouter:
         Log(kMessageSend, kTypeParentRequestToRouters, destination);
         break;
 
@@ -3228,7 +3268,6 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
         switch (mAttachMode)
         {
         case kAnyPartition:
-        case kBetterParent:
             VerifyOrExit(!isPartitionIdSame || isIdSequenceGreater);
             break;
 
@@ -3245,6 +3284,10 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
 
             VerifyOrExit(MleRouter::ComparePartitions(connectivityTlv.GetActiveRouters() <= 1, leaderData,
                                                       Get<MleRouter>().IsSingleton(), mLeaderData) > 0);
+            break;
+
+        case kBetterParent:
+        case kSelectedParent:
             break;
         }
     }
@@ -3962,9 +4005,21 @@ exit:
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+
+void Mle::ParentSearch::SetEnabled(bool aEnabled)
+{
+    VerifyOrExit(mEnabled != aEnabled);
+    mEnabled = aEnabled;
+    StartTimer();
+
+exit:
+    return;
+}
+
 void Mle::ParentSearch::HandleTimer(void)
 {
-    int8_t parentRss;
+    int8_t     parentRss;
+    AttachMode attachMode;
 
     LogInfo("PeriodicParentSearch: %s interval passed", mIsInBackoff ? "Backoff" : "Check");
 
@@ -3989,20 +4044,88 @@ void Mle::ParentSearch::HandleTimer(void)
     LogInfo("PeriodicParentSearch: Parent RSS %d", parentRss);
     VerifyOrExit(parentRss != Radio::kInvalidRssi);
 
-    if (parentRss < kRssThreshold)
+    VerifyOrExit(parentRss < kRssThreshold);
+    LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kRssThreshold);
+
+#if OPENTHREAD_FTD
+    if (Get<Mle>().IsFullThreadDevice())
     {
-        LogInfo("PeriodicParentSearch: Parent RSS less than %d, searching for new parents", kRssThreshold);
-        mIsInBackoff = true;
-        Get<Mle>().Attach(kBetterParent);
+        SuccessOrExit(SelectBetterParent());
+        attachMode = kSelectedParent;
     }
+    else
+#endif
+    {
+        mIsInBackoff = true;
+        attachMode   = kBetterParent;
+    }
+
+    Get<Mle>().mCounters.mBetterParentAttachAttempts++;
+    Get<Mle>().Attach(attachMode);
 
 exit:
     StartTimer();
 }
 
+#if OPENTHREAD_FTD
+Error Mle::ParentSearch::SelectBetterParent(void)
+{
+    Error error = kErrorNone;
+
+    mSelectedParent = nullptr;
+
+    for (Router &router : Get<RouterTable>())
+    {
+        CompareAndUpdateSelectedParent(router);
+    }
+
+    VerifyOrExit(mSelectedParent != nullptr, error = kErrorNotFound);
+    mSelectedParent->SetParentReselectTimeout(kParentReselectTimeout);
+
+    LogInfo("PeriodicParentSearch: Selected router 0x%04x as parent with RSS %d", mSelectedParent->GetRloc16(),
+            mSelectedParent->GetLinkInfo().GetAverageRss());
+
+exit:
+    return error;
+}
+
+void Mle::ParentSearch::CompareAndUpdateSelectedParent(Router &aRouter)
+{
+    int8_t routerRss;
+
+    VerifyOrExit(aRouter.IsSelectableAsParent());
+    VerifyOrExit(aRouter.GetParentReselectTimeout() == 0);
+    VerifyOrExit(aRouter.GetRloc16() != Get<Mle>().GetParent().GetRloc16());
+
+    routerRss = aRouter.GetLinkInfo().GetAverageRss();
+    VerifyOrExit(routerRss != Radio::kInvalidRssi);
+
+    if (mSelectedParent == nullptr)
+    {
+        VerifyOrExit(routerRss >= Get<Mle>().GetParent().GetLinkInfo().GetAverageRss() + kRssMarginOverParent);
+    }
+    else
+    {
+        VerifyOrExit(routerRss > mSelectedParent->GetLinkInfo().GetAverageRss());
+    }
+
+    mSelectedParent = &aRouter;
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_FTD
+
 void Mle::ParentSearch::StartTimer(void)
 {
     uint32_t interval;
+
+    if (!mEnabled)
+    {
+        mTimer.Stop();
+        ExitNow();
+    }
 
     interval = Random::NonCrypto::GetUint32InRange(0, kJitterInterval);
 
@@ -4018,6 +4141,9 @@ void Mle::ParentSearch::StartTimer(void)
     mTimer.Start(interval);
 
     LogInfo("PeriodicParentSearch: (Re)starting timer for %s interval", mIsInBackoff ? "backoff" : "check");
+
+exit:
+    return;
 }
 
 void Mle::ParentSearch::UpdateState(void)
@@ -4274,6 +4400,7 @@ const char *Mle::AttachModeToString(AttachMode aMode)
         "BetterPartition", // (2) kBetterPartition
         "DowngradeToReed", // (3) kDowngradeToReed
         "BetterParent",    // (4) kBetterParent
+        "SelectedParent",  // (5) kSelectedParent
     };
 
     static_assert(kAnyPartition == 0, "kAnyPartition value is incorrect");
@@ -4281,6 +4408,7 @@ const char *Mle::AttachModeToString(AttachMode aMode)
     static_assert(kBetterPartition == 2, "kBetterPartition value is incorrect");
     static_assert(kDowngradeToReed == 3, "kDowngradeToReed value is incorrect");
     static_assert(kBetterParent == 4, "kBetterParent value is incorrect");
+    static_assert(kSelectedParent == 5, "kSelectedParent value is incorrect");
 
     return kAttachModeStrings[aMode];
 }

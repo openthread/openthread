@@ -363,6 +363,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
 
     case kAnyPartition:
     case kBetterParent:
+    case kSelectedParent:
         // If attach was started due to receiving MLE Announce Messages, all rx-on-when-idle devices would
         // start attach immediately when receiving such Announce message as in Thread 1.1 specification,
         // Section 4.8.1,
@@ -1300,6 +1301,10 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
             }
         }
 
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+        router->SetSelectableAsParent(true);
+#endif
+
         router->SetLastHeard(TimerMilli::GetNow());
 
         ExitNow();
@@ -1673,6 +1678,15 @@ void MleRouter::HandleTimeTick(void)
                 continue;
             }
         }
+
+#if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
+        router.DecrementParentReselectTimeout();
+
+        if (age >= kMaxNeighborAge)
+        {
+            router.SetSelectableAsParent(false);
+        }
+#endif
 
         if (IsLeader())
         {

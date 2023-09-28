@@ -40,16 +40,29 @@
  *
  * Define as 1 to enable periodic parent search feature.
  *
- * When this feature is enabled an end-device/child (while staying attached) will periodically search for a possible
- * better parent and will switch parent if a better one is found.
+ * When this feature is enabled, an end device/child (while staying attached) periodically searches for a possible
+ * better parent and switches parents if a better one is found.
  *
- * The child will periodically check the average RSS value for the current parent, and only if it is below a specific
- * threshold, a parent search is performed. The `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` specifies the
- * check interval (in seconds) and `OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD` gives the RSS threshold.
+ * Every `OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL` seconds, the child checks its average RSS to its current
+ * parent. Only if the average RSS is below a configured threshold (`OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD`)
+ * does the device start a parent search process.
  *
- * Since the parent search process can be power consuming (child needs to stays in RX mode to collect parent response)
- * and to limit its impact on battery-powered devices, after a parent search is triggered, the child will not trigger
- * another one before a specified backoff interval specified by `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL`.
+ * The parent search mechanism depends on whether the device is an FTD child or an MTD child.
+ *
+ * An FTD device receives and processes MLE Advertisements from neighboring routers. It uses this information to track
+ * which neighboring routers can be selected as potential new parents and to track the link quality to each.
+ *
+ * To select the best potential parent, the FTD device checks the list of neighboring routers and the tracked link
+ * quality information. A new parent is selected only if its average RSS has a margin over the current parent RSS
+ * (`OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN` config). If the attach attempt to the selected router fails (e.g., the
+ * router already has the maximum number of children it can support), the FTD device ensures that the same router
+ * cannot be selected again until a "reselect timeout" expires. This timeout is specified by the configuration
+ * `OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT`.
+ *
+ * An MTD child sends an MLE Parent Request to discover possible new parents. Since this process can be power consuming
+ * (the child needs to stay in RX mode to collect parent responses) and to limit its impact on battery-powered devices,
+ * after a parent search is triggered on an MTD, the MTD child does not trigger another one before the specified
+ * backoff interval `OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL` expires.
  *
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
@@ -71,7 +84,8 @@
 /**
  * @def OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL
  *
- * Specifies the backoff interval in seconds for a child to not perform a parent search after triggering one.
+ * Specifies the backoff interval in seconds for a child to not perform a parent search after triggering one. This is
+ * used when device is an MTD child.
  *
  * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
  *
@@ -91,6 +105,31 @@
  */
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD -65
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT
+ *
+ * Specifies parent reselect timeout duration in seconds used on FTD child devices. When an attach attempt to a
+ * neighboring router selected as a potential new parent fails, the same router cannot be selected again until this
+ * timeout expires.
+ *
+ * Applicable only if periodic parent search feature is enabled (see `OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE`).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT
+#define OPENTHREAD_CONFIG_PARENT_SEARCH_RESELECT_TIMEOUT (90 * 60)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN
+ *
+ * Specifies the RSS margin over the current parent RSS for allowing selection of a neighboring router as a potential
+ * new parent to attach to. Used on FTD child devices.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN
+#define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_MARGIN 7
 #endif
 
 #endif // CONFIG_PARENT_SEARCH_H_
