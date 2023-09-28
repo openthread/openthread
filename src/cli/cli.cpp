@@ -4725,6 +4725,29 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
         while (otThreadGetNextNeighborInfo(GetInstancePtr(), &iterator, &neighborInfo) == OT_ERROR_NONE)
         {
+            /**
+             * @cli neighbor table
+             * @code
+             * neighbor table
+             * | Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |
+             * +------+--------+-----+----------+-----------+-+-+-+------------------+
+             * |   C  | 0xcc01 |  96 |      -46 |       -46 |1|1|1| 1eb9ba8a6522636b |
+             * |   R  | 0xc800 |   2 |      -29 |       -29 |1|1|1| 9a91556102c39ddb |
+             * |   R  | 0xf000 |   3 |      -28 |       -28 |1|1|1| 0ad7ed6beaa6016d |
+             * Done
+             * @endcode
+             * @par
+             * Prints information in table format about all neighbors.
+             * @par
+             * For `Role`, the only possible values for this table are `C` (Child) or `R` (Router).
+             * @par
+             * The following columns provide information about the device mode of neighbors.
+             * Each column has a value of `0` (off) or `1` (on).
+             * - `R`: RX on when idle
+             * - `D`: Full Thread device
+             * - `N`: Full network data
+             * @sa otThreadGetNextNeighborInfo
+             */
             if (isTable)
             {
                 OutputFormat("| %3c  ", neighborInfo.mIsChild ? 'C' : 'R');
@@ -4739,6 +4762,16 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
                 OutputExtAddress(neighborInfo.mExtAddress);
                 OutputLine(" | %7d |", neighborInfo.mVersion);
             }
+            /**
+             * @cli neighbor list
+             * @code
+             * neighbor list
+             * 0xcc01 0xc800 0xf000
+             * Done
+             * @endcode
+             * @par
+             * Lists the RLOC16 of each neighbor.
+             */
             else
             {
                 OutputFormat("0x%04x ", neighborInfo.mRloc16);
@@ -4747,6 +4780,19 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 
         OutputNewLine();
     }
+    /**
+     * @cli neighbor linkquality
+     * @code
+     * neighbor linkquality
+     * | RLOC16 | Extended MAC     | Frame Error | Msg Error | Avg RSS | Last RSS | Age   |
+     * +--------+------------------+-------------+-----------+---------+----------+-------+
+     * | 0xe800 | 9e2fa4e1b84f92db |      0.00 % |    0.00 % |     -46 |      -48 |     1 |
+     * | 0xc001 | 0ad7ed6beaa6016d |      4.67 % |    0.08 % |     -68 |      -72 |    10 |
+     * Done
+     * @endcode
+     * @par
+     * Prints link quality information about all neighbors.
+     */
     else if (aArgs[0] == "linkquality")
     {
         static const char *const kLinkQualityTableTitles[] = {
@@ -4785,13 +4831,14 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Print the connection time and age of neighbors. Info per neighbor:
+     * Prints the connection time and age of neighbors. Information per neighbor:
      * - RLOC16
-     * - Extended MAC address
-     * - Last Heard (seconds since last heard from neighbor)
-     * - Connection time (seconds since link establishment with neighbor)
+     * - Extended MAC
+     * - Last Heard (Age): Number of seconds since last heard from neighbor.
+     * - Connection Time: Number of seconds since link establishment with neighbor.
      * Duration intervals are formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if the duration is less
      * than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
+     * @csa{neighbor conntime list}
      */
     else if (aArgs[0] == "conntime")
     {
@@ -4805,9 +4852,10 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
          * Done
          * @endcode
          * @par
-         * Print connection time and age of neighbors.
+         * Prints the connection time and age of neighbors.
          * This command is similar to `neighbor conntime`, but it displays the information in a list format. The age
          * and connection time are both displayed in seconds.
+         * @csa{neighbor conntime}
          */
         if (aArgs[1] == "list")
         {
@@ -4859,6 +4907,21 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
 }
 #endif // OPENTHREAD_FTD
 
+/**
+ * @cli netstat
+ * @code
+ * netstat
+ * | Local Address                                   | Peer Address                                    |
+ * +-------------------------------------------------+-------------------------------------------------+
+ * | [0:0:0:0:0:0:0:0]:49153                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:49152                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:61631                         | [0:0:0:0:0:0:0:0]:0                             |
+ * | [0:0:0:0:0:0:0:0]:19788                         | [0:0:0:0:0:0:0:0]:0                             |
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otUdpGetSockets
+ */
 template <> otError Interpreter::Process<Cmd("netstat")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -4981,6 +5044,27 @@ exit:
 template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return mNetworkData.Process(aArgs); }
 
 #if OPENTHREAD_FTD
+/**
+ * @cli networkidtimeout (get,set)
+ * @code
+ * networkidtimeout 120
+ * Done
+ * @endcode
+ * @code
+ * networkidtimeout
+ * 120
+ * Done
+ * @endcode
+ * @cparam networkidtimeout [@ca{timeout}]
+ * Use the optional `timeout` argument to set the value of the `NETWORK_ID_TIMEOUT` parameter.
+ * @par
+ * Gets or sets the `NETWORK_ID_TIMEOUT` parameter.
+ * @note This command is reserved for testing and demo purposes only.
+ * Changing settings with this API will render a production application
+ * non-compliant with the Thread Specification.
+ * @sa otThreadGetNetworkIdTimeout
+ * @sa otThreadSetNetworkIdTimeout
+ */
 template <> otError Interpreter::Process<Cmd("networkidtimeout")>(Arg aArgs[])
 {
     return ProcessGetSet(aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
@@ -8169,6 +8253,63 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
         SuccessOrExit(error = arg->ParseAsUint8(tlvTypes[count++]));
     }
 
+    /**
+     * @cli networkdiagnostic get
+     * @code
+     * networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6e
+     * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
+     * Ext Address: '0e336e1c41494e1c'
+     * Rloc16: 0x0c00
+     * Leader Data:
+     *     PartitionId: 0x640b0f67
+     *     Weighting: 64
+     *     DataVersion: 116
+     *     StableDataVersion: 197
+     *     LeaderRouterId: 0x03
+     * Done
+     * @endcode
+     * @code
+     * networkdiagnostic get ff02::1 0 1
+     * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c00
+     * Ext Address: '0e336e1c41494e1c'
+     * Rloc16: 0x0c00
+     * Done
+     * DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
+     * Ext Address: '3efcdb7e3f9eb0f2'
+     * Rloc16: 0x1800
+     * Done
+     * @endcode
+     * @cparam networkdiagnostic get @ca{addr} @ca{type(s)}
+     * For `addr`, a unicast address triggers a `Diagnostic Get`.
+     * A multicast address triggers a `Diagnostic Query`.
+     * TLV values you can specify (separated by a space if you specify more than one TLV):
+     * - `0`: MAC Extended Address TLV
+     * - `1`: Address16 TLV
+     * - `2`: Mode TLV
+     * - `3`: Timeout TLV (the maximum polling time period for SEDs)
+     * - `4`: Connectivity TLV
+     * - `5`: Route64 TLV
+     * - `6`: Leader Data TLV
+     * - `7`: Network Data TLV
+     * - `8`: IPv6 Address List TLV
+     * - `9`: MAC Counters TLV
+     * - `14`: Battery Level TLV
+     * - `15`: Supply Voltage TLV
+     * - `16`: Child Table TLV
+     * - `17`: Channel Pages TLV
+     * - `19`: Max Child Timeout TLV
+     * - `25`: Vendor Name TLV
+     * - `26`: Vendor Model TLV
+     * - `27`: Vendor SW Version TLV
+     * - `28`: Thread Stack Version TLV
+     * - `29`: Child TLV
+     * - `34`: MLE Counters TLV
+     * @par
+     * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
+     * for the specified addresses(es).
+     * @sa otThreadSendDiagnosticGet
+     */
+
     if (aArgs[0] == "get")
     {
         SuccessOrExit(error = otThreadSendDiagnosticGet(GetInstancePtr(), &address, tlvTypes, count,
@@ -8176,6 +8317,19 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
         SetCommandTimeout(kNetworkDiagnosticTimeoutMsecs);
         error = OT_ERROR_PENDING;
     }
+    /**
+     * @cli networkdiagnostic reset
+     * @code
+     * networkdiagnostic reset fd00:db8::ff:fe00:0 9
+     * Done
+     * @endcode
+     * @cparam networkdiagnostic reset @ca{addr} @ca{type(s)}
+     * @par
+     * Sends a network diagnostic request to reset the specified Type Length Values (TLVs)
+     * on the specified address(es). The only supported TLV value at this time for this
+     * command is `9` (MAC Counters TLV).
+     * @sa otThreadSendDiagnosticReset
+     */
     else if (aArgs[0] == "reset")
     {
         IgnoreError(otThreadSendDiagnosticReset(GetInstancePtr(), &address, tlvTypes, count));
