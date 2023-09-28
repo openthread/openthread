@@ -4838,7 +4838,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * - Connection Time: number of seconds since link establishment with neighbor.
      * Duration intervals are formatted as `hh:mm:ss` for hours, minutes, and seconds if the duration is less
      * than one day. If the duration is longer than one day, the format is `ddd.hh:mm:ss`.
-     * @csa neighbor conntime list
+     * @csa{neighbor conntime list}
      */
     else if (aArgs[0] == "conntime")
     {
@@ -4855,7 +4855,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
          * Prints the connection time and age of neighbors.
          * This command is similar to `neighbor conntime`, but it displays the information in a list format. The age
          * and connection time are both displayed in seconds.
-         * @csa neighbor conntime
+         * @csa{neighbor conntime}
          */
         if (aArgs[1] == "list")
         {
