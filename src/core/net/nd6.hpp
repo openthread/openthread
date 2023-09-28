@@ -75,8 +75,9 @@ class Option
 public:
     enum Type : uint8_t
     {
-        kTypePrefixInfo = 3,  ///< Prefix Information Option.
-        kTypeRouteInfo  = 24, ///< Route Information Option.
+        kTypePrefixInfo       = 3,  ///< Prefix Information Option.
+        kTypeRouteInfo        = 24, ///< Route Information Option.
+        kTypeRaFlagsExtension = 26, ///< RA Flags Extension Option.
     };
 
     static constexpr uint16_t kLengthUnit = 8; ///< The unit of length in octets.
@@ -459,6 +460,71 @@ private:
 static_assert(sizeof(RouteInfoOption) == 8, "invalid RouteInfoOption structure");
 
 /**
+ * Represents an RA Flags Extension Option.
+ *
+ * See RFC-5175 [https://tools.ietf.org/html/rfc5175]
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class RaFlagsExtOption : public Option, private Clearable<RaFlagsExtOption>
+{
+    friend class Clearable<RaFlagsExtOption>;
+
+public:
+    static constexpr Type kType = kTypeRaFlagsExtension; ///< RA Flags Extension Option type.
+
+    /**
+     * Initializes the RA Flags Extension option with proper type and length and sets all flags to zero.
+     *
+     */
+    void Init(void);
+
+    /**
+     * Tells whether this option is valid.
+     *
+     * @returns  A boolean indicates whether this option is valid.
+     *
+     */
+    bool IsValid(void) const { return GetSize() >= sizeof(*this); }
+
+    /**
+     * Indicates whether or not the Stub Router Flag is set.
+     *
+     * @retval TRUE   The Stub Router Flag is set.
+     * @retval FALSE  The Stub Router Flag is not set.
+     *
+     */
+    bool IsStubRouterFlagSet(void) const { return (mFlags[0] & kStubRouterFlag) != 0; }
+
+    /**
+     * Sets the Stub Router Flag.
+     *
+     */
+    void SetStubRouterFlag(void) { mFlags[0] |= kStubRouterFlag; }
+
+    RaFlagsExtOption(void) = delete;
+
+private:
+    // RA Flags Extension Option
+    //
+    //   0                   1                   2                   3
+    //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  |     Type      |    Length     |         Bit fields available ..
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //  ... for assignment                                              |
+    //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                                .
+
+    // Stub router flags defined in [https://www.ietf.org/archive/id/draft-hui-stub-router-ra-flag-01.txt]
+
+    static constexpr uint8_t kStubRouterFlag = 1 << 7;
+
+    uint8_t mFlags[6];
+} OT_TOOL_PACKED_END;
+
+static_assert(sizeof(RaFlagsExtOption) == 8, "invalid RaFlagsExtOption structure");
+
+/**
  * Represents a Router Advertisement message.
  *
  */
@@ -533,6 +599,36 @@ public:
         RoutePreference GetDefaultRouterPreference(void) const;
 
         /**
+         * Indicates whether or not the Managed Address Config Flag is set in the RA message header.
+         *
+         * @retval TRUE   The Managed Address Config Flag is set.
+         * @retval FALSE  The Managed Address Config Flag is not set.
+         *
+         */
+        bool IsManagedAddressConfigFlagSet(void) const { return (mFlags & kManagedAddressConfigFlag) != 0; }
+
+        /**
+         * Sets the Managed Address Config Flag in the RA message.
+         *
+         */
+        void SetManagedAddressConfigFlag(void) { mFlags |= kManagedAddressConfigFlag; }
+
+        /**
+         * Indicates whether or not the Other Config Flag is set in the RA message header.
+         *
+         * @retval TRUE   The Other Config Flag is set.
+         * @retval FALSE  The Other Config Flag is not set.
+         *
+         */
+        bool IsOtherConfigFlagSet(void) const { return (mFlags & kOtherConfigFlag) != 0; }
+
+        /**
+         * Sets the Other Config Flag in the RA message.
+         *
+         */
+        void SetOtherConfigFlag(void) { mFlags |= kOtherConfigFlag; }
+
+        /**
          * This method returns the ICMPv6 message type.
          *
          * @returns The ICMPv6 message type.
@@ -548,7 +644,7 @@ public:
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         //  |     Type      |     Code      |          Checksum             |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-        //  | Cur Hop Limit |M|O|H|Prf|Resvd|       Router Lifetime         |
+        //  | Cur Hop Limit |M|O| |Prf|     |       Router Lifetime         |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         //  |                         Reachable Time                        |
         //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -557,8 +653,10 @@ public:
         //  |   Options ...
         //  +-+-+-+-+-+-+-+-+-+-+-+-
 
-        static constexpr uint8_t kPreferenceOffset = 3;
-        static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
+        static constexpr uint8_t kManagedAddressConfigFlag = 1 << 7;
+        static constexpr uint8_t kOtherConfigFlag          = 1 << 6;
+        static constexpr uint8_t kPreferenceOffset         = 3;
+        static constexpr uint8_t kPreferenceMask           = 3 << kPreferenceOffset;
 
         uint8_t  mType;
         uint8_t  mCode;
