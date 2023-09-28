@@ -261,7 +261,7 @@ void Joiner::HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult)
 {
     VerifyOrExit(mState == kStateDiscover);
 
-    if (aResult != nullptr)
+    if (aResult != nullptr && aResult->mJoinerUdpPort > 0)
     {
         SaveDiscoveredJoinerRouter(*aResult);
     }
