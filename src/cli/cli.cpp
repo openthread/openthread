@@ -4741,9 +4741,9 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
              * @par
              * For `Role`, the only possible values for this table are `C` (Child) or `R` (Router).
              * @par
-             * The following columns provide information about neighbors' device modes.
+             * The following columns provide information about the device mode of neighbors.
              * Each column has a value of `0` (off) or `1` (on).
-             * - `R`: `RxOnWhenIdle`
+             * - `R`: RX on when idle
              * - `D`: Full Thread device
              * - `N`: Full network data
              * @sa otThreadGetNextNeighborInfo
@@ -4833,11 +4833,12 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * @par
      * Prints the connection time and age of neighbors. Information per neighbor:
      * - RLOC16
-     * - Extended MAC address
-     * - Last Heard (seconds since last heard from neighbor)
-     * - Connection time (seconds since link establishment with neighbor)
-     * Duration intervals are formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if the duration is less
-     * than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
+     * - Extended MAC
+     * - Last Heard (Age): Number of seconds since last heard from neighbor.
+     * - Connection Time: number of seconds since link establishment with neighbor.
+     * Duration intervals are formatted as `hh:mm:ss` for hours, minutes, and seconds if the duration is less
+     * than one day. If the duration is longer than one day, the format is `ddd.hh:mm:ss`.
+     * @csa neighbor conntime list
      */
     else if (aArgs[0] == "conntime")
     {
@@ -4854,6 +4855,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
          * Prints the connection time and age of neighbors.
          * This command is similar to `neighbor conntime`, but it displays the information in a list format. The age
          * and connection time are both displayed in seconds.
+         * @csa neighbor conntime
          */
         if (aArgs[1] == "list")
         {
@@ -4909,7 +4911,6 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
  * @cli netstat
  * @code
  * netstat
- * > netstat
  * | Local Address                                   | Peer Address                                    |
  * +-------------------------------------------------+-------------------------------------------------+
  * | [0:0:0:0:0:0:0:0]:49153                         | [0:0:0:0:0:0:0:0]:0                             |
@@ -5058,6 +5059,9 @@ template <> otError Interpreter::Process<Cmd("netdata")>(Arg aArgs[]) { return m
  * Use the optional `timeout` argument to set the value of the `NETWORK_ID_TIMEOUT` parameter.
  * @par
  * Gets or sets the `NETWORK_ID_TIMEOUT` parameter.
+ * @note This command is reserved for testing and demo purposes only.
+ * Changing settings with this API will render a production application
+ * non-compliant with the Thread Specification.
  * @sa otThreadGetNetworkIdTimeout
  * @sa otThreadSetNetworkIdTimeout
  */
@@ -8277,7 +8281,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * @endcode
      * @cparam networkdiagnostic get @ca{addr} @ca{type(s)}
      * For `addr`, a unicast address triggers a `Diagnostic Get`.
-     * A multicast adddress triggers a `Diagnostic Query`.
+     * A multicast address triggers a `Diagnostic Query`.
      * TLV values you can specify (separated by a space if you specify more than one TLV):
      * - `0`: MAC Extended Address TLV
      * - `1`: Address16 TLV
@@ -8316,7 +8320,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
     /**
      * @cli networkdiagnostic reset
      * @code
-     * diagnostic reset fd00:db8::ff:fe00:0 9
+     * networkdiagnostic reset fd00:db8::ff:fe00:0 9
      * Done
      * @endcode
      * @cparam networkdiagnostic reset @ca{addr} @ca{type(s)}
