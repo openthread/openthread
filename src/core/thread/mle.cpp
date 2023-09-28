@@ -2508,6 +2508,13 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
                                                     : mNeighborTable.FindNeighbor(extAddr);
 
+#if OPENTHREAD_FTD
+    if ((neighbor == nullptr) && (command == kCommandAdvertisement))
+    {
+        neighbor = mNeighborTable.FindRxOnlyNeighborRouter(extAddr);
+    }
+#endif
+
     if (neighbor != nullptr && neighbor->IsStateValid())
     {
         if (keySequence == neighbor->GetKeySequence())
