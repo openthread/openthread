@@ -4835,9 +4835,9 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
      * - RLOC16
      * - Extended MAC
      * - Last Heard (Age): Number of seconds since last heard from neighbor.
-     * - Connection Time: number of seconds since link establishment with neighbor.
-     * Duration intervals are formatted as `hh:mm:ss` for hours, minutes, and seconds if the duration is less
-     * than one day. If the duration is longer than one day, the format is `ddd.hh:mm:ss`.
+     * - Connection Time: Number of seconds since link establishment with neighbor.
+     * Duration intervals are formatted as `{hh}:{mm}:{ss}` for hours, minutes, and seconds if the duration is less
+     * than one day. If the duration is longer than one day, the format is `{dd}d.{hh}:{mm}:{ss}`.
      * @csa{neighbor conntime list}
      */
     else if (aArgs[0] == "conntime")
