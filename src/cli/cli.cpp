@@ -4739,7 +4739,7 @@ template <> otError Interpreter::Process<Cmd("neighbor")>(Arg aArgs[])
              * @par
              * Prints information in table format about all neighbors.
              * @par
-             * For `Role`. the only possible values for this table are `C` (Child) or `R` (Router).
+             * For `Role`, the only possible values for this table are `C` (Child) or `R` (Router).
              * @par
              * The following columns provide information about neighbors' device modes.
              * Each column has a value of `0` (off) or `1` (on).
@@ -8270,8 +8270,6 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * Ext Address: '0e336e1c41494e1c'
      * Rloc16: 0x0c00
      * Done
-     * @endcode
-     * @code
      * DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
      * Ext Address: '3efcdb7e3f9eb0f2'
      * Rloc16: 0x1800
@@ -8286,7 +8284,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `2`: Mode TLV
      * - `3`: Timeout TLV (the maximum polling time period for SEDs)
      * - `4`: Connectivity TLV
-     *   `5`: Route64 TLV
+     * - `5`: Route64 TLV
      * - `6`: Leader Data TLV
      * - `7`: Network Data TLV
      * - `8`: IPv6 Address List TLV
@@ -8298,7 +8296,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `19`: Max Child Timeout TLV
      * - `25`: Vendor Name TLV
      * - `26`: Vendor Model TLV
-     *   `27`: Vendor SW Version TLV
+     * - `27`: Vendor SW Version TLV
      * - `28`: Thread Stack Version TLV
      * - `29`: Child TLV
      * - `34`: MLE Counters TLV
