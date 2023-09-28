@@ -167,6 +167,15 @@ exit:
     return neighbor;
 }
 
+Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::Address macAddress;
+
+    macAddress.SetExtended(aExtAddress);
+
+    return FindRxOnlyNeighborRouter(macAddress);
+}
+
 Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddress)
 {
     Neighbor *neighbor = nullptr;

@@ -181,6 +181,17 @@ public:
      * Searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the
      * case of an FTD child with neighbor routers).
      *
+     * @param[in]  aExtAddress  An Extended address.
+     *
+     * @returns A pointer to the Neighbor corresponding to @p aExtAddress, `nullptr` otherwise.
+     *
+     */
+    Neighbor *FindRxOnlyNeighborRouter(const Mac::ExtAddress &aExtAddress);
+
+    /**
+     * Searches in the neighbor table to find a `Neighbor` for which a one-way link is maintained (as in the
+     * case of an FTD child with neighbor routers).
+     *
      * @param[in]  aMacAddress  A MAC address.
      *
      * @returns A pointer to the Neighbor corresponding to @p aMacAddress, `nullptr` otherwise.

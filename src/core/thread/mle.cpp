@@ -2464,6 +2464,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Mac::ExtAddress extAddr;
     uint8_t         command;
     Neighbor       *neighbor;
+#if OPENTHREAD_FTD
+    bool isNeighborRxOnly = false;
+#endif
 
     LogDebg("Receive MLE message");
 
@@ -2517,6 +2520,18 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     neighbor = (command == kCommandChildIdResponse) ? mNeighborTable.FindParent(extAddr)
                                                     : mNeighborTable.FindNeighbor(extAddr);
 
+#if OPENTHREAD_FTD
+    if (neighbor == nullptr)
+    {
+        // As an FED, we may have rx-only neighbors. We find and set
+        // `neighbor` to perform security processing (frame counter
+        // and key sequence checks) for messages from such neighbors.
+
+        neighbor         = mNeighborTable.FindRxOnlyNeighborRouter(extAddr);
+        isNeighborRxOnly = true;
+    }
+#endif
+
     if (neighbor != nullptr && neighbor->IsStateValid())
     {
         if (keySequence == neighbor->GetKeySequence())
@@ -2561,6 +2576,30 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     {
         OT_ASSERT(aMessage.IsRadioTypeSet());
         Get<RadioSelector>().UpdateOnReceive(*neighbor, aMessage.GetRadioType(), /* IsDuplicate */ false);
+    }
+#endif
+
+#if OPENTHREAD_FTD
+    if (isNeighborRxOnly)
+    {
+        // Clear the `neighbor` if it is a rx-only one before calling
+        // `Handle{Msg}()`, except for a subset of MLE messages such
+        // as MLE Advertisement. This ensures that, as an FED, we are
+        // selective about which messages to process from rx-only
+        // neighbors.
+
+        switch (command)
+        {
+        case kCommandAdvertisement:
+        case kCommandLinkRequest:
+        case kCommandLinkAccept:
+        case kCommandLinkAcceptAndRequest:
+            break;
+
+        default:
+            neighbor = nullptr;
+            break;
+        }
     }
 #endif
 
