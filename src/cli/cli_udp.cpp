@@ -50,6 +50,30 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
     memset(&mSocket, 0, sizeof(mSocket));
 }
 
+/**
+ * @cli udp bind
+ * @code
+ * udp bind :: 1234
+ * Done
+ * @endcode
+ * @code
+ * udp bind -u :: 1234
+ * Done
+ * @endcode
+ * @code
+ * udp bind -b :: 1234
+ * Done
+ * @endcode
+ * @cparam udp bind [@ca{netif}] @ca{ip} @ca{port}
+ * - netif: This parameter is optional, and determihnes the binding network interface as follows:
+ *   - No value: Thread network interface is used.
+ *   - `-u`: Unspecified network interface is used.
+ *   - `-b`: Backbone network interface is used.
+ * - ip: IPv6 address to bind to. To use the unspecifed IPv6 address, use the value of `::`.
+ * - port: UDP port number to bind to.
+ * @par
+ * Binds a socket to the specified port.
+ */
 template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
     otError           error;
