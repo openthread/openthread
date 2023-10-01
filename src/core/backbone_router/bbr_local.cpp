@@ -87,7 +87,7 @@ void Local::SetEnabled(bool aEnable)
     {
         SetState(kStateSecondary);
         AddDomainPrefixToNetworkData();
-        IgnoreError(AddService());
+        IgnoreError(AddService(kDecideBasedOnState));
     }
     else
     {
@@ -163,7 +163,7 @@ Error Local::SetConfig(const Config &aConfig)
     {
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
 
-        IgnoreError(AddService());
+        IgnoreError(AddService(kDecideBasedOnState));
     }
 
 exit:
@@ -171,18 +171,22 @@ exit:
     return error;
 }
 
-Error Local::AddService(bool aForce)
+Error Local::AddService(RegisterMode aMode)
 {
     Error                                            error = kErrorInvalidState;
     NetworkData::Service::BackboneRouter::ServerData serverData;
 
     VerifyOrExit(mState != kStateDisabled && Get<Mle::Mle>().IsAttached());
 
-    VerifyOrExit(aForce /* if register by force */ ||
-                 !Get<BackboneRouter::Leader>().HasPrimary() /* if no available Backbone Router service */ ||
-                 Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16()
-                 /* If the device itself should be BBR. */
-    );
+    switch (aMode)
+    {
+    case kDecideBasedOnState:
+        VerifyOrExit(!Get<BackboneRouter::Leader>().HasPrimary() ||
+                     Get<BackboneRouter::Leader>().GetServer16() == Get<Mle::MleRouter>().GetRloc16());
+        break;
+    case kForceRegistration:
+        break;
+    }
 
     serverData.SetSequenceNumber(mSequenceNumber);
     serverData.SetReregistrationDelay(mReregistrationDelay);
@@ -272,10 +276,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
         mMlrTimeout          = aConfig.mMlrTimeout;
         SequenceNumberIncrease();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
-        if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
-        {
-            Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        }
+        IgnoreError(AddService(kForceRegistration));
     }
     else
     {

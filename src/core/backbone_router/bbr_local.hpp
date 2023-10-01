@@ -85,6 +85,16 @@ public:
     };
 
     /**
+     * Represents registration mode used as input to `AddService()` method.
+     *
+     */
+    enum RegisterMode : uint8_t
+    {
+        kDecideBasedOnState, ///< Decide based on current state.
+        kForceRegistration,  ///< Force registration regardless of current state.
+    };
+
+    /**
      * Initializes the local Backbone Router.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
@@ -137,16 +147,14 @@ public:
     /**
      * Registers Backbone Router Dataset to Leader.
      *
-     * @param[in]  aForce True to force registration regardless of current state.
-     *                    False to decide based on current state.
-     *
+     * @param[in]  aMode  The registration mode to use (decide based on current state or force registration).
      *
      * @retval kErrorNone            Successfully added the Service entry.
      * @retval kErrorInvalidState    Not in the ready state to register.
      * @retval kErrorNoBufs          Insufficient space to add the Service entry.
      *
      */
-    Error AddService(bool aForce = false);
+    Error AddService(RegisterMode aMode);
 
     /**
      * Indicates whether or not the Backbone Router is Primary.
