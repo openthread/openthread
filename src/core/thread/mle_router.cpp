@@ -360,7 +360,6 @@ void MleRouter::HandleChildStart(AttachMode aMode)
         break;
 
     case kSamePartition:
-    case kSamePartitionRetry:
         if (HasChildren())
         {
             IgnoreError(BecomeRouter(ThreadStatusTlv::kHaveChildIdRequest));
