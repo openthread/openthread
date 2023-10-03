@@ -65,14 +65,18 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * Done
  * @endcode
  * @cparam udp bind [@ca{netif}] @ca{ip} @ca{port}
- * - netif: This parameter is optional, and determihnes the binding network interface as follows:
- *   - No value: Thread network interface is used.
- *   - `-u`: Unspecified network interface is used.
+ * - netif: The binding network interface, which is determined as follows:
+ *   - No value (leaving out this parameter from the command): Thread network interface is used.
+ *   - `-u`: Unspecified network interface, which means that the UDP/IPv6 stack determines which
+ *   network interface to bind the socket to.
  *   - `-b`: Backbone network interface is used.
- * - ip: IPv6 address to bind to. To use the unspecifed IPv6 address, use the value of `::`.
- * - port: UDP port number to bind to.
+ * - ip: IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
+ *   IPv6 address, then you can use the following value to use the unspecified
+ *   IPv6 address: `::`. Each example uses the unspecified IPv6 address.
+ * - port: UDP port number to bind to. Each of the examples is using port number 1234.
  * @par
- * Binds a socket to the specified port.
+ * Assigns an IPv6 address and a port to an open socket, which binds the socket for communication.
+ * Assigning the IPv6 address and port is referred to as naming the socket.
  */
 template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
@@ -101,6 +105,18 @@ exit:
     return error;
 }
 
+/**
+ * @cli udp connect
+ * @code
+ * udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234
+ * Done
+ * @endcode
+ * @cparam udp connect @ca{ip} @ca{port}
+ * 
+ *
+ *
+ *
+ */
 template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
@@ -124,6 +140,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli udp close
+ * @code
+ * udp close
+ * Done
+ * @endcode
+ * @api
+ * #otUdpClose
+ */
 template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -131,6 +156,15 @@ template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
     return otUdpClose(GetInstancePtr(), &mSocket);
 }
 
+/**
+ * @cli udp open
+ * @code
+ * udp open
+ * Done
+ * @endcode
+ * @api
+ * #otUdpOpen
+ */
 template <> otError UdpExample::Process<Cmd("open")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
