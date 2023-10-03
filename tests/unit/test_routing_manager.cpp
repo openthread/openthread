@@ -449,6 +449,17 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
             break;
         }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+        case Ip6::Nd::Option::kTypeRaFlagsExtension:
+        {
+            const Ip6::Nd::RaFlagsExtOption &flagsOption = static_cast<const Ip6::Nd::RaFlagsExtOption &>(option);
+
+            VerifyOrQuit(flagsOption.IsValid());
+            VerifyOrQuit(flagsOption.IsStubRouterFlagSet());
+            break;
+        }
+#endif
+
         default:
             VerifyOrQuit(false, "Unexpected option type in RA msg");
         }
@@ -542,6 +553,15 @@ void LogRouterAdvert(const Icmp6Packet &aPacket)
             rio.GetPrefix(prefix);
             Log("     RIO - %s, prf:%s, lifetime:%u", prefix.ToString().AsCString(),
                 PreferenceToString(rio.GetPreference()), rio.GetRouteLifetime());
+            break;
+        }
+
+        case Ip6::Nd::Option::kTypeRaFlagsExtension:
+        {
+            const Ip6::Nd::RaFlagsExtOption &flagsOption = static_cast<const Ip6::Nd::RaFlagsExtOption &>(option);
+
+            VerifyOrQuit(flagsOption.IsValid());
+            Log("     FlagsExt - StubRouter:%u", flagsOption.IsStubRouterFlagSet());
             break;
         }
 

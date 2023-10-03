@@ -762,6 +762,17 @@ public:
     Error AppendRouteInfoOption(const Prefix &aPrefix, uint32_t aRouteLifetime, RoutePreference aPreference);
 
     /**
+     * Appends a Flags Extension Option to the RA message.
+     *
+     * @param[in] aStubRouterFlag    The stub router flag.
+     *
+     * @retval kErrorNone    Option is appended successfully.
+     * @retval kErrorNoBufs  No more space in the buffer to append the option.
+     *
+     */
+    Error AppendFlagsExtensionOption(bool aStubsRouterFlag);
+
+    /**
      * Indicates whether or not the RA message contains any options.
      *
      * @retval TRUE   If the RA message contains at least one option.
