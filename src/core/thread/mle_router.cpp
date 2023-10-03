@@ -1550,14 +1550,7 @@ void MleRouter::HandleTimeTick(void)
 
         if (mBackboneRouterRegistrationDelay == 0)
         {
-            // If no Backbone Router service after jitter, try to register its own Backbone Router Service.
-            if (!Get<BackboneRouter::Leader>().HasPrimary())
-            {
-                if (Get<BackboneRouter::Local>().AddService() == kErrorNone)
-                {
-                    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-                }
-            }
+            IgnoreError(Get<BackboneRouter::Local>().AddService(BackboneRouter::Local::kDecideBasedOnState));
         }
     }
 #endif

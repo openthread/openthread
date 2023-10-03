@@ -69,7 +69,7 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(true /* Force registration */);
+    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(BackboneRouter::Local::kForceRegistration);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
