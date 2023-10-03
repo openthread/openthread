@@ -522,16 +522,6 @@ public:
     Error SendTimeSync(void);
 #endif
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    /**
-     * Sets the delay before registering Backbone Router service.
-     *
-     * @param[in]  aDelay  The delay before registering Backbone Router service.
-     *
-     */
-    void SetBackboneRouterRegistrationDelay(uint8_t aDelay) { mBackboneRouterRegistrationDelay = aDelay; }
-#endif
-
     /**
      * Gets the maximum number of IP addresses that each MTD child may register with this device as parent.
      *
@@ -743,9 +733,6 @@ private:
     uint8_t mChildRouterLinks;
 
     int8_t mParentPriority; ///< The assigned parent priority value, -2 means not assigned.
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    uint8_t mBackboneRouterRegistrationDelay; ///< Delay before registering Backbone Router service.
-#endif
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mMaxChildIpAddresses;
 #endif

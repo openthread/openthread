@@ -59,6 +59,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/time_ticker.hpp"
 #include "net/netif.hpp"
 #include "thread/network_data.hpp"
 
@@ -72,6 +73,8 @@ namespace BackboneRouter {
  */
 class Local : public InstanceLocator, private NonCopyable
 {
+    friend class ot::TimeTicker;
+
 public:
     /**
      * Represents Backbone Router state.
@@ -278,6 +281,7 @@ public:
 private:
     void SetState(State aState);
     void RemoveService(void);
+    void HandleTimeTick(void);
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
     void SequenceNumberIncrease(void);
@@ -292,6 +296,7 @@ private:
     State    mState;
     uint32_t mMlrTimeout;
     uint16_t mReregistrationDelay;
+    uint16_t mRegistrationTimeout;
     uint8_t  mSequenceNumber;
     uint8_t  mRegistrationJitter;
 

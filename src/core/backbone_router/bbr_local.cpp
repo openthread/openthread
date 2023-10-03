@@ -54,6 +54,7 @@ Local::Local(Instance &aInstance)
     , mState(kStateDisabled)
     , mMlrTimeout(kDefaultMlrTimeout)
     , mReregistrationDelay(kDefaultRegistrationDelay)
+    , mRegistrationTimeout(0)
     , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(kDefaultRegistrationJitter)
     , mIsServiceAdded(false)
@@ -252,16 +253,15 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
     // Wait some jitter before trying to Register.
     if (aConfig.mServer16 == Mac::kShortAddrInvalid)
     {
-        uint8_t delay = 1;
+        mRegistrationTimeout = 1;
 
         if (!Get<Mle::MleRouter>().IsLeader())
         {
-            delay += Random::NonCrypto::GetUint8InRange(0, mRegistrationJitter < 255 ? mRegistrationJitter + 1
-                                                                                     : mRegistrationJitter);
+            mRegistrationTimeout +=
+                Random::NonCrypto::GetUint16InRange(0, static_cast<uint16_t>(mRegistrationJitter) + 1);
         }
 
-        // Here uses the timer resource in Mle.
-        Get<Mle::MleRouter>().SetBackboneRouterRegistrationDelay(delay);
+        Get<TimeTicker>().RegisterReceiver(TimeTicker::kBbrLocal);
     }
     else if (aConfig.mServer16 != Get<Mle::MleRouter>().GetRloc16())
     {
@@ -285,6 +285,29 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
 
 exit:
     return;
+}
+
+void Local::HandleTimeTick(void)
+{
+    // Delay registration when `GetRouterSelectionJitterTimeout()` is non-zero,
+    // which indicates device may soon switch its role (e.g., REED to router).
+    VerifyOrExit(Get<Mle::MleRouter>().GetRouterSelectionJitterTimeout() == 0);
+
+    if (mRegistrationTimeout > 0)
+    {
+        mRegistrationTimeout--;
+
+        if (mRegistrationTimeout == 0)
+        {
+            IgnoreError(AddService(kDecideBasedOnState));
+        }
+    }
+
+exit:
+    if (mRegistrationTimeout == 0)
+    {
+        Get<TimeTicker>().UnregisterReceiver(TimeTicker::kBbrLocal);
+    }
 }
 
 Error Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
