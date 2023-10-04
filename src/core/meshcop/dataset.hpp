@@ -200,7 +200,7 @@ public:
          * MUST be used when Active Timestamp component is present in the Dataset, otherwise its behavior is
          * undefined.
          *
-         * @returns The Active Timestamp in the Dataset.
+         * @param[out] aTimestamp  A reference to output the Active Timestamp in the Dataset.
          *
          */
         void GetActiveTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mActiveTimestamp); }
@@ -231,7 +231,7 @@ public:
          * MUST be used when Pending Timestamp component is present in the Dataset, otherwise its behavior
          * is undefined.
          *
-         * @returns The Pending Timestamp in the Dataset.
+         * @param[out] aTimestamp  A reference to output the Pending Timestamp in the Dataset.
          *
          */
         void GetPendingTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mPendingTimestamp); }

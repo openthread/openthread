@@ -56,8 +56,6 @@ extern "C" {
  */
 
 /**
- * @struct otCryptoSha256Hash
- *
  * Represents a SHA-256 hash.
  *
  */

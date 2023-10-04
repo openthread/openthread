@@ -1105,7 +1105,7 @@ public:
     /**
      * Initializes the TLV.
      *
-     * @param[in] aMleCounter    The MLE counters to initialize the TLV with.
+     * @param[in] aMleCounters    The MLE counters to initialize the TLV with.
      *
      */
     void Init(const Mle::Counters &aMleCounters);

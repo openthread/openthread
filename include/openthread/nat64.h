@@ -291,7 +291,7 @@ otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
  * @sa otNat64GetPrefixManagerState
  *
  */
-void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
+void otNat64SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Allocate a new message buffer for sending an IPv4 message to the NAT64 translator.
@@ -374,7 +374,7 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
  *                               NULL to disable the callback.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aContext          A pointer to application-specific context.
  *
  */
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);

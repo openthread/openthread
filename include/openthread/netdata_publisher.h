@@ -258,9 +258,9 @@ otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRou
  *   Data (monitoring the Network Data to determine when/if to add the prefix, depending on the number of similar
  *   prefixes present in the Network Data).
  *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
  * @param[in] aPrefix         The previously published external route prefix to replace.
  * @param[in] aConfig         The external route config to publish.
- * @param[in] aRequester      The requester (`kFromUser` or `kFromRoutingManager` module).
  *
  * @retval OT_ERROR_NONE          The external route is published successfully.
  * @retval OT_ERROR_INVALID_ARGS  The @p aConfig is not valid (bad prefix, invalid flag combinations, or not stable).

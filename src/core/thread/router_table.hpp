@@ -381,7 +381,7 @@ public:
     /**
      * Gets the allocated Router ID set.
      *
-     * @returns The allocated Router ID set.
+     * @param[out]  aRouterIdSet   A reference to output the allocated Router ID set.
      *
      */
     void GetRouterIdSet(Mle::RouterIdSet &aRouterIdSet) const { return mRouterIdMap.GetAsRouterIdSet(aRouterIdSet); }
