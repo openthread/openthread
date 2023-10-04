@@ -111,11 +111,20 @@ exit:
  * udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234
  * Done
  * @endcode
+ * @code
+ * udp connect 172.17.0.1 1234
+ * Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+ * Done
+ * @endcode
  * @cparam udp connect @ca{ip} @ca{port}
- * 
- *
- *
- *
+ * The following parameters are required:
+ * - `ip`: IP address of the peer
+ * - `port`: UDP port number of the peer
+ * The address can be an IPv4 address, which gets synthesized to an IPv6 address
+ * using the preferred NAT64 prefix from the network data.
+ * @note The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
+ * @par api_copy
+ * #otUdpConnect
  */
 template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
@@ -146,7 +155,7 @@ exit:
  * udp close
  * Done
  * @endcode
- * @api
+ * @api_copy
  * #otUdpClose
  */
 template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
@@ -162,7 +171,7 @@ template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
  * udp open
  * Done
  * @endcode
- * @api
+ * @api_copy
  * #otUdpOpen
  */
 template <> otError UdpExample::Process<Cmd("open")>(Arg aArgs[])
