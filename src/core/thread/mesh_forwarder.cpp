@@ -808,7 +808,6 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
             mMessageNextOffset = mSendMessage->GetLength();
             ExitNow(frame = nullptr);
         }
-
         break;
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -1308,18 +1307,7 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
         break;
 
     case Message::kSubTypeMleChildIdRequest:
-        if (mSendMessage->IsLinkSecurityEnabled())
-        {
-            // If the Child ID Request requires fragmentation and therefore
-            // link layer security, the frame transmission will be aborted.
-            // When the message is being freed, we signal to MLE to prepare a
-            // shorter Child ID Request message (by only including mesh-local
-            // address in the Address Registration TLV).
-
-            LogInfo("Requesting shorter `Child ID Request`");
-            Get<Mle::Mle>().RequestShorterChildIdRequest();
-        }
-
+        Get<Mle::Mle>().HandleChildIdRequestTxDone(*mSendMessage);
         break;
 
     default:

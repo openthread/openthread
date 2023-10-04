@@ -1776,6 +1776,27 @@ void Mle::RequestShorterChildIdRequest(void)
     }
 }
 
+void Mle::HandleChildIdRequestTxDone(Message &aMessage)
+{
+    if (aMessage.GetTxSuccess() && !IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SetAttachMode(true);
+        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    }
+
+    if (aMessage.IsLinkSecurityEnabled())
+    {
+        // If the Child ID Request requires fragmentation and therefore
+        // link layer security, the frame transmission will be aborted.
+        // When the message is being freed, we signal to MLE to prepare a
+        // shorter Child ID Request message (by only including mesh-local
+        // address in the Address Registration TLV).
+
+        LogInfo("Requesting shorter `Child ID Request`");
+        RequestShorterChildIdRequest();
+    }
+}
+
 Error Mle::SendChildIdRequest(void)
 {
     static const uint8_t kTlvs[] = {Tlv::kAddress16, Tlv::kNetworkData, Tlv::kRoute};
@@ -1832,13 +1853,6 @@ Error Mle::SendChildIdRequest(void)
     Log(kMessageSend,
         (mAddressRegistrationMode == kAppendMeshLocalOnly) ? kTypeChildIdRequestShort : kTypeChildIdRequest,
         destination);
-
-    if (!IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().SetAttachMode(true);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
-    }
-
 exit:
     FreeMessageOnError(message, error);
     return error;
