@@ -913,7 +913,7 @@ bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId);
  * to get the value.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aDesRloct16     The RLOC16 of destination.
+ * @param[in]  aDestRloc16     The RLOC16 of destination.
  * @param[out] aNextHopRloc16  A pointer to return RLOC16 of next hop, 0xfffe if no next hop.
  * @param[out] aPathCost       A pointer to return path cost towards destination.
  *

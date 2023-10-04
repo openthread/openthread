@@ -848,7 +848,7 @@ protected:
     /**
      * Sets the resource handler function.
      *
-     * @param[in] aResourceHandler   The resource handler function pointer.
+     * @param[in] aHandler   The resource handler function pointer.
      *
      */
     void SetResourceHandler(ResourceHandler aHandler) { mResourceHandler = aHandler; }

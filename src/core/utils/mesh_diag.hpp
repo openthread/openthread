@@ -93,9 +93,9 @@ public:
         /**
          * Iterates through the discovered IPv6 address of a router.
          *
-         * @param[out]     aIp6Address  A reference to return the next IPv6 address (if any).
+         * @param[out]     aAddress  A reference to return the next IPv6 address (if any).
          *
-         * @retval kErrorNone      Successfully retrieved the next address. @p aIp6Address is updated.
+         * @retval kErrorNone      Successfully retrieved the next address. @p aAddress is updated.
          * @retval kErrorNotFound  No more address. Reached the end of the list.
          *
          */

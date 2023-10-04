@@ -375,8 +375,8 @@ public:
      *
      * The favored NAT64 prefix can be discovered from infrastructure link or can be the local NAT64 prefix.
      *
-     * @param[out] aPrefix         A reference to output the favored prefix.
-     * @param[out] aPreference     A reference to output the preference associated with the favored prefix.
+     * @param[out] aPrefix           A reference to output the favored prefix.
+     * @param[out] aRoutePreference  A reference to output the preference associated with the favored prefix.
      *
      * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
      * @retval  kErrorNone          Successfully retrieved the NAT64 prefix.
