@@ -265,26 +265,36 @@ public:
     /**
      * Returns the ROUTER_SELECTION_JITTER value.
      *
-     * @returns The ROUTER_SELECTION_JITTER value.
+     * @returns The ROUTER_SELECTION_JITTER value in seconds.
      *
      */
-    uint8_t GetRouterSelectionJitter(void) const { return mRouterSelectionJitter; }
+    uint8_t GetRouterSelectionJitter(void) const { return mRouterRoleTransition.GetJitter(); }
 
     /**
      * Sets the ROUTER_SELECTION_JITTER value.
      *
-     * @returns The ROUTER_SELECTION_JITTER value.
+     * @param[in] aRouterJitter  The router selection jitter value (in seconds).
      *
      */
-    Error SetRouterSelectionJitter(uint8_t aRouterJitter);
+    void SetRouterSelectionJitter(uint8_t aRouterJitter) { mRouterRoleTransition.SetJitter(aRouterJitter); }
 
     /**
-     * Returns the current router selection jitter timeout value.
+     * Indicates whether or not router role transition (upgrade from REED or downgrade to REED) is pending.
      *
-     * @returns The current router selection jitter timeout value.
+     * @retval TRUE    Router role transition is pending.
+     * @retval FALSE   Router role transition is not pending
      *
      */
-    uint8_t GetRouterSelectionJitterTimeout(void) const { return mRouterSelectionJitterTimeout; }
+    bool IsRouterRoleTransitionPending(void) const { return mRouterRoleTransition.IsPending(); }
+
+    /**
+     * Returns the current timeout delay in seconds till router role transition (upgrade from REED or downgrade to
+     * REED).
+     *
+     * @returns The timeout in seconds till router role transition, or zero if not pending role transition.
+     *
+     */
+    uint8_t GetRouterRoleTransitionTimeout(void) const { return mRouterRoleTransition.GetTimeout(); }
 
     /**
      * Returns the ROUTER_UPGRADE_THRESHOLD value.
@@ -616,6 +626,25 @@ private:
     static constexpr int8_t kParentPriorityLow         = -1;
     static constexpr int8_t kParentPriorityUnspecified = -2;
 
+    class RouterRoleTransition
+    {
+    public:
+        RouterRoleTransition(void);
+
+        bool    IsPending(void) const { return (mTimeout != 0); }
+        void    StartTimeout(void);
+        void    StopTimeout(void) { mTimeout = 0; }
+        void    IncreaseTimeout(uint8_t aIncrement) { mTimeout += aIncrement; }
+        uint8_t GetTimeout(void) const { return mTimeout; }
+        bool    HandleTimeTick(void);
+        uint8_t GetJitter(void) const { return mJitter; }
+        void    SetJitter(uint8_t aJitter) { mJitter = aJitter; }
+
+    private:
+        uint8_t mTimeout;
+        uint8_t mJitter;
+    };
+
     void  HandleDetachStart(void);
     void  HandleChildStart(AttachMode aMode);
     void  HandleSecurityPolicyChanged(void);
@@ -727,8 +756,7 @@ private:
     uint8_t  mPreviousPartitionRouterIdSequence; ///< The router ID sequence when last attached
     uint8_t  mPreviousPartitionIdTimeout;        ///< The partition ID timeout when last attached
 
-    uint8_t mRouterSelectionJitter;        ///< The variable to save the assigned jitter value.
-    uint8_t mRouterSelectionJitterTimeout; ///< The Timeout prior to request/release Router ID.
+    RouterRoleTransition mRouterRoleTransition;
 
     uint8_t mChildRouterLinks;
 

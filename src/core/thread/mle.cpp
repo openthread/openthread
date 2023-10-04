@@ -770,7 +770,7 @@ void Mle::InformPreviousChannel(void)
     VerifyOrExit(IsChild() || IsRouter());
 
 #if OPENTHREAD_FTD
-    VerifyOrExit(!IsFullThreadDevice() || IsRouter() || Get<MleRouter>().GetRouterSelectionJitterTimeout() == 0);
+    VerifyOrExit(!IsFullThreadDevice() || IsRouter() || !Get<MleRouter>().IsRouterRoleTransitionPending());
 #endif
 
     mAlternatePanId = Mac::kPanIdBroadcast;

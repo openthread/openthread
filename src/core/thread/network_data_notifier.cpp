@@ -108,7 +108,7 @@ exit:
         break;
 #if OPENTHREAD_FTD
     case kErrorInvalidState:
-        mTimer.Start(Time::SecToMsec(Get<Mle::MleRouter>().GetRouterSelectionJitterTimeout() + 1));
+        mTimer.Start(Time::SecToMsec(Get<Mle::MleRouter>().GetRouterRoleTransitionTimeout() + 1));
         break;
 #endif
     case kErrorNotFound:
