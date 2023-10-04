@@ -127,6 +127,13 @@ void TimeTicker::HandleTimer(void)
     {
         Get<Ip6::Mpl>().HandleTimeTick();
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mReceivers & Mask(kBbrLocal))
+    {
+        Get<BackboneRouter::Local>().HandleTimeTick();
+    }
+#endif
 }
 
 } // namespace ot

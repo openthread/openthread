@@ -73,6 +73,7 @@ public:
         kMlrManager,             ///< `MlrManager`
         kNetworkDataNotifier,    ///< `NetworkData::Notifier`
         kIp6Mpl,                 ///< `Ip6::Mpl`
+        kBbrLocal,               ///< `BackboneRouter::Local`
 
         kNumReceivers, ///< Number of receivers.
     };
