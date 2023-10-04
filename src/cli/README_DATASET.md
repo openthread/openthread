@@ -110,18 +110,35 @@ After the device successfully attaches to a Thread network, the device will retr
 ### Using the Pending Operational Dataset for Delayed Dataset Updates
 
 The Pending Operational Dataset can be used for a delayed update of network parameters on all devices of a Thread Network.
-If certain Active Operational Dataset parameter(s) need to be changed, but the change would impact the connectivity of the network,
-delaying the update helps to let all devices receive the new parameter(s) before the update is applied. Examples of such
+If certain Active Operational Dataset parameters need to be changed, but the change would impact the connectivity of the network,
+delaying the update helps to let all devices receive the new parameters before the update is applied. Examples of such
 parameters are the channel, PAN ID, certain Security Policy bits, or Network Key.
 
-The delay timer determines the time period after which the Pending Dataset takes effect and becomes the
-Active Dataset. The below example shows how a Pending Dataset with delay timer can be set at a Leader device.
-The Leader will initiate the distribution of the Pending Dataset to the rest of the devices in the network.
+The delay timer determines the time period after which the Pending Operational Dataset takes effect and becomes the
+Active Operational Dataset. The following example shows how a Pending Operational Dataset with delay timer can be set at a Leader device.
+The Leader will initiate the distribution of the Pending Operational Dataset to the rest of the devices in the network.
 
-Normally, an active Commissioner will set a new Pending Dataset. For testing purposes, we will do this in the example
+Normally, an active Commissioner will set a new Pending Operational Dataset. For testing purposes, we will do this in the example
 directly on the Leader using the CLI - so without using a Commissioner.
 
-1. Create a new Dataset in the dataset buffer, by copying the Active Dataset. Then change the channel number.
+1. The main parameter to change is the channel. We can display the current Active Operational Dataset to see that the current channel is 16.
+
+   ```bash
+   > dataset active
+   Active Timestamp: 1691070443
+   Channel: 16
+   Channel Mask: 0x07fff800
+   Ext PAN ID: 324a71d90cdc8345
+   Mesh Local Prefix: fd7d:da74:df5e:80c::/64
+   Network Key: be768535bac1b8d228960038311d6ca2
+   Network Name: OpenThread-bcaf
+   PAN ID: 0xbcaf
+   PSKc: e79b274ab22414a814ed5cce6a30be67
+   Security Policy: 672 onrc 0
+   Done
+   ```
+
+2. Create a new Dataset in the dataset buffer, by copying the Active Operational Dataset. Then change the channel number to 12 and increase the timestamp.
 
    ```bash
    > dataset init active
@@ -134,7 +151,7 @@ directly on the Leader using the CLI - so without using a Commissioner.
    Done
    ```
 
-2. Set the delay timer parameter to 5 minutes (300000 ms). Show the resulting Dataset that's ready to be used.
+3. Set the delay timer parameter to 5 minutes (300000 ms). Show the resulting Dataset that's ready to be used.
 
    ```bash
    > dataset delay 300000
@@ -155,14 +172,14 @@ directly on the Leader using the CLI - so without using a Commissioner.
    Done
    ```
 
-3. Commit the new Dataset as the Pending Dataset. This also starts the delay timer countdown. The Leader then starts the distribution of the Pending Dataset to other devices in the network.
+4. Commit the new Dataset as the Pending Operational Dataset. This also starts the delay timer countdown. The Leader then starts the distribution of the Pending Operational Dataset to other devices in the network.
 
    ```bash
    > dataset commit pending
    Done
    ```
 
-4. (Optional) Check that the delay timer is counting down, by displaying the Pending Dataset, after a few seconds.
+5. To verify that the delay timer is counting down, display the Pending Operational Dataset after a few seconds.
 
    ```bash
    > dataset pending
@@ -185,7 +202,7 @@ directly on the Leader using the CLI - so without using a Commissioner.
    The same can be optionally checked on other devices in the network.
 
 
-5. After about 5 minutes, check that the Pending Dataset has been applied at the Leader. This can also be checked at other devices on the network: these should have applied the new Dataset too, at approximately the same time as the Leader has done this.
+6. After about 5 minutes, check that the Pending Operational Dataset has been applied at the Leader. This can also be checked at other devices on the network: these should have applied the new Dataset too, at approximately the same time as the Leader has done this.
 
    ```bash
    > dataset active
@@ -202,7 +219,7 @@ directly on the Leader using the CLI - so without using a Commissioner.
    Done
    ```
 
-   This shows that the Active Dataset has now been updated to use channel 12. And the Pending Dataset is no longer present, as can be seen by this command:
+   This shows that the Active Operational Dataset has now been updated to use channel 12. And the Pending Operational Dataset is no longer present, as can be seen by this command:
 
    ```bash
    > dataset pending
@@ -427,8 +444,8 @@ Initialize operational dataset buffer. Use `new` to initialize with randomly sel
 Done
 ```
 
-Use `active` or `pending` to initialize the dataset buffer with a copy of the current Active Dataset or
-Pending Dataset, respectively:
+Use `active` or `pending` to initialize the dataset buffer with a copy of the current Active Operational Dataset or
+Pending Operational Dataset, respectively:
 
 ```bash
 > dataset init active
