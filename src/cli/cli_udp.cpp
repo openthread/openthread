@@ -77,6 +77,7 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * @par
  * Assigns an IPv6 address and a port to an open socket, which binds the socket for communication.
  * Assigning the IPv6 address and port is referred to as naming the socket.
+ * @sa otUdpBind
  */
 template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
@@ -121,8 +122,8 @@ exit:
  * - `ip`: IP address of the peer
  * - `port`: UDP port number of the peer
  * The address can be an IPv4 address, which gets synthesized to an IPv6 address
- * using the preferred NAT64 prefix from the network data.
- * @note The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
+ * using the preferred NAT64 prefix from the network data. The command returns
+ * `InvalidState` when the preferred NAT64 prefix is unavailable.
  * @par api_copy
  * #otUdpConnect
  */
@@ -155,7 +156,7 @@ exit:
  * udp close
  * Done
  * @endcode
- * @api_copy
+ * @par api_copy
  * #otUdpClose
  */
 template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
@@ -171,7 +172,7 @@ template <> otError UdpExample::Process<Cmd("close")>(Arg aArgs[])
  * udp open
  * Done
  * @endcode
- * @api_copy
+ * @par api_copy
  * #otUdpOpen
  */
 template <> otError UdpExample::Process<Cmd("open")>(Arg aArgs[])
@@ -268,10 +269,33 @@ template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli udp linksecurity(Status)
+     * @code
+     * udp linksecurity
+     * Enabled
+     * Done
+     * @endcode
+     * @par
+     * Indicates whether link security is enabled or disabled.
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
+    /**
+     * @cli udp linksecurity(Enable,Disable)
+     * @code
+     * udp linksecurity enable
+     * Done
+     * @endcode
+     * @code
+     * udp linksecurity disable
+     * Done
+     * @endcode
+     * @par
+     * Enables or disables link security.
+     */
     else
     {
         error = Interpreter::ParseEnableOrDisable(aArgs[0], mLinkSecurityEnabled);
