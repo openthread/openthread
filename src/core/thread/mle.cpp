@@ -1378,8 +1378,7 @@ Error Mle::DetermineParentRequestType(ParentRequestType &aType) const
         // During reattach to the same partition all the Parent
         // Request are sent to Routers and REEDs.
 
-        if ((mAttachMode != kSamePartition) && (mAttachMode != kSamePartitionRetry) &&
-            (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
+        if ((mAttachMode != kSamePartition) && (mParentRequestCounter <= kFirstAttachCycleNumParentRequestToRouters))
         {
             aType = kToRouters;
         }
@@ -1621,10 +1620,6 @@ uint32_t Mle::Reattach(void)
         break;
 
     case kSamePartition:
-        Attach(kSamePartitionRetry);
-        break;
-
-    case kSamePartitionRetry:
     case kDowngradeToReed:
         Attach(kAnyPartition);
         break;
@@ -3224,7 +3219,6 @@ void Mle::HandleParentResponse(RxInfo &aRxInfo)
             break;
 
         case kSamePartition:
-        case kSamePartitionRetry:
             VerifyOrExit(isPartitionIdSame && isIdSequenceGreater);
             break;
 
@@ -4263,20 +4257,18 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
     static const char *const kAttachModeStrings[] = {
-        "AnyPartition",       // (0) kAnyPartition
-        "SamePartition",      // (1) kSamePartition
-        "SamePartitionRetry", // (2) kSamePartitionRetry
-        "BetterPartition",    // (3) kBetterPartition
-        "DowngradeToReed",    // (4) kDowngradeToReed
-        "BetterParent",       // (5) kBetterParent
+        "AnyPartition",    // (0) kAnyPartition
+        "SamePartition",   // (1) kSamePartition
+        "BetterPartition", // (2) kBetterPartition
+        "DowngradeToReed", // (3) kDowngradeToReed
+        "BetterParent",    // (4) kBetterParent
     };
 
     static_assert(kAnyPartition == 0, "kAnyPartition value is incorrect");
     static_assert(kSamePartition == 1, "kSamePartition value is incorrect");
-    static_assert(kSamePartitionRetry == 2, "kSamePartitionRetry value is incorrect");
-    static_assert(kBetterPartition == 3, "kBetterPartition value is incorrect");
-    static_assert(kDowngradeToReed == 4, "kDowngradeToReed value is incorrect");
-    static_assert(kBetterParent == 5, "kBetterParent value is incorrect");
+    static_assert(kBetterPartition == 2, "kBetterPartition value is incorrect");
+    static_assert(kDowngradeToReed == 3, "kDowngradeToReed value is incorrect");
+    static_assert(kBetterParent == 4, "kBetterParent value is incorrect");
 
     return kAttachModeStrings[aMode];
 }

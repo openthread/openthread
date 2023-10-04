@@ -813,12 +813,11 @@ private:
 
     enum AttachMode : uint8_t
     {
-        kAnyPartition,       // Attach to any Thread partition.
-        kSamePartition,      // Attach to the same Thread partition (attempt 1 when losing connectivity).
-        kSamePartitionRetry, // Attach to the same Thread partition (attempt 2 when losing connectivity).
-        kBetterPartition,    // Attach to a better (i.e. higher weight/partition id) Thread partition.
-        kDowngradeToReed,    // Attach to the same Thread partition during downgrade process.
-        kBetterParent,       // Attach to a better parent.
+        kAnyPartition,    // Attach to any Thread partition.
+        kSamePartition,   // Attach to the same Thread partition (when losing connectivity).
+        kBetterPartition, // Attach to a better (i.e. higher weight/partition id) Thread partition.
+        kDowngradeToReed, // Attach to the same Thread partition during downgrade process.
+        kBetterParent,    // Attach to a better parent.
     };
 
     enum AttachState : uint8_t
