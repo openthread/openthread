@@ -1252,7 +1252,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
     addr6.sin6_family   = 0;
     netmask.sin6_family = 0;
     // Skip processing RTM_NEWADDR or RTM_NEWMADDR after interface disabled
-    if (false == otIp6IsEnabled(aInstance))
+    if (!otIp6IsEnabled(aInstance))
     {
         if ((rtm->rtm_type == RTM_NEWADDR) || (rtm->rtm_type == RTM_NEWMADDR))
         {
