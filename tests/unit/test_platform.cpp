@@ -223,6 +223,8 @@ OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *, uint16_t) {}
 
 OT_TOOL_WEAK void otPlatReset(otInstance *) {}
 
+OT_TOOL_WEAK otError otPlatResetToBootloader(otInstance *) { return OT_ERROR_NOT_CAPABLE; }
+
 OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *) { return OT_PLAT_RESET_REASON_POWER_ON; }
 
 OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...) {}

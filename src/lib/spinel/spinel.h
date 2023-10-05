@@ -897,8 +897,9 @@ enum
 
 enum
 {
-    SPINEL_RESET_PLATFORM = 1,
-    SPINEL_RESET_STACK    = 2,
+    SPINEL_RESET_PLATFORM   = 1,
+    SPINEL_RESET_STACK      = 2,
+    SPINEL_RESET_BOOTLOADER = 3,
 };
 
 enum
@@ -928,8 +929,10 @@ enum
      * `PROP_LAST_STATUS` has been set to `STATUS_RESET_SOFTWARE`.
      *
      * The optional command payload specifies the reset type, can be
-     * `SPINEL_RESET_PLATFORM` or `SPINEL_RESET_STACK`. Defaults to stack
-     * reset if unspecified.
+     * `SPINEL_RESET_PLATFORM`, `SPINEL_RESET_STACK`, or
+     * `SPINEL_RESET_BOOTLOADER`.
+     *
+     * Defaults to stack reset if unspecified.
      *
      * If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
      * instead with the value set to the generated status code for the error.
@@ -1284,6 +1287,7 @@ enum
     SPINEL_CAP_RCP__BEGIN               = 64,
     SPINEL_CAP_RCP_API_VERSION          = (SPINEL_CAP_RCP__BEGIN + 0),
     SPINEL_CAP_RCP_MIN_HOST_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 1),
+    SPINEL_CAP_RCP_RESET_TO_BOOTLOADER  = (SPINEL_CAP_RCP__BEGIN + 2),
     SPINEL_CAP_RCP__END                 = 80,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
