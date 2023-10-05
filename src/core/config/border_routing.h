@@ -127,6 +127,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+ *
+ * Define to 1 so for the routing manager to include the Flags Extension Option with Stub Router flag in the emitted
+ * Router Advertisement messages from this Border Router.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
  *
  * Specifies whether to support handling platform generated ND messages.

@@ -593,6 +593,7 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // RA message max length is derived to accommodate:
     //
     // - The RA header.
+    // - One RA Flags Extensions Option (with stub router flag).
     // - One PIO for current local on-link prefix.
     // - At most `kMaxOldPrefixes` for old deprecating on-link prefixes.
     // - At most twice `kMaxOnMeshPrefixes` RIO for on-mesh prefixes.
@@ -600,8 +601,8 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     //   previous prefixes while adding new ones.
 
     static constexpr uint16_t kMaxRaLength =
-        sizeof(Ip6::Nd::RouterAdvertMessage::Header) + sizeof(Ip6::Nd::PrefixInfoOption) +
-        sizeof(Ip6::Nd::PrefixInfoOption) * OnLinkPrefixManager::kMaxOldPrefixes +
+        sizeof(Ip6::Nd::RouterAdvertMessage::Header) + sizeof(Ip6::Nd::RaFlagsExtOption) +
+        sizeof(Ip6::Nd::PrefixInfoOption) + sizeof(Ip6::Nd::PrefixInfoOption) * OnLinkPrefixManager::kMaxOldPrefixes +
         2 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
 
     uint8_t                         buffer[kMaxRaLength];
@@ -610,6 +611,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     NetworkData::OnMeshPrefixConfig prefixConfig;
 
     LogInfo("Preparing RA");
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+    SuccessOrAssert(raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
+    LogInfo("- FlagsExt - StubRouter:1");
+#endif
 
     // Append PIO for local on-link prefix if is either being
     // advertised or deprecated and for old prefix if is being

@@ -269,6 +269,25 @@ exit:
     return error;
 }
 
+Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
+{
+    Error             error = kErrorNone;
+    RaFlagsExtOption *flagsOption;
+
+    flagsOption = static_cast<RaFlagsExtOption *>(AppendOption(sizeof(RaFlagsExtOption)));
+    VerifyOrExit(flagsOption != nullptr, error = kErrorNoBufs);
+
+    flagsOption->Init();
+
+    if (aStubRouterFlag)
+    {
+        flagsOption->SetStubRouterFlag();
+    }
+
+exit:
+    return error;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // RouterSolicitMessage
 
