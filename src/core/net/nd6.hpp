@@ -770,7 +770,7 @@ public:
      * @retval kErrorNoBufs  No more space in the buffer to append the option.
      *
      */
-    Error AppendFlagsExtensionOption(bool aStubsRouterFlag);
+    Error AppendFlagsExtensionOption(bool aStubRouterFlag);
 
     /**
      * Indicates whether or not the RA message contains any options.

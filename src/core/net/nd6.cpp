@@ -269,7 +269,7 @@ exit:
     return error;
 }
 
-Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubsRouterFlag)
+Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
 {
     Error             error = kErrorNone;
     RaFlagsExtOption *flagsOption;
@@ -279,7 +279,7 @@ Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubsRouterFlag)
 
     flagsOption->Init();
 
-    if (aStubsRouterFlag)
+    if (aStubRouterFlag)
     {
         flagsOption->SetStubRouterFlag();
     }
