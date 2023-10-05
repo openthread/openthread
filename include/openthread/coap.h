@@ -878,9 +878,9 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
  *                              2. mAckRandomFactorNumerator / mAckRandomFactorDenominator must not be below 1.0.
  *                              3. The calculated exchange life time must not overflow uint32_t.
  *
- * @retval OT_ERROR_INVALID_ARGS    @p aTxParameters is invalid.
  * @retval OT_ERROR_NONE            Successfully sent CoAP message.
  * @retval OT_ERROR_NO_BUFS         Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_ARGS    Invalid arguments are given.
  *
  */
 otError otCoapSendRequestWithParameters(otInstance               *aInstance,
@@ -909,8 +909,9 @@ otError otCoapSendRequestWithParameters(otInstance               *aInstance,
  * @param[in]  aTransmitHook    A pointer to a hook function for outgoing block-wise transfer.
  * @param[in]  aReceiveHook     A pointer to a hook function for incoming block-wise transfer.
  *
- * @retval OT_ERROR_NONE    Successfully sent CoAP message.
- * @retval OT_ERROR_NO_BUFS Failed to allocate retransmission data.
+ * @retval OT_ERROR_NONE          Successfully sent CoAP message.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate retransmission data.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments are given.
  *
  */
 otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aInstance,
@@ -1059,8 +1060,9 @@ void otCoapSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandle
  * @param[in]  aMessageInfo     A pointer to the message info associated with @p aMessage.
  * @param[in]  aTxParameters    A pointer to transmission parameters for this response. Use NULL for defaults.
  *
- * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
- * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
+ * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments are given.
  *
  */
 otError otCoapSendResponseWithParameters(otInstance               *aInstance,
@@ -1081,8 +1083,9 @@ otError otCoapSendResponseWithParameters(otInstance               *aInstance,
  * @param[in]  aContext         A pointer to arbitrary context information. May be NULL if not used.
  * @param[in]  aTransmitHook    A pointer to a hook function for outgoing block-wise transfer.
  *
- * @retval OT_ERROR_NONE     Successfully enqueued the CoAP response message.
- * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to send the CoAP response.
+ * @retval OT_ERROR_NONE          Successfully enqueued the CoAP response message.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffers available to send the CoAP response.
+ * @retval OT_ERROR_INVALID_ARGS  Invalid arguments are given.
  *
  */
 otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aInstance,

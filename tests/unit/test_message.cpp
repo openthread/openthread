@@ -50,6 +50,7 @@ void TestMessage(void)
     MessagePool *messagePool;
     Message     *message;
     Message     *message2;
+    Message     *messageCopy;
     uint8_t      writeBuffer[kMaxSize];
     uint8_t      readBuffer[kMaxSize];
     uint8_t      zeroBuffer[kMaxSize];
@@ -66,6 +67,12 @@ void TestMessage(void)
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
     VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
+    message->SetLinkSecurityEnabled(Message::kWithLinkSecurity);
+    message->SetPriority(Message::Priority::kPriorityNet);
+    message->SetType(Message::Type::kType6lowpan);
+    message->SetSubType(Message::SubType::kSubTypeMleChildIdRequest);
+    message->SetLoopbackToHostAllowed(true);
+    message->SetOrigin(Message::kOriginHostUntrusted);
     SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
@@ -73,6 +80,26 @@ void TestMessage(void)
     VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize));
     VerifyOrQuit(message->Compare(0, readBuffer));
     VerifyOrQuit(message->GetLength() == kMaxSize);
+
+    // Verify `Clone()` behavior
+    message->SetOffset(15);
+    messageCopy = message->Clone();
+    VerifyOrQuit(messageCopy->GetOffset() == message->GetOffset());
+    SuccessOrQuit(messageCopy->Read(0, readBuffer, kMaxSize));
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0);
+    VerifyOrQuit(messageCopy->CompareBytes(0, readBuffer, kMaxSize));
+    VerifyOrQuit(messageCopy->Compare(0, readBuffer));
+    VerifyOrQuit(messageCopy->GetLength() == kMaxSize);
+    VerifyOrQuit(messageCopy->GetType() == message->GetType());
+    VerifyOrQuit(messageCopy->GetSubType() == message->GetSubType());
+    VerifyOrQuit(messageCopy->IsLinkSecurityEnabled() == message->IsLinkSecurityEnabled());
+    VerifyOrQuit(messageCopy->GetPriority() == message->GetPriority());
+    VerifyOrQuit(messageCopy->IsLoopbackToHostAllowed() == message->IsLoopbackToHostAllowed());
+    VerifyOrQuit(messageCopy->GetOrigin() == message->GetOrigin());
+    VerifyOrQuit(messageCopy->Compare(0, readBuffer));
+    message->SetOffset(0);
+
+    messageCopy->Free();
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
