@@ -289,9 +289,10 @@ exit:
 
 void Local::HandleTimeTick(void)
 {
-    // Delay registration when `GetRouterSelectionJitterTimeout()` is non-zero,
-    // which indicates device may soon switch its role (e.g., REED to router).
-    VerifyOrExit(Get<Mle::MleRouter>().GetRouterSelectionJitterTimeout() == 0);
+    // Delay registration while router role transition is pending
+    // (i.e., device may soon switch from REED to router role).
+
+    VerifyOrExit(!Get<Mle::MleRouter>().IsRouterRoleTransitionPending());
 
     if (mRegistrationTimeout > 0)
     {

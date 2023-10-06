@@ -82,8 +82,6 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionId(0)
     , mPreviousPartitionRouterIdSequence(0)
     , mPreviousPartitionIdTimeout(0)
-    , mRouterSelectionJitter(kRouterSelectionJitter)
-    , mRouterSelectionJitterTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
     , mParentPriority(kParentPriorityUnspecified)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -193,16 +191,13 @@ void MleRouter::HandleSecurityPolicyChanged(void)
 
     VerifyOrExit(IsRouterOrLeader() && !IsRouterEligible());
 
-    // `mRouterSelectionJitterTimeout` is non-zero if we are already
-    // waiting to downgrade.
+    VerifyOrExit(!mRouterRoleTransition.IsPending());
 
-    VerifyOrExit(mRouterSelectionJitterTimeout == 0);
-
-    mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
+    mRouterRoleTransition.StartTimeout();
 
     if (IsLeader())
     {
-        mRouterSelectionJitterTimeout += kLeaderDowngradeExtraDelay;
+        mRouterRoleTransition.IncreaseTimeout(kLeaderDowngradeExtraDelay);
     }
 
 exit:
@@ -229,7 +224,7 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     LogInfo("Attempt to become router");
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
-    mRouterSelectionJitterTimeout = 0;
+    mRouterRoleTransition.StopTimeout();
 
     switch (mRole)
     {
@@ -329,7 +324,7 @@ void MleRouter::HandleChildStart(AttachMode aMode)
 {
     mAddressSolicitRejected = false;
 
-    mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
+    mRouterRoleTransition.StartTimeout();
 
     StopLeader();
     Get<TimeTicker>().RegisterReceiver(TimeTicker::kMleRouter);
@@ -1072,18 +1067,6 @@ exit:
     return error;
 }
 
-Error MleRouter::SetRouterSelectionJitter(uint8_t aRouterJitter)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aRouterJitter > 0, error = kErrorInvalidArgs);
-
-    mRouterSelectionJitter = aRouterJitter;
-
-exit:
-    return error;
-}
-
 Error MleRouter::ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo)
 {
     // This method processes `aRouteTlv` read from an MLE message.
@@ -1292,9 +1275,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
                 ExitNow(error = kErrorDetached);
             }
 
-            if ((mRouterSelectionJitterTimeout == 0) && (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
+            if (!mRouterRoleTransition.IsPending() && (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold))
             {
-                mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
+                mRouterRoleTransition.StartTimeout();
             }
 
             mRouterTable.UpdateRoutesOnFed(routeTlv, routerId);
@@ -1323,12 +1306,9 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Update routers as a router or leader.
 
-    if (IsRouter())
+    if (IsRouter() && ShouldDowngrade(routerId, routeTlv))
     {
-        if (ShouldDowngrade(routerId, routeTlv))
-        {
-            mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
-        }
+        mRouterRoleTransition.StartTimeout();
     }
 
     router = mRouterTable.FindRouterById(routerId);
@@ -1514,7 +1494,7 @@ exit:
 
 void MleRouter::HandleTimeTick(void)
 {
-    bool routerStateUpdate = false;
+    bool roleTransitionTimeoutExpired = false;
 
     VerifyOrExit(IsFullThreadDevice(), Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMleRouter));
 
@@ -1528,15 +1508,7 @@ void MleRouter::HandleTimeTick(void)
         mPreviousPartitionIdTimeout--;
     }
 
-    if (mRouterSelectionJitterTimeout > 0)
-    {
-        mRouterSelectionJitterTimeout--;
-
-        if (mRouterSelectionJitterTimeout == 0)
-        {
-            routerStateUpdate = true;
-        }
-    }
+    roleTransitionTimeoutExpired = mRouterRoleTransition.HandleTimeTick();
 
     switch (mRole)
     {
@@ -1550,11 +1522,10 @@ void MleRouter::HandleTimeTick(void)
         break;
 
     case kRoleChild:
-        if (routerStateUpdate)
+        if (roleTransitionTimeoutExpired)
         {
             if (mRouterTable.GetActiveRouterCount() < mRouterUpgradeThreshold && HasNeighborWithGoodLinkQuality())
             {
-                // upgrade to Router
                 IgnoreError(BecomeRouter(ThreadStatusTlv::kTooFewRouters));
             }
             else
@@ -1576,7 +1547,6 @@ void MleRouter::HandleTimeTick(void)
         OT_FALL_THROUGH;
 
     case kRoleRouter:
-        // verify path to leader
         LogDebg("network id timeout = %lu", ToUlong(mRouterTable.GetLeaderAge()));
 
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
@@ -1585,7 +1555,7 @@ void MleRouter::HandleTimeTick(void)
             Attach(kSamePartition);
         }
 
-        if (routerStateUpdate && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
+        if (roleTransitionTimeoutExpired && mRouterTable.GetActiveRouterCount() > mRouterDowngradeThreshold)
         {
             LogNote("Downgrade to REED");
             Attach(kDowngradeToReed);
@@ -1594,7 +1564,7 @@ void MleRouter::HandleTimeTick(void)
         OT_FALL_THROUGH;
 
     case kRoleLeader:
-        if (routerStateUpdate && !IsRouterEligible())
+        if (roleTransitionTimeoutExpired && !IsRouterEligible())
         {
             LogInfo("No longer router eligible");
             IgnoreError(BecomeDetached());
@@ -3573,7 +3543,7 @@ bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
     static constexpr uint8_t kMaxDelay = 10;
 
     return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
-           ((GetRouterSelectionJitterTimeout() != 0 && GetRouterSelectionJitterTimeout() <= kMaxDelay) ||
+           ((mRouterRoleTransition.IsPending() && mRouterRoleTransition.GetTimeout() <= kMaxDelay) ||
             mAddressSolicitPending);
 }
 
@@ -3826,10 +3796,7 @@ bool MleRouter::ShouldDowngrade(uint8_t aNeighborId, const RouteTlv &aRouteTlv) 
     VerifyOrExit(IsRouter());
     VerifyOrExit(mRouterTable.IsAllocated(aNeighborId));
 
-    // `mRouterSelectionJitterTimeout` is non-zero if we are already
-    // waiting to downgrade.
-
-    VerifyOrExit(mRouterSelectionJitterTimeout == 0);
+    VerifyOrExit(!mRouterRoleTransition.IsPending());
 
     VerifyOrExit(activeRouterCount > mRouterDowngradeThreshold);
 
@@ -4036,6 +4003,32 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+//----------------------------------------------------------------------------------------------------------------------
+// RouterRoleTransition
+
+MleRouter::RouterRoleTransition::RouterRoleTransition(void)
+    : mTimeout(0)
+    , mJitter(kRouterSelectionJitter)
+{
+}
+
+void MleRouter::RouterRoleTransition::StartTimeout(void)
+{
+    mTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mJitter);
+}
+
+bool MleRouter::RouterRoleTransition::HandleTimeTick(void)
+{
+    bool expired = false;
+
+    VerifyOrExit(mTimeout > 0);
+    mTimeout--;
+    expired = (mTimeout == 0);
+
+exit:
+    return expired;
+}
 
 } // namespace Mle
 } // namespace ot
