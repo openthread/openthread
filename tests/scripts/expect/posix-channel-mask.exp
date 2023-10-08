@@ -61,4 +61,38 @@ send "channel preferred\n"
 expect "0x1fff800"
 expect_line "Done"
 
+send "region US\n"
+expect_line "Done"
+
+send "channel supported\n"
+expect "0x7fff800"
+expect_line "Done"
+
+send "dataset init new\n"
+expect_line "Done"
+send "dataset channel 26\n"
+expect_line "Done"
+send "dataset commit active\n"
+expect_line "Done"
+
+attach "leader"
+
+send "channel\n"
+expect "26"
+expect_line "Done"
+
+send "region WW\n"
+expect_line "Done"
+
+wait_for "state" "disabled"
+expect_line "Done"
+
+send "channel supported\n"
+expect "0x3fff800"
+expect_line "Done"
+
+send "channel\n"
+expect "26"
+expect_line "Done"
+
 dispose_node 1

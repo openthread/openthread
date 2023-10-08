@@ -315,7 +315,7 @@ public:
      * @returns The supported channel mask.
      *
      */
-    ChannelMask GetSupportedChannelMask(void) const;
+    const ChannelMask &GetSupportedChannelMask(void) const { return mSupportedChannelMask; }
 
     /**
      * Sets the supported channel mask
@@ -720,6 +720,20 @@ public:
     bool IsRadioFilterEnabled(void) const { return mLinks.GetSubMac().IsRadioFilterEnabled(); }
 #endif
 
+    /**
+     * Sets the region code.
+     *
+     * The radio region format is the 2-bytes ascii representation of the ISO 3166 alpha-2 code.
+     *
+     * @param[in]  aRegionCode  The radio region.
+     *
+     * @retval  kErrorFailed          Other platform specific errors.
+     * @retval  kErrorNone            Successfully set region code.
+     * @retval  kErrorNotImplemented  The feature is not implemented.
+     *
+     */
+    Error SetRegion(uint16_t aRegionCode);
+
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
@@ -833,6 +847,7 @@ private:
     PanId       mPanId;
     uint8_t     mPanChannel;
     uint8_t     mRadioChannel;
+    ChannelMask mSupportedChannelMask;
     uint8_t     mScanChannel;
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;

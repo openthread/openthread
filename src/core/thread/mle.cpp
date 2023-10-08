@@ -1202,6 +1202,18 @@ void Mle::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
+    if (aEvents.Contains(kEventSupportedChannelMaskChanged))
+    {
+        Mac::ChannelMask channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
+
+        if (!channelMask.ContainsChannel(Get<Mac::Mac>().GetPanChannel()) && (mRole != kRoleDisabled))
+        {
+            LogCrit("Channel %u is not in the supported channel mask %s, detach the network gracefully!",
+                    Get<Mac::Mac>().GetPanChannel(), channelMask.ToString().AsCString());
+            IgnoreError(DetachGracefully(nullptr, nullptr));
+        }
+    }
+
 exit:
     return;
 }

@@ -679,7 +679,7 @@ public:
      * @returns The radio supported channel mask.
      *
      */
-    uint32_t GetSupportedChannelMask(void) const;
+    uint32_t GetSupportedChannelMask(void);
 
     /**
      * Gets the radio preferred channel mask that the device prefers to form on.
@@ -733,6 +733,20 @@ public:
                 ((kChannelMin == aCslChannel) || ((kChannelMin < aCslChannel) && (aCslChannel <= kChannelMax))));
     }
 
+    /**
+     * Sets the region code.
+     *
+     * The radio region format is the 2-bytes ascii representation of the ISO 3166 alpha-2 code.
+     *
+     * @param[in]  aRegionCode  The radio region.
+     *
+     * @retval  kErrorFailed          Other platform specific errors.
+     * @retval  kErrorNone            Successfully set region code.
+     * @retval  kErrorNotImplemented  The feature is not implemented.
+     *
+     */
+    Error SetRegion(uint16_t aRegionCode) { return otPlatRadioSetRegion(GetInstancePtr(), aRegionCode); }
+
 private:
     otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }
 
@@ -752,10 +766,7 @@ inline void Radio::GetIeeeEui64(Mac::ExtAddress &aIeeeEui64)
     otPlatRadioGetIeeeEui64(GetInstancePtr(), aIeeeEui64.m8);
 }
 
-inline uint32_t Radio::GetSupportedChannelMask(void) const
-{
-    return otPlatRadioGetSupportedChannelMask(GetInstancePtr());
-}
+inline uint32_t Radio::GetSupportedChannelMask(void) { return otPlatRadioGetSupportedChannelMask(GetInstancePtr()); }
 
 inline uint32_t Radio::GetPreferredChannelMask(void) { return otPlatRadioGetPreferredChannelMask(GetInstancePtr()); }
 

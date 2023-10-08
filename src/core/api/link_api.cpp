@@ -460,3 +460,8 @@ otError otLinkSendEmptyData(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshForwarder>().SendEmptyMessage();
 }
 #endif
+
+otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+{
+    return AsCoreType(aInstance).Get<Mac::Mac>().SetRegion(aRegionCode);
+}

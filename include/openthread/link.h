@@ -1183,6 +1183,21 @@ bool otLinkIsCslSupported(otInstance *aInstance);
 otError otLinkSendEmptyData(otInstance *aInstance);
 
 /**
+ * Sets the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the ISO 3166 alpha-2 code.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aRegionCode  The radio region.
+ *
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully set region code.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
+ *
+ */
+otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode);
+
+/**
  * @}
  *
  */
