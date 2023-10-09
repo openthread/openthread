@@ -188,6 +188,61 @@ exit:
     return error;
 }
 
+/**
+ * @cli udp send
+ * @code
+ * udp send hello
+ * Done
+ * @endcode
+ * @code
+ * udp send -t hello
+ * Done
+ * @endcode
+ * @code
+ * udp send -x 68656c6c6f
+ * Done
+ * @endcode
+ * @code
+ * udp send -s 800
+ * Done
+ * @endcode
+ * @code
+ * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 hello
+ * Done
+ * @endcode
+ * @code
+ * udp send 172.17.0.1 1234
+ * Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+ * Done
+ * @endcode
+ * @code
+ * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -t hello
+ * Done
+ * @endcode
+ * @code
+ * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -x 68656c6c6f
+ * Done
+ * @endcode
+ * @code
+ * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -s 800
+ * Done
+ * @endcode
+ * @cparam udp send [@ca{ip} @ca{port}] [@ca{type}] @ca{value}
+ * Parameter definitions:
+ * - `ip`: Destination address. This address can be either an IPv4 or IPv6 address,
+ *   An IPv4 address gets synthesized to an IPv6 address with the preferred
+ *   NAT64 prefix from the network data. (If the preferred NAT64 prefix
+ *   is unavailable, the command returns `InvalidState`).
+ * - `port`: UDP destination port
+ * - `type`/`value` combinations:
+ *   - `-t`: The payload in the `value` parameter is treated as text. If no `type` value
+ *   is entered, the payload in the `value` parameter is also treated as text.
+ *   - `-s`: Auto-generated payload with the specified length is given  in the `value` parameter.
+ *   - `-x`: Binary data in hexadecimal representation in given in the `value` parameter.
+ * @par
+ * Sends a UDP message.
+ * @sa otUdpSend
+ */
 template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 {
     otError           error   = OT_ERROR_NONE;
@@ -204,61 +259,6 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
     // send <ip> <port> <text>
     // send <ip> <port> <type> <value>
 
-    /**
-     * @cli udp send
-     * @code
-     * udp send hello
-     * Done
-     * @endcode
-     * @code
-     * udp send -t hello
-     * Done
-     * @endcode
-     * @code
-     * udp send -x 68656c6c6f
-     * Done
-     * @endcode
-     * @code
-     * udp send -s 800
-     * Done
-     * @endcode
-     * @code
-     * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 hello
-     * Done
-     * @endcode
-     * @code
-     * udp send 172.17.0.1 1234
-     * Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
-     * Done
-     * @endcode
-     * @code
-     * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -t hello
-     * Done
-     * @endcode
-     * @code
-     * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -x 68656c6c6f
-     * Done
-     * @endcode
-     * @code
-     * udp send fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234 -s 800
-     * Done
-     * @endcode
-     * @cparam udp send [@ca{ip} @ca{port}] [@ca{type}] @ca{value}
-     * Parameter definitions:
-     * - `ip`: Destination address. This address can be either an IPv4 or IPv6 address,
-     *   An IPv4 address gets synthesized to an IPv6 address with the preferred
-     *   NAT64 prefix from the network data.
-     *   @note The command returns `InvalidState` if the preferred NAT64 prefix is unavailable.
-     * - `port`: UDP destination port
-     * - `type`/`value` combinations:
-     *   - `-t`: The payload in the `value` parameter is treated as text. If no `type` value
-     *   is entered, the payload in the `value` parameter is also treated as text.
-     *   - `-s`: Auto-generated payload with the specified length is given  in the `value` parameter.
-     *   - `-x`: Binary data in hexadecimal representation in given in the `value` parameter.
-     * @par
-     * Sends a UDP message.
-     * @sa otUdpSend
-     */
     if (!aArgs[2].IsEmpty())
     {
         bool nat64SynthesizedAddress;
