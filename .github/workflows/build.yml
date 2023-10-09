@@ -196,7 +196,7 @@ jobs:
     - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.2.1
+        ref: v3.5.0
         path: third_party/mbedtls/repo
     - name: Build
       run: |
