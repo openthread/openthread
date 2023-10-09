@@ -99,7 +99,7 @@ void TestIphcVector::GetUncompressedStream(Message &aMessage)
 }
 
 /**
- * This function initializes Thread Interface.
+ * Initializes Thread Interface.
  *
  */
 static void Init(void)
@@ -134,7 +134,7 @@ static void Init(void)
 }
 
 /**
- * This function performs compression or/and decompression based on the given test vector.
+ * Performs compression or/and decompression based on the given test vector.
  *
  * @note Performing decompression and compression on the same LOWPAN_IPHC frame may give different result.
  *       This situation may occur when sender does not use the best possible compression,
@@ -277,7 +277,7 @@ static const uint8_t sTestPayloadDefault[] = {0x80, 0x00, 0x01, 0x02, 0x03, 0x04
 
 static void TestFullyCompressableLongAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 addresses using long MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 addresses using long MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
@@ -302,7 +302,7 @@ static void TestFullyCompressableLongAddresses(void)
 
 static void TestFullyCompressableShortAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 addresses using short MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 addresses using short MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -327,7 +327,7 @@ static void TestFullyCompressableShortAddresses(void)
 
 static void TestFullyCompressableShortLongAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 addresses using short and long MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 addresses using short and long MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -352,7 +352,7 @@ static void TestFullyCompressableShortLongAddresses(void)
 
 static void TestFullyCompressableLongShortAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 addresses using long and short MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 addresses using long and short MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
@@ -505,7 +505,7 @@ static void TestSource16bitDestination16bitAddresses(void)
 
 static void TestSourceCompressedDestination16bitAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 source and destination 16-bit using long MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 source and destination 16-bit using long MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
@@ -530,7 +530,7 @@ static void TestSourceCompressedDestination16bitAddresses(void)
 
 static void TestSourceCompressedDestination128bitAddresses(void)
 {
-    TestIphcVector testVector("Fully compressable IPv6 source and destination inline using long MAC addresses");
+    TestIphcVector testVector("Fully compressible IPv6 source and destination inline using long MAC addresses");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
@@ -734,7 +734,7 @@ static void TestStatefulSource16bitDestination16bitContext0(void)
 
 static void TestStatefulCompressableLongAddressesContext0(void)
 {
-    TestIphcVector testVector("Stateful compression compressable long addresses, context 0");
+    TestIphcVector testVector("Stateful compression compressible long addresses, context 0");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);
@@ -759,7 +759,7 @@ static void TestStatefulCompressableLongAddressesContext0(void)
 
 static void TestStatefulCompressableShortAddressesContext0(void)
 {
-    TestIphcVector testVector("Stateful compression compressable short addresses, context 0");
+    TestIphcVector testVector("Stateful compression compressible short addresses, context 0");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultShort);
@@ -784,7 +784,7 @@ static void TestStatefulCompressableShortAddressesContext0(void)
 
 static void TestStatefulCompressableLongShortAddressesContext0(void)
 {
-    TestIphcVector testVector("Stateful compression compressable long and short addresses, context 0");
+    TestIphcVector testVector("Stateful compression compressible long and short addresses, context 0");
 
     // Setup MAC addresses.
     testVector.SetMacSource(sTestMacSourceDefaultLong);

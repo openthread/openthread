@@ -38,8 +38,14 @@ readonly OT_SHA_NEW
 OT_SHA_OLD="$(git cat-file -p "${OT_SHA_NEW}" | grep 'parent ' | head -n1 | cut -d' ' -f2)"
 readonly OT_SHA_OLD
 
-OT_REPORT_FILE=/tmp/size_report
-readonly OT_REPORT_FILE
+OT_REPORT_FILE_TABLE="${OT_TMP_DIR}/report_table"
+readonly OT_REPORT_FILE_TABLE
+
+OT_REPORT_FILE_PR="${OT_TMP_DIR}/report_pr"
+readonly OT_REPORT_FILE_TABLE
+
+OT_REPORTER="${OT_SIZE_REPORTER-}"
+readonly OT_REPORTER
 
 setup_arm_gcc_7()
 {
@@ -66,19 +72,143 @@ setup()
     setup_ninja_build
 }
 
-markdown_init()
+nm_size()
 {
-    echo '|  name  |  branch  |  text  | data  | bss  | total |'
-    echo '| :----: | :------: | -----: | ----: | ---: | ----: |'
+    arm-none-eabi-nm --print-size --defined-only -C "$1" | cut -d' ' -f2- >nmsize_old
+    arm-none-eabi-nm --print-size --defined-only -C "$2" | cut -d' ' -f2- >nmsize_new
+    diff -Nuar nmsize_old nmsize_new || true
 }
 
-markdown_size()
+build_nrf52840()
+{
+    case "$1" in
+        ftd)
+            local ot_ftd=ON
+            local ot_mtd=OFF
+            local ot_rcp=ON
+            ;;
+        mtd)
+            local ot_ftd=OFF
+            local ot_mtd=ON
+            local ot_rcp=ON
+            ;;
+        br)
+            local ot_ftd=ON
+            local ot_mtd=OFF
+            local ot_rcp=OFF
+            ;;
+        *)
+            exit 128
+            ;;
+    esac
+
+    case "$2" in
+        new)
+            local sha=${OT_SHA_NEW}
+            ;;
+        old)
+            local sha=${OT_SHA_OLD}
+            ;;
+        *)
+            exit 128
+            ;;
+    esac
+
+    local folder="$1_$2"
+    local config_name="ot-core-config-check-size-$1.h"
+    local config_file="../examples/config/${config_name}"
+
+    mkdir -p "${OT_TMP_DIR}/${folder}"
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
+    rm -rf "${OT_TMP_DIR}/${folder}/openthread/*" # replace openthread submodule with latest commit
+    git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
+
+    if [ ! -e "${OT_TMP_DIR}/${folder}/openthread/examples/config/${config_name}" ]; then
+        # Check if the the config headers are not present, copy from
+        # the main sha.
+        case "$1" in
+            br)
+                rm -rf "${OT_TMP_DIR}/${folder}/openthread/*"
+                git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
+                ;;
+            *)
+                mkdir -p "${OT_TMP_DIR}/${folder}/openthread/examples/config"
+                cp "./examples/config/${config_name}" "${OT_TMP_DIR}/${folder}/openthread/examples/config"
+                ;;
+        esac
+    fi
+
+    local cur_dir
+
+    cur_dir=$(pwd)
+
+    cd "${OT_TMP_DIR}/${folder}"
+    OT_CMAKE_BUILD_DIR=build script/build nrf52840 UART_trans \
+        -DOT_APP_CLI=ON -DOT_APP_NCP=ON -DOT_APP_RCP=${ot_rcp} \
+        -DOT_FTD=${ot_ftd} -DOT_MTD=${ot_mtd} -DOT_RCP=${ot_rcp} \
+        -DBUILD_TESTING=OFF \
+        -DOT_PROJECT_CONFIG="${config_file}"
+
+    if [[ $1 == "br" ]]; then
+        mv ./build/bin/ot-cli-ftd ./build/bin/ot-cli-ftd-br
+        mv ./build/lib/libopenthread-ftd.a ./build/lib/libopenthread-ftd-br.a
+        mv ./build/lib/libopenthread-cli-ftd.a ./build/lib/libopenthread-cli-ftd-br.a
+    fi
+
+    cd "${cur_dir}"
+}
+
+generate_table_header()
+{
+    {
+        printf "+----------------------------+----------+----------+----------+----------+----------+\n"
+        printf "| name                       | branch   | text     | data     | bss      | total    |\n"
+        printf "+============================+==========+==========+==========+==========+==========+\n"
+    } >>"${OT_REPORT_FILE_TABLE}"
+
+    {
+        printf "# Size Report of **OpenThread**\n"
+        printf "Merging PR into main\n\n"
+        printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
+        printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
+    } >>"${OT_REPORT_FILE_PR}"
+
+    {
+        printf "\n<details><summary>Library files</summary>\n\n\n"
+        printf "|  name  |  branch  |  text  | data  | bss  | total |\n"
+        printf "| :----: | :------: | -----: | ----: | ---: | ----: |\n"
+    } >>"${OT_REPORT_FILE_PR}_libs"
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" init OpenThread
+    fi
+
+}
+
+generate_size_diff()
 {
     local name
-    name=$(basename "$1")
+    local old_file
+    local new_file
 
-    read -r -a size_old <<<"$(size "$1" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
-    read -r -a size_new <<<"$(size "$2" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    old_file="$1"
+    new_file="$2"
+
+    name=$(basename "${old_file}")
+
+    case "${name}" in
+        lib*)
+            table_report_file="${OT_REPORT_FILE_TABLE}_libs"
+            pr_report_file="${OT_REPORT_FILE_PR}"_libs
+            ;;
+        *)
+            table_report_file="${OT_REPORT_FILE_TABLE}"
+            pr_report_file="${OT_REPORT_FILE_PR}"
+            ;;
+    esac
+
+    read -r -a size_old <<<"$(size "${old_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
+    read -r -a size_new <<<"$(size "${new_file}" | awk '{text+=$1} {bss+=$2} {data+=$3} {total+=$4} END {printf "%d %d %d %d", text, bss, data, total}')"
 
     local -a size_diff
 
@@ -89,168 +219,141 @@ markdown_size()
         fi
     done
 
-    echo "| ${name} | -${OT_SHA_OLD:0:7} | ${size_old[0]} | ${size_old[1]} | ${size_old[2]} | ${size_old[3]} |"
-    echo "|  | +${OT_SHA_NEW:0:7} | ${size_new[0]} | ${size_new[1]} | ${size_new[2]} | ${size_new[3]} |"
-    echo "|  | +/- | ${size_diff[0]} | ${size_diff[1]} | ${size_diff[2]} | ${size_diff[3]} |"
-}
+    # Generate table format report
 
-markdown()
-{
-    case "$1" in
-        init)
-            shift
-            markdown_init "$@" >"${OT_REPORT_FILE}"
-            ;;
-        size)
-            shift
-            markdown_size "$@" >>"${OT_REPORT_FILE}"
-            ;;
-        post)
-            mdv "${OT_REPORT_FILE}"
-            ;;
-    esac
-}
+    {
+        printf "| %-26s | %-8s " "${name}" "${OT_SHA_OLD:0:8}"
+        printf "| %8u | %8u | %8u | %8u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}"
+        printf "\n"
 
-nm_size()
-{
-    arm-none-eabi-nm --print-size --defined-only -C "$1" | cut -d' ' -f2- >nmsize_old
-    arm-none-eabi-nm --print-size --defined-only -C "$2" | cut -d' ' -f2- >nmsize_new
-    diff -Nuar nmsize_old nmsize_new || true
-}
+        printf "| %-26s | %-8s " "" "${OT_SHA_NEW:0:8}"
+        printf "| %8u | %8u | %8u | %8u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}"
+        printf "\n"
 
-size_nrf52840_version()
-{
-    local options=(
-        "-DOT_ANYCAST_LOCATOR=ON"
-        "-DOT_BORDER_AGENT=ON"
-        "-DOT_BORDER_ROUTER=ON"
-        "-DOT_CHANNEL_MANAGER=ON"
-        "-DOT_CHANNEL_MONITOR=ON"
-        "-DOT_COAP=ON"
-        "-DOT_COAPS=ON"
-        "-DOT_COMMISSIONER=ON"
-        "-DOT_DATASET_UPDATER=ON"
-        "-DOT_DHCP6_CLIENT=ON"
-        "-DOT_DHCP6_SERVER=ON"
-        "-DOT_DIAGNOSTIC=ON"
-        "-DOT_DNSSD_SERVER=ON"
-        "-DOT_DNS_CLIENT=ON"
-        "-DOT_ECDSA=ON"
-        "-DOT_FULL_LOGS=ON"
-        "-DOT_JAM_DETECTION=ON"
-        "-DOT_JOINER=ON"
-        "-DOT_LINK_RAW=ON"
-        "-DOT_MAC_FILTER=ON"
-        "-DOT_MESSAGE_USE_HEAP=ON"
-        "-DOT_NETDATA_PUBLISHER=ON"
-        "-DOT_PING_SENDER=ON"
-        "-DOT_SERVICE=ON"
-        "-DOT_SLAAC=ON"
-        "-DOT_SNTP_CLIENT=ON"
-        "-DOT_SRP_CLIENT=ON"
-        "-DOT_SRP_SERVER=ON"
-        "-DOT_TIME_SYNC=ON"
-        "-DOT_UDP_FORWARD=ON"
-        "-DOT_UPTIME=ON"
-    )
+        printf "| %-26s | %-8s " "" "+/-"
+        printf "| %+8d | %+8d | %+8d | %+8d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
+        printf "\n" >>"${table_report_file}"
 
-    local thread_version=$1
+        printf "+----------------------------+----------+----------+----------+----------+----------+\n"
+    } >>"${table_report_file}"
 
-    if [[ ${thread_version} != "1.1" ]]; then
-        options+=(
-            "-DOT_THREAD_VERSION=1.3"
-            "-DOT_BACKBONE_ROUTER=ON"
-            "-DOT_DUA=ON"
-            "-DOT_MLR=ON"
-            "-DOT_CSL_RECEIVER=ON"
-            "-DOT_LINK_METRICS_INITIATOR=ON"
-            "-DOT_LINK_METRICS_SUBJECT=ON"
-        )
+    # Generate PR post format report
+
+    {
+        printf "| %s | %s " "${name}" "${OT_SHA_OLD:0:8}"
+        printf "| %u | %u | %u | %u |" "${size_old[0]}" "${size_old[1]}" "${size_old[2]}" "${size_old[3]}"
+        printf "\n"
+
+        printf "|  | %s " "${OT_SHA_NEW:0:8}"
+        printf "| %u | %u | %u | %u |" "${size_new[0]}" "${size_new[1]}" "${size_new[2]}" "${size_new[3]}"
+        printf "\n"
+
+        printf "|  | %s " "+/-"
+        printf "| %+d | %+d | %+d | %+d |" "${size_diff[0]}" "${size_diff[1]}" "${size_diff[2]}" "${size_diff[3]}"
+        printf "\n"
+    } >>"${pr_report_file}"
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" size "${old_file}" "${new_file}"
     fi
+}
 
-    rm -rf "${OT_TMP_DIR}"
+generate_report()
+{
+    local type="${1}"
+    shift
 
-    local build_dir="build"
+    local old_file
+    local new_file
 
-    # new commit
-    mkdir -p "${OT_TMP_DIR}/b"
-    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/b"
-    rm -rf "${OT_TMP_DIR}/b/openthread/*" # replace openthread submodule with latest commit
-    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/b/openthread"
+    for file in "$@"; do
+        case "${file}" in
+            lib*)
+                old_file="${OT_TMP_DIR}"/${type}_old/build/lib/"${file}"
+                new_file="${OT_TMP_DIR}"/${type}_new/build/lib/"${file}"
+                ;;
+            *)
+                old_file="${OT_TMP_DIR}"/${type}_old/build/bin/"${file}"
+                new_file="${OT_TMP_DIR}"/${type}_new/build/bin/"${file}"
+                ;;
+        esac
 
-    (cd "${OT_TMP_DIR}/b" \
-        && OT_CMAKE_BUILD_DIR=${build_dir} script/build nrf52840 UART_trans "${options[@]}")
+        generate_size_diff "${old_file}" "${new_file}"
 
-    # old commit
-    if [[ "${GITHUB_ACTIONS+x}" ]]; then
-        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+        echo "nm_size ${old_file} ${new_file}"
+        nm_size "${old_file}" "${new_file}"
+    done
+}
+
+finalize_report()
+{
+    cat "${OT_REPORT_FILE_TABLE}"
+    cat "${OT_REPORT_FILE_TABLE}_libs"
+
+    printf "</details>" >>${OT_REPORT_FILE_PR}_libs
+    cat "${OT_REPORT_FILE_PR}_libs" >>${OT_REPORT_FILE_PR}
+
+    if [ -n "${OT_REPORTER}" ]; then
+        "${OT_REPORTER}" post
     fi
-
-    mkdir -p "${OT_TMP_DIR}/a"
-    git clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/a"
-    rm -rf "${OT_TMP_DIR}/a/openthread/*" # replace openthread submodule with last commit
-    git archive "${OT_SHA_OLD}" | tar x -C "${OT_TMP_DIR}/a/openthread"
-
-    (cd "${OT_TMP_DIR}/a" \
-        && OT_CMAKE_BUILD_DIR=${build_dir} script/build nrf52840 UART_trans "${options[@]}")
-
-    # rename the generated files to be ready for size-report
-    # shellcheck disable=SC2011
-    (
-        cd "${OT_TMP_DIR}"/a/"${build_dir}"/bin
-        ls | xargs -I{} mv {} {}_"${thread_version}"
-        cd "${OT_TMP_DIR}"/b/"${build_dir}"/bin
-        ls | xargs -I{} mv {} {}_"${thread_version}"
-
-        cd "${OT_TMP_DIR}"/a/"${build_dir}"/lib
-        ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
-        cd "${OT_TMP_DIR}"/b/"${build_dir}"/lib
-        ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
-    )
-
-    local bins=(
-        "ot-cli-ftd"
-        "ot-cli-mtd"
-        "ot-ncp-ftd"
-        "ot-ncp-mtd"
-        "ot-rcp"
-    )
-
-    local libs=(
-        "libopenthread-cli-ftd.a"
-        "libopenthread-cli-mtd.a"
-        "libopenthread-ftd.a"
-        "libopenthread-mtd.a"
-        "libopenthread-ncp-ftd.a"
-        "libopenthread-ncp-mtd.a"
-        "libopenthread-rcp.a"
-        "libopenthread-radio.a"
-    )
-
-    for file in "${bins[@]}"; do
-        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
-        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
-        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
-    done
-
-    for file in "${libs[@]}"; do
-        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
-    done
 }
 
 size_nrf52840()
 {
     export OT_SHA_NEW OT_SHA_OLD
 
-    local reporter="${OT_SIZE_REPORTER:-markdown}"
-    "${reporter}" init OpenThread
+    rm -rf "${OT_TMP_DIR}"
+    mkdir -p "${OT_TMP_DIR}"
 
-    size_nrf52840_version 1.1
-    size_nrf52840_version 1.3
+    if [[ "${GITHUB_ACTIONS+x}" ]]; then
+        git fetch --depth 1 --no-recurse-submodules origin "${OT_SHA_OLD}"
+    fi
 
-    "${reporter}" post
+    generate_table_header
+
+    build_nrf52840 ftd new
+    build_nrf52840 mtd new
+    build_nrf52840 br new
+
+    build_nrf52840 ftd old
+    build_nrf52840 mtd old
+    build_nrf52840 br old
+
+    local ftd_files=(
+        "ot-cli-ftd"
+        "ot-ncp-ftd"
+        "libopenthread-ftd.a"
+        "libopenthread-cli-ftd.a"
+        "libopenthread-ncp-ftd.a"
+    )
+
+    local mtd_files=(
+        "ot-cli-mtd"
+        "ot-ncp-mtd"
+        "libopenthread-mtd.a"
+        "libopenthread-cli-mtd.a"
+        "libopenthread-ncp-mtd.a"
+    )
+
+    local br_files=(
+        "ot-cli-ftd-br"
+        "libopenthread-ftd-br.a"
+        "libopenthread-cli-ftd-br.a"
+    )
+
+    # `rcp`` is using same config as `ftd`.
+    local rcp_files=(
+        "ot-rcp"
+        "libopenthread-rcp.a"
+        "libopenthread-radio.a"
+    )
+
+    generate_report ftd "${ftd_files[@]}"
+    generate_report mtd "${mtd_files[@]}"
+    generate_report br "${br_files[@]}"
+    generate_report ftd "${rcp_files[@]}"
+
+    finalize_report
 }
 
 main()
@@ -258,6 +361,7 @@ main()
     if [[ $# == 0 ]]; then
         setup
         size_nrf52840
+        cd
     elif [[ $1 == setup ]]; then
         setup
     elif [[ $1 == nrf52840 ]]; then

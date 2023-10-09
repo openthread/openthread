@@ -1369,7 +1369,7 @@ class OTCI(object):
     # TODO: csl period <period>
     # TODO: csl timeout <timeout>
 
-    _CSL_PERIOD_PATTERN = re.compile(r'(\d+)\(in units of 10 symbols\), \d+ms')
+    _CSL_PERIOD_PATTERN = re.compile(r'(\d+)us')
     _CSL_TIMEOUT_PATTERN = re.compile(r'(\d+)s')
 
     def get_csl_config(self) -> Dict[str, int]:
@@ -1398,7 +1398,7 @@ class OTCI(object):
         """Configure CSL parameters.
 
         :param channel: Set CSL channel.
-        :param period: Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to 0.
+        :param period: Set CSL period in usec. Disable CSL by setting this parameter to 0.
         :param timeout: Set the CSL timeout in seconds.
         """
 
@@ -1738,7 +1738,7 @@ class OTCI(object):
         # Network Name: OpenThread-7caa
         # PAN ID: 0x7caa
         # PSKc: 167d89fd169e439ca0b8266de248090f
-        # Security Policy: 0, onrc
+        # Security Policy: 672 onrc 0
 
         dataset = {}
 
@@ -1765,7 +1765,7 @@ class OTCI(object):
             elif key == 'PSKc':
                 dataset['pskc'] = val
             elif key == 'Security Policy':
-                rotation_time, flags = val.split(', ') if ', ' in val else val.split(' ')
+                rotation_time, flags, version_threshold = val.split(' ')
                 rotation_time = int(rotation_time)
                 dataset['security_policy'] = SecurityPolicy(rotation_time, flags)
             else:
@@ -1975,14 +1975,14 @@ class OTCI(object):
     def enable_backbone_router(self):
         """Enable Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred for attached device if there is no Backbone Router Service in Thread Network Data.
+        SRV_DATA.ntf would be triggered for attached device if there is no Backbone Router Service in Thread Network Data.
         """
         self.execute_command('bbr enable')
 
     def disable_backbone_router(self):
         """Disable Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred if Backbone Router is Primary state.
+        SRV_DATA.ntf would be triggered if Backbone Router is Primary state.
         """
         self.execute_command('bbr disable')
 
@@ -2036,7 +2036,7 @@ class OTCI(object):
     def register_backbone_router_dataset(self):
         """Register Backbone Router Service for Thread 1.2 FTD.
 
-        SRV_DATA.ntf would be triggerred for attached device.
+        SRV_DATA.ntf would be triggered for attached device.
         """
         self.execute_command('bbr register')
 

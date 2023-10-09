@@ -49,7 +49,7 @@
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 static_assert(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
                   OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE - ot::Ncp::NcpBase::kSpinelCmdHeaderSize -
-                      ot::Ncp::NcpBase::kSpinelPropIdSize - ot::Ncp::SpiFrame::kHeaderSize,
+                      ot::Ncp::NcpBase::kSpinelPropIdSize - ot::Spinel::SpiFrame::kHeaderSize,
               "diag output should be smaller than NCP SPI tx buffer");
 static_assert(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_NCP_SPI_BUFFER_SIZE,
               "diag command line should be smaller than NCP SPI rx buffer");
@@ -57,6 +57,8 @@ static_assert(OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE <= OPENTHREAD_CONFIG_N
 
 namespace ot {
 namespace Ncp {
+
+using Spinel::SpiFrame;
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK == 0
 

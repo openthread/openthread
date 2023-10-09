@@ -35,6 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/num_utils.hpp"
 #include "common/random.hpp"
 
 namespace ot {
@@ -51,6 +52,158 @@ TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
     , mMode(kModeTrickle)
     , mPhase(kBeforeRandomTime)
 {
+}
+
+TimeMilli TrickleTimer::GetStartTimeOfCurrentInterval(void) const
+{
+    // Determines and returns the start time of the current
+    // interval.
+
+    TimeMilli startTime = TimerMilli::GetFireTime();
+
+    if (mMode == kModePlainTimer)
+    {
+        startTime -= mInterval;
+        ExitNow();
+    }
+
+    switch (mPhase)
+    {
+    case kBeforeRandomTime:
+        startTime -= mTimeInInterval;
+        break;
+
+    case kAfterRandomTime:
+        startTime -= mInterval;
+        break;
+    }
+
+exit:
+    return startTime;
+}
+
+void TrickleTimer::SetIntervalMin(uint32_t aIntervalMin)
+{
+    VerifyOrExit(IsRunning());
+
+    mIntervalMin = aIntervalMin;
+
+    if (mIntervalMax < mIntervalMin)
+    {
+        SetIntervalMax(mIntervalMin);
+    }
+
+exit:
+    return;
+}
+
+void TrickleTimer::SetIntervalMax(uint32_t aIntervalMax)
+{
+    TimeMilli endOfInterval;
+
+    VerifyOrExit(IsRunning());
+
+    aIntervalMax = Max(mIntervalMin, aIntervalMax);
+    VerifyOrExit(aIntervalMax != mIntervalMax);
+
+    mIntervalMax = aIntervalMax;
+
+    // If the new `aIntervalMax` is greater than the current
+    // `mInterval`, no action is needed. The new `aIntervalMax` will be
+    // used as the `mInterval` grows.
+
+    VerifyOrExit(mIntervalMax < mInterval);
+
+    // Determine the end of the interval as if the new and shorter
+    // `mIntervalMax` would have been used. The calculated time may
+    // be in the past. In this case, `FireAt(endOfInterval)` will
+    // cause the timer to fire immediately.
+
+    endOfInterval = GetStartTimeOfCurrentInterval() + mIntervalMax;
+
+    if (mMode == kModePlainTimer)
+    {
+        TimerMilli::FireAt(endOfInterval);
+        ExitNow();
+    }
+
+    // Trickle mode possible scenarios:
+    //
+    // We are in `kBeforeRandomTime` phase.
+    //
+    // a) If the new `aIntervalMax < mTimeInInterval`:
+    //    - Reschedule the timer to fire at new `endOfInterval`
+    //      (which may fire immediately).
+    //    - Set `mTimeInInterval = aIntervalMax`
+    //    - Set `mInterval` to use the shorter `aIntervalMax`.
+    //
+    //   |<---- mInterval ----------------^------------------>|
+    //   |<---- mTimeInInterval ----------^---->|             |
+    //   |<---- aIntervalMax -------->|   ^     |             |
+    //   |                            |  now    |             |
+    //
+    // b) If the new `aIntervalMax >= mTimeInInterval`:
+    //    - Keep timer unchanged to fire at `mTimeInInterval`
+    //    - Keep `mTimeInInterval` unchanged.
+    //    - Set `mInterval` to use the shorter `aIntervalMax`.
+    //
+    //   |<---- mInterval ----------------^------------------>|
+    //   |<---- mTimeInInterval ----------^---->|    |        |
+    //   |<---- aIntervalMax -------------^--------->|        |
+    //   |                              now          |        |
+    //
+    // We are in `kAfterRandomTime` phase.
+    //
+    // c) If the new `aIntervalMax < mTimeInInterval`:
+    //    - Act as if current interval is already finished.
+    //    - Reschedule the timer to fire at new `endOfInterval`
+    //      (which should fire immediately).
+    //    - Set `mInterval` to use the shorter `aIntervalMax`.
+    //    - The `mTimeInInterval` value does not matter as we
+    //      are in `kAfterRandomTime` phase. Keep it unchanged.
+    //
+    //   |<---- mInterval ---------------------------^------->|
+    //   |<---- mTimeInInterval --------------->|    ^        |
+    //   |<---- aIntervalMax -------->|         |    ^        |
+    //   |                            |         |   now       |
+    //
+    // d) If the new `aIntervalMax >= mTimeInInterval`:
+    //    - Reschedule the timer to fire at new `endOfInterval`
+    //    - Set `mInterval` to use the shorter `aIntervalMax`.
+    //    - The `mTimeInInterval` value does not matter as we
+    //      are in `kAfterRandomTime` phase. Keep it unchanged.
+    //
+    //   |<---- mInterval ---------------------------^------->|
+    //   |<---- mTimeInInterval --------------->|    ^   |    |
+    //   |<---- aIntervalMax ------------------------^-->|    |
+    //   |                                      |   now  |    |
+
+    // In all cases we need to set `mInterval` to the new
+    // shorter `aIntervalMax`.
+
+    mInterval = aIntervalMax;
+
+    switch (mPhase)
+    {
+    case kBeforeRandomTime:
+        if (aIntervalMax < mTimeInInterval)
+        {
+            mTimeInInterval = aIntervalMax;
+        }
+        else
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case kAfterRandomTime:
+        TimerMilli::FireAt(endOfInterval);
+        break;
+    }
+
+exit:
+    return;
 }
 
 void TrickleTimer::Start(Mode aMode, uint32_t aIntervalMin, uint32_t aIntervalMax, uint16_t aRedundancyConstant)

@@ -68,7 +68,7 @@ void NdProxyTable::NdProxy::Update(uint16_t aRloc16, uint32_t aTimeSinceLastTran
     OT_ASSERT(mValid);
 
     mRloc16                   = aRloc16;
-    aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, Mle::kTimeSinceLastTransactionMax);
+    aTimeSinceLastTransaction = Min(aTimeSinceLastTransaction, kMaxTimeSinceLastTransaction);
     mLastRegistrationTime     = TimerMilli::GetNow() - TimeMilli::SecToMsec(aTimeSinceLastTransaction);
 }
 
@@ -125,10 +125,9 @@ void NdProxyTable::Iterator::Advance(void)
 
 void NdProxyTable::Erase(NdProxy &aNdProxy) { aNdProxy.mValid = false; }
 
-void NdProxyTable::HandleDomainPrefixUpdate(Leader::DomainPrefixState aState)
+void NdProxyTable::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
 {
-    if (aState == Leader::kDomainPrefixAdded || aState == Leader::kDomainPrefixRemoved ||
-        aState == Leader::kDomainPrefixRefreshed)
+    if (aEvent == kDomainPrefixAdded || aEvent == kDomainPrefixRemoved || aEvent == kDomainPrefixRefreshed)
     {
         Clear();
     }
@@ -291,7 +290,7 @@ void NdProxyTable::NotifyDadComplete(NdProxyTable::NdProxy &aNdProxy, bool aDupl
     }
     else
     {
-        aNdProxy.mDadAttempts = Mle::kDuaDadRepeats;
+        aNdProxy.mDadAttempts = kDuaDadRepeats;
     }
 }
 

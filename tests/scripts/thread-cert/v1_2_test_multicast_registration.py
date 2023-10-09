@@ -144,7 +144,7 @@ class TestMulticastRegistration(thread_cert.TestCase):
                                        in_address_registration=True):
         ''' Check whether or not the addition of the multicast address on the specific node
         would trigger Child Update Request for multicast address registration via Address
-        Registraion TLV.
+        Registration TLV.
 
         Args:
             node (int) : The device id

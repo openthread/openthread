@@ -35,6 +35,8 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
+#include "common/message.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace Mle {
@@ -70,7 +72,7 @@ DeviceMode::InfoString DeviceMode::ToString(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // DeviceProperties
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 DeviceProperties::DeviceProperties(void)
 {
@@ -133,7 +135,7 @@ uint8_t DeviceProperties::CalculateLeaderWeight(void) const
     return weight;
 }
 
-#endif // OPENTHREAD_FTD
+#endif // #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // RouterIdSet
@@ -148,6 +150,35 @@ uint8_t RouterIdSet::GetNumberOfAllocatedIds(void) const
     }
 
     return count;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// TxChallenge
+
+void TxChallenge::GenerateRandom(void) { IgnoreError(Random::Crypto::Fill(*this)); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// RxChallenge
+
+Error RxChallenge::ReadFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    Clear();
+
+    aLength = Min<uint16_t>(aLength, kMaxSize);
+    VerifyOrExit(kMinSize <= aLength, error = kErrorParse);
+
+    SuccessOrExit(error = aMessage.Read(aOffset, mArray.GetArrayBuffer(), aLength));
+    mArray.SetLength(static_cast<uint8_t>(aLength));
+
+exit:
+    return error;
+}
+
+bool RxChallenge::operator==(const TxChallenge &aTxChallenge) const
+{
+    return (mArray.GetLength() == kMaxSize) && (memcmp(mArray.GetArrayBuffer(), aTxChallenge.m8, kMaxSize) == 0);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

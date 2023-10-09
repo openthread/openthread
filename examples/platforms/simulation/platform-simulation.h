@@ -91,13 +91,13 @@ enum
 extern uint32_t gNodeId;
 
 /**
- * This function initializes the alarm service used by OpenThread.
+ * Initializes the alarm service used by OpenThread.
  *
  */
 void platformAlarmInit(uint32_t aSpeedUpFactor);
 
 /**
- * This function retrieves the time remaining until the alarm fires.
+ * Retrieves the time remaining until the alarm fires.
  *
  * @param[out]  aTimeout  A pointer to the timeval struct.
  *
@@ -105,7 +105,7 @@ void platformAlarmInit(uint32_t aSpeedUpFactor);
 void platformAlarmUpdateTimeout(struct timeval *aTimeout);
 
 /**
- * This function performs alarm driver processing.
+ * Performs alarm driver processing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *
@@ -113,7 +113,7 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout);
 void platformAlarmProcess(otInstance *aInstance);
 
 /**
- * This function returns the duration to the next alarm event time (in micro seconds)
+ * Returns the duration to the next alarm event time (in micro seconds)
  *
  * @returns The duration (in micro seconds) to the next alarm event.
  *
@@ -121,7 +121,7 @@ void platformAlarmProcess(otInstance *aInstance);
 uint64_t platformAlarmGetNext(void);
 
 /**
- * This function returns the current alarm time.
+ * Returns the current alarm time.
  *
  * @returns The current alarm time.
  *
@@ -129,7 +129,7 @@ uint64_t platformAlarmGetNext(void);
 uint64_t platformAlarmGetNow(void);
 
 /**
- * This function advances the alarm time by @p aDelta.
+ * Advances the alarm time by @p aDelta.
  *
  * @param[in]  aDelta  The amount of time to advance.
  *
@@ -137,19 +137,19 @@ uint64_t platformAlarmGetNow(void);
 void platformAlarmAdvanceNow(uint64_t aDelta);
 
 /**
- * This function initializes the radio service used by OpenThread.
+ * Initializes the radio service used by OpenThread.
  *
  */
 void platformRadioInit(void);
 
 /**
- * This function shuts down the radio service used by OpenThread.
+ * Shuts down the radio service used by OpenThread.
  *
  */
 void platformRadioDeinit(void);
 
 /**
- * This function inputs a received radio frame.
+ * Inputs a received radio frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
  * @param[in]  aBuf        A pointer to the received radio frame.
@@ -159,7 +159,7 @@ void platformRadioDeinit(void);
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the radio driver.
+ * Updates the file descriptor sets with file descriptors used by the radio driver.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
  * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
@@ -170,7 +170,7 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);
 
 /**
- * This function performs radio driver processing.
+ * Performs radio driver processing.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aReadFdSet   A pointer to the read file descriptors.
@@ -180,7 +180,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
 void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
 /**
- * This function initializes the random number service used by OpenThread.
+ * Initializes the random number service used by OpenThread.
  *
  */
 void platformRandomInit(void);
@@ -194,7 +194,7 @@ void platformRandomInit(void);
 void platformLoggingSetFileName(const char *aName);
 
 /**
- * This function initializes the platform logging service.
+ * Initializes the platform logging service.
  *
  * @param[in] aName    The log module name to set with syslog.
  *
@@ -202,13 +202,13 @@ void platformLoggingSetFileName(const char *aName);
 void platformLoggingInit(const char *aName);
 
 /**
- * This function finalizes the platform logging service.
+ * Finalizes the platform logging service.
  *
  */
 void platformLoggingDeinit(void);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the UART driver.
+ * Updates the file descriptor sets with file descriptors used by the UART driver.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
  * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
@@ -218,19 +218,19 @@ void platformLoggingDeinit(void);
 void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd);
 
 /**
- * This function performs radio driver processing.
+ * Performs radio driver processing.
  *
  */
 void platformUartProcess(void);
 
 /**
- * This function restores the Uart.
+ * Restores the Uart.
  *
  */
 void platformUartRestore(void);
 
 /**
- * This function sends a simulation event.
+ * Sends a simulation event.
  *
  * @param[in]   aEvent  A pointer to the simulation event to send
  *
@@ -238,7 +238,7 @@ void platformUartRestore(void);
 void otSimSendEvent(const struct Event *aEvent);
 
 /**
- * This function sends Uart data through simulation.
+ * Sends Uart data through simulation.
  *
  * @param[in]   aData       A pointer to the UART data.
  * @param[in]   aLength     Length of UART data.
@@ -247,7 +247,7 @@ void otSimSendEvent(const struct Event *aEvent);
 void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 
 /**
- * This function checks if radio transmitting is pending.
+ * Checks if radio transmitting is pending.
  *
  * @returns Whether radio transmitting is pending.
  *
@@ -255,7 +255,7 @@ void otSimSendUartWriteEvent(const uint8_t *aData, uint16_t aLength);
 bool platformRadioIsTransmitPending(void);
 
 /**
- * This function parses an environment variable as an unsigned 16-bit integer.
+ * Parses an environment variable as an unsigned 16-bit integer.
  *
  * If the environment variable does not exist, this function does nothing.
  * If it is not a valid integer, this function will terminate the process with an error message.
@@ -269,7 +269,7 @@ void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 /**
- * This function initializes the TREL service.
+ * Initializes the TREL service.
  *
  * @param[in] aSpeedUpFactor   The time speed-up factor.
  *
@@ -277,13 +277,13 @@ void parseFromEnvAsUint16(const char *aEnvName, uint16_t *aValue);
 void platformTrelInit(uint32_t aSpeedUpFactor);
 
 /**
- * This function shuts down the TREL service.
+ * Shuts down the TREL service.
  *
  */
 void platformTrelDeinit(void);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the TREL.
+ * Updates the file descriptor sets with file descriptors used by the TREL.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
  * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
@@ -294,7 +294,7 @@ void platformTrelDeinit(void);
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);
 
 /**
- * This function performs TREL processing.
+ * Performs TREL processing.
  *
  * @param[in]  aInstance    The OpenThread instance structure.
  * @param[in]  aReadFdSet   A pointer to the read file descriptors.

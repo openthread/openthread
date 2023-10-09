@@ -35,6 +35,8 @@
 #ifndef CONFIG_TMF_H_
 #define CONFIG_TMF_H_
 
+#include "config/border_router.h"
+
 /**
  * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
  *
@@ -42,7 +44,11 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 256
+#else
 #define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
+#endif
 #endif
 
 /**
@@ -51,9 +57,11 @@
  * The maximum number of EID-to-RLOC cache entries that can be used for "snoop optimization" where an entry is created
  * by inspecting a received message.
  *
+ * By default a 1/16 fraction of `OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES` is used.
+ *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES 2
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES (OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES / 16)
 #endif
 
 /**

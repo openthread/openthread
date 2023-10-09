@@ -37,6 +37,7 @@
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel_interface.hpp"
 
@@ -44,23 +45,21 @@ namespace ot {
 namespace Posix {
 
 /**
- * This class defines an HDLC interface to the Radio Co-processor (RCP)
+ * Defines an HDLC interface to the Radio Co-processor (RCP)
  *
  */
 class HdlcInterface : public ot::Spinel::SpinelInterface
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in] aCallback         Callback on frame received
      * @param[in] aCallbackContext  Callback context
      * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
      */
-    HdlcInterface(Spinel::SpinelInterface::ReceiveFrameCallback aCallback,
-                  void                                         *aCallbackContext,
-                  Spinel::SpinelInterface::RxFrameBuffer       &aFrameBuffer);
+    HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * This destructor deinitializes the object.
@@ -69,7 +68,7 @@ public:
     ~HdlcInterface(void);
 
     /**
-     * This method initializes the interface to the Radio Co-processor (RCP)
+     * Initializes the interface to the Radio Co-processor (RCP)
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
@@ -83,13 +82,13 @@ public:
     otError Init(const Url::Url &aRadioUrl);
 
     /**
-     * This method deinitializes the interface to the RCP.
+     * Deinitializes the interface to the RCP.
      *
      */
     void Deinit(void);
 
     /**
-     * This method encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
+     * Encodes and sends a spinel frame to Radio Co-processor (RCP) over the socket.
      *
      * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
      * up to `kMaxWaitTime` interval.
@@ -105,7 +104,7 @@ public:
     otError SendFrame(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method waits for receiving part or all of spinel frame within specified interval.
+     * Waits for receiving part or all of spinel frame within specified interval.
      *
      * @param[in]  aTimeout  The timeout value in microseconds.
      *
@@ -116,7 +115,7 @@ public:
     otError WaitForFrame(uint64_t aTimeoutUs);
 
     /**
-     * This method updates the file descriptor sets with file descriptors used by the radio driver.
+     * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
      * @param[in,out]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
      *
@@ -124,7 +123,7 @@ public:
     void UpdateFdSet(void *aMainloopContext);
 
     /**
-     * This method performs radio driver processing.
+     * Performs radio driver processing.
      *
      * @param[in]   aMainloopContext  A pointer to the mainloop context containing fd_sets.
      *
@@ -132,7 +131,7 @@ public:
     void Process(const void *aMainloopContext);
 
     /**
-     * This method returns the bus speed between the host and the radio.
+     * Returns the bus speed between the host and the radio.
      *
      * @returns   Bus speed in bits/second.
      *
@@ -140,7 +139,7 @@ public:
     uint32_t GetBusSpeed(void) const { return mBaudRate; }
 
     /**
-     * This method hardware resets the RCP.
+     * Hardware resets the RCP.
      *
      * @retval OT_ERROR_NONE            Successfully reset the RCP.
      * @retval OT_ERROR_NOT_IMPLEMENT   The hardware reset is not implemented.
@@ -149,7 +148,7 @@ public:
     otError HardwareReset(void) { return OT_ERROR_NOT_IMPLEMENTED; }
 
     /**
-     * This method returns the RCP interface metrics.
+     * Returns the RCP interface metrics.
      *
      * @returns The RCP interface metrics.
      *
@@ -158,13 +157,13 @@ public:
 
 private:
     /**
-     * This method is called when RCP is reset to recreate the connection with it.
+     * Is called when RCP is reset to recreate the connection with it.
      *
      */
     otError ResetConnection(void);
 
     /**
-     * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
+     * Instructs `HdlcInterface` to read and decode data from radio over the socket.
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
@@ -173,7 +172,7 @@ private:
     void Read(void);
 
     /**
-     * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
+     * Waits for the socket file descriptor associated with the HDLC interface to become writable within
      * `kMaxWaitTime` interval.
      *
      * @retval OT_ERROR_NONE   Socket is writable.
@@ -183,7 +182,7 @@ private:
     otError WaitForWritable(void);
 
     /**
-     * This method writes a given frame to the socket.
+     * Writes a given frame to the socket.
      *
      * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
      * up to `kMaxWaitTime` interval.
@@ -198,7 +197,7 @@ private:
     otError Write(const uint8_t *aFrame, uint16_t aLength);
 
     /**
-     * This method performs HDLC decoding on received data.
+     * Performs HDLC decoding on received data.
      *
      * If a full HDLC frame is decoded while reading data, this method invokes the `HandleReceivedFrame()` (on the
      * `aCallback` object from constructor) to pass the received frame to be processed.
@@ -213,7 +212,7 @@ private:
     void        HandleHdlcFrame(otError aError);
 
     /**
-     * This method opens file specified by aRadioUrl.
+     * Opens file specified by aRadioUrl.
      *
      * @param[in] aRadioUrl  A reference to object containing path to file and data for configuring
      *                       the connection with tty type file.
@@ -223,7 +222,7 @@ private:
     int OpenFile(const Url::Url &aRadioUrl);
 
     /**
-     * This method closes file associated with the file descriptor.
+     * Closes file associated with the file descriptor.
      *
      */
     void CloseFile(void);
@@ -234,17 +233,16 @@ private:
 
     enum
     {
-        kMaxFrameSize  = Spinel::SpinelInterface::kMaxFrameSize,
         kMaxWaitTime   = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
         kResetTimeout  = 5000, ///< Maximum wait time in Milliseconds for file to become ready (see `ResetConnection`).
-        kOpenFileDelay = 500,  ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
+        kOpenFileDelay = 50,   ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
         kRemoveRcpDelay =
             2000, ///< Delay for removing RCP device from host OS after hard reset (see `ResetConnection`).
     };
 
-    Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;
-    void                                         *mReceiveFrameContext;
-    Spinel::SpinelInterface::RxFrameBuffer       &mReceiveFrameBuffer;
+    ReceiveFrameCallback mReceiveFrameCallback;
+    void                *mReceiveFrameContext;
+    RxFrameBuffer       &mReceiveFrameBuffer;
 
     int             mSockFd;
     uint32_t        mBaudRate;

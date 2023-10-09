@@ -86,14 +86,21 @@ int Daemon::OutputFormat(const char *aFormat, ...)
 
 int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 {
-    char buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH + 1];
-    int  rval;
+    static constexpr char truncatedMsg[] = "(truncated ...)";
+    char                  buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+    int                   rval;
 
-    buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH] = '\0';
+    static_assert(sizeof(truncatedMsg) < OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+                  "OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH is too short!");
 
-    rval = vsnprintf(buf, sizeof(buf) - 1, aFormat, aArguments);
-
+    rval = vsnprintf(buf, sizeof(buf), aFormat, aArguments);
     VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
+
+    if (rval >= static_cast<int>(sizeof(buf)))
+    {
+        rval = static_cast<int>(sizeof(buf) - 1);
+        memcpy(buf + sizeof(buf) - sizeof(truncatedMsg), truncatedMsg, sizeof(truncatedMsg));
+    }
 
     VerifyOrExit(mSessionSocket != -1);
 

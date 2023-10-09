@@ -55,7 +55,7 @@ namespace ot {
 class Child;
 
 /**
- * This class implements CSL tx scheduling functionality.
+ * Implements CSL tx scheduling functionality.
  *
  */
 class CslTxScheduler : public InstanceLocator, private NonCopyable
@@ -67,7 +67,7 @@ public:
     static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
-     * This class defines all the child info required for scheduling CSL transmissions.
+     * Defines all the child info required for scheduling CSL transmissions.
      *
      * `Child` class publicly inherits from this class.
      *
@@ -101,20 +101,65 @@ public:
         void     SetLastRxTimestamp(uint64_t aLastRxTimestamp) { mLastRxTimestamp = aLastRxTimestamp; }
 
     private:
-        uint8_t   mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
-        bool      mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
-        uint8_t   mCslChannel;          ///< The channel the device will listen on.
-        uint32_t  mCslTimeout;          ///< The sync timeout, in seconds.
-        uint16_t  mCslPeriod;           ///< CSL sampled listening period in units of 10 symbols (160 microseconds).
-        uint16_t  mCslPhase;            ///< The time when the next CSL sample will start.
-        TimeMilli mCslLastHeard;        ///< Time when last frame containing CSL IE was heard.
-        uint64_t  mLastRxTimestamp;     ///< Time when last frame containing CSL IE was received, in microseconds.
+        uint8_t  mCslTxAttempts : 7;   ///< Number of CSL triggered tx attempts.
+        bool     mCslSynchronized : 1; ///< Indicates whether or not the child is CSL synchronized.
+        uint8_t  mCslChannel;          ///< The channel the device will listen on.
+        uint32_t mCslTimeout;          ///< The sync timeout, in seconds.
+        uint16_t mCslPeriod; ///< CSL sampled listening period between consecutive channel samples in units of 10
+                             ///< symbols (160 microseconds).
+
+        /**
+         * The time in units of 10 symbols from the first symbol of the frame
+         * containing the CSL IE was transmitted until the next channel sample,
+         * see IEEE 802.15.4-2015, section 6.12.2.
+         *
+         * The Thread standard further defines the CSL phase (see Thread 1.3.1,
+         * section 3.2.6.3.4, also conforming to IEEE 802.15.4-2020, section
+         * 6.12.2.1):
+         *  * The "first symbol" from the definition SHALL be interpreted as the
+         *    first symbol of the MAC Header.
+         *  * "until the next channel sample":
+         *     * The CSL Receiver SHALL be ready to receive when the preamble
+         *       time T_pa as specified below is reached.
+         *     * The CSL Receiver SHOULD be ready to receive earlier than T_pa
+         *       and SHOULD stay ready to receive until after the time specified
+         *       in CSL Phase, according to the implementation and accuracy
+         *       expectations.
+         *     * The CSL Transmitter SHALL start transmitting the first symbol
+         *       of the preamble of the frame to transmit at the preamble time
+         *       T_pa = (CSL-Phase-Time – 192 us) (that is, CCA must be
+         *       performed before time T_pa). Here, CSL-Phase-Time is the time
+         *       duration specified by the CslPhase field value (in units of 10
+         *       symbol periods).
+         *     * This implies that the CSL Transmitter SHALL start transmitting
+         *       the first symbol of the MAC Header at the time T_mh =
+         *       CSL-Phase-Time.
+         *
+         * Derivation of the next TX timestamp based on this definition and the
+         * RX timestamp of the packet containing the CSL IE:
+         *
+         * Note that RX and TX timestamps are defined to point to the end of the
+         * synchronization header (SHR).
+         *
+         * lastTmh = lastRxTimestamp + phrDuration
+         *
+         * nextTmh = lastTmh + symbolPeriod * 10 * (n * cslPeriod + cslPhase)
+         *         = lastTmh + 160us * (n * cslPeriod + cslPhase)
+         *
+         * nextTxTimestamp
+         *         = nextTmh - phrDuration
+         *         = lastRxTimestamp + 160us * (n * cslPeriod + cslPhase)
+         */
+        uint16_t  mCslPhase;
+        TimeMilli mCslLastHeard; ///< Radio clock time when last frame containing CSL IE was heard.
+        uint64_t
+            mLastRxTimestamp; ///< Radio clock time when last frame containing CSL IE was received, in microseconds.
 
         static_assert(kMaxCslTriggeredTxAttempts < (1 << 7), "mCslTxAttempts cannot fit max!");
     };
 
     /**
-     * This class defines the callbacks used by the `CslTxScheduler`.
+     * Defines the callbacks used by the `CslTxScheduler`.
      *
      */
     class Callbacks : public InstanceLocator
@@ -125,7 +170,7 @@ public:
         typedef IndirectSenderBase::FrameContext FrameContext;
 
         /**
-         * This constructor initializes the callbacks object.
+         * Initializes the callbacks object.
          *
          * @param[in]  aInstance   A reference to the OpenThread instance.
          *
@@ -163,7 +208,7 @@ public:
                                     Child              &aChild);
     };
     /**
-     * This constructor initializes the CSL tx scheduler object.
+     * Initializes the CSL tx scheduler object.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
@@ -171,7 +216,7 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * This method updates the next CSL transmission (finds the nearest child).
+     * Updates the next CSL transmission (finds the nearest child).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
      * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
@@ -181,7 +226,7 @@ public:
     void Update(void);
 
     /**
-     * This method clears all the states inside `CslTxScheduler` and the related states in each child.
+     * Clears all the states inside `CslTxScheduler` and the related states in each child.
      *
      */
     void Clear(void);

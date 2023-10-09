@@ -70,6 +70,8 @@ otInstance *otInstanceInit(void *aInstanceBuffer, size_t *aInstanceBufferSize)
 otInstance *otInstanceInitSingle(void) { return &Instance::InitSingle(); }
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
+uint32_t otInstanceGetId(otInstance *aInstance) { return AsCoreType(aInstance).GetId(); }
+
 bool otInstanceIsInitialized(otInstance *aInstance)
 {
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

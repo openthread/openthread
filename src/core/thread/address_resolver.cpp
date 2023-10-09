@@ -152,7 +152,8 @@ Error AddressResolver::GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) 
     }
     else
     {
-        aInfo.mState = MapEnum(EntryInfo::kStateRetryQuery);
+        aInfo.mState    = MapEnum(EntryInfo::kStateRetryQuery);
+        aInfo.mRampDown = entry->IsInRampDown();
     }
 
     aInfo.mCanEvict   = entry->CanEvict();
@@ -490,6 +491,34 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
 
     entry = FindCacheEntry(aEid, list, prev);
 
+    if ((entry != nullptr) && ((list == &mCachedList) || (list == &mSnoopedList)))
+    {
+        list->PopAfter(prev);
+
+        if (Get<RouterTable>().GetNextHop(entry->GetRloc16()) == Mle::kInvalidRloc16)
+        {
+            // If the `entry->GetRloc16()` is unreachable (there is no valid
+            // next hop towards it), we clear the entry so to start a new
+            // address query.
+
+            mCacheEntryPool.Free(*entry);
+            entry = nullptr;
+        }
+        else
+        {
+            // Push the entry at the head of cached list.
+
+            if (list == &mSnoopedList)
+            {
+                entry->MarkLastTransactionTimeAsInvalid();
+            }
+
+            mCachedList.Push(*entry);
+            aRloc16 = entry->GetRloc16();
+            ExitNow();
+        }
+    }
+
     if (entry == nullptr)
     {
         // If the entry is not present in any of the lists, try to
@@ -509,23 +538,6 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
         list = nullptr;
     }
 
-    if ((list == &mCachedList) || (list == &mSnoopedList))
-    {
-        // Remove the entry from its current list and push it at the
-        // head of cached list.
-
-        list->PopAfter(prev);
-
-        if (list == &mSnoopedList)
-        {
-            entry->MarkLastTransactionTimeAsInvalid();
-        }
-
-        mCachedList.Push(*entry);
-        aRloc16 = entry->GetRloc16();
-        ExitNow();
-    }
-
     // Note that if `aAllowAddressQuery` is `false` then the `entry`
     // is definitely already in a list, i.e., we cannot not get here
     // with `aAllowAddressQuery` being `false` and `entry` being a
@@ -542,10 +554,10 @@ Error AddressResolver::Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRlo
     if (list == &mQueryRetryList)
     {
         // Allow an entry in query-retry mode to resend an Address
-        // Query again only if the timeout (retry delay interval) is
-        // expired.
+        // Query again only if it is in ramp down mode, i.e., the
+        // retry delay timeout is expired.
 
-        VerifyOrExit(entry->IsTimeoutZero(), error = kErrorDrop);
+        VerifyOrExit(entry->IsInRampDown(), error = kErrorDrop);
         mQueryRetryList.PopAfter(prev);
     }
 
@@ -939,6 +951,33 @@ void AddressResolver::HandleTimeTick(void)
 
         continueRxingTicks = true;
         entry.DecrementTimeout();
+
+        if (entry.IsTimeoutZero())
+        {
+            if (!entry.IsInRampDown())
+            {
+                entry.SetRampDown(true);
+                entry.SetTimeout(kAddressQueryMaxRetryDelay);
+
+                LogInfo("Starting ramp down of %s retry-delay:%u", entry.GetTarget().ToString().AsCString(),
+                        entry.GetTimeout());
+            }
+            else
+            {
+                uint16_t retryDelay = entry.GetRetryDelay();
+
+                retryDelay >>= 1;
+                retryDelay = Max(retryDelay, kAddressQueryInitialRetryDelay);
+
+                if (retryDelay != entry.GetRetryDelay())
+                {
+                    entry.SetRetryDelay(retryDelay);
+                    entry.SetTimeout(kAddressQueryMaxRetryDelay);
+
+                    LogInfo("Ramping down %s retry-delay:%u", entry.GetTarget().ToString().AsCString(), retryDelay);
+                }
+            }
+        }
     }
 
     {
@@ -959,14 +998,11 @@ void AddressResolver::HandleTimeTick(void)
                 entry->SetTimeout(retryDelay);
 
                 retryDelay <<= 1;
-
-                if (retryDelay > kAddressQueryMaxRetryDelay)
-                {
-                    retryDelay = kAddressQueryMaxRetryDelay;
-                }
+                retryDelay = Min(retryDelay, kAddressQueryMaxRetryDelay);
 
                 entry->SetRetryDelay(retryDelay);
                 entry->SetCanEvict(true);
+                entry->SetRampDown(false);
 
                 // Move the entry from `mQueryList` to `mQueryRetryList`
                 mQueryList.PopAfter(prev);

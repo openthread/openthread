@@ -190,7 +190,7 @@ void TestUdpMessageChecksum(void)
 
         // Write UDP header with a random payload.
 
-        Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&udpHeader), sizeof(udpHeader));
+        Random::NonCrypto::Fill(udpHeader);
         udpHeader.SetChecksum(0);
         message->Write(0, udpHeader);
 
@@ -258,7 +258,7 @@ void TestIcmp6MessageChecksum(void)
 
         // Write ICMP6 header with a random payload.
 
-        Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&icmp6Header), sizeof(icmp6Header));
+        Random::NonCrypto::Fill(icmp6Header);
         icmp6Header.SetChecksum(0);
         message->Write(0, icmp6Header);
 
@@ -332,7 +332,7 @@ void TestTcp4MessageChecksum(void)
 
         // Write TCP header with a random payload.
 
-        Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&tcpHeader), sizeof(tcpHeader));
+        Random::NonCrypto::Fill(tcpHeader);
         message->Write(0, tcpHeader);
 
         if (size > sizeof(tcpHeader))
@@ -387,7 +387,7 @@ void TestUdp4MessageChecksum(void)
 
         // Write UDP header with a random payload.
 
-        Random::NonCrypto::FillBuffer(reinterpret_cast<uint8_t *>(&udpHeader), sizeof(udpHeader));
+        Random::NonCrypto::Fill(udpHeader);
         udpHeader.SetChecksum(0);
         message->Write(0, udpHeader);
 

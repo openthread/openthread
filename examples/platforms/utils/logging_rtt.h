@@ -124,7 +124,7 @@ void utilsLogRttInit(void);
 void utilsLogRttDeinit(void);
 
 /**
- * This function outputs logs to SEGGER RTT.
+ * Outputs logs to SEGGER RTT.
  *
  * @param[in]  aLogLevel   The log level.
  * @param[in]  aLogRegion  The log region.

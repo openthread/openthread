@@ -58,3 +58,7 @@ target_link_libraries(openthread-cli-radio
         ot-config-radio
         ot-config
 )
+
+if(OT_CLI_VENDOR_TARGET)
+    target_link_libraries(openthread-cli-radio PRIVATE ${OT_CLI_VENDOR_TARGET})
+endif()

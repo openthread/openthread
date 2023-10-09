@@ -31,6 +31,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include <openthread/dataset_ftd.h>
 #include <openthread/dns_client.h>
 #include <openthread/srp_client.h>
 #include <openthread/srp_server.h>
@@ -82,6 +83,8 @@ void AdvanceTime(uint32_t aDuration);
 // `otPlatRadio`
 
 extern "C" {
+
+otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF; }
 
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
 {
@@ -191,15 +194,23 @@ void InitTest(void)
     // Initialize OT instance.
 
     sNow      = 0;
+    sAlarmOn  = false;
     sInstance = static_cast<Instance *>(testInitInstance());
 
     memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
     sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
+    sRadioTxOngoing     = false;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize Border Router and start Thread operation.
 
-    SuccessOrQuit(otLinkSetPanId(sInstance, 0x1234));
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    SuccessOrQuit(otDatasetCreateNewNetwork(sInstance, &dataset));
+    SuccessOrQuit(otDatasetConvertToTlvs(&dataset, &datasetTlvs));
+    SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
+
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
 
@@ -227,13 +238,16 @@ void FinalizeTest(void)
 static const char kHostName[]     = "elden";
 static const char kHostFullName[] = "elden.default.service.arpa.";
 
-static const char kService1Name[]     = "_srv._udp";
-static const char kService1FullName[] = "_srv._udp.default.service.arpa.";
-static const char kInstance1Label[]   = "srv-instance";
+static const char kService1Name[]      = "_srv._udp";
+static const char kService1FullName[]  = "_srv._udp.default.service.arpa.";
+static const char kInstance1Label[]    = "srv-instance";
+static const char kInstance1FullName[] = "srv-instance._srv._udp.default.service.arpa.";
 
-static const char kService2Name[]     = "_game._udp";
-static const char kService2FullName[] = "_game._udp.default.service.arpa.";
-static const char kInstance2Label[]   = "last-ninja";
+static const char kService2Name[]            = "_game._udp";
+static const char kService2FullName[]        = "_game._udp.default.service.arpa.";
+static const char kService2SubTypeFullName[] = "_best._sub._game._udp.default.service.arpa.";
+static const char kInstance2Label[]          = "last-ninja";
+static const char kInstance2FullName[]       = "last-ninja._game._udp.default.service.arpa.";
 
 void PrepareService1(Srp::Client::Service &aService)
 {
@@ -266,7 +280,7 @@ void PrepareService1(Srp::Client::Service &aService)
 
 void PrepareService2(Srp::Client::Service &aService)
 {
-    static const char  kSub4[]       = "_44444444";
+    static const char  kSub4[]       = "_best";
     static const char *kSubLabels2[] = {kSub4, nullptr};
 
     memset(&aService, 0, sizeof(aService));
@@ -392,6 +406,9 @@ exit:
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+static constexpr uint8_t  kMaxHostAddresses = 10;
+static constexpr uint16_t kMaxTxtBuffer     = 256;
+
 struct ResolveServiceInfo
 {
     void Reset(void)
@@ -407,7 +424,9 @@ struct ResolveServiceInfo
     Error                    mError;
     Dns::Client::ServiceInfo mInfo;
     char                     mNameBuffer[Dns::Name::kMaxNameSize];
-    uint8_t                  mTxtBuffer[256];
+    uint8_t                  mTxtBuffer[kMaxTxtBuffer];
+    Ip6::Address             mHostAddresses[kMaxHostAddresses];
+    uint8_t                  mNumHostAddresses;
 };
 
 static ResolveServiceInfo sResolveServiceInfo;
@@ -432,7 +451,31 @@ void ServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void
 
     SuccessOrExit(aError);
     SuccessOrQuit(response.GetServiceInfo(sResolveServiceInfo.mInfo));
+
+    for (uint8_t index = 0; index < kMaxHostAddresses; index++)
+    {
+        Error    error;
+        uint32_t ttl;
+
+        error = response.GetHostAddress(sResolveServiceInfo.mInfo.mHostNameBuffer, index,
+                                        sResolveServiceInfo.mHostAddresses[index], ttl);
+
+        if (error == kErrorNotFound)
+        {
+            sResolveServiceInfo.mNumHostAddresses = index;
+            break;
+        }
+
+        SuccessOrQuit(error);
+    }
+
     LogServiceInfo(sResolveServiceInfo.mInfo);
+    Log("   NumHostAddresses: %u", sResolveServiceInfo.mNumHostAddresses);
+
+    for (uint8_t index = 0; index < sResolveServiceInfo.mNumHostAddresses; index++)
+    {
+        Log("      %s", sResolveServiceInfo.mHostAddresses[index].ToString().AsCString());
+    }
 
 exit:
     return;
@@ -442,6 +485,10 @@ exit:
 
 void TestDnsClient(void)
 {
+    static constexpr uint8_t kNumAddresses = 2;
+
+    static const char *const kAddresses[kNumAddresses] = {"2001::beef:cafe", "fd00:1234:5678:9abc::1"};
+
     const Dns::Client::QueryConfig::ServiceMode kServiceModes[] = {
         Dns::Client::QueryConfig::kServiceModeSrv,
         Dns::Client::QueryConfig::kServiceModeTxt,
@@ -450,19 +497,35 @@ void TestDnsClient(void)
         Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize,
     };
 
-    Srp::Server                   *srpServer;
-    Srp::Client                   *srpClient;
-    Srp::Client::Service           service1;
-    Srp::Client::Service           service2;
-    Dns::Client                   *dnsClient;
-    Dns::Client::QueryConfig       queryConfig;
-    Dns::ServiceDiscovery::Server *dnsServer;
-    uint16_t                       heapAllocations;
+    Array<Ip6::Address, kNumAddresses> addresses;
+    Srp::Server                       *srpServer;
+    Srp::Client                       *srpClient;
+    Srp::Client::Service               service1;
+    Srp::Client::Service               service2;
+    Dns::Client                       *dnsClient;
+    Dns::Client::QueryConfig           queryConfig;
+    Dns::ServiceDiscovery::Server     *dnsServer;
+    uint16_t                           heapAllocations;
 
     Log("--------------------------------------------------------------------------------------------");
     Log("TestDnsClient");
 
     InitTest();
+
+    for (const char *addrString : kAddresses)
+    {
+        otNetifAddress netifAddr;
+
+        memset(&netifAddr, 0, sizeof(netifAddr));
+        SuccessOrQuit(AsCoreType(&netifAddr.mAddress).FromString(addrString));
+        netifAddr.mPrefixLength  = 64;
+        netifAddr.mAddressOrigin = OT_ADDRESS_ORIGIN_MANUAL;
+        netifAddr.mPreferred     = true;
+        netifAddr.mValid         = true;
+        SuccessOrQuit(otIp6AddUnicastAddress(sInstance, &netifAddr));
+
+        SuccessOrQuit(addresses.PushBack(AsCoreType(&netifAddr.mAddress)));
+    }
 
     srpServer = &sInstance->Get<Srp::Server>();
     srpClient = &sInstance->Get<Srp::Client>();
@@ -539,7 +602,16 @@ void TestDnsClient(void)
     VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
 
     sBrowseInfo.Reset();
-    Log("Browse() for unknwon service");
+
+    Log("Browse(%s)", kService2SubTypeFullName);
+    SuccessOrQuit(dnsClient->Browse(kService2SubTypeFullName, BrowseCallback, sInstance));
+    AdvanceTime(100);
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    sBrowseInfo.Reset();
+    Log("Browse() for unknown service");
     SuccessOrQuit(dnsClient->Browse("_unknown._udp.default.service.arpa.", BrowseCallback, sInstance));
     AdvanceTime(100);
     VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
@@ -580,6 +652,14 @@ void TestDnsClient(void)
             VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
             VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
             VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+            VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+            VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) == sResolveServiceInfo.mHostAddresses[0]);
+
+            for (uint8_t index = 0; index < kNumAddresses; index++)
+            {
+                VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+            }
         }
 
         if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
@@ -624,16 +704,179 @@ void TestDnsClient(void)
     VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
     VerifyOrQuit(sResolveServiceInfo.mError != kErrorNone);
 
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveService()` using all service modes
+    // when sever does not provide any RR in the addition data section.
+
+    for (Dns::Client::QueryConfig::ServiceMode mode : kServiceModes)
+    {
+        Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+        Log("Set TestMode on server to not include any RR in additional section");
+        dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection);
+        Log("ResolveService(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+            ServiceModeToString(mode));
+
+        queryConfig.Clear();
+        queryConfig.mServiceMode = static_cast<otDnsServiceMode>(mode);
+
+        sResolveServiceInfo.Reset();
+        SuccessOrQuit(
+            dnsClient->ResolveService(kInstance1Label, kService1FullName, ServiceCallback, sInstance, &queryConfig));
+        AdvanceTime(100);
+
+        VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+        SuccessOrQuit(sResolveServiceInfo.mError);
+
+        if (mode != Dns::Client::QueryConfig::kServiceModeTxt)
+        {
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+            VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+        }
+
+        if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
+        {
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+            VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+        }
+
+        // Since server is using `kTestModeEmptyAdditionalSection`, there
+        // should be no AAAA records for host address.
+
+        VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress).IsUnspecified());
+        VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == 0);
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Validate DNS Client `ResolveServiceAndHostAddress()` using all service modes
+    // with different TestMode configs on server:
+    // - Normal behavior when server provides AAAA records for host in
+    //   additional section.
+    // - Server provides no records in additional section. We validate that
+    //   client will send separate query to resolve host address.
+
+    for (Dns::Client::QueryConfig::ServiceMode mode : kServiceModes)
+    {
+        for (uint8_t testIter = 0; testIter <= 1; testIter++)
+        {
+            Error error;
+
+            Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+            if (testIter == 1)
+            {
+                Log("Set TestMode on server to not include any RR in additional section");
+                dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection);
+            }
+            else
+            {
+                dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+            }
+
+            Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+                ServiceModeToString(mode));
+
+            queryConfig.Clear();
+            queryConfig.mServiceMode = static_cast<otDnsServiceMode>(mode);
+
+            sResolveServiceInfo.Reset();
+            error = dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
+                                                            sInstance, &queryConfig);
+
+            if (mode == Dns::Client::QueryConfig::kServiceModeTxt)
+            {
+                Log("ResolveServiceAndHostAddress() with ServiceMode: %s failed correctly", ServiceModeToString(mode));
+                VerifyOrQuit(error == kErrorInvalidArgs);
+                continue;
+            }
+
+            SuccessOrQuit(error);
+
+            AdvanceTime(100);
+
+            VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+            SuccessOrQuit(sResolveServiceInfo.mError);
+
+            if (mode != Dns::Client::QueryConfig::kServiceModeTxt)
+            {
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+                VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+                VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+                VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) ==
+                             sResolveServiceInfo.mHostAddresses[0]);
+
+                for (uint8_t index = 0; index < kNumAddresses; index++)
+                {
+                    VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+                }
+            }
+
+            if (mode != Dns::Client::QueryConfig::kServiceModeSrv)
+            {
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+                VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+            }
+        }
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+    Log("Set TestMode on server to not include any RR in additional section AND to only accept single question");
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeEmptyAdditionalSection +
+                           Dns::ServiceDiscovery::Server::kTestModeSingleQuestionOnly);
+
+    Log("ResolveServiceAndHostAddress(%s,%s) with ServiceMode: %s", kInstance1Label, kService1FullName,
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize));
+
+    queryConfig.Clear();
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtOptimize);
+
+    sResolveServiceInfo.Reset();
+    SuccessOrQuit(dnsClient->ResolveServiceAndHostAddress(kInstance1Label, kService1FullName, ServiceCallback,
+                                                          sInstance, &queryConfig));
+
+    AdvanceTime(100);
+
+    VerifyOrQuit(sResolveServiceInfo.mCallbackCount == 1);
+    SuccessOrQuit(sResolveServiceInfo.mError);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mPort == service1.mPort);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mWeight == service1.mWeight);
+    VerifyOrQuit(strcmp(sResolveServiceInfo.mInfo.mHostNameBuffer, kHostFullName) == 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataTtl != 0);
+    VerifyOrQuit(sResolveServiceInfo.mInfo.mTxtDataSize != 0);
+
+    VerifyOrQuit(sResolveServiceInfo.mNumHostAddresses == kNumAddresses);
+    VerifyOrQuit(AsCoreType(&sResolveServiceInfo.mInfo.mHostAddress) == sResolveServiceInfo.mHostAddresses[0]);
+
+    for (uint8_t index = 0; index < kNumAddresses; index++)
+    {
+        VerifyOrQuit(addresses.Contains(sResolveServiceInfo.mHostAddresses[index]));
+    }
+
+    dnsServer->SetTestMode(Dns::ServiceDiscovery::Server::kTestModeDisabled);
+
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
 
     Log("Stop DNS-SD server");
     dnsServer->Stop();
 
     Log("ResolveService(%s,%s) with ServiceMode %s", kInstance1Label, kService1FullName,
-        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrv));
+        ServiceModeToString(Dns::Client::QueryConfig::kServiceModeSrvTxtSeparate));
 
     queryConfig.Clear();
-    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrv);
+    queryConfig.mServiceMode = static_cast<otDnsServiceMode>(Dns::Client::QueryConfig::kServiceModeSrvTxtSeparate);
 
     sResolveServiceInfo.Reset();
     SuccessOrQuit(
@@ -667,12 +910,225 @@ void TestDnsClient(void)
     Log("End of TestDnsClient");
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+char sLastSubscribeName[Dns::Name::kMaxNameSize];
+char sLastUnsubscribeName[Dns::Name::kMaxNameSize];
+
+void QuerySubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QuerySubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastSubscribeName, aFullName);
+}
+
+void QueryUnsubscribe(void *aContext, const char *aFullName)
+{
+    uint16_t length = StringLength(aFullName, Dns::Name::kMaxNameSize);
+
+    Log("QueryUnsubscribe(%s)", aFullName);
+
+    VerifyOrQuit(aContext == sInstance);
+    VerifyOrQuit(length < Dns::Name::kMaxNameSize);
+    strcpy(sLastUnsubscribeName, aFullName);
+}
+
+void TestDnssdServerProxyCallback(void)
+{
+    Srp::Server                   *srpServer;
+    Srp::Client                   *srpClient;
+    Dns::Client                   *dnsClient;
+    Dns::ServiceDiscovery::Server *dnsServer;
+    otDnssdServiceInstanceInfo     instanceInfo;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDnssdServerProxyCallback");
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+    dnsClient = &sInstance->Get<Dns::Client>();
+    dnsServer = &sInstance->Get<Dns::ServiceDiscovery::Server>();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Set the query subscribe/unsubscribe callbacks on server
+
+    dnsServer->SetQueryCallbacks(QuerySubscribe, QueryUnsubscribe, sInstance);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService1FullName);
+    SuccessOrQuit(dnsClient->Browse(kService1FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService1FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService1FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Invoke subscribe callback for wrong name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance1FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService1FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Invoke subscribe callback for correct name");
+
+    memset(&instanceInfo, 0, sizeof(instanceInfo));
+    instanceInfo.mFullName = kInstance2FullName;
+    instanceInfo.mHostName = kHostFullName;
+    instanceInfo.mPort     = 200;
+
+    dnsServer->HandleDiscoveredServiceInstance(kService2FullName, instanceInfo);
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 1);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    Log("Do not invoke subscribe callback and let query to timeout");
+
+    // Query timeout is set to 6 seconds
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    AdvanceTime(2000);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    SuccessOrQuit(sBrowseInfo.mError);
+    VerifyOrQuit(sBrowseInfo.mNumInstances == 0);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    sLastSubscribeName[0]   = '\0';
+    sLastUnsubscribeName[0] = '\0';
+
+    sBrowseInfo.Reset();
+    Log("Browse(%s)", kService2FullName);
+    SuccessOrQuit(dnsClient->Browse(kService2FullName, BrowseCallback, sInstance));
+    AdvanceTime(10);
+
+    VerifyOrQuit(strcmp(sLastSubscribeName, kService2FullName) == 0);
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, "") == 0);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 0);
+
+    Log("Do not invoke subscribe callback and stop server");
+
+    dnsServer->Stop();
+
+    AdvanceTime(10);
+
+    VerifyOrQuit(sBrowseInfo.mCallbackCount == 1);
+    VerifyOrQuit(sBrowseInfo.mError != kErrorNone);
+
+    VerifyOrQuit(strcmp(sLastUnsubscribeName, kService2FullName) == 0);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ");
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    Log("End of TestDnssdServerProxyCallback");
+}
+
 #endif // ENABLE_DNS_TEST
 
 int main(void)
 {
 #if ENABLE_DNS_TEST
     TestDnsClient();
+    TestDnssdServerProxyCallback();
     printf("All tests passed\n");
 #else
     printf("DNS_CLIENT or DSNSSD_SERVER feature is not enabled\n");

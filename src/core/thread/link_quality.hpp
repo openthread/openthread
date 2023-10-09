@@ -55,7 +55,7 @@ namespace ot {
  */
 
 /**
- * This class implements an operation Success Rate Tracker.
+ * Implements an operation Success Rate Tracker.
  *
  * This can be used to track different link quality related metrics, e.g., CCA failure rate, frame tx success rate).
  * The success rate is maintained using an exponential moving IIR averaging filter with a `uint16_t` as the storage.
@@ -67,7 +67,7 @@ public:
     static constexpr uint16_t kMaxRateValue = 0xffff; ///< Value corresponding to max (failure/success) rate of 100%.
 
     /**
-     * This method adds a sample (success or failure) to `SuccessRateTracker`.
+     * Adds a sample (success or failure) to `SuccessRateTracker`.
      *
      * @param[in] aSuccess   The sample status be added, `true` for success, `false` for failure.
      * @param[in] aWeight    The weight coefficient used for adding the new sample into average.
@@ -76,7 +76,7 @@ public:
     void AddSample(bool aSuccess, uint16_t aWeight = kDefaultWeight);
 
     /**
-     * This method returns the average failure rate.
+     * Returns the average failure rate.
      *
      * @retval the average failure rate `[0-kMaxRateValue]` with `kMaxRateValue` corresponding to 100%.
      *
@@ -84,7 +84,7 @@ public:
     uint16_t GetFailureRate(void) const { return mFailureRate; }
 
     /**
-     * This method returns the average success rate.
+     * Returns the average success rate.
      *
      * @retval the average success rate as [0-kMaxRateValue] with `kMaxRateValue` corresponding to 100%.
      *
@@ -98,7 +98,7 @@ private:
 };
 
 /**
- * This class implements a Received Signal Strength (RSS) averager.
+ * Implements a Received Signal Strength (RSS) averager.
  *
  * The average is maintained using an adaptive exponentially weighted moving filter.
  *
@@ -109,13 +109,13 @@ public:
     static constexpr uint16_t kStringSize = 10; ///< Max string size for average (@sa ToString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToString()`.
+     * Defines the fixed-length `String` object returned from `ToString()`.
      *
      */
     typedef String<kStringSize> InfoString;
 
     /**
-     * This method indicates whether the averager contains an average (i.e., at least one RSS value has been added).
+     * Indicates whether the averager contains an average (i.e., at least one RSS value has been added).
      *
      * @retval true   If the average value is available (at least one RSS value has been added).
      * @retval false  Averager is empty (no RSS value added yet).
@@ -124,7 +124,7 @@ public:
     bool HasAverage(void) const { return (mCount != 0); }
 
     /**
-     * This method adds a received signal strength (RSS) value to the average.
+     * Adds a received signal strength (RSS) value to the average.
      *
      * If @p aRss is `Radio::kInvalidRssi`, it is ignored and error status kErrorInvalidArgs is returned.
      * The value of RSS is capped at 0dBm (i.e., for any given RSS value higher than 0dBm, 0dBm is used instead).
@@ -138,7 +138,7 @@ public:
     Error Add(int8_t aRss);
 
     /**
-     * This method returns the current average signal strength value maintained by the averager.
+     * Returns the current average signal strength value maintained by the averager.
      *
      * @returns The current average value (in dBm) or `Radio::kInvalidRssi` if no average is available.
      *
@@ -146,7 +146,7 @@ public:
     int8_t GetAverage(void) const;
 
     /**
-     * This method returns an raw/encoded version of current average signal strength value. The raw value is the
+     * Returns an raw/encoded version of current average signal strength value. The raw value is the
      * average multiplied by a precision factor (currently set as -8).
      *
      * @returns The current average multiplied by precision factor or zero if no average is available.
@@ -155,7 +155,7 @@ public:
     uint16_t GetRaw(void) const { return mAverage; }
 
     /**
-     * This method converts the current average RSS value to a human-readable string (e.g., "-80.375"). If the
+     * Converts the current average RSS value to a human-readable string (e.g., "-80.375"). If the
      * average is unknown, empty string is returned.
      *
      * @returns An `InfoString` object containing the string representation of average RSS.
@@ -188,7 +188,7 @@ private:
 };
 
 /**
- * This class implements a Link Quality Indicator (LQI) averager.
+ * Implements a Link Quality Indicator (LQI) averager.
  *
  * It maintains the exponential moving average value of LQI.
  *
@@ -197,7 +197,7 @@ class LqiAverager : public Clearable<LqiAverager>
 {
 public:
     /**
-     * This method adds a link quality indicator (LQI) value to the average.
+     * Adds a link quality indicator (LQI) value to the average.
      *
      * @param[in] aLqi  Link Quality Indicator value to be added to the average.
      *
@@ -205,7 +205,7 @@ public:
     void Add(uint8_t aLqi);
 
     /**
-     * This method returns the current average link quality value maintained by the averager.
+     * Returns the current average link quality value maintained by the averager.
      *
      * @returns The current average value.
      *
@@ -213,7 +213,7 @@ public:
     uint8_t GetAverage(void) const { return mAverage; }
 
     /**
-     * This method returns the count of frames calculated so far.
+     * Returns the count of frames calculated so far.
      *
      * @returns The count of frames calculated.
      *
@@ -228,7 +228,7 @@ private:
 };
 
 /**
- * This enumeration represents the link quality constants.
+ * Represents the link quality constants.
  *
  * Link Quality is an integer in [0, 3]. A higher link quality indicates a more usable link, with 0 indicating that the
  * link is non-existent or unusable.
@@ -248,9 +248,9 @@ constexpr uint8_t kCostForLinkQuality2 = 2;                  ///< Link Cost for 
 constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for Link Quality 3.
 
 /**
- * This function converts link quality to route cost.
+ * Converts link quality to route cost.
  *
- * @param[in]  aLinkQuality  The link quality to covert.
+ * @param[in]  aLinkQuality  The link quality to convert.
  *
  * @returns The route cost corresponding to @p aLinkQuality.
  *
@@ -258,7 +258,7 @@ constexpr uint8_t kCostForLinkQuality3 = 1;                  ///< Link Cost for 
 uint8_t CostForLinkQuality(LinkQuality aLinkQuality);
 
 /**
- * This function computes the link margin from a given noise floor and received signal strength.
+ * Computes the link margin from a given noise floor and received signal strength.
  *
  * @param[in]  aNoiseFloor  The noise floor value (in dBm).
  * @param[in]  aRss         The received signal strength value (in dBm).
@@ -269,7 +269,7 @@ uint8_t CostForLinkQuality(LinkQuality aLinkQuality);
 uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss);
 
 /**
- * This function converts a link margin value to a link quality value.
+ * Converts a link margin value to a link quality value.
  *
  * @param[in]  aLinkMargin  The Link Margin in dB.
  *
@@ -279,7 +279,7 @@ uint8_t ComputeLinkMargin(int8_t aNoiseFloor, int8_t aRss);
 LinkQuality LinkQualityForLinkMargin(uint8_t aLinkMargin);
 
 /**
- * This function gets the typical received signal strength value for a given link quality.
+ * Gets the typical received signal strength value for a given link quality.
  *
  * @param[in]  aNoiseFloor   The noise floor value (in dBm).
  * @param[in]  aLinkQuality  The link quality value in [0, 3].
@@ -290,7 +290,7 @@ LinkQuality LinkQualityForLinkMargin(uint8_t aLinkMargin);
 int8_t GetTypicalRssForLinkQuality(int8_t aNoiseFloor, LinkQuality aLinkQuality);
 
 /**
- * This class encapsulates/stores all relevant information about quality of a link, including average received signal
+ * Encapsulates/stores all relevant information about quality of a link, including average received signal
  * strength (RSS), last RSS, link margin, and link quality.
  *
  */
@@ -303,13 +303,13 @@ public:
     static constexpr uint16_t kInfoStringSize = 50; ///< `InfoString` size (@sa ToInfoString()).
 
     /**
-     * This type defines the fixed-length `String` object returned from `ToInfoString()`.
+     * Defines the fixed-length `String` object returned from `ToInfoString()`.
      *
      */
     typedef String<kInfoStringSize> InfoString;
 
     /**
-     * This method initializes the `LinkQualityInfo` object.
+     * Initializes the `LinkQualityInfo` object.
      *
      * @param[in] aInstance  A reference to the OpenThread instance.
      *
@@ -317,19 +317,19 @@ public:
     void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
 
     /**
-     * This method clears the all the data in the object.
+     * Clears the all the data in the object.
      *
      */
     void Clear(void);
 
     /**
-     * This method clears the average RSS value.
+     * Clears the average RSS value.
      *
      */
     void ClearAverageRss(void) { mRssAverager.Clear(); }
 
     /**
-     * This method adds a new received signal strength (RSS) value to the average.
+     * Adds a new received signal strength (RSS) value to the average.
      *
      * @param[in] aRss         A new received signal strength value (in dBm) to be added to the average.
      *
@@ -337,7 +337,7 @@ public:
     void AddRss(int8_t aRss);
 
     /**
-     * This method returns the current average received signal strength value.
+     * Returns the current average received signal strength value.
      *
      * @returns The current average value or `Radio::kInvalidRssi` if no average is available.
      *
@@ -345,7 +345,7 @@ public:
     int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
     /**
-     * This method returns an encoded version of current average signal strength value. The encoded value is the
+     * Returns an encoded version of current average signal strength value. The encoded value is the
      * average multiplied by a precision factor (currently -8).
      *
      * @returns The current average multiplied by precision factor or zero if no average is available.
@@ -354,7 +354,7 @@ public:
     uint16_t GetAverageRssRaw(void) const { return mRssAverager.GetRaw(); }
 
     /**
-     * This method converts the link quality info to info/debug human-readable string.
+     * Converts the link quality info to info/debug human-readable string.
      *
      * @returns An `InfoString` representing the link quality info.
      *
@@ -362,7 +362,7 @@ public:
     InfoString ToInfoString(void) const;
 
     /**
-     * This method returns the link margin. The link margin is calculated using the link's current average received
+     * Returns the link margin. The link margin is calculated using the link's current average received
      * signal strength (RSS) and average noise floor.
      *
      * @returns Link margin derived from average received signal strength and average noise floor.
@@ -395,7 +395,7 @@ public:
     int8_t GetLastRss(void) const { return mLastRss; }
 
     /**
-     * This method adds a MAC frame transmission status (success/failure) and updates the frame tx error rate.
+     * Adds a MAC frame transmission status (success/failure) and updates the frame tx error rate.
      *
      * @param[in]  aTxStatus   Success/Failure of MAC frame transmission (`true` -> success, `false` -> failure).
      *
@@ -406,7 +406,7 @@ public:
     }
 
     /**
-     * This method adds a message transmission status (success/failure) and updates the message error rate.
+     * Adds a message transmission status (success/failure) and updates the message error rate.
      *
      * @param[in]  aTxStatus   Success/Failure of message (`true` -> success, `false` -> message tx failed).
      *                         A larger (IPv6) message may be fragmented and sent as multiple MAC frames. The message
@@ -420,7 +420,7 @@ public:
     }
 
     /**
-     * This method returns the MAC frame transmission error rate for the link.
+     * Returns the MAC frame transmission error rate for the link.
      *
      * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_FRAME_TX_ERR_RATE_AVERAGING_WINDOW`
      * frame transmissions.
@@ -431,7 +431,7 @@ public:
     uint16_t GetFrameErrorRate(void) const { return mFrameErrorRate.GetFailureRate(); }
 
     /**
-     * This method returns the message error rate for the link.
+     * Returns the message error rate for the link.
      *
      * The rate is maintained over a window of (roughly) last `OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW`
      * (IPv6) messages.

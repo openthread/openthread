@@ -69,7 +69,7 @@ extern "C" {
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel);
 
 /**
- * This function gets the channel from the last successful call to `otChannelManagerRequestChannelChange()`
+ * Gets the channel from the last successful call to `otChannelManagerRequestChannelChange()`
  *
  * @returns The last requested channel or zero if there has been no channel change request yet.
  *
@@ -77,7 +77,7 @@ void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChanne
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance);
 
 /**
- * This function gets the delay (in seconds) used by Channel Manager for a channel change.
+ * Gets the delay (in seconds) used by Channel Manager for a channel change.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  *
@@ -102,7 +102,7 @@ uint16_t otChannelManagerGetDelay(otInstance *aInstance);
 otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
 
 /**
- * This function requests that `ChannelManager` checks and selects a new channel and starts a channel change.
+ * Requests that `ChannelManager` checks and selects a new channel and starts a channel change.
  *
  * Unlike the `otChannelManagerRequestChannelChange()` where the channel must be given as a parameter, this function
  * asks the `ChannelManager` to select a channel by itself (based on collected channel quality info).
@@ -144,7 +144,7 @@ otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQu
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether the auto-channel-selection functionality is enabled or not.
+ * Indicates whether the auto-channel-selection functionality is enabled or not.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
@@ -166,7 +166,7 @@ bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance);
 otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval);
 
 /**
- * This function gets the period interval (in seconds) used by auto-channel-selection functionality.
+ * Gets the period interval (in seconds) used by auto-channel-selection functionality.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *

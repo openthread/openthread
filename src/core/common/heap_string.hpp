@@ -44,7 +44,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This class represents a heap allocated string.
+ * Represents a heap allocated string.
  *
  * The buffer to store the string is allocated from heap and is manged by the `Heap::String` class itself, e.g., it may
  * be reused and/or freed and reallocated when the string is set. The `Heap::String` destructor will always free the
@@ -55,7 +55,7 @@ class String : public Unequatable<String>
 {
 public:
     /**
-     * This constructor initializes the `String` as null (or empty).
+     * Initializes the `String` as null (or empty).
      *
      */
     String(void)
@@ -83,7 +83,7 @@ public:
     ~String(void) { Free(); }
 
     /**
-     * This method indicates whether or not the `String` is null (i.e., it was never successfully set or it was
+     * Indicates whether or not the `String` is null (i.e., it was never successfully set or it was
      * freed).
      *
      * @retval TRUE  The `String` is null.
@@ -93,7 +93,7 @@ public:
     bool IsNull(void) const { return (mStringBuffer == nullptr); }
 
     /**
-     * This method returns the `String` as a C string.
+     * Returns the `String` as a C string.
      *
      * @returns A pointer to C string buffer or `nullptr` if the `String` is null (never set or freed).
      *
@@ -101,7 +101,7 @@ public:
     const char *AsCString(void) const { return mStringBuffer; }
 
     /**
-     * This method sets the string from a given C string.
+     * Sets the string from a given C string.
      *
      * @param[in] aCString   A pointer to c string buffer. Can be `nullptr` which then frees the `String`.
      *
@@ -112,7 +112,7 @@ public:
     Error Set(const char *aCString);
 
     /**
-     * This method sets the string from another `String`.
+     * Sets the string from another `String`.
      *
      * @param[in] aString   The other `String` to set from.
      *
@@ -123,7 +123,7 @@ public:
     Error Set(const String &aString) { return Set(aString.AsCString()); }
 
     /**
-     * This method sets the string from another `String`.
+     * Sets the string from another `String`.
      *
      * @param[in] aString     The other `String` to set from (rvalue reference using move semantics).
      *
@@ -134,7 +134,7 @@ public:
     Error Set(String &&aString);
 
     /**
-     * This method frees any buffer allocated by the `String`.
+     * Frees any buffer allocated by the `String`.
      *
      * The `String` destructor will automatically call `Free()`. This method allows caller to free buffer
      * explicitly.
@@ -143,7 +143,7 @@ public:
     void Free(void);
 
     /**
-     * This method overloads operator `==` to evaluate whether or not the `String` is equal to a given C string.
+     * Overloads operator `==` to evaluate whether or not the `String` is equal to a given C string.
      *
      * @param[in]  aCString  A C string to compare with. Can be `nullptr` which then checks if `String` is null.
      *
@@ -154,7 +154,7 @@ public:
     bool operator==(const char *aCString) const;
 
     /**
-     * This method overloads operator `!=` to evaluate whether or not the `String` is unequal to a given C string.
+     * Overloads operator `!=` to evaluate whether or not the `String` is unequal to a given C string.
      *
      * @param[in]  aCString  A C string to compare with. Can be `nullptr` which then checks if `String` is not null.
      *
@@ -165,7 +165,7 @@ public:
     bool operator!=(const char *aCString) const { return !(*this == aCString); }
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two `String` are equal.
+     * Overloads operator `==` to evaluate whether or not two `String` are equal.
      *
      * @param[in]  aString  The other string to compare with.
      *

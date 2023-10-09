@@ -211,6 +211,20 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
     mChannel = HostSwap16(aChannel);
 }
 
+const char *StateTlv::StateToString(State aState)
+{
+    static const char *const kStateStrings[] = {
+        "Pending", // (0) kPending,
+        "Accept",  // (1) kAccept
+        "Reject",  // (2) kReject,
+    };
+
+    static_assert(0 == kPending, "kPending value is incorrect");
+    static_assert(1 == kAccept, "kAccept value is incorrect");
+
+    return aState == kReject ? kStateStrings[2] : kStateStrings[aState];
+}
+
 bool ChannelMaskBaseTlv::IsValid(void) const
 {
     const ChannelMaskEntryBase *cur = GetFirstEntry();
@@ -359,8 +373,7 @@ uint32_t ChannelMaskTlv::GetChannelMask(const Message &aMessage)
     uint16_t offset;
     uint16_t end;
 
-    SuccessOrExit(FindTlvValueOffset(aMessage, kChannelMask, offset, end));
-    end += offset;
+    SuccessOrExit(FindTlvValueStartEndOffsets(aMessage, kChannelMask, offset, end));
 
     while (offset + sizeof(ChannelMaskEntryBase) <= end)
     {

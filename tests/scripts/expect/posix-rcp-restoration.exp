@@ -54,17 +54,6 @@ puts "RCP PID: $rcp_pid"
 try {
     puts "Before enabling"
 
-    spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
-
-    exec kill $rcp_pid
-    puts "Killed $rcp_pid"
-    sleep 1
-    set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
-    puts "RCP PID: $rcp_pid"
-
-    expect eof
-
-
     puts "Queued parent-to-child packets, as parent"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
@@ -251,6 +240,7 @@ try {
     puts "While energy scanning"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
+    setup_default_network
     attach
 
     send "scan energy 100\n"

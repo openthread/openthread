@@ -167,6 +167,15 @@ exit:
     return neighbor;
 }
 
+Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::ExtAddress &aExtAddress)
+{
+    Mac::Address macAddress;
+
+    macAddress.SetExtended(aExtAddress);
+
+    return FindRxOnlyNeighborRouter(macAddress);
+}
+
 Neighbor *NeighborTable::FindRxOnlyNeighborRouter(const Mac::Address &aMacAddress)
 {
     Neighbor *neighbor = nullptr;
@@ -305,10 +314,17 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
     case kChildRemoved:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-        Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),
-                                                          Mle::ChildDuaState::kRemoved);
+        Get<DuaManager>().HandleChildDuaAddressEvent(static_cast<const Child &>(aNeighbor),
+                                                     DuaManager::kAddressRemoved);
 #endif
         break;
+
+#if OPENTHREAD_FTD
+    case kRouterAdded:
+    case kRouterRemoved:
+        Get<RouterTable>().SignalTableChanged();
+        break;
+#endif
 
     default:
         break;

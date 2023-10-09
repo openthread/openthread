@@ -45,7 +45,7 @@ namespace ot {
 namespace Heap {
 
 /**
- * This template class defines a `Heap::Allocatable` object.
+ * Defines a `Heap::Allocatable` object.
  *
  * `Heap::Allocatable` provides methods to allocate and free instances of `Type` on heap.
  *
@@ -60,7 +60,7 @@ template <class Type> class Allocatable
 {
 public:
     /**
-     * This static method allocates a new instance of `Type` on heap and initializes it using `Type` constructor.
+     * Allocates a new instance of `Type` on heap and initializes it using `Type` constructor.
      *
      * The `Type` class MUST have a constructor `Type(Args...)` which is invoked upon allocation of new `Type` to
      * initialize it.
@@ -78,7 +78,7 @@ public:
     }
 
     /**
-     * This static method allocates a new instance of `Type` on heap and initializes it using `Type::Init()` method.
+     * Allocates a new instance of `Type` on heap and initializes it using `Type::Init()` method.
      *
      * The `Type` class MUST have a default constructor (with no arguments) which is invoked upon allocation of new
      * `Type` instance. It MUST also provide an `Error Init(Args...)` method to initialize the instance. If any `Error`
@@ -109,7 +109,7 @@ public:
     }
 
     /**
-     * This method frees the `Type` instance.
+     * Frees the `Type` instance.
      *
      * The instance MUST be heap allocated using either `Allocate()` or `AllocateAndInit()`.
      *

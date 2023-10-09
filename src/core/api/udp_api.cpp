@@ -72,8 +72,14 @@ otError otUdpConnect(otInstance *aInstance, otUdpSocket *aSocket, const otSockAd
 
 otError otUdpSend(otInstance *aInstance, otUdpSocket *aSocket, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    return AsCoreType(aInstance).Get<Ip6::Udp>().SendTo(AsCoreType(aSocket), AsCoreType(aMessage),
-                                                        AsCoreType(aMessageInfo));
+    otError error;
+
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).Get<Ip6::Udp>().SendTo(AsCoreType(aSocket), AsCoreType(aMessage),
+                                                         AsCoreType(aMessageInfo));
+exit:
+    return error;
 }
 
 otUdpSocket *otUdpGetSockets(otInstance *aInstance) { return AsCoreType(aInstance).Get<Ip6::Udp>().GetUdpSockets(); }
@@ -116,8 +122,14 @@ otError otUdpRemoveReceiver(otInstance *aInstance, otUdpReceiver *aUdpReceiver)
 
 otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo)
 {
+    otError error;
+
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+
     return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo),
                                                               Ip6::kProtoUdp);
+exit:
+    return error;
 }
 
 bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port)

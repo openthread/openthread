@@ -867,7 +867,7 @@ class OpenThread_WpanCtl(IThci):
         return self.__sendCommand(self.wpan_cmd_prefix + 'getprop -v NCP:Channel')[0]
 
     def setMAC(self, xEUI):
-        """set the extended addresss of Thread device
+        """set the extended address of Thread device
 
         Args:
             xEUI: extended address in hex format
@@ -2180,7 +2180,7 @@ class OpenThread_WpanCtl(IThci):
         Args:
             sAddr: IPv6 destination address for this message
             xCommissionerSessionId: commissioner session id
-            listChannelMask: a channel array to indicate which channels to be scaned
+            listChannelMask: a channel array to indicate which channels to be scanned
             xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
             xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
             xScanDuration: IEEE 802.15.4 ScanDuration to use when performing an IEEE 802.15.4 ED Scan (milliseconds)

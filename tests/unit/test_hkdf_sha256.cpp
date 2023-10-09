@@ -150,7 +150,7 @@ void TestHkdfSha256(void)
 
         VerifyOrQuit(memcmp(outKey, test->mOutKey, test->mOutKeyLength) == 0, "HKDF-SHA-256 failed");
 
-        for (uint16_t i = test->mOutKeyLength + 1; i < sizeof(outKey); i++)
+        for (size_t i = test->mOutKeyLength + 1; i < sizeof(outKey); i++)
         {
             VerifyOrQuit(outKey[i] == kFillByte, "HKDF-SHA-256 wrote beyond output key length");
         }

@@ -90,7 +90,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         # Step 2: new, valid Timestamp TLV
         #         all valid Active Operational Dataset parameters,
         #         with new values in the TLVs that don’t affect connectivity
-        #         binary = new pskc and security policy [3600, 0b11100000]
+        #         binary = new pskc and security policy [3600, 0b11101111]
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=100,
             channel_mask=0x3fff800,
@@ -100,14 +100,14 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
-            binary='0410d2aa9cd8dff7919122d77d37ec3c1b5f0c030e10e0',
+            binary='0410d2aa9cd8dff7919122d77d37ec3c1b5f0c030e10ef',
         )
         self.simulator.go(5)
 
         # Step 7: old, invalid Active Timestamp TLV
         #         all valid Active Operational Dataset parameters, with
         #         new values in the TLVs that don’t affect connectivity
-        #         binary = new pskc and security policy [3600, 0b11110000]
+        #         binary = new pskc and security policy [3600, 0b11111111]
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=100,
             channel_mask=0x1fff800,
@@ -117,14 +117,14 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
-            binary='041017d672be32b0c24a2f8385f2fbaf1d970c030e10f0',
+            binary='041017d672be32b0c24a2f8385f2fbaf1d970c030e10ff',
         )
         self.simulator.go(5)
 
         # Step 9: new, valid Active Timestamp TLV
         #         all of valid Commissioner Dataset parameters plus one bogus TLV, and
         #         new values in the TLVs that don’t affect connectivity
-        #         binary = new pskc and security policy [3600, 0b11111000] and BogusTLV=0x400
+        #         binary = new pskc and security policy [3600, 0b11111111] and BogusTLV=0x400
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=101,
             channel_mask=0xfff800,
@@ -134,7 +134,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
-            binary='041008f4e9531e8efa8e852d5f4fb951b13e0c030e10f88202aa55',
+            binary='041008f4e9531e8efa8e852d5f4fb951b13e0c030e10ff8202aa55',
         )
         self.simulator.go(5)
 

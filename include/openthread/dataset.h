@@ -58,7 +58,7 @@ extern "C" {
 /**
  * @struct otNetworkKey
  *
- * This structure represents a Thread Network Key.
+ * Represents a Thread Network Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -68,7 +68,7 @@ struct otNetworkKey
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a Thread Network Key.
+ * Represents a Thread Network Key.
  *
  */
 typedef struct otNetworkKey otNetworkKey;
@@ -82,7 +82,7 @@ typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
 #define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
 
 /**
- * This structure represents a Network Name.
+ * Represents a Network Name.
  *
  * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
  *
@@ -95,7 +95,7 @@ typedef struct otNetworkName
 #define OT_EXT_PAN_ID_SIZE 8 ///< Size of a Thread PAN ID (bytes)
 
 /**
- * This structure represents an Extended PAN ID.
+ * Represents an Extended PAN ID.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -105,7 +105,7 @@ struct otExtendedPanId
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an Extended PAN ID.
+ * Represents an Extended PAN ID.
  *
  */
 typedef struct otExtendedPanId otExtendedPanId;
@@ -113,7 +113,7 @@ typedef struct otExtendedPanId otExtendedPanId;
 #define OT_MESH_LOCAL_PREFIX_SIZE OT_IP6_PREFIX_SIZE ///< Size of the Mesh Local Prefix (bytes)
 
 /**
- * This structure represents a Mesh Local Prefix.
+ * Represents a Mesh Local Prefix.
  *
  */
 typedef otIp6NetworkPrefix otMeshLocalPrefix;
@@ -121,7 +121,7 @@ typedef otIp6NetworkPrefix otMeshLocalPrefix;
 #define OT_PSKC_MAX_SIZE 16 ///< Maximum size of the PSKc (bytes)
 
 /**
- * This structure represents PSKc.
+ * Represents PSKc.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -131,7 +131,7 @@ struct otPskc
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a PSKc.
+ * Represents a PSKc.
  *
  */
 typedef struct otPskc otPskc;
@@ -143,7 +143,7 @@ typedef struct otPskc otPskc;
 typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
 
 /**
- * This structure represent Security Policy.
+ * Represent Security Policy.
  *
  */
 typedef struct otSecurityPolicy
@@ -163,7 +163,7 @@ typedef struct otSecurityPolicy
 } otSecurityPolicy;
 
 /**
- * This type represents Channel Mask.
+ * Represents Channel Mask.
  *
  */
 typedef uint32_t otChannelMask;
@@ -196,27 +196,27 @@ typedef uint32_t otChannelMask;
 #define OT_CHANNEL_26_MASK (1 << 26) ///< Channel 26
 
 /**
- * This structure represents presence of different components in Active or Pending Operational Dataset.
+ * Represents presence of different components in Active or Pending Operational Dataset.
  *
  */
 typedef struct otOperationalDatasetComponents
 {
-    bool mIsActiveTimestampPresent : 1;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
-    bool mIsPendingTimestampPresent : 1; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
-    bool mIsNetworkKeyPresent : 1;       ///< TRUE if Network Key is present, FALSE otherwise.
-    bool mIsNetworkNamePresent : 1;      ///< TRUE if Network Name is present, FALSE otherwise.
-    bool mIsExtendedPanIdPresent : 1;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
-    bool mIsMeshLocalPrefixPresent : 1;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
-    bool mIsDelayPresent : 1;            ///< TRUE if Delay Timer is present, FALSE otherwise.
-    bool mIsPanIdPresent : 1;            ///< TRUE if PAN ID is present, FALSE otherwise.
-    bool mIsChannelPresent : 1;          ///< TRUE if Channel is present, FALSE otherwise.
-    bool mIsPskcPresent : 1;             ///< TRUE if PSKc is present, FALSE otherwise.
-    bool mIsSecurityPolicyPresent : 1;   ///< TRUE if Security Policy is present, FALSE otherwise.
-    bool mIsChannelMaskPresent : 1;      ///< TRUE if Channel Mask is present, FALSE otherwise.
+    bool mIsActiveTimestampPresent;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
+    bool mIsPendingTimestampPresent; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
+    bool mIsNetworkKeyPresent;       ///< TRUE if Network Key is present, FALSE otherwise.
+    bool mIsNetworkNamePresent;      ///< TRUE if Network Name is present, FALSE otherwise.
+    bool mIsExtendedPanIdPresent;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
+    bool mIsMeshLocalPrefixPresent;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
+    bool mIsDelayPresent;            ///< TRUE if Delay Timer is present, FALSE otherwise.
+    bool mIsPanIdPresent;            ///< TRUE if PAN ID is present, FALSE otherwise.
+    bool mIsChannelPresent;          ///< TRUE if Channel is present, FALSE otherwise.
+    bool mIsPskcPresent;             ///< TRUE if PSKc is present, FALSE otherwise.
+    bool mIsSecurityPolicyPresent;   ///< TRUE if Security Policy is present, FALSE otherwise.
+    bool mIsChannelMaskPresent;      ///< TRUE if Channel Mask is present, FALSE otherwise.
 } otOperationalDatasetComponents;
 
 /**
- * This structure represents a Thread Dataset timestamp component.
+ * Represents a Thread Dataset timestamp component.
  *
  */
 typedef struct otTimestamp
@@ -227,7 +227,7 @@ typedef struct otTimestamp
 } otTimestamp;
 
 /**
- * This structure represents an Active or Pending Operational Dataset.
+ * Represents an Active or Pending Operational Dataset.
  *
  * Components in Dataset are optional. `mComponents` structure specifies which components are present in the Dataset.
  *
@@ -256,7 +256,7 @@ typedef struct otOperationalDataset
 #define OT_OPERATIONAL_DATASET_MAX_LENGTH 254
 
 /**
- * This structure represents an Active or Pending Operational Dataset.
+ * Represents an Active or Pending Operational Dataset.
  *
  * The Operational Dataset is TLV encoded as specified by Thread.
  *
@@ -268,7 +268,7 @@ typedef struct otOperationalDatasetTlvs
 } otOperationalDatasetTlvs;
 
 /**
- * This enumeration represents meshcop TLV types.
+ * Represents meshcop TLV types.
  *
  */
 typedef enum otMeshcopTlvType
@@ -316,7 +316,7 @@ typedef enum otMeshcopTlvType
 } otMeshcopTlvType;
 
 /**
- * This function pointer is called when a response to a MGMT_SET request is received or times out.
+ * Pointer is called when a response to a MGMT_SET request is received or times out.
  *
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
@@ -331,7 +331,7 @@ typedef enum otMeshcopTlvType
 typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
 
 /**
- * This function indicates whether a valid network is present in the Active Operational Dataset or not.
+ * Indicates whether a valid network is present in the Active Operational Dataset or not.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -353,7 +353,7 @@ bool otDatasetIsCommissioned(otInstance *aInstance);
 otError otDatasetGetActive(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * This function gets the Active Operational Dataset.
+ * Gets the Active Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Active Operational Dataset will be placed.
@@ -391,7 +391,7 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
- * This function sets the Active Operational Dataset.
+ * Sets the Active Operational Dataset.
  *
  * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
  *
@@ -417,7 +417,7 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
 
 /**
- * This function gets the Pending Operational Dataset.
+ * Gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
@@ -429,7 +429,7 @@ otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDataset
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset);
 
 /**
- * This function gets the Pending Operational Dataset.
+ * Gets the Pending Operational Dataset.
  *
  * @param[in]   aInstance A pointer to an OpenThread instance.
  * @param[out]  aDataset  A pointer to where the Pending Operational Dataset will be placed.
@@ -454,7 +454,7 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
 
 /**
- * This function sets the Pending Operational Dataset.
+ * Sets the Pending Operational Dataset.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
@@ -549,7 +549,7 @@ otError otDatasetSendMgmtPendingSet(otInstance                 *aInstance,
                                     void                       *aContext);
 
 /**
- * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
+ * Generates PSKc from a given pass-phrase, network name, and extended PAN ID.
  *
  * PSKc is used to establish the Commissioner Session.
  *

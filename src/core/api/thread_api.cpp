@@ -430,6 +430,26 @@ const otIpCounters *otThreadGetIp6Counters(otInstance *aInstance)
 
 void otThreadResetIp6Counters(otInstance *aInstance) { AsCoreType(aInstance).Get<MeshForwarder>().ResetCounters(); }
 
+#if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
+const uint32_t *otThreadGetTimeInQueueHistogram(otInstance *aInstance, uint16_t *aNumBins, uint32_t *aBinInterval)
+{
+    AssertPointerIsNotNull(aNumBins);
+    AssertPointerIsNotNull(aBinInterval);
+
+    return AsCoreType(aInstance).Get<MeshForwarder>().GetTimeInQueueHistogram(*aNumBins, *aBinInterval);
+}
+
+uint32_t otThreadGetMaxTimeInQueue(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshForwarder>().GetMaxTimeInQueue();
+}
+
+void otThreadResetTimeInQueueStat(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshForwarder>().ResetTimeInQueueStat();
+}
+#endif
+
 const otMleCounters *otThreadGetMleCounters(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetCounters();

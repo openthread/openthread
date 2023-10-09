@@ -99,7 +99,7 @@ enum IpDscpCs : uint8_t
 };
 
 /**
- * This enumeration represents the 2-bit Explicit Congestion Notification (ECN) values.
+ * Represents the 2-bit Explicit Congestion Notification (ECN) values.
  *
  */
 enum Ecn : uint8_t

@@ -50,6 +50,26 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
     return AsCoreType(aIterator).GetNextEntry(AsCoreType(aEntry));
 }
 
+otError otDnsEncodeTxtData(const otDnsTxtEntry *aTxtEntries,
+                           uint8_t              aNumTxtEntries,
+                           uint8_t             *aTxtData,
+                           uint16_t            *aTxtDataLength)
+{
+    Error                          error;
+    MutableData<kWithUint16Length> data;
+
+    AssertPointerIsNotNull(aTxtEntries);
+    AssertPointerIsNotNull(aTxtData);
+    AssertPointerIsNotNull(aTxtDataLength);
+
+    data.Init(aTxtData, *aTxtDataLength);
+    SuccessOrExit(error = Dns::TxtEntry::AppendEntries(AsCoreTypePtr(aTxtEntries), aNumTxtEntries, data));
+    *aTxtDataLength = data.GetLength();
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otDnsSetNameCompressionEnabled(bool aEnabled) { Instance::SetDnsNameCompressionEnabled(aEnabled); }
 
@@ -186,6 +206,20 @@ otError otDnsClientResolveService(otInstance             *aInstance,
 
     return AsCoreType(aInstance).Get<Dns::Client>().ResolveService(aInstanceLabel, aServiceName, aCallback, aContext,
                                                                    AsCoreTypePtr(aConfig));
+}
+
+otError otDnsClientResolveServiceAndHostAddress(otInstance             *aInstance,
+                                                const char             *aInstanceLabel,
+                                                const char             *aServiceName,
+                                                otDnsServiceCallback    aCallback,
+                                                void                   *aContext,
+                                                const otDnsQueryConfig *aConfig)
+{
+    AssertPointerIsNotNull(aInstanceLabel);
+    AssertPointerIsNotNull(aServiceName);
+
+    return AsCoreType(aInstance).Get<Dns::Client>().ResolveServiceAndHostAddress(
+        aInstanceLabel, aServiceName, aCallback, aContext, AsCoreTypePtr(aConfig));
 }
 
 otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse,

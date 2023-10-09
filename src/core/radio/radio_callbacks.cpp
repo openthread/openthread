@@ -40,6 +40,9 @@ namespace ot {
 
 void Radio::Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    Get<RadioStatistics>().RecordRxDone(aError);
+#endif
     Get<Mac::SubMac>().HandleReceiveDone(aFrame, aError);
 }
 
@@ -47,6 +50,9 @@ void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame) { Get<Mac::Su
 
 void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError)
 {
+#if OPENTHREAD_CONFIG_RADIO_STATS_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    Get<RadioStatistics>().RecordTxDone(aError, aFrame.GetLength());
+#endif
     Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
 }
 

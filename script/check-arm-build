@@ -91,7 +91,7 @@ build_nrf52840()
 
 main()
 {
-    export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
+    export CPPFLAGS="${CPPFLAGS-} -DNDEBUG"
 
     if [[ $# == 0 ]]; then
         build_nrf52840

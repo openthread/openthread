@@ -31,6 +31,7 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
+#include <openthread/dataset_ftd.h>
 #include <openthread/srp_client.h>
 #include <openthread/srp_server.h>
 #include <openthread/thread.h>
@@ -79,6 +80,8 @@ void AdvanceTime(uint32_t aDuration);
 // `otPlatRadio`
 
 extern "C" {
+
+otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF; }
 
 otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
 {
@@ -188,15 +191,23 @@ void InitTest(void)
     // Initialize OT instance.
 
     sNow      = 0;
+    sAlarmOn  = false;
     sInstance = static_cast<Instance *>(testInitInstance());
 
     memset(&sRadioTxFrame, 0, sizeof(sRadioTxFrame));
     sRadioTxFrame.mPsdu = sRadioTxFramePsdu;
+    sRadioTxOngoing     = false;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize Border Router and start Thread operation.
 
-    SuccessOrQuit(otLinkSetPanId(sInstance, 0x1234));
+    otOperationalDataset     dataset;
+    otOperationalDatasetTlvs datasetTlvs;
+
+    SuccessOrQuit(otDatasetCreateNewNetwork(sInstance, &dataset));
+    SuccessOrQuit(otDatasetConvertToTlvs(&dataset, &datasetTlvs));
+    SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
+
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
 
@@ -283,7 +294,7 @@ static const char kHostName[] = "myhost";
 void PrepareService1(Srp::Client::Service &aService)
 {
     static const char          kServiceName[]   = "_srv._udp";
-    static const char          kInstanceLabel[] = "srv-instance";
+    static const char          kInstanceLabel[] = "srv.instance";
     static const char          kSub1[]          = "_sub1";
     static const char          kSub2[]          = "_V1234567";
     static const char          kSub3[]          = "_XYZWS";
@@ -703,6 +714,122 @@ void TestSrpServerIgnore(void)
     Log("End of TestSrpServerIgnore");
 }
 
+void TestSrpServerClientRemove(bool aShouldRemoveKeyLease)
+{
+    Srp::Server         *srpServer;
+    Srp::Client         *srpClient;
+    Srp::Client::Service service1;
+    Srp::Client::Service service2;
+    uint16_t             heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestSrpServerClientRemove(aShouldRemoveKeyLease:%u)", aShouldRemoveKeyLease);
+
+    InitTest();
+
+    srpServer = &sInstance->Get<Srp::Server>();
+    srpClient = &sInstance->Get<Srp::Client>();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    PrepareService1(service1);
+    PrepareService2(service2);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP server.
+
+    SuccessOrQuit(srpServer->SetAddressMode(Srp::Server::kAddressModeUnicast));
+    VerifyOrQuit(srpServer->GetAddressMode() == Srp::Server::kAddressModeUnicast);
+
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateDisabled);
+
+    srpServer->SetServiceHandler(HandleSrpServerUpdate, sInstance);
+
+    srpServer->SetEnabled(true);
+    VerifyOrQuit(srpServer->GetState() != Srp::Server::kStateDisabled);
+
+    AdvanceTime(10000);
+    VerifyOrQuit(srpServer->GetState() == Srp::Server::kStateRunning);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start SRP client.
+
+    srpClient->SetCallback(HandleSrpClientCallback, sInstance);
+
+    srpClient->EnableAutoStartMode(nullptr, nullptr);
+    VerifyOrQuit(srpClient->IsAutoStartModeEnabled());
+
+    AdvanceTime(2000);
+    VerifyOrQuit(srpClient->IsRunning());
+
+    SuccessOrQuit(srpClient->SetHostName(kHostName));
+    SuccessOrQuit(srpClient->EnableAutoHostAddress());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Register two services, validate that update handler is called.
+
+    SuccessOrQuit(srpClient->AddService(service1));
+    SuccessOrQuit(srpClient->AddService(service2));
+
+    sUpdateHandlerMode       = kAccept;
+    sProcessedUpdateCallback = false;
+    sProcessedClientCallback = false;
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRegistered);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRegistered);
+    ValidateHost(*srpServer, kHostName);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove two services and clear key-lease, validate that update handler is called.
+
+    SuccessOrQuit(srpClient->RemoveHostAndServices(aShouldRemoveKeyLease));
+
+    AdvanceTime(2 * 1000);
+
+    VerifyOrQuit(sProcessedUpdateCallback);
+    VerifyOrQuit(sProcessedClientCallback);
+    VerifyOrQuit(sLastClientCallbackError == kErrorNone);
+
+    VerifyOrQuit(service1.GetState() == Srp::Client::kRemoved);
+    VerifyOrQuit(service2.GetState() == Srp::Client::kRemoved);
+
+    if (aShouldRemoveKeyLease)
+    {
+        VerifyOrQuit(srpServer->GetNextHost(nullptr) == nullptr);
+    }
+    else
+    {
+        ValidateHost(*srpServer, kHostName);
+    }
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Disable SRP server, verify that all heap allocations by SRP server
+    // are freed.
+
+    Log("Disabling SRP server");
+
+    srpServer->SetEnabled(false);
+    AdvanceTime(100);
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Finalize OT instance and validate all heap allocations are freed.
+
+    Log("Finalizing OT instance");
+    FinalizeTest();
+
+    VerifyOrQuit(sHeapAllocatedPtrs.IsEmpty());
+
+    Log("End of TestSrpServerClientRemove");
+}
+
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void TestUpdateLeaseShortVariant(void)
 {
@@ -907,6 +1034,8 @@ int main(void)
     TestSrpServerBase();
     TestSrpServerReject();
     TestSrpServerIgnore();
+    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
+    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     TestUpdateLeaseShortVariant();
 #endif

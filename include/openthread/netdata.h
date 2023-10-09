@@ -53,7 +53,7 @@ extern "C" {
 typedef uint32_t otNetworkDataIterator; ///< Used to iterate through Network Data information.
 
 /**
- * This structure represents a Border Router configuration.
+ * Represents a Border Router configuration.
  */
 typedef struct otBorderRouterConfig
 {
@@ -72,7 +72,7 @@ typedef struct otBorderRouterConfig
 } otBorderRouterConfig;
 
 /**
- * This structure represents 6LoWPAN Context ID information associated with a prefix in Network Data.
+ * Represents 6LoWPAN Context ID information associated with a prefix in Network Data.
  *
  */
 typedef struct otLowpanContextInfo
@@ -83,7 +83,7 @@ typedef struct otLowpanContextInfo
 } otLowpanContextInfo;
 
 /**
- * This structure represents an External Route configuration.
+ * Represents an External Route configuration.
  *
  */
 typedef struct otExternalRouteConfig
@@ -94,6 +94,7 @@ typedef struct otExternalRouteConfig
     bool        mNat64 : 1;               ///< Whether this is a NAT64 prefix.
     bool        mStable : 1;              ///< Whether this configuration is considered Stable Network Data.
     bool        mNextHopIsThisDevice : 1; ///< Whether the next hop is this device (value ignored on config add).
+    bool        mAdvPio : 1;              ///< Whether or not BR is advertising a ULA prefix in PIO (AP flag).
 } otExternalRouteConfig;
 
 /**
@@ -111,7 +112,7 @@ typedef enum otRoutePreference
 #define OT_SERVER_DATA_MAX_SIZE 248  ///< Max size of Server Data in bytes. Theoretical limit, practically much lower.
 
 /**
- * This structure represents a Server configuration.
+ * Represents a Server configuration.
  *
  */
 typedef struct otServerConfig
@@ -123,7 +124,7 @@ typedef struct otServerConfig
 } otServerConfig;
 
 /**
- * This structure represents a Service configuration.
+ * Represents a Service configuration.
  *
  */
 typedef struct otServiceConfig

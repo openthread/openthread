@@ -538,6 +538,27 @@ target_link_libraries(ot-test-ip-address
 
 add_test(NAME ot-test-ip-address COMMAND ot-test-ip-address)
 
+add_executable(ot-test-link-metrics-manager
+    test_link_metrics_manager.cpp
+)
+
+target_include_directories(ot-test-link-metrics-manager
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-link-metrics-manager
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-link-metrics-manager
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-link-metrics-manager COMMAND ot-test-link-metrics-manager)
+
 add_executable(ot-test-link-quality
     test_link_quality.cpp
 )
@@ -1082,6 +1103,27 @@ target_link_libraries(ot-test-timer
 
 add_test(NAME ot-test-timer COMMAND ot-test-timer)
 
+add_executable(ot-test-trickle-timer
+    test_trickle_timer.cpp
+)
+
+target_include_directories(ot-test-trickle-timer
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-trickle-timer
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-trickle-timer
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-trickle-timer COMMAND ot-test-trickle-timer)
+
 add_executable(ot-test-tlv
     test_tlv.cpp
 )
@@ -1187,3 +1229,21 @@ target_link_libraries(ot-test-address-sanitizer
         ${COMMON_LIBS}
 )
 add_test(NAME ot-test-address-sanitizer COMMAND ot-test-address-sanitizer)
+
+add_executable(ot-test-url
+    test_url.cpp
+)
+target_include_directories(ot-test-url
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+target_compile_options(ot-test-url
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+target_link_libraries(ot-test-url
+    PRIVATE
+        ${COMMON_LIBS}
+        openthread-url
+)
+add_test(NAME ot-test-url COMMAND ot-test-url)

@@ -75,7 +75,7 @@ public:
     };
 
     /**
-     * This constructor creates and initializes an NcpBase instance.
+     * Creates and initializes an NcpBase instance.
      *
      * @param[in]  aInstance  The OpenThread instance structure.
      *
@@ -83,7 +83,7 @@ public:
     explicit NcpBase(Instance *aInstance);
 
     /**
-     * This static method returns the pointer to the single NCP instance.
+     * Returns the pointer to the single NCP instance.
      *
      * @returns Pointer to the single NCP instance.
      *
@@ -91,7 +91,7 @@ public:
     static NcpBase *GetNcpInstance(void);
 
     /**
-     * This method sends data to host via specific stream.
+     * Sends data to host via specific stream.
      *
      *
      * @param[in]  aStreamId  A numeric identifier for the stream to write to.
@@ -109,7 +109,7 @@ public:
     otError StreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen);
 
     /**
-     * This method send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
+     * Send an OpenThread log message to host via `SPINEL_PROP_STREAM_LOG` property.
      *
      * @param[in] aLogLevel   The log level
      * @param[in] aLogRegion  The log region
@@ -120,7 +120,7 @@ public:
 
 #if OPENTHREAD_CONFIG_NCP_ENABLE_PEEK_POKE
     /**
-     * This method registers peek/poke delegate functions with NCP module.
+     * Registers peek/poke delegate functions with NCP module.
      *
      * @param[in] aAllowPeekDelegate      Delegate function pointer for peek operation.
      * @param[in] aAllowPokeDelegate      Delegate function pointer for poke operation.
@@ -131,7 +131,7 @@ public:
 #endif
 
     /**
-     * This method is called by the framer whenever a framing error is detected.
+     * Is called by the framer whenever a framing error is detected.
      */
     void IncrementFrameErrorCounter(void);
 
@@ -154,7 +154,7 @@ protected:
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     /**
-     * This enumeration represents the `ResponseEntry` type.
+     * Represents the `ResponseEntry` type.
      *
      */
     enum ResponseType
@@ -165,7 +165,7 @@ protected:
     };
 
     /**
-     * This struct represents a spinel response entry.
+     * Represents a spinel response entry.
      *
      */
     struct ResponseEntry
@@ -312,16 +312,18 @@ protected:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     static void HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
                                              const otLinkMetricsValues *aMetricsValues,
-                                             uint8_t                    aStatus,
+                                             otLinkMetricsStatus        aStatus,
                                              void                      *aContext);
 
     void HandleLinkMetricsReport(const otIp6Address        *aSource,
                                  const otLinkMetricsValues *aMetricsValues,
-                                 uint8_t                    aStatus);
+                                 otLinkMetricsStatus        aStatus);
 
-    static void HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext);
+    static void HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
+                                                   otLinkMetricsStatus aStatus,
+                                                   void               *aContext);
 
-    void HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus);
+    void HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, otLinkMetricsStatus aStatus);
 
     static void HandleLinkMetricsEnhAckProbingIeReport_Jump(otShortAddress             aShortAddress,
                                                             const otExtAddress        *aExtAddress,
@@ -462,7 +464,7 @@ protected:
 
 #if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
     /**
-     * This method defines a vendor "command handler" hook to process vendor-specific spinel commands.
+     * Defines a vendor "command handler" hook to process vendor-specific spinel commands.
      *
      * @param[in] aHeader   The spinel frame header.
      * @param[in] aCommand  The spinel command key.
@@ -474,7 +476,7 @@ protected:
     otError VendorCommandHandler(uint8_t aHeader, unsigned int aCommand);
 
     /**
-     * This method is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
+     * Is a callback which mirrors `NcpBase::HandleFrameRemovedFromNcpBuffer()`. It is called when a
      * spinel frame is sent and removed from NCP buffer.
      *
      * (a) This can be used to track and verify that a vendor spinel frame response is delivered to the host (tracking
@@ -489,7 +491,7 @@ protected:
     void VendorHandleFrameRemovedFromNcpBuffer(Spinel::Buffer::FrameTag aFrameTag);
 
     /**
-     * This method defines a vendor "get property handler" hook to process vendor spinel properties.
+     * Defines a vendor "get property handler" hook to process vendor spinel properties.
      *
      * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "get" operation for the
      * given property key. Otherwise, the vendor handler should behave like other property get handlers, i.e., it
@@ -506,7 +508,7 @@ protected:
     otError VendorGetPropertyHandler(spinel_prop_key_t aPropKey);
 
     /**
-     * This method defines a vendor "set property handler" hook to process vendor spinel properties.
+     * Defines a vendor "set property handler" hook to process vendor spinel properties.
      *
      * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
      * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it

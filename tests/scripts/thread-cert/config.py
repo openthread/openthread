@@ -57,6 +57,7 @@ REALM_LOCAL_ALL_NODES_ADDRESS = 'ff03::1'
 REALM_LOCAL_ALL_ROUTERS_ADDRESS = 'ff03::2'
 LINK_LOCAL_ALL_NODES_ADDRESS = 'ff02::1'
 LINK_LOCAL_ALL_ROUTERS_ADDRESS = 'ff02::2'
+TMF_PORT = 61631
 
 DOMAIN_PREFIX = 'fd00:7d03:7d03:7d03::/64'
 DOMAIN_PREFIX_REGEX_PATTERN = '^fd00:7d03:7d03:7d03:'
@@ -123,7 +124,14 @@ RSSI = {
 }
 
 SNIFFER_ID = int(os.getenv('SNIFFER_ID', 34))
+
+CHANNEL = 11
+CHANNEL_MASK = 0x07fff800
+EXTENDED_PANID = 'dead00beef00cafe'
+NETWORK_NAME = 'OpenThread'
 PANID = 0xface
+PSKC = 'c23a76e98f1a6483639b1ac1271e2e27'
+SECURITY_POLICY = [672, 'onrc']
 
 LEADER_STARTUP_DELAY = 12
 ROUTER_STARTUP_DELAY = 10
@@ -330,7 +338,7 @@ def create_deafult_network_tlvs_factories():
         network_layer.TlvType.XTAL_ACCURACY:
             network_layer.XtalAccuracyFactory(),
         # Routing information are distributed in a Thread network by MLE Routing TLV
-        # which is in fact MLE Route64 TLV. Thread specificaton v1.1. - Chapter 5.20
+        # which is in fact MLE Route64 TLV. Thread specification v1.1. - Chapter 5.20
         network_layer.TlvType.MLE_ROUTING:
             create_default_mle_tlv_route64_factory(),
         network_layer.TlvType.IPv6_ADDRESSES:

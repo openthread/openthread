@@ -110,116 +110,89 @@ exit:
     return rval;
 }
 
+otError Url::ParseUint32(const char *aName, uint32_t &aValue) const
+{
+    otError     error = OT_ERROR_NONE;
+    const char *str;
+    long long   value;
+
+    VerifyOrExit((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    value = strtoll(str, nullptr, 0);
+    VerifyOrExit(0 <= value && value <= UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<uint32_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::ParseUint16(const char *aName, uint16_t &aValue) const
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t value;
+
+    SuccessOrExit(error = ParseUint32(aName, value));
+    VerifyOrExit(value <= UINT16_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<uint16_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::ParseUint8(const char *aName, uint8_t &aValue) const
+{
+    otError  error = OT_ERROR_NONE;
+    uint32_t value;
+
+    SuccessOrExit(error = ParseUint32(aName, value));
+    VerifyOrExit(value <= UINT8_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<uint8_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::ParseInt32(const char *aName, int32_t &aValue) const
+{
+    otError     error = OT_ERROR_NONE;
+    const char *str;
+    long long   value;
+
+    VerifyOrExit((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    value = strtoll(str, nullptr, 0);
+    VerifyOrExit(INT32_MIN <= value && value <= INT32_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<int32_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::ParseInt16(const char *aName, int16_t &aValue) const
+{
+    otError error = OT_ERROR_NONE;
+    int32_t value;
+
+    SuccessOrExit(error = ParseInt32(aName, value));
+    VerifyOrExit(INT16_MIN <= value && value <= INT16_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<int16_t>(value);
+
+exit:
+    return error;
+}
+
+otError Url::ParseInt8(const char *aName, int8_t &aValue) const
+{
+    otError error = OT_ERROR_NONE;
+    int32_t value;
+
+    SuccessOrExit(error = ParseInt32(aName, value));
+    VerifyOrExit(INT8_MIN <= value && value <= INT8_MAX, error = OT_ERROR_INVALID_ARGS);
+    aValue = static_cast<int8_t>(value);
+
+exit:
+    return error;
+}
+
 } // namespace Url
 } // namespace ot
-
-#ifndef SELF_TEST
-#define SELF_TEST 0
-#endif
-
-#if SELF_TEST
-#include <assert.h>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
-
-void TestSimple(void)
-{
-    char         url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
-    ot::Url::Url args;
-
-    assert(!args.Init(url));
-
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert(!strcmp(args.GetValue("baudrate"), "115200"));
-    assert(args.GetValue("not-exists") == nullptr);
-    assert(args.GetValue("last-value-wrong-position", url) == nullptr);
-    assert(args.GetValue("last-value-before-url", url - 1) == nullptr);
-    assert(args.GetValue("last-value-after-url", url + sizeof(url)) == nullptr);
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestSimpleNoQueryString(void)
-{
-    char         url[] = "spinel:///dev/ttyUSB0";
-    ot::Url::Url args;
-
-    assert(!args.Init(url));
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert(args.GetValue("last-value-wrong-position", url) == nullptr);
-    assert(args.GetValue("last-value-before-url", url - 1) == nullptr);
-    assert(args.GetValue("last-value-after-url", url + sizeof(url)) == nullptr);
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestEmptyValue(void)
-{
-    char         url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
-    ot::Url::Url args;
-    const char  *arg = nullptr;
-
-    assert(!args.Init(url));
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert((arg = args.GetValue("rtscts")) != nullptr);
-    assert(args.GetValue("rtscts", arg) == nullptr);
-    assert((arg = args.GetValue("verbose", arg)) != nullptr);
-    assert((arg = args.GetValue("verbose", arg)) != nullptr);
-    assert((arg = args.GetValue("verbose", arg)) != nullptr);
-    assert((arg = args.GetValue("verbose", arg)) == nullptr);
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestMultipleProtocols(void)
-{
-    char         url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
-    ot::Url::Url args;
-
-    assert(!args.Init(url));
-    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
-    assert(!strcmp(args.GetValue("baudrate"), "115200"));
-
-    printf("PASS %s\r\n", __func__);
-}
-
-void TestMultipleProtocolsAndDuplicateParameters(void)
-{
-    char         url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
-    ot::Url::Url args;
-    const char  *arg = nullptr;
-
-    assert(!args.Init(url));
-    assert(!strcmp(args.GetPath(), "/path/to/ot-rcp"));
-
-    arg = args.GetValue("arg");
-    assert(!strcmp(arg, "1"));
-
-    arg = args.GetValue("arg", arg);
-    assert(!strcmp(arg, "arg2"));
-
-    arg = args.GetValue("arg", arg);
-    assert(!strcmp(arg, "3"));
-
-    assert(args.GetValue("arg", url) == nullptr);
-    assert(args.GetValue("arg", url - 1) == nullptr);
-    assert(args.GetValue("arg", url + sizeof(url)) == nullptr);
-
-    printf("PASS %s\r\n", __func__);
-}
-
-#pragma GCC diagnostic pop
-
-int main(void)
-{
-    TestSimple();
-    TestSimpleNoQueryString();
-    TestEmptyValue();
-    TestMultipleProtocols();
-    TestMultipleProtocolsAndDuplicateParameters();
-
-    return 0;
-}
-
-#endif // SELF_TEST

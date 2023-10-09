@@ -261,12 +261,12 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
 {
-    uint16_t cslPeriod;
+    uint32_t cslPeriod;
     otError  error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mDecoder.ReadUint16(cslPeriod));
+    SuccessOrExit(error = mDecoder.ReadUint32(cslPeriod));
 
-    error = otLinkCslSetPeriod(mInstance, cslPeriod);
+    error = otLinkSetCslPeriod(mInstance, cslPeriod);
 
 exit:
     return error;
@@ -274,7 +274,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
 {
-    return mEncoder.WriteUint16(otLinkCslGetPeriod(mInstance));
+    return mEncoder.WriteUint32(otLinkGetCslPeriod(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
@@ -284,7 +284,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(v
 
     SuccessOrExit(error = mDecoder.ReadUint32(cslTimeout));
 
-    error = otLinkCslSetTimeout(mInstance, cslTimeout);
+    error = otLinkSetCslTimeout(mInstance, cslTimeout);
 
 exit:
     return error;
@@ -292,7 +292,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
 {
-    return mEncoder.WriteUint32(otLinkCslGetTimeout(mInstance));
+    return mEncoder.WriteUint32(otLinkGetCslTimeout(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
@@ -302,7 +302,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_CHANNEL>(v
 
     SuccessOrExit(error = mDecoder.ReadUint8(cslChannel));
 
-    error = otLinkCslSetChannel(mInstance, cslChannel);
+    error = otLinkSetCslChannel(mInstance, cslChannel);
 
 exit:
     return error;
@@ -310,7 +310,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
 {
-    return mEncoder.WriteUint8(otLinkCslGetChannel(mInstance));
+    return mEncoder.WriteUint8(otLinkGetCslChannel(mInstance));
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
@@ -1047,7 +1047,7 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ON_MESH_NET
 
     error = otBorderRouterRemoveOnMeshPrefix(mInstance, &ip6Prefix);
 
-    // If prefix was not on the list, "remove" command can be considred
+    // If prefix was not on the list, "remove" command can be considered
     // successful.
 
     if (error == OT_ERROR_NOT_FOUND)
@@ -4230,7 +4230,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
                                            const otLinkMetricsValues *aMetricsValues,
-                                           uint8_t                    aStatus,
+                                           otLinkMetricsStatus        aStatus,
                                            void                      *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleLinkMetricsReport(aSource, aMetricsValues, aStatus);
@@ -4238,7 +4238,7 @@ void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address        *aSource,
 
 void NcpBase::HandleLinkMetricsReport(const otIp6Address        *aSource,
                                       const otLinkMetricsValues *aMetricsValues,
-                                      uint8_t                    aStatus)
+                                      otLinkMetricsStatus        aStatus)
 {
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT));
@@ -4253,12 +4253,14 @@ exit:
     return;
 }
 
-void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext)
+void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
+                                                 otLinkMetricsStatus aStatus,
+                                                 void               *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleLinkMetricsMgmtResponse(aSource, aStatus);
 }
 
-void NcpBase::HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus)
+void NcpBase::HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, otLinkMetricsStatus aStatus)
 {
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE));

@@ -171,11 +171,7 @@ Error DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
     {
         VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = kErrorInvalidArgs);
 
-        // Clipped by the maximal value.
-        if (aPeriod > kMaxExternalPeriod)
-        {
-            aPeriod = kMaxExternalPeriod;
-        }
+        aPeriod = Min(aPeriod, kMaxExternalPeriod);
     }
 
     if (mExternalPollPeriod != aPeriod)
@@ -414,15 +410,8 @@ void DataPollSender::SendFastPolls(uint8_t aNumFastPolls)
         aNumFastPolls = kDefaultFastPolls;
     }
 
-    if (aNumFastPolls > kMaxFastPolls)
-    {
-        aNumFastPolls = kMaxFastPolls;
-    }
-
-    if (mRemainingFastPolls < aNumFastPolls)
-    {
-        mRemainingFastPolls = aNumFastPolls;
-    }
+    aNumFastPolls       = Min(aNumFastPolls, kMaxFastPolls);
+    mRemainingFastPolls = Max(mRemainingFastPolls, aNumFastPolls);
 
     if (mEnabled && shouldRecalculatePollPeriod)
     {
@@ -515,9 +504,9 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
         period = Min(period, kRetxPollPeriod);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Get<Mac::Mac>().GetCslPeriodMs() > 0)
+        if (Get<Mac::Mac>().GetCslPeriodInMsec() > 0)
         {
-            period = Min(period, Get<Mac::Mac>().GetCslPeriodMs());
+            period = Min(period, Get<Mac::Mac>().GetCslPeriodInMsec());
         }
 #endif
     }
@@ -588,8 +577,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
         addresses.mSource.SetShort(Get<Mac::Mac>().GetShortAddress());
     }
 
-    panIds.mSource      = Get<Mac::Mac>().GetPanId();
-    panIds.mDestination = Get<Mac::Mac>().GetPanId();
+    panIds.SetBothSourceDestination(Get<Mac::Mac>().GetPanId());
 
     Get<MeshForwarder>().PrepareMacHeaders(*frame, Mac::Frame::kTypeMacCmd, addresses, panIds,
                                            Mac::Frame::kSecurityEncMic32, Mac::Frame::kKeyIdMode1, nullptr);

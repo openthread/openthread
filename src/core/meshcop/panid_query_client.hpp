@@ -49,7 +49,7 @@
 namespace ot {
 
 /**
- * This class implements handling PANID Query Requests.
+ * Implements handling PANID Query Requests.
  *
  */
 class PanIdQueryClient : public InstanceLocator
@@ -58,13 +58,13 @@ class PanIdQueryClient : public InstanceLocator
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit PanIdQueryClient(Instance &aInstance);
 
     /**
-     * This method sends a PAN ID Query message.
+     * Sends a PAN ID Query message.
      *
      * @param[in]  aPanId         The PAN ID to query.
      * @param[in]  aChannelMask   The channel mask value.

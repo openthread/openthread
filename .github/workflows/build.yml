@@ -49,11 +49,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -62,6 +62,7 @@ jobs:
         sudo apt-get --no-install-recommends install -y clang-format-14 clang-tidy-14 shellcheck
         python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
+        npm install prettier@2.0.4
     - name: Check
       run: |
         script/make-pretty check
@@ -70,25 +71,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
     - uses: gaurav-nelson/github-action-markdown-link-check@5c5dfc0ac2e225883c0e5f03a85311ec2830d368 # v1
       with:
         use-verbose-mode: 'yes'
         max-depth: 3
 
+  spell-check:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+          python -m pip install --upgrade pip
+          pip install --force-reinstall codespell==2.2.4
+    - name: Check
+      run: |
+        script/code-spell check
+
   cmake-version:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -124,11 +144,11 @@ jobs:
       CXX: ${{ matrix.compiler_cpp }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -143,11 +163,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -162,21 +182,21 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
         rm -rf third_party/mbedtls/repo
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.2.1
+        ref: v3.5.0
         path: third_party/mbedtls/repo
     - name: Build
       run: |
@@ -215,11 +235,11 @@ jobs:
             gcc_extract_dir: arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -256,11 +276,11 @@ jobs:
       CXX: g++-${{ matrix.gcc_ver }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -289,11 +309,11 @@ jobs:
       CXX: clang++-${{ matrix.clang_ver }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           submodules: true
       - name: Bootstrap
@@ -327,11 +347,11 @@ jobs:
       LDFLAGS: -m32
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+        uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           submodules: true
       - name: Bootstrap
@@ -355,11 +375,11 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
@@ -391,22 +411,20 @@ jobs:
       CXX: ${{ matrix.CXX }}
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Bootstrap
       run: |
         brew update
-        brew install automake m4
         wget --tries 4 https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip
         unzip ninja-mac.zip && mv ninja /usr/local/bin/.
     - name: Build
       run: |
-        export PATH=$(brew --prefix m4)/bin:$PATH
         script/check-posix-build
         script/check-simulation-build
 
@@ -417,11 +435,11 @@ jobs:
       image: openthread/environment
     steps:
     - name: Harden Runner
-      uses: step-security/harden-runner@6b3083af2869dc3314a0257a42f4af696cc79ba3 # v2.3.1
+      uses: step-security/harden-runner@8ca2b8b2ece13480cda6dacd3511b49857a23c09 # v2.5.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
       with:
         submodules: true
     - name: Install unzip

@@ -55,7 +55,7 @@ namespace ot {
  */
 
 /**
- * This class represents a time instance.
+ * Represents a time instance.
  *
  */
 class Time : public Unequatable<Time>
@@ -65,6 +65,7 @@ public:
     static constexpr uint32_t kOneMinuteInMsec = kOneSecondInMsec * 60; ///< One minute interval in msec.
     static constexpr uint32_t kOneHourInMsec   = kOneMinuteInMsec * 60; ///< One hour interval in msec.
     static constexpr uint32_t kOneDayInMsec    = kOneHourInMsec * 24;   ///< One day interval in msec.
+    static constexpr uint32_t kOneMsecInUsec   = 1000u;                 ///< One millisecond in microseconds.
 
     /**
      * This constant defines a maximum time duration ensured to be longer than any other duration.
@@ -79,7 +80,7 @@ public:
     Time(void) = default;
 
     /**
-     * This constructor initializes a `Time` object with a given value.
+     * Initializes a `Time` object with a given value.
      *
      * @param[in] aValue   The numeric time value to initialize the `Time` object.
      *
@@ -87,7 +88,7 @@ public:
     explicit Time(uint32_t aValue) { SetValue(aValue); }
 
     /**
-     * This method gets the numeric time value associated with the `Time` object.
+     * Gets the numeric time value associated with the `Time` object.
      *
      * @returns The numeric `Time` value.
      *
@@ -95,7 +96,7 @@ public:
     uint32_t GetValue(void) const { return mValue; }
 
     /**
-     * This method sets the numeric time value.
+     * Sets the numeric time value.
      *
      * @param[in] aValue   The numeric time value.
      *
@@ -103,7 +104,7 @@ public:
     void SetValue(uint32_t aValue) { mValue = aValue; }
 
     /**
-     * This method calculates the time duration between two `Time` instances.
+     * Calculates the time duration between two `Time` instances.
      *
      * @note Expression `(t1 - t2)` returns the duration of the interval starting from `t2` and ending at `t1`. When
      * calculating the duration, `t2 is assumed to be in the past relative to `t1`. The duration calculation correctly
@@ -118,7 +119,7 @@ public:
     uint32_t operator-(const Time &aOther) const { return mValue - aOther.mValue; }
 
     /**
-     * This method returns a new `Time` which is ahead of this `Time` object by a given duration.
+     * Returns a new `Time` which is ahead of this `Time` object by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -128,7 +129,7 @@ public:
     Time operator+(uint32_t aDuration) const { return Time(mValue + aDuration); }
 
     /**
-     * This method returns a new `Time` which is behind this `Time` object by a given duration.
+     * Returns a new `Time` which is behind this `Time` object by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -138,7 +139,7 @@ public:
     Time operator-(uint32_t aDuration) const { return Time(mValue - aDuration); }
 
     /**
-     * This method moves this `Time` object forward by a given duration.
+     * Moves this `Time` object forward by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -146,7 +147,7 @@ public:
     void operator+=(uint32_t aDuration) { mValue += aDuration; }
 
     /**
-     * This method moves this `Time` object backward by a given duration.
+     * Moves this `Time` object backward by a given duration.
      *
      * @param[in]   aDuration  A duration.
      *
@@ -154,7 +155,7 @@ public:
     void operator-=(uint32_t aDuration) { mValue -= aDuration; }
 
     /**
-     * This method indicates whether two `Time` instances are equal.
+     * Indicates whether two `Time` instances are equal.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -165,7 +166,7 @@ public:
     bool operator==(const Time &aOther) const { return mValue == aOther.mValue; }
 
     /**
-     * This method indicates whether this `Time` instance is strictly before another one.
+     * Indicates whether this `Time` instance is strictly before another one.
      *
      * @note The comparison operators correctly take into account the wrapping of `Time` numeric value. For a given
      * `Time` instance `t0`, any `Time` instance `t` where `(t - t0)` is less than half the range of `uint32_t` type
@@ -182,7 +183,7 @@ public:
     bool operator<(const Time &aOther) const { return SerialNumber::IsLess(mValue, aOther.mValue); }
 
     /**
-     * This method indicates whether this `Time` instance is after or equal to another one.
+     * Indicates whether this `Time` instance is after or equal to another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -193,7 +194,7 @@ public:
     bool operator>=(const Time &aOther) const { return !(*this < aOther); }
 
     /**
-     * This method indicates whether this `Time` instance is before or equal to another one.
+     * Indicates whether this `Time` instance is before or equal to another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -204,7 +205,7 @@ public:
     bool operator<=(const Time &aOther) const { return (aOther >= *this); }
 
     /**
-     * This method indicates whether this `Time` instance is strictly after another one.
+     * Indicates whether this `Time` instance is strictly after another one.
      *
      * @param[in]   aOther   A `Time` instance to compare with.
      *
@@ -215,31 +216,33 @@ public:
     bool operator>(const Time &aOther) const { return (aOther < *this); }
 
     /**
-     * This method returns a new `Time` instance which is in distant future relative to current `Time` object.
+     * Returns a new `Time` instance which is in distant future relative to current `Time` object.
      *
-     * The returned distance future `Time` is guaranteed to be equal or after (as defined by comparison operator `<=`)
-     * any other `Time` which is after this `Time` object, i.e., for any `t` for which we have `*this <= t`, it is
-     * ensured that `t <= this->GetGetDistantFuture()`.
+     * The distant future is the largest time that is ahead of `Time`. For any time `t`, if `(*this <= t)`, then
+     * `t <= this->GetGetDistantFuture()`, except for the ambiguous `t` value which is half range `(1 << 31)` apart.
+     *
+     * When comparing `GetDistantFuture()` with a time `t` the caller must ensure that `t` is already ahead of `*this`.
      *
      * @returns A new `Time` in distance future relative to current `Time` object.
      *
      */
-    Time GetDistantFuture(void) const { return Time(mValue + kDistantFuture); }
+    Time GetDistantFuture(void) const { return Time(mValue + kDistantInterval); }
 
     /**
-     * This method returns a new `Time` instance which is in distant past relative to current `Time` object.
+     * Returns a new `Time` instance which is in distant past relative to current `Time` object.
      *
-     * The returned distance past `Time` is guaranteed to be equal or before (as defined by comparison operator `>=`)
-     * any other `Time` which is before this `Time` object, i.e., for any `t` for which we have `*this >= t`, it is
-     * ensured that `t >= this->GetDistantPast()`.
+     * The distant past is the smallest time that is before `Time`. For any time `t`, if `(t <= *this )`, then
+     * `this->GetGetDistantPast() <= t`, except for the ambiguous `t` value which is half range `(1 << 31)` apart.
+     *
+     * When comparing `GetDistantPast()` with a time `t` the caller must ensure that the `t` is already before `*this`.
      *
      * @returns A new `Time` in distance past relative to current `Time` object.
      *
      */
-    Time GetDistantPast(void) const { return Time(mValue - kDistantFuture); }
+    Time GetDistantPast(void) const { return Time(mValue - kDistantInterval); }
 
     /**
-     * This static method converts a given number of seconds to milliseconds.
+     * Converts a given number of seconds to milliseconds.
      *
      * @param[in] aSeconds   The seconds value to convert to milliseconds.
      *
@@ -249,7 +252,7 @@ public:
     static uint32_t constexpr SecToMsec(uint32_t aSeconds) { return aSeconds * 1000u; }
 
     /**
-     * This static method converts a given number of milliseconds to seconds.
+     * Converts a given number of milliseconds to seconds.
      *
      * @param[in] aMilliseconds  The milliseconds value to convert to seconds.
      *
@@ -259,13 +262,13 @@ public:
     static uint32_t constexpr MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
-    static constexpr uint32_t kDistantFuture = (1UL << 31);
+    static constexpr uint32_t kDistantInterval = (1UL << 31) - 1;
 
     uint32_t mValue;
 };
 
 /**
- * This type represents a time instance (millisecond time).
+ * Represents a time instance (millisecond time).
  *
  */
 typedef Time TimeMilli;
@@ -273,7 +276,7 @@ typedef Time TimeMilli;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
 /**
- * This type represents a time instance (microsecond time).
+ * Represents a time instance (microsecond time).
  *
  */
 typedef Time TimeMicro;

@@ -59,14 +59,10 @@
 #include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
-using ot::Spinel::SpinelInterface;
-
 namespace ot {
 namespace Posix {
 
-SpiInterface::SpiInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void                                 *aCallbackContext,
-                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+SpiInterface::SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mRxFrameBuffer(aFrameBuffer)
@@ -104,7 +100,7 @@ otError SpiInterface::HardwareReset(void)
 
     // If the `INT` pin is set to low during the restart of the RCP chip, which triggers continuous invalid SPI
     // transactions by the host, it will cause the function `PushPullSpi()` to output lots of invalid warn log
-    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputing invalid
+    // messages. Adding the delay here is used to wait for the RCP chip starts up to avoid outputting invalid
     // log messages.
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
 
@@ -123,7 +119,6 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
     uint16_t    spiCsDelay         = OT_PLATFORM_CONFIG_SPI_DEFAULT_CS_DELAY_US;
     uint8_t     spiAlignAllowance  = OT_PLATFORM_CONFIG_SPI_DEFAULT_ALIGN_ALLOWANCE;
     uint8_t     spiSmallPacketSize = OT_PLATFORM_CONFIG_SPI_DEFAULT_SMALL_PACKET_SIZE;
-    const char *value;
 
     spiGpioIntDevice   = aRadioUrl.GetValue("gpio-int-device");
     spiGpioResetDevice = aRadioUrl.GetValue("gpio-reset-device");
@@ -132,48 +127,18 @@ otError SpiInterface::Init(const Url::Url &aRadioUrl)
         DieNow(OT_EXIT_INVALID_ARGUMENTS);
     }
 
-    if ((value = aRadioUrl.GetValue("gpio-int-line")))
-    {
-        spiGpioIntLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("gpio-reset-line")))
-    {
-        spiGpioResetLine = static_cast<uint8_t>(atoi(value));
-    }
-    else
-    {
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    if ((value = aRadioUrl.GetValue("spi-mode")))
-    {
-        spiMode = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-speed")))
-    {
-        spiSpeed = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-reset-delay")))
-    {
-        spiResetDelay = static_cast<uint32_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-cs-delay")))
-    {
-        spiCsDelay = static_cast<uint16_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-align-allowance")))
-    {
-        spiAlignAllowance = static_cast<uint8_t>(atoi(value));
-    }
-    if ((value = aRadioUrl.GetValue("spi-small-packet")))
-    {
-        spiSmallPacketSize = static_cast<uint8_t>(atoi(value));
-    }
-
-    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_FAILURE);
+    SuccessOrDie(aRadioUrl.ParseUint8("gpio-int-line", spiGpioIntLine));
+    SuccessOrDie(aRadioUrl.ParseUint8("gpio-reset-line", spiGpioResetLine));
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-mode", spiMode) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint32("spi-speed", spiSpeed) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint32("spi-reset-delay", spiResetDelay) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint16("spi-cs-delay", spiCsDelay) != OT_ERROR_INVALID_ARGS, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-align-allowance", spiAlignAllowance) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(aRadioUrl.ParseUint8("spi-small-packet", spiSmallPacketSize) != OT_ERROR_INVALID_ARGS,
+                OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrDie(spiAlignAllowance <= kSpiAlignAllowanceMax, OT_EXIT_INVALID_ARGUMENTS);
 
     mSpiResetDelay      = spiResetDelay;
     mSpiCsDelayUs       = spiCsDelay;
@@ -406,16 +371,16 @@ otError SpiInterface::DoSpiTransfer(uint8_t *aSpiRxFrameBuffer, uint32_t aTransf
 
 otError SpiInterface::PushPullSpi(void)
 {
-    otError       error               = OT_ERROR_FAILED;
-    uint16_t      spiTransferBytes    = 0;
-    uint8_t       successfulExchanges = 0;
-    bool          discardRxFrame      = true;
-    uint8_t      *spiRxFrameBuffer;
-    uint8_t      *spiRxFrame;
-    uint8_t       slaveHeader;
-    uint16_t      slaveAcceptLen;
-    Ncp::SpiFrame txFrame(mSpiTxFrameBuffer);
-    uint16_t      skipAlignAllowanceLength;
+    otError          error               = OT_ERROR_FAILED;
+    uint16_t         spiTransferBytes    = 0;
+    uint8_t          successfulExchanges = 0;
+    bool             discardRxFrame      = true;
+    uint8_t         *spiRxFrameBuffer;
+    uint8_t         *spiRxFrame;
+    uint8_t          slaveHeader;
+    uint16_t         slaveAcceptLen;
+    Spinel::SpiFrame txFrame(mSpiTxFrameBuffer);
+    uint16_t         skipAlignAllowanceLength;
 
     if (mInterfaceMetrics.mTransferredValidFrameCount == 0)
     {
@@ -493,7 +458,7 @@ otError SpiInterface::PushPullSpi(void)
     spiRxFrame = GetRealRxFrameStart(spiRxFrameBuffer, mSpiAlignAllowance, skipAlignAllowanceLength);
 
     {
-        Ncp::SpiFrame rxFrame(spiRxFrame);
+        Spinel::SpiFrame rxFrame(spiRxFrame);
 
         otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
                       txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
@@ -805,7 +770,7 @@ otError SpiInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 
     VerifyOrExit(aLength < (kMaxFrameSize - kSpiFrameHeaderSize), error = OT_ERROR_NO_BUFS);
 
-    if (ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    if (IsSpinelResetCommand(aFrame, aLength))
     {
         ResetStates();
     }

@@ -42,12 +42,12 @@
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "thread/topology.hpp"
+#include "thread/child.hpp"
 
 namespace ot {
 
 /**
- * This class represents the Thread child table.
+ * Represents the Thread child table.
  *
  */
 class ChildTable : public InstanceLocator, private NonCopyable
@@ -57,7 +57,7 @@ class ChildTable : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This class represents an iterator for iterating through the child entries in the child table.
+     * Represents an iterator for iterating through the child entries in the child table.
      *
      */
     class Iterator : public InstanceLocator, public ItemPtrIterator<Child, Iterator>
@@ -67,7 +67,7 @@ public:
 
     public:
         /**
-         * This constructor initializes an `Iterator` instance.
+         * Initializes an `Iterator` instance.
          *
          * @param[in] aInstance  A reference to the OpenThread instance.
          * @param[in] aFilter    A child state filter.
@@ -76,13 +76,13 @@ public:
         Iterator(Instance &aInstance, Child::StateFilter aFilter);
 
         /**
-         * This method resets the iterator to start over.
+         * Resets the iterator to start over.
          *
          */
         void Reset(void);
 
         /**
-         * This method gets the `Child` entry to which the iterator is currently pointing.
+         * Gets the `Child` entry to which the iterator is currently pointing.
          *
          * @returns A pointer to the `Child` entry, or `nullptr` if the iterator is done and/or empty.
          *
@@ -102,7 +102,7 @@ public:
     };
 
     /**
-     * This constructor initializes a `ChildTable` instance.
+     * Initializes a `ChildTable` instance.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -110,13 +110,13 @@ public:
     explicit ChildTable(Instance &aInstance);
 
     /**
-     * This method clears the child table.
+     * Clears the child table.
      *
      */
     void Clear(void);
 
     /**
-     * This method returns the child table index for a given `Child` instance.
+     * Returns the child table index for a given `Child` instance.
      *
      * @param[in]  aChild  A reference to a `Child`
      *
@@ -126,7 +126,7 @@ public:
     uint16_t GetChildIndex(const Child &aChild) const { return static_cast<uint16_t>(&aChild - mChildren); }
 
     /**
-     * This method returns a pointer to a `Child` entry at a given index, or `nullptr` if the index is out of bounds,
+     * Returns a pointer to a `Child` entry at a given index, or `nullptr` if the index is out of bounds,
      * i.e., index is larger or equal to maximum number of children allowed (@sa GetMaxChildrenAllowed()).
      *
      * @param[in]  aChildIndex  A child index.
@@ -137,7 +137,7 @@ public:
     Child *GetChildAtIndex(uint16_t aChildIndex);
 
     /**
-     * This method gets a new/unused `Child` entry from the child table.
+     * Gets a new/unused `Child` entry from the child table.
      *
      * @note The returned child entry will be cleared (`memset` to zero).
      *
@@ -147,7 +147,7 @@ public:
     Child *GetNewChild(void);
 
     /**
-     * This method searches the child table for a `Child` with a given RLOC16 also matching a given state filter.
+     * Searches the child table for a `Child` with a given RLOC16 also matching a given state filter.
      *
      * @param[in]  aRloc16  A RLOC16 address.
      * @param[in]  aFilter  A child state filter.
@@ -158,7 +158,7 @@ public:
     Child *FindChild(uint16_t aRloc16, Child::StateFilter aFilter);
 
     /**
-     * This method searches the child table for a `Child` with a given extended address also matching a given state
+     * Searches the child table for a `Child` with a given extended address also matching a given state
      * filter.
      *
      * @param[in]  aExtAddress A reference to an extended address.
@@ -170,7 +170,7 @@ public:
     Child *FindChild(const Mac::ExtAddress &aExtAddress, Child::StateFilter aFilter);
 
     /**
-     * This method searches the child table for a `Child` with a given address also matching a given state filter.
+     * Searches the child table for a `Child` with a given address also matching a given state filter.
      *
      * @param[in]  aMacAddress A reference to a MAC address.
      * @param[in]  aFilter     A child state filter.
@@ -181,7 +181,7 @@ public:
     Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
 
     /**
-     * This method indicates whether the child table contains any child matching a given state filter.
+     * Indicates whether the child table contains any child matching a given state filter.
      *
      * @param[in]  aFilter  A child state filter.
      *
@@ -191,7 +191,7 @@ public:
     bool HasChildren(Child::StateFilter aFilter) const;
 
     /**
-     * This method returns the number of children in the child table matching a given state filter.
+     * Returns the number of children in the child table matching a given state filter.
      *
      * @param[in]  aFilter  A child state filter.
      *
@@ -201,7 +201,7 @@ public:
     uint16_t GetNumChildren(Child::StateFilter aFilter) const;
 
     /**
-     * This method returns the maximum number of children that can be supported (build-time constant).
+     * Returns the maximum number of children that can be supported (build-time constant).
      *
      * @note Number of children allowed (from `GetMaxChildrenAllowed()`) can be less than maximum number of supported
      * children.
@@ -212,7 +212,7 @@ public:
     uint16_t GetMaxChildren(void) const { return kMaxChildren; }
 
     /**
-     * This method get the maximum number of children allowed.
+     * Get the maximum number of children allowed.
      *
      * @returns  The maximum number of children allowed.
      *
@@ -220,7 +220,7 @@ public:
     uint16_t GetMaxChildrenAllowed(void) const { return mMaxChildrenAllowed; }
 
     /**
-     * This method sets the maximum number of children allowed.
+     * Sets the maximum number of children allowed.
      *
      * The number of children allowed must be at least one and at most same as maximum supported children (@sa
      * GetMaxChildren()). It can be changed only if the child table is empty.
@@ -235,10 +235,10 @@ public:
     Error SetMaxChildrenAllowed(uint16_t aMaxChildren);
 
     /**
-     * This method enables range-based `for` loop iteration over all child entries in the child table matching a given
+     * Enables range-based `for` loop iteration over all child entries in the child table matching a given
      * state filter.
      *
-     * This method should be used as follows:
+     * Should be used as follows:
      *
      *     for (Child &child : aChildTable.Iterate(aFilter)) { ... }
      *
@@ -250,7 +250,7 @@ public:
     IteratorBuilder Iterate(Child::StateFilter aFilter) { return IteratorBuilder(GetInstance(), aFilter); }
 
     /**
-     * This method retains diagnostic information for an attached child by Child ID or RLOC16.
+     * Retains diagnostic information for an attached child by Child ID or RLOC16.
      *
      * @param[in]   aChildId    The Child ID or RLOC16 for an attached child.
      * @param[out]  aChildInfo  A reference to a `Child::Info` to populate with the child information.
@@ -259,7 +259,7 @@ public:
     Error GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
 
     /**
-     * This method retains diagnostic information for an attached child by the internal table index.
+     * Retains diagnostic information for an attached child by the internal table index.
      *
      * @param[in]   aChildIndex  The table index.
      * @param[out]  aChildInfo   A reference to a `Child::Info` to populate with the child information.
@@ -268,13 +268,13 @@ public:
     Error GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
 
     /**
-     * This method restores child table from non-volatile memory.
+     * Restores child table from non-volatile memory.
      *
      */
     void Restore(void);
 
     /**
-     * This method removes a stored child information from non-volatile memory.
+     * Removes a stored child information from non-volatile memory.
      *
      * @param[in]  aChild     A reference to the child to remove from non-volatile memory.
      *
@@ -282,7 +282,7 @@ public:
     void RemoveStoredChild(const Child &aChild);
 
     /**
-     * This method store a child information into non-volatile memory.
+     * Store a child information into non-volatile memory.
      *
      * @param[in]  aChild          A reference to the child to store.
      *
@@ -293,7 +293,7 @@ public:
     Error StoreChild(const Child &aChild);
 
     /**
-     * This method indicates whether the child table contains any sleepy child (in states valid or restoring) with a
+     * Indicates whether the child table contains any sleepy child (in states valid or restoring) with a
      * given IPv6 address.
      *
      * @param[in]  aIp6Address  An IPv6 address.
@@ -305,7 +305,7 @@ public:
     bool HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) const;
 
     /**
-     * This method indicates whether the child table contains a given `Neighbor` instance.
+     * Indicates whether the child table contains a given `Neighbor` instance.
      *
      * @param[in]  aNeighbor  A reference to a `Neighbor`.
      *

@@ -57,7 +57,7 @@ extern "C" {
 /**
  * @struct otIp4Address
  *
- * This structure represents an IPv4 address.
+ * Represents an IPv4 address.
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -71,7 +71,7 @@ struct otIp4Address
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents an IPv4 address.
+ * Represents an IPv4 address.
  *
  */
 typedef struct otIp4Address otIp4Address;
@@ -79,7 +79,7 @@ typedef struct otIp4Address otIp4Address;
 /**
  * @struct otIp4Cidr
  *
- * This structure represents an IPv4 CIDR block.
+ * Represents an IPv4 CIDR block.
  *
  */
 typedef struct otIp4Cidr
@@ -291,7 +291,7 @@ otNat64State otNat64GetPrefixManagerState(otInstance *aInstance);
  * @sa otNat64GetPrefixManagerState
  *
  */
-void otNat64SetEnabled(otInstance *aInstance, bool aEnable);
+void otNat64SetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * Allocate a new message buffer for sending an IPv4 message to the NAT64 translator.
@@ -317,7 +317,7 @@ otMessage *otIp4NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 /**
  * Sets the CIDR used when setting the source address of the outgoing translated IPv4 packets.
  *
- * This function is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
+ * Is available only when OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE is enabled.
  *
  * @note A valid CIDR must have a non-zero prefix length. The actual addresses pool is limited by the size of the
  * mapping pool and the number of addresses available in the CIDR block.
@@ -358,7 +358,7 @@ otError otNat64SetIp4Cidr(otInstance *aInstance, const otIp4Cidr *aCidr);
 otError otNat64Send(otInstance *aInstance, otMessage *aMessage);
 
 /**
- * This function pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
+ * Pointer is called when an IPv4 datagram (translated by NAT64 translator) is received.
  *
  * @param[in]  aMessage  A pointer to the message buffer containing the received IPv6 datagram. This function transfers
  *                       the ownership of the @p aMessage to the receiver of the callback. The message should be
@@ -374,7 +374,7 @@ typedef void (*otNat64ReceiveIp4Callback)(otMessage *aMessage, void *aContext);
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv4 datagram is received or
  *                               NULL to disable the callback.
- * @param[in]  aCallbackContext  A pointer to application-specific context.
+ * @param[in]  aContext          A pointer to application-specific context.
  *
  */
 void otNat64SetReceiveIp4Callback(otInstance *aInstance, otNat64ReceiveIp4Callback aCallback, void *aContext);
@@ -436,7 +436,7 @@ void otIp4AddressToString(const otIp4Address *aAddress, char *aBuffer, uint16_t 
 #define OT_IP4_CIDR_STRING_SIZE 20 ///< Length of 000.000.000.000/00 plus a suffix NUL
 
 /**
- * This function converts a human-readable IPv4 CIDR string into a binary representation.
+ * Converts a human-readable IPv4 CIDR string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aCidr     A pointer to an IPv4 CIDR.

@@ -57,7 +57,7 @@ enum
 #define MAX_RSS(_rss1, _rss2) (((_rss1) < (_rss2)) ? (_rss2) : (_rss1))
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
 
-// This struct contains RSS values and test data for checking link quality info calss.
+// This struct contains RSS values and test data for checking link quality info class.
 struct RssTestData
 {
     const int8_t *mRssList;             // Array of RSS values.
@@ -518,6 +518,13 @@ public:
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(1) == 255);
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(10) == 255);
         VerifyOrQuit(LinkMetrics::ScaleRssiToRawValue(127) == 255);
+
+        // Test corner case of ScaleRawValueToRssi
+        for (uint8_t rawValue = 0; rawValue < 2; rawValue++)
+        {
+            int8_t rssi = LinkMetrics::ScaleRawValueToRssi(rawValue);
+            printf("\nRaw Value: %u -> RSSI : %-3d", rawValue, rssi);
+        }
     }
 };
 

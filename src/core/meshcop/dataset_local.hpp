@@ -48,7 +48,7 @@ class DatasetLocal : public InstanceLocator
 {
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance  A reference to an OpenThread instance.
      * @param[in]  aType      The type of the dataset, active or pending.
@@ -57,7 +57,7 @@ public:
     DatasetLocal(Instance &aInstance, Dataset::Type aType);
 
     /**
-     * This method indicates whether this is an Active or Pending Dataset.
+     * Indicates whether this is an Active or Pending Dataset.
      *
      * @returns The Dataset type.
      *
@@ -65,13 +65,13 @@ public:
     Dataset::Type GetType(void) const { return mType; }
 
     /**
-     * This method clears the Dataset.
+     * Clears the Dataset.
      *
      */
     void Clear(void);
 
     /**
-     * This method indicates whether an Active or Pending Dataset is saved in non-volatile memory.
+     * Indicates whether an Active or Pending Dataset is saved in non-volatile memory.
      *
      * @retval TRUE  if an Active or Pending Dataset is saved in non-volatile memory.
      * @retval FALSE if an Active or Pending Dataset is not saved in non-volatile memory.
@@ -80,7 +80,7 @@ public:
     bool IsSaved(void) const { return mSaved; }
 
     /**
-     * This method indicates whether an Active (Pending) Timestamp is present in the Active (Pending) Dataset.
+     * Indicates whether an Active (Pending) Timestamp is present in the Active (Pending) Dataset.
      *
      * @retval TRUE  if an Active/Pending Timestamp is present.
      * @retval FALSE if an Active/Pending Timestamp is not present.
@@ -89,7 +89,7 @@ public:
     bool IsTimestampPresent(void) const { return mTimestampPresent; }
 
     /**
-     * This method returns a pointer to the Timestamp or `nullptr` when it is not present in the Dataset.
+     * Returns a pointer to the Timestamp or `nullptr` when it is not present in the Dataset.
      *
      * @returns A pointer to the Timestamp or `nullptr` if timestamp is not present in the Dataset.
      *
@@ -97,9 +97,9 @@ public:
     const Timestamp *GetTimestamp(void) const { return mTimestampPresent ? &mTimestamp : nullptr; }
 
     /**
-     * This method restores and retrieves the dataset from non-volatile memory.
+     * Restores and retrieves the dataset from non-volatile memory.
      *
-     * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
+     * Also sets the memory-cached timestamp for subsequent calls to `Compare()`.
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
@@ -110,7 +110,7 @@ public:
     Error Restore(Dataset &aDataset);
 
     /**
-     * This method retrieves the dataset from non-volatile memory.
+     * Retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
@@ -121,7 +121,7 @@ public:
     Error Read(Dataset &aDataset) const;
 
     /**
-     * This method retrieves the dataset from non-volatile memory.
+     * Retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDatasetInfo  Where to place the dataset as `Dataset::Info`.
      *
@@ -132,7 +132,7 @@ public:
     Error Read(Dataset::Info &aDatasetInfo) const;
 
     /**
-     * This method retrieves the dataset from non-volatile memory.
+     * Retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
@@ -143,7 +143,7 @@ public:
     Error Read(otOperationalDatasetTlvs &aDataset) const;
 
     /**
-     * This method returns the local time this dataset was last updated or restored.
+     * Returns the local time this dataset was last updated or restored.
      *
      * @returns The local time this dataset was last updated or restored.
      *
@@ -151,7 +151,7 @@ public:
     TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
-     * This method stores the dataset into non-volatile memory.
+     * Stores the dataset into non-volatile memory.
      *
      * @param[in] aDatasetInfo     The Dataset to save as `Dataset::Info`.
      *
@@ -162,7 +162,7 @@ public:
     Error Save(const Dataset::Info &aDatasetInfo);
 
     /**
-     * This method stores the dataset into non-volatile memory.
+     * Stores the dataset into non-volatile memory.
      *
      * @param[in]  aDataset  The Dataset to save as `otOperationalDatasetTlvs`.
      *
@@ -173,7 +173,7 @@ public:
     Error Save(const otOperationalDatasetTlvs &aDataset);
 
     /**
-     * This method stores the dataset into non-volatile memory.
+     * Stores the dataset into non-volatile memory.
      *
      * @param[in]  aDataset  The Dataset to save.
      *

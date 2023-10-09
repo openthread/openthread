@@ -55,6 +55,17 @@
 #define OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+ *
+ * Set to 1 to enable support for Radio Statistics. Note that this option only works for OPENTHREAD_FTD and
+ * OPENTHREAD_MTD.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_RADIO_STATS_ENABLE
+#define OPENTHREAD_CONFIG_RADIO_STATS_ENABLE 0
+#endif
+
 //--------------------------------------------------------------
 
 #if !OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && !OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

@@ -41,6 +41,7 @@ Done
 - [csl](#csl)
 - [dataset](README_DATASET.md)
 - [delaytimermin](#delaytimermin)
+- [detach](#detach)
 - [deviceprops](#deviceprops)
 - [diag](#diag)
 - [discover](#discover-channel)
@@ -56,6 +57,7 @@ Done
 - [fem](#fem)
 - [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
+- [instanceid](#instanceid)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
 - [joiner](README_JOINER.md)
@@ -64,6 +66,7 @@ Done
 - [leaderdata](#leaderdata)
 - [leaderweight](#leaderweight)
 - [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
+- [linkmetricsmgr](#linkmetricsmgr-disable)
 - [locate](#locate)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -94,6 +97,7 @@ Done
 - [promiscuous](#promiscuous)
 - [pskc](#pskc)
 - [pskcref](#pskcref)
+- [radio](#radio-enable)
 - [radiofilter](#radiofilter)
 - [rcp](#rcp)
 - [region](#region)
@@ -115,6 +119,7 @@ Done
 - [srp](README_SRP.md)
 - [tcp](README_TCP.md)
 - [thread](#thread-start)
+- [timeinqueue](#timeinqueue)
 - [trel](#trel)
 - [tvcheck](#tvcheck-enable)
 - [txpower](#txpower)
@@ -705,9 +710,9 @@ Done
 
 ### childsupervision interval
 
-Get the Child Supervision Interval value.
+Get the Child Supervision interval value on the child.
 
-Child supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a supervision message (a data message with empty payload) to the child. This command can only be used with FTD devices.
+Child Supervision feature provides a mechanism for parent to ensure that a message is sent to each sleepy child within the supervision interval. If there is no transmission to the child within the supervision interval, OpenThread enqueues and sends a Child Supervision Message to the child.
 
 ```bash
 > childsupervision interval
@@ -717,7 +722,7 @@ Done
 
 ### childsupervision interval \<interval\>
 
-Set the Child Supervision Interval value. This command can only be used with FTD devices.
+Set the Child Supervision interval value on the child.
 
 ```bash
 > childsupervision interval 30
@@ -726,7 +731,7 @@ Done
 
 ### childsupervision checktimeout
 
-Get the Child Supervision Check Timeout value.
+Get the Child Supervision Check Timeout value on the child.
 
 If the device is a sleepy child and it does not hear from its parent within the specified check timeout, it initiates the re-attach process (MLE Child Update Request/Response exchange with its parent).
 
@@ -738,7 +743,7 @@ Done
 
 ### childsupervision checktimeout \<timeout\>
 
-Set the Child Supervision Check Timeout value.
+Set the Child Supervision Check Timeout value on the child.
 
 ```bash
 > childsupervision checktimeout 30
@@ -980,10 +985,12 @@ Done
 
 Get the CSL configuration.
 
+CSL period is shown in microseconds.
+
 ```bash
 > csl
 Channel: 11
-Period: 1000 (in units of 10 symbols), 160ms
+Period: 160000us
 Timeout: 1000s
 Done
 ```
@@ -999,10 +1006,12 @@ Done
 
 ### csl period \<period\>
 
-Set CSL period in units of 10 symbols. Disable CSL by setting this parameter to `0`.
+Set CSL period in microseconds. Disable CSL by setting this parameter to `0`.
+
+The CSL period MUST be a multiple 160 microseconds which is 802.15.4 "ten symbols time".
 
 ```bash
-> csl period 3000
+> csl period 30000000
 Done
 ```
 
@@ -1055,6 +1064,25 @@ Set the minimal delay timer (in seconds).
 
 ```bash
 > delaytimermin 60
+Done
+```
+
+### detach
+
+Start the graceful detach process by first notifying other nodes (sending Address Release if acting as a router, or setting Child Timeout value to zero on parent if acting as a child) and then stopping Thread protocol operation.
+
+```bash
+> detach
+Finished detaching
+Done
+```
+
+### detach async
+
+Start the graceful detach process similar to the `detach` command without blocking and waiting for the callback indicating that detach is finished.
+
+```bash
+> detach async
 Done
 ```
 
@@ -1237,15 +1265,23 @@ The parameters after `service-name` are optional. Any unspecified (or zero) valu
 > dns browse _service._udp.example.com
 DNS browse response for _service._udp.example.com.
 inst1
+inst2
+inst3
+Done
+```
+
+The detailed service info (port number, weight, host name, TXT data, host addresses) is outputted only when provided by server/resolver in the browse response (in additional Data Section). This is a SHOULD and not a MUST requirement, and servers/resolvers are not required to provide this.
+
+The recommended behavior, which is supported by the OpenThread DNS-SD resolver, is to only provide the additional data when there is a single instance in the response. However, users should assume that the browse response may only contain the list of matching service instances and not any detail service info. To resolve a service instance, users can use the `dns service` or `dns servicehost` commands.
+
+```bash
+> dns browse _service._udp.example.com
+DNS browse response for _service._udp.example.com.
+inst1
     Port:1234, Priority:1, Weight:2, TTL:7200
     Host:host.example.com.
     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
     TXT:[a=6531, b=6c12] TTL:7300
-instance2
-    Port:1234, Priority:1, Weight:2, TTL:7200
-    Host:host.example.com.
-    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
-    TXT:[a=1234] TTL:7300
 Done
 ```
 
@@ -1268,6 +1304,14 @@ Send a service instance resolution DNS query for a given service instance. Servi
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 > Note: The DNS server IP can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix from the network data. The command will return `InvalidState` when the DNS server IP is an IPv4 address but the preferred NAT64 prefix is unavailable.
+
+### dns servicehost \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a service instance resolution DNS query for a given service instance with a potential follow-up address resolution for the host name discovered for the service instance (if the server/resolver does not provide AAAA/A records for the host name in the response to SRV query).
+
+Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ### dns compression \[enable|disable\]
 
@@ -1317,7 +1361,7 @@ Done
 
 ### dua iid
 
-Get the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Get the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid
@@ -1327,7 +1371,7 @@ Done
 
 ### dua iid \<iid\>
 
-Set the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Set the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid 0004000300020001
@@ -1336,7 +1380,7 @@ Done
 
 ### dua iid clear
 
-Clear the Interface Identifier mannually specified for Thread Domain Unicast Address on Thread 1.2 device.
+Clear the Interface Identifier manually specified for Thread Domain Unicast Address on Thread 1.2 device.
 
 ```bash
 > dua iid clear
@@ -1483,6 +1527,16 @@ Bring down the IPv6 interface.
 Done
 ```
 
+### instanceid
+
+Show OpenThread instance identifier.
+
+```bash
+> instanceid
+468697314
+Done
+```
+
 ### ipaddr
 
 List all IPv6 addresses assigned to the Thread interface.
@@ -1495,7 +1549,7 @@ fe80:0:0:0:f3d9:2a82:c8d8:fe43
 Done
 ```
 
-Use `-v` to get more verbose informations about the address.
+Use `-v` to get more verbose information about the address.
 
 ```bash
 > ipaddr -v
@@ -1671,7 +1725,7 @@ Done
 
 ### keysequence guardtime \<guardtime\>
 
-Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch imediately if key index match
+Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch immediately if key index match
 
 ```bash
 > keysequence guardtime 0
@@ -1822,6 +1876,41 @@ Done
  - LQI: 76 (Exponential Moving Average)
  - Margin: 82 (dB) (Exponential Moving Average)
  - RSSI: -18 (dBm) (Exponential Moving Average)
+```
+
+### linkmetricsmgr disable
+
+Disable the Link Metrics Manager.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+> linkmetricsmgr disable
+Done
+```
+
+### linkmetricsmgr enable
+
+Enable the Link Metrics Manager.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+> linkmetricsmgr enable
+Done
+```
+
+### linkmetricsmgr show
+
+Display the Link Metrics data of all subjects. The subjects are identified by its extended address.
+
+`OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE` is required.
+
+```bash
+
+> linkmetricsmgr show
+ExtAddr:827aa7f7f63e1234, LinkMargin:80, Rssi:-20
+Done
 ```
 
 ### locate
@@ -2039,6 +2128,91 @@ id:62 rloc16:0xf800 ext-addr:ce349873897233a5 ver:4 - br
    children: none
 ```
 
+### meshdiag childtable \<router-rloc16\>
+
+Start a query for child table of a router with a given RLOC16.
+
+Output lists all child entries. Information per child:
+
+- RLOC16
+- Extended MAC address
+- Thread Version
+- Timeout (in seconds)
+- Age (seconds since last heard)
+- Supervision interval (in seconds)
+- Number of queued messages (in case the child is sleepy)
+- Device Mode
+- RSS (average and last) and link margin
+- Error rates, frame tx (at MAC layer), IPv6 message tx (above MAC)
+- Connection time (seconds since link establishment {dd}d.{hh}:{mm}:{ss} format)
+- CSL info
+  - If synchronized
+  - Period (in unit of 10-symbols-time)
+  - Timeout (in seconds)
+  - Channel
+
+```bash
+> meshdiag childtable 0x6400
+rloc16:0x6402 ext-addr:8e6f4d323bbed1fe ver:4
+    timeout:120 age:36 supvn:129 q-msg:0
+    rx-on:yes type:ftd full-net:yes
+    rss - ave:-20 last:-20 margin:80
+    err-rate - frame:11.51% msg:0.76%
+    conn-time:00:11:07
+    csl - sync:no period:0 timeout:0 channel:0
+rloc16:0x6403 ext-addr:ee24e64ecf8c079a ver:4
+    timeout:120 age:19 supvn:129 q-msg:0
+    rx-on:no type:mtd full-net:no
+    rss - ave:-20 last:-20 margin:80
+    err-rate - frame:0.73% msg:0.00%
+    conn-time:01:08:53
+    csl - sync:no period:0 timeout:0 channel:0
+Done
+```
+
+### meshdiag childip6 \<parent-rloc16\>
+
+Send a query to a parent to retrieve the IPv6 addresses of all its MTD children.
+
+```bash
+> meshdiag childip6 0xdc00
+child-rloc16: 0xdc02
+    fdde:ad00:beef:0:ded8:cd58:b73:2c21
+    fd00:2:0:0:c24a:456:3b6b:c597
+    fd00:1:0:0:120b:95fe:3ecc:d238
+child-rloc16: 0xdc03
+    fdde:ad00:beef:0:3aa6:b8bf:e7d6:eefe
+    fd00:2:0:0:8ff8:a188:7436:6720
+    fd00:1:0:0:1fcf:5495:790a:370f
+Done
+```
+
+### meshdiag routerneighbortable \<router-rloc16\>
+
+Start a query for router neighbor table of a router with a given RLOC16.
+
+Output lists all router neighbor entries. Information per entry:
+
+- RLOC16
+- Extended MAC address
+- Thread Version
+- RSS (average and last) and link margin
+- Error rates, frame tx (at MAC layer), IPv6 message tx (above MAC)
+- Connection time (seconds since link establishment {dd}d.{hh}:{mm}:{ss} format)
+
+```bash
+> meshdiag routerneighbortable 0x7400
+rloc16:0x9c00 ext-addr:764788cf6e57a4d2 ver:4
+   rss - ave:-20 last:-20 margin:80
+   err-rate - frame:1.38% msg:0.00%
+   conn-time:01:54:02
+rloc16:0x7c00 ext-addr:4ed24fceec9bf6d3 ver:4
+   rss - ave:-20 last:-20 margin:80
+   err-rate - frame:0.72% msg:0.00%
+   conn-time:00:11:27
+Done
+```
+
 ### mliid \<iid\>
 
 Set the Mesh Local IID.
@@ -2194,14 +2368,14 @@ Gets the state of NAT64 functions.
 Possible results for prefix manager are (`OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` is required):
 
 - `Disabled`: NAT64 prefix manager is disabled.
-- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably bacause the routing manager is disabled.
+- `NotRunning`: NAT64 prefix manager is enabled, but is not running, probably because the routing manager is disabled.
 - `Idle`: NAT64 prefix manager is enabled and is running, but is not publishing a NAT64 prefix. Usually when there is another border router publishing a NAT64 prefix with higher priority.
 - `Active`: NAT64 prefix manager is enabled, running and publishing a NAT64 prefix.
 
 Possible results for NAT64 translator are (`OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required):
 
 - `Disabled`: NAT64 translator is disabled.
-- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably bacause it is not configued with a NAT64 prefix or a CIDR for NAT64.
+- `NotRunning`: NAT64 translator is enabled, but is not translating packets, probably because it is not configured with a NAT64 prefix or a CIDR for NAT64.
 - `Active`: NAT64 translator is enabled and is translating packets.
 
 `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` or `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` are required.
@@ -2677,7 +2851,7 @@ Done
 
 ### prefix
 
-Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceeding `-` if backbone functionality is disabled.
+Get the prefix list in the local Network Data. Note: For the Thread 1.2 border router with backbone capability, the local Domain Prefix would be listed as well (with flag `D`), with preceding `-` if backbone functionality is disabled.
 
 ```bash
 > prefix
@@ -2764,6 +2938,52 @@ Disable radio promiscuous operation.
 
 ```bash
 > promiscuous disable
+Done
+```
+
+### radio enable
+
+Enable radio.
+
+```bash
+> radio enable
+Done
+```
+
+### radio disable
+
+Disable radio.
+
+```bash
+> radio disable
+Done
+```
+
+### radio stats
+
+`OPENTHREAD_CONFIG_RADIO_STATS_ENABLE` is required. This feature is only available on FTD and MTD.
+
+The radio statistics shows the time when the radio is in sleep/tx/rx state. The command will show the time of these states since last reset in unit of microseconds. It will also show the percentage of the time.
+
+```bash
+> radio stats
+Radio Statistics:
+Total Time: 67.756s
+Tx Time: 0.022944s (0.03%)
+Rx Time: 1.482353s (2.18%)
+Sleep Time: 66.251128s (97.77%)
+Disabled Time: 0.000080s (0.00%)
+Done
+```
+
+### radio stats clear
+
+`OPENTHREAD_CONFIG_RADIO_STATS_ENABLE` is required. This feature is only available on FTD and MTD.
+
+This command resets the radio statistics. It sets all the time to 0.
+
+```bash
+> radio stats clear
 Done
 ```
 
@@ -2868,12 +3088,13 @@ Get the external route list in the local Network Data.
 Done
 ```
 
-### route add \<prefix\> [sn][prf]
+### route add \<prefix\> [sna][prf]
 
 Add a valid external route to the Network Data.
 
 - s: Stable flag
 - n: NAT64 flag
+- a: Advertising PIO (AP) flag
 - prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash
@@ -3211,6 +3432,97 @@ Get the Thread Version number.
 Done
 ```
 
+### timeinqueue
+
+Print the tx queue time-in-queue histogram.
+
+Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+
+The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message is added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+
+Each table row shows min and max time-in-queue (in milliseconds) followed by number of messages with time-in-queue within the specified min-max range. The histogram information is collected since the OpenThread instance was initialized or since the last time statistics collection was reset by the `timeinqueue reset` command.
+
+The collected statistics can be reset by `timeinqueue reset`.
+
+```bash
+> timeinqueue
+| Min  | Max  |Msg Count|
++------+------+---------+
+|    0 |    9 |    1537 |
+|   10 |   19 |     156 |
+|   20 |   29 |      57 |
+|   30 |   39 |     108 |
+|   40 |   49 |      60 |
+|   50 |   59 |      76 |
+|   60 |   69 |      88 |
+|   70 |   79 |      51 |
+|   80 |   89 |      86 |
+|   90 |   99 |      45 |
+|  100 |  109 |      43 |
+|  110 |  119 |      44 |
+|  120 |  129 |      38 |
+|  130 |  139 |      44 |
+|  140 |  149 |      35 |
+|  150 |  159 |      41 |
+|  160 |  169 |      34 |
+|  170 |  179 |      13 |
+|  180 |  189 |      24 |
+|  190 |  199 |       3 |
+|  200 |  209 |       0 |
+|  210 |  219 |       0 |
+|  220 |  229 |       2 |
+|  230 |  239 |       0 |
+|  240 |  249 |       0 |
+|  250 |  259 |       0 |
+|  260 |  269 |       0 |
+|  270 |  279 |       0 |
+|  280 |  289 |       0 |
+|  290 |  299 |       1 |
+|  300 |  309 |       0 |
+|  310 |  319 |       0 |
+|  320 |  329 |       0 |
+|  330 |  339 |       0 |
+|  340 |  349 |       0 |
+|  350 |  359 |       0 |
+|  360 |  369 |       0 |
+|  370 |  379 |       0 |
+|  380 |  389 |       0 |
+|  390 |  399 |       0 |
+|  400 |  409 |       0 |
+|  410 |  419 |       0 |
+|  420 |  429 |       0 |
+|  430 |  439 |       0 |
+|  440 |  449 |       0 |
+|  450 |  459 |       0 |
+|  460 |  469 |       0 |
+|  470 |  479 |       0 |
+|  480 |  489 |       0 |
+|  490 |  inf |       0 |
+Done
+```
+
+### timeinqueue max
+
+Print the maximum observed time-in-queue in milliseconds.
+
+Requires `OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE`.
+
+The time-in-queue is tracked for direct transmissions only and is measured as the duration from when a message is added to the transmit queue until it is passed to the MAC layer for transmission or dropped.
+
+```bash
+> timeinqueue max
+291
+```
+
+### timeinqueue reset
+
+Reset the TX queue time-in-queue statistics.
+
+```bash
+> timeinqueue reset
+Done
+```
+
 ### trel
 
 Indicate whether TREL radio operation is enabled or not.
@@ -3400,8 +3712,6 @@ Done
 
 ### vendor name
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor name.
 
 ```bash
@@ -3419,8 +3729,6 @@ Done
 
 ### vendor model
 
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
-
 Get the vendor model.
 
 ```bash
@@ -3437,8 +3745,6 @@ Done
 ```
 
 ### vendor swversion
-
-This command requires `OPENTHREAD_FTD` or `OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE`.
 
 Get the vendor SW version.
 
@@ -3538,7 +3844,7 @@ Address Mode: Allowlist
 0f6127e33af6b402
 RssIn List:
 0f6127e33af6b403 : rss -95 (lqi 1)
-Default rss : -50 (lqi 3)
+Default rss: -50 (lqi 3)
 Done
 ```
 
@@ -3583,7 +3889,7 @@ Done
 
 ### macfilter addr add \<extaddr\> \[rss\]
 
-Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received singal strength for the messages from the address if rss is specified.
+Add an IEEE 802.15.4 Extended Address to the address filter, and fixed the received signal strength for the messages from the address if rss is specified.
 
 ```bash
 > macfilter addr add 0f6127e33af6b403 -95
@@ -3648,7 +3954,7 @@ Done
 ```
 
 ```bash
-> macfilter rss add 0f6127e33af6b404 2
+> macfilter rss add-lqi 0f6127e33af6b404 2
 Done
 ```
 

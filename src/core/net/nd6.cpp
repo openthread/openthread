@@ -171,6 +171,16 @@ uint8_t RouteInfoOption::OptionLengthForPrefix(uint8_t aPrefixLength)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+// RaFlagsExtOption
+
+void RaFlagsExtOption::Init(void)
+{
+    Clear();
+    SetType(kTypeRaFlagsExtension);
+    SetSize(sizeof(RaFlagsExtOption));
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 // RouterAdverMessage::Header
 
 void RouterAdvertMessage::Header::SetToDefault(void)
@@ -254,6 +264,25 @@ Error RouterAdvertMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
     rio->SetRouteLifetime(aRouteLifetime);
     rio->SetPreference(aPreference);
     rio->SetPrefix(aPrefix);
+
+exit:
+    return error;
+}
+
+Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
+{
+    Error             error = kErrorNone;
+    RaFlagsExtOption *flagsOption;
+
+    flagsOption = static_cast<RaFlagsExtOption *>(AppendOption(sizeof(RaFlagsExtOption)));
+    VerifyOrExit(flagsOption != nullptr, error = kErrorNoBufs);
+
+    flagsOption->Init();
+
+    if (aStubRouterFlag)
+    {
+        flagsOption->SetStubRouterFlag();
+    }
 
 exit:
     return error;

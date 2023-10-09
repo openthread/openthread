@@ -144,6 +144,12 @@
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 
+#include "mbedtls/version.h"
+// Include in the legacy config name adjustment file for mbedtls >= 3.5.0
+#if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
+    #include "mbedtls/config_adjust_legacy_crypto.h"
+#endif
+
 #include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */

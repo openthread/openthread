@@ -34,11 +34,18 @@ add_library(openthread-platform-utils OBJECT
     otns_utils.cpp
     settings_ram.c
     soft_source_match_table.c
+    uart_rtt.c
 )
 
 target_compile_definitions(openthread-platform-utils PRIVATE
     $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )
+
+if(OT_RTT_UART)
+    target_compile_definitions(openthread-platform-utils PRIVATE
+        OPENTHREAD_UART_RTT_ENABLE=1
+    )
+endif()
 
 target_include_directories(openthread-platform-utils PRIVATE
     ${OT_PUBLIC_INCLUDES}

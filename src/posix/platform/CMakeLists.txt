@@ -91,8 +91,8 @@ if(OT_POSIX_NAT64_CIDR)
     )
 endif()
 
-if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
+if(NOT OT_PLATFORM_CONFIG)
+    set(OT_PLATFORM_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS "-rdynamic ${CMAKE_EXE_LINKER_FLAGS}" PARENT_SCOPE)
@@ -105,6 +105,7 @@ add_library(openthread-posix
     alarm.cpp
     backbone.cpp
     backtrace.cpp
+    configuration.cpp
     config_file.cpp
     daemon.cpp
     entropy.cpp
@@ -118,7 +119,6 @@ add_library(openthread-posix
     multicast_routing.cpp
     netif.cpp
     power.cpp
-    power_updater.cpp
     radio.cpp
     radio_url.cpp
     resolver.cpp

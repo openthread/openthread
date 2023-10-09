@@ -211,6 +211,8 @@ otError otCoapSendRequestBlockWiseWithParameters(otInstance                 *aIn
     Error                     error;
     const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+
     if (aTxParameters != nullptr)
     {
         VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
@@ -235,6 +237,8 @@ otError otCoapSendRequestWithParameters(otInstance               *aInstance,
     Error error;
 
     const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
+
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
 
     if (aTxParameters != nullptr)
     {
@@ -290,9 +294,15 @@ otError otCoapSendResponseBlockWiseWithParameters(otInstance                 *aI
                                                   void                       *aContext,
                                                   otCoapBlockwiseTransmitHook aTransmitHook)
 {
-    return AsCoreType(aInstance).GetApplicationCoap().SendMessage(AsCoapMessage(aMessage), AsCoreType(aMessageInfo),
-                                                                  Coap::TxParameters::From(aTxParameters), nullptr,
-                                                                  aContext, aTransmitHook, nullptr);
+    otError error;
+
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).GetApplicationCoap().SendMessage(AsCoapMessage(aMessage), AsCoreType(aMessageInfo),
+                                                                   Coap::TxParameters::From(aTxParameters), nullptr,
+                                                                   aContext, aTransmitHook, nullptr);
+exit:
+    return error;
 }
 #endif
 
@@ -301,8 +311,15 @@ otError otCoapSendResponseWithParameters(otInstance               *aInstance,
                                          const otMessageInfo      *aMessageInfo,
                                          const otCoapTxParameters *aTxParameters)
 {
-    return AsCoreType(aInstance).GetApplicationCoap().SendMessage(
+    otError error;
+
+    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+
+    error = AsCoreType(aInstance).GetApplicationCoap().SendMessage(
         AsCoapMessage(aMessage), AsCoreType(aMessageInfo), Coap::TxParameters::From(aTxParameters), nullptr, nullptr);
+
+exit:
+    return error;
 }
 
 #endif // OPENTHREAD_CONFIG_COAP_API_ENABLE

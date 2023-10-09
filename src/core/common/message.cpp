@@ -51,10 +51,6 @@
 #error "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE conflicts with OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT."
 #endif
 
-#if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE && !OPENTHREAD_CONFIG_DTLS_ENABLE
-#error "OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE is strongly discouraged when OPENTHREAD_CONFIG_DTLS_ENABLE is off."
-#endif
-
 namespace ot {
 
 RegisterLogModule("Message");
@@ -84,6 +80,8 @@ Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, con
     message->SetType(aType);
     message->SetReserved(aReserveHeader);
     message->SetLinkSecurityEnabled(aSettings.IsLinkSecurityEnabled());
+    message->SetLoopbackToHostAllowed(OPENTHREAD_CONFIG_IP6_ALLOW_LOOP_BACK_HOST_DATAGRAMS);
+    message->SetOrigin(Message::kOriginHostTrusted);
 
     SuccessOrExit(error = message->SetPriority(aSettings.GetPriority()));
     SuccessOrExit(error = message->SetLength(0));
@@ -776,6 +774,8 @@ Message *Message::Clone(uint16_t aLength) const
     messageCopy->SetOffset(offset);
 
     messageCopy->SetSubType(GetSubType());
+    messageCopy->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
+    messageCopy->SetOrigin(GetOrigin());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     messageCopy->SetTimeSync(IsTimeSync());
 #endif
@@ -785,6 +785,7 @@ exit:
     return messageCopy;
 }
 
+#if OPENTHREAD_FTD
 bool Message::GetChildMask(uint16_t aChildIndex) const { return GetMetadata().mChildMask.Get(aChildIndex); }
 
 void Message::ClearChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, false); }
@@ -792,6 +793,7 @@ void Message::ClearChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Se
 void Message::SetChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(aChildIndex, true); }
 
 bool Message::IsChildPending(void) const { return GetMetadata().mChildMask.HasAny(); }
+#endif
 
 void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
 {
