@@ -1185,6 +1185,33 @@ public:
     void SetOrigin(Origin aOrigin) { GetMetadata().mOrigin = aOrigin; }
 
     /**
+     * Indicates whether or not the message origin is Thread Netif.
+     *
+     * @retval TRUE   If the message origin is Thread Netif.
+     * @retval FALSE  If the message origin is not Thread Netif.
+     *
+     */
+    bool IsOriginThreadNetif(void) const { return GetOrigin() == kOriginThreadNetif; }
+
+    /**
+     * Indicates whether or not the message origin is a trusted source on host.
+     *
+     * @retval TRUE   If the message origin is a trusted source on host.
+     * @retval FALSE  If the message origin is not a trusted source on host.
+     *
+     */
+    bool IsOriginHostTrusted(void) const { return GetOrigin() == kOriginHostTrusted; }
+
+    /**
+     * Indicates whether or not the message origin is an untrusted source on host.
+     *
+     * @retval TRUE   If the message origin is an untrusted source on host.
+     * @retval FALSE  If the message origin is not an untrusted source on host.
+     *
+     */
+    bool IsOriginHostUntrusted(void) const { return GetOrigin() == kOriginHostUntrusted; }
+
+    /**
      * Indicates whether or not link security is enabled for the message.
      *
      * @retval TRUE   If link security is enabled.

@@ -134,7 +134,7 @@ otError otIp6Send(otInstance *aInstance, otMessage *aMessage)
 {
     otError error;
 
-    VerifyOrExit(AsCoreType(aMessage).GetOrigin() != Message::kOriginThreadNetif, error = kErrorInvalidArgs);
+    VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
     error = AsCoreType(aInstance).Get<Ip6::Ip6>().SendRaw(AsCoreType(aMessage));
 
