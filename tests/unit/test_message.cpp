@@ -68,7 +68,7 @@ void TestMessage(void)
 
     VerifyOrQuit((message = messagePool->Allocate(Message::kTypeIp6)) != nullptr);
     message->SetLinkSecurityEnabled(Message::kWithLinkSecurity);
-    message->SetPriority(Message::Priority::kPriorityNet);
+    SuccessOrQuit(message->SetPriority(Message::Priority::kPriorityNet));
     message->SetType(Message::Type::kType6lowpan);
     message->SetSubType(Message::SubType::kSubTypeMleChildIdRequest);
     message->SetLoopbackToHostAllowed(true);
