@@ -47,12 +47,12 @@ class RadioUrl : public ot::Url::Url
 {
 public:
     /**
-     * Initializes the radio URL.
+     * Initializes the object.
      *
      * @param[in]   aUrl    The null-terminated URL string.
      *
      */
-    void Init(const char *aUrl);
+    RadioUrl(const char *aUrl);
 
 private:
     enum

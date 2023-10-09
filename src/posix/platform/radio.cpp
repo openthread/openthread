@@ -58,7 +58,7 @@ extern "C" void platformRadioInit(const char *aUrl) { sRadio.Init(aUrl); }
 } // namespace
 
 Radio::Radio(void)
-    : mRadioUrl()
+    : mRadioUrl(nullptr)
     , mRadioSpinel()
     , mSpinelInterface(nullptr)
 {
@@ -69,7 +69,7 @@ void Radio::Init(const char *aUrl)
     bool resetRadio;
     bool skipCompatibilityCheck;
 
-    mRadioUrl.Init(aUrl);
+    mRadioUrl = aUrl;
     VerifyOrDie(mRadioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
