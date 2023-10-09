@@ -49,14 +49,14 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/neighbor.hpp"
 #include "thread/neighbor_table.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 namespace Utils {
 
 /**
- * This class implements the OTNS Stub that interacts with OTNS.
+ * Implements the OTNS Stub that interacts with OTNS.
  *
  */
 class Otns : public InstanceLocator, private NonCopyable
@@ -65,7 +65,7 @@ class Otns : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -76,7 +76,7 @@ public:
     }
 
     /**
-     * This function emits radio short address to OTNS when changed.
+     * Emits radio short address to OTNS when changed.
      *
      * @param[in]  aShortAddress  The new short address.
      *
@@ -84,7 +84,7 @@ public:
     static void EmitShortAddress(uint16_t aShortAddress);
 
     /**
-     * This function emits radio extended address to OTNS when changed.
+     * Emits radio extended address to OTNS when changed.
      *
      * @param[in]  aExtAddress  The new extended address.
      *
@@ -92,7 +92,7 @@ public:
     static void EmitExtendedAddress(const Mac::ExtAddress &aExtAddress);
 
     /**
-     * This function emits ping request information to OTNS when sending.
+     * Emits ping request information to OTNS when sending.
      *
      * @param[in]  aPeerAddress  The peer address of the ping request.
      * @param[in]  aPingLength   The data length of the ping request.
@@ -106,7 +106,7 @@ public:
                                 uint8_t             aHopLimit);
 
     /**
-     * This function emits ping reply information to OTNS when received.
+     * Emits ping reply information to OTNS when received.
      *
      * @param[in]  aPeerAddress  The peer address of the ping request.
      * @param[in]  aPingLength   The data length of the ping reply.
@@ -120,7 +120,7 @@ public:
                               uint8_t             aHopLimit);
 
     /**
-     * This function emits a neighbor table event to OTNS when a neighbor is added or removed.
+     * Emits a neighbor table event to OTNS when a neighbor is added or removed.
      *
      * @param[in]  aEvent     The event type.
      * @param[in]  aNeighbor  The neighbor that is added or removed.
@@ -129,7 +129,7 @@ public:
     static void EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeighbor);
 
     /**
-     * This function emits a transmit event to OTNS.
+     * Emits a transmit event to OTNS.
      *
      * @param[in]  aFrame  The frame of the transmission.
      *
@@ -137,7 +137,7 @@ public:
     static void EmitTransmit(const Mac::TxFrame &aFrame);
 
     /**
-     * This function emits the device mode to OTNS.
+     * Emits the device mode to OTNS.
      *
      * @param[in] aMode The device mode.
      *
@@ -145,7 +145,7 @@ public:
     static void EmitDeviceMode(Mle::DeviceMode aMode);
 
     /**
-     * This function emits the sending COAP message info to OTNS.
+     * Emits the sending COAP message info to OTNS.
      *
      * @param[in] aMessage      The sending COAP message.
      * @param[in] aMessageInfo  The message info.
@@ -154,7 +154,7 @@ public:
     static void EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This function emits the COAP message sending failure to OTNS.
+     * Emits the COAP message sending failure to OTNS.
      *
      * @param[in] aError        The error in sending the COAP message.
      * @param[in] aMessage      The COAP message failed to send.
@@ -164,7 +164,7 @@ public:
     static void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This function emits the received COAP message info to OTNS.
+     * Emits the received COAP message info to OTNS.
      *
      * @param[in] aMessage      The received COAP message.
      * @param[in] aMessageInfo  The message info.

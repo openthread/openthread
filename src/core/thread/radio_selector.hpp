@@ -65,7 +65,7 @@ class RadioSelector : InstanceLocator
 {
 public:
     /**
-     * This class defines all the neighbor info required for multi radio link and radio selection.
+     * Defines all the neighbor info required for multi radio link and radio selection.
      *
      * `Neighbor` class publicly inherits from this class.
      *
@@ -76,13 +76,13 @@ public:
 
     public:
         /**
-         * This type represents multi radio information associated with a neighbor.
+         * Represents multi radio information associated with a neighbor.
          *
          */
         typedef otMultiRadioNeighborInfo MultiRadioInfo;
 
         /**
-         * This method returns the supported radio types by the neighbor.
+         * Returns the supported radio types by the neighbor.
          *
          * @returns The supported radio types set.
          *
@@ -90,7 +90,7 @@ public:
         Mac::RadioTypes GetSupportedRadioTypes(void) const { return mSupportedRadioTypes; }
 
         /**
-         * This method retrieves the multi radio information `otMultiRadioNeighborInfo` associated with the neighbor.
+         * Retrieves the multi radio information `otMultiRadioNeighborInfo` associated with the neighbor.
          *
          * @param[out] aInfo  A reference to `MultiRadioInfo` to populate with neighbor info.
          *
@@ -110,7 +110,7 @@ public:
     };
 
     /**
-     * This constructor initializes the RadioSelector object.
+     * Initializes the RadioSelector object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -118,9 +118,9 @@ public:
     explicit RadioSelector(Instance &aInstance);
 
     /**
-     * This method updates the neighbor info (for multi radio support) on a received frame event.
+     * Updates the neighbor info (for multi radio support) on a received frame event.
      *
-     * This method notifies `RadioSelector` of a received secure frame/message on a radio link type for neighbor. If
+     * Notifies `RadioSelector` of a received secure frame/message on a radio link type for neighbor. If
      * the frame/message happens to be received earlier on another radio link, the `aIsDuplicate` is set to `true`.
      * A duplicate frame/message should have passed the security check (i.e., tag/MIC should be valid).
      *
@@ -132,9 +132,9 @@ public:
     void UpdateOnReceive(Neighbor &aNeighbor, Mac::RadioType aRadioType, bool aIsDuplicate);
 
     /**
-     * This method updates the neighbor info (for multi radio support) on a send done event.
+     * Updates the neighbor info (for multi radio support) on a send done event.
      *
-     * This method notifies `RadioSelector` the status of frame transmission on a radio link type. The radio link
+     * Notifies `RadioSelector` the status of frame transmission on a radio link type. The radio link
      * type is provided by the `aFrame` itself.
      *
      * @param[in] aFrame     A transmitted frame.
@@ -145,7 +145,7 @@ public:
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method updates the neighbor info (for multi radio support) on a deferred ack event.
+     * Updates the neighbor info (for multi radio support) on a deferred ack event.
      *
      * The deferred ack model is used by TREL radio link.
      *
@@ -158,7 +158,7 @@ public:
 #endif
 
     /**
-     * This method selects the radio link type for sending a data poll frame to a given parent neighbor.
+     * Selects the radio link type for sending a data poll frame to a given parent neighbor.
      *
      * @param[in] aParent  The parent to which the data poll frame will be sent.
      *
@@ -168,7 +168,7 @@ public:
     Mac::RadioType SelectPollFrameRadio(const Neighbor &aParent);
 
     /**
-     * This method selects the radio link for sending a given message to a specified MAC destination.
+     * Selects the radio link for sending a given message to a specified MAC destination.
      *
      * The `aMessage` will be updated to store the selected radio type (please see `Message::GetRadioType()`).
      * The `aTxFrames` will also be updated to indicate which radio links are to be used.

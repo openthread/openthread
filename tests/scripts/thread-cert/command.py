@@ -682,7 +682,7 @@ def check_joiner_router_commissioning_messages(commissioning_messages):
 
 
 def check_payload_same(tp1, tp2):
-    """Verfiy two payloads are totally the same.
+    """Verify two payloads are totally the same.
        A payload is a tuple of tlvs.
     """
     assert len(tp1) == len(tp2)

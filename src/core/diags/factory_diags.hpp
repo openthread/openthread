@@ -62,7 +62,7 @@ public:
     explicit Diags(Instance &aInstance);
 
     /**
-     * This method processes a factory diagnostics command line.
+     * Processes a factory diagnostics command line.
      *
      * @param[in]   aString        A null-terminated input string.
      * @param[out]  aOutput        The diagnostics execution result.
@@ -72,7 +72,7 @@ public:
     Error ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen);
 
     /**
-     * This method processes a factory diagnostics command line.
+     * Processes a factory diagnostics command line.
      *
      * @param[in]   aArgsLength    The number of args in @p aArgs.
      * @param[in]   aArgs          The arguments of diagnostics command line.
@@ -87,7 +87,7 @@ public:
     Error ProcessCmd(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
 
     /**
-     * This method indicates whether or not the factory diagnostics mode is enabled.
+     * Indicates whether or not the factory diagnostics mode is enabled.
      *
      * @retval TRUE if factory diagnostics mode is enabled
      * @retval FALSE if factory diagnostics mode is disabled.

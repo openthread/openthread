@@ -194,4 +194,17 @@ extern "C" void otPlatInfraIfDiscoverNat64PrefixDone(otInstance        *aInstanc
 } // namespace BorderRouter
 } // namespace ot
 
+//---------------------------------------------------------------------------------------------------------------------
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *) { return false; }
+
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
+{
+    return OT_ERROR_FAILED;
+}
+
+OT_TOOL_WEAK otError otPlatInfraIfDiscoverNat64Prefix(uint32_t) { return OT_ERROR_FAILED; }
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

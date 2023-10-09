@@ -343,13 +343,13 @@ uint32_t RouterTable::GetLeaderAge(void) const
     return (!mRouters.IsEmpty()) ? Time::MsecToSec(TimerMilli::GetNow() - mRouterIdSequenceLastUpdated) : 0xffffffff;
 }
 
-uint8_t RouterTable::GetNeighborCount(void) const
+uint8_t RouterTable::GetNeighborCount(LinkQuality aLinkQuality) const
 {
     uint8_t count = 0;
 
     for (const Router &router : mRouters)
     {
-        if (router.IsStateValid())
+        if (router.IsStateValid() && (router.GetLinkQualityIn() >= aLinkQuality))
         {
             count++;
         }
@@ -731,11 +731,11 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
         uint8_t routerCount = mRouters.GetLength();
 
-        if (routerCount > Mle::kLinkAcceptMaxRouters)
+        if (routerCount > kMaxRoutersInRouteTlvForLinkAccept)
         {
             for (uint8_t routerId = 0; routerId <= Mle::kMaxRouterId; routerId++)
             {
-                if (routerCount <= Mle::kLinkAcceptMaxRouters)
+                if (routerCount <= kMaxRoutersInRouteTlvForLinkAccept)
                 {
                     break;
                 }
@@ -758,7 +758,7 @@ void RouterTable::FillRouteTlv(Mle::RouteTlv &aRouteTlv, const Neighbor *aNeighb
 
             // Ensure that the neighbor will process the current
             // Route64 TLV in a subsequent message exchange
-            routerIdSequence -= Mle::kLinkAcceptSequenceRollback;
+            routerIdSequence -= kLinkAcceptSequenceRollback;
         }
     }
 
@@ -812,7 +812,7 @@ void RouterTable::HandleTimeTick(void)
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     // Update router id sequence
-    if (GetLeaderAge() >= Mle::kRouterIdSequencePeriod)
+    if (GetLeaderAge() >= kRouterIdSequencePeriod)
     {
         mRouterIdSequence++;
         mRouterIdSequenceLastUpdated = TimerMilli::GetNow();
@@ -881,6 +881,8 @@ void RouterTable::HandleTableChanged(void)
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRouterTableChange();
 #endif
+
+    Get<Mle::MleRouter>().UpdateAdvertiseInterval();
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)

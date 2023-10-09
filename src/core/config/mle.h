@@ -89,6 +89,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+ *
+ * Define as 1 to enable feature to set device properties which are used for calculating the local leader weight on a
+ * device.
+ *
+ * It is enabled by default on Thread Version 1.3.1 or later.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+#define OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE \
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_DEFAULT_LEADER_WEIGHT_ADJUSTMENT
  *
  * Specifies the default value for `mLeaderWeightAdjustment` in `otDeviceProperties`. MUST be from -16 up to +16.
@@ -312,6 +326,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
+ *
+ * The max number of series that a Link Metrics Subject (MTD device) can track simultaneously.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
+#define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD 2
 #endif
 
 #endif // CONFIG_MLE_H_

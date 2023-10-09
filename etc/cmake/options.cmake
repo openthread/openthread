@@ -50,13 +50,15 @@ set(OT_CONFIG_VALUES
 )
 
 macro(ot_option name ot_config description)
-    # Declare an OT cmake config with `name` mapping to OPENTHREAD_CONFIG
-    # `ot_config`. Parameter `description` provides the help string for this
-    # OT cmake config. There is an optional last parameter which if provided
-    # determines the default value for the cmake config. If not provided
-    # empty string is used which will be treated as "not specified". In this
-    # case, the variable `name` would still be false but the related
-    # OPENTHREAD_CONFIG is not added in `ot-config`.
+    # Declare an (ON/OFF/unspecified) OT cmake config with `name`
+    # mapping to OPENTHREAD_CONFIG `ot_config`. Parameter
+    # `description` provides the help string for this OT cmake
+    # config. There is an optional last parameter which if provided
+    # determines the default value for the cmake config. If not
+    # provided empty string is used which will be treated as "not
+    # specified". In this case, the variable `name` would still be
+    # false but the related OPENTHREAD_CONFIG is not added in
+    # `ot-config`.
 
     if (${ARGC} GREATER 3)
         set(${name} ${ARGN} CACHE STRING "enable ${description}")
@@ -78,6 +80,91 @@ macro(ot_option name ot_config description)
     endif()
 endmacro()
 
+macro(ot_string_option name ot_config description)
+    # Declare a string OT cmake config with `name` mapping to
+    # OPENTHREAD_CONFIG `ot_config`. Parameter `description` provides
+    # the help string for this OT cmake config. There is an optional
+    # last parameter which if provided determines the default value
+    # for the cmake config. If not provided empty string is used
+    # which will be treated as "not specified".
+
+    if (${ARGC} GREATER 3)
+        set(${name} ${ARGN} CACHE STRING "${description}")
+    else()
+        set(${name} "" CACHE STRING "${description}")
+    endif()
+
+    set_property(CACHE ${name} PROPERTY STRINGS "")
+
+    string(COMPARE EQUAL "${${name}}" "" is_empty)
+    if (is_empty)
+        message(STATUS "${name}=\"\"")
+    else()
+        message(STATUS "${name}=\"${${name}}\" --> ${ot_config}=\"${${name}}\"")
+        target_compile_definitions(ot-config INTERFACE "${ot_config}=\"${${name}}\"")
+    endif()
+endmacro()
+
+macro(ot_int_option name ot_config description)
+    # Declares a integer-value OT cmake config with `name` mapping to
+    # OPENTHREAD_CONFIG `ot_config`. There is an optional last
+    # parameter which if provided determines the default value for
+    # the cmake config. If not provided empty string is used which
+    # will be treated as "not specified".
+
+    if (${ARGC} GREATER 3)
+        set(${name} ${ARGN} CACHE STRING "${description}")
+    else()
+        set(${name} "" CACHE STRING "${description}")
+    endif()
+
+    set_property(CACHE ${name} PROPERTY STRINGS "")
+
+    string(COMPARE EQUAL "${${name}}" "" is_empty)
+    if (is_empty)
+        message(STATUS "${name}=\"\"")
+    elseif("${${name}}" MATCHES "^[0-9]+$")
+        message(STATUS "${name}=\"${${name}}\" --> ${ot_config}=${${name}}")
+        target_compile_definitions(ot-config INTERFACE "${ot_config}=${${name}}")
+    else()
+        message(FATAL_ERROR "${name}=\"${${name}}\" - invalid value, must be integer")
+    endif()
+endmacro()
+
+macro(ot_multi_option name values ot_config ot_value_prefix description)
+    # Declares a multi-value OT cmake config with `name` with valid
+    # values from `values` list mapping to OPENTHREAD_CONFIG
+    # `ot_config`. The `ot_value_prefix` is the prefix string to
+    # construct the OPENTHREAD_CONFIG value. There is an optional
+    # last parameter which if provided determines the default value
+    # for the cmake config. If not provided empty string is used
+    # which will be treated as "not specified".
+
+    if (${ARGC} GREATER 5)
+        set(${name} ${ARGN} CACHE STRING "${description}")
+    else()
+        set(${name} "" CACHE STRING "${description}")
+    endif()
+
+    set_property(CACHE ${name} PROPERTY STRINGS "${${values}}")
+
+    string(COMPARE EQUAL "${${name}}" "" is_empty)
+    if (is_empty)
+        message(STATUS "${name}=\"\"")
+    else()
+        list(FIND ${values} "${${name}}" ot_index)
+        if(ot_index EQUAL -1)
+            message(FATAL_ERROR "${name}=\"${${name}}\" - unknown value, valid values " "${${values}}")
+        else()
+            message(STATUS "${name}=\"${${name}}\" --> ${ot_config}=${ot_value_prefix}${${name}}")
+            target_compile_definitions(ot-config INTERFACE "${ot_config}=${ot_value_prefix}${${name}}")
+        endif()
+    endif()
+endmacro()
+
+message(STATUS "- - - - - - - - - - - - - - - - ")
+message(STATUS "OpenThread ON/OFF/Unspecified Configs")
+
 ot_option(OT_15_4 OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE "802.15.4 radio link")
 ot_option(OT_ANDROID_NDK OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE "enable android NDK")
 ot_option(OT_ANYCAST_LOCATOR OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE "anycast locator")
@@ -89,6 +176,7 @@ ot_option(OT_BORDER_AGENT OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE "border agent")
 ot_option(OT_BORDER_AGENT_ID OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE "create and save border agent ID")
 ot_option(OT_BORDER_ROUTER OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE "border router")
 ot_option(OT_BORDER_ROUTING OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE "border routing")
+ot_option(OT_BORDER_ROUTING_DHCP6_PD OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE "dhcpv6 pd support in border routing")
 ot_option(OT_BORDER_ROUTING_COUNTERS OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE "border routing counters")
 ot_option(OT_CHANNEL_MANAGER OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE "channel manager")
 ot_option(OT_CHANNEL_MONITOR OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE "channel monitor")
@@ -101,6 +189,7 @@ ot_option(OT_CSL_AUTO_SYNC OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE "data poll
 ot_option(OT_CSL_DEBUG OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE "csl debug")
 ot_option(OT_CSL_RECEIVER OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE "csl receiver")
 ot_option(OT_DATASET_UPDATER OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE "dataset updater")
+ot_option(OT_DEVICE_PROP_LEADER_WEIGHT OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE "device prop for leader weight")
 ot_option(OT_DHCP6_CLIENT OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE "DHCP6 client")
 ot_option(OT_DHCP6_SERVER OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE "DHCP6 server")
 ot_option(OT_DIAGNOSTIC OPENTHREAD_CONFIG_DIAG_ENABLE "diagnostic")
@@ -118,6 +207,7 @@ ot_option(OT_IP6_FRAGM OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE "ipv6 fragment
 ot_option(OT_JAM_DETECTION OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE "jam detection")
 ot_option(OT_JOINER OPENTHREAD_CONFIG_JOINER_ENABLE "joiner")
 ot_option(OT_LINK_METRICS_INITIATOR OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE "link metrics initiator")
+ot_option(OT_LINK_METRICS_MANAGER  OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE "link metrics manager")
 ot_option(OT_LINK_METRICS_SUBJECT OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE "link metrics subject")
 ot_option(OT_LINK_RAW OPENTHREAD_CONFIG_LINK_RAW_ENABLE "link raw service")
 ot_option(OT_LOG_LEVEL_DYNAMIC OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE "dynamic log level control")
@@ -132,6 +222,7 @@ ot_option(OT_NAT64_TRANSLATOR OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE "NAT64 t
 ot_option(OT_NEIGHBOR_DISCOVERY_AGENT OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE "neighbor discovery agent")
 ot_option(OT_NETDATA_PUBLISHER OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE "Network Data publisher")
 ot_option(OT_NETDIAG_CLIENT OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE "Network Diagnostic client")
+ot_option(OT_OPERATIONAL_DATASET_AUTO_INIT OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT "operational dataset auto init")
 ot_option(OT_OTNS OPENTHREAD_CONFIG_OTNS_ENABLE "OTNS")
 ot_option(OT_PING_SENDER OPENTHREAD_CONFIG_PING_SENDER_ENABLE "ping sender" ${OT_APP_CLI})
 ot_option(OT_PLATFORM_NETIF OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE "platform netif")
@@ -147,10 +238,56 @@ ot_option(OT_TCP OPENTHREAD_CONFIG_TCP_ENABLE "TCP")
 ot_option(OT_TIME_SYNC OPENTHREAD_CONFIG_TIME_SYNC_ENABLE "time synchronization service")
 ot_option(OT_TREL OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE "TREL radio link for Thread over Infrastructure feature")
 ot_option(OT_TX_BEACON_PAYLOAD OPENTHREAD_CONFIG_MAC_OUTGOING_BEACON_PAYLOAD_ENABLE "tx beacon payload")
+ot_option(OT_TX_QUEUE_STATS OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE "tx queue statistics")
 ot_option(OT_UDP_FORWARD OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE "UDP forward")
 ot_option(OT_UPTIME OPENTHREAD_CONFIG_UPTIME_ENABLE "uptime")
 
-option(OT_DOC "Build OpenThread documentation")
+option(OT_DOC "build OpenThread documentation")
+
+message(STATUS "- - - - - - - - - - - - - - - - ")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Get a list of the available platforms and output as a list to the 'arg_platforms' argument
+function(ot_get_platforms arg_platforms)
+    list(APPEND result "NO" "posix" "external")
+    set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
+    file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*")
+    foreach(platform IN LISTS platforms)
+        if(IS_DIRECTORY "${platforms_dir}/${platform}")
+            list(APPEND result "${platform}")
+        endif()
+    endforeach()
+    list(REMOVE_ITEM result utils)
+    list(SORT result)
+    set(${arg_platforms} "${result}" PARENT_SCOPE)
+endfunction()
+
+ot_get_platforms(OT_PLATFORM_VALUES)
+set(OT_PLATFORM "NO" CACHE STRING "Target platform chosen by the user at configure time")
+set_property(CACHE OT_PLATFORM PROPERTY STRINGS "${OT_PLATFORM_VALUES}")
+message(STATUS "OT_PLATFORM=\"${OT_PLATFORM}\"")
+list(FIND OT_PLATFORM_VALUES "${OT_PLATFORM}" ot_index)
+if(ot_index EQUAL -1)
+    message(FATAL_ERROR "Invalid value for OT_PLATFORM - valid values are:" "${OT_PLATFORM_VALUES}")
+endif()
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set(OT_THREAD_VERSION_VALUES "1.1" "1.2" "1.3" "1.3.1")
+set(OT_THREAD_VERSION "1.3" CACHE STRING "set Thread version")
+set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "${OT_THREAD_VERSION_VALUES}")
+list(FIND OT_THREAD_VERSION_VALUES "${OT_THREAD_VERSION}" ot_index)
+if(ot_index EQUAL -1)
+    message(STATUS "OT_THREAD_VERSION=\"${OT_THREAD_VERSION}\"")
+    message(FATAL_ERROR "Invalid value for OT_THREAD_VERSION - valid values are: " "${OT_THREAD_VERSION_VALUES}")
+endif()
+set(OT_VERSION_SUFFIX_LIST "1_1" "1_2" "1_3" "1_3_1")
+list(GET OT_VERSION_SUFFIX_LIST ${ot_index} OT_VERSION_SUFFIX)
+target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_${OT_VERSION_SUFFIX}")
+message(STATUS "OT_THREAD_VERSION=\"${OT_THREAD_VERSION}\" -> OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_${OT_VERSION_SUFFIX}")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set(OT_LOG_LEVEL_VALUES "NONE" "CRIT" "WARN" "NOTE" "INFO" "DEBG")
+ot_multi_option(OT_LOG_LEVEL OT_LOG_LEVEL_VALUES OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_ "set OpenThread log level")
 
 option(OT_FULL_LOGS "enable full logs")
 if(OT_FULL_LOGS)
@@ -161,68 +298,28 @@ if(OT_FULL_LOGS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1")
 endif()
 
-set(OT_VENDOR_NAME "" CACHE STRING "set the vendor name config")
-set_property(CACHE OT_VENDOR_NAME PROPERTY STRINGS ${OT_VENDOR_NAME_VALUES})
-string(COMPARE EQUAL "${OT_VENDOR_NAME}" "" is_empty)
-if (is_empty)
-    message(STATUS "OT_VENDOR_NAME=\"\"")
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
+    set(OT_DEFAULT_LOG_OUTPUT "APP")
 else()
-    message(STATUS "OT_VENDOR_NAME=\"${OT_VENDOR_NAME}\" --> OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME=\"${OT_VENDOR_NAME}\"")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME=\"${OT_VENDOR_NAME}\"")
+    set(OT_DEFAULT_LOG_OUTPUT "")
 endif()
+set(OT_LOG_OUTPUT_VALUES "APP" "DEBUG_UART" "NONE" "PLATFORM_DEFINED")
+ot_multi_option(OT_LOG_OUTPUT OT_LOG_OUTPUT_VALUES OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_ "Set the log output" "${OT_DEFAULT_LOG_OUTPUT}")
 
-set(OT_VENDOR_MODEL "" CACHE STRING "set the vendor model config")
-set_property(CACHE OT_VENDOR_MODEL PROPERTY STRINGS ${OT_VENDOR_MODEL_VALUES})
-string(COMPARE EQUAL "${OT_VENDOR_MODEL}" "" is_empty)
-if (is_empty)
-    message(STATUS "OT_VENDOR_MODEL=\"\"")
-else()
-    message(STATUS "OT_VENDOR_MODEL=\"${OT_VENDOR_MODEL}\" --> OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL=\"${OT_VENDOR_MODEL}\"")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL=\"${OT_VENDOR_MODEL}\"")
-endif()
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-set(OT_VENDOR_SW_VERSION "" CACHE STRING "set the vendor sw version config")
-set_property(CACHE OT_VENDOR_SW_VERSION PROPERTY STRINGS ${OT_VENDOR_SW_VERSION_VALUES})
-string(COMPARE EQUAL "${OT_VENDOR_SW_VERSION}" "" is_empty)
-if (is_empty)
-    message(STATUS "OT_VENDOR_SW_VERSION=\"\"")
-else()
-    message(STATUS "OT_VENDOR_SW_VERSION=\"${OT_VENDOR_SW_VERSION}\" --> OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION=\"${OT_VENDOR_SW_VERSION}\"")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION=\"${OT_VENDOR_SW_VERSION}\"")
-endif()
+ot_string_option(OT_VENDOR_NAME OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "set the vendor name config")
+ot_string_option(OT_VENDOR_MODEL OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL "set the vendor model config")
+ot_string_option(OT_VENDOR_SW_VERSION OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "set the vendor sw version config")
 
-set(OT_POWER_SUPPLY "" CACHE STRING "set the device power supply config")
-set(OT_POWER_SUPPLY_VALUES
-    ""
-    "BATTERY"
-    "EXTERNAL"
-    "EXTERNAL_STABLE"
-    "EXTERNAL_UNSTABLE"
-)
-set_property(CACHE OT_POWER_SUPPLY PROPERTY STRINGS ${OT_POWER_SUPPLY_VALUES})
-string(COMPARE EQUAL "${OT_POWER_SUPPLY}" "" is_empty)
-if (is_empty)
-    message(STATUS "OT_POWER_SUPPLY=\"\"")
-else()
-    message(STATUS "OT_POWER_SUPPLY=${OT_POWER_SUPPLY} --> OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY=OT_POWER_SUPPLY_${OT_POWER_SUPPLY}")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY=OT_POWER_SUPPLY_${OT_POWER_SUPPLY}")
-endif()
+set(OT_POWER_SUPPLY_VALUES "BATTERY" "EXTERNAL" "EXTERNAL_STABLE" "EXTERNAL_UNSTABLE")
+ot_multi_option(OT_POWER_SUPPLY OT_POWER_SUPPLY_VALUES OPENTHREAD_CONFIG_DEVICE_POWER_SUPPLY OT_POWER_SUPPLY_ "set the device power supply config")
 
-set(OT_MLE_MAX_CHILDREN "" CACHE STRING "set maximum number of children")
-if(OT_MLE_MAX_CHILDREN MATCHES "^[0-9]+$")
-    message(STATUS "OT_MLE_MAX_CHILDREN=${OT_MLE_MAX_CHILDREN}")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_MAX_CHILDREN=${OT_MLE_MAX_CHILDREN}")
-elseif(NOT OT_MLE_MAX_CHILDREN STREQUAL "")
-    message(FATAL_ERROR "Invalid maximum number of children: ${OT_MLE_MAX_CHILDREN}")
-endif()
+ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximum number of children")
+ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT "set max RCP restoration count")
 
-set(OT_RCP_RESTORATION_MAX_COUNT "0" CACHE STRING "set max RCP restoration count")
-if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
-    message(STATUS "OT_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}")
-else()
-    message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
-endif()
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 if(NOT OT_EXTERNAL_MBEDTLS)
     set(OT_MBEDTLS mbedtls)

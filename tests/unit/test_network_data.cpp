@@ -134,6 +134,7 @@ void TestNetworkDataIterator(void)
                 false,  // mNat64
                 false,  // mStable
                 false,  // mNextHopIsThisDevice
+                false,  // mAdvPio
             },
             {
                 {
@@ -146,6 +147,7 @@ void TestNetworkDataIterator(void)
                 false,  // mNat64
                 true,   // mStable
                 false,  // mNextHopIsThisDevice
+                false,  // mAdvPio
             },
         };
 

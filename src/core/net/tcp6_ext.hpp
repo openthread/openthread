@@ -54,7 +54,7 @@ namespace Ip6 {
  */
 
 /**
- * This class represents a TCP circular send buffer.
+ * Represents a TCP circular send buffer.
  *
  */
 class TcpCircularSendBuffer : public otTcpCircularSendBuffer

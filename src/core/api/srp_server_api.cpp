@@ -139,6 +139,11 @@ bool otSrpServerHostIsDeleted(const otSrpServerHost *aHost) { return AsCoreType(
 
 const char *otSrpServerHostGetFullName(const otSrpServerHost *aHost) { return AsCoreType(aHost).GetFullName(); }
 
+bool otSrpServerHostMatchesFullName(const otSrpServerHost *aHost, const char *aFullName)
+{
+    return AsCoreType(aHost).Matches(aFullName);
+}
+
 const otIp6Address *otSrpServerHostGetAddresses(const otSrpServerHost *aHost, uint8_t *aAddressesNum)
 {
     return AsCoreType(aHost).GetAddresses(*aAddressesNum);
@@ -154,30 +159,24 @@ uint32_t otSrpServerHostGetKeyLease(const otSrpServerHost *aHost) { return AsCor
 const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost    *aHost,
                                                         const otSrpServerService *aService)
 {
-    return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aService), Srp::Server::kFlagsBaseTypeServiceOnly);
-}
-
-const otSrpServerService *otSrpServerHostFindNextService(const otSrpServerHost    *aHost,
-                                                         const otSrpServerService *aPrevService,
-                                                         otSrpServerServiceFlags   aFlags,
-                                                         const char               *aServiceName,
-                                                         const char               *aInstanceName)
-{
-    return AsCoreType(aHost).FindNextService(AsCoreTypePtr(aPrevService), aFlags, aServiceName, aInstanceName);
+    return AsCoreType(aHost).GetNextService(AsCoreTypePtr(aService));
 }
 
 bool otSrpServerServiceIsDeleted(const otSrpServerService *aService) { return AsCoreType(aService).IsDeleted(); }
 
-bool otSrpServerServiceIsSubType(const otSrpServerService *aService) { return AsCoreType(aService).IsSubType(); }
-
-const char *otSrpServerServiceGetFullName(const otSrpServerService *aService)
+const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService)
 {
     return AsCoreType(aService).GetInstanceName();
 }
 
-const char *otSrpServerServiceGetInstanceName(const otSrpServerService *aService)
+bool otSrpServerServiceMatchesInstanceName(const otSrpServerService *aService, const char *aInstanceName)
 {
-    return AsCoreType(aService).GetInstanceName();
+    return AsCoreType(aService).MatchesInstanceName(aInstanceName);
+}
+
+const char *otSrpServerServiceGetInstanceLabel(const otSrpServerService *aService)
+{
+    return AsCoreType(aService).GetInstanceLabel();
 }
 
 const char *otSrpServerServiceGetServiceName(const otSrpServerService *aService)
@@ -185,9 +184,29 @@ const char *otSrpServerServiceGetServiceName(const otSrpServerService *aService)
     return AsCoreType(aService).GetServiceName();
 }
 
-otError otSrpServerServiceGetServiceSubTypeLabel(const otSrpServerService *aService, char *aLabel, uint8_t aMaxSize)
+bool otSrpServerServiceMatchesServiceName(const otSrpServerService *aService, const char *aServiceName)
 {
-    return AsCoreType(aService).GetServiceSubTypeLabel(aLabel, aMaxSize);
+    return AsCoreType(aService).MatchesServiceName(aServiceName);
+}
+
+uint16_t otSrpServerServiceGetNumberOfSubTypes(const otSrpServerService *aService)
+{
+    return AsCoreType(aService).GetNumberOfSubTypes();
+}
+
+const char *otSrpServerServiceGetSubTypeServiceNameAt(const otSrpServerService *aService, uint16_t aIndex)
+{
+    return AsCoreType(aService).GetSubTypeServiceNameAt(aIndex);
+}
+
+bool otSrpServerServiceHasSubTypeServiceName(const otSrpServerService *aService, const char *aSubTypeServiceName)
+{
+    return AsCoreType(aService).HasSubTypeServiceName(aSubTypeServiceName);
+}
+
+otError otSrpServerParseSubTypeServiceName(const char *aSubTypeServiceName, char *aLabel, uint8_t aLabelSize)
+{
+    return Srp::Server::Service::ParseSubTypeServiceName(aSubTypeServiceName, aLabel, aLabelSize);
 }
 
 uint16_t otSrpServerServiceGetPort(const otSrpServerService *aService) { return AsCoreType(aService).GetPort(); }

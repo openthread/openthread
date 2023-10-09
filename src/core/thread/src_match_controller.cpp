@@ -42,9 +42,9 @@
 #include "common/log.hpp"
 #include "mac/mac_types.hpp"
 #include "radio/radio.hpp"
+#include "thread/child.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/thread_netif.hpp"
-#include "thread/topology.hpp"
 
 namespace ot {
 

@@ -43,9 +43,14 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
-otError otBorderAgentGetId(otInstance *aInstance, uint8_t *aId, uint16_t *aLength)
+otError otBorderAgentGetId(otInstance *aInstance, otBorderAgentId *aId)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetId(aId, *aLength);
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetId(AsCoreType(aId));
+}
+
+otError otBorderAgentSetId(otInstance *aInstance, const otBorderAgentId *aId)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetId(AsCoreType(aId));
 }
 #endif
 

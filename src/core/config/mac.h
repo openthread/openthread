@@ -489,16 +489,27 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
+ * @def OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD
  *
- * The minimum CSL receive window (in microseconds) required to receive an IEEE 802.15.4 frame.
- * - Maximum frame size with preamble: 6*2+127*2 symbols
- * - AIFS: 12 symbols
- * - Maximum ACK size with preamble: 6*2+33*2 symbols
+ * The minimum time (in microseconds) before the MHR start that the radio should be in receive state and ready to
+ * properly receive in order to properly receive any IEEE 802.15.4 frame. Defaults to the duration of SHR + PHR.
  *
  */
-#ifndef OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
-#define OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON 356 * 16
+#ifndef OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD
+#define OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD (6 * 32)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER
+ *
+ * The minimum time (in microseconds) after the MHR start that the radio should be in receive state in order
+ * to properly receive any IEEE 802.15.4 frame. Defaults to the duration of a maximum size frame, plus AIFS,
+ * plus the duration of maximum enh-ack frame. Platforms are encouraged to improve this value for energy
+ * efficiency purposes.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER
+#define OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER ((127 + 6 + 39) * 32)
 #endif
 
 /**

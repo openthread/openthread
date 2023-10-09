@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This method provides a full or stable copy of the local Thread Network Data.
+ * Provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]      aInstance    A pointer to an OpenThread instance.
  * @param[in]      aStable      TRUE when copying the stable version, FALSE when copying the full version.
@@ -100,7 +100,7 @@ otError otServerRemoveService(otInstance    *aInstance,
                               uint8_t        aServiceDataLength);
 
 /**
- * This function gets the next service in the local Network Data.
+ * Gets the next service in the local Network Data.
  *
  * @param[in]      aInstance  A pointer to an OpenThread instance.
  * @param[in,out]  aIterator  A pointer to the Network Data iterator context. To get the first service entry

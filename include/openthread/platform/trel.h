@@ -58,7 +58,7 @@ extern "C" {
  */
 
 /**
- * This function initializes and enables TREL platform layer.
+ * Initializes and enables TREL platform layer.
  *
  * Upon this call, the platform layer MUST perform the following:
  *
@@ -87,7 +87,7 @@ extern "C" {
 void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 
 /**
- * This function disables TREL platform layer.
+ * Disables TREL platform layer.
  *
  * After this call, the platform layer MUST stop DNS-SD browse on the service name "_trel._udp", stop advertising the
  * TREL DNS-SD service (from `otPlatTrelRegisterService()`) and MUST close the UDP socket used to receive TREL messages.
@@ -98,7 +98,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort);
 void otPlatTrelDisable(otInstance *aInstance);
 
 /**
- * This structure represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
+ * Represents a TREL peer info discovered using DNS-SD browse on the service name "_trel._udp".
  *
  */
 typedef struct otPlatTrelPeerInfo
@@ -145,7 +145,7 @@ typedef struct otPlatTrelPeerInfo
 extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
- * This function registers a new service to be advertised using DNS-SD [RFC6763].
+ * Registers a new service to be advertised using DNS-SD [RFC6763].
  *
  * The service name is "_trel._udp". The platform should use its own hostname, which when combined with the service
  * name and the local DNS-SD domain name will produce the full service instance name, for example
@@ -170,7 +170,7 @@ extern void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPl
 void otPlatTrelRegisterService(otInstance *aInstance, uint16_t aPort, const uint8_t *aTxtData, uint8_t aTxtLength);
 
 /**
- * This function requests a TREL UDP packet to be sent to a given destination.
+ * Requests a TREL UDP packet to be sent to a given destination.
  *
  * @param[in] aInstance        The OpenThread instance structure.
  * @param[in] aUdpPayload      A pointer to UDP payload.
@@ -184,7 +184,7 @@ void otPlatTrelSend(otInstance       *aInstance,
                     const otSockAddr *aDestSockAddr);
 
 /**
- * This function is a callback from platform to notify of a received TREL UDP packet.
+ * Is a callback from platform to notify of a received TREL UDP packet.
  *
  * @note The buffer content (up to its specified length) may get changed during processing by OpenThread core (e.g.,
  * decrypted in place), so the platform implementation should expect that after returning from this function the

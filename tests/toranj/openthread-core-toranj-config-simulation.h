@@ -37,66 +37,28 @@
 // Include the common configuration for all platforms.
 #include "openthread-core-toranj-config.h"
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
 #if OPENTHREAD_RADIO
+
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
 #else
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
+
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
- *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
- *
- */
+#define OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE 0
+
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
 
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 
-/**
- * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
- *
- * Define as 1 for CLI to emit its command input string and the resulting output to the logs.
- *
- */
 #define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE 1
 
-/**
- * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL
- *
- * Defines the log level to use when CLI emits its command input/output to the logs.
- *
- */
 #define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LEVEL OT_LOG_LEVEL_INFO
 
-/**
- * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
- *
- * Define to 1 to enable DSO support.
- *
- */
 #define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
 
-/**
- * @def OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
- *
- * Enable the external heap.
- *
- */
 #define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 1
+
+#define OPENTHREAD_CONFIG_RADIO_STATS_ENABLE 0
 
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */

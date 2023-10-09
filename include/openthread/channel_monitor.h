@@ -82,7 +82,7 @@ extern "C" {
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function indicates whether the Channel Monitoring operation is enabled and running.
+ * Indicates whether the Channel Monitoring operation is enabled and running.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
  *

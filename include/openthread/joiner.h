@@ -56,7 +56,7 @@ extern "C" {
  */
 
 /**
- * This enumeration defines the Joiner State.
+ * Defines the Joiner State.
  *
  */
 typedef enum otJoinerState
@@ -72,7 +72,7 @@ typedef enum otJoinerState
 #define OT_JOINER_MAX_DISCERNER_LENGTH 64 ///< Maximum length of a Joiner Discerner in bits.
 
 /**
- * This structure represents a Joiner Discerner.
+ * Represents a Joiner Discerner.
  *
  */
 typedef struct otJoinerDiscerner
@@ -82,7 +82,7 @@ typedef struct otJoinerDiscerner
 } otJoinerDiscerner;
 
 /**
- * This function pointer is called to notify the completion of a join operation.
+ * Pointer is called to notify the completion of a join operation.
  *
  * @param[in]  aError    OT_ERROR_NONE if the join process succeeded.
  *                       OT_ERROR_SECURITY if the join process failed due to security credentials.
@@ -135,12 +135,7 @@ void otJoinerStop(otInstance *aInstance);
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @retval OT_JOINER_STATE_IDLE
- * @retval OT_JOINER_STATE_DISCOVER
- * @retval OT_JOINER_STATE_CONNECT
- * @retval OT_JOINER_STATE_CONNECTED
- * @retval OT_JOINER_STATE_ENTRUST
- * @retval OT_JOINER_STATE_JOINED
+ * @returns The joiner state.
  *
  */
 otJoinerState otJoinerGetState(otInstance *aInstance);
@@ -188,7 +183,7 @@ otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerne
 const otJoinerDiscerner *otJoinerGetDiscerner(otInstance *aInstance);
 
 /**
- * This function converts a given joiner state enumeration value to a human-readable string.
+ * Converts a given joiner state enumeration value to a human-readable string.
  *
  * @param[in] aState   The joiner state.
  *

@@ -52,6 +52,8 @@ namespace ot {
 
 namespace NetworkData {
 
+class Notifier;
+
 /**
  * @addtogroup core-netdata-leader
  *
@@ -63,16 +65,17 @@ namespace NetworkData {
  */
 
 /**
- * This class implements the Thread Network Data maintained by the Leader.
+ * Implements the Thread Network Data maintained by the Leader.
  *
  */
 class Leader : public LeaderBase, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class Notifier;
 
 public:
     /**
-     * This enumeration defines the match mode constants to compare two RLOC16 values.
+     * Defines the match mode constants to compare two RLOC16 values.
      *
      */
     enum MatchMode : uint8_t
@@ -82,7 +85,7 @@ public:
     };
 
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -90,13 +93,13 @@ public:
     explicit Leader(Instance &aInstance);
 
     /**
-     * This method reset the Thread Network Data.
+     * Reset the Thread Network Data.
      *
      */
     void Reset(void);
 
     /**
-     * This method starts the Leader services.
+     * Starts the Leader services.
      *
      * The start mode indicates whether device is starting normally as leader or restoring its role as leader after
      * reset. In the latter case, we do not accept any new registrations (`HandleServerData()`) and wait for
@@ -109,19 +112,19 @@ public:
     void Start(Mle::LeaderStartMode aStartMode);
 
     /**
-     * This method increments the Thread Network Data version.
+     * Increments the Thread Network Data version.
      *
      */
     void IncrementVersion(void);
 
     /**
-     * This method increments both the Thread Network Data version and stable version.
+     * Increments both the Thread Network Data version and stable version.
      *
      */
     void IncrementVersionAndStableVersion(void);
 
     /**
-     * This method returns CONTEXT_ID_RESUSE_DELAY value.
+     * Returns CONTEXT_ID_RESUSE_DELAY value.
      *
      * @returns The CONTEXT_ID_REUSE_DELAY value (in seconds).
      *
@@ -129,7 +132,7 @@ public:
     uint32_t GetContextIdReuseDelay(void) const { return mContextIds.GetReuseDelay(); }
 
     /**
-     * This method sets CONTEXT_ID_RESUSE_DELAY value.
+     * Sets CONTEXT_ID_RESUSE_DELAY value.
      *
      * @warning This method should only be used for testing.
      *
@@ -139,7 +142,7 @@ public:
     void SetContextIdReuseDelay(uint32_t aDelay) { mContextIds.SetReuseDelay(aDelay); }
 
     /**
-     * This method removes Network Data entries matching with a given RLOC16.
+     * Removes Network Data entries matching with a given RLOC16.
      *
      * @param[in]  aRloc16    A RLOC16 value.
      * @param[in]  aMatchMode A match mode (@sa MatchMode).
@@ -148,7 +151,7 @@ public:
     void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
 
     /**
-     * This method synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
+     * Synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
      *
      * Note that this method should be called only by the Leader once after reset.
      *
@@ -156,7 +159,7 @@ public:
     void HandleNetworkDataRestoredAfterReset(void);
 
     /**
-     * This method scans network data for given Service ID and returns pointer to the respective TLV, if present.
+     * Scans network data for given Service ID and returns pointer to the respective TLV, if present.
      *
      * @param aServiceId Service ID to look for.
      * @return Pointer to the Service TLV for given Service ID, or nullptr if not present.
@@ -166,7 +169,7 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This method indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
+     * Indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
      *
      * @param[in]  aPrefix   The OMR prefix to check.
      *
@@ -179,6 +182,9 @@ public:
 
 private:
     static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
+
+    static constexpr uint8_t kMinServiceId = 0x00;
+    static constexpr uint8_t kMaxServiceId = 0x0f;
 
     class ChangedFlags
     {
@@ -219,11 +225,7 @@ private:
 
         static constexpr uint8_t kInvalidId = NumericLimits<uint8_t>::kMax;
 
-        explicit ContextIds(Instance &aInstance)
-            : InstanceLocator(aInstance)
-            , mReuseDelay(kReuseDelay)
-        {
-        }
+        explicit ContextIds(Instance &aInstance);
 
         void     Clear(void);
         Error    GetUnallocatedId(uint8_t &aId);
@@ -232,6 +234,9 @@ private:
         uint32_t GetReuseDelay(void) const { return mReuseDelay; }
         void     SetReuseDelay(uint32_t aDelay) { mReuseDelay = aDelay; }
         void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        void MarkAsClone(void) { mIsClone = true; }
+#endif
 
     private:
         static constexpr uint32_t kReuseDelay = 5 * 60; // 5 minutes (in seconds).
@@ -256,6 +261,9 @@ private:
 
         TimeMilli mRemoveTimes[kMaxId - kMinId + 1];
         uint32_t  mReuseDelay;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        bool mIsClone;
+#endif
     };
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -330,8 +338,16 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16);
+    void MarkAsClone(void);
+#endif
+
     using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    bool mIsClone;
+#endif
     bool        mWaitingForNetDataSync;
     ContextIds  mContextIds;
     UpdateTimer mTimer;

@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 /**
- * This structure represents a CLI command.
+ * Represents a CLI command.
  *
  */
 typedef struct otCliCommand
@@ -68,7 +68,7 @@ typedef struct otCliCommand
  */
 
 /**
- * This function pointer is called to notify about Console output.
+ * Pointer is called to notify about Console output.
  *
  * @param[out] aContext    A user context pointer.
  * @param[in]  aFormat     The format string.
@@ -90,7 +90,7 @@ typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list 
 void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
 /**
- * This method is called to feed in a console input line.
+ * Is called to feed in a console input line.
  *
  * @param[in]  aBuf        A pointer to a null-terminated string.
  *
@@ -147,6 +147,15 @@ void otCliAppendResult(otError aError);
  *
  */
 void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs);
+
+/**
+ * Callback to allow vendor specific commands to be added to the user command table.
+ *
+ * Available when `OPENTHREAD_CONFIG_CLI_VENDOR_COMMANDS_ENABLE` is enabled and
+ * `OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES` is greater than 1.
+ *
+ */
+extern void otCliVendorSetUserCommands(void);
 
 /**
  * @}

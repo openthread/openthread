@@ -61,7 +61,7 @@ class JoinerRouter : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the Joiner Router object.
+     * Initializes the Joiner Router object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
@@ -69,7 +69,7 @@ public:
     explicit JoinerRouter(Instance &aInstance);
 
     /**
-     * This method returns the Joiner UDP Port.
+     * Returns the Joiner UDP Port.
      *
      * @returns The Joiner UDP Port number .
      *
@@ -77,7 +77,7 @@ public:
     uint16_t GetJoinerUdpPort(void);
 
     /**
-     * This method sets the Joiner UDP Port.
+     * Sets the Joiner UDP Port.
      *
      * @param[in]  aJoinerUdpPort  The Joiner UDP Port number.
      *

@@ -331,17 +331,8 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
     {
         // `key [enable/disable]`
 
-        bool enable;
-
-        if (aArgs[1].IsEmpty())
-        {
-            OutputEnabledDisabledStatus(otSrpClientIsServiceKeyRecordEnabled(GetInstancePtr()));
-            ExitNow();
-        }
-
-        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[1], enable));
-        VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-        otSrpClientSetServiceKeyRecordEnabled(GetInstancePtr(), enable);
+        error = Interpreter::GetInterpreter().ProcessEnableDisable(aArgs + 1, otSrpClientIsServiceKeyRecordEnabled,
+                                                                   otSrpClientSetServiceKeyRecordEnabled);
     }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else

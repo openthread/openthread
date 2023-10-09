@@ -31,6 +31,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/multi_frame_buffer.hpp"
 
 #include "test_util.h"
 
@@ -60,7 +61,7 @@ static const uint8_t sSkipText[]       = "Skip text";
 static const uint8_t sHdlcSpecials[]   = {kFlagSequence, kFlagXOn,        kFlagXOff,
                                           kFlagSequence, kEscapeSequence, kFlagSpecial};
 
-otError WriteToBuffer(const uint8_t *aText, Hdlc::FrameWritePointer &aWritePointer)
+otError WriteToBuffer(const uint8_t *aText, Spinel::FrameWritePointer &aWritePointer)
 {
     otError error = OT_ERROR_NONE;
 
@@ -75,9 +76,9 @@ exit:
 
 void TestHdlcFrameBuffer(void)
 {
-    Hdlc::FrameBuffer<kBufferSize> frameBuffer;
+    Spinel::FrameBuffer<kBufferSize> frameBuffer;
 
-    printf("Testing Hdlc::FrameBuffer");
+    printf("Testing Spinel::FrameBuffer");
 
     VerifyOrQuit(frameBuffer.IsEmpty(), "after constructor");
     VerifyOrQuit(frameBuffer.GetLength() == 0, "after constructor");
@@ -123,15 +124,15 @@ void TestHdlcFrameBuffer(void)
     printf(" -- PASS\n");
 }
 
-void TestHdlcMultiFrameBuffer(void)
+void TestSpinelMultiFrameBuffer(void)
 {
-    Hdlc::MultiFrameBuffer<kBufferSize> frameBuffer;
-    uint8_t                            *frame    = nullptr;
-    uint8_t                            *newFrame = nullptr;
-    uint16_t                            length;
-    uint16_t                            newLength;
+    Spinel::MultiFrameBuffer<kBufferSize> frameBuffer;
+    uint8_t                              *frame    = nullptr;
+    uint8_t                              *newFrame = nullptr;
+    uint16_t                              length;
+    uint16_t                              newLength;
 
-    printf("Testing Hdlc::MultiFrameBuffer");
+    printf("Testing Spinel::MultiFrameBuffer");
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check state after constructor
@@ -149,7 +150,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -159,7 +160,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHelloText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -188,7 +189,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHexText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHexText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
@@ -224,7 +225,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0,
                  "GetFrame() content is incorrect");
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     // Read the fourth saved frame and check the content
     SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
@@ -262,10 +263,10 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == 0, "after Clear()");
 
     SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
 
     frame = nullptr;
@@ -286,11 +287,11 @@ void TestHdlcMultiFrameBuffer(void)
     // Verify behavior of `ClearSavedFrames()`
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sOpenThreadText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sMottoText, frameBuffer));
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     SuccessOrQuit(WriteToBuffer(sHexText, frameBuffer));
 
     frame = nullptr;
@@ -306,7 +307,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHexText) - 1, "after ClearSavedFrames()");
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHexText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     SuccessOrQuit(WriteToBuffer(sHelloText, frameBuffer));
 
@@ -333,7 +334,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sHelloText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     frame = nullptr;
     SuccessOrQuit(frameBuffer.GetNextSavedFrame(frame, length));
     VerifyOrQuit(length == sizeof(sHelloText) - 1, "GetNextSavedFrame() length is incorrect");
@@ -353,7 +354,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sMottoText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "after SaveFrame()");
@@ -366,7 +367,7 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sOpenThreadText) - 1);
     VerifyOrQuit(memcmp(frameBuffer.GetFrame(), sOpenThreadText, frameBuffer.GetLength()) == 0);
 
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
     VerifyOrQuit(!frameBuffer.HasFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.HasSavedFrame(), "after SaveFrame()");
     VerifyOrQuit(frameBuffer.GetSkipLength() == 0, "after SaveFrame()");
@@ -397,14 +398,14 @@ void TestHdlcMultiFrameBuffer(void)
     VerifyOrQuit(frameBuffer.SetLength(sizeof(sHelloText)) == OT_ERROR_NONE);
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sHelloText));
     VerifyOrQuit(frameBuffer.HasFrame());
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit((frame = frameBuffer.GetFrame()) != nullptr);
     memcpy(frame, sMottoText, sizeof(sMottoText));
     VerifyOrQuit(frameBuffer.SetLength(sizeof(sMottoText)) == OT_ERROR_NONE);
     VerifyOrQuit(frameBuffer.GetLength() == sizeof(sMottoText));
     VerifyOrQuit(frameBuffer.HasFrame());
-    frameBuffer.SaveFrame();
+    SuccessOrQuit(frameBuffer.SaveFrame());
 
     VerifyOrQuit((frame = frameBuffer.GetFrame()) != nullptr);
     memcpy(frame, sHexText, sizeof(sHexText));
@@ -447,49 +448,49 @@ void ProcessDecodedFrame(void *aContext, otError aError)
 
 void TestEncoderDecoder(void)
 {
-    otError                             error;
-    uint8_t                             byte;
-    Hdlc::MultiFrameBuffer<kBufferSize> encoderBuffer;
-    Hdlc::MultiFrameBuffer<kBufferSize> decoderBuffer;
-    DecoderContext                      decoderContext;
-    Hdlc::Encoder                       encoder(encoderBuffer);
-    Hdlc::Decoder                       decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
-    uint8_t                            *frame;
-    uint16_t                            length;
-    uint8_t                             badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
+    otError                               error;
+    uint8_t                               byte;
+    Spinel::MultiFrameBuffer<kBufferSize> encoderBuffer;
+    Spinel::MultiFrameBuffer<kBufferSize> decoderBuffer;
+    DecoderContext                        decoderContext;
+    Hdlc::Encoder                         encoder(encoderBuffer);
+    Hdlc::Decoder                         decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    uint8_t                              *frame;
+    uint16_t                              length;
+    uint8_t                               badShortFrame[3] = {kFlagSequence, 0xaa, kFlagSequence};
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder");
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sOpenThreadText, sizeof(sOpenThreadText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sMottoText, sizeof(sMottoText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sHdlcSpecials, sizeof(sHdlcSpecials)));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(sHelloText, sizeof(sHelloText) - 1));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     SuccessOrQuit(encoder.BeginFrame());
     // Empty frame
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     byte = kFlagSequence;
     SuccessOrQuit(encoder.BeginFrame());
     SuccessOrQuit(encoder.Encode(&byte, sizeof(uint8_t)));
     SuccessOrQuit(encoder.EndFrame());
-    encoderBuffer.SaveFrame();
+    SuccessOrQuit(encoderBuffer.SaveFrame());
 
     // Feed the encoded frames to decoder and save the content
     for (frame = nullptr; encoderBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE;)
@@ -501,7 +502,7 @@ void TestEncoderDecoder(void)
         VerifyOrQuit(decoderContext.mWasCalled);
         VerifyOrQuit(decoderContext.mError == OT_ERROR_NONE, "Decoder::Decode() returned incorrect error code");
 
-        decoderBuffer.SaveFrame();
+        SuccessOrQuit(decoderBuffer.SaveFrame());
     }
 
     // Verify the decoded frames match the original frames
@@ -595,13 +596,13 @@ uint32_t GetRandom(uint32_t max) { return static_cast<uint32_t>(rand()) % max; }
 
 void TestFuzzEncoderDecoder(void)
 {
-    uint16_t                       length;
-    uint8_t                        frame[kMaxFrameLength];
-    Hdlc::FrameBuffer<kBufferSize> encoderBuffer;
-    Hdlc::FrameBuffer<kBufferSize> decoderBuffer;
-    DecoderContext                 decoderContext;
-    Hdlc::Encoder                  encoder(encoderBuffer);
-    Hdlc::Decoder                  decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
+    uint16_t                         length;
+    uint8_t                          frame[kMaxFrameLength];
+    Spinel::FrameBuffer<kBufferSize> encoderBuffer;
+    Spinel::FrameBuffer<kBufferSize> decoderBuffer;
+    DecoderContext                   decoderContext;
+    Hdlc::Encoder                    encoder(encoderBuffer);
+    Hdlc::Decoder                    decoder(decoderBuffer, ProcessDecodedFrame, &decoderContext);
 
     printf("Testing Hdlc::Encoder and Hdlc::Decoder with randomly generated frames");
 
@@ -647,7 +648,7 @@ void TestFuzzEncoderDecoder(void)
 int main(void)
 {
     ot::Ncp::TestHdlcFrameBuffer();
-    ot::Ncp::TestHdlcMultiFrameBuffer();
+    ot::Ncp::TestSpinelMultiFrameBuffer();
     ot::Ncp::TestEncoderDecoder();
     ot::Ncp::TestFuzzEncoderDecoder();
     printf("\nAll tests passed.\n");

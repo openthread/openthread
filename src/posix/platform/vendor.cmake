@@ -30,7 +30,10 @@ set(OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE "vendor_interface_example.cpp"
     CACHE STRING "vendor interface implementation")
 
 set(OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE "" CACHE STRING
-    "name of optional external package to link to rcp vendor implementation")
+    "path to CMake file to define and link posix vendor extension")
+
+set(OT_POSIX_RCP_VENDOR_TARGET "" CACHE STRING 
+    "name of vendor extension CMake target to link with posix library")
 
 if(OT_POSIX_CONFIG_RCP_BUS STREQUAL "VENDOR")
     add_library(rcp-vendor-intf ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE})
@@ -50,11 +53,9 @@ if(OT_POSIX_CONFIG_RCP_BUS STREQUAL "VENDOR")
     target_link_libraries(openthread-posix PUBLIC rcp-vendor-intf)
 
     if (OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE)
-        set(DEPS_TARGET ${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE}::${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
-        find_package(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
-
-        if(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE}_FOUND)
-            target_link_libraries(rcp-vendor-intf PUBLIC ${DEPS_TARGET})
+        include(${OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE})
+        if (OT_POSIX_CONFIG_RCP_VENDOR_TARGET)
+            target_link_libraries(rcp-vendor-intf PRIVATE ${OT_POSIX_CONFIG_RCP_VENDOR_TARGET})
         endif()
     endif()
 endif()

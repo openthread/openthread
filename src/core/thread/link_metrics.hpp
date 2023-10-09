@@ -74,7 +74,7 @@ namespace LinkMetrics {
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 /**
- * This class implements the Thread Link Metrics Initiator.
+ * Implements the Thread Link Metrics Initiator.
  *
  * The Initiator makes queries, configures Link Metrics probing at the Subject and generates reports of the results.
  *
@@ -88,7 +88,7 @@ public:
     typedef otLinkMetricsEnhAckProbingIeReportCallback EnhAckProbingIeReportCallback;
 
     /**
-     * This structure provides the info used for appending MLE Link Metric Query TLV.
+     * Provides the info used for appending MLE Link Metric Query TLV.
      *
      */
     struct QueryInfo : public Clearable<QueryInfo>
@@ -99,7 +99,7 @@ public:
     };
 
     /**
-     * This constructor initializes an instance of the Initiator class.
+     * Initializes an instance of the Initiator class.
      *
      * @param[in]  aInstance  A reference to the OpenThread interface.
      *
@@ -107,7 +107,7 @@ public:
     explicit Initiator(Instance &aInstance);
 
     /**
-     * This method sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data.
+     * Sends an MLE Data Request containing Link Metrics Query TLV to query Link Metrics data.
      *
      * It could be either a Single Probe or a Forward Tracking Series.
      *
@@ -124,7 +124,7 @@ public:
     Error Query(const Ip6::Address &aDestination, uint8_t aSeriesId, const Metrics *aMetrics);
 
     /**
-     * This method appends MLE Link Metrics Query TLV to a given message.
+     * Appends MLE Link Metrics Query TLV to a given message.
      *
      * @param[in] aMessage     The message to append to.
      * @param[in] aInfo        The link metrics query info to use to prepare the message.
@@ -136,7 +136,7 @@ public:
     Error AppendLinkMetricsQueryTlv(Message &aMessage, const QueryInfo &aInfo);
 
     /**
-     * This method registers a callback to handle Link Metrics report received.
+     * Registers a callback to handle Link Metrics report received.
      *
      * @param[in]  aCallback  A pointer to a function that is called when a Link Metrics report is received.
      * @param[in]  aContext   A pointer to application-specific context.
@@ -145,7 +145,7 @@ public:
     void SetReportCallback(ReportCallback aCallback, void *aContext) { mReportCallback.Set(aCallback, aContext); }
 
     /**
-     * This method handles the received Link Metrics report contained in @p aMessage.
+     * Handles the received Link Metrics report contained in @p aMessage.
      *
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aOffset       The offset in bytes where the metrics report sub-TLVs start.
@@ -156,7 +156,7 @@ public:
     void HandleReport(const Message &aMessage, uint16_t aOffset, uint16_t aLength, const Ip6::Address &aAddress);
 
     /**
-     * This method sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
+     * Sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
      *
      * @param[in] aDestination       A reference to the IPv6 address of the destination.
      * @param[in] aSeriesId          The Series ID.
@@ -175,7 +175,7 @@ public:
                                                const Metrics      *aMetrics);
 
     /**
-     * This method registers a callback to handle Link Metrics Management Response received.
+     * Registers a callback to handle Link Metrics Management Response received.
      *
      * @param[in]  aCallback A pointer to a function that is called when a Link Metrics Management Response is received.
      * @param[in]  aContext  A pointer to application-specific context.
@@ -187,7 +187,7 @@ public:
     }
 
     /**
-     * This method sends an MLE Link Metrics Management Request to configure/clear a Enhanced-ACK Based Probing.
+     * Sends an MLE Link Metrics Management Request to configure/clear a Enhanced-ACK Based Probing.
      *
      * @param[in] aDestination       A reference to the IPv6 address of the destination.
      * @param[in] aEnhAckFlags       Enh-ACK Flags to indicate whether to register or clear the probing. `0` to clear
@@ -206,7 +206,7 @@ public:
                                        const Metrics      *aMetrics);
 
     /**
-     * This method registers a callback to handle Link Metrics when Enh-ACK Probing IE is received.
+     * Registers a callback to handle Link Metrics when Enh-ACK Probing IE is received.
      *
      * @param[in]  aCallback A pointer to a function that is called when Enh-ACK Probing IE is received is received.
      * @param[in]  aContext  A pointer to application-specific context.
@@ -218,7 +218,7 @@ public:
     }
 
     /**
-     * This method handles the received Link Metrics Management Response contained in @p aMessage.
+     * Handles the received Link Metrics Management Response contained in @p aMessage.
      *
      * @param[in]  aMessage    A reference to the message that contains the Link Metrics Management Response.
      * @param[in]  aAddress    A reference to the source address of the message.
@@ -230,7 +230,7 @@ public:
     Error HandleManagementResponse(const Message &aMessage, const Ip6::Address &aAddress);
 
     /**
-     * This method sends an MLE Link Probe message.
+     * Sends an MLE Link Probe message.
      *
      * @param[in] aDestination    A reference to the IPv6 address of the destination.
      * @param[in] aSeriesId       The Series ID which the Probe message targets at.
@@ -245,7 +245,7 @@ public:
     Error SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength);
 
     /**
-     * This method processes received Enh-ACK Probing IE data.
+     * Processes received Enh-ACK Probing IE data.
      *
      * @param[in] aData      A pointer to buffer containing the Enh-ACK Probing IE data.
      * @param[in] aLength    The length of @p aData.
@@ -269,7 +269,7 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 /**
- * This class implements the Thread Link Metrics Subject.
+ * Implements the Thread Link Metrics Subject.
  *
  * The Subject reponds queries with reports, handles Link Metrics Management Requests and Link Probe Messages.
  *
@@ -280,7 +280,7 @@ public:
     typedef otLinkMetricsEnhAckProbingIeReportCallback EnhAckProbingIeReportCallback;
 
     /**
-     * This constructor initializes an instance of the Subject class.
+     * Initializes an instance of the Subject class.
      *
      * @param[in]  aInstance  A reference to the OpenThread interface.
      *
@@ -288,7 +288,7 @@ public:
     explicit Subject(Instance &aInstance);
 
     /**
-     * This method appends a Link Metrics Report to a message according to the Link Metrics query.
+     * Appends a Link Metrics Report to a message according to the Link Metrics query.
      *
      * @param[out]  aMessage           A reference to the message to append report.
      * @param[in]   aRequestMessage    A reference to the message of the Data Request.
@@ -302,7 +302,7 @@ public:
     Error AppendReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor);
 
     /**
-     * This method handles the received Link Metrics Management Request contained in @p aMessage and return a status.
+     * Handles the received Link Metrics Management Request contained in @p aMessage and return a status.
      *
      * @param[in]   aMessage     A reference to the message that contains the Link Metrics Management Request.
      * @param[in]   aNeighbor    A reference to the neighbor who sends the request.
@@ -315,7 +315,7 @@ public:
     Error HandleManagementRequest(const Message &aMessage, Neighbor &aNeighbor, Status &aStatus);
 
     /**
-     * This method handles the Link Probe contained in @p aMessage.
+     * Handles the Link Probe contained in @p aMessage.
      *
      * @param[in]   aMessage     A reference to the message that contains the Link Probe Message.
      * @param[out]  aSeriesId    A reference to Series ID that parsed from the message.
@@ -327,7 +327,7 @@ public:
     Error HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId);
 
     /**
-     * This method frees a SeriesInfo entry that was allocated from the Subject object.
+     * Frees a SeriesInfo entry that was allocated from the Subject object.
      *
      * @param[in]  aSeries    A reference to the SeriesInfo to free.
      *
@@ -336,7 +336,11 @@ public:
 
 private:
     // Max number of SeriesInfo that could be allocated by the pool.
+#if OPENTHREAD_FTD
     static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_MAX_SERIES_SUPPORTED;
+#elif OPENTHREAD_MTD
+    static constexpr uint16_t kMaxSeriesSupported = OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD;
+#endif
 
     static Error ReadTypeIdsFromMessage(const Message &aMessage,
                                         uint16_t       aStartOffset,

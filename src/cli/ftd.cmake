@@ -49,3 +49,7 @@ target_link_libraries(openthread-cli-ftd
         ot-config-ftd
         ot-config
 )
+
+if(OT_CLI_VENDOR_TARGET)
+    target_link_libraries(openthread-cli-ftd PRIVATE ${OT_CLI_VENDOR_TARGET})
+endif()

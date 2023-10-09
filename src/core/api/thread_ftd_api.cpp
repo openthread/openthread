@@ -79,6 +79,7 @@ otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId)
     return AsCoreType(aInstance).Get<Mle::MleRouter>().SetPreferredRouterId(aRouterId);
 }
 
+#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
 const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance)
 {
     return &AsCoreType(aInstance).Get<Mle::MleRouter>().GetDeviceProperties();
@@ -88,6 +89,7 @@ void otThreadSetDeviceProperties(otInstance *aInstance, const otDeviceProperties
 {
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetDeviceProperties(AsCoreType(aDeviceProperties));
 }
+#endif
 
 uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance)
 {
@@ -220,7 +222,7 @@ uint8_t otThreadGetRouterSelectionJitter(otInstance *aInstance)
 
 void otThreadSetRouterSelectionJitter(otInstance *aInstance, uint8_t aRouterJitter)
 {
-    IgnoreError(AsCoreType(aInstance).Get<Mle::MleRouter>().SetRouterSelectionJitter(aRouterJitter));
+    AsCoreType(aInstance).Get<Mle::MleRouter>().SetRouterSelectionJitter(aRouterJitter);
 }
 
 otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChildInfo *aChildInfo)
@@ -355,6 +357,7 @@ void otThreadSetDiscoveryRequestCallback(otInstance                      *aInsta
 }
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 void otThreadSendAddressNotification(otInstance               *aInstance,
                                      otIp6Address             *aDestination,
                                      otIp6Address             *aTarget,
@@ -384,9 +387,7 @@ void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled)
 {
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetThreadVersionCheckEnabled(aEnabled);
 }
-#endif
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId)
 {
     AssertPointerIsNotNull(aMinRouterId);
@@ -399,7 +400,13 @@ otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, ui
 {
     return AsCoreType(aInstance).Get<RouterTable>().SetRouterIdRange(aMinRouterId, aMaxRouterId);
 }
-#endif
+
+uint32_t otThreadGetAdvertisementTrickleIntervalMax(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Mle::MleRouter>().GetAdvertisementTrickleIntervalMax();
+}
+
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId)
 {

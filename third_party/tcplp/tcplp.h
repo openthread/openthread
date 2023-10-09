@@ -55,33 +55,34 @@ extern "C" {
 
 struct tcplp_signals
 {
-    uint32_t links_popped;
-    uint32_t bytes_acked;
-    bool     conn_established;
-    bool     recvbuf_added;
-    bool     rcvd_fin;
+    struct tcpcb* accepted_connection;
+    uint32_t      links_popped;
+    uint32_t      bytes_acked;
+    bool          conn_established;
+    bool          recvbuf_added;
+    bool          rcvd_fin;
 };
 
 /*
  * Functions that the TCP protocol logic can call to interact with the rest of
  * the system.
  */
-otMessage *   tcplp_sys_new_message(otInstance *instance);
-void          tcplp_sys_free_message(otInstance *instance, otMessage *pkt);
-void          tcplp_sys_send_message(otInstance *instance, otMessage *pkt, otMessageInfo *info);
+otMessage *   tcplp_sys_new_message(otInstance *aInstance);
+void          tcplp_sys_free_message(otInstance *aInstance, otMessage *aMessage);
+void          tcplp_sys_send_message(otInstance *aInstance, otMessage *aMessage, otMessageInfo *aMessageInfo);
 uint32_t      tcplp_sys_get_ticks();
 uint32_t      tcplp_sys_get_millis();
-void          tcplp_sys_set_timer(struct tcpcb *tcb, uint8_t timer_flag, uint32_t delay);
-void          tcplp_sys_stop_timer(struct tcpcb *tcb, uint8_t timer_flag);
-struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *tpl, struct in6_addr *addr, uint16_t port);
-bool          tcplp_sys_accepted_connection(struct tcpcb_listen *tpl,
-                                            struct tcpcb *       accepted,
-                                            struct in6_addr *    addr,
-                                            uint16_t             port);
-void          tcplp_sys_connection_lost(struct tcpcb *tcb, uint8_t errnum);
-void          tcplp_sys_on_state_change(struct tcpcb *tcb, int newstate);
-void          tcplp_sys_log(const char *format, ...);
-void          tcplp_sys_panic(const char *format, ...);
+void          tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay);
+void          tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag);
+struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *aTcbListen, struct in6_addr *aAddr, uint16_t aPort);
+bool          tcplp_sys_accepted_connection(struct tcpcb_listen *aTcbListen,
+                                            struct tcpcb *       aAccepted,
+                                            struct in6_addr *    aAddr,
+                                            uint16_t             aPort);
+void          tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
+void          tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState);
+void          tcplp_sys_log(const char *aFormat, ...);
+void          tcplp_sys_panic(const char *aFormat, ...);
 bool          tcplp_sys_autobind(otInstance *      aInstance,
                                  const otSockAddr *aPeer,
                                  otSockAddr *      aToBind,

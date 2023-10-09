@@ -167,11 +167,6 @@ exit:
 
 Error Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
 {
-    return AppendMultipleLabels(aLabels, kMaxNameLength, aMessage);
-}
-
-Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage)
-{
     Error    error           = kErrorNone;
     uint16_t index           = 0;
     uint16_t labelStartIndex = 0;
@@ -181,7 +176,7 @@ Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &
 
     do
     {
-        ch = index < aLength ? aLabels[index] : static_cast<char>(kNullChar);
+        ch = aLabels[index];
 
         if ((ch == kNullChar) || (ch == kLabelSeparatorChar))
         {
@@ -336,7 +331,7 @@ Error Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuff
             }
 
             labelLength = static_cast<uint8_t>(Min(static_cast<uint16_t>(kMaxLabelSize), aNameBufferSize));
-            SuccessOrExit(error = iterator.ReadLabel(aNameBuffer, labelLength, /* aAllowDotCharInLabel */ false));
+            SuccessOrExit(error = iterator.ReadLabel(aNameBuffer, labelLength, /* aAllowDotCharInLabel */ firstLabel));
             aNameBuffer += labelLength;
             aNameBufferSize -= labelLength;
             firstLabel = false;
@@ -628,6 +623,35 @@ Error Name::LabelIterator::AppendLabel(Message &aMessage) const
     VerifyOrExit((0 < mLabelLength) && (mLabelLength <= kMaxLabelLength), error = kErrorInvalidArgs);
     SuccessOrExit(error = aMessage.Append(mLabelLength));
     error = aMessage.AppendBytesFromMessage(mMessage, mLabelStartOffset, mLabelLength);
+
+exit:
+    return error;
+}
+
+Error Name::ExtractLabels(const char *aName, const char *aSuffixName, char *aLabels, uint16_t aLabelsSize)
+{
+    Error       error        = kErrorParse;
+    uint16_t    nameLength   = StringLength(aName, kMaxNameSize);
+    uint16_t    suffixLength = StringLength(aSuffixName, kMaxNameSize);
+    const char *suffixStart;
+
+    VerifyOrExit(nameLength < kMaxNameSize);
+    VerifyOrExit(suffixLength < kMaxNameSize);
+
+    VerifyOrExit(nameLength > suffixLength);
+
+    suffixStart = aName + nameLength - suffixLength;
+    VerifyOrExit(StringMatch(suffixStart, aSuffixName, kStringCaseInsensitiveMatch));
+    suffixStart--;
+    VerifyOrExit(*suffixStart == kLabelSeparatorChar);
+
+    // Determine the labels length to copy
+    nameLength -= (suffixLength + 1);
+    VerifyOrExit(nameLength < aLabelsSize, error = kErrorNoBufs);
+
+    memcpy(aLabels, aName, nameLength);
+    aLabels[nameLength] = kNullChar;
+    error               = kErrorNone;
 
 exit:
     return error;
@@ -1037,14 +1061,14 @@ exit:
     return error;
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Message &aMessage)
 {
     Appender appender(aMessage);
 
     return AppendEntries(aEntries, aNumEntries, appender);
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, MutableData<kWithUint16Length> &aData)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, MutableData<kWithUint16Length> &aData)
 {
     Error    error;
     Appender appender(aData.GetBytes(), aData.GetLength());
@@ -1056,11 +1080,11 @@ exit:
     return error;
 }
 
-Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Appender &aAppender)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint16_t aNumEntries, Appender &aAppender)
 {
     Error error = kErrorNone;
 
-    for (uint8_t index = 0; index < aNumEntries; index++)
+    for (uint16_t index = 0; index < aNumEntries; index++)
     {
         SuccessOrExit(error = aEntries[index].AppendTo(aAppender));
     }

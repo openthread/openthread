@@ -52,7 +52,7 @@ extern "C" {
  */
 
 /**
- * This function processes a factory diagnostics command line.
+ * Processes a factory diagnostics command line.
  *
  * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
  * output buffer.
@@ -75,7 +75,7 @@ otError otDiagProcessCmd(otInstance *aInstance,
                          size_t      aOutputMaxLen);
 
 /**
- * This function processes a factory diagnostics command line.
+ * Processes a factory diagnostics command line.
  *
  * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
  * output buffer.
@@ -94,7 +94,7 @@ otError otDiagProcessCmd(otInstance *aInstance,
 otError otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen);
 
 /**
- * This function indicates whether or not the factory diagnostics mode is enabled.
+ * Indicates whether or not the factory diagnostics mode is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *

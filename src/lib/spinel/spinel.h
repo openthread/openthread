@@ -3055,10 +3055,13 @@ enum
     SPINEL_PROP_THREAD_NEW_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 40,
 
     /// MAC CSL Period
-    /** Format: `S`
+    /** Format: `L`
      * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
      *
-     * The CSL period in units of 10 symbols. Value of 0 indicates that CSL should be disabled.
+     * The CSL period in microseconds. Value of 0 indicates that CSL should be disabled.
+     *
+     * The CSL period MUST be a multiple of 160 (which is 802.15 "ten symbols time").
+     *
      */
     SPINEL_PROP_THREAD_CSL_PERIOD = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
 
@@ -5031,9 +5034,9 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_unpack(const uint8_t *data_in,
                                                         const char    *pack_format,
                                                         ...);
 /**
- * This function parses spinel data similar to sscanf().
+ * Parses spinel data similar to sscanf().
  *
- * This function actually calls spinel_datatype_vunpack_in_place() to parse data.
+ * Actually calls spinel_datatype_vunpack_in_place() to parse data.
  *
  * @param[in]   data_in     A pointer to the data to parse.
  * @param[in]   data_len    The length of @p data_in in bytes.
@@ -5063,7 +5066,7 @@ SPINEL_API_EXTERN spinel_ssize_t spinel_datatype_vunpack(const uint8_t *data_in,
                                                          const char    *pack_format,
                                                          va_list        args);
 /**
- * This function parses spinel data similar to vsscanf().
+ * Parses spinel data similar to vsscanf().
  *
  * @param[in]   data_in     A pointer to the data to parse.
  * @param[in]   data_len    The length of @p data_in in bytes.

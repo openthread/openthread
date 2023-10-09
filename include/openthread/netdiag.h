@@ -87,6 +87,13 @@ enum
     OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL         = 26, ///< Vendor Model TLV
     OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION    = 27, ///< Vendor SW Version TLV
     OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION = 28, ///< Thread Stack Version TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHILD                = 29, ///< Child TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST  = 30, ///< Child IPv6 Address List TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR      = 31, ///< Router Neighbor TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_ANSWER               = 32, ///< Answer TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID             = 33, ///< Query ID TLV
+    OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS         = 34, ///< MLE Counters TLV
+
 };
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
@@ -97,7 +104,7 @@ enum
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
 
 /**
- * This structure represents a Network Diagnostic Connectivity value.
+ * Represents a Network Diagnostic Connectivity value.
  *
  */
 typedef struct otNetworkDiagConnectivity
@@ -149,7 +156,7 @@ typedef struct otNetworkDiagConnectivity
 } otNetworkDiagConnectivity;
 
 /**
- * This structure represents a Network Diagnostic Route data.
+ * Represents a Network Diagnostic Route data.
  *
  */
 typedef struct otNetworkDiagRouteData
@@ -161,7 +168,7 @@ typedef struct otNetworkDiagRouteData
 } otNetworkDiagRouteData;
 
 /**
- * This structure represents a Network Diagnostic Route TLV value.
+ * Represents a Network Diagnostic Route TLV value.
  *
  */
 typedef struct otNetworkDiagRoute
@@ -183,7 +190,7 @@ typedef struct otNetworkDiagRoute
 } otNetworkDiagRoute;
 
 /**
- * This structure represents a Network Diagnostic Mac Counters value.
+ * Represents a Network Diagnostic Mac Counters value.
  *
  * See <a href="https://www.ietf.org/rfc/rfc2863">RFC 2863</a> for definitions of member fields.
  *
@@ -202,7 +209,30 @@ typedef struct otNetworkDiagMacCounters
 } otNetworkDiagMacCounters;
 
 /**
- * This structure represents a Network Diagnostic Child Table Entry.
+ * Represents a Network Diagnostics MLE Counters value.
+ *
+ */
+typedef struct otNetworkDiagMleCounters
+{
+    uint16_t mDisabledRole;                  ///< Number of times device entered disabled role.
+    uint16_t mDetachedRole;                  ///< Number of times device entered detached role.
+    uint16_t mChildRole;                     ///< Number of times device entered child role.
+    uint16_t mRouterRole;                    ///< Number of times device entered router role.
+    uint16_t mLeaderRole;                    ///< Number of times device entered leader role.
+    uint16_t mAttachAttempts;                ///< Number of attach attempts while device was detached.
+    uint16_t mPartitionIdChanges;            ///< Number of changes to partition ID.
+    uint16_t mBetterPartitionAttachAttempts; ///< Number of attempts to attach to a better partition.
+    uint16_t mParentChanges;                 ///< Number of time device changed its parent.
+    uint64_t mTrackedTime;                   ///< Milliseconds tracked by next counters (zero if not supported).
+    uint64_t mDisabledTime;                  ///< Milliseconds device has been in disabled role.
+    uint64_t mDetachedTime;                  ///< Milliseconds device has been in detached role.
+    uint64_t mChildTime;                     ///< Milliseconds device has been in child role.
+    uint64_t mRouterTime;                    ///< Milliseconds device has been in router role.
+    uint64_t mLeaderTime;                    ///< Milliseconds device has been in leader role.
+} otNetworkDiagMleCounters;
+
+/**
+ * Represents a Network Diagnostic Child Table Entry.
  *
  */
 typedef struct otNetworkDiagChildEntry
@@ -232,7 +262,7 @@ typedef struct otNetworkDiagChildEntry
 } otNetworkDiagChildEntry;
 
 /**
- * This structure represents a Network Diagnostic TLV.
+ * Represents a Network Diagnostic TLV.
  *
  */
 typedef struct otNetworkDiagTlv
@@ -252,6 +282,7 @@ typedef struct otNetworkDiagTlv
         otNetworkDiagRoute        mRoute;
         otLeaderData              mLeaderData;
         otNetworkDiagMacCounters  mMacCounters;
+        otNetworkDiagMleCounters  mMleCounters;
         uint8_t                   mBatteryLevel;
         uint16_t                  mSupplyVoltage;
         uint32_t                  mMaxChildTimeout;
@@ -285,7 +316,7 @@ typedef struct otNetworkDiagTlv
 } otNetworkDiagTlv;
 
 /**
- * This function gets the next Network Diagnostic TLV in the message.
+ * Gets the next Network Diagnostic TLV in the message.
  *
  * Requires `OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE`.
  *
@@ -306,7 +337,7 @@ otError otThreadGetNextDiagnosticTlv(const otMessage       *aMessage,
                                      otNetworkDiagTlv      *aNetworkDiagTlv);
 
 /**
- * This function pointer is called when Network Diagnostic Get response is received.
+ * Pointer is called when Network Diagnostic Get response is received.
  *
  * @param[in]  aError        The error when failed to get the response.
  * @param[in]  aMessage      A pointer to the message buffer containing the received Network Diagnostic

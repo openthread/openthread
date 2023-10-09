@@ -45,8 +45,8 @@ if(OT_SIMULATION_MAX_NETWORK_SIZE)
     target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=${OT_SIMULATION_MAX_NETWORK_SIZE}")
 endif()
 
-if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-simulation-config.h" PARENT_SCOPE)
+if(NOT OT_PLATFORM_CONFIG)
+    set(OT_PLATFORM_CONFIG "openthread-core-simulation-config.h" PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
@@ -61,6 +61,7 @@ add_library(openthread-simulation
     alarm.c
     crypto.c
     diag.c
+    dns.c
     dso_transport.c
     entropy.c
     flash.c

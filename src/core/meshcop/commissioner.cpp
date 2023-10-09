@@ -273,8 +273,6 @@ void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
         mActiveJoiner = nullptr;
     }
 
-    UpdateJoinerExpirationTimer();
-
     SendCommissionerSet();
 
     LogJoinerEntry("Removed", joinerCopy);
@@ -481,7 +479,7 @@ Error Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
 
     joiner->mExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aTimeout);
 
-    UpdateJoinerExpirationTimer();
+    mJoinerExpirationTimer.FireAtIfEarlier(joiner->mExpirationTime);
 
     SendCommissionerSet();
 
@@ -577,7 +575,7 @@ void Commissioner::RemoveJoiner(Joiner &aJoiner, uint32_t aDelay)
         if (aJoiner.mExpirationTime > newExpirationTime)
         {
             aJoiner.mExpirationTime = newExpirationTime;
-            UpdateJoinerExpirationTimer();
+            mJoinerExpirationTimer.FireAtIfEarlier(newExpirationTime);
         }
     }
     else
@@ -629,7 +627,8 @@ void Commissioner::HandleTimer(void)
 
 void Commissioner::HandleJoinerExpirationTimer(void)
 {
-    TimeMilli now = TimerMilli::GetNow();
+    TimeMilli now  = TimerMilli::GetNow();
+    TimeMilli next = now.GetDistantFuture();
 
     for (Joiner &joiner : mJoiners)
     {
@@ -643,33 +642,15 @@ void Commissioner::HandleJoinerExpirationTimer(void)
             LogDebg("removing joiner due to timeout or successfully joined");
             RemoveJoinerEntry(joiner);
         }
-    }
-
-    UpdateJoinerExpirationTimer();
-}
-
-void Commissioner::UpdateJoinerExpirationTimer(void)
-{
-    TimeMilli now  = TimerMilli::GetNow();
-    TimeMilli next = now.GetDistantFuture();
-
-    for (Joiner &joiner : mJoiners)
-    {
-        if (joiner.mType == Joiner::kTypeUnused)
+        else
         {
-            continue;
+            next = Min(joiner.mExpirationTime, next);
         }
-
-        next = Min(next, Max(now, joiner.mExpirationTime));
     }
 
-    if (next < now.GetDistantFuture())
+    if (next != now.GetDistantFuture())
     {
-        mJoinerExpirationTimer.FireAt(next);
-    }
-    else
-    {
-        mJoinerExpirationTimer.Stop();
+        mJoinerExpirationTimer.FireAtIfEarlier(next);
     }
 }
 
@@ -786,11 +767,18 @@ void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message          *aMe
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
-    LogInfo("Received %s response", UriToString<kUriCommissionerSet>());
+    Error   error;
+    uint8_t state;
 
+    SuccessOrExit(error = aResult);
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged && Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone &&
+                     state != StateTlv::kPending,
+                 error = kErrorParse);
+
+    OT_UNUSED_VARIABLE(error);
 exit:
-    return;
+    LogInfo("Received %s response: %s", UriToString<kUriCommissionerSet>(),
+            error == kErrorNone ? StateTlv::StateToString(static_cast<StateTlv::State>(state)) : ErrorToString(error));
 }
 
 Error Commissioner::SendPetition(void)
@@ -948,8 +936,8 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     Ip6::InterfaceIdentifier joinerIid;
     uint16_t                 joinerRloc;
     Ip6::MessageInfo         joinerMessageInfo;
-    uint16_t                 offset;
-    uint16_t                 length;
+    uint16_t                 startOffset;
+    uint16_t                 endOffset;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
@@ -959,8 +947,8 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
     SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRloc));
 
-    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
-    VerifyOrExit(length <= aMessage.GetLength() - offset, error = kErrorParse);
+    SuccessOrExit(
+        error = Tlv::FindTlvValueStartEndOffsets(aMessage, Tlv::kJoinerDtlsEncapsulation, startOffset, endOffset));
 
     if (!Get<Tmf::SecureAgent>().IsConnectionActive())
     {
@@ -997,8 +985,8 @@ template <> void Commissioner::HandleTmf<kUriRelayRx>(Coap::Message &aMessage, c
 
     LogInfo("Received %s (%s, 0x%04x)", UriToString<kUriRelayRx>(), mJoinerIid.ToString().AsCString(), mJoinerRloc);
 
-    aMessage.SetOffset(offset);
-    SuccessOrExit(error = aMessage.SetLength(offset + length));
+    aMessage.SetOffset(startOffset);
+    SuccessOrExit(error = aMessage.SetLength(endOffset));
 
     joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal64());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);

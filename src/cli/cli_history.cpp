@@ -375,10 +375,10 @@ template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
 
         otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
 
-        OutputLine(isList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%u"
-                          : "| %20s | %-8s | %-4s | 0x%04x | %12u |",
-                   ageString, otThreadDeviceRoleToString(info->mRole),
-                   Interpreter::LinkModeToString(info->mMode, linkModeString), info->mRloc16, info->mPartitionId);
+        OutputLine(
+            isList ? "%s -> role:%s mode:%s rloc16:0x%04x partition-id:%lu" : "| %20s | %-8s | %-4s | 0x%04x | %12lu |",
+            ageString, otThreadDeviceRoleToString(info->mRole),
+            Interpreter::LinkModeToString(info->mMode, linkModeString), info->mRloc16, ToUlong(info->mPartitionId));
     }
 
 exit:
@@ -572,7 +572,7 @@ void History::OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo
     otHistoryTrackerEntryAgeToString(aEntryAge, ageString, sizeof(ageString));
 
     OutputLine("%s", ageString);
-    OutputFormat(kIndentSize, "type:%s len:%u cheksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
+    OutputFormat(kIndentSize, "type:%s len:%u checksum:0x%04x sec:%s prio:%s ", MessageTypeToString(aInfo),
                  aInfo.mPayloadLength, aInfo.mChecksum, aInfo.mLinkSecurity ? "yes" : "no",
                  MessagePriorityToString(aInfo.mPriority));
     if (aIsRx)

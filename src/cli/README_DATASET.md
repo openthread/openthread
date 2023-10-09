@@ -44,7 +44,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    Network Name: OpenThread-5938
    PAN ID: 0x5938
    PSKc: 3ca67c969efb0d0c74a4d8ee923b576c
-   Security Policy: 672 onrc
+   Security Policy: 672 onrc 0
    Done
    ```
 
@@ -103,7 +103,7 @@ After the device successfully attaches to a Thread network, the device will retr
    Network Name: OpenThread-5938
    PAN ID: 0x5938
    PSKc: 3ca67c969efb0d0c74a4d8ee923b576c
-   Security Policy: 672 onrc
+   Security Policy: 672 onrc 0
    Done
    ```
 
@@ -183,7 +183,7 @@ Network Key: f366cec7a446bab978d90d27abe38f23
 Network Name: OpenThread-5938
 PAN ID: 0x5938
 PSKc: 3ca67c969efb0d0c74a4d8ee923b576c
-Security Policy: 672 onrc
+Security Policy: 672 onrc 0
 Done
 ```
 
@@ -362,7 +362,7 @@ Usage: `dataset mgmtsetcommand <active|pending> [TLV Type list] [-x]`
 Send MGMT_ACTIVE_SET or MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrc
+> dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrc 0
 Done
 ```
 
@@ -392,7 +392,7 @@ Usage: `dataset networkname [name]`
 Get network name.
 
 ```bash
-> datset networkname
+> dataset networkname
 OpenThread
 Done
 ```
@@ -444,7 +444,7 @@ Network Key: ed916e454d96fd00184f10a6f5c9e1d3
 Network Name: OpenThread-bff8
 PAN ID: 0xbff8
 PSKc: 264f78414adc683191863d968f72d1b7
-Security Policy: 672 onrc
+Security Policy: 672 onrc 0
 Done
 ```
 
@@ -500,13 +500,13 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy [<rotationtime> [onrcCepR]]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcCepR] [versionthreshold]]`
 
 Get security policy.
 
 ```bash
 > dataset securitypolicy
-672 onrc
+672 onrc 0
 Done
 ```
 
@@ -521,8 +521,10 @@ Set security policy.
 - p: Thread 1.2 Network Key Provisioning is enabled.
 - R: Non-CCM routers are allowed in Thread 1.2 CCM networks.
 
+If the `versionthreshold` parameter is not provided, a default value of zero is assumed.
+
 ```bash
-> dataset securitypolicy 672 onrc
+> dataset securitypolicy 672 onrc 0
 Done
 ```
 
@@ -561,7 +563,7 @@ Network Key: 9929154dbc363218bcd22f907caf5c15
 Network Name: OpenThread-de2b
 PAN ID: 0xde2b
 PSKc: 15b2c16f7ba92ed4bc7b1ee054f1553f
-Security Policy: 672 onrc
+Security Policy: 672 onrc 0
 Done
 
 > dataset tlvs

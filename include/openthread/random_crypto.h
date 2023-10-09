@@ -37,7 +37,6 @@
 
 #include <stdint.h>
 
-#include <mbedtls/ctr_drbg.h>
 #include <openthread/error.h>
 
 #ifdef __cplusplus
@@ -55,7 +54,7 @@ extern "C" {
  */
 
 /**
- * This function fills a given buffer with cryptographically secure random bytes.
+ * Fills a given buffer with cryptographically secure random bytes.
  *
  * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
  * @param[in]  aSize    Size of buffer (number of bytes to fill).

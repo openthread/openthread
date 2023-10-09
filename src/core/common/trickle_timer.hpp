@@ -52,14 +52,16 @@ namespace ot {
  */
 
 /**
- * This class implements a trickle timer.
+ * Implements a trickle timer.
  *
  */
 class TrickleTimer : public TimerMilli
 {
+    friend class TrickleTimerTester;
+
 public:
     /**
-     * This enumeration defines the modes of operation for the `TrickleTimer`.
+     * Defines the modes of operation for the `TrickleTimer`.
      *
      */
     enum Mode : uint8_t
@@ -76,7 +78,7 @@ public:
     static constexpr uint16_t kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax;
 
     /**
-     * This function pointer is called when the timer expires (i.e., transmission should happen).
+     * Pointer is called when the timer expires (i.e., transmission should happen).
      *
      * @param[in]  aTimer  A reference to the trickle timer.
      *
@@ -84,7 +86,7 @@ public:
     typedef void (&Handler)(TrickleTimer &aTimer);
 
     /**
-     * This constructor initializes a `TrickleTimer` instance.
+     * Initializes a `TrickleTimer` instance.
      *
      * @param[in]  aInstance   A reference to the OpenThread instance.
      * @param[in]  aHandler    A handler which is called when transmission should occur.
@@ -93,7 +95,7 @@ public:
     TrickleTimer(Instance &aInstance, Handler aHandler);
 
     /**
-     * This method indicates whether or not the trickle timer instance is running.
+     * Indicates whether or not the trickle timer instance is running.
      *
      * @retval TRUE   If the trickle timer is running.
      * @retval FALSE  If the trickle timer is not running.
@@ -102,12 +104,50 @@ public:
     bool IsRunning(void) const { return TimerMilli::IsRunning(); }
 
     /**
-     * This method gets the current operation mode of the trickle timer.
+     * Gets the current operation mode of the trickle timer.
      *
      * @returns The current operation mode of the timer.
      *
      */
     Mode GetMode(void) const { return mMode; }
+
+    /**
+     * Gets the interval min value of the trickle timer.
+     *
+     * @returns The interval min value in milliseconds.
+     *
+     */
+    uint32_t GetIntervalMin(void) const { return mIntervalMin; }
+
+    /**
+     * Sets the interval min value of the trickle timer while timer is running.
+     *
+     * If @p aIntervalMin is smaller than the current `GetIntervalMax()` the interval max value is also updated to
+     * the new @p aIntervalMin (as if `SetIntervalMax(aIntervalMin)` was called).
+     *
+     * @param[in]  aIntervalMin   The minimum interval in milliseconds.
+     *
+     */
+    void SetIntervalMin(uint32_t aIntervalMin);
+
+    /**
+     * Gets the interval max value of the trickle timer.
+     *
+     * @returns The interval max value in milliseconds.
+     *
+     */
+    uint32_t GetIntervalMax(void) const { return mIntervalMax; }
+
+    /**
+     * Sets the interval max value of the trickle timer while timer is running.
+     *
+     * If the given @p aIntervalMax is smaller than the current `GetIntervalMin()`, the interval min value will be
+     * used instead.
+     *
+     * @param[in]  aIntervalMax  The maximum interval in milliseconds.
+     *
+     */
+    void SetIntervalMax(uint32_t aIntervalMax);
 
     /**
      * This method starts the trickle timer.
@@ -126,13 +166,13 @@ public:
                uint16_t aRedundancyConstant = kInfiniteRedundancyConstant);
 
     /**
-     * This method stops the trickle timer.
+     * Stops the trickle timer.
      *
      */
     void Stop(void) { TimerMilli::Stop(); }
 
     /**
-     * This method indicates to the trickle timer a 'consistent' event.
+     * Indicates to the trickle timer a 'consistent' event.
      *
      * The 'consistent' events are used to control suppression behavior. The trickle timer keeps track of the number of
      * 'consistent' events in each interval. The timer handler is invoked only if the number of `consistent` events
@@ -142,7 +182,7 @@ public:
     void IndicateConsistent(void);
 
     /**
-     * This method indicates to the trickle timer an 'inconsistent' event.
+     * Indicates to the trickle timer an 'inconsistent' event.
      *
      * Receiving an 'inconsistent' event causes the trickle timer to reset (i.e., start with interval set to the min
      * value) unless the current interval being used is already equal to the min interval.
@@ -162,6 +202,7 @@ private:
     void        HandleTimer(void);
     void        HandleEndOfTimeInInterval(void);
     void        HandleEndOfInterval(void);
+    TimeMilli   GetStartTimeOfCurrentInterval(void) const;
 
     // Shadow base class `TimerMilli` methods to ensure they are hidden.
     void StartAt(void) {}

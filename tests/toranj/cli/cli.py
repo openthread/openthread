@@ -411,6 +411,9 @@ class Node(object):
         leaderdata = Node.parse_list(self.cli('leaderdata'))
         return (int(leaderdata['Data Version']), int(leaderdata['Stable Data Version']))
 
+    def get_netdata_length(self):
+        return self._cli_single_output('netdata length')
+
     def add_prefix(self, prefix, flags=None, prf=None):
         return self._cli_no_output('prefix add', prefix, flags, prf)
 
@@ -422,6 +425,12 @@ class Node(object):
 
     def register_netdata(self):
         self._cli_no_output('netdata register')
+
+    def get_netdata_full(self):
+        return self._cli_single_output('netdata full')
+
+    def reset_netdata_full(self):
+        self._cli_no_output('netdata full reset')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # ping and counters
@@ -447,6 +456,12 @@ class Node(object):
         else:
             verify(False)
         return counter
+
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Misc
+
+    def get_mle_adv_imax(self):
+        return self._cli_single_output('mleadvimax')
 
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # UDP
@@ -704,29 +719,57 @@ class Node(object):
             if (instance_name == service['instance'] and service_name == service['name']):
                 return service
 
+    #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # br
+
+    def br_init(self, if_inex, is_running):
+        self._cli_no_output('br init', if_inex, is_running)
+
+    def br_enable(self):
+        self._cli_no_output('br enable')
+
+    def br_disable(self):
+        self._cli_no_output('br disable')
+
+    def br_get_state(self):
+        return self._cli_single_output('br state')
+
+    def br_get_routeprf(self):
+        return self._cli_single_output('br routeprf')
+
+    def br_set_routeprf(self, prf):
+        self._cli_no_output('br routeprf', prf)
+
+    def br_clear_routeprf(self):
+        self._cli_no_output('br routeprf clear')
+
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
 
     def form(self, network_name=None, network_key=None, channel=None, panid=0x1234, xpanid=None):
+        self._cli_no_output('dataset init new')
+        self._cli_no_output('dataset panid', panid)
         if network_name is not None:
-            self.set_network_name(network_name)
+            self._cli_no_output('dataset networkname', network_name)
         if network_key is not None:
-            self.set_network_key(network_key)
+            self._cli_no_output('dataset networkkey', network_key)
         if channel is not None:
-            self.set_channel(channel)
+            self._cli_no_output('dataset channel', channel)
         if xpanid is not None:
-            self.set_ext_panid(xpanid)
+            self._cli_no_output('dataset extpanid', xpanid)
+        self._cli_no_output('dataset commit active')
         self.set_mode('rdn')
-        self.set_panid(panid)
         self.interface_up()
         self.thread_start()
         verify_within(_check_node_is_leader, self._WAIT_TIME, arg=self)
 
     def join(self, node, type=JOIN_TYPE_ROUTER):
-        self.set_network_name(node.get_network_name())
-        self.set_network_key(node.get_network_key())
-        self.set_channel(node.get_channel())
-        self.set_panid(node.get_panid())
+        self._cli_no_output('dataset clear')
+        self._cli_no_output('dataset networkname', node.get_network_name())
+        self._cli_no_output('dataset networkkey', node.get_network_key())
+        self._cli_no_output('dataset channel', node.get_channel())
+        self._cli_no_output('dataset panid', node.get_panid())
+        self._cli_no_output('dataset commit active')
         if type == JOIN_TYPE_END_DEVICE:
             self.set_mode('rn')
         elif type == JOIN_TYPE_SLEEPY_END_DEVICE:

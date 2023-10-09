@@ -51,7 +51,7 @@ extern "C" {
  */
 
 /**
- * This structure holds diagnostic information for a Thread Child
+ * Holds diagnostic information for a Thread Child
  *
  */
 typedef struct
@@ -83,7 +83,7 @@ typedef struct
 typedef uint16_t otChildIp6AddressIterator; ///< Used to iterate through IPv6 addresses of a Thread Child entry.
 
 /**
- * This enumeration defines the EID cache entry state.
+ * Defines the EID cache entry state.
  *
  */
 typedef enum otCacheEntryState
@@ -95,7 +95,7 @@ typedef enum otCacheEntryState
 } otCacheEntryState;
 
 /**
- * This structure represents an EID cache entry.
+ * Represents an EID cache entry.
  *
  */
 typedef struct otCacheEntryInfo
@@ -104,6 +104,7 @@ typedef struct otCacheEntryInfo
     otShortAddress    mRloc16;             ///< RLOC16
     otCacheEntryState mState;              ///< Entry state
     bool              mCanEvict : 1;       ///< Indicates whether the entry can be evicted.
+    bool              mRampDown : 1;       ///< Whether in ramp-down mode while in `OT_CACHE_ENTRY_STATE_RETRY_QUERY`.
     bool              mValidLastTrans : 1; ///< Indicates whether last transaction time and ML-EID are valid.
     uint32_t          mLastTransTime;      ///< Last transaction time (applicable in cached state).
     otIp6Address      mMeshLocalEid;       ///< Mesh Local EID (applicable if entry in cached state).
@@ -112,7 +113,7 @@ typedef struct otCacheEntryInfo
 } otCacheEntryInfo;
 
 /**
- * This type represents an iterator used for iterating through the EID cache table entries.
+ * Represents an iterator used for iterating through the EID cache table entries.
  *
  * To initialize the iterator and start from the first entry in the cache table, set all its fields in the structure to
  * zero (e.g., `memset` the iterator to zero).
@@ -153,7 +154,7 @@ uint16_t otThreadGetMaxAllowedChildren(otInstance *aInstance);
 otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildren);
 
 /**
- * This method indicates whether or not the device is router-eligible.
+ * Indicates whether or not the device is router-eligible.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
@@ -164,7 +165,7 @@ otError otThreadSetMaxAllowedChildren(otInstance *aInstance, uint16_t aMaxChildr
 bool otThreadIsRouterEligible(otInstance *aInstance);
 
 /**
- * This function sets whether or not the device is router-eligible.
+ * Sets whether or not the device is router-eligible.
  *
  * If @p aEligible is false and the device is currently operating as a router, this call will cause the device to
  * detach and attempt to reattach as a child.
@@ -198,7 +199,7 @@ otError otThreadSetRouterEligible(otInstance *aInstance, bool aEligible);
 otError otThreadSetPreferredRouterId(otInstance *aInstance, uint8_t aRouterId);
 
 /**
- * This enumeration represents the power supply property on a device.
+ * Represents the power supply property on a device.
  *
  * This is used as a property in `otDeviceProperties` to calculate the leader weight.
  *
@@ -212,7 +213,7 @@ typedef enum
 } otPowerSupply;
 
 /**
- * This structure represents the device properties which are used for calculating the local leader weight on a
+ * Represents the device properties which are used for calculating the local leader weight on a
  * device.
  *
  * The parameters are set based on device's capability, whether acting as border router, its power supply config, etc.
@@ -236,6 +237,8 @@ typedef struct otDeviceProperties
 /**
  * Get the current device properties.
  *
+ * Requires `OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE`.
+ *
  * @returns The device properties `otDeviceProperties`.
  *
  */
@@ -243,6 +246,8 @@ const otDeviceProperties *otThreadGetDeviceProperties(otInstance *aInstance);
 
 /**
  * Set the device properties which are then used to determine and set the Leader Weight.
+ *
+ * Requires `OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE`.
  *
  * @param[in]  aInstance           A pointer to an OpenThread instance.
  * @param[in]  aDeviceProperties   The device properties.
@@ -266,7 +271,7 @@ uint8_t otThreadGetLocalLeaderWeight(otInstance *aInstance);
 /**
  * Sets the Thread Leader Weight used when operating in the Leader role.
  *
- * This function directly sets the Leader Weight to the new value, replacing its previous value (which may have been
+ * Directly sets the Leader Weight to the new value, replacing its previous value (which may have been
  * determined from the current `otDeviceProperties`).
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -363,14 +368,14 @@ uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance);
 void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 
 /**
- * Get the NETWORK_ID_TIMEOUT parameter used in the Router role.
+ * Get the `NETWORK_ID_TIMEOUT` parameter.
  *
  * @note This API is reserved for testing and demo purposes only. Changing settings with
  * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
- * @returns The NETWORK_ID_TIMEOUT value.
+ * @returns The `NETWORK_ID_TIMEOUT` value.
  *
  * @sa otThreadSetNetworkIdTimeout
  *
@@ -378,10 +383,13 @@ void otThreadSetContextIdReuseDelay(otInstance *aInstance, uint32_t aDelay);
 uint8_t otThreadGetNetworkIdTimeout(otInstance *aInstance);
 
 /**
- * Set the NETWORK_ID_TIMEOUT parameter used in the Leader role.
+ * Set the `NETWORK_ID_TIMEOUT` parameter.
+ *
+ * @note This API is reserved for testing and demo purposes only. Changing settings with
+ * this API will render a production application non-compliant with the Thread Specification.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aTimeout  The NETWORK_ID_TIMEOUT value.
+ * @param[in]  aTimeout  The `NETWORK_ID_TIMEOUT` value.
  *
  * @sa otThreadGetNetworkIdTimeout
  *
@@ -570,7 +578,7 @@ otError otThreadGetChildInfoById(otInstance *aInstance, uint16_t aChildId, otChi
 otError otThreadGetChildInfoByIndex(otInstance *aInstance, uint16_t aChildIndex, otChildInfo *aChildInfo);
 
 /**
- * This function gets the next IPv6 address (using an iterator) for a given child.
+ * Gets the next IPv6 address (using an iterator) for a given child.
  *
  * @param[in]      aInstance    A pointer to an OpenThread instance.
  * @param[in]      aChildIndex  The child index.
@@ -626,7 +634,7 @@ uint8_t otThreadGetMaxRouterId(otInstance *aInstance);
 otError otThreadGetRouterInfo(otInstance *aInstance, uint16_t aRouterId, otRouterInfo *aRouterInfo);
 
 /**
- * This function gets the next EID cache entry (using an iterator).
+ * Gets the next EID cache entry (using an iterator).
  *
  * @param[in]     aInstance   A pointer to an OpenThread instance.
  * @param[out]    aEntryInfo  A pointer to where the EID cache entry information is placed.
@@ -654,7 +662,7 @@ void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc);
 /**
  * Get Key Reference to Thread PSKc stored
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
@@ -668,7 +676,7 @@ otPskcRef otThreadGetPskcRef(otInstance *aInstance);
 /**
  * Set the Thread PSKc
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
+ * Will only succeed when Thread protocols are disabled.  A successful
  * call to this function will also invalidate the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
@@ -684,12 +692,12 @@ otPskcRef otThreadGetPskcRef(otInstance *aInstance);
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc);
 
 /**
- * Set the Thread PSKc
+ * Set the Key Reference to the Thread PSKc
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
+ * Requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
- * This function will only succeed when Thread protocols are disabled.  A successful
- * call to this function will also invalidate the Active and Pending Operational Datasets in
+ * Will only succeed when Thread protocols are disabled.  Upon success,
+ * this will also invalidate the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
@@ -768,7 +776,7 @@ uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
 otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses);
 
 /**
- * This enumeration defines the constants used in `otNeighborTableCallback` to indicate changes in neighbor table.
+ * Defines the constants used in `otNeighborTableCallback` to indicate changes in neighbor table.
  *
  */
 typedef enum
@@ -781,7 +789,7 @@ typedef enum
 } otNeighborTableEvent;
 
 /**
- * This type represent a neighbor table entry info (child or router) and is used as a parameter in the neighbor table
+ * Represent a neighbor table entry info (child or router) and is used as a parameter in the neighbor table
  * callback `otNeighborTableCallback`.
  *
  */
@@ -796,7 +804,7 @@ typedef struct
 } otNeighborTableEntryInfo;
 
 /**
- * This function pointer is called to notify that there is a change in the neighbor table.
+ * Pointer is called to notify that there is a change in the neighbor table.
  *
  * @param[in]  aEvent      A event flag.
  * @param[in]  aEntryInfo  A pointer to table entry info.
@@ -805,7 +813,7 @@ typedef struct
 typedef void (*otNeighborTableCallback)(otNeighborTableEvent aEvent, const otNeighborTableEntryInfo *aEntryInfo);
 
 /**
- * This function registers a neighbor table callback function.
+ * Registers a neighbor table callback function.
  *
  * The provided callback (if non-NULL) will be invoked when there is a change in the neighbor table (e.g., a child or a
  * router neighbor entry is being added/removed or an existing child's mode is changed).
@@ -820,7 +828,7 @@ typedef void (*otNeighborTableCallback)(otNeighborTableEvent aEvent, const otNei
 void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTableCallback aCallback);
 
 /**
- * This function sets whether the device was commissioned using CCM.
+ * Sets whether the device was commissioned using CCM.
  *
  * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
  *       to indicate whether this device was commissioned using CCM.
@@ -832,7 +840,7 @@ void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTabl
 void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
+ * Sets whether the Security Policy TLV version-threshold for routing (VR field) is enabled.
  *
  * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
  *       to indicate that thread protocol version check VR should be skipped.
@@ -844,7 +852,7 @@ void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
 void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function gets the range of router IDs that are allowed to assign to nodes within the thread network.
+ * Gets the range of router IDs that are allowed to assign to nodes within the thread network.
  *
  * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
  * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
@@ -859,7 +867,7 @@ void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled);
 void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId);
 
 /**
- * This function sets the range of router IDs that are allowed to assign to nodes within the thread network.
+ * Sets the range of router IDs that are allowed to assign to nodes within the thread network.
  *
  * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used for test purpose. All the
  * router IDs in the range [aMinRouterId, aMaxRouterId] are allowed.
@@ -877,7 +885,17 @@ void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint
 otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, uint8_t aMaxRouterId);
 
 /**
- * This function indicates whether or not a Router ID is currently allocated.
+ * Gets the current Interval Max value used by Advertisement trickle timer.
+ *
+ * This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is intended for testing only.
+ *
+ * @returns The Interval Max of Advertisement trickle timer in milliseconds.
+ *
+ */
+uint32_t otThreadGetAdvertisementTrickleIntervalMax(otInstance *aInstance);
+
+/**
+ * Indicates whether or not a Router ID is currently allocated.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
  * @param[in]  aRouterId     The router ID to check.
@@ -889,13 +907,13 @@ otError otThreadSetRouterIdRange(otInstance *aInstance, uint8_t aMinRouterId, ui
 bool otThreadIsRouterIdAllocated(otInstance *aInstance, uint8_t aRouterId);
 
 /**
- * This function gets the next hop and path cost towards a given RLOC16 destination.
+ * Gets the next hop and path cost towards a given RLOC16 destination.
  *
- * This function can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
+ * Can be used with either @p aNextHopRloc16 or @p aPathCost being NULL indicating caller does not want
  * to get the value.
  *
  * @param[in]  aInstance       A pointer to an OpenThread instance.
- * @param[in]  aDesRloct16     The RLOC16 of destination.
+ * @param[in]  aDestRloc16     The RLOC16 of destination.
  * @param[out] aNextHopRloc16  A pointer to return RLOC16 of next hop, 0xfffe if no next hop.
  * @param[out] aPathCost       A pointer to return path cost towards destination.
  *

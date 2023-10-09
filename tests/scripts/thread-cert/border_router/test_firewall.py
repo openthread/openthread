@@ -201,6 +201,15 @@ class Firewall(thread_cert.TestCase):
             br1.ping_ether(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                            interface=br1.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
 
+        # 16. Host sends a UDP packet to router1's OMR address's TMF port.
+        host.udp_send_host(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], config.TMF_PORT, "HELLO")
+
+        # 17. BR1 sends a UDP packet to router1's ML-EID's TMF port.
+        br1.udp_send_host(router1.get_mleid(), config.TMF_PORT, "BYE")
+
+        # 18. BR1 sends a UDP packet to its own ML-EID's TMF port.
+        br1.udp_send_host(br1.get_mleid(), config.TMF_PORT, "SELF")
+
         self.collect_ipaddrs()
         self.collect_rlocs()
         self.collect_rloc16s()
@@ -292,7 +301,7 @@ class Firewall(thread_cert.TestCase):
         pkts.filter_eth_src(vars['BR_1_ETH']).filter_ipv6_src_dst(
             vars['Router_1_MLEID'], vars['Host_BGUA']).filter_ping_request().must_not_next()
 
-        # 14. BR pings router1's ML-EID from BR's infra interface.
+        # 14. BR pings router1's ML-EID from BR's ML-EID.
         _pkt = pkts.filter_wpan_src64(vars['BR_1']).filter_ipv6_src_dst(
             vars['BR_1_MLEID'], vars['Router_1_MLEID']).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['Router_1']).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
@@ -300,6 +309,23 @@ class Firewall(thread_cert.TestCase):
         # 15. BR pings router1's OMR from BR's infra interface.
         _pkt = pkts.filter_wpan_src64(vars['BR_1']).filter_ping_request().must_next()
         pkts.filter_wpan_src64(vars['Router_1']).filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).must_next()
+
+        # 16. Host sends a UDP packet to router1's OMR address's TMF port (61631).
+        # The packet should be able to reach BR1 but BR1 won't forward it to Thread.
+        pkts.filter_eth_src(vars['Host_ETH']).filter_ipv6_dst(vars['Router_1_OMR'][0]).filter(
+            lambda p: p.udp.dstport == config.TMF_PORT and p.udp.length == len("HELLO") + 8).must_next()
+        pkts.filter_wpan_src64(vars['BR_1']).filter_ipv6_dst(vars['Router_1_OMR'][0]).filter(
+            lambda p: p.udp.dstport == config.TMF_PORT and p.udp.length == len("HELLO") + 8).must_not_next()
+
+        # 17. BR1 sends a UDP packet to router1's ML-EID's TMF port (61631).
+        # The packet should be dropped by BR1, so it should not be present in Thread.
+        pkts.filter_wpan_src64(vars['BR_1']).filter_ipv6_dst(vars['Router_1_MLEID']).filter(
+            lambda p: p.udp.dstport == config.TMF_PORT and p.udp.length == len("BYE") + 8).must_not_next()
+
+        # 18. BR1 sends a UDP packet to its own ML-EID's TMF port (61631).
+        # The packet should be dropped by BR1, so it should not be present anywhere.
+        pkts.filter_wpan_src64(vars['BR_1']).filter_ipv6_dst(vars['BR_1_MLEID']).filter(
+            lambda p: p.udp.dstport == config.TMF_PORT and p.udp.length == len("SELF") + 8).must_not_next()
 
 
 if __name__ == '__main__':

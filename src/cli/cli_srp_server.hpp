@@ -46,7 +46,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * This class implements the SRP Server CLI interpreter.
+ * Implements the SRP Server CLI interpreter.
  *
  */
 class SrpServer : private Output
@@ -67,12 +67,15 @@ public:
     }
 
     /**
-     * This method interprets a list of CLI arguments.
+     * Processes a CLI sub-command.
      *
-     * @param[in]  aArgs        A pointer to an array of command line arguments.
+     * @param[in]  aArgs     An array of command line arguments.
      *
-     * @retval  OT_ERROR_NONE  Successfully executed the CLI command.
-     * @retval  ...            Failed to execute the CLI command.
+     * @retval OT_ERROR_NONE              Successfully executed the CLI command.
+     * @retval OT_ERROR_PENDING           The CLI command was successfully started but final result is pending.
+     * @retval OT_ERROR_INVALID_COMMAND   Invalid or unknown CLI command.
+     * @retval OT_ERROR_INVALID_ARGS      Invalid arguments.
+     * @retval ...                        Error during execution of the CLI command.
      *
      */
     otError Process(Arg aArgs[]);

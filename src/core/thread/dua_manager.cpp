@@ -78,10 +78,9 @@ DuaManager::DuaManager(Instance &aInstance)
 #endif
 }
 
-void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixState aState)
+void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::DomainPrefixEvent aEvent)
 {
-    if ((aState == BackboneRouter::Leader::kDomainPrefixRemoved) ||
-        (aState == BackboneRouter::Leader::kDomainPrefixRefreshed))
+    if ((aEvent == BackboneRouter::kDomainPrefixRemoved) || (aEvent == BackboneRouter::kDomainPrefixRefreshed))
     {
         if (mIsDuaPending)
         {
@@ -102,16 +101,16 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
     }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    switch (aState)
+    switch (aEvent)
     {
-    case BackboneRouter::Leader::kDomainPrefixUnchanged:
+    case BackboneRouter::kDomainPrefixUnchanged:
         // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcefully
         VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
         OT_FALL_THROUGH;
 
-    case BackboneRouter::Leader::kDomainPrefixRefreshed:
-    case BackboneRouter::Leader::kDomainPrefixAdded:
+    case BackboneRouter::kDomainPrefixRefreshed:
+    case BackboneRouter::kDomainPrefixAdded:
     {
         const Ip6::Prefix *prefix = Get<BackboneRouter::Leader>().GetDomainPrefix();
         OT_ASSERT(prefix != nullptr);
@@ -335,7 +334,7 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         else if (mle.IsExpectedToBecomeRouterSoon())
         {
             // Will check again in case the device decides to stay REED when jitter timeout expires.
-            UpdateRegistrationDelay(mle.GetRouterSelectionJitterTimeout() + kNewRouterRegistrationDelay + 1);
+            UpdateRegistrationDelay(mle.GetRouterRoleTransitionTimeout() + kNewRouterRegistrationDelay + 1);
         }
 #endif
     }
@@ -376,7 +375,7 @@ void DuaManager::HandleTimeTick(void)
             mDelay.mFields.mReregistrationDelay, mDelay.mFields.mCheckDelay);
 
     if ((mDuaState != kNotExist) &&
-        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(Mle::kDuaDadPeriod))))
+        (TimerMilli::GetNow() > (mLastRegistrationTime + TimeMilli::SecToMsec(kDuaDadPeriod))))
     {
         mDomainUnicastAddress.mPreferred = true;
     }
@@ -546,7 +545,7 @@ void DuaManager::PerformNextRegistration(void)
 exit:
     if (error == kErrorNoBufs)
     {
-        UpdateCheckDelay(Mle::kNoBufDelay);
+        UpdateCheckDelay(kNoBufDelay);
     }
 
     LogInfo("PerformNextRegistration: %s", ErrorToString(error));
@@ -574,7 +573,7 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageIn
 
     if (aResult == kErrorResponseTimeout)
     {
-        UpdateCheckDelay(Mle::KResponseTimeoutDelay);
+        UpdateCheckDelay(KResponseTimeoutDelay);
         ExitNow(error = aResult);
     }
 
@@ -758,12 +757,11 @@ exit:
     }
 }
 
-void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::ChildDuaState aState)
+void DuaManager::HandleChildDuaAddressEvent(const Child &aChild, ChildDuaAddressEvent aEvent)
 {
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    if ((aState == Mle::ChildDuaState::kRemoved || aState == Mle::ChildDuaState::kChanged) &&
-        mChildDuaMask.Get(childIndex))
+    if ((aEvent == kAddressRemoved || aEvent == kAddressChanged) && mChildDuaMask.Get(childIndex))
     {
         // Abort on going proxy DUA.req for this child
         if (mChildIndexDuaRegistering == childIndex)
@@ -775,12 +773,12 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaRegisteredMask.Set(childIndex, false);
     }
 
-    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged ||
-        (aState == Mle::ChildDuaState::kUnchanged && !mChildDuaMask.Get(childIndex)))
+    if (aEvent == kAddressAdded || aEvent == kAddressChanged ||
+        (aEvent == kAddressUnchanged && !mChildDuaMask.Get(childIndex)))
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {
-            UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, Mle::kParentAggregateDelay));
+            UpdateCheckDelay(Random::NonCrypto::GetUint8InRange(1, BackboneRouter::kParentAggregateDelay));
         }
 
         mChildDuaMask.Set(childIndex, true);

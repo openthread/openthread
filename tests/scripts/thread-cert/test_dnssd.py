@@ -172,16 +172,14 @@ class TestDnssd(thread_cert.TestCase):
         # Browse for main service
         service_instances = client1.dns_browse(f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
         self.assertEqual({'ins1', 'ins2', 'ins3'}, set(service_instances.keys()))
-        self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
-        self._assert_service_instance_equal(service_instances['ins2'], instance2_verify_info)
-        self._assert_service_instance_equal(service_instances['ins3'], instance3_verify_info)
 
         # Browse for service sub-type _s1.
         service_instances = client1.dns_browse(f'_s1._sub.{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
         self.assertEqual({'ins1', 'ins3'}, set(service_instances.keys()))
-        self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
 
         # Browse for service sub-type _s2.
+        # Since there is only one matching instance, validate that
+        # server included the service info in additional section.
         service_instances = client1.dns_browse(f'_s2._sub.{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
         self.assertEqual({'ins1'}, set(service_instances.keys()))
         self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
@@ -195,6 +193,9 @@ class TestDnssd(thread_cert.TestCase):
         service_instance = client1.dns_resolve_service('ins2', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
         self._assert_service_instance_equal(service_instance, instance2_verify_info)
 
+        service_instance = client1.dns_resolve_service('ins3', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
+        self._assert_service_instance_equal(service_instance, instance3_verify_info)
+
         #---------------------------------------------------------------
         # Add another service with TXT entries to the existing host and
         # verify that it is properly merged.
@@ -204,10 +205,9 @@ class TestDnssd(thread_cert.TestCase):
 
         service_instances = client1.dns_browse(f'{SERVICE}.{DOMAIN}', server.get_mleid(), 53)
         self.assertEqual({'ins1', 'ins2', 'ins3', 'ins4'}, set(service_instances.keys()))
-        self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
-        self._assert_service_instance_equal(service_instances['ins2'], instance2_verify_info)
-        self._assert_service_instance_equal(service_instances['ins3'], instance3_verify_info)
-        self._assert_service_instance_equal(service_instances['ins4'], instance4_verify_info)
+
+        service_instance = client1.dns_resolve_service('ins4', f'{SERVICE}.{DOMAIN}'.upper(), server.get_mleid(), 53)
+        self._assert_service_instance_equal(service_instance, instance4_verify_info)
 
     def _assert_service_instance_equal(self, instance, info):
         self.assertEqual(instance['host'].lower(), info['host'].lower(), instance)

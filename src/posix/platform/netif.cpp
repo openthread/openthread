@@ -77,6 +77,7 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #endif // __linux__
+#include <math.h>
 #include <net/if.h>
 #include <net/if_arp.h>
 #include <stdio.h>
@@ -146,6 +147,7 @@ extern int
 #include <openthread/message.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
+#include <openthread/platform/border_routing.h>
 #include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
@@ -156,7 +158,9 @@ extern int
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
-otIp4Cidr    gNat64Cidr;
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+static otIp4Cidr sActiveNat64Cidr;
+#endif
 
 const char *otSysGetThreadNetifName(void) { return gNetifName; }
 
@@ -896,24 +900,55 @@ static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsA
 }
 
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-void processNat64StateChange(otNat64State aNewState)
+static bool isSameIp4Cidr(const otIp4Cidr &aCidr1, const otIp4Cidr &aCidr2)
 {
-    // If the interface is not up and we are enabling NAT64, the route will be added when we bring up the route.
-    // Also, the route will be deleted by the kernel when we shutting down the interface.
-    // We should try to add route first, since otNat64SetEnabled never fails.
-    if (otIp6IsEnabled(gInstance))
+    bool res = true;
+
+    VerifyOrExit(aCidr1.mLength == aCidr2.mLength, res = false);
+
+    // The higher (32 - length) bits must be the same, host bits are ignored.
+    VerifyOrExit(((ntohl(aCidr1.mAddress.mFields.m32) ^ ntohl(aCidr2.mAddress.mFields.m32)) >> (32 - aCidr1.mLength)) ==
+                     0,
+                 res = false);
+
+exit:
+    return res;
+}
+
+static void processNat64StateChange(void)
+{
+    otIp4Cidr translatorCidr;
+
+    // Skip if NAT64 translator has not been configured with a CIDR.
+    SuccessOrExit(otNat64GetCidr(gInstance, &translatorCidr));
+
+    if (!isSameIp4Cidr(translatorCidr, sActiveNat64Cidr)) // Someone sets a new CIDR for NAT64.
     {
-        if (aNewState == OT_NAT64_STATE_ACTIVE)
+        char cidrString[OT_IP4_CIDR_STRING_SIZE];
+
+        if (sActiveNat64Cidr.mLength != 0)
         {
-            AddIp4Route(gNat64Cidr, kNat64RoutePriority);
-            otLogInfoPlat("[netif] Adding route for NAT64");
+            DeleteIp4Route(sActiveNat64Cidr);
         }
-        else
-        {
-            DeleteIp4Route(gNat64Cidr);
-            otLogInfoPlat("[netif] Deleting route for NAT64");
-        }
+        sActiveNat64Cidr = translatorCidr;
+
+        otIp4CidrToString(&translatorCidr, cidrString, sizeof(cidrString));
+        otLogInfoPlat("[netif] NAT64 CIDR updated to %s.", cidrString);
     }
+
+    if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
+    {
+        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
+        otLogInfoPlat("[netif] Adding route for NAT64");
+    }
+    else if (sActiveNat64Cidr.mLength > 0) // Translator is not active.
+    {
+        DeleteIp4Route(sActiveNat64Cidr);
+        otLogInfoPlat("[netif] Deleting route for NAT64");
+    }
+
+exit:
+    return;
 }
 #endif // defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
 
@@ -936,9 +971,9 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
 #endif
     }
 #if defined(__linux__) && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (OT_CHANGED_NAT64_TRANSLATOR_STATE & aFlags)
+    if ((OT_CHANGED_NAT64_TRANSLATOR_STATE | OT_CHANGED_THREAD_NETIF_STATE) & aFlags)
     {
-        processNat64StateChange(otNat64GetTranslatorState(aInstance));
+        processNat64StateChange();
     }
 #endif
 }
@@ -988,6 +1023,71 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+static constexpr uint8_t kIpVersion4 = 4;
+static constexpr uint8_t kIpVersion6 = 6;
+
+static uint8_t getIpVersion(const uint8_t *data)
+{
+    assert(data != nullptr);
+
+    // Mute compiler warnings.
+    OT_UNUSED_VARIABLE(kIpVersion4);
+    OT_UNUSED_VARIABLE(kIpVersion6);
+
+    return (static_cast<uint8_t>(data[0]) >> 4) & 0x0F;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
+/**
+ * Returns nullptr if data does not point to a valid ICMPv6 RA message.
+ *
+ */
+static const uint8_t *getIcmp6RaMessage(const uint8_t *data, ssize_t length)
+{
+    const uint8_t *ret = nullptr;
+    otIcmp6Header  icmpHeader;
+
+    VerifyOrExit(length >= OT_IP6_HEADER_SIZE + OT_ICMP6_ROUTER_ADVERT_MIN_SIZE);
+    VerifyOrExit(getIpVersion(data) == kIpVersion6);
+    VerifyOrExit(data[OT_IP6_HEADER_PROTO_OFFSET] == OT_IP6_PROTO_ICMP6);
+
+    ret = data + OT_IP6_HEADER_SIZE;
+    memcpy(&icmpHeader, ret, sizeof(icmpHeader));
+    VerifyOrExit(icmpHeader.mType == OT_ICMP6_TYPE_ROUTER_ADVERT, ret = nullptr);
+    VerifyOrExit(icmpHeader.mCode == 0, ret = nullptr);
+
+exit:
+    return ret;
+}
+
+/**
+ * Returns false if the message is not an ICMPv6 RA message.
+ *
+ */
+static otError tryProcessIcmp6RaMessage(otInstance *aInstance, const uint8_t *data, ssize_t length)
+{
+    otError        error = OT_ERROR_NONE;
+    const uint8_t *ra    = getIcmp6RaMessage(data, length);
+    ssize_t        raLength;
+
+    VerifyOrExit(ra != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+#if OPENTHREAD_POSIX_LOG_TUN_PACKETS
+    otLogInfoPlat("[netif] RA to BorderRouting (%hu bytes)", static_cast<uint16_t>(length));
+    otDumpInfoPlat("", data, static_cast<size_t>(length));
+#endif
+
+    raLength = length + (ra - data);
+    otPlatBorderRoutingProcessIcmp6Ra(aInstance, ra, raLength);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
@@ -1013,18 +1113,27 @@ static void processTransmit(otInstance *aInstance)
     }
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    if (tryProcessIcmp6RaMessage(aInstance, reinterpret_cast<uint8_t *>(&packet[offset]), rval) == OT_ERROR_NONE)
+    {
+        ExitNow();
+    }
+#endif
+
     {
         otMessageSettings settings;
 
         settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
         settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-        isIp4   = (packet[offset] & 0xf0) == 0x40;
+        isIp4   = (getIpVersion(reinterpret_cast<uint8_t *>(&packet[offset])) == kIpVersion4);
         message = isIp4 ? otIp4NewMessage(aInstance, &settings) : otIp6NewMessage(aInstance, &settings);
 #else
         message = otIp6NewMessage(aInstance, &settings);
 #endif
         VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+        otMessageSetLoopbackToHostAllowed(message, true);
+        otMessageSetOrigin(message, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
     }
 
 #if OPENTHREAD_POSIX_LOG_TUN_PACKETS
@@ -1207,10 +1316,10 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    if (isUp && gNat64Cidr.mLength > 0)
+    if (isUp && sActiveNat64Cidr.mLength > 0)
     {
-        SuccessOrExit(error = otNat64SetIp4Cidr(gInstance, &gNat64Cidr));
-        otLogInfoPlat("[netif] Succeeded to enable NAT64");
+        // Recover NAT64 route.
+        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
     }
 #endif
 
@@ -1457,6 +1566,82 @@ exit:
 
 #endif
 
+#if defined(__linux__)
+
+#define ERR_RTA(errmsg, requestPayloadLength) \
+    ((struct rtattr *)((char *)(errmsg)) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength))
+
+// The format of NLMSG_ERROR is described below:
+//
+// ----------------------------------------------
+// | struct nlmsghdr - response header          |
+// ----------------------------------------------------------------
+// |    int error                               |                 |
+// ---------------------------------------------| struct nlmsgerr |
+// | struct nlmsghdr - original request header  |                 |
+// ----------------------------------------------------------------
+// | ** optionally (1) payload of the request   |
+// ----------------------------------------------
+// | ** optionally (2) extended ACK attrs       |
+// ----------------------------------------------
+//
+static void HandleNetlinkResponse(struct nlmsghdr *msg)
+{
+    const struct nlmsgerr *err;
+    const char            *errorMsg;
+    size_t                 rtaLength;
+    size_t                 requestPayloadLength = 0;
+    uint32_t               requestSeq           = 0;
+
+    if (msg->nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr)))
+    {
+        otLogWarnPlat("[netif] Truncated netlink reply of request#%u", requestSeq);
+        ExitNow();
+    }
+
+    err        = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
+    requestSeq = err->msg.nlmsg_seq;
+
+    if (err->error == 0)
+    {
+        otLogInfoPlat("[netif] Succeeded to process request#%u", requestSeq);
+        ExitNow();
+    }
+
+    // For rtnetlink, `abs(err->error)` maps to values of `errno`.
+    // But this is not a requirement in RFC 3549.
+    errorMsg = strerror(abs(err->error));
+
+    // The payload of the request is omitted if NLM_F_CAPPED is set
+    if (!(msg->nlmsg_flags & NLM_F_CAPPED))
+    {
+        requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
+    }
+
+    rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
+
+    for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+         rta                = RTA_NEXT(rta, rtaLength))
+    {
+        if (rta->rta_type == NLMSGERR_ATTR_MSG)
+        {
+            errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
+            break;
+        }
+        else
+        {
+            otLogDebgPlat("[netif] Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+        }
+    }
+
+    otLogWarnPlat("[netif] Failed to process request#%u: %s", requestSeq, errorMsg);
+
+exit:
+    return;
+}
+
+#endif // defined(__linux__)
+
 static void processNetlinkEvent(otInstance *aInstance)
 {
     const size_t kMaxNetifEvent = 8192;
@@ -1518,20 +1703,8 @@ static void processNetlinkEvent(otInstance *aInstance)
 
 #else
         case NLMSG_ERROR:
-        {
-            const struct nlmsgerr *err = reinterpret_cast<const nlmsgerr *>(NLMSG_DATA(msg));
-
-            if (err->error == 0)
-            {
-                otLogInfoPlat("[netif] Succeeded to process request#%u", err->msg.nlmsg_seq);
-            }
-            else
-            {
-                otLogWarnPlat("[netif] Failed to process request#%u: %s", err->msg.nlmsg_seq, strerror(err->error));
-            }
-
+            HandleNetlinkResponse(msg);
             break;
-        }
 #endif
 
 #if defined(ROUTE_FILTER) || defined(RO_MSGFILTER) || defined(__linux__)
@@ -1539,7 +1712,7 @@ static void processNetlinkEvent(otInstance *aInstance)
             otLogWarnPlat("[netif] Unhandled/Unexpected netlink/route message (%d).", (int)msg->nlmsg_type);
             break;
 #else
-        // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
+            // this platform doesn't support filtering, so we expect messages of other types...we just ignore them
 #endif
         }
     }
@@ -1553,7 +1726,9 @@ static void mldListenerInit(void)
 {
     struct ipv6_mreq mreq6;
 
-    sMLDMonitorFd          = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    sMLDMonitorFd = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketNonBlock);
+    VerifyOrDie(sMLDMonitorFd != -1, OT_EXIT_FAILURE);
+
     mreq6.ipv6mr_interface = gNetifIndex;
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
 
@@ -1653,7 +1828,7 @@ static void SetAddrGenModeToNone(void)
         char             buf[512];
     } req;
 
-    const enum in6_addr_gen_mode mode = IN6_ADDR_GEN_MODE_NONE;
+    const uint8_t mode = IN6_ADDR_GEN_MODE_NONE;
 
     memset(&req, 0, sizeof(req));
 
@@ -1829,6 +2004,25 @@ static void platformConfigureNetLink(void)
 #endif
     VerifyOrDie(sNetlinkFd >= 0, OT_EXIT_ERROR_ERRNO);
 
+#if defined(SOL_NETLINK)
+    {
+        int enable = 1;
+
+#if defined(NETLINK_EXT_ACK)
+        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_EXT_ACK, &enable, sizeof(enable)) != 0)
+        {
+            otLogWarnPlat("[netif] Failed to enable NETLINK_EXT_ACK: %s", strerror(errno));
+        }
+#endif
+#if defined(NETLINK_CAP_ACK)
+        if (setsockopt(sNetlinkFd, SOL_NETLINK, NETLINK_CAP_ACK, &enable, sizeof(enable)) != 0)
+        {
+            otLogWarnPlat("[netif] Failed to enable NETLINK_CAP_ACK: %s", strerror(errno));
+        }
+#endif
+    }
+#endif
+
 #if defined(__linux__)
     {
         struct sockaddr_nl sa;
@@ -1886,6 +2080,22 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+void nat64Init(void)
+{
+    otIp4Cidr cidr;
+
+    if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &cidr) == OT_ERROR_NONE && cidr.mLength != 0)
+    {
+        otNat64SetIp4Cidr(gInstance, &cidr);
+    }
+    else
+    {
+        otLogInfoPlat("[netif] No default NAT64 CIDR provided.");
+    }
+}
+#endif
+
 void platformNetifSetUp(void)
 {
     OT_ASSERT(gInstance != nullptr);
@@ -1904,6 +2114,9 @@ void platformNetifSetUp(void)
     otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
+#endif
+#if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+    nat64Init();
 #endif
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     gResolver.Init();

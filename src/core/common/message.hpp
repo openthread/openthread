@@ -60,7 +60,7 @@
 #include "thread/link_quality.hpp"
 
 /**
- * This struct represents an opaque (and empty) type for an OpenThread message buffer.
+ * Represents an opaque (and empty) type for an OpenThread message buffer.
  *
  */
 struct otMessage
@@ -88,9 +88,9 @@ class HmacSha256;
  */
 
 /**
- * This macro frees a given message buffer if not `nullptr`.
+ * Frees a given message buffer if not `nullptr`.
  *
- * This macro and the ones that follow contain small but common code patterns used in many of the core modules. They
+ * And the ones that follow contain small but common code patterns used in many of the core modules. They
  * are intentionally defined as macros instead of inline methods/functions to ensure that they are fully inlined.
  * Note that an `inline` method/function is not necessarily always inlined by the toolchain and not inlining such
  * small implementations can add a rather large code-size overhead.
@@ -108,7 +108,7 @@ class HmacSha256;
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `Error` indicates an error.
+ * Frees a given message buffer if a given `Error` indicates an error.
  *
  * The parameter @p aMessage can be `nullptr` in which case this macro does nothing.
  *
@@ -126,7 +126,7 @@ class HmacSha256;
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
+ * Frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be `nullptr`).
  * @param[in] aError      The `Error` to check.
@@ -152,7 +152,7 @@ class PriorityQueue;
 class ThreadLinkInfo;
 
 /**
- * This class represents a Message buffer.
+ * Represents a Message buffer.
  *
  */
 class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
@@ -161,7 +161,7 @@ class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
 
 public:
     /**
-     * This method returns a pointer to the next message buffer.
+     * Returns a pointer to the next message buffer.
      *
      * @returns A pointer to the next message buffer.
      *
@@ -169,7 +169,7 @@ public:
     Buffer *GetNextBuffer(void) { return GetNext(); }
 
     /**
-     * This method returns a pointer to the next message buffer.
+     * Returns a pointer to the next message buffer.
      *
      * @returns A pointer to the next message buffer.
      *
@@ -177,7 +177,7 @@ public:
     const Buffer *GetNextBuffer(void) const { return GetNext(); }
 
     /**
-     * This method sets the pointer to the next message buffer.
+     * Sets the pointer to the next message buffer.
      *
      * @param[in] aNext  A pointer to the next buffer.
      *
@@ -203,18 +203,22 @@ protected:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         LqiAverager mLqiAverager; // The averager maintaining the Link quality indicator (LQI) average.
 #endif
+#if OPENTHREAD_FTD
         ChildMask mChildMask; // ChildMask to indicate which sleepy children need to receive this.
+#endif
 
-        uint8_t mType : 3;             // The message type.
-        uint8_t mSubType : 4;          // The message sub type.
-        bool    mDirectTx : 1;         // Whether a direct transmission is required.
-        bool    mLinkSecurity : 1;     // Whether link security is enabled.
-        uint8_t mPriority : 2;         // The message priority level (higher value is higher priority).
-        bool    mInPriorityQ : 1;      // Whether the message is queued in normal or priority queue.
-        bool    mTxSuccess : 1;        // Whether the direct tx of the message was successful.
-        bool    mDoNotEvict : 1;       // Whether this message may be evicted.
-        bool    mMulticastLoop : 1;    // Whether this multicast message may be looped back.
-        bool    mResolvingAddress : 1; // Whether the message is pending an address query resolution.
+        uint8_t mType : 3;                // The message type.
+        uint8_t mSubType : 4;             // The message sub type.
+        bool    mDirectTx : 1;            // Whether a direct transmission is required.
+        bool    mLinkSecurity : 1;        // Whether link security is enabled.
+        uint8_t mPriority : 2;            // The message priority level (higher value is higher priority).
+        bool    mInPriorityQ : 1;         // Whether the message is queued in normal or priority queue.
+        bool    mTxSuccess : 1;           // Whether the direct tx of the message was successful.
+        bool    mDoNotEvict : 1;          // Whether this message may be evicted.
+        bool    mMulticastLoop : 1;       // Whether this multicast message may be looped back.
+        bool    mResolvingAddress : 1;    // Whether the message is pending an address query resolution.
+        bool    mAllowLookbackToHost : 1; // Whether the message is allowed to be looped back to host.
+        uint8_t mOrigin : 2;              // The origin of the message.
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         uint8_t mRadioType : 2;      // The radio link type the message was received on, or should be sent on.
         bool    mIsRadioTypeSet : 1; // Whether the radio type is set.
@@ -257,7 +261,7 @@ static_assert(sizeof(Buffer) >= kBufferSize,
               "Buffer size is not valid. Increase OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE.");
 
 /**
- * This class represents a message.
+ * Represents a message.
  *
  */
 class Message : public otMessage, public Buffer, public GetProvider<Message>
@@ -272,7 +276,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
 
 public:
     /**
-     * This enumeration represents the message type.
+     * Represents the message type.
      *
      */
     enum Type : uint8_t
@@ -286,7 +290,7 @@ public:
     };
 
     /**
-     * This enumeration represents the message sub-type.
+     * Represents the message sub-type.
      *
      */
     enum SubType : uint8_t
@@ -316,7 +320,7 @@ public:
     static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
 
     /**
-     * This enumeration represents the link security mode (used by `Settings` constructor).
+     * Represents the link security mode (used by `Settings` constructor).
      *
      */
     enum LinkSecurityMode : bool
@@ -326,7 +330,7 @@ public:
     };
 
     /**
-     * This enumeration represents the message ownership model when a `Message` instance is passed to a method/function.
+     * Represents the message ownership model when a `Message` instance is passed to a method/function.
      *
      */
     enum Ownership : uint8_t
@@ -348,14 +352,25 @@ public:
     };
 
     /**
-     * This class represents settings used for creating a new message.
+     * Represents an IPv6 message origin.
+     *
+     */
+    enum Origin : uint8_t
+    {
+        kOriginThreadNetif   = OT_MESSAGE_ORIGIN_THREAD_NETIF,   // Message from Thread Netif.
+        kOriginHostTrusted   = OT_MESSAGE_ORIGIN_HOST_TRUSTED,   // Message from a trusted source on host.
+        kOriginHostUntrusted = OT_MESSAGE_ORIGIN_HOST_UNTRUSTED, // Message from an untrusted source on host.
+    };
+
+    /**
+     * Represents settings used for creating a new message.
      *
      */
     class Settings : public otMessageSettings
     {
     public:
         /**
-         * This constructor initializes the `Settings` object.
+         * Initializes the `Settings` object.
          *
          * @param[in]  aSecurityMode  A link security mode.
          * @param[in]  aPriority      A message priority.
@@ -364,7 +379,7 @@ public:
         Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
 
         /**
-         * This constructor initializes the `Settings` with a given message priority and link security enabled.
+         * Initializes the `Settings` with a given message priority and link security enabled.
          *
          * @param[in]  aPriority      A message priority.
          *
@@ -375,7 +390,7 @@ public:
         }
 
         /**
-         * This method gets the message priority.
+         * Gets the message priority.
          *
          * @returns The message priority.
          *
@@ -383,7 +398,7 @@ public:
         Priority GetPriority(void) const { return static_cast<Priority>(mPriority); }
 
         /**
-         * This method indicates whether the link security should be enabled.
+         * Indicates whether the link security should be enabled.
          *
          * @returns TRUE if link security should be enabled, FALSE otherwise.
          *
@@ -391,9 +406,9 @@ public:
         bool IsLinkSecurityEnabled(void) const { return mLinkSecurityEnabled; }
 
         /**
-         * This static method converts a pointer to an `otMessageSettings` to a `Settings`.
+         * Converts a pointer to an `otMessageSettings` to a `Settings`.
          *
-         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from.
+         * @param[in] aSettings  A pointer to `otMessageSettings` to convert from.
          *                       If it is `nullptr`, then the default settings `GetDefault()` will be used.
          *
          * @returns A reference to the converted `Settings` or the default if @p aSettings is `nullptr`.
@@ -402,7 +417,7 @@ public:
         static const Settings &From(const otMessageSettings *aSettings);
 
         /**
-         * This static method returns the default settings with link security enabled and `kPriorityNormal` priority.
+         * Returns the default settings with link security enabled and `kPriorityNormal` priority.
          *
          * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
          *
@@ -414,7 +429,7 @@ public:
     };
 
     /**
-     * This method returns a reference to the OpenThread Instance which owns the `Message`.
+     * Returns a reference to the OpenThread Instance which owns the `Message`.
      *
      * @returns A reference to the `Instance`.
      *
@@ -422,13 +437,13 @@ public:
     Instance &GetInstance(void) const;
 
     /**
-     * This method frees this message buffer.
+     * Frees this message buffer.
      *
      */
     void Free(void);
 
     /**
-     * This method returns a pointer to the next message.
+     * Returns a pointer to the next message.
      *
      * @returns A pointer to the next message in the list or `nullptr` if at the end of the list.
      *
@@ -436,7 +451,7 @@ public:
     Message *GetNext(void) const;
 
     /**
-     * This method returns the number of bytes in the message.
+     * Returns the number of bytes in the message.
      *
      * @returns The number of bytes in the message.
      *
@@ -444,7 +459,7 @@ public:
     uint16_t GetLength(void) const { return GetMetadata().mLength; }
 
     /**
-     * This method sets the number of bytes in the message.
+     * Sets the number of bytes in the message.
      *
      * @param[in]  aLength  Requested number of bytes in the message.
      *
@@ -455,13 +470,13 @@ public:
     Error SetLength(uint16_t aLength);
 
     /**
-     * This method returns the number of buffers in the message.
+     * Returns the number of buffers in the message.
      *
      */
     uint8_t GetBufferCount(void) const;
 
     /**
-     * This method returns the byte offset within the message.
+     * Returns the byte offset within the message.
      *
      * @returns A byte offset within the message.
      *
@@ -469,7 +484,7 @@ public:
     uint16_t GetOffset(void) const { return GetMetadata().mOffset; }
 
     /**
-     * This method moves the byte offset within the message.
+     * Moves the byte offset within the message.
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      *
@@ -477,7 +492,7 @@ public:
     void MoveOffset(int aDelta);
 
     /**
-     * This method sets the byte offset within the message.
+     * Sets the byte offset within the message.
      *
      * @param[in]  aOffset  The byte offset within the message.
      *
@@ -485,7 +500,7 @@ public:
     void SetOffset(uint16_t aOffset);
 
     /**
-     * This method returns the type of the message.
+     * Returns the type of the message.
      *
      * @returns The type of the message.
      *
@@ -493,7 +508,7 @@ public:
     Type GetType(void) const { return static_cast<Type>(GetMetadata().mType); }
 
     /**
-     * This method sets the message type.
+     * Sets the message type.
      *
      * @param[in]  aType  The message type.
      *
@@ -501,7 +516,7 @@ public:
     void SetType(Type aType) { GetMetadata().mType = aType; }
 
     /**
-     * This method returns the sub type of the message.
+     * Returns the sub type of the message.
      *
      * @returns The sub type of the message.
      *
@@ -509,7 +524,7 @@ public:
     SubType GetSubType(void) const { return static_cast<SubType>(GetMetadata().mSubType); }
 
     /**
-     * This method sets the message sub type.
+     * Sets the message sub type.
      *
      * @param[in]  aSubType  The message sub type.
      *
@@ -517,7 +532,7 @@ public:
     void SetSubType(SubType aSubType) { GetMetadata().mSubType = aSubType; }
 
     /**
-     * This method returns whether or not the message is of MLE subtype.
+     * Returns whether or not the message is of MLE subtype.
      *
      * @retval TRUE   If message is of MLE subtype.
      * @retval FALSE  If message is not of MLE subtype.
@@ -526,7 +541,7 @@ public:
     bool IsSubTypeMle(void) const;
 
     /**
-     * This method checks whether this multicast message may be looped back.
+     * Checks whether this multicast message may be looped back.
      *
      * @retval TRUE   If message may be looped back.
      * @retval FALSE  If message must not be looped back.
@@ -535,7 +550,7 @@ public:
     bool GetMulticastLoop(void) const { return GetMetadata().mMulticastLoop; }
 
     /**
-     * This method sets whether multicast may be looped back.
+     * Sets whether multicast may be looped back.
      *
      * @param[in]  aMulticastLoop  Whether allow looping back multicast.
      *
@@ -543,7 +558,7 @@ public:
     void SetMulticastLoop(bool aMulticastLoop) { GetMetadata().mMulticastLoop = aMulticastLoop; }
 
     /**
-     * This method returns the message priority level.
+     * Returns the message priority level.
      *
      * @returns The priority level associated with this message.
      *
@@ -551,7 +566,7 @@ public:
     Priority GetPriority(void) const { return static_cast<Priority>(GetMetadata().mPriority); }
 
     /**
-     * This method sets the messages priority.
+     * Sets the messages priority.
      * If the message is already queued in a priority queue, changing the priority ensures to
      * update the message in the associated queue.
      *
@@ -564,7 +579,7 @@ public:
     Error SetPriority(Priority aPriority);
 
     /**
-     * This static method convert a `Priority` to a string.
+     * Convert a `Priority` to a string.
      *
      * @param[in] aPriority  The priority level.
      *
@@ -574,7 +589,7 @@ public:
     static const char *PriorityToString(Priority aPriority);
 
     /**
-     * This method prepends bytes to the front of the message.
+     * Prepends bytes to the front of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
      *
@@ -588,7 +603,7 @@ public:
     Error PrependBytes(const void *aBuf, uint16_t aLength);
 
     /**
-     * This method prepends an object to the front of the message.
+     * Prepends an object to the front of the message.
      *
      * On success, this method grows the message by the size of the object.
      *
@@ -608,7 +623,7 @@ public:
     }
 
     /**
-     * This method removes header bytes from the message at start of message.
+     * Removes header bytes from the message at start of message.
      *
      * The caller MUST ensure that message contains the bytes to be removed, i.e. `aOffset` is smaller than the message
      * length.
@@ -619,9 +634,9 @@ public:
     void RemoveHeader(uint16_t aLength);
 
     /**
-     * This method removes header bytes from the message at a given offset.
+     * Removes header bytes from the message at a given offset.
      *
-     * This method shrinks the message. The existing header bytes before @p aOffset are copied forward and replace the
+     * Shrinks the message. The existing header bytes before @p aOffset are copied forward and replace the
      * removed bytes.
      *
      * The caller MUST ensure that message contains the bytes to be removed, i.e. `aOffset + aLength` is smaller than
@@ -634,9 +649,9 @@ public:
     void RemoveHeader(uint16_t aOffset, uint16_t aLength);
 
     /**
-     * This method grows the message to make space for new header bytes at a given offset.
+     * Grows the message to make space for new header bytes at a given offset.
      *
-     * This method grows the message header (similar to `PrependBytes()`). The existing header bytes from start to
+     * Grows the message header (similar to `PrependBytes()`). The existing header bytes from start to
      * `aOffset + aLength` are then copied backward to make room for the new header bytes. Note that this method does
      * not change the bytes from @p aOffset up @p aLength (the new inserted header range). Caller can write to this
      * range to update the bytes after successful return from this method.
@@ -651,7 +666,7 @@ public:
     Error InsertHeader(uint16_t aOffset, uint16_t aLength);
 
     /**
-     * This method appends bytes to the end of the message.
+     * Appends bytes to the end of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
      *
@@ -665,7 +680,7 @@ public:
     Error AppendBytes(const void *aBuf, uint16_t aLength);
 
     /**
-     * This method appends bytes read from another or potentially the same message to the end of the current message.
+     * Appends bytes read from another or potentially the same message to the end of the current message.
      *
      * On success, this method grows the message by @p aLength bytes.
      *
@@ -681,7 +696,7 @@ public:
     Error AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
-     * This method appends an object to the end of the message.
+     * Appends an object to the end of the message.
      *
      * On success, this method grows the message by the size of the appended object
      *
@@ -701,7 +716,7 @@ public:
     }
 
     /**
-     * This method appends bytes from a given `Data` instance to the end of the message.
+     * Appends bytes from a given `Data` instance to the end of the message.
      *
      * On success, this method grows the message by the size of the appended data.
      *
@@ -719,7 +734,7 @@ public:
     }
 
     /**
-     * This method reads bytes from the message.
+     * Reads bytes from the message.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
@@ -731,7 +746,7 @@ public:
     uint16_t ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
-     * This method reads a given number of bytes from the message.
+     * Reads a given number of bytes from the message.
      *
      * If there are fewer bytes available in the message than the requested read length, the available bytes will be
      * read and copied into @p aBuf. In this case `kErrorParse` will be returned.
@@ -747,7 +762,7 @@ public:
     Error Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
-     * This method reads an object from the message.
+     * Reads an object from the message.
      *
      * If there are fewer bytes available in the message than the requested object size, the available bytes will be
      * read and copied into @p aObject (@p aObject will be read partially). In this case `kErrorParse` will
@@ -770,7 +785,7 @@ public:
     }
 
     /**
-     * This method compares the bytes in the message at a given offset with a given byte array.
+     * Compares the bytes in the message at a given offset with a given byte array.
      *
      * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
      * failure (returns FALSE).
@@ -788,7 +803,7 @@ public:
     bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength, ByteMatcher aMatcher = nullptr) const;
 
     /**
-     * This method compares the bytes in the message at a given offset with bytes read from another message.
+     * Compares the bytes in the message at a given offset with bytes read from another message.
      *
      * If either message has fewer bytes available than the requested @p aLength, the comparison is treated as failure
      * (returns FALSE).
@@ -810,7 +825,7 @@ public:
                       ByteMatcher    aMatcher = nullptr) const;
 
     /**
-     * This method compares the bytes in the message at a given offset with an object.
+     * Compares the bytes in the message at a given offset with an object.
      *
      * The bytes in the message are compared with the bytes in @p aObject. If there are fewer bytes available in the
      * message than the requested object size, it is treated as failed comparison (returns FALSE).
@@ -832,9 +847,9 @@ public:
     }
 
     /**
-     * This method writes bytes to the message.
+     * Writes bytes to the message.
      *
-     * This method will not resize the message. The given data to write (with @p aLength bytes) MUST fit within the
+     * Will not resize the message. The given data to write (with @p aLength bytes) MUST fit within the
      * existing message buffer (from the given offset @p aOffset up to the message's length).
      *
      * @param[in]  aOffset  Byte offset within the message to begin writing.
@@ -845,12 +860,12 @@ public:
     void WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength);
 
     /**
-     * This method writes bytes read from another or potentially the same message to the message at a given offset.
+     * Writes bytes read from another or potentially the same message to the message at a given offset.
      *
-     * This method will not resize the message. The bytes to write (with @p aLength) MUST fit within the existing
+     * Will not resize the message. The bytes to write (with @p aLength) MUST fit within the existing
      * message buffer (from the given @p aWriteOffset up to the message's length).
      *
-     * This method can be used to copy bytes within the same message in either direction, i.e., copy forward where
+     * Can be used to copy bytes within the same message in either direction, i.e., copy forward where
      * `aWriteOffset > aReadOffset` or copy backward where `aWriteOffset < aReadOffset`.
      *
      * @param[in] aWriteOffset  Byte offset within this message to begin writing.
@@ -862,9 +877,9 @@ public:
     void WriteBytesFromMessage(uint16_t aWriteOffset, const Message &aMessage, uint16_t aReadOffset, uint16_t aLength);
 
     /**
-     * This methods writes an object to the message.
+     * Writes an object to the message.
      *
-     * This method will not resize the message. The entire given object (all its bytes) MUST fit within the existing
+     * Will not resize the message. The entire given object (all its bytes) MUST fit within the existing
      * message buffer (from the given offset @p aOffset up to the message's length).
      *
      * @tparam     ObjectType   The object type to write to the message.
@@ -881,9 +896,9 @@ public:
     }
 
     /**
-     * This method writes bytes from a given `Data` instance to the message.
+     * Writes bytes from a given `Data` instance to the message.
      *
-     * This method will not resize the message. The given data to write MUST fit within the existing message buffer
+     * Will not resize the message. The given data to write MUST fit within the existing message buffer
      * (from the given offset @p aOffset up to the message's length).
      *
      * @tparam     kDataLengthType   Determines the data length type (`uint8_t` or `uint16_t`).
@@ -898,7 +913,7 @@ public:
     }
 
     /**
-     * This method creates a copy of the message.
+     * Creates a copy of the message.
      *
      * It allocates the new message from the same message pool as the original one and copies @p aLength octets
      * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
@@ -912,7 +927,7 @@ public:
     Message *Clone(uint16_t aLength) const;
 
     /**
-     * This method creates a copy of the message.
+     * Creates a copy of the message.
      *
      * It allocates the new message from the same message pool as the original one and copies the entire payload. The
      * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
@@ -924,7 +939,7 @@ public:
     Message *Clone(void) const { return Clone(GetLength()); }
 
     /**
-     * This method returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
+     * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
      * fragmentation.
      *
      * @returns The 6LoWPAN datagram tag or the IPv6 fragment identification.
@@ -933,15 +948,16 @@ public:
     uint32_t GetDatagramTag(void) const { return GetMetadata().mDatagramTag; }
 
     /**
-     * This method sets the datagram tag used for 6LoWPAN fragmentation.
+     * Sets the datagram tag used for 6LoWPAN fragmentation.
      *
      * @param[in]  aTag  The 6LoWPAN datagram tag.
      *
      */
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
+#if OPENTHREAD_FTD
     /**
-     * This method returns whether or not the message forwarding is scheduled for the child.
+     * Returns whether or not the message forwarding is scheduled for the child.
      *
      * @param[in]  aChildIndex  The index into the child table.
      *
@@ -952,7 +968,7 @@ public:
     bool GetChildMask(uint16_t aChildIndex) const;
 
     /**
-     * This method unschedules forwarding of the message to the child.
+     * Unschedules forwarding of the message to the child.
      *
      * @param[in]  aChildIndex  The index into the child table.
      *
@@ -960,7 +976,7 @@ public:
     void ClearChildMask(uint16_t aChildIndex);
 
     /**
-     * This method schedules forwarding of the message to the child.
+     * Schedules forwarding of the message to the child.
      *
      * @param[in]  aChildIndex  The index into the child table.
      *
@@ -968,16 +984,17 @@ public:
     void SetChildMask(uint16_t aChildIndex);
 
     /**
-     * This method returns whether or not the message forwarding is scheduled for at least one child.
+     * Returns whether or not the message forwarding is scheduled for at least one child.
      *
      * @retval TRUE   If message forwarding is scheduled for at least one child.
      * @retval FALSE  If message forwarding is not scheduled for any child.
      *
      */
     bool IsChildPending(void) const;
+#endif // OPENTHREAD_FTD
 
     /**
-     * This method returns the RLOC16 of the mesh destination.
+     * Returns the RLOC16 of the mesh destination.
      *
      * @note Only use this for non-link-local unicast messages.
      *
@@ -987,7 +1004,7 @@ public:
     uint16_t GetMeshDest(void) const { return GetMetadata().mMeshDest; }
 
     /**
-     * This method sets the RLOC16 of the mesh destination.
+     * Sets the RLOC16 of the mesh destination.
      *
      * @note Only use this when sending non-link-local unicast messages.
      *
@@ -997,7 +1014,7 @@ public:
     void SetMeshDest(uint16_t aMeshDest) { GetMetadata().mMeshDest = aMeshDest; }
 
     /**
-     * This method returns the IEEE 802.15.4 Destination PAN ID.
+     * Returns the IEEE 802.15.4 Destination PAN ID.
      *
      * @note Only use this when sending MLE Discover Request or Response messages.
      *
@@ -1007,7 +1024,7 @@ public:
     uint16_t GetPanId(void) const { return GetMetadata().mPanId; }
 
     /**
-     * This method sets the IEEE 802.15.4 Destination PAN ID.
+     * Sets the IEEE 802.15.4 Destination PAN ID.
      *
      * @note Only use this when sending MLE Discover Request or Response messages.
      *
@@ -1017,7 +1034,7 @@ public:
     void SetPanId(uint16_t aPanId) { GetMetadata().mPanId = aPanId; }
 
     /**
-     * This method returns the IEEE 802.15.4 Channel to use for transmission.
+     * Returns the IEEE 802.15.4 Channel to use for transmission.
      *
      * @note Only use this when sending MLE Announce messages.
      *
@@ -1027,7 +1044,7 @@ public:
     uint8_t GetChannel(void) const { return GetMetadata().mChannel; }
 
     /**
-     * This method sets the IEEE 802.15.4 Channel to use for transmission.
+     * Sets the IEEE 802.15.4 Channel to use for transmission.
      *
      * @note Only use this when sending MLE Announce messages.
      *
@@ -1037,7 +1054,7 @@ public:
     void SetChannel(uint8_t aChannel) { GetMetadata().mChannel = aChannel; }
 
     /**
-     * This method returns the message timestamp.
+     * Returns the message timestamp.
      *
      * @returns The message timestamp.
      *
@@ -1045,7 +1062,7 @@ public:
     TimeMilli GetTimestamp(void) const { return GetMetadata().mTimestamp; }
 
     /**
-     * This method sets the message timestamp to a given time.
+     * Sets the message timestamp to a given time.
      *
      * @param[in] aTimestamp   The timestamp value.
      *
@@ -1053,13 +1070,13 @@ public:
     void SetTimestamp(TimeMilli aTimestamp) { GetMetadata().mTimestamp = aTimestamp; }
 
     /**
-     * This method sets the message timestamp to the current time.
+     * Sets the message timestamp to the current time.
      *
      */
     void SetTimestampToNow(void) { SetTimestamp(TimerMilli::GetNow()); }
 
     /**
-     * This method returns whether or not message forwarding is scheduled for direct transmission.
+     * Returns whether or not message forwarding is scheduled for direct transmission.
      *
      * @retval TRUE   If message forwarding is scheduled for direct transmission.
      * @retval FALSE  If message forwarding is not scheduled for direct transmission.
@@ -1068,19 +1085,19 @@ public:
     bool IsDirectTransmission(void) const { return GetMetadata().mDirectTx; }
 
     /**
-     * This method unschedules forwarding using direct transmission.
+     * Unschedules forwarding using direct transmission.
      *
      */
     void ClearDirectTransmission(void) { GetMetadata().mDirectTx = false; }
 
     /**
-     * This method schedules forwarding using direct transmission.
+     * Schedules forwarding using direct transmission.
      *
      */
     void SetDirectTransmission(void) { GetMetadata().mDirectTx = true; }
 
     /**
-     * This method indicates whether the direct transmission of message was successful.
+     * Indicates whether the direct transmission of message was successful.
      *
      * @retval TRUE   If direct transmission of message was successful (all fragments were delivered and acked).
      * @retval FALSE  If direct transmission of message failed (at least one fragment failed).
@@ -1089,7 +1106,7 @@ public:
     bool GetTxSuccess(void) const { return GetMetadata().mTxSuccess; }
 
     /**
-     * This method sets whether the direct transmission of message was successful.
+     * Sets whether the direct transmission of message was successful.
      *
      * @param[in] aTxSuccess   TRUE if the direct transmission is successful, FALSE otherwise (i.e., at least one
      *                         fragment transmission failed).
@@ -1098,7 +1115,7 @@ public:
     void SetTxSuccess(bool aTxSuccess) { GetMetadata().mTxSuccess = aTxSuccess; }
 
     /**
-     * This method indicates whether the message may be evicted.
+     * Indicates whether the message may be evicted.
      *
      * @retval TRUE   If the message must not be evicted.
      * @retval FALSE  If the message may be evicted.
@@ -1107,7 +1124,7 @@ public:
     bool GetDoNotEvict(void) const { return GetMetadata().mDoNotEvict; }
 
     /**
-     * This method sets whether the message may be evicted.
+     * Sets whether the message may be evicted.
      *
      * @param[in]  aDoNotEvict  TRUE if the message may not be evicted, FALSE otherwise.
      *
@@ -1115,7 +1132,7 @@ public:
     void SetDoNotEvict(bool aDoNotEvict) { GetMetadata().mDoNotEvict = aDoNotEvict; }
 
     /**
-     * This method indicates whether the message is waiting for an address query resolution.
+     * Indicates whether the message is waiting for an address query resolution.
      *
      * @retval TRUE   If the message is waiting for address query resolution.
      * @retval FALSE  If the message is not waiting for address query resolution.
@@ -1124,7 +1141,7 @@ public:
     bool IsResolvingAddress(void) const { return GetMetadata().mResolvingAddress; }
 
     /**
-     * This method sets whether the message is waiting for an address query resolution.
+     * Sets whether the message is waiting for an address query resolution.
      *
      * @param[in] aResolvingAddress    TRUE if message is waiting for address resolution, FALSE otherwise.
      *
@@ -1132,7 +1149,43 @@ public:
     void SetResolvingAddress(bool aResolvingAddress) { GetMetadata().mResolvingAddress = aResolvingAddress; }
 
     /**
-     * This method indicates whether or not link security is enabled for the message.
+     * Indicates whether the message is allowed to be looped back to host.
+     *
+     * @retval TRUE   If the message is allowed to be looped back to host.
+     * @retval FALSE  If the message is not allowed to be looped back to host.
+     *
+     */
+    bool IsLoopbackToHostAllowed(void) const { return GetMetadata().mAllowLookbackToHost; }
+
+    /**
+     * Sets whether or not allow the message to be looped back to host.
+     *
+     * @param[in] aAllowLoopbackToHost  Whether or not allow the message to be looped back to host.
+     *
+     */
+    void SetLoopbackToHostAllowed(bool aAllowLoopbackToHost)
+    {
+        GetMetadata().mAllowLookbackToHost = aAllowLoopbackToHost;
+    }
+
+    /**
+     * Gets the message origin.
+     *
+     * @returns An enum representing the origin of the message.
+     *
+     */
+    Origin GetOrigin(void) const { return static_cast<Origin>(GetMetadata().mOrigin); }
+
+    /**
+     * Sets the message origin.
+     *
+     * @param[in]  aOrigin  An enum representing the origin of the message.
+     *
+     */
+    void SetOrigin(Origin aOrigin) { GetMetadata().mOrigin = aOrigin; }
+
+    /**
+     * Indicates whether or not link security is enabled for the message.
      *
      * @retval TRUE   If link security is enabled.
      * @retval FALSE  If link security is not enabled.
@@ -1141,7 +1194,7 @@ public:
     bool IsLinkSecurityEnabled(void) const { return GetMetadata().mLinkSecurity; }
 
     /**
-     * This method sets whether or not link security is enabled for the message.
+     * Sets whether or not link security is enabled for the message.
      *
      * @param[in]  aEnabled  TRUE if link security is enabled, FALSE otherwise.
      *
@@ -1149,7 +1202,7 @@ public:
     void SetLinkSecurityEnabled(bool aEnabled) { GetMetadata().mLinkSecurity = aEnabled; }
 
     /**
-     * This method updates the average RSS (Received Signal Strength) associated with the message by adding the given
+     * Updates the average RSS (Received Signal Strength) associated with the message by adding the given
      * RSS value to the average. Note that a message can be composed of multiple 802.15.4 data frame fragments each
      * received with a different signal strength.
      *
@@ -1159,7 +1212,7 @@ public:
     void AddRss(int8_t aRss) { IgnoreError(GetMetadata().mRssAverager.Add(aRss)); }
 
     /**
-     * This method returns the average RSS (Received Signal Strength) associated with the message.
+     * Returns the average RSS (Received Signal Strength) associated with the message.
      *
      * @returns The current average RSS value (in dBm) or `Radio::kInvalidRssi` if no average is available.
      *
@@ -1167,7 +1220,7 @@ public:
     int8_t GetAverageRss(void) const { return GetMetadata().mRssAverager.GetAverage(); }
 
     /**
-     * This method returns a const reference to RssAverager of the message.
+     * Returns a const reference to RssAverager of the message.
      *
      * @returns A const reference to the RssAverager of the message.
      *
@@ -1176,7 +1229,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
-     * This method updates the average LQI (Link Quality Indicator) associated with the message.
+     * Updates the average LQI (Link Quality Indicator) associated with the message.
      *
      * The given LQI value would be added to the average. Note that a message can be composed of multiple 802.15.4
      * frame fragments each received with a different signal strength.
@@ -1187,7 +1240,7 @@ public:
     void AddLqi(uint8_t aLqi) { GetMetadata().mLqiAverager.Add(aLqi); }
 
     /**
-     * This method returns the average LQI (Link Quality Indicator) associated with the message.
+     * Returns the average LQI (Link Quality Indicator) associated with the message.
      *
      * @returns The current average LQI value (in dBm) or OT_RADIO_LQI_NONE if no average is available.
      *
@@ -1195,7 +1248,7 @@ public:
     uint8_t GetAverageLqi(void) const { return GetMetadata().mLqiAverager.GetAverage(); }
 
     /**
-     * This method returns the count of frames counted so far.
+     * Returns the count of frames counted so far.
      *
      * @returns The count of frames that have been counted.
      *
@@ -1204,7 +1257,7 @@ public:
 #endif
 
     /**
-     * This method sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.
+     * Sets the message's link info properties (PAN ID, link security, RSS) from a given `ThreadLinkInfo`.
      *
      * @param[in] aLinkInfo   The `ThreadLinkInfo` instance from which to set message's related properties.
      *
@@ -1212,7 +1265,7 @@ public:
     void SetLinkInfo(const ThreadLinkInfo &aLinkInfo);
 
     /**
-     * This method returns a pointer to the message queue (if any) where this message is queued.
+     * Returns a pointer to the message queue (if any) where this message is queued.
      *
      * @returns A pointer to the message queue or `nullptr` if not in any message queue.
      *
@@ -1223,7 +1276,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the priority message queue (if any) where this message is queued.
+     * Returns a pointer to the priority message queue (if any) where this message is queued.
      *
      * @returns A pointer to the priority queue or `nullptr` if not in any priority queue.
      *
@@ -1234,7 +1287,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the message is also used for time sync purpose.
+     * Indicates whether or not the message is also used for time sync purpose.
      *
      * When OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is 0, this method always return false.
      *
@@ -1246,7 +1299,7 @@ public:
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
-     * This method sets whether or not the message is also used for time sync purpose.
+     * Sets whether or not the message is also used for time sync purpose.
      *
      * @param[in]  aEnabled  TRUE if the message is also used for time sync purpose, FALSE otherwise.
      *
@@ -1254,7 +1307,7 @@ public:
     void SetTimeSync(bool aEnabled) { GetMetadata().mTimeSync = aEnabled; }
 
     /**
-     * This method sets the offset to network time.
+     * Sets the offset to network time.
      *
      * @param[in]  aNetworkTimeOffset  The offset to network time.
      *
@@ -1262,7 +1315,7 @@ public:
     void SetNetworkTimeOffset(int64_t aNetworkTimeOffset) { GetMetadata().mNetworkTimeOffset = aNetworkTimeOffset; }
 
     /**
-     * This method gets the offset to network time.
+     * Gets the offset to network time.
      *
      * @returns  The offset to network time.
      *
@@ -1270,7 +1323,7 @@ public:
     int64_t GetNetworkTimeOffset(void) const { return GetMetadata().mNetworkTimeOffset; }
 
     /**
-     * This method sets the time sync sequence.
+     * Sets the time sync sequence.
      *
      * @param[in]  aTimeSyncSeq  The time sync sequence.
      *
@@ -1278,7 +1331,7 @@ public:
     void SetTimeSyncSeq(uint8_t aTimeSyncSeq) { GetMetadata().mTimeSyncSeq = aTimeSyncSeq; }
 
     /**
-     * This method gets the time sync sequence.
+     * Gets the time sync sequence.
      *
      * @returns  The time sync sequence.
      *
@@ -1288,7 +1341,7 @@ public:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     /**
-     * This method indicates whether the radio type is set.
+     * Indicates whether the radio type is set.
      *
      * @retval TRUE   If the radio type is set.
      * @retval FALSE  If the radio type is not set.
@@ -1297,9 +1350,9 @@ public:
     bool IsRadioTypeSet(void) const { return GetMetadata().mIsRadioTypeSet; }
 
     /**
-     * This method gets the radio link type the message was received on, or should be sent on.
+     * Gets the radio link type the message was received on, or should be sent on.
      *
-     * This method should be used only when `IsRadioTypeSet()` returns `true`.
+     * Should be used only when `IsRadioTypeSet()` returns `true`.
      *
      * @returns The radio link type of the message.
      *
@@ -1307,7 +1360,7 @@ public:
     Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
 
     /**
-     * This method sets the radio link type the message was received on, or should be sent on.
+     * Sets the radio link type the message was received on, or should be sent on.
      *
      * @param[in] aRadioType   A radio link type of the message.
      *
@@ -1319,7 +1372,7 @@ public:
     }
 
     /**
-     * This method clears any previously set radio type on the message.
+     * Clears any previously set radio type on the message.
      *
      * After calling this method, `IsRadioTypeSet()` returns false until radio type is set (`SetRadioType()`).
      *
@@ -1419,7 +1472,7 @@ private:
 };
 
 /**
- * This class implements a message queue.
+ * Implements a message queue.
  *
  */
 class MessageQueue : public otMessageQueue
@@ -1431,7 +1484,7 @@ public:
     typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
 
     /**
-     * This enumeration represents a position (head or tail) in the queue. This is used to specify where a new message
+     * Represents a position (head or tail) in the queue. This is used to specify where a new message
      * should be added in the queue.
      *
      */
@@ -1442,13 +1495,13 @@ public:
     };
 
     /**
-     * This constructor initializes the message queue.
+     * Initializes the message queue.
      *
      */
     MessageQueue(void) { SetTail(nullptr); }
 
     /**
-     * This method returns a pointer to the first message.
+     * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      *
@@ -1456,7 +1509,7 @@ public:
     Message *GetHead(void) { return Message::NextOf(GetTail()); }
 
     /**
-     * This method returns a pointer to the first message.
+     * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      *
@@ -1464,7 +1517,7 @@ public:
     const Message *GetHead(void) const { return Message::NextOf(GetTail()); }
 
     /**
-     * This method adds a message to the end of the list.
+     * Adds a message to the end of the list.
      *
      * @param[in]  aMessage  The message to add.
      *
@@ -1472,7 +1525,7 @@ public:
     void Enqueue(Message &aMessage) { Enqueue(aMessage, kQueuePositionTail); }
 
     /**
-     * This method adds a message at a given position (head/tail) of the list.
+     * Adds a message at a given position (head/tail) of the list.
      *
      * @param[in]  aMessage  The message to add.
      * @param[in]  aPosition The position (head or tail) where to add the message.
@@ -1481,7 +1534,7 @@ public:
     void Enqueue(Message &aMessage, QueuePosition aPosition);
 
     /**
-     * This method removes a message from the list.
+     * Removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
@@ -1489,7 +1542,7 @@ public:
     void Dequeue(Message &aMessage);
 
     /**
-     * This method removes a message from the queue and frees it.
+     * Removes a message from the queue and frees it.
      *
      * @param[in]  aMessage  The message to remove and free.
      *
@@ -1497,15 +1550,15 @@ public:
     void DequeueAndFree(Message &aMessage);
 
     /**
-     * This method removes and frees all messages from the queue.
+     * Removes and frees all messages from the queue.
      *
      */
     void DequeueAndFreeAll(void);
 
     /**
-     * This method gets the information about number of messages and buffers in the queue.
+     * Gets the information about number of messages and buffers in the queue.
      *
-     * This method updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
+     * Updates `aInfo` and adds number of message/buffers in the message queue to the corresponding member
      * variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method (e.g.,
      * clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues to add
      * up the number of messages/buffers on different queues.
@@ -1533,7 +1586,7 @@ private:
 };
 
 /**
- * This class implements a priority queue.
+ * Implements a priority queue.
  *
  */
 class PriorityQueue : private Clearable<PriorityQueue>
@@ -1547,13 +1600,13 @@ public:
     typedef otMessageQueueInfo Info; ///< This struct represents info (number of messages/buffers) about a queue.
 
     /**
-     * This constructor initializes the priority queue.
+     * Initializes the priority queue.
      *
      */
     PriorityQueue(void) { Clear(); }
 
     /**
-     * This method returns a pointer to the first message.
+     * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      *
@@ -1561,7 +1614,7 @@ public:
     Message *GetHead(void) { return AsNonConst(AsConst(this)->GetHead()); }
 
     /**
-     * This method returns a pointer to the first message.
+     * Returns a pointer to the first message.
      *
      * @returns A pointer to the first message.
      *
@@ -1569,7 +1622,7 @@ public:
     const Message *GetHead(void) const;
 
     /**
-     * This method returns a pointer to the first message for a given priority level.
+     * Returns a pointer to the first message for a given priority level.
      *
      * @param[in] aPriority   Priority level.
      *
@@ -1583,7 +1636,7 @@ public:
     }
 
     /**
-     * This method returns a pointer to the first message for a given priority level.
+     * Returns a pointer to the first message for a given priority level.
      *
      * @param[in] aPriority   Priority level.
      *
@@ -1594,7 +1647,7 @@ public:
     const Message *GetHeadForPriority(Message::Priority aPriority) const;
 
     /**
-     * This method adds a message to the queue.
+     * Adds a message to the queue.
      *
      * @param[in]  aMessage  The message to add.
      *
@@ -1602,7 +1655,7 @@ public:
     void Enqueue(Message &aMessage);
 
     /**
-     * This method removes a message from the list.
+     * Removes a message from the list.
      *
      * @param[in]  aMessage  The message to remove.
      *
@@ -1610,7 +1663,7 @@ public:
     void Dequeue(Message &aMessage);
 
     /**
-     * This method removes a message from the queue and frees it.
+     * Removes a message from the queue and frees it.
      *
      * @param[in]  aMessage  The message to remove and free.
      *
@@ -1618,13 +1671,13 @@ public:
     void DequeueAndFree(Message &aMessage);
 
     /**
-     * This method removes and frees all messages from the queue.
+     * Removes and frees all messages from the queue.
      *
      */
     void DequeueAndFreeAll(void);
 
     /**
-     * This method returns the tail of the list (last message in the list).
+     * Returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
@@ -1632,7 +1685,7 @@ public:
     Message *GetTail(void) { return AsNonConst(AsConst(this)->GetTail()); }
 
     /**
-     * This method returns the tail of the list (last message in the list).
+     * Returns the tail of the list (last message in the list).
      *
      * @returns A pointer to the tail of the list.
      *
@@ -1640,9 +1693,9 @@ public:
     const Message *GetTail(void) const;
 
     /**
-     * This method gets the information about number of messages and buffers in the priority queue.
+     * Gets the information about number of messages and buffers in the priority queue.
      *
-     * This method updates `aInfo` array and adds number of message/buffers in the message queue to the corresponding
+     * Updates `aInfo` array and adds number of message/buffers in the message queue to the corresponding
      * member variable in `aInfo`. The caller needs to make sure `aInfo` is initialized before calling this method
      * (e.g., clearing `aInfo`). Same `aInfo` can be passed in multiple calls of `GetInfo(aInfo)` on different queues
      * to add up the number of messages/buffers on different queues.
@@ -1680,7 +1733,7 @@ private:
 };
 
 /**
- * This class represents a message pool
+ * Represents a message pool
  *
  */
 class MessagePool : public InstanceLocator, private NonCopyable
@@ -1691,13 +1744,13 @@ class MessagePool : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      */
     explicit MessagePool(Instance &aInstance);
 
     /**
-     * This method allocates a new message with specified settings.
+     * Allocates a new message with specified settings.
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
@@ -1709,7 +1762,7 @@ public:
     Message *Allocate(Message::Type aType, uint16_t aReserveHeader, const Message::Settings &aSettings);
 
     /**
-     * This method allocates a new message of a given type using default settings.
+     * Allocates a new message of a given type using default settings.
      *
      * @param[in]  aType           The message type.
      *
@@ -1719,7 +1772,7 @@ public:
     Message *Allocate(Message::Type aType);
 
     /**
-     * This method allocates a new message with a given type and reserved length using default settings.
+     * Allocates a new message with a given type and reserved length using default settings.
      *
      * @param[in]  aType           The message type.
      * @param[in]  aReserveHeader  The number of header bytes to reserve.
@@ -1730,7 +1783,7 @@ public:
     Message *Allocate(Message::Type aType, uint16_t aReserveHeader);
 
     /**
-     * This method is used to free a message and return all message buffers to the buffer pool.
+     * Is used to free a message and return all message buffers to the buffer pool.
      *
      * @param[in]  aMessage  The message to free.
      *
@@ -1738,7 +1791,7 @@ public:
     void Free(Message *aMessage);
 
     /**
-     * This method returns the number of free buffers.
+     * Returns the number of free buffers.
      *
      * @returns The number of free buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
@@ -1746,7 +1799,7 @@ public:
     uint16_t GetFreeBufferCount(void) const;
 
     /**
-     * This method returns the total number of buffers.
+     * Returns the total number of buffers.
      *
      * @returns The total number of buffers, or 0xffff (UINT16_MAX) if number is unknown.
      *
@@ -1754,7 +1807,7 @@ public:
     uint16_t GetTotalBufferCount(void) const;
 
     /**
-     * This method returns the maximum number of buffers in use at the same time since OT stack initialization or
+     * Returns the maximum number of buffers in use at the same time since OT stack initialization or
      * since last call to `ResetMaxUsedBufferCount()`.
      *
      * @returns The maximum number of buffers in use at the same time so far (buffer allocation watermark).
@@ -1763,7 +1816,7 @@ public:
     uint16_t GetMaxUsedBufferCount(void) const { return mMaxAllocated; }
 
     /**
-     * This method resets the tracked maximum number of buffers in use.
+     * Resets the tracked maximum number of buffers in use.
      *
      * @sa GetMaxUsedBufferCount
      *
@@ -1793,6 +1846,8 @@ DefineCoreType(otMessageBuffer, Buffer);
 DefineCoreType(otMessageSettings, Message::Settings);
 DefineCoreType(otMessage, Message);
 DefineCoreType(otMessageQueue, MessageQueue);
+
+DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 

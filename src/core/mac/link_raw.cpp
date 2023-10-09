@@ -273,13 +273,8 @@ exit:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
-void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                        RxFrame       *aAckFrame,
-                                        Error          aError,
-                                        uint8_t        aRetryCount,
-                                        bool           aWillRetx)
+void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx)
 {
-    OT_UNUSED_VARIABLE(aAckFrame);
     OT_UNUSED_VARIABLE(aWillRetx);
 
     if (aError != kErrorNone)

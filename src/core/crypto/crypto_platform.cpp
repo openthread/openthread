@@ -724,15 +724,19 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
                                                 uint16_t       aKeyLen,
                                                 uint8_t       *aKey)
 {
+#if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
+    const size_t kBlockSize = MBEDTLS_CMAC_MAX_BLOCK_SIZE;
+#else
     const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
-    uint8_t      prfInput[OT_CRYPTO_PBDKF2_MAX_SALT_SIZE + 4]; // Salt || INT(), for U1 calculation
-    long         prfOne[kBlockSize / sizeof(long)];
-    long         prfTwo[kBlockSize / sizeof(long)];
-    long         keyBlock[kBlockSize / sizeof(long)];
-    uint32_t     blockCounter = 0;
-    uint8_t     *key          = aKey;
-    uint16_t     keyLen       = aKeyLen;
-    uint16_t     useLen       = 0;
+#endif
+    uint8_t  prfInput[OT_CRYPTO_PBDKF2_MAX_SALT_SIZE + 4]; // Salt || INT(), for U1 calculation
+    long     prfOne[kBlockSize / sizeof(long)];
+    long     prfTwo[kBlockSize / sizeof(long)];
+    long     keyBlock[kBlockSize / sizeof(long)];
+    uint32_t blockCounter = 0;
+    uint8_t *key          = aKey;
+    uint16_t keyLen       = aKeyLen;
+    uint16_t useLen       = 0;
 
     OT_ASSERT(aSaltLen <= sizeof(prfInput));
     memcpy(prfInput, aSalt, aSaltLen);

@@ -41,7 +41,7 @@ namespace ot {
 namespace Spinel {
 
 /**
- * This class implements a buffer/queue for storing Ncp frames.
+ * Implements a buffer/queue for storing Ncp frames.
  *
  * A frame can consist of a sequence of data bytes and/or the content of an `otMessage` or a combination of the two.
  * `Buffer` implements priority FIFO logic for storing and reading frames. Two priority levels of high and low
@@ -117,7 +117,7 @@ public:
     typedef void (*BufferCallback)(void *aContext, FrameTag aTag, Priority aPriority, Buffer *aBuffer);
 
     /**
-     * This constructor initializes an NCP frame buffer.
+     * Initializes an NCP frame buffer.
      *
      * @param[in] aBuffer               A pointer to a buffer which will be used by NCP frame buffer.
      * @param[in] aBufferLength         The buffer size (in bytes).
@@ -126,13 +126,13 @@ public:
     Buffer(uint8_t *aBuffer, uint16_t aBufferLength);
 
     /**
-     * This method clears the NCP frame buffer. All the frames are cleared/removed.
+     * Clears the NCP frame buffer. All the frames are cleared/removed.
      *
      */
     void Clear(void);
 
     /**
-     * This method sets the FrameAdded callback and its context.
+     * Sets the FrameAdded callback and its context.
      *
      * Subsequent calls to this method will overwrite the previous callback and its context.
      *
@@ -143,7 +143,7 @@ public:
     void SetFrameAddedCallback(BufferCallback aFrameAddedCallback, void *aFrameAddedContext);
 
     /**
-     * This method sets the FrameRemoved callback and its context.
+     * Sets the FrameRemoved callback and its context.
      *
      * Subsequent calls to this method will overwrite the previous callback and its context.
      *
@@ -154,7 +154,7 @@ public:
     void SetFrameRemovedCallback(BufferCallback aFrameRemovedCallback, void *aFrameRemovedContext);
 
     /**
-     * This method begins a new input frame (InFrame) to be added/written to the frame buffer.
+     * Begins a new input frame (InFrame) to be added/written to the frame buffer.
 
      * If there is a previous frame being written (for which `InFrameEnd()` has not yet been called), calling
      * `InFrameBegin()` will discard and clear the previous unfinished frame.
@@ -165,7 +165,7 @@ public:
     void InFrameBegin(Priority aPriority);
 
     /**
-     * This method adds a single byte to current input frame.
+     * Adds a single byte to current input frame.
      *
      * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -183,7 +183,7 @@ public:
     otError InFrameFeedByte(uint8_t aByte);
 
     /**
-     * This method adds data to the current input frame.
+     * Adds data to the current input frame.
      *
      * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -203,7 +203,7 @@ public:
 
 #if OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
     /**
-     * This method adds a message to the current input frame.
+     * Adds a message to the current input frame.
      *
      * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -229,7 +229,7 @@ public:
 #endif
 
     /**
-     * This method gets the current write position in the input frame.
+     * Gets the current write position in the input frame.
      *
      * The write position is returned in @p aPosition. The saved position can later be used to overwrite the frame
      * content (using `InFrameOverwrite()`) or discard a portion of written frame and move the write pointer back to
@@ -244,13 +244,13 @@ public:
     otError InFrameGetPosition(WritePosition &aPosition);
 
     /**
-     * This method overwrites the previously written content in the current input frame at a given write position.
+     * Overwrites the previously written content in the current input frame at a given write position.
      *
      * The write position @p aPostion must belong to the same input frame saved earlier with `InFrameGetPosition()`.
-     * This method does not allow writing beyond the current end of the input frame (i.e., it can only write over
+     * Does not allow writing beyond the current end of the input frame (i.e., it can only write over
      * previously added content). If writing @p aDataBufferLength bytes from write position @p aPosition goes beyond
      * the end, this method does not change the input frame and returns error status `OT_ERROR_INVALID_ARGS`.
-     * This method cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
+     * Cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
      * `InFrameFeedMessage()`).
      *
      * @param[in] aPosition             A reference to the write position.
@@ -267,11 +267,11 @@ public:
     otError InFrameOverwrite(const WritePosition &aPosition, const uint8_t *aDataBuffer, uint16_t aDataBufferLength);
 
     /**
-     * This method resets the write position of input frame back to a previously saved position. Any previously
+     * Resets the write position of input frame back to a previously saved position. Any previously
      * added content after the write position is discarded.
      *
      * The write position @p aPosition must belong to the same input frame saved earlier with `InFrameGetPosition()`.
-     * This method cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
+     * Cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
      * `InFrameFeedMessage()`).
      *
      * @param[in] aPosition             A reference to write position
@@ -285,10 +285,10 @@ public:
     otError InFrameReset(const WritePosition &aPosition);
 
     /**
-     * This method gets the distance (number of bytes) from a given saved position to current end of frame.
+     * Gets the distance (number of bytes) from a given saved position to current end of frame.
      *
      * The write position @p aPosition must belong to the same input frame saved earlier with `InFrameGetPosition()`.
-     * This method cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
+     * Cannot be used if the input frame has an added `otMessage` (i.e., a previous call to
      * `InFrameFeedMessage()`). In case of invalid argument, this method returns zero.
      *
      * @param[in] aPosition             A reference to write position
@@ -300,7 +300,7 @@ public:
     uint16_t InFrameGetDistance(const WritePosition &aPosition) const;
 
     /**
-     * This method finalizes/ends the current input frame being written to the buffer.
+     * Finalizes/ends the current input frame being written to the buffer.
      *
      * Before using this method `InFrameBegin()` must be called to start and prepare a new input frame. Otherwise, this
      * method does nothing and returns error status `OT_ERROR_INVALID_STATE`.
@@ -316,7 +316,7 @@ public:
     otError InFrameEnd(void);
 
     /**
-     * This method returns the tag assigned to last successfully written/added frame to NcpBuffer (i.e., last input
+     * Returns the tag assigned to last successfully written/added frame to NcpBuffer (i.e., last input
      * frame for which `InFrameEnd()` was called and returned success status). The tag is a unique value (within
      * currently queued frames) associated with a frame in the `Buffer`. The tag can be used to identify the
      * same frame when it is read and removed from the NcpBuffer. Tags can be compared using operator `==`.
@@ -326,7 +326,7 @@ public:
     FrameTag InFrameGetLastTag(void) const;
 
     /**
-     * This method checks if the buffer is empty. A non-empty buffer contains at least one full frame for reading.
+     * Checks if the buffer is empty. A non-empty buffer contains at least one full frame for reading.
      *
      * @retval TRUE                     Buffer is not empty and contains at least one full frame for reading.
      * @retval FALSE                    Buffer is empty and contains no frame for reading.
@@ -335,7 +335,7 @@ public:
     bool IsEmpty(void) const;
 
     /**
-     * This method begins/prepares an output frame to be read from the frame buffer if there is no current active output
+     * Begins/prepares an output frame to be read from the frame buffer if there is no current active output
      * frame, or resets the read offset if there is a current active output frame.
      *
      * The NCP buffer maintains a read offset for the current frame being read. Before reading any bytes from the frame
@@ -353,7 +353,7 @@ public:
     otError OutFrameBegin(void);
 
     /**
-     * This method checks if the current output frame (being read) has ended.
+     * Checks if the current output frame (being read) has ended.
      *
      * The NCP buffer maintains a read offset for the current output frame being read. This method returns `true` if
      * the read offset has reached the end of the frame and there are no more bytes available to read, or if there is
@@ -367,7 +367,7 @@ public:
     bool OutFrameHasEnded(void);
 
     /**
-     * This method reads and returns the next byte from the current output frame.
+     * Reads and returns the next byte from the current output frame.
      *
      * The NCP buffer maintains a read offset for the current output frame being read. This method reads and returns
      * the next byte from the current frame and moves the read offset forward. If read offset is already at the end
@@ -380,7 +380,7 @@ public:
     uint8_t OutFrameReadByte(void);
 
     /**
-     * This method reads and copies bytes from the current output frame into a given buffer.
+     * Reads and copies bytes from the current output frame into a given buffer.
      *
      * The NCP buffer maintains a read offset for the current output frame being read. This method attempts to read
      * the given number of bytes (@p aReadLength) from the current frame and copies the bytes into the given
@@ -397,7 +397,7 @@ public:
     uint16_t OutFrameRead(uint16_t aReadLength, uint8_t *aDataBuffer);
 
     /**
-     * This method removes the current or front output frame from the buffer.
+     * Removes the current or front output frame from the buffer.
      *
      * If there is an active output from being read (an output frame was prepared earlier with a successful call to
      * `OutFrameBegin()`), this method removes the current active output frame. If there is no current active frame,
@@ -415,7 +415,7 @@ public:
     otError OutFrameRemove(void);
 
     /**
-     * This method returns the number of bytes (length) of current or front frame in the NCP frame buffer.
+     * Returns the number of bytes (length) of current or front frame in the NCP frame buffer.
      *
      * If there is an active output from being read (an output frame was prepared earlier with successful call to
      * `OutFrameBegin()`), this method returns the length of the current output frame. If there is no current active
@@ -429,7 +429,7 @@ public:
     uint16_t OutFrameGetLength(void);
 
     /**
-     * This method returns the tag value associated to current or front frame in the NCP frame buffer.
+     * Returns the tag value associated to current or front frame in the NCP frame buffer.
      *
      * If there is an active output from being read (an output frame was prepared earlier with successful call to
      * `OutFrameBegin()`), this method returns the tag associated with current output frame. If there is no current

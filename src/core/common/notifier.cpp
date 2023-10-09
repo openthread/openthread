@@ -186,6 +186,9 @@ void Notifier::EmitEvents(void)
     // being published (if needed).
     Get<NetworkData::Publisher>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+    Get<Utils::LinkMetricsManager>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -271,6 +274,8 @@ const char *Notifier::EventToString(Event aEvent) const
         "JoinerState",       // kEventJoinerStateChanged               (1 << 27)
         "ActDset",           // kEventActiveDatasetChanged             (1 << 28)
         "PndDset",           // kEventPendingDatasetChanged            (1 << 29)
+        "Nat64",             // kEventNat64TranslatorStateChanged      (1 << 30)
+        "ParentLq",          // kEventParentLinkQualityChanged         (1 << 31)
     };
 
     for (uint8_t index = 0; index < GetArrayLength(kEventStrings); index++)

@@ -75,24 +75,18 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+/**
+ * @cli srp server auto
+ * @code
+ * srp server auto
+ * Disabled
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpServerIsAutoEnableMode
+ */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    /**
-     * @cli srp server auto
-     * @code
-     * srp server auto
-     * Disabled
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otSrpServerIsAutoEnableMode
-     */
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(otSrpServerIsAutoEnableMode(GetInstancePtr()));
-    }
     /**
      * @cli srp server auto enable
      * @code
@@ -102,16 +96,8 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
      * @par api_copy
      * #otSrpServerSetAutoEnableMode
      */
-    else
-    {
-        bool enable;
-
-        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
-        otSrpServerSetAutoEnableMode(GetInstancePtr(), enable);
-    }
-
-exit:
-    return error;
+    return Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode,
+                                                              otSrpServerSetAutoEnableMode);
 }
 #endif
 
@@ -284,9 +270,6 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
 
 template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 {
-    static constexpr char *kAnyServiceName  = nullptr;
-    static constexpr char *kAnyInstanceName = nullptr;
-
     otError                error = OT_ERROR_NONE;
     const otSrpServerHost *host  = nullptr;
 
@@ -296,18 +279,15 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
     {
         const otSrpServerService *service = nullptr;
 
-        while ((service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY,
-                                                         kAnyServiceName, kAnyInstanceName)) != nullptr)
+        while ((service = otSrpServerHostGetNextService(host, service)) != nullptr)
         {
-            bool                      isDeleted    = otSrpServerServiceIsDeleted(service);
-            const char               *instanceName = otSrpServerServiceGetInstanceName(service);
-            const otSrpServerService *subService   = nullptr;
-            const uint8_t            *txtData;
-            uint16_t                  txtDataLength;
-            bool                      hasSubType = false;
-            otSrpServerLeaseInfo      leaseInfo;
+            bool                 isDeleted = otSrpServerServiceIsDeleted(service);
+            const uint8_t       *txtData;
+            uint16_t             txtDataLength;
+            bool                 hasSubType = false;
+            otSrpServerLeaseInfo leaseInfo;
 
-            OutputLine("%s", instanceName);
+            OutputLine("%s", otSrpServerServiceGetInstanceName(service));
             OutputLine(kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
 
             if (isDeleted)
@@ -319,13 +299,17 @@ template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 
             OutputFormat(kIndentSize, "subtypes: ");
 
-            while ((subService = otSrpServerHostFindNextService(
-                        host, subService, (OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
-                        kAnyServiceName, instanceName)) != nullptr)
+            for (uint16_t index = 0;; index++)
             {
-                char subLabel[OT_DNS_MAX_LABEL_SIZE];
+                char        subLabel[OT_DNS_MAX_LABEL_SIZE];
+                const char *subTypeName = otSrpServerServiceGetSubTypeServiceNameAt(service, index);
 
-                IgnoreError(otSrpServerServiceGetServiceSubTypeLabel(subService, subLabel, sizeof(subLabel)));
+                if (subTypeName == nullptr)
+                {
+                    break;
+                }
+
+                IgnoreError(otSrpServerParseSubTypeServiceName(subTypeName, subLabel, sizeof(subLabel)));
                 OutputFormat("%s%s", hasSubType ? "," : "", subLabel);
                 hasSubType = true;
             }

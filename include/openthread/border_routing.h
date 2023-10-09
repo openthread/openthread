@@ -73,7 +73,7 @@ extern "C" {
  */
 
 /**
- * This structure represents an iterator to iterate through the Border Router's discovered prefix table.
+ * Represents an iterator to iterate through the Border Router's discovered prefix table.
  *
  * The fields in this type are opaque (intended for use by OpenThread core only) and therefore should not be
  * accessed or used by caller.
@@ -89,7 +89,7 @@ typedef struct otBorderRoutingPrefixTableIterator
 } otBorderRoutingPrefixTableIterator;
 
 /**
- * This structure represents an entry from the discovered prefix table.
+ * Represents an entry from the discovered prefix table.
  *
  * The entries in the discovered table track the Prefix/Route Info Options in the received Router Advertisement messages
  * from other routers on infrastructure link.
@@ -107,7 +107,7 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
- * This enumeration represents the state of Border Routing Manager.
+ * Represents the state of Border Routing Manager.
  *
  */
 typedef enum
@@ -119,9 +119,22 @@ typedef enum
 } otBorderRoutingState;
 
 /**
- * This method initializes the Border Routing Manager on given infrastructure interface.
+ * This enumeration represents the state of DHCPv6 Prefix Delegation State.
+ *
+ */
+typedef enum
+{
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< DHCPv6 PD is disabled on the border router.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< DHCPv6 PD in enabled but won't try to request and publish a prefix.
+    OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< DHCPv6 PD is enabled and will try to request and publish a prefix.
+} otBorderRoutingDhcp6PdState;
+
+/**
+ * Initializes the Border Routing Manager on given infrastructure interface.
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
+ * @note  This method can be re-called to change the infrastructure interface, but the Border Routing Manager should be
+ *        disabled first, and re-enabled after.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex      The infrastructure interface index.
@@ -129,11 +142,12 @@ typedef enum
  *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
- * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager has already been initialized.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is in a state other than disabled or uninitialized.
  * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
  * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
+ * @sa otBorderRoutingSetEnabled.
  *
  */
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
@@ -163,7 +177,7 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
 
 /**
- * This function gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
+ * Gets the current preference used when advertising Route Info Options (RIO) in Router Advertisement
  * messages sent over the infrastructure link.
  *
  * The RIO preference is determined as follows:
@@ -179,7 +193,7 @@ otBorderRoutingState otBorderRoutingGetState(otInstance *aInstance);
 otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
- * This function explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
+ * Explicitly sets the preference to use when advertising Route Info Options (RIO) in Router
  * Advertisement messages sent over the infrastructure link.
  *
  * After a call to this function, BR will use the given preference for all its advertised RIOs. The preference can be
@@ -192,7 +206,7 @@ otRoutePreference otBorderRoutingGetRouteInfoOptionPreference(otInstance *aInsta
 void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRoutePreference aPreference);
 
 /**
- * This function clears a previously set preference value for advertised Route Info Options.
+ * Clears a previously set preference value for advertised Route Info Options.
  *
  * After a call to this function, BR will use device's role to determine the RIO preference: Medium preference when
  * in router/leader role and low preference when in child role.
@@ -203,11 +217,52 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
 void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
+ * Gets the current preference used for published routes in Network Data.
+ *
+ * The preference is determined as follows:
+ *
+ * - If explicitly set by user by calling `otBorderRoutingSetRoutePreference()`, the given preference is used.
+ * - Otherwise, it is determined automatically by `RoutingManager` based on the device's role and link quality.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ * @returns The current published route preference.
+ *
+ */
+otRoutePreference otBorderRoutingGetRoutePreference(otInstance *aInstance);
+
+/**
+ * Explicitly sets the preference of published routes in Network Data.
+ *
+ * After a call to this function, BR will use the given preference. The preference can be cleared by calling
+ * `otBorderRoutingClearRoutePreference()`.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ * @param[in] aPreference   The route preference to use.
+ *
+ */
+void otBorderRoutingSetRoutePreference(otInstance *aInstance, otRoutePreference aPreference);
+
+/**
+ * Clears a previously set preference value for published routes in Network Data.
+ *
+ * After a call to this function, BR will determine the preference automatically based on the device's role and
+ * link quality (to the parent when acting as end-device).
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ */
+void otBorderRoutingClearRoutePreference(otInstance *aInstance);
+
+/**
  * Gets the local Off-Mesh-Routable (OMR) Prefix, for example `fdfc:1ff5:1512:5622::/64`.
  *
  * An OMR Prefix is a randomly generated 64-bit prefix that's published in the
  * Thread network if there isn't already an OMR prefix. This prefix can be reached
  * from the local Wi-Fi or Ethernet network.
+ *
+ * Note: When DHCPv6 PD is enabled, the border router may publish the prefix from
+ * DHCPv6 PD.
  *
  * @param[in]   aInstance  A pointer to an OpenThread instance.
  * @param[out]  aPrefix    A pointer to where the prefix will be output to.
@@ -215,8 +270,30 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
  * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
  *
+ * @sa otBorderRoutingGetPdOmrPrefix
+ *
  */
 otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * Gets the DHCPv6 Prefix Delegation (PD) provided off-mesh-routable (OMR) prefix.
+ *
+ * Only mPrefix, mValidLifetime and mPreferredLifetime fields are used in the returned prefix info.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
+ *
+ * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NOT_FOUND      There are no valid PD prefix on this BR.
+ *
+ * @sa otBorderRoutingGetOmrPrefix
+ * @sa otPlatBorderRoutingProcessIcmp6Ra
+ *
+ */
+otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPrefixTableEntry *aPrefixInfo);
 
 /**
  * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.
@@ -296,7 +373,7 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
                                              otRoutePreference *aPreference);
 
 /**
- * This function initializes an `otBorderRoutingPrefixTableIterator`.
+ * Initializes an `otBorderRoutingPrefixTableIterator`.
  *
  * An iterator MUST be initialized before it is used.
  *
@@ -312,7 +389,7 @@ otError otBorderRoutingGetFavoredNat64Prefix(otInstance        *aInstance,
 void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRoutingPrefixTableIterator *aIterator);
 
 /**
- * This function iterates over the entries in the Border Router's discovered prefix table.
+ * Iterates over the entries in the Border Router's discovered prefix table.
  *
  * @param[in]     aInstance    The OpenThread instance.
  * @param[in,out] aIterator    A pointer to the iterator.
@@ -325,6 +402,17 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry    *aEntry);
+
+/**
+ * Enables / Disables DHCPv6 Prefix Delegation.
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aEnabled  Whether to accept platform generated RA messages.
+ *
+ */
+void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * @}

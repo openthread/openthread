@@ -8,11 +8,13 @@ Usage : `br [command] ...`
 - [disable](#disable)
 - [enable](#enable)
 - [help](#help)
+- [init](#init)
 - [nat64prefix](#nat64prefix)
 - [omrprefix](#omrprefix)
 - [onlinkprefix](#onlinkprefix)
 - [prefixtable](#prefixtable)
 - [rioprf](#rioprf)
+- [routeprf](#routeprf)
 - [state](#state)
 
 ## Command Details
@@ -32,7 +34,19 @@ omrprefix
 onlinkprefix
 prefixtable
 rioprf
+routeprf
 state
+Done
+```
+
+### init
+
+Usage: `br init <interface> <enabled>`
+
+Initializes the Border Routing Manager on given infrastructure interface.
+
+```bash
+> br init 2 1
 Done
 ```
 
@@ -204,5 +218,39 @@ Clear a previously set preference value for advertising Route Info Options (e.g.
 
 ```bash
 > br rioprf clear
+Done
+```
+
+### routeprf
+
+Usage: `br routeprf`
+
+Get the preference used for publishing routes in Thread Network Data. This may be the automatically determined route preference, or an administratively set fixed route preference - if applicable.
+
+```bash
+> br routeprf
+med
+Done
+```
+
+### routeprf \<prf\>
+
+Usage: `br routeprf high|med|low`
+
+Set the preference (which may be 'high', 'med', or 'low') to use publishing routes in Thread Network Data. Setting a preference value overrides the automatic route preference determination. It is used only for an explicit administrative configuration of a Border Router.
+
+```bash
+> br routeprf low
+Done
+```
+
+### routeprf clear
+
+Usage: `br routeprf clear`
+
+Clear a previously set preference value for publishing routes in Thread Network Data. When cleared BR will automatically determine the route preference based on device's role and link quality to parent (when acting as end-device).
+
+```bash
+> br routeprf clear
 Done
 ```

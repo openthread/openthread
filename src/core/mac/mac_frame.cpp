@@ -98,34 +98,105 @@ void Frame::InitMacHeader(Type             aType,
         break;
     }
 
+    if (aType == kTypeAck)
+    {
+        fcf &= ~kFcfAckRequest;
+    }
+
     fcf |= (aSecurityLevel != kSecurityNone) ? kFcfSecurityEnabled : 0;
 
-    // When we have both source and destination addresses we check PAN
-    // IDs to determine whether to include `kFcfPanidCompression`.
+    // PAN ID compression
 
-    if (!aAddrs.mSource.IsNone() && !aAddrs.mDestination.IsNone() && (aPanIds.mSource == aPanIds.mDestination))
+    switch (aVersion)
     {
-        switch (aVersion)
-        {
-        case kVersion2015:
-            // Special case for a IEEE 802.15.4-2015 frame: When both
-            // addresses are extended, the PAN ID compression is set
-            // to one to indicate that no PAN ID is in the frame,
-            // while setting the PAN ID Compression to zero indicates
-            // the presence of the destination PAN ID in the frame.
+    case kVersion2003:
+    case kVersion2006:
 
-            if (aAddrs.mSource.IsExtended() && aAddrs.mDestination.IsExtended())
+        // For 2003-2006 versions:
+        //
+        // - If only either the destination or the source addressing information is present,
+        //   the PAN ID Compression field shall be set to zero, and the PAN ID field of the
+        //   single address shall be included in the transmitted frame.
+        // - If both destination and source addressing information is present, the MAC shall
+        //   compare the destination and source PAN identifiers. If the PAN IDs are identical,
+        //   the PAN ID Compression field shall be set to one, and the Source PAN ID field
+        //   shall be omitted from the transmitted frame. If the PAN IDs are different, the
+        //   PAN ID Compression field shall be set to zero, and both Destination PAN ID
+        //   field and Source PAN ID fields shall be included in the transmitted frame.
+
+        if (!aAddrs.mSource.IsNone() && !aAddrs.mDestination.IsNone() &&
+            (aPanIds.GetSource() == aPanIds.GetDestination()))
+        {
+            fcf |= kFcfPanidCompression;
+        }
+        break;
+
+    case kVersion2015:
+        // +----+--------------+--------------+--------------+--------------+--------------+
+        // | No |  Dest Addr   |   Src Addr   |   Dst PAN ID |  Src PAN ID  |  PAN ID Comp |
+        // +----+--------------+--------------+--------------+--------------+--------------+
+        // |  1 | Not Present  | Not Present  | Not Present  | Not Present  |      0       |
+        // |  2 | Not Present  | Not Present  | Present      | Not Present  |      1       |
+        // |  3 | Present      | Not Present  | Present      | Not Present  |      0       |
+        // |  4 | Present      | Not Present  | Not Present  | Not Present  |      1       |
+        // |  5 | Not Present  | Present      | Not Present  | Present      |      0       |
+        // |  6 | Not Present  | Present      | Not Present  | Not Present  |      1       |
+        // +----+--------------+--------------+--------------+--------------+--------------+
+        // |  7 | Extended     | Extended     | Present      | Not Present  |      0       |
+        // |  8 | Extended     | Extended     | Not Present  | Not Present  |      1       |
+        // |----+--------------+--------------+--------------+--------------+--------------+
+        // |  9 | Short        | Short        | Present      | Present      |      0       |
+        // | 10 | Short        | Extended     | Present      | Present      |      0       |
+        // | 11 | Extended     | Short        | Present      | Present      |      0       |
+        // | 12 | Short        | Extended     | Present      | Not Present  |      1       |
+        // | 13 | Extended     | Short        | Present      | Not Present  |      1       |
+        // | 14 | Short        | Short        | Present      | Not Present  |      1       |
+        // +----+--------------+--------------+--------------+--------------+--------------+
+
+        if (aAddrs.mDestination.IsNone())
+        {
+            // Dst addr not present - rows 1,2,5,6.
+
+            if ((aAddrs.mSource.IsNone() && aPanIds.IsDestinationPresent()) ||                               // Row 2.
+                (!aAddrs.mSource.IsNone() && !aPanIds.IsDestinationPresent() && !aPanIds.IsSourcePresent())) // Row 6.
+            {
+                fcf |= kFcfPanidCompression;
+            }
+
+            break;
+        }
+
+        if (aAddrs.mSource.IsNone())
+        {
+            // Dst addr present, Src addr not present - rows 3,4.
+
+            if (!aPanIds.IsDestinationPresent()) // Row 4.
+            {
+                fcf |= kFcfPanidCompression;
+            }
+
+            break;
+        }
+
+        // Both addresses are present - rows 7 to 14.
+
+        if (aAddrs.mSource.IsExtended() && aAddrs.mDestination.IsExtended())
+        {
+            // Both addresses are extended - rows 7,8.
+
+            if (aPanIds.IsDestinationPresent()) // Row 7.
             {
                 break;
             }
-
-            OT_FALL_THROUGH;
-
-        case kVersion2003:
-        case kVersion2006:
-            fcf |= kFcfPanidCompression;
+        }
+        else if (aPanIds.GetSource() != aPanIds.GetDestination()) // Rows 9-14.
+        {
             break;
         }
+
+        fcf |= kFcfPanidCompression;
+
+        break;
     }
 
     builder.Init(mPsdu, GetMtu());
@@ -134,14 +205,14 @@ void Frame::InitMacHeader(Type             aType,
 
     if (IsDstPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.mDestination));
+        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.GetDestination()));
     }
 
     IgnoreError(builder.AppendMacAddress(aAddrs.mDestination));
 
     if (IsSrcPanIdPresent(fcf))
     {
-        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.mSource));
+        IgnoreError(builder.AppendLittleEndianUint16(aPanIds.GetSource()));
     }
 
     IgnoreError(builder.AppendMacAddress(aAddrs.mSource));
@@ -167,6 +238,8 @@ void Frame::InitMacHeader(Type             aType,
 }
 
 uint16_t Frame::GetFrameControlField(void) const { return ReadUint16(mPsdu); }
+
+void Frame::SetFrameControlField(uint16_t aFcf) { WriteUint16(aFcf, mPsdu); }
 
 Error Frame::ValidatePsdu(void) const
 {
@@ -204,6 +277,22 @@ void Frame::SetFramePending(bool aFramePending)
     }
 }
 
+void Frame::SetIePresent(bool aIePresent)
+{
+    uint16_t fcf = GetFrameControlField();
+
+    if (aIePresent)
+    {
+        fcf |= kFcfIePresent;
+    }
+    else
+    {
+        fcf &= ~kFcfIePresent;
+    }
+
+    SetFrameControlField(fcf);
+}
+
 uint8_t Frame::FindDstPanIdIndex(void) const
 {
     uint8_t index;
@@ -222,16 +311,39 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
 
     if (IsVersion2015(aFcf))
     {
+        // Original table at `InitMacHeader()`
+        //
+        // +----+--------------+--------------+--------------++--------------+
+        // | No |  Dest Addr   |   Src Addr   |  PAN ID Comp ||   Dst PAN ID |
+        // +----+--------------+--------------+--------------++--------------+
+        // |  1 | Not Present  | Not Present  |      0       || Not Present  |
+        // |  2 | Not Present  | Not Present  |      1       || Present      |
+        // |  3 | Present      | Not Present  |      0       || Present      |
+        // |  4 | Present      | Not Present  |      1       || Not Present  |
+        // |  5 | Not Present  | Present      |      0       || Not Present  |
+        // |  6 | Not Present  | Present      |      1       || Not Present  |
+        // +----+--------------+--------------+--------------++--------------+
+        // |  7 | Extended     | Extended     |      0       || Present      |
+        // |  8 | Extended     | Extended     |      1       || Not Present  |
+        // |----+--------------+--------------+--------------++--------------+
+        // |  9 | Short        | Short        |      0       || Present      |
+        // | 10 | Short        | Extended     |      0       || Present      |
+        // | 11 | Extended     | Short        |      0       || Present      |
+        // | 12 | Short        | Extended     |      1       || Present      |
+        // | 13 | Extended     | Short        |      1       || Present      |
+        // | 14 | Short        | Short        |      1       || Present      |
+        // +----+--------------+--------------+--------------++--------------+
+
         switch (aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask | kFcfPanidCompression))
         {
-        case (kFcfDstAddrNone | kFcfSrcAddrNone):
-        case (kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression):
-        case (kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression):
-        case (kFcfDstAddrNone | kFcfSrcAddrExt):
-        case (kFcfDstAddrNone | kFcfSrcAddrShort):
-        case (kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression):
-        case (kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression):
-        case (kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression):
+        case (kFcfDstAddrNone | kFcfSrcAddrNone):                         // 1
+        case (kFcfDstAddrShort | kFcfSrcAddrNone | kFcfPanidCompression): // 4 (short dst)
+        case (kFcfDstAddrExt | kFcfSrcAddrNone | kFcfPanidCompression):   // 4 (ext dst)
+        case (kFcfDstAddrNone | kFcfSrcAddrShort):                        // 5 (short src)
+        case (kFcfDstAddrNone | kFcfSrcAddrExt):                          // 5 (ext src)
+        case (kFcfDstAddrNone | kFcfSrcAddrShort | kFcfPanidCompression): // 6 (short src)
+        case (kFcfDstAddrNone | kFcfSrcAddrExt | kFcfPanidCompression):   // 6 (ext src)
+        case (kFcfDstAddrExt | kFcfSrcAddrExt | kFcfPanidCompression):    // 8
             present = false;
             break;
         default:
@@ -367,6 +479,27 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
     // compression is set, it indicates that no PAN ID is in the
     // frame, while if the PAN ID Compression is zero, it indicates
     // the presence of the destination PAN ID in the frame.
+    //
+    // +----+--------------+--------------+--------------++--------------+
+    // | No |  Dest Addr   |   Src Addr   |  PAN ID Comp ||  Src PAN ID  |
+    // +----+--------------+--------------+--------------++--------------+
+    // |  1 | Not Present  | Not Present  |      0       || Not Present  |
+    // |  2 | Not Present  | Not Present  |      1       || Not Present  |
+    // |  3 | Present      | Not Present  |      0       || Not Present  |
+    // |  4 | Present      | Not Present  |      1       || Not Present  |
+    // |  5 | Not Present  | Present      |      0       || Present      |
+    // |  6 | Not Present  | Present      |      1       || Not Present  |
+    // +----+--------------+--------------+--------------++--------------+
+    // |  7 | Extended     | Extended     |      0       || Not Present  |
+    // |  8 | Extended     | Extended     |      1       || Not Present  |
+    // |----+--------------+--------------+--------------++--------------+
+    // |  9 | Short        | Short        |      0       || Present      |
+    // | 10 | Short        | Extended     |      0       || Present      |
+    // | 11 | Extended     | Short        |      0       || Present      |
+    // | 12 | Short        | Extended     |      1       || Not Present  |
+    // | 13 | Extended     | Short        |      1       || Not Present  |
+    // | 14 | Short        | Short        |      1       || Not Present  |
+    // +----+--------------+--------------+--------------++--------------+
 
     if (IsVersion2015(aFcf) && ((aFcf & (kFcfDstAddrMask | kFcfSrcAddrMask)) == (kFcfDstAddrExt | kFcfSrcAddrExt)))
     {
@@ -975,7 +1108,7 @@ Error Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize
 {
     Error error = kErrorNone;
 
-    WriteUint16(GetFrameControlField() | kFcfIePresent, mPsdu);
+    SetIePresent(true);
 
     if (aIndex == 0)
     {
@@ -1214,7 +1347,7 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
         // different FCS size. We adjust the PSDU length after the
         // copy to account for this.
 
-        SetLength(aFromFrame.GetPsduLength() - aFromFrame.GetFcsSize() + GetFcsSize());
+        SetLength(aFromFrame.GetLength() - aFromFrame.GetFcsSize() + GetFcsSize());
     }
 #endif
 }
@@ -1271,112 +1404,79 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
+Error TxFrame::GenerateEnhAck(const RxFrame &aRxFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    Error error = kErrorNone;
+    Error     error = kErrorNone;
+    Address   address;
+    PanId     panId;
+    Addresses addrs;
+    PanIds    panIds;
+    uint8_t   securityLevel = kSecurityNone;
+    uint8_t   keyIdMode     = kKeyIdMode0;
 
-    uint16_t fcf;
-    Address  address;
-    PanId    panId;
-    uint8_t  footerLength;
-    uint8_t  securityControlField;
-    uint8_t  keyId;
+    // Validate the received frame.
 
-    fcf = static_cast<uint16_t>(kTypeAck) | static_cast<uint16_t>(kVersion2015) | kFcfSrcAddrNone;
+    VerifyOrExit(aRxFrame.IsVersion2015(), error = kErrorParse);
+    VerifyOrExit(aRxFrame.GetAckRequest(), error = kErrorParse);
 
-    mChannel = aFrame.mChannel;
+    // Check `aRxFrame` has a valid destination address. The ack frame
+    // will not use this as its source though and will always use no
+    // source address.
+
+    SuccessOrExit(error = aRxFrame.GetDstAddr(address));
+    VerifyOrExit(!address.IsNone() && !address.IsBroadcast(), error = kErrorParse);
+
+    // Check `aRxFrame` has a valid source, which is then used as
+    // ack frames destination.
+
+    SuccessOrExit(error = aRxFrame.GetSrcAddr(addrs.mDestination));
+    VerifyOrExit(!addrs.mDestination.IsNone(), error = kErrorParse);
+
+    if (aRxFrame.GetSecurityEnabled())
+    {
+        SuccessOrExit(error = aRxFrame.GetSecurityLevel(securityLevel));
+        VerifyOrExit(securityLevel == kSecurityEncMic32, error = kErrorParse);
+
+        SuccessOrExit(error = aRxFrame.GetKeyIdMode(keyIdMode));
+    }
+
+    if (aRxFrame.IsSrcPanIdPresent())
+    {
+        SuccessOrExit(error = aRxFrame.GetSrcPanId(panId));
+        panIds.SetDestination(panId);
+    }
+    else if (aRxFrame.IsDstPanIdPresent())
+    {
+        SuccessOrExit(error = aRxFrame.GetDstPanId(panId));
+        panIds.SetDestination(panId);
+    }
+
+    // Prepare the ack frame
+
+    mChannel = aRxFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
 
-    // Set frame control field
-    if (aIsFramePending)
+    InitMacHeader(kTypeAck, kVersion2015, addrs, panIds, static_cast<SecurityLevel>(securityLevel),
+                  static_cast<KeyIdMode>(keyIdMode));
+
+    SetFramePending(aIsFramePending);
+    SetIePresent(aIeLength != 0);
+    SetSequence(aRxFrame.GetSequence());
+
+    if (aRxFrame.GetSecurityEnabled())
     {
-        fcf |= kFcfFramePending;
-    }
+        uint8_t keyId;
 
-    if (aFrame.GetSecurityEnabled())
-    {
-        fcf |= kFcfSecurityEnabled;
-    }
-
-    if (aFrame.IsPanIdCompressed())
-    {
-        fcf |= kFcfPanidCompression;
-    }
-
-    // Destination address mode
-    if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrExt)
-    {
-        fcf |= kFcfDstAddrExt;
-    }
-    else if ((aFrame.GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort)
-    {
-        fcf |= kFcfDstAddrShort;
-    }
-    else
-    {
-        fcf |= kFcfDstAddrNone;
-    }
-
-    if (aIeLength > 0)
-    {
-        fcf |= kFcfIePresent;
-    }
-
-    WriteUint16(fcf, mPsdu);
-
-    // Set sequence number
-    mPsdu[kSequenceIndex] = aFrame.GetSequence();
-
-    if (IsDstPanIdPresent())
-    {
-        // Set address field
-        if (aFrame.IsSrcPanIdPresent())
-        {
-            SuccessOrExit(error = aFrame.GetSrcPanId(panId));
-        }
-        else if (aFrame.IsDstPanIdPresent())
-        {
-            SuccessOrExit(error = aFrame.GetDstPanId(panId));
-        }
-        else
-        {
-            ExitNow(error = kErrorParse);
-        }
-
-        SetDstPanId(panId);
-    }
-
-    if (aFrame.IsSrcAddrPresent())
-    {
-        SuccessOrExit(error = aFrame.GetSrcAddr(address));
-        SetDstAddr(address);
-    }
-
-    // At this time the length of ACK hasn't been determined, set it to
-    // `kMaxPsduSize` to call methods that check frame length
-    mLength = kMaxPsduSize;
-
-    // Set security header
-    if (aFrame.GetSecurityEnabled())
-    {
-        SuccessOrExit(error = aFrame.GetSecurityControlField(securityControlField));
-        SuccessOrExit(error = aFrame.GetKeyId(keyId));
-
-        SetSecurityControlField(securityControlField);
+        SuccessOrExit(error = aRxFrame.GetKeyId(keyId));
         SetKeyId(keyId);
     }
 
-    // Set header IE
     if (aIeLength > 0)
     {
         OT_ASSERT(aIeData != nullptr);
         memcpy(&mPsdu[FindHeaderIeIndex()], aIeData, aIeLength);
+        mLength += aIeLength;
     }
-
-    // Set frame length
-    footerLength = GetFooterLength();
-    OT_ASSERT(footerLength != kInvalidIndex);
-    mLength = SkipSecurityHeaderIndex() + aIeLength + footerLength;
 
 exit:
     return error;

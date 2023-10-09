@@ -44,7 +44,7 @@
 #include "tcp_seq.h"
 #include "tcp_var.h"
 #include "tcp_timer.h"
-//#include <sys/socket.h>
+#include "tcp_fastopen.h"
 #include "ip6.h"
 
 #include "tcp_const.h"
@@ -251,14 +251,15 @@ out:
  * to extend the final linked buffer of the send buffer. Either DATA should be
  * NULL, or EXTENDBY should be 0.
  */
-int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t extendby)
+int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t extendby, struct sockaddr_in6* nam)
 {
 	int error = 0;
+	int do_fastopen_implied_connect = (nam != NULL) && IS_FASTOPEN(tp->t_flags) && tp->t_state < TCPS_SYN_SENT;
 
 	/*
 	 * samkumar: This if statement and the next are checks that I added
 	 */
-	if (tp->t_state < TCPS_ESTABLISHED) {
+	if (tp->t_state < TCPS_ESTABLISHED && !IS_FASTOPEN(tp->t_flags)) {
 		error = ENOTCONN;
 		goto out;
 	}
@@ -273,9 +274,9 @@ int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t 
 	 * INP_TIMEWAIT and INP_DROPPED flags on inp->inp_flags, and handled the
 	 * control mbuf passed as an argument (which would result in an error since
 	 * TCP doesn't support control information). I've deleted that code, but
-	 * left the following if block.
+	 * added the following if block based on those checks.
 	 */
-	 if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) {
+	 if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED && !do_fastopen_implied_connect)) {
 		error = ECONNRESET;
 		goto out;
 	}
@@ -283,13 +284,13 @@ int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t 
 	/*
 	 * The following code used to be wrapped in an if statement:
 	 * "if (!(flags & PRUS_OOB))", that only executed it if the "out of band"
-	 * flag was not set. In TCB, "out of band" data is conveyed via the urgent
+	 * flag was not set. In TCP, "out of band" data is conveyed via the urgent
 	 * pointer, and TCPlp does not support the urgent pointer. Therefore, I
 	 * removed the "if" check and put its body below.
 	 */
 
 	/*
-	 * samkumar; The FreeBSD code calls sbappendstream(&so->so_snd, m, flags);
+	 * samkumar: The FreeBSD code calls sbappendstream(&so->so_snd, m, flags);
 	 * I've replaced it with the following logic, which appends to the
 	 * send buffer according to TCPlp's data structures.
 	 */
@@ -308,9 +309,16 @@ int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t 
 	/*
 	 * samkumar: There used to be code here to handle "implied connect,"
 	 * which initiates the TCP handshake if sending data on a socket that
-	 * isn't yet connected. TCPlp doesn't support this at the moment, but
-	 * it might be worth revisiting  when implementing TCP Fast Open.
+	 * isn't yet connected. For now, I've special-cased this code to work
+	 * only for TCP Fast Open for IPv6 (since implied connect is the only
+	 * way to initiate a connection with TCP Fast Open).
 	 */
+	if (do_fastopen_implied_connect) {
+		error = tcp6_connect(tp, nam);
+		if (error)
+			goto out;
+		tcp_fastopen_connect(tp);
+	}
 
 	/*
 	 * samkumar: There used to be code here handling the PRUS_EOF flag in
@@ -361,6 +369,17 @@ tcp_usr_rcvd(struct tcpcb* tp)
 		error = ECONNRESET;
 		goto out;
 	}
+
+	/*
+	 * For passively-created TFO connections, don't attempt a window
+	 * update while still in SYN_RECEIVED as this may trigger an early
+	 * SYN|ACK.  It is preferable to have the SYN|ACK be sent along with
+	 * application response data, or failing that, when the DELACK timer
+	 * expires.
+	 */
+	if (IS_FASTOPEN(tp->t_flags) &&
+	    (tp->t_state == TCPS_SYN_RECEIVED))
+		goto out;
 
 	tcp_output(tp);
 

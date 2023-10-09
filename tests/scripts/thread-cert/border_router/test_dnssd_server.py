@@ -136,16 +136,6 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 'QUESTION': [(SERVICE_FULL_NAME, 'IN', 'PTR')],
                 'ANSWER': [(SERVICE_FULL_NAME, 'IN', 'PTR', f'ins1.{SERVICE_FULL_NAME}'),
                            (SERVICE_FULL_NAME, 'IN', 'PTR', f'ins2.{SERVICE_FULL_NAME}')],
-                'ADDITIONAL': [
-                    (ins1_full_name, 'IN', 'SRV', 1, 1, 11111, host1_full_name),
-                    (ins1_full_name, 'IN', 'TXT', EMPTY_TXT),
-                    (host1_full_name, 'IN', 'AAAA', client1_addrs[0]),
-                    (host1_full_name, 'IN', 'AAAA', client1_addrs[1]),
-                    (ins2_full_name, 'IN', 'SRV', 2, 2, 22222, host2_full_name),
-                    (ins2_full_name, 'IN', 'TXT', EMPTY_TXT),
-                    (host2_full_name, 'IN', 'AAAA', client2_addrs[0]),
-                    (host2_full_name, 'IN', 'AAAA', client2_addrs[1]),
-                ],
             })
 
         # check if SRV query works

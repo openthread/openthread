@@ -72,7 +72,7 @@ OT11_VERSION = 'OPENTHREAD'
 OT12_VERSION = 'OPENTHREAD'
 OT13_VERSION = 'OPENTHREAD'
 
-# Supported device capabilites in this THCI implementation
+# Supported device capabilities in this THCI implementation
 OT11_CAPBS = DevCapb.V1_1
 OT12_CAPBS = (DevCapb.L_AIO | DevCapb.C_FFD | DevCapb.C_RFD)
 OT12BR_CAPBS = (DevCapb.C_BBR | DevCapb.C_Host | DevCapb.C_Comm)
@@ -255,7 +255,7 @@ class OpenThreadTHCI(object):
             line str: data send to device
         """
 
-    # Override the following empty methods in the dervied classes when needed
+    # Override the following empty methods in the derived classes when needed
     def _onCommissionStart(self):
         """Called when commissioning starts"""
 
@@ -442,7 +442,7 @@ class OpenThreadTHCI(object):
                                 self.UIStatusMsg)
             ModuleHelper.WriteIntoDebugLogger('Err: OpenThread device Firmware not matching..')
 
-        # Make this class compatible with Thread referenece 20200818
+        # Make this class compatible with Thread reference 20200818
         self.__detectReference20200818()
 
     def __repr__(self):
@@ -832,8 +832,15 @@ class OpenThreadTHCI(object):
             [str]: The modified string with escaped characters.
         """
         escapable_chars = '\\ \t\r\n'
+        escapable_chars_present = False
+
         for char in escapable_chars:
-            string = string.replace(char, '\\%s' % char)
+            if char in string:
+                string = string.replace(char, '\\%s' % char)
+                escapable_chars_present = True
+
+        if self._cmdPrefix == ZEPHYR_PREFIX and escapable_chars_present:
+            string = '"' + string + '"'
         return string
 
     @API
@@ -880,7 +887,7 @@ class OpenThreadTHCI(object):
 
     @API
     def setMAC(self, xEUI):
-        """set the extended addresss of Thread device
+        """set the extended address of Thread device
 
         Args:
             xEUI: extended address in hex format
@@ -2338,15 +2345,16 @@ class OpenThreadTHCI(object):
                     EncryptedPacket.TLVsLength = int(infoValue)
                     payloadLineCount = (int(infoValue) + bytesInEachLine - 1) / bytesInEachLine
                     while payloadLineCount > 0:
-                        payloadLineCount = payloadLineCount - 1
                         payloadLine = rawLogs.get()
-                        payloadSplit = payloadLine.split('|')
-                        for block in range(1, 3):
-                            payloadBlock = payloadSplit[block]
-                            payloadValues = payloadBlock.split(' ')
-                            for num in range(1, 9):
-                                if '..' not in payloadValues[num]:
-                                    payload.append(int(payloadValues[num], 16))
+                        if '|' in payloadLine:
+                            payloadLineCount = payloadLineCount - 1
+                            payloadSplit = payloadLine.split('|')
+                            for block in range(1, 3):
+                                payloadBlock = payloadSplit[block]
+                                payloadValues = payloadBlock.split(' ')
+                                for num in range(1, 9):
+                                    if '..' not in payloadValues[num]:
+                                        payload.append(int(payloadValues[num], 16))
 
                     EncryptedPacket.TLVs = (PlatformPackets.read(EncryptedPacket.Type, payload)
                                             if payload != [] else [])
@@ -2369,7 +2377,7 @@ class OpenThreadTHCI(object):
         Args:
             sAddr: IPv6 destination address for this message
             xCommissionerSessionId: commissioner session id
-            listChannelMask: a channel array to indicate which channels to be scaned
+            listChannelMask: a channel array to indicate which channels to be scanned
             xCount: number of IEEE 802.15.4 ED Scans (milliseconds)
             xPeriod: Period between successive IEEE802.15.4 ED Scans (milliseconds)
             xScanDuration: ScanDuration when performing an IEEE 802.15.4 ED Scan (milliseconds)
@@ -2923,11 +2931,8 @@ class OpenThreadTHCI(object):
         Args:
             period: csl period in ms
 
-        note: OT command 'csl period' accepts parameter in unit of 10 symbols,
-        period is converted from unit ms to ten symbols (160us per 10 symbols).
-
         """
-        cmd = 'csl period %u' % (period * 6.25)
+        cmd = 'csl period %u' % (period * 1000)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
     @staticmethod

@@ -55,14 +55,14 @@ namespace Ip6 {
  */
 
 /**
- * This class implements an IPv6 datagram filter.
+ * Implements an IPv6 datagram filter.
  *
  */
 class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the Filter object.
+     * Initializes the Filter object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -73,7 +73,7 @@ public:
     }
 
     /**
-     * This method indicates whether or not the IPv6 datagram passes the filter.
+     * Indicates whether or not the IPv6 datagram passes the filter.
      *
      * @param[in]  aMessage  The IPv6 datagram to process.
      *
@@ -84,7 +84,7 @@ public:
     bool Accept(Message &aMessage) const;
 
     /**
-     * This method adds a port to the allowed unsecured port list.
+     * Adds a port to the allowed unsecured port list.
      *
      * @param[in]  aPort  The port value.
      *
@@ -96,7 +96,7 @@ public:
     Error AddUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kAdd, aPort); }
 
     /**
-     * This method removes a port from the allowed unsecure port list.
+     * Removes a port from the allowed unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
@@ -108,7 +108,7 @@ public:
     Error RemoveUnsecurePort(uint16_t aPort) { return UpdateUnsecurePorts(kRemove, aPort); }
 
     /**
-     * This method checks whether a port is in the unsecure port list.
+     * Checks whether a port is in the unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
@@ -118,13 +118,13 @@ public:
     bool IsUnsecurePort(uint16_t aPort) { return mUnsecurePorts.Contains(aPort); }
 
     /**
-     * This method removes all ports from the allowed unsecure port list.
+     * Removes all ports from the allowed unsecure port list.
      *
      */
     void RemoveAllUnsecurePorts(void) { mUnsecurePorts.Clear(); }
 
     /**
-     * This method returns a pointer to the unsecure port list.
+     * Returns a pointer to the unsecure port list.
      *
      * @note Port value 0 is used to indicate an invalid entry.
      *

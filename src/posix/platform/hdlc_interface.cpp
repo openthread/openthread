@@ -49,6 +49,7 @@
 #endif
 #include <stdarg.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -116,18 +117,18 @@
 #define B4000000 4000000
 #endif
 
+#ifndef IOSSIOSPEED
+#define IOSSIOSPEED 0x80045402
+#endif
+
 #endif // __APPLE__
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
 
-using ot::Spinel::SpinelInterface;
-
 namespace ot {
 namespace Posix {
 
-HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                             void                                 *aCallbackContext,
-                             SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+HdlcInterface::HdlcInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
     : mReceiveFrameCallback(aCallback)
     , mReceiveFrameContext(aCallbackContext)
     , mReceiveFrameBuffer(aFrameBuffer)
@@ -198,9 +199,9 @@ void HdlcInterface::Decode(const uint8_t *aBuffer, uint16_t aLength) { mHdlcDeco
 
 otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
-    otError                          error = OT_ERROR_NONE;
-    Hdlc::FrameBuffer<kMaxFrameSize> encoderBuffer;
-    Hdlc::Encoder                    hdlcEncoder(encoderBuffer);
+    otError                            error = OT_ERROR_NONE;
+    Spinel::FrameBuffer<kMaxFrameSize> encoderBuffer;
+    Hdlc::Encoder                      hdlcEncoder(encoderBuffer);
 
     SuccessOrExit(error = hdlcEncoder.BeginFrame());
     SuccessOrExit(error = hdlcEncoder.Encode(aFrame, aLength));
@@ -209,7 +210,7 @@ otError HdlcInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
     error = Write(encoderBuffer.GetFrame(), encoderBuffer.GetLength());
 
 exit:
-    if ((error == OT_ERROR_NONE) && ot::Spinel::SpinelInterface::IsSpinelResetCommand(aFrame, aLength))
+    if ((error == OT_ERROR_NONE) && IsSpinelResetCommand(aFrame, aLength))
     {
         mHdlcDecoder.Reset();
         error = ResetConnection();
@@ -451,9 +452,8 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
         struct termios tios;
         const char    *value;
         speed_t        speed;
-
-        int      stopBit  = 1;
-        uint32_t baudrate = 115200;
+        uint8_t        stopBit  = 1;
+        uint32_t       baudrate = 115200;
 
         VerifyOrExit((rval = tcgetattr(fd, &tios)) == 0);
 
@@ -478,10 +478,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             }
         }
 
-        if ((value = aRadioUrl.GetValue("uart-stop")) != nullptr)
-        {
-            stopBit = atoi(value);
-        }
+        IgnoreError(aRadioUrl.ParseUint8("uart-stop", stopBit));
 
         switch (stopBit)
         {
@@ -496,10 +493,7 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
             break;
         }
 
-        if ((value = aRadioUrl.GetValue("uart-baudrate")))
-        {
-            baudrate = static_cast<uint32_t>(atoi(value));
-        }
+        IgnoreError(aRadioUrl.ParseUint32("uart-baudrate", baudrate));
 
         switch (baudrate)
         {
@@ -590,13 +584,27 @@ int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 
         mBaudRate = baudrate;
 
-        if (aRadioUrl.GetValue("uart-flow-control") != nullptr)
+        if (aRadioUrl.HasParam("uart-flow-control"))
         {
             tios.c_cflag |= CRTSCTS;
         }
 
         VerifyOrExit((rval = cfsetspeed(&tios, static_cast<speed_t>(speed))) == 0, perror("cfsetspeed"));
-        VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
+        rval = tcsetattr(fd, TCSANOW, &tios);
+
+#ifdef __APPLE__
+        if (rval)
+        {
+            struct termios orig_tios;
+            VerifyOrExit((rval = tcgetattr(fd, &orig_tios)) == 0, perror("tcgetattr"));
+            VerifyOrExit((rval = cfsetispeed(&tios, cfgetispeed(&orig_tios))) == 0, perror("cfsetispeed"));
+            VerifyOrExit((rval = cfsetospeed(&tios, cfgetospeed(&orig_tios))) == 0, perror("cfsetospeed"));
+            VerifyOrExit((rval = tcsetattr(fd, TCSANOW, &tios)) == 0, perror("tcsetattr"));
+            VerifyOrExit((rval = ioctl(fd, IOSSIOSPEED, &speed)) == 0, perror("ioctl IOSSIOSPEED"));
+        }
+#else  // __APPLE__
+        VerifyOrExit(rval == 0, perror("tcsetattr"));
+#endif // __APPLE__
         VerifyOrExit((rval = tcflush(fd, TCIOFLUSH)) == 0);
     }
 
@@ -703,7 +711,7 @@ otError HdlcInterface::ResetConnection(void)
     otError  error = OT_ERROR_NONE;
     uint64_t end;
 
-    if (mRadioUrl->GetValue("uart-reset") != nullptr)
+    if (mRadioUrl->HasParam("uart-reset"))
     {
         usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
         CloseFile();

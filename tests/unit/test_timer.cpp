@@ -32,6 +32,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/num_utils.hpp"
 #include "common/timer.hpp"
 
 enum
@@ -507,7 +508,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
     }
 
     // given the order in which timers are started, the TimerScheduler should call otPlatAlarmMilliStartAt 2 times.
-    // one for timer[0] and one for timer[5] which will supercede timer[0].
+    // one for timer[0] and one for timer[5] which will supersede timer[0].
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "TestTenTimer: Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "TestTenTimer: Stop CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "TestTenTimer: Handler CallCount Failed.");
@@ -650,14 +651,20 @@ int TestTimerTime(void)
             VerifyOrQuit(t1 - t2 == duration, "Time difference failed");
 
             t2 = t1.GetDistantFuture();
-            VerifyOrQuit((t1 < t2), "GetDistanceFuture() failed");
+            VerifyOrQuit((t1 < t2) && !(t1 > t2), "GetDistanceFuture() failed");
             t2 += 1;
-            VerifyOrQuit(!(t1 < t2), "GetDistanceFuture() failed");
+            VerifyOrQuit(!(t1 < t2) || (t1 > t2), "GetDistanceFuture() failed");
 
             t2 = t1.GetDistantPast();
-            VerifyOrQuit((t1 > t2), "GetDistantPast() failed");
+            VerifyOrQuit((t1 > t2) && !(t1 < t2), "GetDistantPast() failed");
             t2 -= 1;
-            VerifyOrQuit(!(t1 > t2), "GetDistantPast() failed");
+            VerifyOrQuit(!(t1 > t2) || (t1 < t2), "GetDistantPast() failed");
+
+            VerifyOrQuit(Min(t1, t1.GetDistantFuture()) == t1);
+            VerifyOrQuit(Min(t1.GetDistantFuture(), t1) == t1);
+
+            VerifyOrQuit(Max(t1, t1.GetDistantPast()) == t1);
+            VerifyOrQuit(Max(t1.GetDistantPast(), t1) == t1);
 
             printf("--> PASSED\n");
         }

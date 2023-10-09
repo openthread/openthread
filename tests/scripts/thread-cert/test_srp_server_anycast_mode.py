@@ -177,7 +177,8 @@ class TestSrpServerAnycastMode(thread_cert.TestCase):
 
             #---------------------------------------------------------------
             # Browse for a matching service name and verify that the registered
-            # service is successfully found.
+            # service is successfully found. Since there is only one match the
+            # server should include the service info in additional section.
 
             service_instances = browser.dns_browse(f'{SERVICE}.{DOMAIN}', server.get_mleid(), DNS_RESOLVER_PORT)
             self.assertEqual({INSTANCE}, set(service_instances.keys()))

@@ -46,9 +46,28 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+ *
+ * Define to 1 to allow using heap by Routing Manager.
+ *
+ * When enabled heap allocated entries will be used to track discovered prefix table contain information about
+ * discovered routers and the advertised on-link prefixes on infra link.
+ *
+ * When disabled pre-allocated pools are used instead where max number of entries are specified by
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS` and `MAX_DISCOVERED_PREFIXES` configurations.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
  *
  * Specifies maximum number of routers (on infra link) to track by routing manager.
+ *
+ * Applicable only when heap allocation is not used, i.e., `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` is
+ * disabled.
  *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS
@@ -59,6 +78,9 @@
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
  *
  * Specifies maximum number of discovered prefixes (on-link prefixes on the infra link) maintained by routing manager.
+ *
+ * Applicable only when heap allocation is not used, i.e., `OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE` is
+ * disabled.
  *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES
@@ -102,6 +124,42 @@
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_ROUTER_ACTIVE_CHECK_TIMEOUT (60 * 1000) // (in msec).
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+ *
+ * Define to 1 so for the routing manager to include the Flags Extension Option with Stub Router flag in the emitted
+ * Router Advertisement messages from this Border Router.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+ *
+ * Specifies whether to support handling platform generated ND messages.
+ *
+ * The desired use case is the prefix will be allocated by other software on the interface, and they will advertise the
+ * assigned prefix to the thread interface via router advertisement messages.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+ *
+ * Define to 1 to add mock (empty) implementation of infra-if platform APIs.
+ *
+ * This is intended for generating code size report only and should not be used otherwise.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE 0
 #endif
 
 #endif // CONFIG_BORDER_ROUTING_H_

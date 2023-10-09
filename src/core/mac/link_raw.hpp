@@ -50,7 +50,7 @@ namespace ot {
 namespace Mac {
 
 /**
- * This class defines the raw link-layer object.
+ * Defines the raw link-layer object.
  *
  */
 class LinkRaw : public InstanceLocator, private NonCopyable
@@ -59,7 +59,7 @@ class LinkRaw : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This constructor initializes the object.
+     * Initializes the object.
      *
      * @param[in]   aInstance   A reference to the OpenThread instance.
      *
@@ -67,13 +67,13 @@ public:
     explicit LinkRaw(Instance &aInstance);
 
     /**
-     * This method initializes the states of the raw link-layer.
+     * Initializes the states of the raw link-layer.
      *
      */
     void Init(void);
 
     /**
-     * This method returns true if the raw link-layer is enabled.
+     * Returns true if the raw link-layer is enabled.
      *
      * @returns true if enabled, false otherwise.
      *
@@ -81,7 +81,7 @@ public:
     bool IsEnabled(void) const { return mReceiveDoneCallback != nullptr; }
 
     /**
-     * This method enables/disables the raw link-layer.
+     * Enables/disables the raw link-layer.
      *
      * @param[in]  aCallback  A pointer to a function called on receipt of a IEEE 802.15.4 frame, `nullptr` to disable
      *                        raw link-layer.
@@ -95,7 +95,7 @@ public:
     Error SetReceiveDone(otLinkRawReceiveDone aCallback);
 
     /**
-     * This method returns the capabilities of the raw link-layer.
+     * Returns the capabilities of the raw link-layer.
      *
      * @returns The radio capability bit vector.
      *
@@ -103,7 +103,7 @@ public:
     otRadioCaps GetCaps(void) const { return mSubMac.GetCaps(); }
 
     /**
-     * This method starts a (recurring) Receive on the link-layer.
+     * Starts a (recurring) Receive on the link-layer.
      *
      * @retval kErrorNone            Successfully transitioned to Receive.
      * @retval kErrorInvalidState    The radio was disabled or transmitting.
@@ -112,7 +112,7 @@ public:
     Error Receive(void);
 
     /**
-     * This method invokes the mReceiveDoneCallback, if set.
+     * Invokes the mReceiveDoneCallback, if set.
      *
      * @param[in]  aFrame    A pointer to the received frame or `nullptr` if the receive operation failed.
      * @param[in]  aError    kErrorNone when successfully received a frame,
@@ -123,7 +123,7 @@ public:
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
 
     /**
-     * This method gets the radio transmit frame.
+     * Gets the radio transmit frame.
      *
      * @returns The transmit frame.
      *
@@ -131,7 +131,7 @@ public:
     TxFrame &GetTransmitFrame(void) { return mSubMac.GetTransmitFrame(); }
 
     /**
-     * This method starts a (single) Transmit on the link-layer.
+     * Starts a (single) Transmit on the link-layer.
      *
      * @note The callback @p aCallback will not be called if this call does not return kErrorNone.
      *
@@ -144,7 +144,7 @@ public:
     Error Transmit(otLinkRawTransmitDone aCallback);
 
     /**
-     * This method invokes the mTransmitDoneCallback, if set.
+     * Invokes the mTransmitDoneCallback, if set.
      *
      * @param[in]  aFrame     The transmitted frame.
      * @param[in]  aAckFrame  A pointer to the ACK frame, `nullptr` if no ACK was received.
@@ -157,7 +157,7 @@ public:
     void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
     /**
-     * This method starts a (single) Energy Scan on the link-layer.
+     * Starts a (single) Energy Scan on the link-layer.
      *
      * @param[in]  aScanChannel     The channel to perform the energy scan on.
      * @param[in]  aScanDuration    The duration, in milliseconds, for the channel to be scanned.
@@ -172,7 +172,7 @@ public:
     Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
 
     /**
-     * This method invokes the mEnergyScanDoneCallback, if set.
+     * Invokes the mEnergyScanDoneCallback, if set.
      *
      * @param[in]   aEnergyScanMaxRssi  The max RSSI for energy scan.
      *
@@ -180,7 +180,7 @@ public:
     void InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi);
 
     /**
-     * This function returns the short address.
+     * Returns the short address.
      *
      * @returns short address.
      *
@@ -188,7 +188,7 @@ public:
     ShortAddress GetShortAddress(void) const { return mSubMac.GetShortAddress(); }
 
     /**
-     * This method updates short address.
+     * Updates short address.
      *
      * @param[in]   aShortAddress   The short address.
      *
@@ -199,7 +199,7 @@ public:
     Error SetShortAddress(ShortAddress aShortAddress);
 
     /**
-     * This function returns PANID.
+     * Returns PANID.
      *
      * @returns PANID.
      *
@@ -207,7 +207,7 @@ public:
     PanId GetPanId(void) const { return mPanId; }
 
     /**
-     * This method updates PANID.
+     * Updates PANID.
      *
      * @param[in]   aPanId          The PANID.
      *
@@ -218,7 +218,7 @@ public:
     Error SetPanId(PanId aPanId);
 
     /**
-     * This method gets the current receiving channel.
+     * Gets the current receiving channel.
      *
      * @returns Current receiving channel.
      *
@@ -226,7 +226,7 @@ public:
     uint8_t GetChannel(void) const { return mReceiveChannel; }
 
     /**
-     * This method sets the receiving channel.
+     * Sets the receiving channel.
      *
      * @param[in]  aChannel     The channel to use for receiving.
      *
@@ -234,7 +234,7 @@ public:
     Error SetChannel(uint8_t aChannel);
 
     /**
-     * This function returns the extended address.
+     * Returns the extended address.
      *
      * @returns A reference to the extended address.
      *
@@ -242,7 +242,7 @@ public:
     const ExtAddress &GetExtAddress(void) const { return mSubMac.GetExtAddress(); }
 
     /**
-     * This method updates extended address.
+     * Updates extended address.
      *
      * @param[in]   aExtAddress     The extended address.
      *
@@ -253,7 +253,7 @@ public:
     Error SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
-     * This method updates MAC keys and key index.
+     * Updates MAC keys and key index.
      *
      * @param[in]   aKeyIdMode        The key ID mode.
      * @param[in]   aKeyId            The key index.
@@ -269,7 +269,7 @@ public:
     Error SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
 
     /**
-     * This method sets the current MAC frame counter value.
+     * Sets the current MAC frame counter value.
      *
      * @param[in] aFrameCounter  The MAC frame counter value.
      * @param[in] aSetIfLarger   If `true`, set only if the new value @p aFrameCounter is larger than current value.
@@ -283,13 +283,12 @@ public:
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
     /**
-     * This method records the status of a frame transmission attempt and is mainly used for logging failures.
+     * Records the status of a frame transmission attempt and is mainly used for logging failures.
      *
      * Unlike `HandleTransmitDone` which is called after all transmission attempts of frame to indicate final status
      * of a frame transmission request, this method is invoked on all frame transmission attempts.
      *
      * @param[in] aFrame      The transmitted frame.
-     * @param[in] aAckFrame   A pointer to the ACK frame, or `nullptr` if no ACK was received.
      * @param[in] aError      kErrorNone when the frame was transmitted successfully,
      *                        kErrorNoAck when the frame was transmitted but no ACK was received,
      *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
@@ -299,13 +298,9 @@ public:
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
      *
      */
-    void RecordFrameTransmitStatus(const TxFrame &aFrame,
-                                   RxFrame       *aAckFrame,
-                                   Error          aError,
-                                   uint8_t        aRetryCount,
-                                   bool           aWillRetx);
+    void RecordFrameTransmitStatus(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, RxFrame *, Error, uint8_t, bool) {}
+    void    RecordFrameTransmitStatus(const TxFrame &, Error, uint8_t, bool) {}
 #endif
 
 private:

@@ -36,7 +36,7 @@ import config
 LEADER = 1
 SSED_1 = 2
 
-CSL_PERIOD = 500 * 6.25  # 500ms
+CSL_PERIOD = 500 * 1000  # 0.5 in usec
 CSL_TIMEOUT = 30  # 30s
 
 

@@ -60,9 +60,9 @@ static ot::Spinel::RadioSpinel<ot::Posix::VendorInterface> sRadioSpinel;
     "OT_POSIX_RCP_BUS_VENDOR!"
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-#include "power_updater.hpp"
-static ot::Posix::PowerUpdater sPowerUpdater;
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+#include "configuration.hpp"
+static ot::Posix::Configuration sConfig;
 #endif
 
 namespace ot {
@@ -87,51 +87,57 @@ Radio::Radio(const char *aUrl)
 
 void Radio::Init(void)
 {
-    bool        resetRadio             = (mRadioUrl.GetValue("no-reset") == nullptr);
-    bool        restoreDataset         = (mRadioUrl.GetValue("ncp-dataset") != nullptr);
-    bool        skipCompatibilityCheck = (mRadioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
-    const char *parameterValue;
-    const char *region;
-#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    const char *maxPowerTable;
-#endif
+    bool resetRadio             = !mRadioUrl.HasParam("no-reset");
+    bool skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-    // The last argument must be the node id
-    {
-        const char *nodeId = nullptr;
-
-        for (const char *arg = nullptr; (arg = mRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
-        {
-        }
-
-        virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
-    }
+    VirtualTimeInit();
 #endif
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(mRadioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
+    sRadioSpinel.Init(resetRadio, skipCompatibilityCheck);
 
-    parameterValue = mRadioUrl.GetValue("fem-lnagain");
-    if (parameterValue != nullptr)
+    ProcessRadioUrl(mRadioUrl);
+}
+
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+void Radio::VirtualTimeInit(void)
+{
+    // The last argument must be the node id
+    const char *nodeId = nullptr;
+
+    for (const char *arg = nullptr; (arg = mRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
     {
-        long femLnaGain = strtol(parameterValue, nullptr, 0);
-
-        VerifyOrDie(INT8_MIN <= femLnaGain && femLnaGain <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
-        SuccessOrDie(sRadioSpinel.SetFemLnaGain(static_cast<int8_t>(femLnaGain)));
     }
 
-    parameterValue = mRadioUrl.GetValue("cca-threshold");
-    if (parameterValue != nullptr)
-    {
-        long ccaThreshold = strtol(parameterValue, nullptr, 0);
+    virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
+}
+#endif
 
-        VerifyOrDie(INT8_MIN <= ccaThreshold && ccaThreshold <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
-        SuccessOrDie(sRadioSpinel.SetCcaEnergyDetectThreshold(static_cast<int8_t>(ccaThreshold)));
+void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
+{
+    const char *region;
+    int8_t      value;
+
+    if (aRadioUrl.HasParam("ncp-dataset"))
+    {
+        otLogCritPlat("The argument \"ncp-dataset\" is no longer supported");
+        DieNow(OT_ERROR_FAILED);
     }
 
-    region = mRadioUrl.GetValue("region");
-    if (region != nullptr)
+    if (aRadioUrl.HasParam("fem-lnagain"))
+    {
+        SuccessOrDie(aRadioUrl.ParseInt8("fem-lnagain", value));
+        SuccessOrDie(sRadioSpinel.SetFemLnaGain(value));
+    }
+
+    if (aRadioUrl.HasParam("cca-threshold"))
+    {
+        SuccessOrDie(aRadioUrl.ParseInt8("cca-threshold", value));
+        SuccessOrDie(sRadioSpinel.SetCcaEnergyDetectThreshold(value));
+    }
+
+    if ((region = aRadioUrl.GetValue("region")) != nullptr)
     {
         uint16_t regionCode;
 
@@ -140,61 +146,66 @@ void Radio::Init(void)
         SuccessOrDie(otPlatRadioSetRegion(gInstance, regionCode));
     }
 
-#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-    maxPowerTable = mRadioUrl.GetValue("max-power-table");
-    if (maxPowerTable != nullptr)
-    {
-        constexpr int8_t kPowerDefault = 30; // Default power 1 watt (30 dBm).
-        const char      *str           = nullptr;
-        uint8_t          channel       = ot::Radio::kChannelMin;
-        int8_t           power         = kPowerDefault;
-        otError          error;
+    ProcessMaxPowerTable(aRadioUrl);
 
-        for (str = strtok(const_cast<char *>(maxPowerTable), ","); str != nullptr && channel <= ot::Radio::kChannelMax;
-             str = strtok(nullptr, ","))
-        {
-            power = static_cast<int8_t>(strtol(str, nullptr, 0));
-            error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
-            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_IMPLEMENTED)
-            {
-                DieNow(OT_ERROR_FAILED);
-            }
-            else if (error == OT_ERROR_NOT_IMPLEMENTED)
-            {
-                otLogWarnPlat("The RCP doesn't support setting the max transmit power");
-            }
-
-            ++channel;
-        }
-
-        // Use the last power if omitted.
-        while (channel <= ot::Radio::kChannelMax)
-        {
-            error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
-            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_IMPLEMENTED)
-            {
-                DieNow(OT_ERROR_FAILED);
-            }
-            else if (error == OT_ERROR_NOT_IMPLEMENTED)
-            {
-                otLogWarnPlat("The RCP doesn't support setting the max transmit power");
-            }
-
-            ++channel;
-        }
-
-        VerifyOrDie(str == nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    }
-#endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
     {
-        const char *enableCoex = mRadioUrl.GetValue("enable-coex");
+        const char *enableCoex = aRadioUrl.GetValue("enable-coex");
         if (enableCoex != nullptr)
         {
             SuccessOrDie(sRadioSpinel.SetCoexEnabled(enableCoex[0] != '0'));
         }
     }
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+}
+
+void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
+{
+    OT_UNUSED_VARIABLE(aRadioUrl);
+
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+    otError          error;
+    constexpr int8_t kPowerDefault = 30; // Default power 1 watt (30 dBm).
+    const char      *str           = nullptr;
+    char            *pSave         = nullptr;
+    uint8_t          channel       = ot::Radio::kChannelMin;
+    int8_t           power         = kPowerDefault;
+    const char      *maxPowerTable;
+
+    VerifyOrExit((maxPowerTable = aRadioUrl.GetValue("max-power-table")) != nullptr);
+
+    for (str = strtok_r(const_cast<char *>(maxPowerTable), ",", &pSave);
+         str != nullptr && channel <= ot::Radio::kChannelMax; str = strtok_r(nullptr, ",", &pSave))
+    {
+        power = static_cast<int8_t>(strtol(str, nullptr, 0));
+        error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
+        if (error == OT_ERROR_NOT_IMPLEMENTED)
+        {
+            otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+        }
+
+        ++channel;
+    }
+
+    // Use the last power if omitted.
+    while (channel <= ot::Radio::kChannelMax)
+    {
+        error = sRadioSpinel.SetChannelMaxTransmitPower(channel, power);
+        VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
+        if (error == OT_ERROR_NOT_IMPLEMENTED)
+        {
+            otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+        }
+
+        ++channel;
+    }
+
+    VerifyOrDie(str == nullptr, OT_EXIT_INVALID_ARGUMENTS);
+
+exit:
+    return;
+#endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 }
 
 void *Radio::GetSpinelInstance(void) { return &sRadioSpinel; }
@@ -756,13 +767,41 @@ void otPlatDiagAlarmCallback(otInstance *aInstance) { OT_UNUSED_VARIABLE(aInstan
 uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(false);
+
+    uint32_t channelMask;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        channelMask = sConfig.GetSupportedChannelMask();
+    }
+    else
+#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(false);
+    }
+
+    return channelMask;
 }
 
 uint32_t otPlatRadioGetPreferredChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.GetRadioChannelMask(true);
+
+    uint32_t channelMask;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        channelMask = sConfig.GetPreferredChannelMask();
+    }
+    else
+#endif
+    {
+        channelMask = sRadioSpinel.GetRadioChannelMask(true);
+    }
+
+    return channelMask;
 }
 
 otRadioState otPlatRadioGetState(otInstance *aInstance)
@@ -859,22 +898,42 @@ otError otPlatRadioSetChannelTargetPower(otInstance *aInstance, uint8_t aChannel
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    return sPowerUpdater.SetRegion(aRegionCode);
-#else
-    return sRadioSpinel.SetRadioRegion(aRegionCode);
+
+    otError error;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        error = sConfig.SetRegion(aRegionCode);
+    }
+    else
 #endif
+    {
+        error = sRadioSpinel.SetRadioRegion(aRegionCode);
+    }
+
+    return error;
 }
 
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
-#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
-    *aRegionCode = sPowerUpdater.GetRegion();
-    return OT_ERROR_NONE;
-#else
-    return sRadioSpinel.GetRadioRegion(aRegionCode);
+
+    otError error;
+
+#if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
+    if (sConfig.IsValid())
+    {
+        *aRegionCode = sConfig.GetRegion();
+        error        = OT_ERROR_NONE;
+    }
+    else
 #endif
+    {
+        error = sRadioSpinel.GetRadioRegion(aRegionCode);
+    }
+
+    return error;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

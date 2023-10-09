@@ -129,6 +129,7 @@ build_simulation()
         options+=("-DOT_CSL_RECEIVER=ON")
         options+=("-DOT_LINK_METRICS_INITIATOR=ON")
         options+=("-DOT_LINK_METRICS_SUBJECT=ON")
+        options+=("-DOT_LINK_METRICS_MANAGER=ON")
     fi
 
     if [[ ${ot_extra_options[*]+x} ]]; then
@@ -162,6 +163,9 @@ build_posix()
     if [[ ${version} != "1.1" ]]; then
         options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
+        options+=("-DOT_LINK_METRICS_INITIATOR=ON")
+        options+=("-DOT_LINK_METRICS_SUBJECT=ON")
+        options+=("-DOT_LINK_METRICS_MANAGER=ON")
     fi
 
     if [[ ${FULL_LOGS} == 1 ]]; then
@@ -378,6 +382,8 @@ do_build_otbr_docker()
         rm -rf third_party/openthread/repo
         rsync -r \
             --exclude=build \
+            --exclude=ot_testing \
+            --exclude=__pycache__ \
             "${otdir}/." \
             third_party/openthread/repo
         rm -rf .git
@@ -447,7 +453,7 @@ do_expect()
             fi
         fi
     else
-        test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
+        test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp' -o -name 'cli_non_rcp-*.exp')
     fi
 
     if [[ $# != 0 ]]; then
@@ -657,7 +663,7 @@ main()
 {
     envsetup "$@"
 
-    if [[ -z ${1:-} ]]; then
+    if [[ -z ${1-} ]]; then
         print_usage 1
     fi
 

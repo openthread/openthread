@@ -69,7 +69,7 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(true /* Force registration */);
+    return AsCoreType(aInstance).Get<BackboneRouter::Local>().AddService(BackboneRouter::Local::kForceRegistration);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
@@ -166,7 +166,7 @@ otError otBackboneRouterMulticastListenerAdd(otInstance *aInstance, const otIp6A
         aTimeout = config.mMlrTimeout;
     }
 
-    aTimeout = Min(aTimeout, Mle::kMlrTimeoutMax);
+    aTimeout = Min(aTimeout, BackboneRouter::kMaxMlrTimeout);
     aTimeout = Time::SecToMsec(aTimeout);
 
     return AsCoreType(aInstance).Get<BackboneRouter::MulticastListenersTable>().Add(AsCoreType(aAddress),

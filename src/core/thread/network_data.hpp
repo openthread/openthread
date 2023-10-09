@@ -97,7 +97,7 @@ class Publisher;
 class MutableNetworkData;
 
 /**
- * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
+ * Represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
  *
  */
 typedef otNetworkDataIterator Iterator;
@@ -105,7 +105,7 @@ typedef otNetworkDataIterator Iterator;
 constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializer for `Iterator` type.
 
 /**
- * This class represents an immutable Network Data.
+ * Represents an immutable Network Data.
  *
  */
 class NetworkData : public InstanceLocator
@@ -119,7 +119,7 @@ public:
     static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
-     * This constructor initializes the `NetworkData` from a given pointer to a buffer and length.
+     * Initializes the `NetworkData` from a given pointer to a buffer and length.
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aTlvs         A pointer to the buffer containing the TLVs.
@@ -134,7 +134,7 @@ public:
     }
 
     /**
-     * This constructor initializes the `NetworkData` from a range of TLVs (given as pair of start and end pointers).
+     * Initializes the `NetworkData` from a range of TLVs (given as pair of start and end pointers).
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aStartTlv     A pointer to the start of the TLVs buffer.
@@ -150,7 +150,7 @@ public:
     }
 
     /**
-     * This method returns the length of `NetworkData` (number of bytes).
+     * Returns the length of `NetworkData` (number of bytes).
      *
      * @returns The length of `NetworkData` (number of bytes).
      *
@@ -158,7 +158,7 @@ public:
     uint8_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns a pointer to the start of the TLVs in `NetworkData`.
+     * Returns a pointer to the start of the TLVs in `NetworkData`.
      *
      * @returns A pointer to the start of the TLVs.
      *
@@ -166,7 +166,7 @@ public:
     const uint8_t *GetBytes(void) const { return mTlvs; }
 
     /**
-     * This method provides full or stable copy of the Thread Network Data.
+     * Provides full or stable copy of the Thread Network Data.
      *
      * @param[in]     aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]    aData        A pointer to the data buffer to copy the Network Data into.
@@ -180,7 +180,7 @@ public:
     Error CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const;
 
     /**
-     * This method provides full or stable copy of the Thread Network Data.
+     * Provides full or stable copy of the Thread Network Data.
      *
      * @param[in]    aType        The Network Data type to copy, the full set or stable subset.
      * @param[out]   aNetworkData A reference to a `MutableNetworkData` to copy the Network Data into.
@@ -192,7 +192,7 @@ public:
     Error CopyNetworkData(Type aType, MutableNetworkData &aNetworkData) const;
 
     /**
-     * This method provides the next On Mesh prefix in the Thread Network Data.
+     * Provides the next On Mesh prefix in the Thread Network Data.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[out]     aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
@@ -204,7 +204,7 @@ public:
     Error GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const;
 
     /**
-     * This method provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
+     * Provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[in]      aRloc16    The RLOC16 value.
@@ -217,7 +217,7 @@ public:
     Error GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const;
 
     /**
-     * This method provides the next external route in the Thread Network Data.
+     * Provides the next external route in the Thread Network Data.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[out]     aConfig    A reference to a config variable where the external route information will be placed.
@@ -229,7 +229,7 @@ public:
     Error GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const;
 
     /**
-     * This method provides the next external route in the Thread Network Data for a given RLOC16.
+     * Provides the next external route in the Thread Network Data for a given RLOC16.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[in]      aRloc16    The RLOC16 value.
@@ -242,7 +242,7 @@ public:
     Error GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const;
 
     /**
-     * This method provides the next service in the Thread Network Data.
+     * Provides the next service in the Thread Network Data.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[out]     aConfig    A reference to a config variable where the service information will be placed.
@@ -254,7 +254,7 @@ public:
     Error GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const;
 
     /**
-     * This method provides the next service in the Thread Network Data for a given RLOC16.
+     * Provides the next service in the Thread Network Data for a given RLOC16.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[in]      aRloc16    The RLOC16 value.
@@ -267,7 +267,7 @@ public:
     Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
-     * This method gets the next 6LoWPAN Context ID info in the Thread Network Data.
+     * Gets the next 6LoWPAN Context ID info in the Thread Network Data.
      *
      * @param[in,out]  aIterator     A reference to the Network Data iterator.
      * @param[out]     aContextInfo  A reference to where the retrieved 6LoWPAN Context ID information will be placed.
@@ -279,7 +279,7 @@ public:
     Error GetNextLowpanContextInfo(Iterator &aIterator, LowpanContextInfo &aContextInfo) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
+     * Indicates whether or not the Thread Network Data contains a given on mesh prefix entry.
      *
      * @param[in]  aPrefix   The on mesh prefix config to check.
      *
@@ -290,7 +290,7 @@ public:
     bool ContainsOnMeshPrefix(const OnMeshPrefixConfig &aPrefix) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains a given external route entry.
+     * Indicates whether or not the Thread Network Data contains a given external route entry.
      *
      * @param[in]  aRoute   The external route config to check.
      *
@@ -301,7 +301,7 @@ public:
     bool ContainsExternalRoute(const ExternalRouteConfig &aRoute) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains a given service entry.
+     * Indicates whether or not the Thread Network Data contains a given service entry.
      *
      * @param[in]  aService   The service config to check.
      *
@@ -312,7 +312,7 @@ public:
     bool ContainsService(const ServiceConfig &aService) const;
 
     /**
-     * This method indicates whether or not the Thread Network Data contains all the on mesh prefixes, external
+     * Indicates whether or not the Thread Network Data contains all the on mesh prefixes, external
      * routes, and service entries as in another given Network Data associated with a given RLOC16.
      *
      * @param[in] aCompare         The Network Data to compare with.
@@ -325,7 +325,7 @@ public:
     bool ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const;
 
     /**
-     * This method provides the next server RLOC16 in the Thread Network Data.
+     * Provides the next server RLOC16 in the Thread Network Data.
      *
      * @param[in,out]  aIterator  A reference to the Network Data iterator.
      * @param[out]     aRloc16    The RLOC16 value.
@@ -337,12 +337,12 @@ public:
     Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
 
     /**
-     * This method finds and returns the list of RLOCs of border routers providing external IP connectivity.
+     * Finds and returns the list of RLOCs of border routers providing external IP connectivity.
      *
      * A border router is considered to provide external IP connectivity if it has added at least one external route
      * entry, or an on-mesh prefix with default-route and on-mesh flags set.
      *
-     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
      *
      * @param[in]      aRoleFilter   Indicates which devices to include (any role, router role only, or child only).
@@ -358,7 +358,7 @@ public:
     Error FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const;
 
     /**
-     * This method counts the number of border routers providing external IP connectivity.
+     * Counts the number of border routers providing external IP connectivity.
      *
      * A border router is considered to provide external IP connectivity if at least one of the below conditions hold
      *
@@ -366,7 +366,7 @@ public:
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
      * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
-     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
      *
      * @param[in] aRoleFilter   Indicates which RLOCs to include (any role, router only, or child only).
@@ -377,7 +377,7 @@ public:
     uint8_t CountBorderRouters(RoleFilter aRoleFilter) const;
 
     /**
-     * This method indicates whether the network data contains a border providing external IP connectivity with a given
+     * Indicates whether the network data contains a border providing external IP connectivity with a given
      * RLOC16.
      *
      * A border router is considered to provide external IP connectivity if at least one of the below conditions hold
@@ -386,7 +386,7 @@ public:
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
      * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
-     * This method should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
+     * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
      *
      * @param[in] aRloc16   The RLOC16 to check.
@@ -399,7 +399,7 @@ public:
 
 protected:
     /**
-     * This enumeration defines Service Data match mode.
+     * Defines Service Data match mode.
      *
      */
     enum ServiceMatchMode : uint8_t
@@ -409,7 +409,7 @@ protected:
     };
 
     /**
-     * This method returns a pointer to the start of Network Data TLV sequence.
+     * Returns a pointer to the start of Network Data TLV sequence.
      *
      * @returns A pointer to the start of Network Data TLV sequence.
      *
@@ -417,7 +417,7 @@ protected:
     const NetworkDataTlv *GetTlvsStart(void) const { return reinterpret_cast<const NetworkDataTlv *>(mTlvs); }
 
     /**
-     * This method returns a pointer to the end of Network Data TLV sequence.
+     * Returns a pointer to the end of Network Data TLV sequence.
      *
      * @returns A pointer to the end of Network Data TLV sequence.
      *
@@ -425,7 +425,7 @@ protected:
     const NetworkDataTlv *GetTlvsEnd(void) const { return reinterpret_cast<const NetworkDataTlv *>(mTlvs + mLength); }
 
     /**
-     * This method returns a pointer to a Prefix TLV.
+     * Returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
@@ -436,7 +436,7 @@ protected:
     const PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const;
 
     /**
-     * This method returns a pointer to a Prefix TLV.
+     * Returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        An IPv6 prefix.
      *
@@ -449,7 +449,7 @@ protected:
     }
 
     /**
-     * This method returns a pointer to a matching Service TLV.
+     * Returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A Service Data.
@@ -463,9 +463,9 @@ protected:
                                   ServiceMatchMode   aServiceMatchMode) const;
 
     /**
-     * This method returns the next pointer to a matching Service TLV.
+     * Returns the next pointer to a matching Service TLV.
      *
-     * This method can be used to iterate over all Service TLVs that start with a given Service Data.
+     * Can be used to iterate over all Service TLVs that start with a given Service Data.
      *
      * @param[in]  aPrevServiceTlv    Set to `nullptr` to start from the beginning of the TLVs (finding the first
      *                                matching Service TLV), or a pointer to the previous Service TLV returned from
@@ -483,9 +483,9 @@ protected:
                                       ServiceMatchMode   aServiceMatchMode) const;
 
     /**
-     * This method returns the next pointer to a matching Thread Service TLV (with Thread Enterprise number).
+     * Returns the next pointer to a matching Thread Service TLV (with Thread Enterprise number).
      *
-     * This method can be used to iterate over all Thread Service TLVs that start with a given Service Data.
+     * Can be used to iterate over all Thread Service TLVs that start with a given Service Data.
      *
      * @param[in]  aPrevServiceTlv    Set to `nullptr` to start from the beginning of the TLVs (finding the first
      *                                matching Service TLV), or a pointer to the previous Service TLV returned from
@@ -584,7 +584,7 @@ private:
 };
 
 /**
- * This class represents mutable Network Data.
+ * Represents mutable Network Data.
  *
  */
 class MutableNetworkData : public NetworkData
@@ -595,7 +595,7 @@ class MutableNetworkData : public NetworkData
 
 public:
     /**
-     * This constructor initializes the `MutableNetworkData`
+     * Initializes the `MutableNetworkData`
      *
      * @param[in] aInstance     A reference to the OpenThread instance.
      * @param[in] aTlvs         A pointer to the buffer to store the TLVs.
@@ -613,7 +613,7 @@ public:
     using NetworkData::GetLength;
 
     /**
-     * This method returns the size of the buffer to store the mutable Network Data.
+     * Returns the size of the buffer to store the mutable Network Data.
      *
      * @returns The size of the buffer.
      *
@@ -621,7 +621,7 @@ public:
     uint8_t GetSize(void) const { return mSize; }
 
     /**
-     * This method returns a pointer to start of the TLVs in `NetworkData`.
+     * Returns a pointer to start of the TLVs in `NetworkData`.
      *
      * @returns A pointer to start of the TLVs.
      *
@@ -629,14 +629,14 @@ public:
     uint8_t *GetBytes(void) { return AsNonConst(AsConst(this)->GetBytes()); }
 
     /**
-     * This method clears the network data.
+     * Clears the network data.
      *
      */
     void Clear(void) { mLength = 0; }
 
 protected:
     /**
-     * This method sets the Network Data length.
+     * Sets the Network Data length.
      *
      * @param[in] aLength   The length.
      *
@@ -646,7 +646,7 @@ protected:
     using NetworkData::GetTlvsStart;
 
     /**
-     * This method returns a pointer to the start of Network Data TLV sequence.
+     * Returns a pointer to the start of Network Data TLV sequence.
      *
      * @returns A pointer to the start of Network Data TLV sequence.
      *
@@ -656,7 +656,7 @@ protected:
     using NetworkData::GetTlvsEnd;
 
     /**
-     * This method returns a pointer to the end of Network Data TLV sequence.
+     * Returns a pointer to the end of Network Data TLV sequence.
      *
      * @returns A pointer to the end of Network Data TLV sequence.
      *
@@ -666,7 +666,7 @@ protected:
     using NetworkData::FindPrefix;
 
     /**
-     * This method returns a pointer to a Prefix TLV.
+     * Returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
      * @param[in]  aPrefixLength  The prefix length pointed to by @p aPrefix (in bits).
@@ -680,7 +680,7 @@ protected:
     }
 
     /**
-     * This method returns a pointer to a Prefix TLV.
+     * Returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        An IPv6 prefix.
      *
@@ -692,7 +692,7 @@ protected:
     using NetworkData::FindService;
 
     /**
-     * This method returns a pointer to a matching Service TLV.
+     * Returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A Service Data.
@@ -709,7 +709,7 @@ protected:
     }
 
     /**
-     * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
+     * Indicates whether there is space in Network Data to insert/append new info and grow it by a given
      * number of bytes.
      *
      * @param[in]  aSize  The number of bytes to grow the Network Data.
@@ -721,7 +721,7 @@ protected:
     bool CanInsert(uint16_t aSize) const { return (mLength + aSize <= mSize); }
 
     /**
-     * This method grows the Network Data to append a TLV with a requested size.
+     * Grows the Network Data to append a TLV with a requested size.
      *
      * On success, the returned TLV is not initialized (i.e., the TLV Length field is not set) but the requested
      * size for it (@p aTlvSize number of bytes) is reserved in the Network Data.
@@ -735,7 +735,7 @@ protected:
     NetworkDataTlv *AppendTlv(uint16_t aTlvSize);
 
     /**
-     * This method inserts bytes into the Network Data.
+     * Inserts bytes into the Network Data.
      *
      * @param[in]  aStart   A pointer to the beginning of the insertion.
      * @param[in]  aLength  The number of bytes to insert.
@@ -744,7 +744,7 @@ protected:
     void Insert(void *aStart, uint8_t aLength);
 
     /**
-     * This method removes bytes from the Network Data.
+     * Removes bytes from the Network Data.
      *
      * @param[in]  aRemoveStart   A pointer to the beginning of the removal.
      * @param[in]  aRemoveLength  The number of bytes to remove.
@@ -753,7 +753,7 @@ protected:
     void Remove(void *aRemoveStart, uint8_t aRemoveLength);
 
     /**
-     * This method removes a TLV from the Network Data.
+     * Removes a TLV from the Network Data.
      *
      * @param[in]  aTlv   The TLV to remove.
      *
@@ -761,7 +761,7 @@ protected:
     void RemoveTlv(NetworkDataTlv *aTlv);
 
     /**
-     * This method strips non-stable data from the Thread Network Data.
+     * Strips non-stable data from the Thread Network Data.
      *
      */
     void RemoveTemporaryData(void);

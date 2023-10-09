@@ -54,7 +54,7 @@ class ThreadNetif : public Ip6::Netif
 {
 public:
     /**
-     * This constructor initializes the Thread network interface.
+     * Initializes the Thread network interface.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
      *
@@ -62,19 +62,19 @@ public:
     explicit ThreadNetif(Instance &aInstance);
 
     /**
-     * This method enables the Thread network interface.
+     * Enables the Thread network interface.
      *
      */
     void Up(void);
 
     /**
-     * This method disables the Thread network interface.
+     * Disables the Thread network interface.
      *
      */
     void Down(void);
 
     /**
-     * This method indicates whether or not the Thread network interface is enabled.
+     * Indicates whether or not the Thread network interface is enabled.
      *
      * @retval TRUE   If the Thread network interface is enabled.
      * @retval FALSE  If the Thread network interface is not enabled.

@@ -324,15 +324,9 @@ Interface::Peer *Interface::GetNewPeerEntry(void)
         }
 
 #if OPENTHREAD_FTD
+        if (Get<NeighborTable>().FindRxOnlyNeighborRouter(entry.GetExtAddress()) != nullptr)
         {
-            Mac::Address macAddress;
-
-            macAddress.SetExtended(entry.GetExtAddress());
-
-            if (Get<NeighborTable>().FindRxOnlyNeighborRouter(macAddress) != nullptr)
-            {
-                continue;
-            }
+            continue;
         }
 #endif
 
