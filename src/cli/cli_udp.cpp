@@ -211,7 +211,7 @@ exit:
  * Done
  * @endcode
  * @code
- * udp send 172.17.0.1 1234
+ * udp send 172.17.0.1 1234 hello
  * Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
  * Done
  * @endcode
