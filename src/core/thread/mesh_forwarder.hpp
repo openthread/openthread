@@ -567,7 +567,7 @@ private:
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
     void HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
-    void RemoveMessageIfNoPendingTx(Message &aMessage);
+    bool RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
     void ScheduleTransmissionTask(void);
