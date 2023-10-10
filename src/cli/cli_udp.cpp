@@ -233,12 +233,12 @@ exit:
  *   An IPv4 address gets synthesized to an IPv6 address with the preferred
  *   NAT64 prefix from the network data. (If the preferred NAT64 prefix
  *   is unavailable, the command returns `InvalidState`).
- * - `port`: UDP destination port
+ * - `port`: UDP destination port.
  * - `type`/`value` combinations:
  *   - `-t`: The payload in the `value` parameter is treated as text. If no `type` value
  *   is entered, the payload in the `value` parameter is also treated as text.
- *   - `-s`: Auto-generated payload with the specified length is given  in the `value` parameter.
- *   - `-x`: Binary data in hexadecimal representation in given in the `value` parameter.
+ *   - `-s`: Auto-generated payload with the specified length given in the `value` parameter.
+ *   - `-x`: Binary data in hexadecimal representation given in the `value` parameter.
  * @par
  * Sends a UDP message.
  * @sa otUdpSend
