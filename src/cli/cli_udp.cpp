@@ -239,8 +239,8 @@ exit:
  *   is entered, the payload in the `value` parameter is also treated as text.
  *   - `-s`: Auto-generated payload with the specified length given in the `value` parameter.
  *   - `-x`: Binary data in hexadecimal representation given in the `value` parameter.
- * @note `ip` and `port` are optional as a pair, but if you specify one you must
- * specify the other. If `ip port` are not given the socket peer address
+ * `ip` and `port` are optional as a pair, but if you specify one you must
+ * specify the other. If `ip` and `port` are not specified, the socket peer address
  * is used from `udp connect`.
  * @par
  * Sends a UDP message using the socket.
