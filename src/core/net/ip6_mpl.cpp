@@ -90,7 +90,7 @@ void Mpl::InitOption(MplOption &aOption, const Address &aAddress)
     aOption.SetSequence(mSequence++);
 }
 
-Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive)
+Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool &aReceive)
 {
     Error     error;
     MplOption option;
@@ -122,10 +122,10 @@ Error Mpl::ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAd
     if (error == kErrorNone)
     {
 #if OPENTHREAD_FTD
-        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence(), aIsOutbound);
+        AddBufferedMessage(aMessage, option.GetSeedId(), option.GetSequence());
 #endif
     }
-    else if (aIsOutbound)
+    else if (!aMessage.IsOriginThreadNetif())
     {
         aReceive = false;
         // In case MPL Data Message is generated locally, ignore potential error of the MPL Seed Set
@@ -334,7 +334,7 @@ uint8_t Mpl::GetTimerExpirations(void) const
     return timerExpirations;
 }
 
-void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
+void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence)
 {
     Error    error       = kErrorNone;
     Message *messageCopy = nullptr;
@@ -352,16 +352,23 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     VerifyOrExit(GetTimerExpirations() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
 
-    if (!aIsOutbound)
+    if (aMessage.IsOriginThreadNetif())
     {
         IgnoreError(aMessage.Read(Header::kHopLimitFieldOffset, hopLimit));
         VerifyOrExit(hopLimit-- > 1, error = kErrorDrop);
         messageCopy->Write(Header::kHopLimitFieldOffset, hopLimit);
     }
 
+    // If the message originates from Thread Netif (i.e., it was
+    // received over Thread radio), set the `mTransmissionCount` to
+    // zero. Otherwise, the message originates from the host and will
+    // be forwarded by `Ip6` to the Thread mesh, so the message itself
+    // will be the first transmission and we set `mTransmissionCount`
+    // to one.
+
     metadata.mSeedId            = aSeedId;
     metadata.mSequence          = aSequence;
-    metadata.mTransmissionCount = aIsOutbound ? 1 : 0;
+    metadata.mTransmissionCount = aMessage.IsOriginThreadNetif() ? 0 : 1;
     metadata.mIntervalOffset    = 0;
     metadata.GenerateNextTransmissionTime(TimerMilli::GetNow(), interval);
 

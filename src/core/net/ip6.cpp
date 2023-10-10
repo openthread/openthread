@@ -516,7 +516,7 @@ void Ip6::HandleSendQueue(void)
     }
 }
 
-Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive)
+Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool &aReceive)
 {
     Error          error = kErrorNone;
     HopByHopHeader hbhHeader;
@@ -542,7 +542,7 @@ Error Ip6::HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, b
 
         if (option.GetType() == MplOption::kType)
         {
-            SuccessOrExit(error = mMpl.ProcessOption(aMessage, offset, aHeader.GetSource(), aIsOutbound, aReceive));
+            SuccessOrExit(error = mMpl.ProcessOption(aMessage, offset, aHeader.GetSource(), aReceive));
             continue;
         }
 
@@ -829,8 +829,8 @@ Error Ip6::HandleExtensionHeaders(Message     &aMessage,
                                   uint8_t     &aNextHeader,
                                   bool        &aReceive)
 {
-    Error           error      = kErrorNone;
-    bool            isOutbound = !aMessage.IsOriginThreadNetif();
+    Error error = kErrorNone;
+
     ExtensionHeader extHeader;
 
     while (aReceive || aNextHeader == kProtoHopOpts)
@@ -840,7 +840,7 @@ Error Ip6::HandleExtensionHeaders(Message     &aMessage,
         switch (aNextHeader)
         {
         case kProtoHopOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, isOutbound, aReceive));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aReceive));
             break;
 
         case kProtoFragment:
@@ -850,7 +850,7 @@ Error Ip6::HandleExtensionHeaders(Message     &aMessage,
             break;
 
         case kProtoDstOpts:
-            SuccessOrExit(error = HandleOptions(aMessage, aHeader, isOutbound, aReceive));
+            SuccessOrExit(error = HandleOptions(aMessage, aHeader, aReceive));
             break;
 
         case kProtoIp6:
