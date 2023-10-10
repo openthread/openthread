@@ -65,15 +65,15 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * Done
  * @endcode
  * @cparam udp bind [@ca{netif}] @ca{ip} @ca{port}
- * - netif: The binding network interface, which is determined as follows:
+ * - `netif`: The binding network interface, which is determined as follows:
  *   - No value (leaving out this parameter from the command): Thread network interface is used.
  *   - `-u`: Unspecified network interface, which means that the UDP/IPv6 stack determines which
  *   network interface to bind the socket to.
  *   - `-b`: Backbone network interface is used.
- * - ip: IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
+ * - `ip`: IPv6 address to bind to. If you wish to have the UDP/IPv6 stack assign the binding
  *   IPv6 address, then you can use the following value to use the unspecified
  *   IPv6 address: `::`. Each example uses the unspecified IPv6 address.
- * - port: UDP port number to bind to. Each of the examples is using port number 1234.
+ * - `port`: UDP port number to bind to. Each of the examples is using port number 1234.
  * @par
  * Assigns an IPv6 address and a port to an open socket, which binds the socket for communication.
  * Assigning the IPv6 address and port is referred to as naming the socket.
@@ -119,8 +119,8 @@ exit:
  * @endcode
  * @cparam udp connect @ca{ip} @ca{port}
  * The following parameters are required:
- * - `ip`: IP address of the peer
- * - `port`: UDP port number of the peer
+ * - `ip`: IP address of the peer.
+ * - `port`: UDP port number of the peer.
  * The address can be an IPv4 address, which gets synthesized to an IPv6 address
  * using the preferred NAT64 prefix from the network data. The command returns
  * `InvalidState` when the preferred NAT64 prefix is unavailable.
@@ -229,6 +229,9 @@ exit:
  * @endcode
  * @cparam udp send [@ca{ip} @ca{port}] [@ca{type}] @ca{value}
  * Parameter definitions:
+ * @note `ip` and `port` are optional as a pair, but if you specify one you must
+ * specify the other. If `ip port` are not given the socket peer address
+ * is used from `udp connect`.
  * - `ip`: Destination address. This address can be either an IPv4 or IPv6 address,
  *   An IPv4 address gets synthesized to an IPv6 address with the preferred
  *   NAT64 prefix from the network data. (If the preferred NAT64 prefix
@@ -240,7 +243,10 @@ exit:
  *   - `-s`: Auto-generated payload with the specified length given in the `value` parameter.
  *   - `-x`: Binary data in hexadecimal representation given in the `value` parameter.
  * @par
- * Sends a UDP message.
+ * Sends a UDP message using the socket.
+ * @csa{udp open}
+ * @csa{udp bind}
+ * @csa{udp connect}
  * @sa otUdpSend
  */
 template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
@@ -325,7 +331,7 @@ template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
     /**
-     * @cli udp linksecurity(Status)
+     * @cli udp linksecurity
      * @code
      * udp linksecurity
      * Enabled
@@ -339,7 +345,7 @@ template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
         OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
     /**
-     * @cli udp linksecurity(Enable,Disable)
+     * @cli udp linksecurity(enable,disable)
      * @code
      * udp linksecurity enable
      * Done
