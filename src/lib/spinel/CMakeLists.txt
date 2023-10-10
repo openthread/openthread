@@ -61,6 +61,7 @@ set(COMMON_INCLUDES
 )
 
 set(COMMON_SOURCES
+    radio_spinel.cpp
     spinel.c
     spinel_buffer.cpp
     spinel_decoder.cpp

@@ -199,14 +199,21 @@ exit:
     return error;
 }
 
-Decoder::Decoder(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext)
+Decoder::Decoder(void)
     : mState(kStateNoSync)
-    , mWritePointer(aFrameWritePointer)
-    , mFrameHandler(aFrameHandler)
-    , mContext(aContext)
+    , mWritePointer(nullptr)
+    , mFrameHandler(nullptr)
+    , mContext(nullptr)
     , mFcs(0)
     , mDecodedLength(0)
 {
+}
+
+void Decoder::Init(Spinel::FrameWritePointer &aFrameWritePointer, FrameHandler aFrameHandler, void *aContext)
+{
+    mWritePointer = &aFrameWritePointer;
+    mFrameHandler = aFrameHandler;
+    mContext      = aContext;
 }
 
 void Decoder::Reset(void)
@@ -254,7 +261,7 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                     )
                     {
                         // Remove the FCS from the frame.
-                        mWritePointer.UndoLastWrites(kFcsSize);
+                        mWritePointer->UndoLastWrites(kFcsSize);
                         error = OT_ERROR_NONE;
                     }
 
@@ -266,10 +273,10 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                 break;
 
             default:
-                if (mWritePointer.CanWrite(sizeof(uint8_t)))
+                if (mWritePointer->CanWrite(sizeof(uint8_t)))
                 {
                     mFcs = UpdateFcs(mFcs, byte);
-                    IgnoreError(mWritePointer.WriteByte(byte));
+                    IgnoreError(mWritePointer->WriteByte(byte));
                     mDecodedLength++;
                 }
                 else
@@ -284,11 +291,11 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
             break;
 
         case kStateEscaped:
-            if (mWritePointer.CanWrite(sizeof(uint8_t)))
+            if (mWritePointer->CanWrite(sizeof(uint8_t)))
             {
                 byte ^= 0x20;
                 mFcs = UpdateFcs(mFcs, byte);
-                IgnoreError(mWritePointer.WriteByte(byte));
+                IgnoreError(mWritePointer->WriteByte(byte));
                 mDecodedLength++;
                 mState = kStateSync;
             }

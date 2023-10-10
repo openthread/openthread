@@ -37,6 +37,14 @@
 namespace ot {
 namespace Url {
 
+Url::Url(void)
+{
+    mProtocol = nullptr;
+    mPath     = nullptr;
+    mQuery    = nullptr;
+    mEnd      = nullptr;
+}
+
 otError Url::Init(char *aUrl)
 {
     otError error = OT_ERROR_NONE;

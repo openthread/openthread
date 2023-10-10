@@ -354,3 +354,4 @@ endmacro()
 
 ot_removed_option(OT_MTD_NETDIAG "- Use OT_NETDIAG_CLIENT instead - note that server function is always supported")
 ot_removed_option(OT_EXCLUDE_TCPLP_LIB "- Use OT_TCP instead, OT_EXCLUDE_TCPLP_LIB is deprecated")
+ot_removed_option(OT_POSIX_CONFIG_RCP_BUS "- Use OT_POSIX_RCP_HDLC_BUS, OT_POSIX_RCP_SPI_BUS or OT_POSIX_RCP_VENDOR_BUS instead, OT_POSIX_CONFIG_RCP_BUS is deprecated")
