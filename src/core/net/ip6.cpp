@@ -830,7 +830,7 @@ Error Ip6::HandleExtensionHeaders(Message     &aMessage,
                                   bool        &aReceive)
 {
     Error           error      = kErrorNone;
-    bool            isOutbound = (aMessage.GetOrigin() != Message::kOriginThreadNetif);
+    bool            isOutbound = !aMessage.IsOriginThreadNetif();
     ExtensionHeader extHeader;
 
     while (aReceive || aNextHeader == kProtoHopOpts)
@@ -1136,15 +1136,14 @@ exit:
 
 Error Ip6::HandleDatagram(Message &aMessage, const void *aLinkMessageInfo, bool aIsReassembled)
 {
-    Error           error;
-    MessageInfo     messageInfo;
-    Header          header;
-    bool            receive;
-    bool            forwardThread;
-    bool            forwardHost;
-    bool            shouldFreeMessage;
-    uint8_t         nextHeader;
-    Message::Origin origin = aMessage.GetOrigin();
+    Error       error;
+    MessageInfo messageInfo;
+    Header      header;
+    bool        receive;
+    bool        forwardThread;
+    bool        forwardHost;
+    bool        shouldFreeMessage;
+    uint8_t     nextHeader;
 
 start:
     receive           = false;
@@ -1168,10 +1167,10 @@ start:
     {
         // Destination is multicast
 
-        forwardThread = (origin != Message::kOriginThreadNetif);
+        forwardThread = !aMessage.IsOriginThreadNetif();
 
 #if OPENTHREAD_FTD
-        if ((origin == Message::kOriginThreadNetif) && header.GetDestination().IsMulticastLargerThanRealmLocal() &&
+        if (aMessage.IsOriginThreadNetif() && header.GetDestination().IsMulticastLargerThanRealmLocal() &&
             Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
         {
             forwardThread = true;
@@ -1180,7 +1179,7 @@ start:
 
         forwardHost = header.GetDestination().IsMulticastLargerThanRealmLocal();
 
-        if (((origin == Message::kOriginThreadNetif) || aMessage.GetMulticastLoop()) &&
+        if ((aMessage.IsOriginThreadNetif() || aMessage.GetMulticastLoop()) &&
             Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
         {
             receive = true;
@@ -1198,7 +1197,7 @@ start:
         {
             receive = true;
         }
-        else if ((origin != Message::kOriginThreadNetif) || !header.GetDestination().IsLinkLocal())
+        else if (!aMessage.IsOriginThreadNetif() || !header.GetDestination().IsLinkLocal())
         {
             if (header.GetDestination().IsLinkLocal())
             {
@@ -1261,7 +1260,7 @@ start:
     {
         uint8_t hopLimit;
 
-        if (origin == Message::kOriginThreadNetif)
+        if (aMessage.IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
             header.SetHopLimit(header.GetHopLimit() - 1);
@@ -1289,7 +1288,7 @@ start:
             VerifyOrExit(isAllowedType, error = kErrorDrop);
         }
 
-        if (aMessage.GetOrigin() == Message::kOriginHostUntrusted && nextHeader == kProtoUdp)
+        if (aMessage.IsOriginHostUntrusted() && (nextHeader == kProtoUdp))
         {
             uint16_t destPort;
 
@@ -1304,7 +1303,7 @@ start:
         }
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        if ((origin == Message::kOriginHostTrusted && !aMessage.IsLoopbackToHostAllowed()) && (nextHeader == kProtoUdp))
+        if (aMessage.IsOriginHostTrusted() && !aMessage.IsLoopbackToHostAllowed() && (nextHeader == kProtoUdp))
         {
             uint16_t destPort;
 
