@@ -55,7 +55,7 @@
 
 using IcmpType = ot::Ip6::Icmp::Header::Type;
 
-static const IcmpType sForwardICMPTypes[] = {
+static const IcmpType kForwardIcmpTypes[] = {
     IcmpType::kTypeDstUnreach,       IcmpType::kTypePacketToBig, IcmpType::kTypeTimeExceeded,
     IcmpType::kTypeParameterProblem, IcmpType::kTypeEchoRequest, IcmpType::kTypeEchoReply,
 };
@@ -1258,8 +1258,6 @@ start:
 
     if (forwardThread)
     {
-        uint8_t hopLimit;
-
         if (aMessage.IsOriginThreadNetif())
         {
             VerifyOrExit(Get<Mle::Mle>().IsRouterOrLeader());
@@ -1268,24 +1266,26 @@ start:
 
         VerifyOrExit(header.GetHopLimit() > 0, error = kErrorDrop);
 
-        hopLimit = header.GetHopLimit();
-        aMessage.Write(Header::kHopLimitFieldOffset, hopLimit);
+        aMessage.Write<uint8_t>(Header::kHopLimitFieldOffset, header.GetHopLimit());
 
         if (nextHeader == kProtoIcmp6)
         {
             uint8_t icmpType;
-            bool    isAllowedType = false;
 
             SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), icmpType));
-            for (IcmpType type : sForwardICMPTypes)
+
+            error = kErrorDrop;
+
+            for (IcmpType type : kForwardIcmpTypes)
             {
                 if (icmpType == type)
                 {
-                    isAllowedType = true;
+                    error = kErrorNone;
                     break;
                 }
             }
-            VerifyOrExit(isAllowedType, error = kErrorDrop);
+
+            SuccessOrExit(error);
         }
 
         if (aMessage.IsOriginHostUntrusted() && (nextHeader == kProtoUdp))
