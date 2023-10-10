@@ -48,8 +48,7 @@ RegisterLogModule("MeshForwarder");
 
 Error MeshForwarder::SendMessage(Message &aMessage)
 {
-    Mle::MleRouter &mle   = Get<Mle::MleRouter>();
-    Error           error = kErrorNone;
+    Error error = kErrorNone;
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
@@ -60,57 +59,48 @@ Error MeshForwarder::SendMessage(Message &aMessage)
     {
     case Message::kTypeIp6:
     {
-        Ip6::Header ip6Header;
+        Ip6::Header         ip6Header;
+        const Ip6::Address &destination = ip6Header.GetDestination();
 
         IgnoreError(aMessage.Read(0, ip6Header));
 
-        if (ip6Header.GetDestination().IsMulticast())
+        if (destination.IsMulticast())
         {
             // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
             // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
             // is multicast address larger than realm local, it should be for indirection transmission for the
             // device's sleepy child, thus there should be no direct transmission.
-            if (!ip6Header.GetDestination().IsMulticastLargerThanRealmLocal())
+            if (!destination.IsMulticastLargerThanRealmLocal())
             {
-                // schedule direct transmission
                 aMessage.SetDirectTransmission();
             }
 
             if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
             {
-                if (ip6Header.GetDestination() == mle.GetLinkLocalAllThreadNodesAddress() ||
-                    ip6Header.GetDestination() == mle.GetRealmLocalAllThreadNodesAddress())
+                // Check if we need to forward the multicast message
+                // to any sleepy child. This is skipped for MPL retx
+                // (only the first MPL transmission is forwarded to
+                // sleepy children).
+
+                bool destinedForAll = ((destination == Get<Mle::Mle>().GetLinkLocalAllThreadNodesAddress()) ||
+                                       (destination == Get<Mle::Mle>().GetRealmLocalAllThreadNodesAddress()));
+
+                for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
                 {
-                    // destined for all sleepy children
-                    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+                    if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)))
                     {
-                        if (!child.IsRxOnWhenIdle())
-                        {
-                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
-                        }
-                    }
-                }
-                else
-                {
-                    // destined for some sleepy children which subscribed the multicast address.
-                    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
-                    {
-                        if (!child.IsRxOnWhenIdle() && child.HasIp6Address(ip6Header.GetDestination()))
-                        {
-                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
-                        }
+                        mIndirectSender.AddMessageForSleepyChild(aMessage, child);
                     }
                 }
             }
         }
         else // Destination is unicast
         {
-            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination());
+            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(destination);
 
             if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission() &&
                 Get<ChildTable>().Contains(*neighbor))
             {
-                // Destined for a sleepy child
                 mIndirectSender.AddMessageForSleepyChild(aMessage, *static_cast<Child *>(neighbor));
             }
             else
