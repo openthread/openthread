@@ -234,8 +234,8 @@ private:
     uint8_t   mSequence;
 
 #if OPENTHREAD_FTD
-    static constexpr uint8_t kChildTimerExpirations  = 0; // MPL retransmissions for Children.
-    static constexpr uint8_t kRouterTimerExpirations = 2; // MPL retransmissions for Routers.
+    static constexpr uint8_t kChildRetransmissions  = 0; // MPL retransmissions for Children.
+    static constexpr uint8_t kRouterRetransmissions = 2; // MPL retransmissions for Routers.
 
     struct Metadata
     {
@@ -252,7 +252,7 @@ private:
         uint8_t   mIntervalOffset;
     };
 
-    uint8_t GetTimerExpirations(void) const;
+    uint8_t DetermineMaxRetransmissions(void) const;
     void    HandleRetransmissionTimer(void);
     void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
 

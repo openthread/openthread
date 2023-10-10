@@ -311,9 +311,9 @@ void Mpl::HandleTimeTick(void)
 
 #if OPENTHREAD_FTD
 
-uint8_t Mpl::GetTimerExpirations(void) const
+uint8_t Mpl::DetermineMaxRetransmissions(void) const
 {
-    uint8_t timerExpirations = 0;
+    uint8_t maxRetx = 0;
 
     switch (Get<Mle::Mle>().GetRole())
     {
@@ -322,16 +322,16 @@ uint8_t Mpl::GetTimerExpirations(void) const
         break;
 
     case Mle::kRoleChild:
-        timerExpirations = kChildTimerExpirations;
+        maxRetx = kChildRetransmissions;
         break;
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:
-        timerExpirations = kRouterTimerExpirations;
+        maxRetx = kRouterRetransmissions;
         break;
     }
 
-    return timerExpirations;
+    return maxRetx;
 }
 
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound)
@@ -349,7 +349,7 @@ void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSeque
     interval = kDataMessageInterval;
 #endif
 
-    VerifyOrExit(GetTimerExpirations() > 0);
+    VerifyOrExit(DetermineMaxRetransmissions() > 0);
     VerifyOrExit((messageCopy = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
 
     if (!aIsOutbound)
@@ -378,66 +378,69 @@ void Mpl::HandleRetransmissionTimer(void)
 {
     TimeMilli now      = TimerMilli::GetNow();
     TimeMilli nextTime = now.GetDistantFuture();
-    Metadata  metadata;
 
     for (Message &message : mBufferedMessageSet)
     {
+        Metadata metadata;
+        Message *messageCopy;
+        uint8_t  maxRetx;
+
         metadata.ReadFrom(message);
 
         if (now < metadata.mTransmissionTime)
         {
             nextTime = Min(nextTime, metadata.mTransmissionTime);
+            continue;
+        }
+
+        metadata.mTransmissionCount++;
+
+        maxRetx = DetermineMaxRetransmissions();
+
+        if (metadata.mTransmissionCount > maxRetx)
+        {
+            // If the number of tx already exceeds the limit, remove
+            // the message. This situation can potentially happen on
+            // a device role change, which then updates the max MPL
+            // retx.
+
+            mBufferedMessageSet.DequeueAndFree(message);
+            continue;
+        }
+
+        if (metadata.mTransmissionCount < maxRetx)
+        {
+            metadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
+            metadata.UpdateIn(message);
+
+            nextTime = Min(nextTime, metadata.mTransmissionTime);
+
+            messageCopy = message.Clone();
         }
         else
         {
-            uint8_t timerExpirations = GetTimerExpirations();
+            // This is the last retx of message, we can use the
+            // `message` directly.
 
-            // Update the number of transmission timer expirations.
-            metadata.mTransmissionCount++;
+            mBufferedMessageSet.Dequeue(message);
+            messageCopy = &message;
+        }
 
-            if (metadata.mTransmissionCount < timerExpirations)
+        if (messageCopy != nullptr)
+        {
+            if (metadata.mTransmissionCount > 1)
             {
-                Message *messageCopy = message.Clone(message.GetLength() - sizeof(Metadata));
+                // Mark all transmissions after the first one as "MPL
+                // retx". This is used to decide whether to send this
+                // message to the device's sleepy children.
 
-                if (messageCopy != nullptr)
-                {
-                    if (metadata.mTransmissionCount > 1)
-                    {
-                        messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
-                    }
-
-                    messageCopy->SetLoopbackToHostAllowed(true);
-                    messageCopy->SetOrigin(Message::kOriginHostTrusted);
-                    Get<Ip6>().EnqueueDatagram(*messageCopy);
-                }
-
-                metadata.GenerateNextTransmissionTime(now, kDataMessageInterval);
-                metadata.UpdateIn(message);
-
-                nextTime = Min(nextTime, metadata.mTransmissionTime);
+                messageCopy->SetSubType(Message::kSubTypeMplRetransmission);
             }
-            else
-            {
-                mBufferedMessageSet.Dequeue(message);
 
-                if (metadata.mTransmissionCount == timerExpirations)
-                {
-                    if (metadata.mTransmissionCount > 1)
-                    {
-                        message.SetSubType(Message::kSubTypeMplRetransmission);
-                    }
-
-                    metadata.RemoveFrom(message);
-                    message.SetLoopbackToHostAllowed(true);
-                    message.SetOrigin(Message::kOriginHostTrusted);
-                    Get<Ip6>().EnqueueDatagram(message);
-                }
-                else
-                {
-                    // Stop retransmitting if the number of timer expirations is already exceeded.
-                    message.Free();
-                }
-            }
+            metadata.RemoveFrom(*messageCopy);
+            messageCopy->SetLoopbackToHostAllowed(true);
+            messageCopy->SetOrigin(Message::kOriginHostTrusted);
+            Get<Ip6>().EnqueueDatagram(*messageCopy);
         }
     }
 
