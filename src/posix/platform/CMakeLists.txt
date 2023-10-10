@@ -77,10 +77,24 @@ if (OT_POSIX_SECURE_SETTINGS)
     )
 endif()
 
-set(OT_POSIX_CONFIG_RCP_BUS "" CACHE STRING "RCP bus type")
-if(OT_POSIX_CONFIG_RCP_BUS)
+option(OT_POSIX_RCP_HDLC_BUS "enable RCP HDLC bus" OFF)
+if(OT_POSIX_RCP_HDLC_BUS)
     target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_${OT_POSIX_CONFIG_RCP_BUS}"
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE=1"
+    )
+endif()
+
+option(OT_POSIX_RCP_SPI_BUS "enable RCP SPI bus" OFF)
+if(OT_POSIX_RCP_SPI_BUS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE=1"
+    )
+endif()
+
+option(OT_POSIX_RCP_VENDOR_BUS "enable RCP vendor bus" OFF)
+if(OT_POSIX_RCP_VENDOR_BUS)
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE=1"
     )
 endif()
 

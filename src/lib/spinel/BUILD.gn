@@ -34,8 +34,9 @@ declare_args() {
 
 spinel_sources = [
   "openthread-spinel-config.h",
+  "multi_frame_buffer.hpp",
+  "radio_spinel.cpp",
   "radio_spinel.hpp",
-  "radio_spinel_impl.hpp",
   "spi_frame.hpp",
   "spinel.c",
   "spinel_buffer.cpp",
