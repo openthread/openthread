@@ -228,9 +228,10 @@ exit:
  * Done
  * @endcode
  * @cparam udp send [@ca{ip} @ca{port}] [@ca{type}] @ca{value}
- * `ip` and `port` are optional as a pair, but if you specify one you must
+ * The `ip` and `port` are optional as a pair, but if you specify one you must
  * specify the other. If `ip` and `port` are not specified, the socket peer address
  * is used from `udp connect`.
+ *
  * Definitions:
  * - `ip`: Destination address. This address can be either an IPv4 or IPv6 address,
  *   An IPv4 address gets synthesized to an IPv6 address with the preferred
