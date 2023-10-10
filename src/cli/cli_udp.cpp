@@ -228,7 +228,10 @@ exit:
  * Done
  * @endcode
  * @cparam udp send [@ca{ip} @ca{port}] [@ca{type}] @ca{value}
- * Parameter definitions:
+ * `ip` and `port` are optional as a pair, but if you specify one you must
+ * specify the other. If `ip` and `port` are not specified, the socket peer address
+ * is used from `udp connect`.
+ * Definitions:
  * - `ip`: Destination address. This address can be either an IPv4 or IPv6 address,
  *   An IPv4 address gets synthesized to an IPv6 address with the preferred
  *   NAT64 prefix from the network data. (If the preferred NAT64 prefix
@@ -239,9 +242,6 @@ exit:
  *   is entered, the payload in the `value` parameter is also treated as text.
  *   - `-s`: Auto-generated payload with the specified length given in the `value` parameter.
  *   - `-x`: Binary data in hexadecimal representation given in the `value` parameter.
- * `ip` and `port` are optional as a pair, but if you specify one you must
- * specify the other. If `ip` and `port` are not specified, the socket peer address
- * is used from `udp connect`.
  * @par
  * Sends a UDP message using the socket.
  * @csa{udp open}
