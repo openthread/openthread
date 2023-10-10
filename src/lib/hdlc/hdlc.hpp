@@ -140,6 +140,10 @@ public:
      */
     typedef void (*FrameHandler)(void *aContext, otError aError);
 
+    /**
+     * Initializes the object.
+     *
+     */
     Decoder(void);
 
     /**
