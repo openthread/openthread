@@ -71,4 +71,7 @@ send "panid\n"
 expect "0xffff"
 expect_line "Done"
 
+send "reset bootloader\n"
+expect_line "Error 27: NotCapable"
+
 dispose_all
