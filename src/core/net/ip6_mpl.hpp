@@ -194,7 +194,6 @@ public:
      * @param[in]  aMessage    A reference to the message.
      * @param[in]  aOffset     The offset in @p aMessage to read the MPL option.
      * @param[in]  aAddress    A reference to the IPv6 Source Address.
-     * @param[in]  aIsOutbound TRUE if this message was locally generated, FALSE otherwise.
      * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
      *                         go through the receiving process again, untouched otherwise.
      *
@@ -202,7 +201,7 @@ public:
      * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
      *
      */
-    Error ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool aIsOutbound, bool &aReceive);
+    Error ProcessOption(Message &aMessage, uint16_t aOffset, const Address &aAddress, bool &aReceive);
 
 #if OPENTHREAD_FTD
     /**
@@ -254,7 +253,7 @@ private:
 
     uint8_t DetermineMaxRetransmissions(void) const;
     void    HandleRetransmissionTimer(void);
-    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence, bool aIsOutbound);
+    void    AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence);
 
     using RetxTimer = TimerMilliIn<Mpl, &Mpl::HandleRetransmissionTimer>;
 

@@ -390,7 +390,7 @@ private:
     Error AddTunneledMplOption(Message &aMessage, Header &aHeader);
     Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
-    Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
+    Error HandleOptions(Message &aMessage, Header &aHeader, bool &aReceive);
     Error HandlePayload(Header            &aIp6Header,
                         Message           &aMessage,
                         MessageInfo       &aMessageInfo,
