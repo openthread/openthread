@@ -344,7 +344,7 @@ template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
         OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
     /**
-     * @cli udp linksecurity(enable,disable)
+     * @cli udp linksecurity (enable,disable)
      * @code
      * udp linksecurity enable
      * Done
