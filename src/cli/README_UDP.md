@@ -169,7 +169,7 @@ The address can be an IPv4 address, which will be synthesized to an IPv6 address
 > Note: The command will return `InvalidState` when the preferred NAT64 prefix is unavailable.
 
 ```bash
-> udp send 172.17.0.1 1234
+> udp send 172.17.0.1 1234 hello
 Sending to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
 Done
 ```
