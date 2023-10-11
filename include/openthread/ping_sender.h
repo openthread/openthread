@@ -120,6 +120,7 @@ typedef struct otPingSenderConfig
                                   ///< Zero to use default.
     uint8_t mHopLimit;            ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
     bool    mAllowZeroHopLimit;   ///< Indicates whether hop limit is zero.
+    bool    mMulticastLoop;       ///< Allow looping back pings to multicast address that device is subscribed to.
 } otPingSenderConfig;
 
 /**

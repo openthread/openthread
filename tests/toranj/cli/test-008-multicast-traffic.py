@@ -53,8 +53,17 @@ import time
 # - r1  =>> mesh-local all-thread (two hops). Expected response from [r2, r3, fed].
 # - r1  =>> mesh-local all-thread (three hops). Expected response from [r2, r3, r4, fed].
 # - r1  =>> mesh-local all-thread (four hops). Expected response from [r2, r3, r4, fed, sed].
-# - r1  =>> specific address (on r2 and sed). Expected to receive on [r2, sed].
 #
+# - r1  =>> realm-local scope mcast addr (on r2 and sed). Expected to receive on [r2, sed].
+# - r2  =>> realm-local scope mcast addr (on r2 and sed) without `multicast-loop`. Expected to receive from [sed].
+# - r2  =>> realm-local scope mcast addr (on r2 and sed) with `multicast-loop`. Expected to receive from [r2, sed].
+# - sed =>> realm-local scope mcast addr (on r2 and sed) without `multicast-loop`. Expected to receive from [r2].
+# - sed =>> realm-local scope mcast addr (on r2 and sed) with `multicast-loop`. Expected to receive from [r2, sed].
+#
+# - r3  =>> site-local mcast addr (on r1, r2, sed). Expected to receive from [r1, r2, sed].
+# - r1  =>> site-local mcast addr (on r1, r2, sed) with `multicast-loop`. Expected to receive from [r1, r2, sed].
+# - r1  =>> site-local mcast addr (on r1, r2, sed) without `multicast-loop`. Expected to receive from [r2, sed].
+# - sed =>> site-local mcast addr (on r1, r2, sed). Expected to receive from [r1, r2].
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
@@ -223,7 +232,7 @@ for node in [r2, r3, r4, fed, sed]:
     verify(any(ml_addr in line for line in outputs))
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Subscribe to a specific multicast address on r2 and sed
+# Subscribe to a realm-local scope multicast address on r2 and sed
 
 mcast_addr = 'ff03:0:0:0:0:0:0:114'
 r2.add_ip_maddr(mcast_addr)
@@ -234,9 +243,90 @@ verify(any(mcast_addr in maddr for maddr in maddrs))
 maddrs = sed.get_ip_maddrs()
 verify(any(mcast_addr in maddr for maddr in maddrs))
 
+# r1  =>> realm-local scope mcast addr (on r2 and sed). Expected to receive on [r2, sed].
+
 outputs = r1.cli('ping', mcast_addr)
 verify(len(outputs) == 3)
 for node in [r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# r2  =>> realm-local scope mcast addr (on r2 and sed) without `multicast-loop`. Expected to receive from [sed].
+
+outputs = r2.cli('ping', mcast_addr)
+verify(len(outputs) == 2)
+for node in [sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# r2  =>> realm-local scope mcast addr (on r2 and sed) with `multicast-loop`. Expected to receive from [r2, sed].
+
+outputs = r2.cli('ping', '-m', mcast_addr)
+verify(len(outputs) == 3)
+for node in [r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# sed  =>> realm-local scope mcast addr (on r2 and sed) without `multicast-loop`. Expected to receive from [r2].
+
+outputs = sed.cli('ping', mcast_addr)
+verify(len(outputs) == 2)
+for node in [r2]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# sed  =>> realm-local scope mcast addr (on r2 and sed) with `multicast-loop`. Expected to receive from [r2, sed].
+
+outputs = sed.cli('ping', '-m', mcast_addr)
+verify(len(outputs) == 3)
+for node in [r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Subscribe to a larger than realm-local scope (site-local) multicast address on r1, r2, and sed
+
+mcast_addr = 'ff05:0:0:0:0:0:0:abcd'
+r1.add_ip_maddr(mcast_addr)
+r2.add_ip_maddr(mcast_addr)
+sed.add_ip_maddr(mcast_addr)
+time.sleep(1)
+maddrs = r1.get_ip_maddrs()
+verify(any(mcast_addr in maddr for maddr in maddrs))
+maddrs = r2.get_ip_maddrs()
+verify(any(mcast_addr in maddr for maddr in maddrs))
+maddrs = sed.get_ip_maddrs()
+verify(any(mcast_addr in maddr for maddr in maddrs))
+
+# r3  =>> site-local mcast addr (on r1, r2, sed) with `multicast-loop`. Expected to receive from [r1, r2, sed].
+
+outputs = r3.cli('ping', '-m', mcast_addr)
+verify(len(outputs) == 4)
+for node in [r1, r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# r1  =>> site-local mcast addr (on r1, r2, sed) with `multicast-loop`. Expected to receive from [r1, r2, sed].
+
+outputs = r1.cli('ping', '-m', mcast_addr)
+verify(len(outputs) == 4)
+for node in [r1, r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# r1  =>> site-local mcast addr (on r1, r2, sed) without `multicast-loop`. Expected to receive from [r2, sed].
+
+outputs = r1.cli('ping', mcast_addr)
+verify(len(outputs) == 3)
+for node in [r2, sed]:
+    ml_addr = node.get_mleid_ip_addr()
+    verify(any(ml_addr in line for line in outputs))
+
+# sed  =>> site-local mcast addr (on r1, r2, sed) without `multicast-loop`. Expected to receive from [r1, r2].
+
+outputs = sed.cli('ping', mcast_addr)
+verify(len(outputs) >= 3)
+for node in [r1, r2]:
     ml_addr = node.get_mleid_ip_addr()
     verify(any(ml_addr in line for line in outputs))
 

@@ -6019,13 +6019,16 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
  * 1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
  * Done
  * @endcode
- * @cparam ping [@ca{async}] [@ca{-I source}] @ca{ipaddrc} [@ca{size}] [@ca{count}] <!--
+ * @cparam ping [@ca{async}] [@ca{-I source}] [@ca{-m}] @ca{ipaddrc} [@ca{size}] [@ca{count}] <!--
  * -->          [@ca{interval}] [@ca{hoplimit}] [@ca{timeout}]
  * @par
  * Send an ICMPv6 Echo Request.
  * @par
  * The address can be an IPv4 address, which will be synthesized to an IPv6 address using the preferred NAT64 prefix
  * from the network data.
+ * @par
+ * The optional `-m` flag sets the multicast loop flag, which allows looping back pings to multicast addresses that the
+ * device itself is subscribed to.
  * @par
  * Note: The command will return InvalidState when the preferred NAT64 prefix is unavailable.
  * @sa otPingSenderPing
@@ -6083,6 +6086,12 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
 #endif
 
         aArgs += 2;
+    }
+
+    if (aArgs[0] == "-m")
+    {
+        config.mMulticastLoop = true;
+        aArgs++;
     }
 
     SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64SynthesizedAddress));

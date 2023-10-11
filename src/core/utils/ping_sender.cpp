@@ -134,6 +134,7 @@ void PingSender::SendPing(void)
     messageInfo.SetPeerAddr(mConfig.GetDestination());
     messageInfo.mHopLimit          = mConfig.mHopLimit;
     messageInfo.mAllowZeroHopLimit = mConfig.mAllowZeroHopLimit;
+    messageInfo.mMulticastLoop     = mConfig.mMulticastLoop;
 
     message = Get<Ip6::Icmp>().NewMessage();
     VerifyOrExit(message != nullptr);
