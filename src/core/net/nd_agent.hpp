@@ -66,12 +66,6 @@ public:
      */
     void UpdateService(void);
 
-    /**
-     * Updates the prefix of the Neighbor Discovery Agent Anycast Locator.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
 private:
     void FreeAloc(void) { mAloc.mNext = &mAloc; }
     bool IsAlocInUse(void) const { return mAloc.mNext != &mAloc; }

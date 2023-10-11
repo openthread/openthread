@@ -486,12 +486,6 @@ public:
      */
     PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
 
-    /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
 private:
     static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
     static constexpr uint8_t  kPetitionRetryCount   = 2;  // COMM_PET_RETRY_COUNT

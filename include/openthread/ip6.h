@@ -188,6 +188,7 @@ typedef struct otNetifAddress
     bool         mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
     unsigned int mScopeOverride : 4;      ///< The IPv6 scope of this address.
     bool         mRloc : 1;               ///< TRUE if the address is an RLOC, FALSE otherwise.
+    bool         mMeshLocal : 1;          ///< TRUE if the address is mesh-local, FALSE otherwise.
     const struct otNetifAddress *mNext;   ///< A pointer to the next network interface address.
 } otNetifAddress;
 

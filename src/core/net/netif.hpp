@@ -123,10 +123,10 @@ public:
 
         /**
          * Clears and initializes the unicast address as a valid (but not preferred), thread-origin,
-         * realm-local scope (overridden) address with 64-bit prefix length.
+         * mesh-local address using the realm-local scope (overridden) address with 64-bit prefix length.
          *
          */
-        void InitAsThreadOriginRealmLocalScope(void);
+        void InitAsThreadOriginMeshLocal(void);
 
         /**
          * Clears and initializes the unicast address as a valid (but not preferred), thread-origin, global
@@ -645,6 +645,14 @@ public:
      *
      */
     bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddress::Iterator(*this).IsDone(); }
+
+    /**
+     * Applies the new mesh local prefix.
+     *
+     * Updates all mesh-local unicast addresses and prefix-based multicast addresses of the network interface.
+     *
+     */
+    void ApplyNewMeshLocalPrefix(void);
 
 protected:
     /**

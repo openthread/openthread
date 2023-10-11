@@ -365,6 +365,11 @@ void Netif::UnsubscribeAllExternalMulticastAddresses(void)
 
 void Netif::AddUnicastAddress(UnicastAddress &aAddress)
 {
+    if (aAddress.mMeshLocal)
+    {
+        aAddress.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+    }
+
     SuccessOrExit(mUnicastAddresses.Add(aAddress));
     SignalUnicastAddressChange(kAddressAdded, aAddress);
 
@@ -438,8 +443,10 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
     entry = mExtUnicastAddressPool.Allocate();
     VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
-    *entry       = aAddress;
-    entry->mRloc = false;
+    *entry            = aAddress;
+    entry->mRloc      = false;
+    entry->mMeshLocal = false;
+
     mUnicastAddresses.Push(*entry);
     SignalUnicastAddressChange(kAddressAdded, *entry);
 
@@ -490,6 +497,29 @@ bool Netif::IsUnicastAddressExternal(const UnicastAddress &aAddress) const
     return mExtUnicastAddressPool.IsPoolEntry(aAddress);
 }
 
+void Netif::ApplyNewMeshLocalPrefix(void)
+{
+    for (UnicastAddress &address : mUnicastAddresses)
+    {
+        if (address.mMeshLocal)
+        {
+            SignalUnicastAddressChange(kAddressRemoved, address);
+            address.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+            SignalUnicastAddressChange(kAddressAdded, address);
+        }
+    }
+
+    for (MulticastAddress &address : mMulticastAddresses)
+    {
+        if (Get<Mle::Mle>().IsMulticastAddressMeshLocalPrefixBased(address))
+        {
+            SignalMulticastAddressChange(kAddressRemoved, address, kOriginThread);
+            address.GetAddress().SetMulticastNetworkPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
+            SignalMulticastAddressChange(kAddressAdded, address, kOriginThread);
+        }
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // Netif::UnicastAddress
 
@@ -502,10 +532,11 @@ void Netif::UnicastAddress::InitAsThreadOrigin(bool aPreferred)
     mValid         = true;
 }
 
-void Netif::UnicastAddress::InitAsThreadOriginRealmLocalScope(void)
+void Netif::UnicastAddress::InitAsThreadOriginMeshLocal(void)
 {
     InitAsThreadOrigin();
     SetScopeOverride(Address::kRealmLocalScope);
+    mMeshLocal = true;
 }
 
 void Netif::UnicastAddress::InitAsThreadOriginGlobalScope(void)

@@ -80,12 +80,6 @@ public:
      */
     Error UpdateService(void);
 
-    /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
 private:
     class PrefixAgent
     {
@@ -173,6 +167,7 @@ private:
 
             mAloc.InitAsThreadOrigin();
             mAloc.GetAddress().SetToAnycastLocator(aMeshLocalPrefix, (Ip6::Address::kAloc16Mask << 8) + aContextId);
+            mAloc.mMeshLocal = true;
         }
 
     private:

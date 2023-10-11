@@ -485,21 +485,6 @@ Error Server::AppendRapidCommit(Message &aMessage)
     return aMessage.Append(option);
 }
 
-void Server::ApplyMeshLocalPrefix(void)
-{
-    for (PrefixAgent &prefixAgent : mPrefixAgents)
-    {
-        if (prefixAgent.IsValid())
-        {
-            PrefixAgent *entry = &prefixAgent;
-
-            Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc());
-            entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc());
-        }
-    }
-}
-
 } // namespace Dhcp6
 } // namespace ot
 
