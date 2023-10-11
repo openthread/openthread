@@ -445,7 +445,7 @@ void Mpl::HandleRetransmissionTimer(void)
             }
 
             metadata.RemoveFrom(*messageCopy);
-            messageCopy->SetLoopbackToHostAllowed(true);
+            messageCopy->SetLoopbackToHostAllowed(false);
             messageCopy->SetOrigin(Message::kOriginHostTrusted);
             Get<Ip6>().EnqueueDatagram(*messageCopy);
         }
