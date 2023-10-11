@@ -74,3 +74,11 @@
 #ifndef OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
 #define OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE 0
 #endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME
+ *
+ * Define the Thread default network interface name.
+ *
+ */
+#define OPENTHREAD_POSIX_CONFIG_THREAD_NETIF_DEFAULT_NAME "thread-wpan"
