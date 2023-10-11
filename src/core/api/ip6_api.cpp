@@ -75,6 +75,11 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
     return AsCoreType(aInstance).Get<ThreadNetif>().GetUnicastAddresses().GetHead();
 }
 
+bool otIp6HasUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
+{
+    return AsCoreType(aInstance).Get<ThreadNetif>().HasUnicastAddress(AsCoreType(aAddress));
+}
+
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
 {
     return AsCoreType(aInstance).Get<ThreadNetif>().AddExternalUnicastAddress(AsCoreType(aAddress));

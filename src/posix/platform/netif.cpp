@@ -291,26 +291,6 @@ static bool sIsSyncingState = false;
 
 #define OPENTHREAD_POSIX_LOG_TUN_PACKETS 0
 
-#if !defined(__linux__)
-static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddress *netAddr)
-{
-    const otNetifAddress *address = otIp6GetUnicastAddresses(aInstance);
-
-    while (address != nullptr)
-    {
-        if (memcmp(address->mAddress.mFields.m8, netAddr->mAddress.mFields.m8, sizeof(address->mAddress.mFields.m8)) ==
-            0)
-        {
-            return true;
-        }
-
-        address = address->mNext;
-    }
-
-    return false;
-}
-#endif
-
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -1435,14 +1415,11 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             if (!addr.IsMulticast())
             {
                 otNetifAddress netAddr;
-                bool           subscribed;
 
                 netAddr.mAddress      = addr;
                 netAddr.mPrefixLength = NetmaskToPrefixLength(&netmask);
 
-                subscribed = UnicastAddressIsSubscribed(aInstance, &netAddr);
-
-                if (subscribed)
+                if (otIp6HasUnicastAddress(aInstance, &addr))
                 {
                     logAddrEvent(/* isAdd */ true, addr, OT_ERROR_ALREADY);
                     error = OT_ERROR_NONE;
