@@ -1145,7 +1145,6 @@ Error Ip6::HandleDatagram(Message &aMessage, const void *aLinkMessageInfo, bool 
     bool        shouldFreeMessage;
     uint8_t     nextHeader;
 
-start:
     receive           = false;
     forwardThread     = false;
     forwardHost       = false;
@@ -1229,10 +1228,34 @@ start:
 
     if (receive && (nextHeader == kProtoIp6))
     {
-        // Remove encapsulating header and start over.
-        aMessage.RemoveHeader(aMessage.GetOffset());
-        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, aMessage);
-        goto start;
+        // Process the embedded IPv6 message in an IPv6 tunnel message.
+        // If we need to `forwardThread` we create a copy by cloning
+        // the message, otherwise we take ownership of `aMessage`
+        // itself and use it directly. The encapsulating header is
+        // then removed before processing the embedded message.
+
+        Message *messageCopy;
+
+        if (forwardThread)
+        {
+            messageCopy = aMessage.Clone();
+            VerifyOrExit(messageCopy != nullptr, error = kErrorNoBufs);
+            messageCopy->SetMulticastLoop(aMessage.GetMulticastLoop());
+        }
+        else
+        {
+            messageCopy       = &aMessage;
+            shouldFreeMessage = false;
+        }
+
+        messageCopy->RemoveHeader(messageCopy->GetOffset());
+
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, *messageCopy);
+
+        IgnoreError(HandleDatagram(*messageCopy, aLinkMessageInfo, aIsReassembled));
+
+        receive     = false;
+        forwardHost = false;
     }
 
     if ((forwardHost || receive) && !aIsReassembled)
