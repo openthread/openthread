@@ -41,13 +41,13 @@ namespace Ip6 {
 //---------------------------------------------------------------------------------------------------------------------
 // Header
 
-Error Header::ParseFrom(const Message &aMessage)
+Error Header::ParseFrom(const Message &aMessage, uint16_t aOffset)
 {
     Error error = kErrorParse;
 
-    SuccessOrExit(aMessage.Read(0, *this));
+    SuccessOrExit(aMessage.Read(aOffset, *this));
     VerifyOrExit(IsValid());
-    VerifyOrExit(sizeof(Header) + GetPayloadLength() == aMessage.GetLength());
+    VerifyOrExit((aOffset + sizeof(Header) + GetPayloadLength()) == (aMessage.GetLength()));
 
     error = kErrorNone;
 

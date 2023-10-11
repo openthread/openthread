@@ -331,7 +331,7 @@ public:
      * @retval kErrorParse  Malformed IPv6 header or message (e.g., message does not contained expected payload length).
      *
      */
-    Error ParseFrom(const Message &aMessage);
+    Error ParseFrom(const Message &aMessage, uint16_t aOffset = 0);
 
 private:
     // IPv6 header `mVerTcFlow` field:

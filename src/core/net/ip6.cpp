@@ -1160,8 +1160,7 @@ Error Ip6::HandleDatagram(Message &aMessage, const void *aLinkMessageInfo, bool 
 
         forwardHost = header.GetDestination().IsMulticastLargerThanRealmLocal();
 
-        if ((aMessage.IsOriginThreadNetif() || aMessage.GetMulticastLoop()) &&
-            Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
+        if (ShouldReceiveMulticastMessage(aMessage, header))
         {
             receive = true;
         }
@@ -1502,6 +1501,31 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
     }
 
     return error;
+}
+
+bool Ip6::ShouldReceiveMulticastMessage(const Message &aMessage, const Header &aHeader) const
+{
+    constexpr uint16_t tunneledHeaderOffset = sizeof(Header) + sizeof(HopByHopHeader) + sizeof(MplOption);
+
+    const Address &destination = aHeader.GetDestination();
+    bool           tunneled    = false;
+    bool           result      = false;
+    Header         tunneledHeader;
+
+    if (destination.IsRealmLocalAllMplForwarders() && aHeader.GetNextHeader() == kProtoHopOpts)
+    {
+        SuccessOrExit(tunneledHeader.ParseFrom(aMessage, tunneledHeaderOffset));
+        tunneled = true;
+    }
+
+    if ((aMessage.IsOriginThreadNetif() || aMessage.GetMulticastLoop()) &&
+        Get<ThreadNetif>().IsMulticastSubscribed(tunneled ? tunneledHeader.GetDestination() : aHeader.GetDestination()))
+    {
+        result = true;
+    }
+
+exit:
+    return result;
 }
 
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE

@@ -398,6 +398,7 @@ private:
                         Message::Ownership aMessageOwnership);
     bool  IsOnLink(const Address &aAddress) const;
     Error RouteLookup(const Address &aSource, const Address &aDestination) const;
+    bool  ShouldReceiveMulticastMessage(const Message &aMessage, const Header &aHeader) const;
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
     void UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound);
 #endif
