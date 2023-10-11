@@ -387,7 +387,7 @@ private:
     void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
 #endif
     Error AddMplOption(Message &aMessage, Header &aHeader);
-    Error AddTunneledMplOption(Message &aMessage, Header &aHeader);
+    Error PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader);
     Error InsertMplOption(Message &aMessage, Header &aHeader);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, Header &aHeader, bool &aReceive);
