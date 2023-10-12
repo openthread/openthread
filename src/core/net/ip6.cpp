@@ -200,11 +200,28 @@ exit:
     return error;
 }
 
-Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader)
+Error Ip6::PrepareMulticastToLargerThanRealmLocal(Message &aMessage, const Header &aHeader)
 {
     Error          error = kErrorNone;
     Header         tunnelHeader;
     const Address *source;
+
+#if OPENTHREAD_FTD
+    if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
+        Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
+    {
+        Message *messageCopy = aMessage.Clone();
+
+        if (messageCopy != nullptr)
+        {
+            EnqueueDatagram(*messageCopy);
+        }
+        else
+        {
+            LogWarn("Failed to clone mcast message for indirect tx to sleepy children");
+        }
+    }
+#endif
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     tunnelHeader.InitVersionTrafficClassFlow();
@@ -280,25 +297,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader)
     }
     else
     {
-#if OPENTHREAD_FTD
-        if (aHeader.GetDestination().IsMulticastLargerThanRealmLocal() &&
-            Get<ChildTable>().HasSleepyChildWithAddress(aHeader.GetDestination()))
-        {
-            Message *messageCopy = nullptr;
-
-            if ((messageCopy = aMessage.Clone()) != nullptr)
-            {
-                IgnoreError(HandleDatagram(*messageCopy));
-                LogInfo("Message copy for indirect transmission to sleepy children");
-            }
-            else
-            {
-                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
-            }
-        }
-#endif
-
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, aHeader));
+        SuccessOrExit(error = PrepareMulticastToLargerThanRealmLocal(aMessage, aHeader));
     }
 
 exit:
@@ -469,24 +468,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     if (aMessageInfo.GetPeerAddr().IsMulticastLargerThanRealmLocal())
     {
-#if OPENTHREAD_FTD
-        if (Get<ChildTable>().HasSleepyChildWithAddress(header.GetDestination()))
-        {
-            Message *messageCopy = aMessage.Clone();
-
-            if (messageCopy != nullptr)
-            {
-                LogInfo("Message copy for indirect transmission to sleepy children");
-                EnqueueDatagram(*messageCopy);
-            }
-            else
-            {
-                LogWarn("No enough buffer for message copy for indirect transmission to sleepy children");
-            }
-        }
-#endif
-
-        SuccessOrExit(error = AddTunneledMplOption(aMessage, header));
+        SuccessOrExit(error = PrepareMulticastToLargerThanRealmLocal(aMessage, header));
     }
 
     aMessage.SetMulticastLoop(aMessageInfo.GetMulticastLoop());
