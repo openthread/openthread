@@ -212,6 +212,28 @@ bool otMessageIsLoopbackToHostAllowed(const otMessage *aMessage);
 void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackToHost);
 
 /**
+ * Indicates whether the given message may be looped back in a case of a multicast destination address.
+ *
+ * If @p aMessage is used along with an `otMessageInfo`, the `mMulticastLoop` field from `otMessageInfo` structure
+ * takes precedence and will be used instead of the the value set on @p aMessage.
+ *
+ * This API is mainly intended for use along with `otIp6Send()` which expects an already prepared IPv6 message.
+ *
+ * @param[in]  aMessage A pointer to the message.
+ *
+ */
+bool otMessageIsMulticastLoopEnabled(otMessage *aMessage);
+
+/**
+ * Controls whether the given message may be looped back in a case of a multicast destination address.
+ *
+ * @param[in]  aMessage  A pointer to the message.
+ * @param[in]  aEnabled  The configuration value.
+ *
+ */
+void otMessageSetMulticastLoopEnabled(otMessage *aMessage, bool aEnabled);
+
+/**
  * Gets the message origin.
  *
  * @param[in]  aMessage  A pointer to a message buffer.

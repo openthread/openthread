@@ -62,6 +62,13 @@ void otMessageSetLoopbackToHostAllowed(otMessage *aMessage, bool aAllowLoopbackT
     return AsCoreType(aMessage).SetLoopbackToHostAllowed(aAllowLoopbackToHost);
 }
 
+bool otMessageIsMulticastLoopEnabled(otMessage *aMessage) { return AsCoreType(aMessage).GetMulticastLoop(); }
+
+void otMessageSetMulticastLoopEnabled(otMessage *aMessage, bool aEnabled)
+{
+    AsCoreType(aMessage).SetMulticastLoop(aEnabled);
+}
+
 otMessageOrigin otMessageGetOrigin(const otMessage *aMessage) { return MapEnum(AsCoreType(aMessage).GetOrigin()); }
 
 void otMessageSetOrigin(otMessage *aMessage, otMessageOrigin aOrigin)
