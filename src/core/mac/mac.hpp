@@ -725,7 +725,8 @@ public:
      *
      * The radio region format is the 2-bytes ascii representation of the ISO 3166 alpha-2 code.
      *
-     * @param[in]  aRegionCode  The radio region.
+     * @param[in]  aRegionCode  The radio region code. The `aRegionCode >> 8` is first ascii char
+     *                          and the `aRegionCode & 0xff` is the second ascii char.
      *
      * @retval  kErrorFailed          Other platform specific errors.
      * @retval  kErrorNone            Successfully set region code.
