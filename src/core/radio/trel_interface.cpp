@@ -363,7 +363,7 @@ Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
     Error error = kErrorNone;
     Peer *peerEntry;
 
-    VerifyOrExit(mInitialized && mEnabled, error = kErrorAbort);
+    VerifyOrExit(mInitialized && mEnabled, error = kErrorInvalidState);
     VerifyOrExit(!mFiltered);
 
     switch (aPacket.GetHeader().GetType())
