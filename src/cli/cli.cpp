@@ -6068,23 +6068,8 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(config.mSource));
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {
-            bool                  valid        = false;
-            const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(GetInstancePtr());
-
-            for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
-            {
-                if (otIp6IsAddressEqual(&addr->mAddress, &config.mSource))
-                {
-                    valid = true;
-                    break;
-                }
-            }
-
-            VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
-        }
+        VerifyOrExit(otIp6HasUnicastAddress(GetInstancePtr(), &config.mSource), error = OT_ERROR_INVALID_ARGS);
 #endif
-
         aArgs += 2;
     }
 

@@ -424,7 +424,7 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
 
     if (entry != nullptr)
     {
-        VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorAlready);
+        VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorInvalidArgs);
 
         entry->mPrefixLength  = aAddress.mPrefixLength;
         entry->mAddressOrigin = aAddress.mAddressOrigin;
