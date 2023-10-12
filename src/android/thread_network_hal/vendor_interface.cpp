@@ -51,17 +51,15 @@ using ot::Spinel::SpinelInterface;
 
 HalInterface *sHalInterface = nullptr;
 
-VendorInterface::VendorInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                                 void                                 *aCallbackContext,
-                                 SpinelInterface::RxFrameBuffer       &aFrameBuffer)
+VendorInterface::VendorInterface(const Url::Url &aRadioUrl)
 {
-    sHalInterface = new HalInterface(aCallback, aCallbackContext, aFrameBuffer);
+    sHalInterface = new HalInterface(aRadioUrl);
     assert(sHalInterface != nullptr);
 }
 
-otError VendorInterface::Init(const Url::Url &aRadioUrl)
+otError VendorInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer)
 {
-    return sHalInterface->Init(aRadioUrl);
+    return sHalInterface->Init(aCallback, aCallbackContext, aFrameBuffer);
 }
 
 VendorInterface::~VendorInterface(void)
@@ -71,45 +69,24 @@ VendorInterface::~VendorInterface(void)
     sHalInterface = nullptr;
 }
 
-void VendorInterface::Deinit(void)
-{
-    sHalInterface->Deinit();
-}
+void VendorInterface::Deinit(void) { sHalInterface->Deinit(); }
 
-uint32_t VendorInterface::GetBusSpeed(void) const
-{
-    return sHalInterface->GetBusSpeed();
-}
+uint32_t VendorInterface::GetBusSpeed(void) const { return sHalInterface->GetBusSpeed(); }
 
-void VendorInterface::UpdateFdSet(void *aMainloopContext)
-{
-    sHalInterface->UpdateFdSet(aMainloopContext);
-}
+void VendorInterface::UpdateFdSet(void *aMainloopContext) { sHalInterface->UpdateFdSet(aMainloopContext); }
 
-void VendorInterface::Process(const void *aMainloopContext)
-{
-    sHalInterface->Process(aMainloopContext);
-}
+void VendorInterface::Process(const void *aMainloopContext) { sHalInterface->Process(aMainloopContext); }
 
-otError VendorInterface::WaitForFrame(uint64_t aTimeoutUs)
-{
-    return sHalInterface->WaitForFrame(aTimeoutUs);
-}
+otError VendorInterface::WaitForFrame(uint64_t aTimeoutUs) { return sHalInterface->WaitForFrame(aTimeoutUs); }
 
 otError VendorInterface::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
     return sHalInterface->SendFrame(aFrame, aLength);
 }
 
-otError VendorInterface::HardwareReset(void)
-{
-    return sHalInterface->HardwareReset();
-}
+otError VendorInterface::HardwareReset(void) { return sHalInterface->HardwareReset(); }
 
-const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const
-{
-    return nullptr;
-}
+const otRcpInterfaceMetrics *VendorInterface::GetRcpInterfaceMetrics(void) const { return nullptr; }
 } // namespace Posix
 } // namespace ot
 

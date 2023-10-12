@@ -85,6 +85,9 @@ cc_defaults {
         "-DPACKAGE_TARNAME=\"openthread\"",
         "-DPACKAGE_URL=\"http://github.com/openthread/openthread\"",
         "-DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"",
+        "-DOPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE=0",
+        "-DOPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE=0",
+        "-DOPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE=1",
     ],
 }
 
@@ -103,13 +106,7 @@ soong_config_module_type {
     module_type: "cc_defaults",
     config_namespace: "openthread",
     bool_variables: ["diag"],
-    variables: ["rcp_bus"],
     properties: ["cflags"],
-}
-
-soong_config_string_variable {
-    name: "rcp_bus",
-    values: ["spi", "uart", "hal"],
 }
 
 ot_config_cc_defaults {
@@ -117,22 +114,6 @@ ot_config_cc_defaults {
     soong_config_variables: {
         diag: {
             cflags: ["-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"],
-        },
-        rcp_bus: {
-            spi: {
-                cflags: ["-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI"]
-            },
-            uart: {
-                cflags: [
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1",
-                ]
-            },
-            conditions_default: {
-                cflags: [
-                    "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_VENDOR",
-                ]
-            },
         },
     },
 }
@@ -557,6 +538,7 @@ cc_library_static {
         "src/android/thread_network_hal/vendor_interface.cpp",
         "src/lib/hdlc/hdlc.cpp",
         "src/lib/platform/exit_code.c",
+        "src/lib/spinel/radio_spinel.cpp",
         "src/lib/spinel/spinel.c",
         "src/lib/spinel/spinel_buffer.cpp",
         "src/lib/spinel/spinel_decoder.cpp",
@@ -816,7 +798,7 @@ cc_library_static {
     ],
 
     cflags: [
-        "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_SPI",
+        "-DOPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE=1",
     ],
 
     srcs: [
@@ -876,6 +858,7 @@ cc_library_static {
     ],
 
     srcs: [
+        "src/lib/spinel/radio_spinel.cpp",
         "src/lib/spinel/spinel.c",
         "src/lib/spinel/spinel_buffer.cpp",
         "src/lib/spinel/spinel_decoder.cpp",
@@ -949,7 +932,7 @@ cc_library_static {
     ],
 
     cflags: [
-        "-DOPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_UART",
+        "-DOPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE=1",
         "-DOPENTHREAD_OSIX_CONFIG_RCP_PTY_ENABLE=1",
     ],
 

@@ -51,40 +51,34 @@ using ::ndk::ScopedAStatus;
 
 using ot::Spinel::SpinelInterface;
 
-HalInterface::HalInterface(SpinelInterface::ReceiveFrameCallback aCallback,
-                           void *                                aCallbackContext,
-                           SpinelInterface::RxFrameBuffer &      aFrameBuffer)
-    : mRxFrameCallback(aCallback)
-    , mRxFrameContext(aCallbackContext)
-    , mRxFrameBuffer(aFrameBuffer)
+HalInterface::HalInterface(const Url::Url &aRadioUrl)
+    : mRxFrameCallback(nullptr)
+    , mRxFrameContext(nullptr)
+    , mRxFrameBuffer(nullptr)
     , mThreadChip(nullptr)
     , mThreadChipCallback(nullptr)
     , mDeathRecipient(AIBinder_DeathRecipient_new(BinderDeathCallback))
     , mBinderFd(-1)
+    , mHalInterfaceId(0)
 {
-    OT_ASSERT(mRxFrameCallback != nullptr);
+    IgnoreError(aRadioUrl.ParseUint8("id", mHalInterfaceId));
 }
 
-otError HalInterface::Init(const Url::Url &aRadioUrl)
+otError HalInterface::Init(SpinelInterface::ReceiveFrameCallback aCallback,
+                           void                                 *aCallbackContext,
+                           SpinelInterface::RxFrameBuffer       &aFrameBuffer)
 {
     static const std::string            kServicePrefix = std::string() + IThreadChip::descriptor + "/chip";
-    uint32_t                            id             = 0;
-    const char *                        value;
+    const char                         *value;
     binder_status_t                     binderStatus;
     ScopedAStatus                       ndkStatus;
     std::shared_ptr<ThreadChipCallback> callback;
-    std::string                         serviceName;
+    std::string                         serviceName = kServicePrefix + std::to_string(mHalInterfaceId);
 
     binderStatus = ABinderProcess_setupPolling(&mBinderFd);
     VerifyOrDie(binderStatus == ::STATUS_OK, OT_EXIT_FAILURE);
     VerifyOrDie(mBinderFd >= 0, OT_EXIT_FAILURE);
 
-    if ((value = aRadioUrl.GetValue("id")) != nullptr)
-    {
-        id = static_cast<uint32_t>(atoi(value));
-    }
-
-    serviceName = kServicePrefix + std::to_string(id);
     otLogInfoPlat("[HAL] Wait for getting the service %s ...", serviceName.c_str());
     mThreadChip = IThreadChip::fromBinder(::ndk::SpAIBinder(AServiceManager_waitForService(serviceName.c_str())));
     VerifyOrDie(mThreadChip != nullptr, OT_EXIT_FAILURE);
@@ -105,6 +99,10 @@ otError HalInterface::Init(const Url::Url &aRadioUrl)
         DieNow(OT_EXIT_FAILURE);
     }
 
+    mRxFrameCallback = aCallback;
+    mRxFrameContext  = aCallbackContext;
+    mRxFrameBuffer   = &aFrameBuffer;
+
     otLogInfoPlat("[HAL] Successfully got the service %s", serviceName.c_str());
 
     return OT_ERROR_NONE;
@@ -118,10 +116,7 @@ void HalInterface::BinderDeathCallback(void *aContext)
     DieNow(OT_EXIT_FAILURE);
 }
 
-HalInterface::~HalInterface(void)
-{
-    Deinit();
-}
+HalInterface::~HalInterface(void) { Deinit(); }
 
 void HalInterface::Deinit(void)
 {
@@ -137,6 +132,10 @@ void HalInterface::Deinit(void)
     {
         close(mBinderFd);
     }
+
+    mRxFrameCallback = nullptr;
+    mRxFrameContext  = nullptr;
+    mRxFrameBuffer   = nullptr;
 }
 
 uint32_t HalInterface::GetBusSpeed(void) const
@@ -235,19 +234,23 @@ void HalInterface::ReceiveFrameCallback(const std::vector<uint8_t> &aFrame)
 {
     otError error = OT_ERROR_NONE;
 
+    VerifyOrExit(mRxFrameBuffer != nullptr, error = OT_ERROR_FAILED);
     VerifyOrExit(aFrame.size() > 0, error = OT_ERROR_FAILED);
 
     for (uint32_t i = 0; i < aFrame.size(); i++)
     {
-        if ((error = mRxFrameBuffer.WriteByte(aFrame[i])) != OT_ERROR_NONE)
+        if ((error = mRxFrameBuffer->WriteByte(aFrame[i])) != OT_ERROR_NONE)
         {
             otLogNotePlat("[HAL] Drop the received spinel frame: %s", otThreadErrorToString(error));
-            mRxFrameBuffer.DiscardFrame();
+            mRxFrameBuffer->DiscardFrame();
             ExitNow();
         }
     }
 
-    mRxFrameCallback(mRxFrameContext);
+    if (mRxFrameCallback != nullptr)
+    {
+        mRxFrameCallback(mRxFrameContext);
+    }
 
 exit:
     return;
