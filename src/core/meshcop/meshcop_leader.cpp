@@ -73,6 +73,8 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
 
     LogInfo("Received %s", UriToString<kUriLeaderPetition>());
 
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
+
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
     SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
 
@@ -151,6 +153,8 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
     StateTlv::State        responseState;
 
     LogInfo("Received %s", UriToString<kUriLeaderKeepAlive>());
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
