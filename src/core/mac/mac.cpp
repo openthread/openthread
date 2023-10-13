@@ -2210,12 +2210,9 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 
 void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const
 {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && OPENTHREAD_CONFIG_MULTI_RADIO
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
     if (aFrame.GetRadioType() == kRadioTypeIeee802154)
-#elif OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (true)
-#else
-    if (false)
 #endif
     {
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
@@ -2224,10 +2221,22 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
         LogInfo("Frame tx attempt %u/%u failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
                 aFrame.ToInfoString().AsCString());
     }
-    else
+#else
+    OT_UNUSED_VARIABLE(aRetryCount);
+    OT_UNUSED_VARIABLE(aWillRetx);
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrame.GetRadioType() == kRadioTypeTrel)
+#endif
     {
-        LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        if (Get<Trel::Interface>().IsEnabled())
+        {
+            LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        }
     }
+#endif
 }
 
 void Mac::LogBeacon(const char *aActionText) const { LogInfo("%s Beacon", aActionText); }
