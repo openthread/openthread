@@ -231,6 +231,7 @@ exit:
 Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
     Error error = kErrorNone;
+
     VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
                  error = kErrorInvalidArgs);
     mDelayTimerMinimal = aDelayTimerMinimal;
@@ -253,13 +254,13 @@ exit:
 
 void Leader::SetEmptyCommissionerData(void)
 {
-    CommissionerSessionIdTlv mCommissionerSessionId;
+    CommissionerSessionIdTlv sessionIdTlv;
 
-    mCommissionerSessionId.Init();
-    mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
+    sessionIdTlv.Init();
+    sessionIdTlv.SetCommissionerSessionId(++mSessionId);
 
-    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
-                                                                sizeof(Tlv) + mCommissionerSessionId.GetLength()));
+    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&sessionIdTlv),
+                                                                sizeof(Tlv) + sessionIdTlv.GetLength()));
 }
 
 void Leader::ResignCommissioner(void)
