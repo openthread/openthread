@@ -1666,7 +1666,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
     aMessage.SetLoopbackToHostAllowed(true);
     aMessage.SetOrigin(Message::kOriginThreadNetif);
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &aLinkInfo);
+    return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage), &aLinkInfo);
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,
@@ -1707,24 +1707,23 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 Error MeshForwarder::SendEmptyMessage(void)
 {
-    Error    error   = kErrorNone;
-    Message *message = nullptr;
+    Error             error = kErrorNone;
+    OwnedPtr<Message> messagePtr;
 
     VerifyOrExit(mEnabled && !Get<Mac::Mac>().GetRxOnWhenIdle() &&
                      Get<Mle::MleRouter>().GetParent().IsStateValidOrRestoring(),
                  error = kErrorInvalidState);
 
-    message = Get<MessagePool>().Allocate(Message::kTypeMacEmptyData);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    messagePtr.Reset(Get<MessagePool>().Allocate(Message::kTypeMacEmptyData));
+    VerifyOrExit(messagePtr != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = SendMessage(*message));
+    SendMessage(messagePtr.PassOwnership());
 
 exit:
-    FreeMessageOnError(message, error);
     LogDebg("Send empty message, error:%s", ErrorToString(error));
     return error;
 }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
 
 bool MeshForwarder::CalcIePresent(const Message *aMessage)
 {

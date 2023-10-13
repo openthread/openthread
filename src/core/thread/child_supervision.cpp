@@ -67,13 +67,13 @@ exit:
 
 void ChildSupervisor::SendMessage(Child &aChild)
 {
-    Message *message = nullptr;
-    uint16_t childIndex;
+    OwnedPtr<Message> messagePtr;
+    uint16_t          childIndex;
 
     VerifyOrExit(aChild.GetIndirectMessageCount() == 0);
 
-    message = Get<MessagePool>().Allocate(Message::kTypeSupervision, sizeof(uint8_t));
-    VerifyOrExit(message != nullptr);
+    messagePtr.Reset(Get<MessagePool>().Allocate(Message::kTypeSupervision, sizeof(uint8_t)));
+    VerifyOrExit(messagePtr != nullptr);
 
     // Supervision message is an empty payload 15.4 data frame.
     // The child index is stored here in the message content to allow
@@ -81,15 +81,14 @@ void ChildSupervisor::SendMessage(Child &aChild)
     // `ChildSupervisor::GetDestination(message)`.
 
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
-    SuccessOrExit(message->Append(childIndex));
+    SuccessOrExit(messagePtr->Append(childIndex));
 
-    SuccessOrExit(Get<MeshForwarder>().SendMessage(*message));
-    message = nullptr;
+    Get<MeshForwarder>().SendMessage(messagePtr.PassOwnership());
 
     LogInfo("Sending supervision message to child 0x%04x", aChild.GetRloc16());
 
 exit:
-    FreeMessage(message);
+    return;
 }
 
 void ChildSupervisor::UpdateOnSend(Child &aChild) { aChild.ResetSecondsSinceLastSupervision(); }
