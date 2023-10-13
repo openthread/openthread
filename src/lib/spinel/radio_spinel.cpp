@@ -884,35 +884,43 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
                                const otMacKeyMaterial *aCurrKey,
                                const otMacKeyMaterial *aNextKey)
 {
-    otError error;
-    size_t  aKeySize;
+    otError  error;
+    size_t   aKeySize;
+    otMacKey prevKey;
+    otMacKey currKey;
+    otMacKey nextKey;
 
     VerifyOrExit((aPrevKey != nullptr) && (aCurrKey != nullptr) && (aNextKey != nullptr), error = kErrorInvalidArgs);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    SuccessOrExit(error = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, aPrevKey->mKeyMaterial.mKey.m8,
-                                                sizeof(aPrevKey->mKeyMaterial.mKey.m8), &aKeySize));
-    SuccessOrExit(error = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, aCurrKey->mKeyMaterial.mKey.m8,
-                                                sizeof(aCurrKey->mKeyMaterial.mKey.m8), &aKeySize));
-    SuccessOrExit(error = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, aNextKey->mKeyMaterial.mKey.m8,
-                                                sizeof(aNextKey->mKeyMaterial.mKey.m8), &aKeySize));
+    SuccessOrExit(error =
+                      otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, prevKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
+    SuccessOrExit(error =
+                      otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, currKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
+    SuccessOrExit(error =
+                      otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, nextKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
 #else
     OT_UNUSED_VARIABLE(aKeySize);
+
+    memcpy(prevKey.m8, aPrevKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(currKey.m8, aCurrKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(nextKey.m8, aNextKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
 #endif
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                              aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey.m8, sizeof(otMacKey),
-                              aCurrKey->mKeyMaterial.mKey.m8, sizeof(otMacKey), aNextKey->mKeyMaterial.mKey.m8,
-                              sizeof(otMacKey)));
+                              aKeyIdMode, aKeyId, prevKey.m8, OT_MAC_KEY_SIZE, currKey.m8, OT_MAC_KEY_SIZE, nextKey.m8,
+                              OT_MAC_KEY_SIZE));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mKeyIdMode = aKeyIdMode;
     mKeyId     = aKeyId;
-    memcpy(mPrevKey.m8, aPrevKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(mCurrKey.m8, aCurrKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(mNextKey.m8, aNextKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+
+    memcpy(mPrevKey.m8, prevKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(mCurrKey.m8, currKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(mNextKey.m8, nextKey.m8, OT_MAC_KEY_SIZE);
+
     mMacKeySet = true;
 #endif
 
