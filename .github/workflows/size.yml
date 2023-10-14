@@ -67,3 +67,4 @@ jobs:
           export OT_SIZE_REPORTER=./size-report
         fi
         ./script/check-size
+        cat /tmp/ot-size-report/report_pr >> $GITHUB_STEP_SUMMARY
