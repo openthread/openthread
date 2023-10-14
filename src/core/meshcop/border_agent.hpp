@@ -142,12 +142,6 @@ public:
     State GetState(void) const { return mState; }
 
     /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
-    /**
      * Returns the UDP Proxy port to which the commissioner is currently
      * bound.
      *

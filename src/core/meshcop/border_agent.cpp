@@ -240,7 +240,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mIdInitialized(false)
 #endif
 {
-    mCommissionerAloc.InitAsThreadOriginRealmLocalScope();
+    mCommissionerAloc.InitAsThreadOriginMeshLocal();
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -649,21 +649,6 @@ void BorderAgent::Stop(void)
     mUdpProxyPort = 0;
 
     LogInfo("Border Agent stopped");
-
-exit:
-    return;
-}
-
-void BorderAgent::ApplyMeshLocalPrefix(void)
-{
-    VerifyOrExit(mState == kStateActive);
-
-    if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
-    {
-        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-        mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
-    }
 
 exit:
     return;

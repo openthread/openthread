@@ -96,6 +96,8 @@ MleRouter::MleRouter(Instance &aInstance)
     mLeaderWeight = kDefaultLeaderWeight;
 #endif
 
+    mLeaderAloc.InitAsThreadOriginMeshLocal();
+
     SetRouterId(kInvalidRouterId);
 
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
