@@ -38,3 +38,4 @@ expect_line "Done"
 send "region\n"
 expect "US"
 expect_line "Done"
+dispose_node 1

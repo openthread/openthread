@@ -56,6 +56,8 @@ namespace Url {
 class Url : public otUrl
 {
 public:
+    Url(void);
+
     /**
      * Initializes the URL.
      *

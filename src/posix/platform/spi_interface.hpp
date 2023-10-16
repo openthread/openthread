@@ -31,8 +31,8 @@
  *   This file includes definitions for the SPI interface to radio (RCP).
  */
 
-#ifndef POSIX_APP_SPI_INTERFACE_HPP_
-#define POSIX_APP_SPI_INTERFACE_HPP_
+#ifndef POSIX_PLATFORM_SPI_INTERFACE_HPP_
+#define POSIX_PLATFORM_SPI_INTERFACE_HPP_
 
 #include "openthread-posix-config.h"
 
@@ -57,12 +57,10 @@ public:
     /**
      * Initializes the object.
      *
-     * @param[in] aCallback         A reference to a `Callback` object.
-     * @param[in] aCallbackContext  The context pointer passed to the callback.
-     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
+     * @param[in] aRadioUrl  RadioUrl parsed from radio url.
      *
      */
-    SpiInterface(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
+    SpiInterface(const Url::Url &aRadioUrl);
 
     /**
      * This destructor deinitializes the object.
@@ -75,14 +73,16 @@ public:
      *
      * @note This method should be called before reading and sending spinel frames to the interface.
      *
-     * @param[in]  aRadioUrl          Arguments parsed from radio url.
+     * @param[in] aCallback         Callback on frame received
+     * @param[in] aCallbackContext  Callback context
+     * @param[in] aFrameBuffer      A reference to a `RxFrameBuffer` object.
      *
-     * @retval OT_ERROR_NONE          The interface is initialized successfully.
-     * @retval OT_ERROR_ALREADY       The interface is already initialized.
-     * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
+     * @retval OT_ERROR_NONE       The interface is initialized successfully
+     * @retval OT_ERROR_ALREADY    The interface is already initialized.
+     * @retval OT_ERROR_FAILED     Failed to initialize the interface.
      *
      */
-    otError Init(const Url::Url &aRadioUrl);
+    otError Init(ReceiveFrameCallback aCallback, void *aCallbackContext, RxFrameBuffer &aFrameBuffer);
 
     /**
      * Deinitializes the interface to the RCP.
@@ -156,6 +156,20 @@ public:
      */
     const otRcpInterfaceMetrics *GetRcpInterfaceMetrics(void) const { return &mInterfaceMetrics; }
 
+    /**
+     * Indicates whether or not the given interface matches this interface name.
+     *
+     * @param[in] aInterfaceName A pointer to the interface name.
+     *
+     * @retval TRUE   The given interface name matches this interface name.
+     * @retval FALSE  The given interface name doesn't match this interface name.
+     */
+    static bool IsInterfaceNameMatch(const char *aInterfaceName)
+    {
+        static const char kInterfaceName[] = "spinel+spi";
+        return (strncmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
+    }
+
 private:
     void    ResetStates(void);
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
@@ -206,7 +220,8 @@ private:
 
     ReceiveFrameCallback mReceiveFrameCallback;
     void                *mReceiveFrameContext;
-    RxFrameBuffer       &mRxFrameBuffer;
+    RxFrameBuffer       *mRxFrameBuffer;
+    const Url::Url      &mRadioUrl;
 
     int mSpiDevFd;
     int mResetGpioValueFd;
@@ -243,4 +258,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_APP_SPI_INTERFACE_HPP_
+#endif // POSIX_PLATFORM_SPI_INTERFACE_HPP_

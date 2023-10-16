@@ -35,7 +35,7 @@ set(OT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE "" CACHE STRING
 set(OT_POSIX_RCP_VENDOR_TARGET "" CACHE STRING 
     "name of vendor extension CMake target to link with posix library")
 
-if(OT_POSIX_CONFIG_RCP_BUS STREQUAL "VENDOR")
+if(OT_POSIX_RCP_VENDOR_BUS)
     add_library(rcp-vendor-intf ${OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE})
 
     target_link_libraries(rcp-vendor-intf PUBLIC ot-posix-config)
