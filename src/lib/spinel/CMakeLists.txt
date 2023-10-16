@@ -30,20 +30,10 @@ add_library(openthread-spinel-ncp)
 add_library(openthread-spinel-rcp)
 
 target_compile_definitions(openthread-spinel-ncp PRIVATE
-    OPENTHREAD_FTD=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
-if (OT_NCP_SPI)
-    target_compile_definitions(openthread-spinel-ncp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=0)
-    target_compile_definitions(openthread-spinel-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=0)
-else()
-    target_compile_definitions(openthread-spinel-ncp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
-    target_compile_definitions(openthread-spinel-rcp PRIVATE OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
-endif()
-
 target_compile_definitions(openthread-spinel-rcp PRIVATE
-    OPENTHREAD_RADIO=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
 )
 
