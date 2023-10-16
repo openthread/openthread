@@ -466,7 +466,7 @@ const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aT
     commissioningDataTlv = GetCommissioningData();
     VerifyOrExit(commissioningDataTlv != nullptr);
 
-    rval = MeshCoP::Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType);
+    rval = As<MeshCoP::Tlv>(Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType));
 
 exit:
     return rval;
