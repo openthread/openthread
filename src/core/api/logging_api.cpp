@@ -38,6 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/string.hpp"
 
 using namespace ot;
 
@@ -176,6 +177,38 @@ void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength)
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aData);
     OT_UNUSED_VARIABLE(aDataLength);
+#endif
+}
+
+void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, ...)
+{
+#if OPENTHREAD_CONFIG_LOG_PLATFORM
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(aLogLevel, aPlatModuleName, aFormat, args);
+    va_end(args);
+#else
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aPlatModuleName);
+    OT_UNUSED_VARIABLE(aFormat);
+#endif
+}
+
+void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs)
+{
+#if OT_SHOULD_LOG && OPENTHREAD_CONFIG_LOG_PLATFORM
+    String<kMaxLogModuleNameLength> moduleName;
+
+    OT_ASSERT(aLogLevel >= kLogLevelNone && aLogLevel <= kLogLevelDebg);
+
+    moduleName.Append("P-%s", aPlatModuleName);
+    Logger::LogVarArgs(moduleName.AsCString(), static_cast<LogLevel>(aLogLevel), aFormat, aArgs);
+#else
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aPlatModuleName);
+    OT_UNUSED_VARIABLE(aFormat);
+    OT_UNUSED_VARIABLE(aArgs);
 #endif
 }
 
