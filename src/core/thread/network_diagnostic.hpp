@@ -208,8 +208,6 @@ private:
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
-    Error SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString);
-
     VendorNameTlv::StringType      mVendorName;
     VendorModelTlv::StringType     mVendorModel;
     VendorSwVersionTlv::StringType mVendorSwVersion;

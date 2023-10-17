@@ -126,6 +126,7 @@ public:
      */
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
+    static constexpr uint8_t kMaxCommissionerIdLength  = 64; ///< Max length of Commissioner ID TLV.
     static constexpr uint8_t kMaxVendorNameLength      = 32; ///< Max length of Vendor Name TLV.
     static constexpr uint8_t kMaxVendorModelLength     = 32; ///< Max length of Vendor Model TLV.
     static constexpr uint8_t kMaxVendorSwVersionLength = 16; ///< Max length of Vendor SW Version TLV.
@@ -247,6 +248,12 @@ typedef UintTlvInfo<Tlv::kPeriod, uint16_t> PeriodTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kScanDuration, uint16_t> ScanDurationTlv;
+
+/**
+ * Defines Commissioner ID TLV constants and type.s
+ *
+ */
+typedef StringTlvInfo<Tlv::kCommissionerId, Tlv::kMaxCommissionerIdLength> CommissionerIdTlv;
 
 /**
  * Implements Channel TLV generation and parsing.
@@ -754,62 +761,6 @@ public:
 
 private:
     uint16_t mLocator;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements the Commissioner ID TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CommissionerIdTlv : public Tlv, public TlvInfo<Tlv::kCommissionerId>
-{
-public:
-    static constexpr uint8_t kMaxLength = 64; ///< maximum length (bytes)
-
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Returns the Commissioner ID length.
-     *
-     * @returns The Commissioner ID length.
-     *
-     */
-    uint8_t GetCommissionerIdLength(void) const
-    {
-        return GetLength() <= sizeof(mCommissionerId) ? GetLength() : sizeof(mCommissionerId);
-    }
-
-    /**
-     * Returns the Commissioner ID value.
-     *
-     * @returns The Commissioner ID value.
-     *
-     */
-    const char *GetCommissionerId(void) const { return mCommissionerId; }
-
-    /**
-     * Sets the Commissioner ID value.
-     *
-     * @param[in]  aCommissionerId  A pointer to the Commissioner ID value.
-     *
-     */
-    void SetCommissionerId(const char *aCommissionerId)
-    {
-        uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
-        memcpy(mCommissionerId, aCommissionerId, length);
-        SetLength(static_cast<uint8_t>(length));
-    }
-
-private:
-    char mCommissionerId[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**

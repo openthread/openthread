@@ -133,8 +133,8 @@ private:
 
     uint32_t mDelayTimerMinimal;
 
-    CommissionerIdTlv mCommissionerId;
-    uint16_t          mSessionId;
+    CommissionerIdTlv::StringType mCommissionerId;
+    uint16_t                      mSessionId;
 };
 
 DeclareTmfHandler(Leader, kUriLeaderPetition);
