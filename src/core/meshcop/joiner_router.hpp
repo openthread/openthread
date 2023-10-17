@@ -71,10 +71,10 @@ public:
     /**
      * Returns the Joiner UDP Port.
      *
-     * @returns The Joiner UDP Port number .
+     * @returns The Joiner UDP Port number.
      *
      */
-    uint16_t GetJoinerUdpPort(void);
+    uint16_t GetJoinerUdpPort(void) const;
 
     /**
      * Sets the Joiner UDP Port.
@@ -85,6 +85,7 @@ public:
     void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
+    static constexpr uint16_t kDefaultJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
     static constexpr uint32_t kJoinerEntrustTxDelay = 50; // in msec
 
     struct JoinerEntrustMetadata

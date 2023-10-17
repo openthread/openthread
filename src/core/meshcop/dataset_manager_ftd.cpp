@@ -167,14 +167,12 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check commissioner session id
     if (Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId) == kErrorNone)
     {
-        const CommissionerSessionIdTlv *localId;
+        uint16_t localSessionId;
 
         isUpdateFromCommissioner = true;
 
-        localId = As<CommissionerSessionIdTlv>(
-            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
-
-        VerifyOrExit(localId != nullptr && localId->GetCommissionerSessionId() == sessionId);
+        SuccessOrExit(Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId));
+        VerifyOrExit(localSessionId == sessionId);
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
@@ -240,16 +238,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // notify commissioner if update is from thread device
     if (!isUpdateFromCommissioner)
     {
-        const CommissionerSessionIdTlv *localSessionId;
-        Ip6::Address                    destination;
+        uint16_t     localSessionId;
+        Ip6::Address destination;
 
-        localSessionId = As<CommissionerSessionIdTlv>(
-            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kCommissionerSessionId));
-        VerifyOrExit(localSessionId != nullptr);
-
-        SuccessOrExit(
-            Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId->GetCommissionerSessionId()));
-
+        SuccessOrExit(Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId));
+        SuccessOrExit(Get<Mle::MleRouter>().GetCommissionerAloc(destination, localSessionId));
         Get<Leader>().SendDatasetChanged(destination);
     }
 

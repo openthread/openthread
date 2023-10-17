@@ -248,7 +248,7 @@ template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage,
     VerifyOrExit(hasValidTlv);
 
     // Find Commissioning Data TLV
-    commDataTlv = GetCommissioningData();
+    commDataTlv = FindCommissioningData();
 
     if (commDataTlv != nullptr)
     {
@@ -312,7 +312,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message    &aRequest,
     message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    commDataTlv = GetCommissioningData();
+    commDataTlv = FindCommissioningData();
 
     if (commDataTlv != nullptr)
     {
