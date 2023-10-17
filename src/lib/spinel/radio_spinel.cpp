@@ -878,6 +878,20 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+otError RadioSpinel::ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey)
+{
+    size_t  keySize;
+    otError error = otPlatCryptoExportKey(aKeyMaterial.mKeyMaterial.mKeyRef, aKey.m8, sizeof(aKey), &keySize);
+
+    SuccessOrExit(error);
+    VerifyOrExit(keySize == sizeof(otMacKey), error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
 otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
                                uint8_t                 aKeyId,
                                const otMacKeyMaterial *aPrevKey,
@@ -885,41 +899,54 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
                                const otMacKeyMaterial *aNextKey)
 {
     otError  error;
-    size_t   aKeySize;
     otMacKey prevKey;
     otMacKey currKey;
     otMacKey nextKey;
 
-    VerifyOrExit((aPrevKey != nullptr) && (aCurrKey != nullptr) && (aNextKey != nullptr), error = kErrorInvalidArgs);
+    SuccessOrExit(error = ReadMacKey(*aPrevKey, prevKey));
+    SuccessOrExit(error = ReadMacKey(*aCurrKey, currKey));
+    SuccessOrExit(error = ReadMacKey(*aNextKey, nextKey));
+    error = SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    SuccessOrExit(error =
-                      otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, prevKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
-    SuccessOrExit(error =
-                      otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, currKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
-    SuccessOrExit(error =
-                      otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, nextKey.m8, OT_MAC_KEY_SIZE, &aKeySize));
+exit:
+    return error;
+}
+
 #else
-    OT_UNUSED_VARIABLE(aKeySize);
 
-    prevKey = aPrevKey->mKeyMaterial.mKey;
-    currKey = aCurrKey->mKeyMaterial.mKey;
-    nextKey = aNextKey->mKeyMaterial.mKey;
-#endif
+otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
+                               uint8_t                 aKeyId,
+                               const otMacKeyMaterial *aPrevKey,
+                               const otMacKeyMaterial *aCurrKey,
+                               const otMacKeyMaterial *aNextKey)
+{
+    return SetMacKey(aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey, aCurrKey->mKeyMaterial.mKey,
+                     aNextKey->mKeyMaterial.mKey);
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+otError RadioSpinel::SetMacKey(uint8_t         aKeyIdMode,
+                               uint8_t         aKeyId,
+                               const otMacKey &aPrevKey,
+                               const otMacKey &aCurrKey,
+                               const otMacKey &aNextKey)
+{
+    otError error;
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                              aKeyIdMode, aKeyId, prevKey.m8, OT_MAC_KEY_SIZE, currKey.m8, OT_MAC_KEY_SIZE, nextKey.m8,
-                              OT_MAC_KEY_SIZE));
+                              aKeyIdMode, aKeyId, aPrevKey.m8, sizeof(aPrevKey), aCurrKey.m8, sizeof(aCurrKey),
+                              aNextKey.m8, sizeof(aNextKey)));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mKeyIdMode = aKeyIdMode;
     mKeyId     = aKeyId;
 
-    mPrevKey = prevKey;
-    mCurrKey = currKey;
-    mNextKey = nextKey;
+    mPrevKey = aPrevKey;
+    mCurrKey = aCurrKey;
+    mNextKey = aNextKey;
 
     mMacKeySet = true;
 #endif
