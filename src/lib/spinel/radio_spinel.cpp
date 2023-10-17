@@ -902,9 +902,9 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
 #else
     OT_UNUSED_VARIABLE(aKeySize);
 
-    memcpy(prevKey.m8, aPrevKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(currKey.m8, aCurrKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(nextKey.m8, aNextKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    prevKey = aPrevKey->mKeyMaterial.mKey;
+    currKey = aCurrKey->mKeyMaterial.mKey;
+    nextKey = aNextKey->mKeyMaterial.mKey;
 #endif
 
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
@@ -917,9 +917,9 @@ otError RadioSpinel::SetMacKey(uint8_t                 aKeyIdMode,
     mKeyIdMode = aKeyIdMode;
     mKeyId     = aKeyId;
 
-    memcpy(mPrevKey.m8, prevKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(mCurrKey.m8, currKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(mNextKey.m8, nextKey.m8, OT_MAC_KEY_SIZE);
+    mPrevKey = prevKey;
+    mCurrKey = currKey;
+    mNextKey = nextKey;
 
     mMacKeySet = true;
 #endif
