@@ -87,18 +87,8 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
         ResignCommissioner();
     }
 
-    data.mBorderAgentLocator.Init();
-    data.mBorderAgentLocator.SetBorderAgentLocator(aMessageInfo.GetPeerAddr().GetIid().GetLocator());
-
-    data.mCommissionerSessionId.Init();
-    data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
-
-    data.mSteeringData.Init();
-    data.mSteeringData.SetLength(1);
-    data.mSteeringData.Clear();
-
-    SuccessOrExit(
-        Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&data), data.GetLength()));
+    data.Init(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), ++mSessionId);
+    SuccessOrExit(Get<NetworkData::Leader>().SetCommissioningData(&data, data.GetLength()));
 
     mCommissionerId = commissionerId;
 
@@ -263,8 +253,7 @@ void Leader::SetEmptyCommissionerData(void)
     sessionIdTlv.Init();
     sessionIdTlv.SetCommissionerSessionId(++mSessionId);
 
-    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&sessionIdTlv),
-                                                                sizeof(Tlv) + sessionIdTlv.GetLength()));
+    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(&sessionIdTlv, sizeof(CommissionerSessionIdTlv)));
 }
 
 void Leader::ResignCommissioner(void)
@@ -273,6 +262,25 @@ void Leader::ResignCommissioner(void)
     SetEmptyCommissionerData();
 
     LogInfo("commissioner inactive");
+}
+
+void Leader::CommissioningData::Init(uint16_t aBorderAgentRloc16, uint16_t aSessionId)
+{
+    mBorderAgentLocatorTlv.Init();
+    mBorderAgentLocatorTlv.SetBorderAgentLocator(aBorderAgentRloc16);
+
+    mSessionIdTlv.Init();
+    mSessionIdTlv.SetCommissionerSessionId(aSessionId);
+
+    mSteeringDataTlv.Init();
+    mSteeringDataTlv.SetLength(1);
+    mSteeringDataTlv.Clear();
+}
+
+uint8_t Leader::CommissioningData::GetLength(void) const
+{
+    return static_cast<uint8_t>(sizeof(BorderAgentLocatorTlv) + sizeof(CommissionerSessionIdTlv) +
+                                mSteeringDataTlv.GetSize());
 }
 
 } // namespace MeshCoP
