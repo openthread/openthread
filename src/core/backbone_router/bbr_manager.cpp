@@ -176,11 +176,10 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     if (Tlv::Find<ThreadCommissionerSessionIdTlv>(aMessage, commissionerSessionId) == kErrorNone)
     {
-        const MeshCoP::CommissionerSessionIdTlv *commissionerSessionIdTlv = As<MeshCoP::CommissionerSessionIdTlv>(
-            Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kCommissionerSessionId));
+        uint16_t localSessionId;
 
-        VerifyOrExit(commissionerSessionIdTlv != nullptr &&
-                         commissionerSessionIdTlv->GetCommissionerSessionId() == commissionerSessionId,
+        VerifyOrExit((Get<NetworkData::Leader>().FindCommissioningSessionId(localSessionId) == kErrorNone) &&
+                         (localSessionId == commissionerSessionId),
                      status = ThreadStatusTlv::kMlrGeneralFailure);
 
         hasCommissionerSessionIdTlv = true;

@@ -75,7 +75,7 @@ void JoinerRouter::Start(void)
 {
     VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
 
-    if (Get<NetworkData::Leader>().IsJoiningEnabled())
+    if (Get<NetworkData::Leader>().IsJoiningAllowed())
     {
         uint16_t port = GetJoinerUdpPort();
 
@@ -99,20 +99,24 @@ exit:
     return;
 }
 
-uint16_t JoinerRouter::GetJoinerUdpPort(void)
+uint16_t JoinerRouter::GetJoinerUdpPort(void) const
 {
-    uint16_t                rval = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
-    const JoinerUdpPortTlv *joinerUdpPort;
+    uint16_t port;
 
-    VerifyOrExit(!mIsJoinerPortConfigured, rval = mJoinerUdpPort);
+    if (mIsJoinerPortConfigured)
+    {
+        ExitNow(port = mJoinerUdpPort);
+    }
 
-    joinerUdpPort = As<JoinerUdpPortTlv>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kJoinerUdpPort));
-    VerifyOrExit(joinerUdpPort != nullptr);
+    if (Get<NetworkData::Leader>().FindJoinerUdpPort(port) == kErrorNone)
+    {
+        ExitNow();
+    }
 
-    rval = joinerUdpPort->GetUdpPort();
+    port = kDefaultJoinerUdpPort;
 
 exit:
-    return rval;
+    return port;
 }
 
 void JoinerRouter::SetJoinerUdpPort(uint16_t aJoinerUdpPort)
@@ -137,7 +141,7 @@ void JoinerRouter::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &a
 
     LogInfo("JoinerRouter::HandleUdpReceive");
 
-    SuccessOrExit(error = GetBorderAgentRloc(Get<ThreadNetif>(), borderAgentRloc));
+    SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc));
 
     message = Get<Tmf::Agent>().NewPriorityNonConfirmablePostMessage(kUriRelayRx);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);

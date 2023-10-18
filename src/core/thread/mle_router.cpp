@@ -2740,7 +2740,7 @@ void MleRouter::HandleDiscoveryRequest(RxInfo &aRxInfo)
             else // if steering data is not set out of band, fall back to network data
 #endif
             {
-                VerifyOrExit(Get<NetworkData::Leader>().IsJoiningEnabled(), error = kErrorSecurity);
+                VerifyOrExit(Get<NetworkData::Leader>().IsJoiningAllowed(), error = kErrorSecurity);
             }
         }
     }
@@ -2821,13 +2821,13 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     else
 #endif
     {
-        const MeshCoP::Tlv *steeringData;
+        const MeshCoP::SteeringDataTlv *steeringDataTlv;
 
-        steeringData = Get<NetworkData::Leader>().GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
+        steeringDataTlv = Get<NetworkData::Leader>().FindInCommissioningData<MeshCoP::SteeringDataTlv>();
 
-        if (steeringData != nullptr)
+        if (steeringDataTlv != nullptr)
         {
-            SuccessOrExit(error = steeringData->AppendTo(*message));
+            SuccessOrExit(error = steeringDataTlv->AppendTo(*message));
         }
     }
 

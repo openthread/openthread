@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2017, The OpenThread Authors.
  *  All rights reserved.
@@ -298,21 +299,6 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
 
     memcpy(&aJoinerId, hash.GetBytes(), sizeof(aJoinerId));
     aJoinerId.SetLocal(true);
-}
-
-Error GetBorderAgentRloc(ThreadNetif &aNetif, uint16_t &aRloc)
-{
-    Error                        error = kErrorNone;
-    const BorderAgentLocatorTlv *borderAgentLocator;
-
-    borderAgentLocator = As<BorderAgentLocatorTlv>(
-        aNetif.Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
-    VerifyOrExit(borderAgentLocator != nullptr, error = kErrorNotFound);
-
-    aRloc = borderAgentLocator->GetBorderAgentLocator();
-
-exit:
-    return error;
 }
 
 #if OPENTHREAD_FTD

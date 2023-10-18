@@ -207,8 +207,10 @@ exit:
 
 void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
+    uint16_t borderAgentRloc;
+
     if (aEvents.Contains(kEventThreadNetdataChanged) && (mReportMessage != nullptr) &&
-        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
+        Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc) != kErrorNone)
     {
         mReportMessage->Free();
         mReportMessage = nullptr;
