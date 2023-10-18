@@ -240,7 +240,7 @@ public:
      * @retval kErrorNoBufs   Insufficient space to add the Commissioning Data.
      *
      */
-    Error SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
+    Error SetCommissioningData(const void *aValue, uint8_t aValueLength);
 
     /**
      * Checks if the steering data includes a Joiner.

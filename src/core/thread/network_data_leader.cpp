@@ -428,7 +428,7 @@ exit:
     return error;
 }
 
-Error LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
+Error LeaderBase::SetCommissioningData(const void *aValue, uint8_t aValueLength)
 {
     Error                 error = kErrorNone;
     CommissioningDataTlv *commissioningDataTlv;
