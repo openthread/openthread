@@ -42,6 +42,7 @@ target_link_libraries(ot-daemon PRIVATE
     openthread-ftd
     openthread-posix
     openthread-hdlc
+    openthread-radio-spinel
     openthread-spinel-rcp
     ${OT_MBEDTLS}
     ot-posix-config

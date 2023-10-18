@@ -50,6 +50,7 @@ target_link_libraries(ot-cli PRIVATE
     openthread-posix
     openthread-cli-ftd
     openthread-hdlc
+    openthread-radio-spinel
     openthread-spinel-rcp
     ${OT_MBEDTLS}
     ${READLINE_LINK_LIBRARIES}

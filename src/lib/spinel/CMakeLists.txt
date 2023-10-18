@@ -26,6 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+add_library(openthread-radio-spinel)
 add_library(openthread-spinel-ncp)
 add_library(openthread-spinel-rcp)
 
@@ -35,6 +36,10 @@ target_compile_definitions(openthread-spinel-ncp PRIVATE
 
 target_compile_definitions(openthread-spinel-rcp PRIVATE
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
+)
+
+target_compile_options(openthread-radio-spinel PRIVATE
+    ${OT_CFLAGS}
 )
 
 target_compile_options(openthread-spinel-ncp PRIVATE
@@ -57,14 +62,17 @@ set(COMMON_SOURCES
     spinel_encoder.cpp
 )
 
+target_include_directories(openthread-radio-spinel PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-ncp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
+target_sources(openthread-radio-spinel PRIVATE radio_spinel.cpp)
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
-target_sources(openthread-spinel-rcp
+target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
+
+target_link_libraries(openthread-radio-spinel
     PRIVATE
-        ${COMMON_SOURCES}
-        radio_spinel.cpp
+        ot-config
 )
 
 target_link_libraries(openthread-spinel-ncp
