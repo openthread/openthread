@@ -67,35 +67,28 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    CommissioningData data;
-    CommissionerIdTlv commissionerId;
-    StateTlv::State   state = StateTlv::kReject;
+    CommissioningData             data;
+    CommissionerIdTlv::StringType commissionerId;
+    StateTlv::State               state = StateTlv::kReject;
 
     LogInfo("Received %s", UriToString<kUriLeaderPetition>());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
-    SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
+
+    SuccessOrExit(Tlv::Find<CommissionerIdTlv>(aMessage, commissionerId));
 
     if (mTimer.IsRunning())
     {
-        VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                               commissionerId.GetCommissionerIdLength())));
-
+        VerifyOrExit(StringMatch(mCommissionerId, commissionerId));
         ResignCommissioner();
     }
 
     data.Init(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), ++mSessionId);
     SuccessOrExit(Get<NetworkData::Leader>().SetCommissioningData(&data, data.GetLength()));
 
-    mCommissionerId = commissionerId;
-
-    if (mCommissionerId.GetLength() > CommissionerIdTlv::kMaxLength)
-    {
-        mCommissionerId.SetLength(CommissionerIdTlv::kMaxLength);
-    }
+    IgnoreError(StringCopy(mCommissionerId, commissionerId));
 
     state = StateTlv::kAccept;
     mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
@@ -118,7 +111,7 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
 
     if (mTimer.IsRunning())
     {
-        SuccessOrExit(error = mCommissionerId.AppendTo(*message));
+        SuccessOrExit(error = Tlv::Append<CommissionerIdTlv>(*message, mCommissionerId));
     }
 
     if (aState == StateTlv::kAccept)

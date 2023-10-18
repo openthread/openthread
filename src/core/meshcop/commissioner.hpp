@@ -616,8 +616,8 @@ private:
 
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
-    char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
-    char mCommissionerId[CommissionerIdTlv::kMaxLength + 1];
+    ProvisioningUrlTlv::StringType mProvisioningUrl;
+    CommissionerIdTlv::StringType  mCommissionerId;
 
     State mState;
 

@@ -67,6 +67,16 @@ enum StringMatchMode : uint8_t
     kStringCaseInsensitiveMatch, ///< Case insensitive match (uppercase and lowercase characters are treated as equal).
 };
 
+/**
+ * Represents string encoding check when copying string.
+ *
+ */
+enum StringEncodingCheck : uint8_t
+{
+    kStringNoEncodingCheck,   ///< Do not check the string encoding.
+    kStringCheckUtf8Encoding, ///< Validate that string follows UTF-8 encoding.
+};
+
 static constexpr char kNullChar = '\0'; ///< null character.
 
 /**
@@ -155,6 +165,43 @@ bool StringEndsWith(const char *aString, const char *aSubString, StringMatchMode
  *
  */
 bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatchMode aMode = kStringExactMatch);
+
+/**
+ * Copies a string into a given target buffer with a given size if it fits.
+ *
+ * @param[out] aTargetBuffer  A pointer to the target buffer to copy into.
+ * @param[out] aTargetSize    The size (number of characters) in @p aTargetBuffer array.
+ * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
+ * @param[in]  aEncodingCheck Specifies the encoding format check (e.g., UTF-8) to perform.
+ *
+ * @retval kErrorNone         The @p aSource fits in the given buffer. @p aTargetBuffer is updated.
+ * @retval kErrorInvalidArgs  The @p aSource does not fit in the given buffer.
+ * @retval kErrorParse        The @p aSource does not follow the encoding format specified by @p aEncodingCheck.
+ *
+ */
+Error StringCopy(char *TargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck);
+
+/**
+ * Copies a string into a given target buffer with a given size if it fits.
+ *
+ * @tparam kSize  The size of buffer.
+ *
+ * @param[out] aTargetBuffer  A reference to the target buffer array to copy into.
+ * @param[in]  aSource        A pointer to null-terminated string to copy from. Can be `nullptr` which treated as "".
+ * @param[in]  aEncodingCheck Specifies the encoding format check (e.g., UTF-8) to perform.
+ *
+ * @retval kErrorNone         The @p aSource fits in the given buffer. @p aTargetBuffer is updated.
+ * @retval kErrorInvalidArgs  The @p aSource does not fit in the given buffer.
+ * @retval kErrorParse        The @p aSource does not follow the encoding format specified by @p aEncodingCheck.
+ *
+ */
+template <uint16_t kSize>
+Error StringCopy(char (&aTargetBuffer)[kSize],
+                 const char         *aSource,
+                 StringEncodingCheck aEncodingCheck = kStringNoEncodingCheck)
+{
+    return StringCopy(aTargetBuffer, kSize, aSource, aEncodingCheck);
+}
 
 /**
  * Parses a decimal number from a string as `uint8_t` and skips over the parsed characters.

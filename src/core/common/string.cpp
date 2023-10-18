@@ -160,6 +160,35 @@ bool StringMatch(const char *aFirstString, const char *aSecondString, StringMatc
     return Match(aFirstString, aSecondString, aMode) == kFullMatch;
 }
 
+Error StringCopy(char *aTargetBuffer, uint16_t aTargetSize, const char *aSource, StringEncodingCheck aEncodingCheck)
+{
+    Error    error = kErrorNone;
+    uint16_t length;
+
+    if (aSource == nullptr)
+    {
+        aTargetBuffer[0] = kNullChar;
+        ExitNow();
+    }
+
+    length = StringLength(aSource, aTargetSize);
+    VerifyOrExit(length < aTargetSize, error = kErrorInvalidArgs);
+
+    switch (aEncodingCheck)
+    {
+    case kStringNoEncodingCheck:
+        break;
+    case kStringCheckUtf8Encoding:
+        VerifyOrExit(IsValidUtf8String(aSource), error = kErrorParse);
+        break;
+    }
+
+    memcpy(aTargetBuffer, aSource, length + 1); // `+ 1` to also copy null char.
+
+exit:
+    return error;
+}
+
 Error StringParseUint8(const char *&aString, uint8_t &aUint8)
 {
     return StringParseUint8(aString, aUint8, NumericLimits<uint8_t>::kMax);
