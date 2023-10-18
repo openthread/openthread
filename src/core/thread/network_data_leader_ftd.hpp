@@ -329,9 +329,6 @@ private:
     UpdateStatus UpdateService(ServiceTlv &aService);
     UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
 
-    void SendCommissioningGetResponse(const Coap::Message    &aRequest,
-                                      uint16_t                aLength,
-                                      const Ip6::MessageInfo &aMessageInfo);
     void SendCommissioningSetResponse(const Coap::Message     &aRequest,
                                       const Ip6::MessageInfo  &aMessageInfo,
                                       MeshCoP::StateTlv::State aState);
