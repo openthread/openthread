@@ -1011,6 +1011,15 @@ private:
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
     }
 
+    otError SetMacKey(uint8_t         aKeyIdMode,
+                      uint8_t         aKeyId,
+                      const otMacKey &aPrevKey,
+                      const otMacKey &aCurrKey,
+                      const otMacKey &NextKey);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
+#endif
+
     static void LogIfFail(const char *aText, otError aError);
 
     static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
