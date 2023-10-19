@@ -284,74 +284,53 @@ exit:
 
 template <> void Leader::HandleTmf<kUriCommissionerGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint16_t length = 0;
-    uint16_t offset;
+    uint16_t       length;
+    uint16_t       offset;
+    Coap::Message *response = nullptr;
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
-    SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length));
-    aMessage.SetOffset(offset);
+    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    VerifyOrExit(response != nullptr);
 
-exit:
-    if (Get<Mle::MleRouter>().IsLeader())
+    if (Tlv::FindTlvValueOffset(aMessage, MeshCoP::Tlv::kGet, offset, length) == kErrorNone)
     {
-        SendCommissioningGetResponse(aMessage, length, aMessageInfo);
-    }
-}
+        // Append the requested sub-TLV types given in Get TLV.
 
-void Leader::SendCommissioningGetResponse(const Coap::Message    &aRequest,
-                                          uint16_t                aLength,
-                                          const Ip6::MessageInfo &aMessageInfo)
-{
-    Error                 error = kErrorNone;
-    Coap::Message        *message;
-    CommissioningDataTlv *commDataTlv;
-    uint8_t              *data   = nullptr;
-    uint8_t               length = 0;
-
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
-
-    commDataTlv = FindCommissioningData();
-
-    if (commDataTlv != nullptr)
-    {
-        data   = commDataTlv->GetValue();
-        length = commDataTlv->GetLength();
-    }
-
-    VerifyOrExit(data && length, error = kErrorDrop);
-
-    if (aLength == 0)
-    {
-        SuccessOrExit(error = message->AppendBytes(data, length));
-    }
-    else
-    {
-        for (uint16_t index = 0; index < aLength; index++)
+        for (; length > 0; offset++, length--)
         {
-            uint8_t type;
+            uint8_t             type;
+            const MeshCoP::Tlv *subTlv;
 
-            IgnoreError(aRequest.Read(aRequest.GetOffset() + index, type));
+            IgnoreError(aMessage.Read(offset, type));
 
-            for (MeshCoP::Tlv *cur                                          = reinterpret_cast<MeshCoP::Tlv *>(data);
-                 cur < reinterpret_cast<MeshCoP::Tlv *>(data + length); cur = cur->GetNext())
+            subTlv = FindCommissioningDataSubTlv(type);
+
+            if (subTlv != nullptr)
             {
-                if (cur->GetType() == type)
-                {
-                    SuccessOrExit(error = cur->AppendTo(*message));
-                    break;
-                }
+                SuccessOrExit(subTlv->AppendTo(*response));
             }
         }
     }
+    else
+    {
+        // Append all sub-TLVs in the Commissioning Data.
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+        CommissioningDataTlv *dataTlv = FindCommissioningData();
+
+        if (dataTlv != nullptr)
+        {
+            SuccessOrExit(response->AppendBytes(dataTlv->GetValue(), dataTlv->GetLength()));
+        }
+    }
+
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*response, aMessageInfo));
+    response = nullptr; // `SendMessage` takes ownership on success
 
     LogInfo("Sent %s response", UriToString<kUriCommissionerGet>());
 
 exit:
-    FreeMessageOnError(message, error);
+    FreeMessage(response);
 }
 
 void Leader::SendCommissioningSetResponse(const Coap::Message     &aRequest,

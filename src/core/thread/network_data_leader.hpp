@@ -325,6 +325,11 @@ protected:
     void                        SignalNetDataChanged(void);
     const CommissioningDataTlv *FindCommissioningData(void) const;
     CommissioningDataTlv *FindCommissioningData(void) { return AsNonConst(AsConst(this)->FindCommissioningData()); }
+    const MeshCoP::Tlv   *FindCommissioningDataSubTlv(uint8_t aType) const;
+    MeshCoP::Tlv         *FindCommissioningDataSubTlv(uint8_t aType)
+    {
+        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
+    }
 
     uint8_t mStableVersion;
     uint8_t mVersion;
@@ -347,11 +352,6 @@ private:
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
     Error ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const;
-    const MeshCoP::Tlv *FindCommissioningDataSubTlv(uint8_t aType) const;
-    MeshCoP::Tlv       *FindCommissioningDataSubTlv(uint8_t aType)
-    {
-        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
-    }
 
     uint8_t mTlvBuffer[kMaxSize];
     uint8_t mMaxLength;
