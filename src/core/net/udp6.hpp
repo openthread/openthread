@@ -585,13 +585,12 @@ public:
      *
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
-     * @param[in]  aIpProto      The Internet Protocol value.
      *
      * @retval kErrorNone    Successfully enqueued the message into an output interface.
      * @retval kErrorNoBufs  Insufficient available buffer to add the IPv6 headers.
      *
      */
-    Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
+    Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
      * Handles a received UDP message.

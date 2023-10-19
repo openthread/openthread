@@ -126,8 +126,7 @@ otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageI
 
     VerifyOrExit(!AsCoreType(aMessage).IsOriginThreadNetif(), error = kErrorInvalidArgs);
 
-    return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo),
-                                                              Ip6::kProtoUdp);
+    return AsCoreType(aInstance).Get<Ip6::Udp>().SendDatagram(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 exit:
     return error;
 }

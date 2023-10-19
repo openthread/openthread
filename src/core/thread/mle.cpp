@@ -124,12 +124,10 @@ Mle::Mle(Instance &aInstance)
     mLinkLocal64.InitAsThreadOrigin(/* aPreferred */ true);
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
-    mLeaderAloc.InitAsThreadOriginRealmLocalScope();
-
-    mMeshLocal64.InitAsThreadOriginRealmLocalScope();
+    mMeshLocal64.InitAsThreadOriginMeshLocal();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
 
-    mMeshLocal16.InitAsThreadOriginRealmLocalScope();
+    mMeshLocal16.InitAsThreadOriginMeshLocal();
     mMeshLocal16.GetAddress().GetIid().SetToLocator(0);
     mMeshLocal16.mRloc = true;
 
@@ -141,10 +139,8 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
+    mMeshLocalPrefix.Clear();
     SetMeshLocalPrefix(AsCoreType(&kMeshLocalPrefixInit));
-
-    // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
-    // to the Link- and Realm-Local All Thread Nodes multicast addresses.
 }
 
 Error Mle::Enable(void)
@@ -195,7 +191,11 @@ Error Mle::Start(StartMode aMode)
 
     SetStateDetached();
 
-    ApplyMeshLocalPrefix();
+    Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
+
+    Get<ThreadNetif>().SubscribeMulticast(mLinkLocalAllThreadNodes);
+    Get<ThreadNetif>().SubscribeMulticast(mRealmLocalAllThreadNodes);
+
     SetRloc16(GetRloc16());
 
     mAttachCounter = 0;
@@ -693,10 +693,12 @@ void Mle::SetStateDetached(void)
     Get<BackboneRouter::Leader>().Reset();
 #endif
 
+#if OPENTHREAD_FTD
     if (IsLeader())
     {
-        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
+        Get<ThreadNetif>().RemoveUnicastAddress(Get<MleRouter>().mLeaderAloc);
     }
+#endif
 
     SetRole(kRoleDetached);
     SetAttachState(kAttachStateIdle);
@@ -719,10 +721,12 @@ void Mle::SetStateDetached(void)
 
 void Mle::SetStateChild(uint16_t aRloc16)
 {
+#if OPENTHREAD_FTD
     if (IsLeader())
     {
-        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
+        Get<ThreadNetif>().RemoveUnicastAddress(Get<MleRouter>().mLeaderAloc);
     }
+#endif
 
     SetRloc16(aRloc16);
     SetRole(kRoleChild);
@@ -888,28 +892,40 @@ void Mle::UpdateLinkLocalAddress(void)
 
 void Mle::SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix)
 {
-    VerifyOrExit(GetMeshLocalPrefix() != aMeshLocalPrefix,
-                 Get<Notifier>().SignalIfFirst(kEventThreadMeshLocalAddrChanged));
+    VerifyOrExit(mMeshLocalPrefix != aMeshLocalPrefix);
 
-    if (Get<ThreadNetif>().IsUp())
-    {
-        Get<ThreadNetif>().RemoveUnicastAddress(mLeaderAloc);
+    mMeshLocalPrefix = aMeshLocalPrefix;
 
-        // We must remove the old addresses before adding the new ones.
-        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal64);
-        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
-        Get<ThreadNetif>().UnsubscribeMulticast(mLinkLocalAllThreadNodes);
-        Get<ThreadNetif>().UnsubscribeMulticast(mRealmLocalAllThreadNodes);
-    }
+    // We ask `ThreadNetif` to apply the new mesh-local prefix which
+    // will then update all of its assigned unicast addresses that are
+    // marked as mesh-local, as well as all of the subscribed mesh-local
+    // prefix-based multicast addresses (such as link-local or
+    // realm-local All Thread Nodes addresses). It is important to call
+    // `ApplyNewMeshLocalPrefix()` first so that `ThreadNetif` can
+    // correctly signal the updates. It will first signal the removal
+    // of the previous address based on the old prefix, and then the
+    // addition of the new address with the new mesh-local prefix.
 
-    mMeshLocal64.GetAddress().SetPrefix(aMeshLocalPrefix);
-    mMeshLocal16.GetAddress().SetPrefix(aMeshLocalPrefix);
-    mLeaderAloc.GetAddress().SetPrefix(aMeshLocalPrefix);
+    Get<ThreadNetif>().ApplyNewMeshLocalPrefix();
 
-    // Just keep mesh local prefix if network interface is down
-    VerifyOrExit(Get<ThreadNetif>().IsUp());
+    // Some of the addresses may already be updated from the
+    // `ApplyNewMeshLocalPrefix()` call, but we apply the new prefix to
+    // them in case they are not yet added to the `Netif`. This ensures
+    // that addresses are always updated and other modules can retrieve
+    // them using methods such as `GetMeshLocal16()`, `GetMeshLocal64()`
+    // or `GetLinkLocalAllThreadNodesAddress()`, even if they have not
+    // yet been added to the `Netif`.
 
-    ApplyMeshLocalPrefix();
+    mMeshLocal64.GetAddress().SetPrefix(mMeshLocalPrefix);
+    mMeshLocal16.GetAddress().SetPrefix(mMeshLocalPrefix);
+    mLinkLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(mMeshLocalPrefix);
+    mRealmLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(mMeshLocalPrefix);
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    Get<BackboneRouter::Local>().ApplyNewMeshLocalPrefix();
+#endif
+
+    Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
 
 exit:
     return;
@@ -927,71 +943,6 @@ exit:
     return error;
 }
 #endif
-
-void Mle::ApplyMeshLocalPrefix(void)
-{
-    mLinkLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
-    mRealmLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
-
-    VerifyOrExit(!IsDisabled());
-
-    // Add the addresses back into the table.
-    Get<ThreadNetif>().AddUnicastAddress(mMeshLocal64);
-    Get<ThreadNetif>().SubscribeMulticast(mLinkLocalAllThreadNodes);
-    Get<ThreadNetif>().SubscribeMulticast(mRealmLocalAllThreadNodes);
-
-    if (IsAttached())
-    {
-        Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
-    }
-
-    // update Leader ALOC
-    if (IsLeader())
-    {
-        Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
-    }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
-    Get<MeshCoP::Commissioner>().ApplyMeshLocalPrefix();
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    Get<MeshCoP::BorderAgent>().ApplyMeshLocalPrefix();
-#endif
-
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-    Get<Dhcp6::Server>().ApplyMeshLocalPrefix();
-#endif
-
-#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
-    Get<NeighborDiscovery::Agent>().ApplyMeshLocalPrefix();
-#endif
-
-#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    for (ServiceAloc &serviceAloc : mServiceAlocs)
-    {
-        if (serviceAloc.IsInUse())
-        {
-            Get<ThreadNetif>().RemoveUnicastAddress(serviceAloc);
-        }
-
-        serviceAloc.ApplyMeshLocalPrefix(GetMeshLocalPrefix());
-
-        if (serviceAloc.IsInUse())
-        {
-            Get<ThreadNetif>().AddUnicastAddress(serviceAloc);
-        }
-    }
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<BackboneRouter::Local>().ApplyMeshLocalPrefix();
-#endif
-
-exit:
-    // Changing the prefix also causes the mesh local address to be different.
-    Get<Notifier>().Signal(kEventThreadMeshLocalAddrChanged);
-}
 
 void Mle::SetRloc16(uint16_t aRloc16)
 {
@@ -1051,7 +1002,7 @@ Error Mle::GetLeaderAddress(Ip6::Address &aAddress) const
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
 
-    aAddress.SetToRoutingLocator(GetMeshLocalPrefix(), Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
+    aAddress.SetToRoutingLocator(mMeshLocalPrefix, Rloc16FromRouterId(mLeaderData.GetLeaderRouterId()));
 
 exit:
     return error;
@@ -1075,7 +1026,7 @@ Error Mle::GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const
     Error error = kErrorNone;
 
     VerifyOrExit(GetRloc16() != Mac::kShortAddrInvalid, error = kErrorDetached);
-    aAddress.SetToAnycastLocator(GetMeshLocalPrefix(), ServiceAlocFromId(aServiceId));
+    aAddress.SetToAnycastLocator(mMeshLocalPrefix, ServiceAlocFromId(aServiceId));
 
 exit:
     return error;
@@ -1259,7 +1210,7 @@ exit:
 
 Mle::ServiceAloc::ServiceAloc(void)
 {
-    InitAsThreadOriginRealmLocalScope();
+    InitAsThreadOriginMeshLocal();
     GetAddress().GetIid().SetToLocator(kNotInUse);
 }
 
@@ -3954,10 +3905,7 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
     return IsMeshLocalAddress(aAddress) && aAddress.GetIid().IsAnycastLocator();
 }
 
-bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const
-{
-    return (aAddress.GetPrefix() == GetMeshLocalPrefix());
-}
+bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const { return (aAddress.GetPrefix() == mMeshLocalPrefix); }
 
 Error Mle::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
 {

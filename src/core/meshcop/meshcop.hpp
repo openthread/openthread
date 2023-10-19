@@ -434,18 +434,6 @@ Error GeneratePskc(const char          *aPassPhrase,
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
-/**
- * Gets the border agent RLOC.
- *
- * @param[in]   aNetIf  A reference to the thread interface.
- * @param[out]  aRloc   Border agent RLOC.
- *
- * @retval kErrorNone       Successfully got the Border Agent Rloc.
- * @retval kErrorNotFound   Border agent is not available.
- *
- */
-Error GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
 /**
  * Emits a log message indicating an error during a MeshCoP action.

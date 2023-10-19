@@ -182,53 +182,77 @@ public:
                          uint16_t       aLength);
 
     /**
-     * Returns a pointer to the Commissioning Data.
+     * Searches for given sub-TLV in Commissioning Data TLV.
      *
-     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
+     * @tparam SubTlvType    The sub-TLV type to search for.
      *
-     */
-    CommissioningDataTlv *GetCommissioningData(void) { return AsNonConst(AsConst(this)->GetCommissioningData()); }
-
-    /**
-     * Returns a pointer to the Commissioning Data.
-     *
-     * @returns A pointer to the Commissioning Data or `nullptr` if no Commissioning Data exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no such sub-TLV exists.
      *
      */
-    const CommissioningDataTlv *GetCommissioningData(void) const;
-
-    /**
-     * Returns a pointer to the Commissioning Data Sub-TLV.
-     *
-     * @param[in]  aType  The TLV type value.
-     *
-     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
-     *
-     */
-    MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
+    template <typename SubTlvType> const SubTlvType *FindInCommissioningData(void) const
     {
-        return AsNonConst(AsConst(this)->GetCommissioningDataSubTlv(aType));
+        return As<SubTlvType>(FindCommissioningDataSubTlv(SubTlvType::kType));
     }
 
     /**
-     * Returns a pointer to the Commissioning Data Sub-TLV.
+     * Searches for given sub-TLV in Commissioning Data TLV.
      *
-     * @param[in]  aType  The TLV type value.
+     * @tparam SubTlvType    The sub-TLV type to search for.
      *
-     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no Sub-TLV exists.
+     * @returns A pointer to the Commissioning Data Sub-TLV or `nullptr` if no such sub-TLV exists.
      *
      */
-    const MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const;
+    template <typename SubTlvType> SubTlvType *FindInCommissioningData(void)
+    {
+        return As<SubTlvType>(FindCommissioningDataSubTlv(SubTlvType::kType));
+    }
 
     /**
-     * Indicates whether or not the Commissioning Data TLV indicates Joining is enabled.
+     * Finds and reads the Commissioning Session ID in Commissioning Data TLV.
      *
-     * Joining is enabled if a Border Agent Locator TLV exist and the Steering Data TLV is non-zero.
+     * @param[out] aSessionId  A reference to return the read session ID.
      *
-     * @returns TRUE if the Commissioning Data TLV says Joining is enabled, FALSE otherwise.
+     * @retval kErrorNone       Successfully read the session ID, @p aSessionId is updated.
+     * @retval kErrorNotFound   Did not find Session ID sub-TLV.
+     * @retval kErrorParse      Failed to parse Commissioning Data TLV (invalid format).
      *
      */
-    bool IsJoiningEnabled(void) const;
+    Error FindCommissioningSessionId(uint16_t &aSessionId) const;
+
+    /**
+     * Finds and reads the Border Agent RLOC16 in Commissioning Data TLV.
+     *
+     * @param[out] aRloc16  A reference to return the read RLOC16.
+     *
+     * @retval kErrorNone       Successfully read the Border Agent RLOC16, @p aRloc16 is updated.
+     * @retval kErrorNotFound   Did not find Border Agent RLOC16 sub-TLV.
+     * @retval kErrorParse      Failed to parse Commissioning Data TLV (invalid format).
+     *
+     */
+    Error FindBorderAgentRloc(uint16_t &aRloc16) const;
+
+    /**
+     * Finds and reads the Joiner UDP Port in Commissioning Data TLV.
+     *
+     * @param[out] aPort  A reference to return the read port number.
+     *
+     * @retval kErrorNone       Successfully read the Joiner UDP port, @p aPort is updated.
+     * @retval kErrorNotFound   Did not find Joiner UDP Port sub-TLV.
+     * @retval kErrorParse      Failed to parse Commissioning Data TLV (invalid format).
+     *
+     */
+    Error FindJoinerUdpPort(uint16_t &aPort) const;
+
+    /**
+     * Indicates whether or not the Commissioning Data TLV indicates Joining is allowed.
+     *
+     * Joining is allowed if a Border Agent Locator TLV exist and the Steering Data TLV is non-zero.
+     *
+     * @retval TRUE    If joining is allowed.
+     * @retval FALSE   If joining is not allowed.
+     *
+     */
+    bool IsJoiningAllowed(void) const;
 
     /**
      * Adds Commissioning Data to the Thread Network Data.
@@ -240,7 +264,7 @@ public:
      * @retval kErrorNoBufs   Insufficient space to add the Commissioning Data.
      *
      */
-    Error SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
+    Error SetCommissioningData(const void *aValue, uint8_t aValueLength);
 
     /**
      * Checks if the steering data includes a Joiner.
@@ -298,7 +322,14 @@ public:
     Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
 protected:
-    void SignalNetDataChanged(void);
+    void                        SignalNetDataChanged(void);
+    const CommissioningDataTlv *FindCommissioningData(void) const;
+    CommissioningDataTlv *FindCommissioningData(void) { return AsNonConst(AsConst(this)->FindCommissioningData()); }
+    const MeshCoP::Tlv   *FindCommissioningDataSubTlv(uint8_t aType) const;
+    MeshCoP::Tlv         *FindCommissioningDataSubTlv(uint8_t aType)
+    {
+        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
+    }
 
     uint8_t mStableVersion;
     uint8_t mVersion;
@@ -320,6 +351,7 @@ private:
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
+    Error ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const;
 
     uint8_t mTlvBuffer[kMaxSize];
     uint8_t mMaxLength;

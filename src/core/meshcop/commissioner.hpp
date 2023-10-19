@@ -486,12 +486,6 @@ public:
      */
     PanIdQueryClient &GetPanIdQueryClient(void) { return mPanIdQuery; }
 
-    /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
-
 private:
     static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
     static constexpr uint8_t  kPetitionRetryCount   = 2;  // COMM_PET_RETRY_COUNT
@@ -622,8 +616,8 @@ private:
 
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
-    char mProvisioningUrl[OT_PROVISIONING_URL_MAX_SIZE + 1]; // + 1 is for null char at end of string.
-    char mCommissionerId[CommissionerIdTlv::kMaxLength + 1];
+    ProvisioningUrlTlv::StringType mProvisioningUrl;
+    CommissionerIdTlv::StringType  mCommissionerId;
 
     State mState;
 

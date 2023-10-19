@@ -49,21 +49,6 @@
 namespace ot {
 namespace MeshCoP {
 
-OT_TOOL_PACKED_BEGIN
-class CommissioningData
-{
-public:
-    uint8_t GetLength(void) const
-    {
-        return sizeof(Tlv) + mBorderAgentLocator.GetLength() + sizeof(Tlv) + mCommissionerSessionId.GetLength() +
-               sizeof(Tlv) + mSteeringData.GetLength();
-    }
-
-    BorderAgentLocatorTlv    mBorderAgentLocator;
-    CommissionerSessionIdTlv mCommissionerSessionId;
-    SteeringDataTlv          mSteeringData;
-} OT_TOOL_PACKED_END;
-
 class Leader : public InstanceLocator, private NonCopyable
 {
     friend class Tmf::Agent;
@@ -113,6 +98,19 @@ public:
 private:
     static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
+    OT_TOOL_PACKED_BEGIN
+    class CommissioningData
+    {
+    public:
+        void    Init(uint16_t aBorderAgentRloc16, uint16_t aSessionId);
+        uint8_t GetLength(void) const;
+
+    private:
+        BorderAgentLocatorTlv    mBorderAgentLocatorTlv;
+        CommissionerSessionIdTlv mSessionIdTlv;
+        SteeringDataTlv          mSteeringDataTlv;
+    } OT_TOOL_PACKED_END;
+
     void HandleTimer(void);
 
     template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -135,8 +133,8 @@ private:
 
     uint32_t mDelayTimerMinimal;
 
-    CommissionerIdTlv mCommissionerId;
-    uint16_t          mSessionId;
+    CommissionerIdTlv::StringType mCommissionerId;
+    uint16_t                      mSessionId;
 };
 
 DeclareTmfHandler(Leader, kUriLeaderPetition);

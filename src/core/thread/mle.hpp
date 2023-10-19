@@ -352,7 +352,7 @@ public:
      * @returns A reference to the Mesh Local Prefix.
      *
      */
-    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocal16.GetAddress().GetPrefix(); }
+    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
 
     /**
      * Sets the Mesh Local Prefix.
@@ -376,12 +376,6 @@ public:
      */
     Error SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMlIid);
 #endif
-
-    /**
-     * Applies the Mesh Local Prefix.
-     *
-     */
-    void ApplyMeshLocalPrefix(void);
 
     /**
      * Returns a reference to the Thread link-local address.
@@ -689,6 +683,21 @@ public:
      *
      */
     bool HasRestored(void) const { return mHasRestored; }
+
+    /**
+     * Indicates whether or not a given netif multicast address instance is a prefix-based address added by MLE and
+     * uses the mesh local prefix.
+     *
+     * @param[in] aAddress   A `Netif::MulticastAddress` address instance.
+     *
+     * @retval TRUE   If @p aAddress is a prefix-based address which uses the mesh local prefix.
+     * @retval FALSE  If @p aAddress is not a prefix-based address which uses the mesh local prefix.
+     *
+     */
+    bool IsMulticastAddressMeshLocalPrefixBased(const Ip6::Netif::MulticastAddress &aAddress) const
+    {
+        return (&aAddress == &mLinkLocalAllThreadNodes) || (&aAddress == &mRealmLocalAllThreadNodes);
+    }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -1151,7 +1160,6 @@ private:
         void     MarkAsNotInUse(void) { SetAloc16(kNotInUse); }
         uint16_t GetAloc16(void) const { return GetAddress().GetIid().GetLocator(); }
         void     SetAloc16(uint16_t aAloc16) { GetAddress().GetIid().SetLocator(aAloc16); }
-        void     ApplyMeshLocalPrefix(const Ip6::NetworkPrefix &aPrefix) { GetAddress().SetPrefix(aPrefix); }
     };
 #endif
 
@@ -1401,12 +1409,12 @@ private:
     DelayTimer                   mDelayedResponseTimer;
     MsgTxTimer                   mMessageTransmissionTimer;
     DetachGracefullyTimer        mDetachGracefullyTimer;
+    Ip6::NetworkPrefix           mMeshLocalPrefix;
     Ip6::Netif::UnicastAddress   mLinkLocal64;
     Ip6::Netif::UnicastAddress   mMeshLocal64;
     Ip6::Netif::UnicastAddress   mMeshLocal16;
     Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
     Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
-    Ip6::Netif::UnicastAddress   mLeaderAloc;
 };
 
 } // namespace Mle

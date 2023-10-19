@@ -42,6 +42,7 @@
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
+#include "common/owned_ptr.hpp"
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "mac/channel_mask.hpp"
@@ -196,14 +197,10 @@ public:
     /**
      * Submits a message to the mesh forwarder for forwarding.
      *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval kErrorNone     Successfully enqueued the message.
-     * @retval kErrorAlready  The message was already enqueued.
-     * @retval kErrorDrop     The message could not be sent and should be dropped.
+     * @param[in]  aMessagePtr  An owned pointer to a message (transfer ownership).
      *
      */
-    Error SendMessage(Message &aMessage);
+    void SendMessage(OwnedPtr<Message> aMessagePtr);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**

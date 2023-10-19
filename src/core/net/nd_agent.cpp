@@ -105,22 +105,11 @@ void Agent::UpdateService(void)
 
             mAloc.InitAsThreadOrigin();
             mAloc.GetAddress().SetToAnycastLocator(Get<Mle::MleRouter>().GetMeshLocalPrefix(), rloc);
+            mAloc.mMeshLocal = true;
             Get<ThreadNetif>().AddUnicastAddress(mAloc);
             ExitNow();
         }
     }
-
-exit:
-    return;
-}
-
-void Agent::ApplyMeshLocalPrefix(void)
-{
-    VerifyOrExit(IsAlocInUse());
-
-    Get<ThreadNetif>().RemoveUnicastAddress(mAloc);
-    mAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    Get<ThreadNetif>().AddUnicastAddress(mAloc);
 
 exit:
     return;

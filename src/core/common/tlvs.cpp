@@ -271,7 +271,7 @@ template Error Tlv::FindUintTlv<uint8_t>(const Message &aMessage, uint8_t aType,
 template Error Tlv::FindUintTlv<uint16_t>(const Message &aMessage, uint8_t aType, uint16_t &aValue);
 template Error Tlv::FindUintTlv<uint32_t>(const Message &aMessage, uint8_t aType, uint32_t &aValue);
 
-Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength)
+Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint16_t aLength)
 {
     Error    error;
     uint16_t offset;
@@ -320,6 +320,34 @@ Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8
 
 exit:
     return error;
+}
+
+const Tlv *Tlv::FindTlv(const void *aTlvsStart, uint16_t aTlvsLength, uint8_t aType)
+{
+    const Tlv *tlv;
+    const Tlv *end = reinterpret_cast<const Tlv *>(reinterpret_cast<const uint8_t *>(aTlvsStart) + aTlvsLength);
+
+    for (tlv = reinterpret_cast<const Tlv *>(aTlvsStart); tlv < end; tlv = tlv->GetNext())
+    {
+        VerifyOrExit((tlv + 1) <= end, tlv = nullptr);
+
+        if (tlv->IsExtended())
+        {
+            VerifyOrExit((As<ExtendedTlv>(tlv) + 1) <= As<ExtendedTlv>(end), tlv = nullptr);
+        }
+
+        VerifyOrExit(tlv->GetNext() <= end, tlv = nullptr);
+
+        if (tlv->GetType() == aType)
+        {
+            ExitNow();
+        }
+    }
+
+    tlv = nullptr;
+
+exit:
+    return tlv;
 }
 
 } // namespace ot

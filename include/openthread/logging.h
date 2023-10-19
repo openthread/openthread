@@ -202,6 +202,45 @@ void otDumpInfoPlat(const char *aText, const void *aData, uint16_t aDataLength);
 void otDumpDebgPlat(const char *aText, const void *aData, uint16_t aDataLength);
 
 /**
+ * Emits a log message at given log level using a platform module name.
+ *
+ * This is is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below @p aLogLevel , this function does not emit any log message.
+ *
+ * The @p aPlatModuleName name is used to determine the log module name in the emitted log message, following the
+ * `P-{PlatModuleName}---` format. This means that the prefix string "P-" is added to indicate that this is a platform
+ * sub-module, followed by the next 12 characters of the @p PlatModuleName string, with padded hyphens `-` at the end
+ * to ensure that the region name is 14 characters long.
+
+ * @param[in] aLogLevel         The log level.
+ * @param[in] aPlatModuleName   The platform sub-module name.
+ * @param[in] aFormat           The format string.
+ * @param[in] ...               Arguments for the format specification.
+ *
+ */
+void otLogPlat(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, ...)
+    OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(3, 4);
+
+/**
+ * Emits a log message at given log level using a platform module name.
+ *
+ * This is is intended for use by platform. If `OPENTHREAD_CONFIG_LOG_PLATFORM` is not set or the current log
+ * level is below @p aLogLevel , this function does not emit any log message.
+ *
+ * The @p aPlatModuleName name is used to determine the log module name in the emitted log message, following the
+ * `P-{PlatModuleName}---` format. This means that the prefix string "P-" is added to indicate that this is a platform
+ * sub-module, followed by the next 12 characters of the @p PlatModuleName string, with padded hyphens `-` at the end
+ * to ensure that the region name is 14 characters long.
+ *
+ * @param[in] aLogLevel         The log level.
+ * @param[in] aPlatModuleName   The platform sub-module name.
+ * @param[in] aFormat           The format string.
+ * @param[in] aArgs             Arguments for the format specification.
+ *
+ */
+void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char *aFormat, va_list aArgs);
+
+/**
  * Emits a log message at a given log level.
  *
  * Is intended for use by CLI only. If `OPENTHREAD_CONFIG_LOG_CLI` is not set or the current log
