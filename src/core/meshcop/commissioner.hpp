@@ -97,134 +97,6 @@ public:
     typedef otCommissionerJoinerCallback JoinerCallback; ///< Joiner state change callback function pointer type.
 
     /**
-     * Represents a Commissioning Dataset.
-     *
-     */
-    class Dataset : public otCommissioningDataset, public Clearable<Dataset>
-    {
-    public:
-        /**
-         * Indicates whether or not the Border Router RLOC16 Locator is set in the Dataset.
-         *
-         * @returns TRUE if Border Router RLOC16 Locator is set, FALSE otherwise.
-         *
-         */
-        bool IsLocatorSet(void) const { return mIsLocatorSet; }
-
-        /**
-         * Gets the Border Router RLOC16 Locator in the Dataset.
-         *
-         * MUST be used when Locator is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Border Router RLOC16 Locator in the Dataset.
-         *
-         */
-        uint16_t GetLocator(void) const { return mLocator; }
-
-        /**
-         * Sets the Border Router RLOCG16 Locator in the Dataset.
-         *
-         * @param[in] aLocator  A Locator.
-         *
-         */
-        void SetLocator(uint16_t aLocator)
-        {
-            mIsLocatorSet = true;
-            mLocator      = aLocator;
-        }
-
-        /**
-         * Indicates whether or not the Session ID is set in the Dataset.
-         *
-         * @returns TRUE if Session ID is set, FALSE otherwise.
-         *
-         */
-        bool IsSessionIdSet(void) const { return mIsSessionIdSet; }
-
-        /**
-         * Gets the Session ID in the Dataset.
-         *
-         * MUST be used when Session ID is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Session ID in the Dataset.
-         *
-         */
-        uint16_t GetSessionId(void) const { return mSessionId; }
-
-        /**
-         * Sets the Session ID in the Dataset.
-         *
-         * @param[in] aSessionId  The Session ID.
-         *
-         */
-        void SetSessionId(uint16_t aSessionId)
-        {
-            mIsSessionIdSet = true;
-            mSessionId      = aSessionId;
-        }
-
-        /**
-         * Indicates whether or not the Steering Data is set in the Dataset.
-         *
-         * @returns TRUE if Steering Data is set, FALSE otherwise.
-         *
-         */
-        bool IsSteeringDataSet(void) const { return mIsSteeringDataSet; }
-
-        /**
-         * Gets the Steering Data in the Dataset.
-         *
-         * MUST be used when Steering Data is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Steering Data in the Dataset.
-         *
-         */
-        const SteeringData &GetSteeringData(void) const { return AsCoreType(&mSteeringData); }
-
-        /**
-         * Returns a reference to the Steering Data in the Dataset to be updated by caller.
-         *
-         * @returns A reference to the Steering Data in the Dataset.
-         *
-         */
-        SteeringData &UpdateSteeringData(void)
-        {
-            mIsSteeringDataSet = true;
-            return AsCoreType(&mSteeringData);
-        }
-
-        /**
-         * Indicates whether or not the Joiner UDP port is set in the Dataset.
-         *
-         * @returns TRUE if Joiner UDP port is set, FALSE otherwise.
-         *
-         */
-        bool IsJoinerUdpPortSet(void) const { return mIsJoinerUdpPortSet; }
-
-        /**
-         * Gets the Joiner UDP port in the Dataset.
-         *
-         * MUST be used when Joiner UDP port is set in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The Joiner UDP port in the Dataset.
-         *
-         */
-        uint16_t GetJoinerUdpPort(void) const { return mJoinerUdpPort; }
-
-        /**
-         * Sets the Joiner UDP Port in the Dataset.
-         *
-         * @param[in] aJoinerUdpPort  The Joiner UDP Port.
-         *
-         */
-        void SetJoinerUdpPort(uint16_t aJoinerUdpPort)
-        {
-            mIsJoinerUdpPortSet = true;
-            mJoinerUdpPort      = aJoinerUdpPort;
-        }
-    };
-
-    /**
      * Initializes the Commissioner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -460,7 +332,7 @@ public:
      * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    Error SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
+    Error SendMgmtCommissionerSetRequest(const CommissioningDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * Returns a reference to the AnnounceBeginClient instance.
@@ -633,7 +505,6 @@ DeclareTmfHandler(Commissioner, kUriJoinerFinalize);
 
 DefineMapEnum(otCommissionerState, MeshCoP::Commissioner::State);
 DefineMapEnum(otCommissionerJoinerEvent, MeshCoP::Commissioner::JoinerEvent);
-DefineCoreType(otCommissioningDataset, MeshCoP::Commissioner::Dataset);
 
 } // namespace ot
 

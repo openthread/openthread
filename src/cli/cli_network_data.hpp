@@ -143,6 +143,7 @@ private:
     void    OutputRoutes(bool aLocal);
     void    OutputServices(bool aLocal);
     void    OutputLowpanContexts(bool aLocal);
+    void    OutputCommissioningDataset(bool aLocal);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }

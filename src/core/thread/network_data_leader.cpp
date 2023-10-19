@@ -458,6 +458,44 @@ exit:
     return error;
 }
 
+void LeaderBase::GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) const
+{
+    const CommissioningDataTlv *dataTlv = FindCommissioningData();
+    const MeshCoP::Tlv         *subTlv;
+    const MeshCoP::Tlv         *endTlv;
+
+    aDataset.Clear();
+
+    VerifyOrExit(dataTlv != nullptr);
+
+    aDataset.mIsLocatorSet       = (FindBorderAgentRloc(aDataset.mLocator) == kErrorNone);
+    aDataset.mIsSessionIdSet     = (FindCommissioningSessionId(aDataset.mSessionId) == kErrorNone);
+    aDataset.mIsJoinerUdpPortSet = (FindJoinerUdpPort(aDataset.mJoinerUdpPort) == kErrorNone);
+    aDataset.mIsSteeringDataSet  = (FindSteeringData(AsCoreType(&aDataset.mSteeringData)) == kErrorNone);
+
+    // Determine if the Commissioning data has any extra unknown TLVs
+
+    subTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue());
+    endTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue() + dataTlv->GetLength());
+
+    for (; subTlv < endTlv; subTlv = subTlv->GetNext())
+    {
+        switch (subTlv->GetType())
+        {
+        case MeshCoP::Tlv::kBorderAgentLocator:
+        case MeshCoP::Tlv::kSteeringData:
+        case MeshCoP::Tlv::kJoinerUdpPort:
+        case MeshCoP::Tlv::kCommissionerSessionId:
+            break;
+        default:
+            ExitNow(aDataset.mHasExtraTlv = true);
+        }
+    }
+
+exit:
+    return;
+}
+
 Error LeaderBase::FindBorderAgentRloc(uint16_t &aRloc16) const
 {
     return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kBorderAgentLocator, aRloc16);
@@ -473,23 +511,25 @@ Error LeaderBase::FindJoinerUdpPort(uint16_t &aPort) const
     return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kJoinerUdpPort, aPort);
 }
 
+Error LeaderBase::FindSteeringData(MeshCoP::SteeringData &aSteeringData) const
+{
+    Error                           error           = kErrorNone;
+    const MeshCoP::SteeringDataTlv *steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
+
+    VerifyOrExit(steeringDataTlv != nullptr, error = kErrorNotFound);
+    steeringDataTlv->CopyTo(aSteeringData);
+
+exit:
+    return error;
+}
+
 bool LeaderBase::IsJoiningAllowed(void) const
 {
-    bool                            isAllowed = false;
-    const MeshCoP::SteeringDataTlv *steeringDataTlv;
+    bool                  isAllowed = false;
+    MeshCoP::SteeringData steeringData;
 
-    VerifyOrExit(FindInCommissioningData<MeshCoP::BorderAgentLocatorTlv>() != nullptr);
-
-    steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
-    VerifyOrExit(steeringDataTlv != nullptr);
-
-    for (int i = 0; i < steeringDataTlv->GetLength(); i++)
-    {
-        if (steeringDataTlv->GetValue()[i] != 0)
-        {
-            ExitNow(isAllowed = true);
-        }
-    }
+    SuccessOrExit(FindSteeringData(steeringData));
+    isAllowed = !steeringData.IsEmpty();
 
 exit:
     return isAllowed;
@@ -497,16 +537,11 @@ exit:
 
 Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
 {
-    Error                           error = kErrorNone;
-    const MeshCoP::SteeringDataTlv *steeringDataTlv;
-    MeshCoP::SteeringData           steeringData;
+    Error                 error = kErrorInvalidState;
+    MeshCoP::SteeringData steeringData;
 
-    steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
-    VerifyOrExit(steeringDataTlv != nullptr, error = kErrorInvalidState);
-
-    steeringDataTlv->CopyTo(steeringData);
-
-    VerifyOrExit(steeringData.Contains(aFilterIndexes), error = kErrorNotFound);
+    SuccessOrExit(FindSteeringData(steeringData));
+    error = steeringData.Contains(aFilterIndexes) ? kErrorNone : kErrorNotFound;
 
 exit:
     return error;

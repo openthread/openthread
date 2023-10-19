@@ -379,6 +379,15 @@ Service entries are listed under `Services` header:
 - Context ID
 - Compress flag (`c` if marked or `-` otherwise).
 
+Commissioning Dataset information is printed under `Commissioning` header:
+
+- Session ID if present in Dataset or `-` otherwise
+- Border Agent RLOC16 (in hex) if present in Dataset or `-` otherwise
+- Joiner UDP port number if present in Dataset or `-` otherwise
+- Steering Data (as hex bytes) if present in Dataset or `-` otherwise
+- Flags:
+  - e: if Dataset contains any extra unknown TLV
+
 Print Network Data received from the Leader.
 
 ```bash
@@ -392,6 +401,8 @@ Services:
 44970 5d fddead00beef00007bad0069ce45948504d2 s a000
 Contexts:
 fd00:dead:beef:cafe::/64 1 c
+Commissioning:
+1248 dc00 9988 00000000000120000000000000000000 e
 Done
 ```
 

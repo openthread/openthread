@@ -387,11 +387,13 @@ class Node(object):
         routes_index = outputs.index('Routes:')
         services_index = outputs.index('Services:')
         contexts_index = outputs.index('Contexts:')
+        commissioning_index = outputs.index('Commissioning:')
         result = {}
         result['prefixes'] = outputs[1:routes_index]
         result['routes'] = outputs[routes_index + 1:services_index]
         result['services'] = outputs[services_index + 1:contexts_index]
-        result['contexts'] = outputs[contexts_index + 1:]
+        result['contexts'] = outputs[contexts_index + 1:commissioning_index]
+        result['commissioning'] = outputs[commissioning_index + 1:]
 
         return result
 
