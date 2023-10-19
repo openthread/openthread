@@ -1199,6 +1199,23 @@ otError otLinkSendEmptyData(otInstance *aInstance);
 otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode);
 
 /**
+ * Get the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the ISO 3166 alpha-2 code.
+
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[out] aRegionCode  The radio region code. The `aRegionCode >> 8` is first ascii char
+ *                          and the `aRegionCode & 0xff` is the second ascii char.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully got region code.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented.
+ *
+ */
+otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
+
+/**
  * @}
  *
  */

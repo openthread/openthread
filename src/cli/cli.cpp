@@ -6658,7 +6658,7 @@ exit:
  * Done
  * @endcode
  * @par api_copy
- * #otPlatRadioGetRegion
+ * #otLinkGetRegion
  */
 template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 {
@@ -6667,7 +6667,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        SuccessOrExit(error = otPlatRadioGetRegion(GetInstancePtr(), &regionCode));
+        SuccessOrExit(error = otLinkGetRegion(GetInstancePtr(), &regionCode));
         OutputLine("%c%c", regionCode >> 8, regionCode & 0xff);
     }
     /**
