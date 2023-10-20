@@ -428,31 +428,6 @@ exit:
     return error;
 }
 
-Error LeaderBase::SetCommissioningData(const void *aValue, uint8_t aValueLength)
-{
-    Error                 error = kErrorNone;
-    CommissioningDataTlv *commissioningDataTlv;
-
-    RemoveCommissioningData();
-
-    if (aValueLength > 0)
-    {
-        VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = kErrorNoBufs);
-        commissioningDataTlv = As<CommissioningDataTlv>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
-        VerifyOrExit(commissioningDataTlv != nullptr, error = kErrorNoBufs);
-
-        commissioningDataTlv->Init();
-        commissioningDataTlv->SetLength(aValueLength);
-        memcpy(commissioningDataTlv->GetValue(), aValue, aValueLength);
-    }
-
-    mVersion++;
-    SignalNetDataChanged();
-
-exit:
-    return error;
-}
-
 const CommissioningDataTlv *LeaderBase::FindCommissioningData(void) const
 {
     return NetworkDataTlv::Find<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
@@ -518,17 +493,6 @@ bool LeaderBase::IsJoiningAllowed(void) const
 
 exit:
     return isAllowed;
-}
-
-void LeaderBase::RemoveCommissioningData(void)
-{
-    CommissioningDataTlv *tlv = FindCommissioningData();
-
-    VerifyOrExit(tlv != nullptr);
-    RemoveTlv(tlv);
-
-exit:
-    return;
 }
 
 Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const

@@ -186,96 +186,37 @@ exit:
 
 template <> void Leader::HandleTmf<kUriCommissionerSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint16_t                 offset = aMessage.GetOffset();
-    uint16_t                 length = aMessage.GetLength() - aMessage.GetOffset();
-    uint8_t                  tlvs[NetworkData::kMaxSize];
-    MeshCoP::StateTlv::State state        = MeshCoP::StateTlv::kReject;
-    bool                     hasSessionId = false;
-    bool                     hasValidTlv  = false;
-    uint16_t                 sessionId    = 0;
-    CommissioningDataTlv    *commDataTlv;
-
-    MeshCoP::Tlv *cur;
-    MeshCoP::Tlv *end;
+    MeshCoP::StateTlv::State state = MeshCoP::StateTlv::kReject;
+    uint16_t                 borderAgentRloc;
+    uint16_t                 sessionId;
+    uint16_t                 localSessionId;
 
     VerifyOrExit(Get<Mle::Mle>().IsLeader() && !mWaitingForNetDataSync);
 
-    VerifyOrExit(length <= sizeof(tlvs));
+    // Validate that there is no Border Agent Locator TLV. This also
+    // validates that all included TLVs are properly formatted.
 
-    aMessage.ReadBytes(offset, tlvs, length);
+    VerifyOrExit(Tlv::Find<MeshCoP::BorderAgentLocatorTlv>(aMessage, borderAgentRloc) == kErrorNotFound);
 
-    // Session Id and Border Router Locator MUST NOT be set, but accept including unexpected or
-    // unknown TLV as long as there is at least one valid TLV.
-    cur = reinterpret_cast<MeshCoP::Tlv *>(tlvs);
-    end = reinterpret_cast<MeshCoP::Tlv *>(tlvs + length);
+    SuccessOrExit(Tlv::Find<MeshCoP::CommissionerSessionIdTlv>(aMessage, sessionId));
 
-    while (cur < end)
+    if (FindCommissioningSessionId(localSessionId) == kErrorNone)
     {
-        MeshCoP::Tlv::Type type;
-
-        VerifyOrExit(((cur + 1) <= end) && !cur->IsExtended() && (cur->GetNext() <= end));
-
-        type = cur->GetType();
-
-        if (type == MeshCoP::Tlv::kJoinerUdpPort || type == MeshCoP::Tlv::kSteeringData)
-        {
-            hasValidTlv = true;
-        }
-        else if (type == MeshCoP::Tlv::kBorderAgentLocator)
-        {
-            ExitNow();
-        }
-        else if (type == MeshCoP::Tlv::kCommissionerSessionId)
-        {
-            MeshCoP::CommissionerSessionIdTlv *tlv = As<MeshCoP::CommissionerSessionIdTlv>(cur);
-
-            VerifyOrExit(tlv->IsValid());
-            sessionId    = tlv->GetCommissionerSessionId();
-            hasSessionId = true;
-        }
-        else
-        {
-            // do nothing for unexpected or unknown TLV
-        }
-
-        cur = cur->GetNext();
+        VerifyOrExit(sessionId == localSessionId);
     }
 
-    // verify whether or not commissioner session id TLV is included
-    VerifyOrExit(hasSessionId);
+    // Add the Border Agent RLOC TLV from Network Data.
 
-    // verify whether or not MGMT_COMM_SET.req includes at least one valid TLV
-    VerifyOrExit(hasValidTlv);
-
-    // Find Commissioning Data TLV
-    commDataTlv = FindCommissioningData();
-
-    if (commDataTlv != nullptr)
+    if (FindBorderAgentRloc(borderAgentRloc) == kErrorNone)
     {
-        // Iterate over MeshCoP TLVs and extract desired data
-        for (cur = reinterpret_cast<MeshCoP::Tlv *>(commDataTlv->GetValue());
-             cur < reinterpret_cast<MeshCoP::Tlv *>(commDataTlv->GetValue() + commDataTlv->GetLength());
-             cur = cur->GetNext())
-        {
-            if (cur->GetType() == MeshCoP::Tlv::kCommissionerSessionId)
-            {
-                VerifyOrExit(sessionId == As<MeshCoP::CommissionerSessionIdTlv>(cur)->GetCommissionerSessionId());
-            }
-            else if (cur->GetType() == MeshCoP::Tlv::kBorderAgentLocator)
-            {
-                VerifyOrExit(length + cur->GetSize() <= sizeof(tlvs));
-                memcpy(tlvs + length, reinterpret_cast<uint8_t *>(cur), cur->GetSize());
-                length += cur->GetSize();
-            }
-        }
+        SuccessOrExit(Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(aMessage, borderAgentRloc));
     }
 
-    IgnoreError(SetCommissioningData(tlvs, static_cast<uint8_t>(length)));
+    SuccessOrExit(SetCommissioningData(aMessage));
 
     state = MeshCoP::StateTlv::kAccept;
 
 exit:
-
     if (Get<Mle::MleRouter>().IsLeader())
     {
         SendCommissioningSetResponse(aMessage, aMessageInfo, state);
@@ -337,20 +278,18 @@ void Leader::SendCommissioningSetResponse(const Coap::Message     &aRequest,
                                           const Ip6::MessageInfo  &aMessageInfo,
                                           MeshCoP::StateTlv::State aState)
 {
-    Error          error = kErrorNone;
-    Coap::Message *message;
+    Coap::Message *message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
 
-    message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    VerifyOrExit(message != nullptr);
+    SuccessOrExit(Tlv::Append<MeshCoP::StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
+    SuccessOrExit(Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
+    message = nullptr; // `SendMessage` takes ownership on success
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
-
-    LogInfo("sent %s response", UriToString<kUriCommissionerSet>());
+    LogInfo("Sent %s response", UriToString<kUriCommissionerSet>());
 
 exit:
-    FreeMessageOnError(message, error);
+    FreeMessage(message);
 }
 
 bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode)
@@ -1360,6 +1299,75 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
     {
         Get<MeshCoP::Leader>().SetEmptyCommissionerData();
     }
+}
+
+Error Leader::UpdateCommissioningData(uint16_t aDataLength, CommissioningDataTlv *&aDataTlv)
+{
+    // First determine whether or not we can add Commissioning Data
+    // TLV with the given `aDataLength`, taking into account that we
+    // would remove the current Commissioning Data TLV. Then remove
+    // the current TLV and append a new TLV with proper size which is
+    // returned in `aDataTlv`.
+
+    Error                 error   = kErrorNone;
+    CommissioningDataTlv *dataTlv = FindCommissioningData();
+    uint16_t              insertLength;
+
+    if (dataTlv != nullptr)
+    {
+        insertLength = (aDataLength <= dataTlv->GetLength()) ? 0 : aDataLength - dataTlv->GetLength();
+    }
+    else
+    {
+        insertLength = sizeof(CommissioningDataTlv) + aDataLength;
+    }
+
+    VerifyOrExit(CanInsert(insertLength), error = kErrorNoBufs);
+
+    if (dataTlv != nullptr)
+    {
+        RemoveTlv(dataTlv);
+    }
+
+    aDataTlv = As<CommissioningDataTlv>(AppendTlv(sizeof(CommissioningDataTlv) + aDataLength));
+
+    OT_ASSERT(aDataTlv != nullptr);
+
+    aDataTlv->Init();
+    aDataTlv->SetLength(static_cast<uint8_t>(aDataLength));
+
+    // The caller would fill the `aDataTlv` value.
+
+    mVersion++;
+    SignalNetDataChanged();
+
+exit:
+    return error;
+}
+
+Error Leader::SetCommissioningData(const void *aData, uint8_t aDataLength)
+{
+    Error                 error = kErrorNone;
+    CommissioningDataTlv *dataTlv;
+
+    SuccessOrExit(error = UpdateCommissioningData(aDataLength, dataTlv));
+    memcpy(dataTlv->GetValue(), aData, aDataLength);
+
+exit:
+    return error;
+}
+
+Error Leader::SetCommissioningData(const Message &aMessage)
+{
+    Error                 error      = kErrorNone;
+    uint16_t              dataLength = aMessage.GetLength() - aMessage.GetOffset();
+    CommissioningDataTlv *dataTlv;
+
+    SuccessOrExit(error = UpdateCommissioningData(dataLength, dataTlv));
+    aMessage.ReadBytes(aMessage.GetOffset(), dataTlv->GetValue(), dataLength);
+
+exit:
+    return error;
 }
 
 void Leader::HandleTimer(void)

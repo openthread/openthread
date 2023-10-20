@@ -255,18 +255,6 @@ public:
     bool IsJoiningAllowed(void) const;
 
     /**
-     * Adds Commissioning Data to the Thread Network Data.
-     *
-     * @param[in]  aValue        A pointer to the Commissioning Data value.
-     * @param[in]  aValueLength  The length of @p aValue.
-     *
-     * @retval kErrorNone     Successfully added the Commissioning Data.
-     * @retval kErrorNoBufs   Insufficient space to add the Commissioning Data.
-     *
-     */
-    Error SetCommissioningData(const void *aValue, uint8_t aValueLength);
-
-    /**
      * Checks if the steering data includes a Joiner.
      *
      * @param[in]  aEui64             A reference to the Joiner's IEEE EUI-64.
@@ -338,8 +326,6 @@ private:
     using FilterIndexes = MeshCoP::SteeringData::HashBitIndexes;
 
     const PrefixTlv *FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const;
-
-    void RemoveCommissioningData(void);
 
     template <typename EntryType> int CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const;
     int                               CompareRouteEntries(int8_t   aFirstPreference,
