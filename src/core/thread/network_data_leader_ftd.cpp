@@ -1301,6 +1301,7 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
     Iterator         iterator = kIteratorInit;
     ChangedFlags     flags;
     uint16_t         rloc16;
+    uint16_t         sessionId;
 
     mWaitingForNetDataSync = false;
 
@@ -1344,6 +1345,20 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
         {
             mContextIds.ScheduleToRemove(context->GetContextId());
         }
+    }
+
+    // Update Commissioning Data. We adopt the same session ID
+    // (if any) and resign active commissioner (if any) by
+    // clearing the Commissioning Data.
+
+    if (FindCommissioningSessionId(sessionId) == kErrorNone)
+    {
+        Get<MeshCoP::Leader>().SetSessionId(sessionId);
+    }
+
+    if (FindBorderAgentRloc(rloc16) == kErrorNone)
+    {
+        Get<MeshCoP::Leader>().SetEmptyCommissionerData();
     }
 }
 

@@ -63,6 +63,14 @@ public:
     explicit Leader(Instance &aInstance);
 
     /**
+     * Sets the session ID.
+     *
+     * @param[in] aSessionId  The session ID to use.
+     *
+     */
+    void SetSessionId(uint16_t aSessionId) { mSessionId = aSessionId; }
+
+    /**
      * Sends a MGMT_DATASET_CHANGED message to commissioner.
      *
      * @param[in]  aAddress   The IPv6 address of destination.
