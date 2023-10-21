@@ -232,3 +232,10 @@ exit:
 #endif
     return;
 }
+
+otError otLogGenerateNextHexDumpLine(otLogHexDumpInfo *aInfo)
+{
+    AssertPointerIsNotNull(aInfo);
+
+    return GenerateNextHexDumpLine(*aInfo);
+}

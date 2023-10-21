@@ -424,6 +424,15 @@ public:
     StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
+     * Appends a given character a given number of times.
+     *
+     * @param[in] aChar    The character to append.
+     * @param[in] aCount   Number of times to append @p aChar.
+     *
+     */
+    StringWriter &AppendCharMultipleTimes(char aChar, uint16_t aCount);
+
+    /**
      * Converts all uppercase letter characters in the string to lowercase.
      *
      */

@@ -253,6 +253,45 @@ void otLogPlatArgs(otLogLevel aLogLevel, const char *aPlatModuleName, const char
  */
 void otLogCli(otLogLevel aLogLevel, const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
 
+#define OT_LOG_HEX_DUMP_LINE_SIZE 73 ///< Hex dump line string size.
+
+/**
+ * Represents information used for generating hex dump output.
+ *
+ */
+typedef struct
+{
+    const uint8_t *mDataBytes;                       ///< The data byes.
+    uint16_t       mDataLength;                      ///< The data length (number of bytes in @p mDataBytes)
+    const char    *mTitle;                           ///< Title string to add table header (MUST NOT be `NULL`).
+    char           mLine[OT_LOG_HEX_DUMP_LINE_SIZE]; ///< Buffer to output one line of generated hex dump.
+    uint16_t       mIterator;                        ///< Iterator used by OT stack. MUST be initialized to zero.
+} otLogHexDumpInfo;
+
+/**
+ * Generates the next hex dump line.
+ *
+ * Can call this method back-to-back to generate the hex dump output line by line. On the first call the `mIterator`
+ * field in @p aInfo MUST be set to zero.
+ *
+ * Here is an example of the generated hex dump output:
+ *
+ *  "==========================[{mTitle} len=070]============================"
+ *  "| 41 D8 87 34 12 FF FF 25 | 4C 57 DA F2 FB 2F 62 7F | A..4...%LW.../b. |"
+ *  "| 3B 01 F0 4D 4C 4D 4C 54 | 4F 00 15 15 00 00 00 00 | ;..MLMLTO....... |"
+ *  "| 00 00 00 01 80 DB 60 82 | 7E 33 72 3B CC B3 A1 84 | ......`.~3r;.... |"
+ *  "| 3B E6 AD B2 0B 45 E7 45 | C5 B9 00 1A CB 2D 6D 1C | ;....E.E.....-m. |"
+ *  "| 10 3E 3C F5 D3 70       |                         | .><..p           |"
+ *  "------------------------------------------------------------------------"
+ *
+ * @param[in,out] aInfo        A pointer to `otLogHexDumpInfo` to use to generate hex dump.
+ *
+ * @retval OT_ERROR_NONE       Successfully generated the next line, `mLine` field in @p aInfo is updated.
+ * @retval OT_ERROR_NOT_FOUND  Reached the end and no more line to generate.
+ *
+ */
+otError otLogGenerateNextHexDumpLine(otLogHexDumpInfo *aInfo);
+
 /**
  * @}
  *
