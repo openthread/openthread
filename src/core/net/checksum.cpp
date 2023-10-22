@@ -34,13 +34,17 @@
 #include "checksum.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip4_types.hpp"
+#include "net/ip6.hpp"
 #include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
+
+RegisterLogModule("Ip6");
 
 void Checksum::AddUint8(uint8_t aUint8)
 {
@@ -147,11 +151,18 @@ void Checksum::Calculate(const Ip4::Address &aSource,
 
 Error Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
+    Error    error = kErrorNone;
     Checksum checksum;
 
     checksum.Calculate(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), aIpProto, aMessage);
 
-    return (checksum.GetValue() == kValidRxChecksum) ? kErrorNone : kErrorDrop;
+    if (checksum.GetValue() != kValidRxChecksum)
+    {
+        LogNote("Bad %s checksum", Ip6::Ip6::IpProtoToString(aIpProto));
+        error = kErrorDrop;
+    }
+
+    return error;
 }
 
 void Checksum::UpdateMessageChecksum(Message            &aMessage,

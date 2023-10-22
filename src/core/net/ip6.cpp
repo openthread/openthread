@@ -905,18 +905,10 @@ Error Ip6::HandlePayload(Header            &aIp6Header,
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     case kProtoTcp:
         error = mTcp.HandleMessage(aIp6Header, *messagePtr, aMessageInfo);
-        if (error == kErrorDrop)
-        {
-            LogNote("Error TCP Checksum");
-        }
         break;
 #endif
     case kProtoUdp:
         error = mUdp.HandleMessage(*messagePtr, aMessageInfo);
-        if (error == kErrorDrop)
-        {
-            LogNote("Error UDP Checksum");
-        }
         break;
 
     case kProtoIcmp6:
