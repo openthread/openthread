@@ -39,7 +39,7 @@
 
 #include "border_router/routing_manager.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/ip4_types.hpp"
 #include "net/ip6_headers.hpp"
 #include "net/nat64_translator.hpp"

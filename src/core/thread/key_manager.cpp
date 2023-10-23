@@ -35,12 +35,12 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"
 #include "crypto/storage.hpp"
+#include "instance/instance.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 

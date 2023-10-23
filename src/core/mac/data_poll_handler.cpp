@@ -36,9 +36,9 @@
 #if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

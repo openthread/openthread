@@ -34,8 +34,8 @@
 #include "neighbor_table.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "thread/dua_manager.hpp"
 
 namespace ot {

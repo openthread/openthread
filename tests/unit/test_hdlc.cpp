@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/multi_frame_buffer.hpp"
 

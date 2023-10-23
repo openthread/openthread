@@ -41,7 +41,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 
 #include "test_util.h"
 

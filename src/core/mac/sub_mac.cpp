@@ -39,12 +39,12 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {

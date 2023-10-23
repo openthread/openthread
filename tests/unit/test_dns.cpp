@@ -34,7 +34,7 @@
 #include "test_util.hpp"
 
 #include "common/array.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
 namespace ot {

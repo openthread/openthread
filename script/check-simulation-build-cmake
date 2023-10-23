@@ -188,7 +188,7 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation \
         -DOT_THREAD_VERSION=1.1 \
-        -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
+        -DOT_VENDOR_EXTENSION=../../src/core/instance/extension_example.cpp
 
     # Build Thread 1.3 with no additional features
     reset_source
@@ -249,7 +249,7 @@ build_nest_common()
     mkdir build && cd build
     CFLAGS="${cppflags[*]} ${CFLAGS}" CXXFLAGS="${cppflags[*]} ${CXXFLAGS}" \
         cmake -GNinja -DOT_PLATFORM=simulation \
-        -DOT_VENDOR_EXTENSION=common/extension_example.cpp \
+        -DOT_VENDOR_EXTENSION=instance/extension_example.cpp \
         -DOT_NCP_VENDOR_HOOK_SOURCE=example_vendor_hook.cpp \
         ..
     ninja

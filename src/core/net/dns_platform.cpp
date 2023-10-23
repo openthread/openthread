@@ -37,8 +37,8 @@
 #include <openthread/platform/dns.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
+#include "instance/instance.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 

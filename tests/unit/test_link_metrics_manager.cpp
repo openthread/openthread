@@ -33,7 +33,7 @@
 #include "test_util.h"
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/child_table.hpp"
 

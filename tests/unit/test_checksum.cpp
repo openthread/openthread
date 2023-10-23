@@ -27,9 +27,9 @@
  */
 
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "net/checksum.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip4_types.hpp"
