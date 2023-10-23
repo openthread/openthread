@@ -182,6 +182,14 @@ public:
                          uint16_t       aLength);
 
     /**
+     * Gets the Commissioning Dataset from Network Data.
+     *
+     * @param[out] aDataset    A reference to a `MeshCoP::CommissioningDataset` to populate.
+     *
+     */
+    void GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) const;
+
+    /**
      * Searches for given sub-TLV in Commissioning Data TLV.
      *
      * @tparam SubTlvType    The sub-TLV type to search for.
@@ -242,6 +250,17 @@ public:
      *
      */
     Error FindJoinerUdpPort(uint16_t &aPort) const;
+
+    /**
+     * Finds and read the Steering Data in Commissioning Data TLV.
+     *
+     * @param[out] aSteeringData  A reference to return the read Steering Data.
+     *
+     * @retval kErrorNone       Successfully read the Steering Data, @p aSteeringData is updated.
+     * @retval kErrorNotFound   Did not find Steering Data sub-TLV.
+     *
+     */
+    Error FindSteeringData(MeshCoP::SteeringData &aSteeringData) const;
 
     /**
      * Indicates whether or not the Commissioning Data TLV indicates Joining is allowed.

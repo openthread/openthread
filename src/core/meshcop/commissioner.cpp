@@ -392,8 +392,8 @@ exit:
 
 void Commissioner::SendCommissionerSet(void)
 {
-    Error   error = kErrorNone;
-    Dataset dataset;
+    Error                error = kErrorNone;
+    CommissioningDataset dataset;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
@@ -671,7 +671,9 @@ exit:
     return;
 }
 
-Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
+Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &aDataset,
+                                                   const uint8_t              *aTlvs,
+                                                   uint8_t                     aLength)
 {
     Error            error = kErrorNone;
     Coap::Message   *message;

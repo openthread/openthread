@@ -104,6 +104,11 @@ otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
                                                                                      AsCoreType(aContextInfo));
 }
 
+void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset)
+{
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetCommissioningDataset(AsCoreType(aDataset));
+}
+
 uint8_t otNetDataGetVersion(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Mle::MleRouter>().GetLeaderData().GetDataVersion(NetworkData::kFullSet);
