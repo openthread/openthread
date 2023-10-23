@@ -748,7 +748,7 @@ public:
      * @retval  kErrorNotImplemented  The feature is not implemented.
      *
      */
-    Error GetRegion(uint16_t &aRegionCode);
+    Error GetRegion(uint16_t &aRegionCode) const;
 
 private:
     static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;

@@ -761,7 +761,7 @@ public:
      * @retval  kErrorNotImplemented  The feature is not implemented.
      *
      */
-    Error GetRegion(uint16_t &aRegionCode) { return otPlatRadioGetRegion(GetInstancePtr(), &aRegionCode); }
+    Error GetRegion(uint16_t &aRegionCode) const { return otPlatRadioGetRegion(GetInstancePtr(), &aRegionCode); }
 
 private:
     otInstance *GetInstancePtr(void) const { return reinterpret_cast<otInstance *>(&InstanceLocator::GetInstance()); }

@@ -2118,7 +2118,7 @@ exit:
     return error;
 }
 
-Error Mac::GetRegion(uint16_t &aRegionCode) { return Get<Radio>().GetRegion(aRegionCode); }
+Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)

@@ -468,6 +468,16 @@ otError otLinkSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 
 otError otLinkGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
-    AssertPointerIsNotNull(aRegionCode);
-    return AsCoreType(aInstance).Get<Mac::Mac>().GetRegion(*aRegionCode);
+    Error error;
+
+    if (aRegionCode == nullptr)
+    {
+        error = kErrorInvalidArgs;
+    }
+    else
+    {
+        error = AsCoreType(aInstance).Get<Mac::Mac>().GetRegion(*aRegionCode);
+    }
+
+    return error;
 }
