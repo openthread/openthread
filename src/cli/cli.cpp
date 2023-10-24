@@ -6658,7 +6658,7 @@ exit:
  * Done
  * @endcode
  * @par api_copy
- * #otPlatRadioGetRegion
+ * #otLinkGetRegion
  */
 template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 {
@@ -6667,7 +6667,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        SuccessOrExit(error = otPlatRadioGetRegion(GetInstancePtr(), &regionCode));
+        SuccessOrExit(error = otLinkGetRegion(GetInstancePtr(), &regionCode));
         OutputLine("%c%c", regionCode >> 8, regionCode & 0xff);
     }
     /**
@@ -6677,7 +6677,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * #otPlatRadioSetRegion
+     * #otLinkSetRegion
      * @par
      * Changing this can affect the transmit power limit.
      */
@@ -6688,7 +6688,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 
         regionCode = static_cast<uint16_t>(static_cast<uint16_t>(aArgs[0].GetCString()[0]) << 8) +
                      static_cast<uint16_t>(aArgs[0].GetCString()[1]);
-        error = otPlatRadioSetRegion(GetInstancePtr(), regionCode);
+        error = otLinkSetRegion(GetInstancePtr(), regionCode);
     }
 
 exit:

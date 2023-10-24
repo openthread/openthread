@@ -187,7 +187,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = GetSupportedChannelMask().GetMask();
+        aScanChannels = mSupportedChannelMask.GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -474,7 +474,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
+    newMask.Intersect(mSupportedChannelMask);
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
@@ -2104,6 +2104,21 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     mLinks.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 }
+
+Error Mac::SetRegion(uint16_t aRegionCode)
+{
+    Error       error;
+    ChannelMask oldMask = mSupportedChannelMask;
+
+    SuccessOrExit(error = Get<Radio>().SetRegion(aRegionCode));
+    mSupportedChannelMask.SetMask(Get<Radio>().GetSupportedChannelMask());
+    IgnoreError(Get<Notifier>().Update(oldMask, mSupportedChannelMask, kEventSupportedChannelMaskChanged));
+
+exit:
+    return error;
+}
+
+Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
