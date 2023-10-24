@@ -1017,6 +1017,7 @@ private:
         Error AppendActiveDatasetTlv(void);
         Error AppendPendingDatasetTlv(void);
         Error AppendConnectivityTlv(void);
+        Error AppendSteeringDataTlv(void);
         Error AppendAddressRegistrationTlv(Child &aChild);
 #endif
         template <uint8_t kArrayLength> Error AppendTlvRequestTlv(const uint8_t (&aTlvArray)[kArrayLength])
