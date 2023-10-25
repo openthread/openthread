@@ -60,7 +60,6 @@ Error InfraIf::Init(uint32_t aIfIndex)
     Error error = kErrorNone;
 
     VerifyOrExit(!mInitialized, error = kErrorInvalidState);
-    VerifyOrExit(aIfIndex > 0, error = kErrorInvalidArgs);
 
     mIfIndex     = aIfIndex;
     mInitialized = true;
