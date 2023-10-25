@@ -2810,26 +2810,7 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     networkNameTlv.SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
     SuccessOrExit(error = networkNameTlv.AppendTo(*message));
 
-#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
-    // If steering data is set out of band, use that value.
-    // Otherwise use the one from commissioning data.
-    if (!mSteeringData.IsEmpty())
-    {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::SteeringDataTlv>(*message, mSteeringData.GetData(),
-                                                                    mSteeringData.GetLength()));
-    }
-    else
-#endif
-    {
-        const MeshCoP::SteeringDataTlv *steeringDataTlv;
-
-        steeringDataTlv = Get<NetworkData::Leader>().FindInCommissioningData<MeshCoP::SteeringDataTlv>();
-
-        if (steeringDataTlv != nullptr)
-        {
-            SuccessOrExit(error = steeringDataTlv->AppendTo(*message));
-        }
-    }
+    SuccessOrExit(error = message->AppendSteeringDataTlv());
 
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::JoinerUdpPortTlv>(*message, Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()));

@@ -4963,6 +4963,28 @@ Error Mle::TxMessage::AppendPendingDatasetTlv(void)
     return Get<MeshCoP::PendingDatasetManager>().AppendMleDatasetTlv(*this);
 }
 
+Error Mle::TxMessage::AppendSteeringDataTlv(void)
+{
+    Error                 error = kErrorNone;
+    MeshCoP::SteeringData steeringData;
+
+#if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
+    if (!Get<MleRouter>().mSteeringData.IsEmpty())
+    {
+        steeringData = Get<MleRouter>().mSteeringData;
+    }
+    else
+#endif
+    {
+        SuccessOrExit(Get<NetworkData::Leader>().FindSteeringData(steeringData));
+    }
+
+    error = Tlv::Append<MeshCoP::SteeringDataTlv>(*this, steeringData.GetData(), steeringData.GetLength());
+
+exit:
+    return error;
+}
+
 #endif // OPENTHREAD_FTD
 
 //---------------------------------------------------------------------------------------------------------------------
