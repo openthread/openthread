@@ -6239,70 +6239,19 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, 
 
 void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
-    OT_UNUSED_VARIABLE(aIsTx);
+    otLogHexDumpInfo info;
+
+    info.mDataBytes  = aFrame->mPsdu;
+    info.mDataLength = aFrame->mLength;
+    info.mTitle      = (aIsTx) ? "TX" : "RX";
+    info.mIterator   = 0;
 
     OutputNewLine();
 
-    for (size_t i = 0; i < 44; i++)
+    while (otLogGenerateNextHexDumpLine(&info) == OT_ERROR_NONE)
     {
-        OutputFormat("=");
+        OutputLine("%s", info.mLine);
     }
-
-    OutputFormat("[len = %3u]", aFrame->mLength);
-
-    for (size_t i = 0; i < 28; i++)
-    {
-        OutputFormat("=");
-    }
-
-    OutputNewLine();
-
-    for (size_t i = 0; i < aFrame->mLength; i += 16)
-    {
-        OutputFormat("|");
-
-        for (size_t j = 0; j < 16; j++)
-        {
-            if (i + j < aFrame->mLength)
-            {
-                OutputFormat(" %02X", aFrame->mPsdu[i + j]);
-            }
-            else
-            {
-                OutputFormat(" ..");
-            }
-        }
-
-        OutputFormat("|");
-
-        for (size_t j = 0; j < 16; j++)
-        {
-            if (i + j < aFrame->mLength)
-            {
-                if (31 < aFrame->mPsdu[i + j] && aFrame->mPsdu[i + j] < 127)
-                {
-                    OutputFormat(" %c", aFrame->mPsdu[i + j]);
-                }
-                else
-                {
-                    OutputFormat(" ?");
-                }
-            }
-            else
-            {
-                OutputFormat(" .");
-            }
-        }
-
-        OutputLine("|");
-    }
-
-    for (size_t i = 0; i < 83; i++)
-    {
-        OutputFormat("-");
-    }
-
-    OutputNewLine();
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
