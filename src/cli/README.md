@@ -40,6 +40,7 @@ Done
 - [counters](#counters)
 - [csl](#csl)
 - [dataset](README_DATASET.md)
+- [debug](#debug)
 - [delaytimermin](#delaytimermin)
 - [detach](#detach)
 - [deviceprops](#deviceprops)
@@ -1048,6 +1049,52 @@ Set time sync parameters
 > networktime 100 300
 Done
 ```
+
+### debug
+
+Executes a series of CLI commands to gather information about the device and thread network. This is intended for debugging.
+
+The output will display each executed CLI command preceded by "\$", followed by the corresponding command's generated output.
+
+The generated output encompasses the following information:
+
+- Version
+- Current state
+- RLOC16, extended MAC address
+- Unicast and multicast IPv6 address list
+- Channel
+- PAN ID and extended PAN ID
+- Network Data
+- Partition ID
+- Leader Data
+
+If the device is operating as FTD:
+
+- Child and neighbor table
+- Router table and next hop Info
+- Address cache table
+- Registered MTD child IPv6 address
+- Device properties
+
+If the device supports and acts as an SRP client:
+
+- SRP client state
+- SRP client services and host info
+
+If the device supports and acts as an SRP sever:
+
+- SRP server state and address mode
+- SRP server registered hosts and services
+
+If the device supports TREL:
+
+- TREL status and peer table
+
+If the device supports and acts as a border router:
+
+- BR state
+- BR prefixes (OMR, on-link, NAT64)
+- Discovered prefix table
 
 ### delaytimermin
 
