@@ -35,9 +35,9 @@
 
 #include "openthread-core-config.h"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {

@@ -37,8 +37,8 @@
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/uri_paths.hpp"
 

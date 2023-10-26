@@ -37,10 +37,10 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"

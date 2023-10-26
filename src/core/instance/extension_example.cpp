@@ -37,8 +37,8 @@
 #include <stdint.h>
 
 #include "common/code_utils.hpp"
-#include "common/extension.hpp"
 #include "common/new.hpp"
+#include "instance/extension.hpp"
 
 namespace ot {
 namespace Extension {

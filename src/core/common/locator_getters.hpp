@@ -37,9 +37,9 @@
 
 #include "openthread-core-config.h"
 
-#include "common/instance.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

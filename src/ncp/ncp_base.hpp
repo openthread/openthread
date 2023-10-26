@@ -55,8 +55,8 @@
 #endif
 
 #include "changed_props_set.hpp"
-#include "common/instance.hpp"
 #include "common/tasklet.hpp"
+#include "instance/instance.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_buffer.hpp"
 #include "lib/spinel/spinel_decoder.hpp"

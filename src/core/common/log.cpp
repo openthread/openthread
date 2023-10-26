@@ -38,10 +38,10 @@
 #include <openthread/platform/logging.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/string.hpp"
+#include "instance/instance.hpp"
 
 /*
  * Verify debug UART dependency.

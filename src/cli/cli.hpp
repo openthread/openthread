@@ -82,8 +82,8 @@
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/type_traits.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 

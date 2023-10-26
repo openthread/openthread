@@ -30,9 +30,9 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/num_utils.hpp"
 #include "common/trickle_timer.hpp"
+#include "instance/instance.hpp"
 
 static ot::Instance *sInstance;
 

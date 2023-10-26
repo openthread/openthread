@@ -35,7 +35,7 @@
 
 #include <openthread/dns_client.h>
 
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_types.hpp"
 
 using namespace ot;

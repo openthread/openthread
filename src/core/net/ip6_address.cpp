@@ -39,10 +39,10 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "net/ip4_types.hpp"
 #include "net/netif.hpp"
 

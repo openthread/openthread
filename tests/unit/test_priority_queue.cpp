@@ -29,8 +29,8 @@
 #include <stdarg.h>
 
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
+#include "instance/instance.hpp"
 
 #include "test_platform.h"
 #include "test_util.h"

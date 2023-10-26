@@ -28,9 +28,9 @@
 
 #include "common/appender.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"

@@ -30,8 +30,8 @@
 
 #include <openthread/config.h>
 
-#include "common/instance.hpp"
 #include "common/pool.hpp"
+#include "instance/instance.hpp"
 
 #include "test_util.h"
 

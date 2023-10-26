@@ -34,7 +34,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "net/netif.hpp"
 
 #include "test_util.h"
