@@ -569,6 +569,8 @@ otError SpiInterface::PushPullSpi(void)
             mInterfaceMetrics.mTxFrameCount++;
             mInterfaceMetrics.mTxFrameByteCount += mSpiTxPayloadSize;
 
+	    // Clear tx buffer after usage
+            memset(&mSpiTxFrameBuffer[kSpiFrameHeaderSize], 0, mSpiTxPayloadSize);
             mSpiTxIsReady      = false;
             mSpiTxPayloadSize  = 0;
             mSpiTxRefusedCount = 0;
