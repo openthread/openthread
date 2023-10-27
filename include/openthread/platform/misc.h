@@ -62,6 +62,20 @@ extern "C" {
 void otPlatReset(otInstance *aInstance);
 
 /**
+ * Performs a hardware reset on the platform to launch bootloader mode, if supported.
+ *
+ * Used when `OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE` is enabled.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ * @retval OT_ERROR_NONE         Reset to bootloader successfully.
+ * @retval OT_ERROR_BUSY         Failed due to another operation is ongoing.
+ * @retval OT_ERROR_NOT_CAPABLE  Not capable of resetting to bootloader.
+ *
+ */
+otError otPlatResetToBootloader(otInstance *aInstance);
+
+/**
  * Enumeration of possible reset reason codes.
  *
  * These are in the same order as the Spinel reset reason codes.

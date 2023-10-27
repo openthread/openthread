@@ -978,6 +978,15 @@ otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t a
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+otError otPlatResetToBootloader(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return GetRadioSpinel().SendReset(SPINEL_RESET_BOOTLOADER);
+}
+#endif
+
 const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void) { return GetRadioSpinel().GetRadioSpinelMetrics(); }
 
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
