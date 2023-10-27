@@ -494,6 +494,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp abort
+ * @code
+ * tcp abort
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otTcpAbort
+ */
 template <> otError TcpExample::Process<Cmd("abort")>(Arg aArgs[])
 {
     otError error;
