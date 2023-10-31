@@ -58,25 +58,6 @@ namespace NetworkData {
 
 RegisterLogModule("NetworkData");
 
-Leader::Leader(Instance &aInstance)
-    : LeaderBase(aInstance)
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
-    , mIsClone(false)
-#endif
-    , mWaitingForNetDataSync(false)
-    , mContextIds(aInstance)
-    , mTimer(aInstance)
-{
-    Reset();
-}
-
-void Leader::Reset(void)
-{
-    LeaderBase::Reset();
-
-    mContextIds.Clear();
-}
-
 void Leader::Start(Mle::LeaderStartMode aStartMode)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
