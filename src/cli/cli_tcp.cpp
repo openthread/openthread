@@ -85,6 +85,26 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
 }
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
+/**
+ * @cli init
+ * @code
+ * tcp init tls
+ * Done
+ * @endcode
+ * @cparam tcp init [@ca mode] [@ca size]
+ * The `mode` has three possible values.
+ * - `tls`: Specifies that the TCP connection between two nodes should also
+ * use the TLS protocol on top of TCP. When two nodes communicate over TCP, 
+ * both nodes must either use TLS or neither node should use TLS because a
+ * a non-TLS endpoint cannot communicate with a TLS endpoint.
+ * - 
+ * -
+ *
+ *
+ *
+ *
+ *
+ */
 template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -234,6 +254,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp deinit
+ * @code
+ * tcp deinit
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otTcpEndpointDeinitialize
+ */
 template <> otError TcpExample::Process<Cmd("deinit")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -273,6 +302,23 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp bind
+ * @code
+ * tcp bind :: 30000
+ * Done
+ * @endcode
+ * Associates an IPv6 address and a port to the example TCP endpoint provided by
+ * the `tcp` CLI. Associating the TCP endpoint to an IPv6
+ * address and port is referred to as naming the TCP endpoint. This binds the
+ * endpoint for communication.
+ * @cparam tcp bind {@ca ip} {@ca port}
+ * - `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
+ * the binding IPv6 address, then you can use the following value to use the
+ *  unspecified IPv6 address: `::`. 
+ * - port: TCP port number to bind to.
+ * @sa otTcpBind
+ */
 template <> otError TcpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
     otError    error;
@@ -290,6 +336,34 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp connect
+ * @code
+ * tcp connect fe80:0:0:0:a8df:580a:860:ffa4 30000
+ * Done
+ * TCP: Connection established
+ * @endcode
+ * @code
+ * tcp connect 172.17.0.1 1234
+ * Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
+ * Done
+ * @endcode
+ * @cparam tcp connect {@ca ip} {@ca port} [@ca fastopen]
+ * The following parameters are required:
+ * - `ip`: IP address of the peer.
+ * - `port`: TCP port number of the peer. The address can be an IPv4 address,
+ * which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+ * The command returns InvalidState when the preferred NAT64 prefix is unavailable.
+ * The `fastopen` parameter is optional. If set to `fast`, TCP Fast Open is enabled
+ * for this connection. Otherwise, if this parameter is set to `slow` or not used,
+ * TCP Fast Open is disabled.
+ * @par
+ * Establishes a connection with the specified peer.
+ * @par
+ * If the connection establishment is successful, the resulting TCP connection
+ * is associated with the example TCP endpoint
+ * @sa otTcpConnect
+ */
 template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
@@ -408,7 +482,29 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgs[0] == "result")
+    /**
+     * @cli tcp benchmark result
+     * @code
+     * tcp benchmark result
+     * TCP Benchmark Status: Ongoing
+     * Done
+     * @endcode
+     * @code
+     * tcp benchmark result
+     * TCP Benchmark Status: Completed
+     * TCP Benchmark Complete: Transferred 73728 bytes in 7056 milliseconds
+     * TCP Goodput: 83.592 kb/s
+     * @endcode
+     * @par
+     * Shows the latest result of the TCP benchmark test. Possible status values:
+     * - Ongoing
+     * - Completed
+     * - Untested
+     * @par
+     * This command is primarily intended for creating scripts that automate
+     * the TCP benchmark test.
+     */
+if (aArgs[0] == "result")
     {
         OutputFormat("TCP Benchmark Status: ");
         if (mBenchmarkBytesTotal != 0)
@@ -425,6 +521,23 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
             OutputLine("Untested");
         }
     }
+    /**
+     * @cli tcp benchmark run
+     * @code
+     * tcp benchmark run
+     * Done
+     * TCP Benchmark Complete: Transferred 73728 bytes in 7233 milliseconds
+     * TCP Goodput: 81.546 kb/s
+     * @endcode
+     * @cparam tcp benchmark run [@ca size]
+     * You can use the `size` parameter to specify the number of bytes to send
+     * for the benchmark. If you do not use the `size` parameter, the default
+     * value is used.
+     * @par
+     * Transfers the specified number of bytes using the TCP connection
+     * currently associated with the example TCP endpoint provided by the `tcp` CLI.
+     * @note You must establish this TCP connection before you run  this command.
+     */
     else if (aArgs[0] == "run")
     {
         VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);
@@ -498,10 +611,13 @@ exit:
  * @cli tcp abort
  * @code
  * tcp abort
+ * TCP: Connection reset
  * Done
  * @endcode
- * @par api_copy
- * #otTcpAbort
+ * @par
+ * Unceremoniously ends the TCP connection, if one exists, associated with the
+ * example TCP endpoint, transitioning the TCP endpoint to the closed state.
+ * @sa otTcpAbort
  */
 template <> otError TcpExample::Process<Cmd("abort")>(Arg aArgs[])
 {
