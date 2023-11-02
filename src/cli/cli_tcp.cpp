@@ -97,13 +97,8 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * use the TLS protocol on top of TCP. When two nodes communicate over TCP, 
  * both nodes must either use TLS or neither node should use TLS because a
  * a non-TLS endpoint cannot communicate with a TLS endpoint.
- * - 
- * -
- *
- *
- *
- *
- *
+ * - `linked`: 
+ * @sa otInstanceResetToBootloader
  */
 template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 {
