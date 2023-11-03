@@ -95,7 +95,7 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * * The `mode` has three possible values:
  *   + `tls`: Specifies that the TCP connection between two nodes should also
  *    use the TLS protocol on top of TCP. When two nodes communicate over TCP,
- *    both nodes must either use TLS or neither node should use TLS because a
+ *    both nodes must either use TLS or neither node should use TLS because
  *    a non-TLS endpoint cannot communicate with a TLS endpoint.
  *   + `linked` or `circular`: Either one of these options means that TLS
  *    is not to be used, and the specified buffering type should be used for TCP
