@@ -848,5 +848,17 @@ exit:
     return contains;
 }
 
+Error NetworkData::FindDomainIdFor(const Ip6::Prefix &aPrefix, uint8_t &aDomainId) const
+{
+    Error            error     = kErrorNone;
+    const PrefixTlv *prefixTlv = FindPrefix(aPrefix);
+
+    VerifyOrExit(prefixTlv != nullptr, error = kErrorNotFound);
+    aDomainId = prefixTlv->GetDomainId();
+
+exit:
+    return error;
+}
+
 } // namespace NetworkData
 } // namespace ot

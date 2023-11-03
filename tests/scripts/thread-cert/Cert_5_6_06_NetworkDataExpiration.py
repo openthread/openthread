@@ -118,7 +118,7 @@ class Cert_5_6_6_NetworkDataExpiration(thread_cert.TestCase):
 
         self.nodes[ROUTER].remove_prefix('2001:2:0:3::/64')
         self.nodes[ROUTER].register_netdata()
-        self.simulator.go(10)
+        self.simulator.go(310)
 
         addrs = self.nodes[ED1].get_addrs()
         self.assertTrue(any('2001:2:0:1' in addr[0:10] for addr in addrs))

@@ -142,25 +142,86 @@ public:
      */
     Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCounter) const;
 
+    /**
+     * Searches in the list of deprecating SLAAC prefixes for a match to a given address and if found, returns the
+     * Domain ID from the Prefix TLV in the Network Data for this SLAAC prefix.
+     *
+     * The `Slaac` module keeps track of the associated Domain IDs for deprecating SLAAC prefixes, even if the related
+     * Prefix TLV has already been removed from the Network Data. This information is used during external route lookup
+     * if a deprecating SLAAC address is used as the source address in an outbound message.
+     *
+     * @param[in]  aAddress   The address to search for.
+     * @param[out] aDomainId  A reference to return the Domain ID.
+     *
+     * @retval kErrorNone       Found a match for @p aAddress and updated @p aDomainId.
+     * @retval kErrorNotFound   Could not find a match for @p aAddress in deprecating SLAAC prefixes.
+     *
+     */
+    Error FindDomainIdFor(const Ip6::Address &aAddress, uint8_t &aDomainId) const;
+
 private:
-    static constexpr uint16_t kNumAddresses = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
+    static constexpr uint16_t kNumSlaacAddresses = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
 
     static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
 
-    bool        ShouldUseForSlaac(const NetworkData::OnMeshPrefixConfig &aConfig) const;
-    void        RemoveAddresses(void);
+    static constexpr uint32_t kDeprecationInterval =
+        TimeMilli::SecToMsec(OPENTHREAD_CONFIG_IP6_SLAAC_DEPRECATION_INTERVAL);
+
+    enum Action : uint8_t
+    {
+        kAdding,
+        kRemoving,
+        kDeprecating,
+    };
+
+    class SlaacAddress : public Ip6::Netif::UnicastAddress
+    {
+    public:
+        bool      IsInUse(void) const { return mValid; }
+        void      MarkAsNotInUse(void) { mValid = false; }
+        uint8_t   GetDomainId(void) const { return mDomainId; }
+        void      SetDomainId(uint8_t aDomainId) { mDomainId = aDomainId; }
+        bool      IsDeprecating(void) const { return (mExpirationTime.GetValue() != kNotDeprecated); };
+        void      MarkAsNotDeprecating(void) { mExpirationTime.SetValue(kNotDeprecated); }
+        TimeMilli GetExpirationTime(void) const { return mExpirationTime; }
+        void      SetExpirationTime(TimeMilli aTime)
+        {
+            mExpirationTime = aTime;
+
+            if (mExpirationTime.GetValue() == kNotDeprecated)
+            {
+                mExpirationTime.SetValue(kNotDeprecated + 1);
+            }
+        }
+
+    private:
+        static constexpr uint32_t kNotDeprecated = 0; // Special `mExpirationTime` value to indicate not deprecated.
+
+        uint8_t   mDomainId;
+        TimeMilli mExpirationTime;
+    };
+
+    bool        IsSlaac(const NetworkData::OnMeshPrefixConfig &aConfig) const;
+    bool        IsFiltered(const NetworkData::OnMeshPrefixConfig &aConfig) const;
+    void        RemoveOrDeprecateAddresses(void);
     void        RemoveAllAddresses(void);
     void        AddAddresses(void);
-    void        RemoveAddress(Ip6::Netif::UnicastAddress &aAddress);
+    void        DeprecateAddress(SlaacAddress &aAddress);
+    void        RemoveAddress(SlaacAddress &aAddress);
     void        AddAddressFor(const NetworkData::OnMeshPrefixConfig &aConfig);
+    void        HandleTimer(void);
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     void        HandleNotifierEvents(Events aEvents);
+    void        LogAddress(Action aAction, const SlaacAddress &aAddress);
     static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
                                          const Ip6::Netif::UnicastAddress      &aAddr);
 
-    bool                       mEnabled;
-    PrefixFilter               mFilter;
-    Ip6::Netif::UnicastAddress mAddresses[kNumAddresses];
+    using ExpireTimer = TimerMilliIn<Slaac, &Slaac::HandleTimer>;
+
+    bool         mEnabled;
+    PrefixFilter mFilter;
+    ExpireTimer  mTimer;
+    SlaacAddress mSlaacAddresses[kNumSlaacAddresses];
 };
 
 /**

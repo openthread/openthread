@@ -162,7 +162,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.remove_prefix(ON_MESH_PREFIX2)
         br.register_netdata()
 
-        self.simulator.go(10)
+        self.simulator.go(310)
         self.collect_ipaddrs()
 
         logging.info("BR     addrs: %r", br.get_addrs())
