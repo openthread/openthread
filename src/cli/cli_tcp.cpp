@@ -313,15 +313,16 @@ exit:
  * tcp bind :: 30000
  * Done
  * @endcode
- * Associates an IPv6 address and a port to the example TCP endpoint provided by
- * the `tcp` CLI. Associating the TCP endpoint to an IPv6
- * address and port is referred to as naming the TCP endpoint. This binds the
- * endpoint for communication.
  * @cparam tcp bind @ca{ip} @ca{port}
  * * `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
  *    the binding IPv6 address, use the following value to use the
  *    unspecified IPv6 address: `::`.
  * * port: TCP port number to bind to.
+ * @par
+ * Associates an IPv6 address and a port to the example TCP endpoint provided by
+ * the `tcp` CLI. Associating the TCP endpoint to an IPv6
+ * address and port is referred to as naming the TCP endpoint. This binds the
+ * endpoint for communication.
  * @sa otTcpBind
  */
 template <> otError TcpExample::Process<Cmd("bind")>(Arg aArgs[])
