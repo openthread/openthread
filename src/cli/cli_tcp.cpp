@@ -86,7 +86,7 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
 #endif // OPENTHREAD_CONFIG_TLS_ENABLE
 
 /**
- * @cli init
+ * @cli tcp init
  * @code
  * tcp init tls
  * Done
@@ -94,11 +94,21 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * @cparam tcp init [@ca mode] [@ca size]
  * The `mode` has three possible values.
  * - `tls`: Specifies that the TCP connection between two nodes should also
- * use the TLS protocol on top of TCP. When two nodes communicate over TCP, 
+ * use the TLS protocol on top of TCP. When two nodes communicate over TCP,
  * both nodes must either use TLS or neither node should use TLS because a
  * a non-TLS endpoint cannot communicate with a TLS endpoint.
- * - `linked`: 
- * @sa otInstanceResetToBootloader
+ * - `linked` or `circular`: Either one of these options means that TLS
+ * is not to be used, and the specified buffering type should be used for TCP
+ * buffering. The behavior of `linked` and `circular` is identical. You can examine the code
+ * for the differences between these two buffering types.
+ * Two endpoints of a TCP connection are not required to use the same buffering type.
+ * The `size` parameter sets the size of the receive buffer to associate with the
+ * example TCP endpoint. If left unspecified, the maximum size is used.
+ * @par
+ * Initializes the example TCP listener and the example TCP endpoint provided
+ * by the `tcp` CLI.
+ * @sa otTcpListenerInitialize
+ * @sa otTcpEndpointInitialize
  */
 template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 {
@@ -310,7 +320,7 @@ exit:
  * @cparam tcp bind {@ca ip} {@ca port}
  * - `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
  * the binding IPv6 address, then you can use the following value to use the
- *  unspecified IPv6 address: `::`. 
+ *  unspecified IPv6 address: `::`.
  * - port: TCP port number to bind to.
  * @sa otTcpBind
  */
@@ -426,6 +436,19 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp send
+ * @code
+ * tcp send hello
+ * Done
+ * @endcode
+ * @cparam tcp send {@ca message}
+ * The `message` parameter contains the message you want to send to the
+ * remote TCP endpoint.
+ * @par
+ * Sends data over the TCP connection associated with the example TCP endpoint
+ * that is provided with the `tcp` CLI.
+ */
 template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
 {
     otError error;
@@ -499,7 +522,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * This command is primarily intended for creating scripts that automate
      * the TCP benchmark test.
      */
-if (aArgs[0] == "result")
+    if (aArgs[0] == "result")
     {
         OutputFormat("TCP Benchmark Status: ");
         if (mBenchmarkBytesTotal != 0)
@@ -589,6 +612,18 @@ exit:
     return error;
 }
 
+/**
+ * @cli sendend
+ * @code
+ * tcp sendend
+ * Done
+ * @endcode
+ * @par
+ * Sends the "end of stream" signal over the TCP connection
+ * associated with the example TCP endpoint provided by the `tcp` CLI. This
+ * alerts the peer that it will not receive any more data over this TCP connection.
+ * @sa otTcpSendEndOfStream
+ */
 template <> otError TcpExample::Process<Cmd("sendend")>(Arg aArgs[])
 {
     otError error;
@@ -629,6 +664,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp listen
+ * @code
+ * tcp listen :: 30000
+ * Done
+ * @endcode
+ * @cparam tcp listen {@ca ip} {@ca port}
+ * The following parameters are required:
+ * - `ip`: IPv6 address or the unspecified IPv6 address (`::`) of the example
+ * TCP listener provided by the `tcp` CLI.
+ * - `port`: TCP port of the example TCP listener.
+ * If no TCP connection is associated with the example TCP endpoint, then any
+ * incoming connections matching the specified IPv6 address and port are accepted
+ * and associate with the example TCP endpoint.
+ * @par
+ * Uses the example TCP listener to listen for incoming connections on the
+ * specified IPv6 address and port.
+ * @sa otTcpListen
+ */
 template <> otError TcpExample::Process<Cmd("listen")>(Arg aArgs[])
 {
     otError    error;
@@ -647,6 +701,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli tcp stoplistening
+ * @code
+ * tcp stoplistening
+ * Done
+ * @endcode
+ * @par
+ * Instructs the example TCP lisenter to stop listening for incoming TCP connections.
+ * @sa otTcpStopListening
+ */
 template <> otError TcpExample::Process<Cmd("stoplistening")>(Arg aArgs[])
 {
     otError error;
