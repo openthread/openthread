@@ -92,17 +92,17 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * Done
  * @endcode
  * @cparam tcp init [@ca{mode}] [@ca{size}]
- * The `mode` has three possible values.
- * - `tls`: Specifies that the TCP connection between two nodes should also
+ * - The `mode` has three possible values:
+ * `tls`: Specifies that the TCP connection between two nodes should also
  * use the TLS protocol on top of TCP. When two nodes communicate over TCP,
  * both nodes must either use TLS or neither node should use TLS because a
  * a non-TLS endpoint cannot communicate with a TLS endpoint.
- * - `linked` or `circular`: Either one of these options means that TLS
+ * `linked` or `circular`: Either one of these options means that TLS
  * is not to be used, and the specified buffering type should be used for TCP
  * buffering. The behavior of `linked` and `circular` is identical. You can examine the code
  * for the differences between these two buffering types.
  * Two endpoints of a TCP connection are not required to use the same buffering type.
- * The `size` parameter sets the size of the receive buffer to associate with the
+ * - The `size` parameter sets the size of the receive buffer to associate with the
  * example TCP endpoint. If left unspecified, the maximum size is used.
  * @par
  * Initializes the example TCP listener and the example TCP endpoint provided
@@ -354,12 +354,12 @@ exit:
  * Done
  * @endcode
  * @cparam tcp connect @ca{ip} @ca{port} [@ca{fastopen}]
- * The following parameters are required:
+ * Parameter:
  * - `ip`: IP address of the peer.
  * - `port`: TCP port number of the peer. The address can be an IPv4 address,
  * which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
  * The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
- * The `fastopen` parameter is optional. If set to `fast`, TCP Fast Open is enabled
+ * - `fastopen`: This parameter is optional. If set to `fast`, TCP Fast Open is enabled
  * for this connection. Otherwise, if this parameter is set to `slow` or not used,
  * TCP Fast Open is disabled.
  * @par
