@@ -93,15 +93,15 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * @endcode
  * @cparam tcp init [@ca{mode}] [@ca{size}]
  * * The `mode` has three possible values:
- *   * `tls`: Specifies that the TCP connection between two nodes should also
- *      use the TLS protocol on top of TCP. When two nodes communicate over TCP,
- *      both nodes must either use TLS or neither node should use TLS because a
- *      a non-TLS endpoint cannot communicate with a TLS endpoint.
- *   * `linked` or `circular`: Either one of these options means that TLS
- *      is not to be used, and the specified buffering type should be used for TCP
- *      buffering. The behavior of `linked` and `circular` is identical. Examine the code
- *      for the differences between these two buffering types.
- *      Two endpoints of a TCP connection are not required to use the same buffering type.
+ *   + `tls`: Specifies that the TCP connection between two nodes should also
+ *    use the TLS protocol on top of TCP. When two nodes communicate over TCP,
+ *    both nodes must either use TLS or neither node should use TLS because a
+ *    a non-TLS endpoint cannot communicate with a TLS endpoint.
+ *   + `linked` or `circular`: Either one of these options means that TLS
+ *    is not to be used, and the specified buffering type should be used for TCP
+ *    buffering. The behavior of `linked` and `circular` is identical. Examine the code
+ *    for the differences between these two buffering types.
+ *    Two endpoints of a TCP connection are not required to use the same buffering type.
  * * The `size` parameter sets the size of the receive buffer to associate with the
  *   example TCP endpoint. If left unspecified, the maximum size is used.
  * @par
