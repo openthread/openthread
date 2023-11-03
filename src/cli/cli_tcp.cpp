@@ -91,7 +91,7 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * tcp init tls
  * Done
  * @endcode
- * @cparam tcp init [@ca mode] [@ca size]
+ * @cparam tcp init [@ca{mode}] [@ca{size}]
  * The `mode` has three possible values.
  * - `tls`: Specifies that the TCP connection between two nodes should also
  * use the TLS protocol on top of TCP. When two nodes communicate over TCP,
@@ -317,7 +317,7 @@ exit:
  * the `tcp` CLI. Associating the TCP endpoint to an IPv6
  * address and port is referred to as naming the TCP endpoint. This binds the
  * endpoint for communication.
- * @cparam tcp bind {@ca ip} {@ca port}
+ * @cparam tcp bind @ca{ip} @ca{port}
  * - `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
  * the binding IPv6 address, then you can use the following value to use the
  *  unspecified IPv6 address: `::`.
@@ -353,12 +353,12 @@ exit:
  * Connecting to synthesized IPv6 address: fdde:ad00:beef:2:0:0:ac11:1
  * Done
  * @endcode
- * @cparam tcp connect {@ca ip} {@ca port} [@ca fastopen]
+ * @cparam tcp connect @ca{ip} @ca{port} [@ca{fastopen}]
  * The following parameters are required:
  * - `ip`: IP address of the peer.
  * - `port`: TCP port number of the peer. The address can be an IPv4 address,
  * which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
- * The command returns InvalidState when the preferred NAT64 prefix is unavailable.
+ * The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
  * The `fastopen` parameter is optional. If set to `fast`, TCP Fast Open is enabled
  * for this connection. Otherwise, if this parameter is set to `slow` or not used,
  * TCP Fast Open is disabled.
@@ -442,7 +442,7 @@ exit:
  * tcp send hello
  * Done
  * @endcode
- * @cparam tcp send {@ca message}
+ * @cparam tcp send @ca{message}
  * The `message` parameter contains the message you want to send to the
  * remote TCP endpoint.
  * @par
@@ -547,7 +547,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * TCP Benchmark Complete: Transferred 73728 bytes in 7233 milliseconds
      * TCP Goodput: 81.546 kb/s
      * @endcode
-     * @cparam tcp benchmark run [@ca size]
+     * @cparam tcp benchmark run [@ca{size}]
      * You can use the `size` parameter to specify the number of bytes to send
      * for the benchmark. If you do not use the `size` parameter, the default
      * value is used.
@@ -670,7 +670,7 @@ exit:
  * tcp listen :: 30000
  * Done
  * @endcode
- * @cparam tcp listen {@ca ip} {@ca port}
+ * @cparam tcp listen @ca{ip} @ca{port}
  * The following parameters are required:
  * - `ip`: IPv6 address or the unspecified IPv6 address (`::`) of the example
  * TCP listener provided by the `tcp` CLI.
