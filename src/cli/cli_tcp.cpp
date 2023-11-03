@@ -92,18 +92,18 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * Done
  * @endcode
  * @cparam tcp init [@ca{mode}] [@ca{size}]
- * - The `mode` has three possible values:
- * `tls`: Specifies that the TCP connection between two nodes should also
- * use the TLS protocol on top of TCP. When two nodes communicate over TCP,
- * both nodes must either use TLS or neither node should use TLS because a
- * a non-TLS endpoint cannot communicate with a TLS endpoint.
- * `linked` or `circular`: Either one of these options means that TLS
- * is not to be used, and the specified buffering type should be used for TCP
- * buffering. The behavior of `linked` and `circular` is identical. You can examine the code
- * for the differences between these two buffering types.
- * Two endpoints of a TCP connection are not required to use the same buffering type.
- * - The `size` parameter sets the size of the receive buffer to associate with the
- * example TCP endpoint. If left unspecified, the maximum size is used.
+ * * The `mode` has three possible values:
+ *  *   * `tls`: Specifies that the TCP connection between two nodes should also
+ *         use the TLS protocol on top of TCP. When two nodes communicate over TCP,
+ *         both nodes must either use TLS or neither node should use TLS because a
+ *         a non-TLS endpoint cannot communicate with a TLS endpoint.
+ * *    * `linked` or `circular`: Either one of these options means that TLS
+ *         is not to be used, and the specified buffering type should be used for TCP
+ *         buffering. The behavior of `linked` and `circular` is identical. Examine the code
+ *         for the differences between these two buffering types.
+ *         Two endpoints of a TCP connection are not required to use the same buffering type.
+ * * The `size` parameter sets the size of the receive buffer to associate with the
+ *   example TCP endpoint. If left unspecified, the maximum size is used.
  * @par
  * Initializes the example TCP listener and the example TCP endpoint provided
  * by the `tcp` CLI.
@@ -318,10 +318,10 @@ exit:
  * address and port is referred to as naming the TCP endpoint. This binds the
  * endpoint for communication.
  * @cparam tcp bind @ca{ip} @ca{port}
- * - `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
- * the binding IPv6 address, then you can use the following value to use the
- *  unspecified IPv6 address: `::`.
- * - port: TCP port number to bind to.
+ * * `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
+ *    the binding IPv6 address, use the following value to use the
+ *    unspecified IPv6 address: `::`.
+ * * port: TCP port number to bind to.
  * @sa otTcpBind
  */
 template <> otError TcpExample::Process<Cmd("bind")>(Arg aArgs[])
@@ -354,13 +354,12 @@ exit:
  * Done
  * @endcode
  * @cparam tcp connect @ca{ip} @ca{port} [@ca{fastopen}]
- * Parameter:
- * - `ip`: IP address of the peer.
- * - `port`: TCP port number of the peer. The address can be an IPv4 address,
- * which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
- * The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
- * - `fastopen`: This parameter is optional. If set to `fast`, TCP Fast Open is enabled
- * for this connection. Otherwise, if this parameter is set to `slow` or not used,
+ * * `ip`: IP address of the peer.
+ * * `port`: TCP port number of the peer. The address can be an IPv4 address,
+ *    which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
+ *    The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
+ * * `fastopen`: This parameter is optional. If set to `fast`, TCP Fast Open is enabled
+ *    for this connection. Otherwise, if this parameter is set to `slow` or not used,
  * TCP Fast Open is disabled.
  * @par
  * Establishes a connection with the specified peer.
@@ -515,9 +514,9 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * @endcode
      * @par
      * Shows the latest result of the TCP benchmark test. Possible status values:
-     * - Ongoing
-     * - Completed
-     * - Untested
+     * * Ongoing
+     * * Completed
+     * * Untested
      * @par
      * This command is primarily intended for creating scripts that automate
      * the TCP benchmark test.
@@ -548,7 +547,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * TCP Goodput: 81.546 kb/s
      * @endcode
      * @cparam tcp benchmark run [@ca{size}]
-     * You can use the `size` parameter to specify the number of bytes to send
+     * Use the `size` parameter to specify the number of bytes to send
      * for the benchmark. If you do not use the `size` parameter, the default
      * value is used.
      * @par
@@ -613,7 +612,7 @@ exit:
 }
 
 /**
- * @cli sendend
+ * @cli tcp sendend
  * @code
  * tcp sendend
  * Done
@@ -645,7 +644,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Unceremoniously ends the TCP connection, if one exists, associated with the
+ * Unceremoniously ends the TCP connection associated with the
  * example TCP endpoint, transitioning the TCP endpoint to the closed state.
  * @sa otTcpAbort
  */
@@ -672,12 +671,12 @@ exit:
  * @endcode
  * @cparam tcp listen @ca{ip} @ca{port}
  * The following parameters are required:
- * - `ip`: IPv6 address or the unspecified IPv6 address (`::`) of the example
- * TCP listener provided by the `tcp` CLI.
- * - `port`: TCP port of the example TCP listener.
- * If no TCP connection is associated with the example TCP endpoint, then any
- * incoming connections matching the specified IPv6 address and port are accepted
- * and associate with the example TCP endpoint.
+ * * `ip`: IPv6 address or the unspecified IPv6 address (`::`) of the example
+ *    TCP listener provided by the `tcp` CLI.
+ * * `port`: TCP port of the example TCP listener.
+ *    If no TCP connection is associated with the example TCP endpoint, then any
+ *    incoming connections matching the specified IPv6 address and port are accepted
+ *    and are associated with the example TCP endpoint.
  * @par
  * Uses the example TCP listener to listen for incoming connections on the
  * specified IPv6 address and port.
@@ -708,7 +707,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Instructs the example TCP lisenter to stop listening for incoming TCP connections.
+ * Instructs the example TCP listener to stop listening for incoming TCP connections.
  * @sa otTcpStopListening
  */
 template <> otError TcpExample::Process<Cmd("stoplistening")>(Arg aArgs[])
