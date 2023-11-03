@@ -94,14 +94,14 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  * @cparam tcp init [@ca{mode}] [@ca{size}]
  * * The `mode` has three possible values:
  *   * `tls`: Specifies that the TCP connection between two nodes should also
- *    use the TLS protocol on top of TCP. When two nodes communicate over TCP,
- *    both nodes must either use TLS or neither node should use TLS because
- *    a non-TLS endpoint cannot communicate with a TLS endpoint.
+ *     use the TLS protocol on top of TCP. When two nodes communicate over TCP,
+ *     both nodes must either use TLS or neither node should use TLS because
+ *     a non-TLS endpoint cannot communicate with a TLS endpoint.
  *   * `linked` or `circular`: Either one of these options means that TLS
- *    is not to be used, and the specified buffering type should be used for TCP
- *    buffering. The behavior of `linked` and `circular` is identical. Examine the code
- *    for the differences between these two buffering types.
- *    Two endpoints of a TCP connection are not required to use the same buffering type.
+ *     is not to be used, and the specified buffering type should be used for TCP
+ *     buffering. The behavior of `linked` and `circular` is identical. Examine the code
+ *     for the differences between these two buffering types.
+ *     Two endpoints of a TCP connection are not required to use the same buffering type.
  * * The `size` parameter sets the size of the receive buffer to associate with the
  *   example TCP endpoint. If left unspecified, the maximum size is used.
  * @par
@@ -315,13 +315,12 @@ exit:
  * @endcode
  * @cparam tcp bind @ca{ip} @ca{port}
  * * `ip`: IPv6 address to bind to. If you wish to have the TCP/IPv6 stack assign
- *    the binding IPv6 address, use the following value to use the
- *    unspecified IPv6 address: `::`.
- * * port: TCP port number to bind to.
+ *   the binding IPv6 address, use the unspecified IPv6 address: `::`.
+ * * `port`: TCP port number to bind to.
  * @par
  * Associates an IPv6 address and a port to the example TCP endpoint provided by
  * the `tcp` CLI. Associating the TCP endpoint to an IPv6
- * address and port is referred to as naming the TCP endpoint. This binds the
+ * address and port is referred to as "naming the TCP endpoint." This binds the
  * endpoint for communication.
  * @sa otTcpBind
  */
@@ -355,18 +354,19 @@ exit:
  * Done
  * @endcode
  * @cparam tcp connect @ca{ip} @ca{port} [@ca{fastopen}]
- * * `ip`: IP address of the peer.
- * * `port`: TCP port number of the peer. The address can be an IPv4 address,
- *    which gets synthesized to an IPv6 address using the preferred NAT64 prefix from the network data.
- *    The command returns `InvalidState` when the preferred NAT64 prefix is unavailable.
+ * * `ip`: IP address of the peer The address can be an IPv4 address,
+ *   which gets synthesized to an IPv6 address using the preferred
+ *   NAT64 prefix from the network data. The command returns `InvalidState`
+ *   when the preferred NAT64 prefix is unavailable.
+ * * `port`: TCP port number of the peer.
  * * `fastopen`: This parameter is optional. If set to `fast`, TCP Fast Open is enabled
- *    for this connection. Otherwise, if this parameter is set to `slow` or not used,
- * TCP Fast Open is disabled.
+ *   for this connection. Otherwise, if this parameter is set to `slow` or not used,
+ *   TCP Fast Open is disabled.
  * @par
  * Establishes a connection with the specified peer.
  * @par
  * If the connection establishment is successful, the resulting TCP connection
- * is associated with the example TCP endpoint
+ * is associated with the example TCP endpoint.
  * @sa otTcpConnect
  */
 template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
@@ -554,7 +554,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * @par
      * Transfers the specified number of bytes using the TCP connection
      * currently associated with the example TCP endpoint provided by the `tcp` CLI.
-     * @note You must establish this TCP connection before you run  this command.
+     * @note You must establish this TCP connection before you run this command.
      */
     else if (aArgs[0] == "run")
     {
@@ -673,11 +673,11 @@ exit:
  * @cparam tcp listen @ca{ip} @ca{port}
  * The following parameters are required:
  * * `ip`: IPv6 address or the unspecified IPv6 address (`::`) of the example
- *    TCP listener provided by the `tcp` CLI.
+ *   TCP listener provided by the `tcp` CLI.
  * * `port`: TCP port of the example TCP listener.
- *    If no TCP connection is associated with the example TCP endpoint, then any
- *    incoming connections matching the specified IPv6 address and port are accepted
- *    and are associated with the example TCP endpoint.
+ *   If no TCP connection is associated with the example TCP endpoint, then any
+ *   incoming connections matching the specified IPv6 address and port are accepted
+ *   and are associated with the example TCP endpoint.
  * @par
  * Uses the example TCP listener to listen for incoming connections on the
  * specified IPv6 address and port.
