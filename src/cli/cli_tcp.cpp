@@ -103,7 +103,8 @@ void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int 
  *     for the differences between these two buffering types.
  *     Two endpoints of a TCP connection are not required to use the same buffering type.
  * * The `size` parameter sets the size of the receive buffer to associate with the
- *   example TCP endpoint. If left unspecified, the maximum size is used.
+ *   example TCP endpoint. If left unspecified, the maximum size is used. The
+ *   maximum size is set in `OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE`.
  * @par
  * Initializes the example TCP listener and the example TCP endpoint provided
  * by the `tcp` CLI.
@@ -550,11 +551,11 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
      * @cparam tcp benchmark run [@ca{size}]
      * Use the `size` parameter to specify the number of bytes to send
      * for the benchmark. If you do not use the `size` parameter, the default
-     * value is used.
+     * value (`OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE`) is used.
      * @par
      * Transfers the specified number of bytes using the TCP connection
      * currently associated with the example TCP endpoint provided by the `tcp` CLI.
-     * @note You must establish this TCP connection before you run this command.
+     * @note You must establish a TCP connection before you run this command.
      */
     else if (aArgs[0] == "run")
     {
