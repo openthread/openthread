@@ -312,15 +312,18 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     Error   error;
-    uint8_t state;
+    uint8_t state = StateTlv::kPending;
 
     SuccessOrExit(error = aError);
     VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending,
                  error = kErrorParse);
+    if (state == StateTlv::kReject)
+    {
+        error = kErrorRejected;
+    }
 
 exit:
-    LogInfo("MGMT_SET finished: %s",
-            error == kErrorNone ? StateTlv::StateToString(static_cast<StateTlv::State>(state)) : ErrorToString(error));
+    LogInfo("MGMT_SET finished: %s", error == kErrorNone ? "Accepted" : ErrorToString(error));
 
     mMgmtPending = false;
 
