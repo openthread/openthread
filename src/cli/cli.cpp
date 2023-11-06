@@ -276,11 +276,34 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    otInstanceReset(GetInstancePtr());
+    if (aArgs[0].IsEmpty())
+    {
+        otInstanceReset(GetInstancePtr());
+    }
 
-    return OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    /**
+     * @cli reset bootloader
+     * @code
+     * reset bootloader
+     * @endcode
+     * @cparam reset bootloader
+     * @par api_copy
+     * #otInstanceResetToBootloader
+     */
+    else if (aArgs[0] == "bootloader")
+    {
+        error = otInstanceResetToBootloader(GetInstancePtr());
+    }
+#endif
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
 }
 
 void Interpreter::ProcessLine(char *aBuf)

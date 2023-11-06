@@ -236,6 +236,18 @@ public:
      */
     void Reset(void);
 
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    /**
+     * Triggers a platform reset to bootloader mode, if supported.
+     *
+     * @retval kErrorNone        Reset to bootloader successfully.
+     * @retval kErrorBusy        Failed due to another operation is ongoing.
+     * @retval kErrorNotCapable  Not capable of resetting to bootloader.
+     *
+     */
+    Error ResetToBootloader(void);
+#endif
+
 #if OPENTHREAD_RADIO
     /**
      * Resets the internal states of the radio.

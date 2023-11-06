@@ -86,6 +86,10 @@ void otInstanceFinalize(otInstance *aInstance) { AsCoreType(aInstance).Finalize(
 
 void otInstanceReset(otInstance *aInstance) { AsCoreType(aInstance).Reset(); }
 
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+otError otInstanceResetToBootloader(otInstance *aInstance) { return AsCoreType(aInstance).ResetToBootloader(); }
+#endif
+
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
 uint64_t otInstanceGetUptime(otInstance *aInstance) { return AsCoreType(aInstance).Get<Uptime>().GetUptime(); }
 

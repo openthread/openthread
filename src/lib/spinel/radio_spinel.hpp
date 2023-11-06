@@ -808,10 +808,11 @@ public:
     /**
      * Tries to reset the co-processor.
      *
-     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM or SPINEL_RESET_STACK.
+     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM, SPINEL_RESET_STACK, or SPINEL_RESET_BOOTLOADER.
      *
      * @retval  OT_ERROR_NONE               Successfully removed item from the property.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
      *
      */
     otError SendReset(uint8_t aResetType);
@@ -1065,10 +1066,11 @@ private:
     otExtAddress mIeeeEui64;
 
     State mState;
-    bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
-    bool  mIsReady : 1;           ///< NCP ready.
-    bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
-    bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
+    bool  mIsPromiscuous : 1;             ///< Promiscuous mode.
+    bool  mIsReady : 1;                   ///< NCP ready.
+    bool  mSupportsLogStream : 1;         ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
+    bool  mSupportsResetToBootloader : 1; ///< RCP supports resetting into bootloader mode.
+    bool  mIsTimeSynced : 1;              ///< Host has calculated the time difference between host and RCP.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 

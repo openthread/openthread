@@ -1659,6 +1659,8 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());
 
+    SuccessOrExit(aAckFrame.ValidatePsdu());
+
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
 

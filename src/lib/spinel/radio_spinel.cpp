@@ -72,6 +72,7 @@ RadioSpinel::RadioSpinel(void)
     , mIsPromiscuous(false)
     , mIsReady(false)
     , mSupportsLogStream(false)
+    , mSupportsResetToBootloader(false)
     , mIsTimeSynced(false)
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     , mRcpFailureCount(0)
@@ -234,6 +235,11 @@ bool RadioSpinel::IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostA
         if (capability == SPINEL_CAP_RCP_API_VERSION)
         {
             aSupportsRcpApiVersion = true;
+        }
+
+        if (capability == SPINEL_CAP_RCP_RESET_TO_BOOTLOADER)
+        {
+            mSupportsResetToBootloader = true;
         }
 
         if (capability == SPINEL_PROP_RCP_MIN_HOST_API_VERSION)
@@ -1468,6 +1474,11 @@ otError RadioSpinel::SendReset(uint8_t aResetType)
     otError        error = OT_ERROR_NONE;
     uint8_t        buffer[kMaxSpinelFrame];
     spinel_ssize_t packed;
+
+    if ((aResetType == SPINEL_RESET_BOOTLOADER) && !mSupportsResetToBootloader)
+    {
+        ExitNow(error = OT_ERROR_NOT_CAPABLE);
+    }
 
     // Pack the header, command and key
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_UINT8_S,

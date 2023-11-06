@@ -132,6 +132,17 @@ build_simulation()
         options+=("-DOT_LINK_METRICS_MANAGER=ON")
     fi
 
+    if [[ ${OT_NODE_TYPE} == cli* ]]; then
+        # Only enable OT_PLATFORM_BOOTLOADER_MODE when testing cli.
+        # This is intended to test that the "reset bootloader" CLI command returns a "NotCapable" error
+
+        # Note: Setting this option to ON for all OT_NODE_TYPEs will cause the posix/expects CI check to fail.
+        #       This is because the simulation RCP will have the SPINEL_CAP_RCP_RESET_TO_BOOTLOADER capability,
+        #       causing the ot-cli POSIX app to send the reset to simulation RCP successfully instead of printing
+        #       the expected error.
+        options+=("-DOT_PLATFORM_BOOTLOADER_MODE=ON")
+    fi
+
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")
     fi
@@ -158,7 +169,12 @@ build_simulation()
 build_posix()
 {
     local version="$1"
-    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
+    local options=(
+        "-DBUILD_TESTING=ON"
+        "-DOT_MESSAGE_USE_HEAP=ON"
+        "-DOT_PLATFORM_BOOTLOADER_MODE=ON"
+        "-DOT_THREAD_VERSION=${version}"
+    )
 
     if [[ ${version} != "1.1" ]]; then
         options+=("-DOT_DUA=ON")

@@ -40,10 +40,13 @@
 
 #include "coap/coap.hpp"
 #include "common/const_cast.hpp"
+#include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/network_data.hpp"
+#include "thread/tmf.hpp"
 
 namespace ot {
 
@@ -63,8 +66,11 @@ namespace NetworkData {
  * Implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase : public MutableNetworkData
+class Leader : public MutableNetworkData, private NonCopyable
 {
+    friend class Tmf::Agent;
+    friend class Notifier;
+
 public:
     /**
      * Initializes the object.
@@ -72,12 +78,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit LeaderBase(Instance &aInstance)
-        : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
-        , mMaxLength(0)
-    {
-        Reset();
-    }
+    explicit Leader(Instance &aInstance);
 
     /**
      * Reset the Thread Network Data.
@@ -328,18 +329,112 @@ public:
      */
     Error GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const;
 
-protected:
-    void                        SignalNetDataChanged(void);
-    const CommissioningDataTlv *FindCommissioningData(void) const;
-    CommissioningDataTlv *FindCommissioningData(void) { return AsNonConst(AsConst(this)->FindCommissioningData()); }
-    const MeshCoP::Tlv   *FindCommissioningDataSubTlv(uint8_t aType) const;
-    MeshCoP::Tlv         *FindCommissioningDataSubTlv(uint8_t aType)
+#if OPENTHREAD_FTD
+    /**
+     * Defines the match mode constants to compare two RLOC16 values.
+     *
+     */
+    enum MatchMode : uint8_t
     {
-        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
-    }
+        kMatchModeRloc16,   ///< Perform exact RLOC16 match.
+        kMatchModeRouterId, ///< Perform Router ID match (match the router and any of its children).
+    };
 
-    uint8_t mStableVersion;
-    uint8_t mVersion;
+    /**
+     * Starts the Leader services.
+     *
+     * The start mode indicates whether device is starting normally as leader or restoring its role as leader after
+     * reset. In the latter case, we do not accept any new registrations (`HandleServerData()`) and wait for
+     * `HandleNetworkDataRestoredAfterReset()` to indicate that the leader has successfully recovered the Network Data
+     * before allowing new Network Data registrations.
+     *
+     * @param[in] aStartMode   The start mode.
+     *
+     */
+    void Start(Mle::LeaderStartMode aStartMode);
+
+    /**
+     * Increments the Thread Network Data version.
+     *
+     */
+    void IncrementVersion(void);
+
+    /**
+     * Increments both the Thread Network Data version and stable version.
+     *
+     */
+    void IncrementVersionAndStableVersion(void);
+
+    /**
+     * Returns CONTEXT_ID_RESUSE_DELAY value.
+     *
+     * @returns The CONTEXT_ID_REUSE_DELAY value (in seconds).
+     *
+     */
+    uint32_t GetContextIdReuseDelay(void) const { return mContextIds.GetReuseDelay(); }
+
+    /**
+     * Sets CONTEXT_ID_RESUSE_DELAY value.
+     *
+     * @warning This method should only be used for testing.
+     *
+     * @param[in]  aDelay  The CONTEXT_ID_REUSE_DELAY value (in seconds).
+     *
+     */
+    void SetContextIdReuseDelay(uint32_t aDelay) { mContextIds.SetReuseDelay(aDelay); }
+
+    /**
+     * Removes Network Data entries matching with a given RLOC16.
+     *
+     * @param[in]  aRloc16    A RLOC16 value.
+     * @param[in]  aMatchMode A match mode (@sa MatchMode).
+     *
+     */
+    void RemoveBorderRouter(uint16_t aRloc16, MatchMode aMatchMode);
+
+    /**
+     * Updates Commissioning Data in Network Data.
+     *
+     * @param[in]  aData        A pointer to the Commissioning Data.
+     * @param[in]  aDataLength  The length of @p aData.
+     *
+     * @retval kErrorNone     Successfully updated the Commissioning Data.
+     * @retval kErrorNoBufs   Insufficient space to add the Commissioning Data.
+     *
+     */
+    Error SetCommissioningData(const void *aData, uint8_t aDataLength);
+
+    /**
+     * Synchronizes internal 6LoWPAN Context ID Set with recently obtained Thread Network Data.
+     *
+     * Note that this method should be called only by the Leader once after reset.
+     *
+     */
+    void HandleNetworkDataRestoredAfterReset(void);
+
+    /**
+     * Scans network data for given Service ID and returns pointer to the respective TLV, if present.
+     *
+     * @param aServiceId Service ID to look for.
+     * @return Pointer to the Service TLV for given Service ID, or nullptr if not present.
+     *
+     */
+    const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    /**
+     * Indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
+     *
+     * @param[in]  aPrefix   The OMR prefix to check.
+     *
+     * @retval TRUE  If @p aPrefix is a valid OMR prefix and Network Data contains @p aPrefix.
+     * @retval FALSE Otherwise.
+     *
+     */
+    bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
+#endif
+
+#endif // OPENTHREAD_FTD
 
 private:
     using FilterIndexes = MeshCoP::SteeringData::HashBitIndexes;
@@ -357,10 +452,200 @@ private:
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
     void  GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const;
     Error ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const;
+    void  SignalNetDataChanged(void);
+    const CommissioningDataTlv *FindCommissioningData(void) const;
+    CommissioningDataTlv *FindCommissioningData(void) { return AsNonConst(AsConst(this)->FindCommissioningData()); }
+    const MeshCoP::Tlv   *FindCommissioningDataSubTlv(uint8_t aType) const;
+    MeshCoP::Tlv         *FindCommissioningDataSubTlv(uint8_t aType)
+    {
+        return AsNonConst(AsConst(this)->FindCommissioningDataSubTlv(aType));
+    }
 
+#if OPENTHREAD_FTD
+    static constexpr uint32_t kMaxNetDataSyncWait = 60 * 1000; // Maximum time to wait for netdata sync in msec.
+    static constexpr uint8_t  kMinServiceId       = 0x00;
+    static constexpr uint8_t  kMaxServiceId       = 0x0f;
+
+    class ChangedFlags
+    {
+    public:
+        ChangedFlags(void)
+            : mChanged(false)
+            , mStableChanged(false)
+        {
+        }
+
+        void Update(const NetworkDataTlv &aTlv)
+        {
+            mChanged       = true;
+            mStableChanged = (mStableChanged || aTlv.IsStable());
+        }
+
+        bool DidChange(void) const { return mChanged; }
+        bool DidStableChange(void) const { return mStableChanged; }
+
+    private:
+        bool mChanged;       // Any (stable or not) network data change (add/remove).
+        bool mStableChanged; // Stable network data change (add/remove).
+    };
+
+    enum UpdateStatus : uint8_t
+    {
+        kTlvRemoved, // TLV contained no sub TLVs and therefore is removed.
+        kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
+    };
+
+    class ContextIds : public InstanceLocator
+    {
+    public:
+        // This class tracks Context IDs. A Context ID can be in one
+        // of the 3 states: It is unallocated, or it is allocated
+        // and in-use, or it scheduled to be removed (after reuse delay
+        // interval is passed).
+
+        static constexpr uint8_t kInvalidId = NumericLimits<uint8_t>::kMax;
+
+        explicit ContextIds(Instance &aInstance);
+
+        void     Clear(void);
+        Error    GetUnallocatedId(uint8_t &aId);
+        void     MarkAsInUse(uint8_t aId) { mRemoveTimes[aId - kMinId].SetValue(kInUse); }
+        void     ScheduleToRemove(uint8_t aId);
+        uint32_t GetReuseDelay(void) const { return mReuseDelay; }
+        void     SetReuseDelay(uint32_t aDelay) { mReuseDelay = aDelay; }
+        void     HandleTimer(void);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        void MarkAsClone(void) { mIsClone = true; }
+#endif
+
+    private:
+        static constexpr uint32_t kReuseDelay = 5 * 60; // 5 minutes (in seconds).
+
+        static constexpr uint8_t kMinId = 1;
+        static constexpr uint8_t kMaxId = 15;
+
+        // The `mRemoveTimes[id]` is used to track the state of a
+        // Context ID and its remove time. Two specific values
+        // `kUnallocated` and `kInUse` are used to indicate ID is in
+        // unallocated or in-use states. Other values indicate we
+        // are in remove state waiting to remove it at `mRemoveTime`.
+
+        static constexpr uint32_t kUnallocated = 0;
+        static constexpr uint32_t kInUse       = 1;
+
+        bool      IsUnallocated(uint8_t aId) const { return mRemoveTimes[aId - kMinId].GetValue() == kUnallocated; }
+        bool      IsInUse(uint8_t aId) const { return mRemoveTimes[aId - kMinId].GetValue() == kInUse; }
+        TimeMilli GetRemoveTime(uint8_t aId) const { return mRemoveTimes[aId - kMinId]; }
+        void      SetRemoveTime(uint8_t aId, TimeMilli aTime);
+        void      MarkAsUnallocated(uint8_t aId) { mRemoveTimes[aId - kMinId].SetValue(kUnallocated); }
+
+        TimeMilli mRemoveTimes[kMaxId - kMinId + 1];
+        uint32_t  mReuseDelay;
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+        bool mIsClone;
+#endif
+    };
+
+    template <Uri kUri> void HandleTmf(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    void HandleTimer(void);
+
+    void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
+
+    Error AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
+    Error AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
+    Error AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
+    Error AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
+    Error AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
+
+    Error AllocateServiceId(uint8_t &aServiceId) const;
+
+    void RemoveContext(uint8_t aContextId);
+    void RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
+
+    void RemoveCommissioningData(void);
+
+    void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags);
+    void RemoveRloc(uint16_t           aRloc16,
+                    MatchMode          aMatchMode,
+                    const NetworkData &aExcludeNetworkData,
+                    ChangedFlags      &aChangedFlags);
+    void RemoveRlocInPrefix(PrefixTlv       &aPrefix,
+                            uint16_t         aRloc16,
+                            MatchMode        aMatchMode,
+                            const PrefixTlv *aExcludePrefix,
+                            ChangedFlags    &aChangedFlags);
+    void RemoveRlocInService(ServiceTlv       &aService,
+                             uint16_t          aRloc16,
+                             MatchMode         aMatchMode,
+                             const ServiceTlv *aExcludeService,
+                             ChangedFlags     &aChangedFlags);
+    void RemoveRlocInHasRoute(PrefixTlv       &aPrefix,
+                              HasRouteTlv     &aHasRoute,
+                              uint16_t         aRloc16,
+                              MatchMode        aMatchMode,
+                              const PrefixTlv *aExcludePrefix,
+                              ChangedFlags    &aChangedFlags);
+    void RemoveRlocInBorderRouter(PrefixTlv       &aPrefix,
+                                  BorderRouterTlv &aBorderRouter,
+                                  uint16_t         aRloc16,
+                                  MatchMode        aMatchMode,
+                                  const PrefixTlv *aExcludePrefix,
+                                  ChangedFlags    &aChangedFlags);
+
+    static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
+
+    static Error Validate(const NetworkData &aNetworkData, uint16_t aRloc16);
+    static Error ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16);
+    static Error ValidateService(const ServiceTlv &aService, uint16_t aRloc16);
+
+    static bool ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const HasRouteEntry &aEntry);
+    static bool ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry);
+    static bool ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const BorderRouterEntry &aEntry);
+    static bool ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry);
+    static bool ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv &aServer);
+
+    UpdateStatus UpdatePrefix(PrefixTlv &aPrefix);
+    UpdateStatus UpdateService(ServiceTlv &aService);
+    UpdateStatus UpdateTlv(NetworkDataTlv &aTlv, const NetworkDataTlv *aSubTlvs);
+
+    Error UpdateCommissioningData(uint16_t aDataLength, CommissioningDataTlv *&aDataTlv);
+    Error SetCommissioningData(const Message &aMessage);
+
+    void SendCommissioningSetResponse(const Coap::Message     &aRequest,
+                                      const Ip6::MessageInfo  &aMessageInfo,
+                                      MeshCoP::StateTlv::State aState);
+    void IncrementVersions(bool aIncludeStable);
+    void IncrementVersions(const ChangedFlags &aFlags);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    void CheckForNetDataGettingFull(const NetworkData &aNetworkData, uint16_t aOldRloc16);
+    void MarkAsClone(void);
+#endif
+
+    using UpdateTimer = TimerMilliIn<Leader, &Leader::HandleTimer>;
+#endif // OPENTHREAD_FTD
+
+    uint8_t mStableVersion;
+    uint8_t mVersion;
     uint8_t mTlvBuffer[kMaxSize];
     uint8_t mMaxLength;
+
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    bool mIsClone;
+#endif
+    bool        mWaitingForNetDataSync;
+    ContextIds  mContextIds;
+    UpdateTimer mTimer;
+#endif
 };
+
+#if OPENTHREAD_FTD
+DeclareTmfHandler(Leader, kUriServerData);
+DeclareTmfHandler(Leader, kUriCommissionerGet);
+DeclareTmfHandler(Leader, kUriCommissionerSet);
+#endif
 
 /**
  * @}
@@ -368,21 +653,5 @@ private:
 
 } // namespace NetworkData
 } // namespace ot
-
-#if OPENTHREAD_MTD
-namespace ot {
-namespace NetworkData {
-class Leader : public LeaderBase
-{
-public:
-    using LeaderBase::LeaderBase;
-};
-} // namespace NetworkData
-} // namespace ot
-#elif OPENTHREAD_FTD
-#include "network_data_leader_ftd.hpp"
-#else
-#error "Please define OPENTHREAD_MTD=1 or OPENTHREAD_FTD=1"
-#endif
 
 #endif // NETWORK_DATA_LEADER_HPP_

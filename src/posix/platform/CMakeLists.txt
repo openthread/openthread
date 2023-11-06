@@ -154,6 +154,7 @@ target_link_libraries(openthread-posix
         openthread-cli-ftd
         openthread-ftd
         openthread-hdlc
+        openthread-radio-spinel
         openthread-spinel-rcp
         openthread-url
         ot-config-ftd

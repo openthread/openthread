@@ -312,6 +312,10 @@ exit:
 
 void Instance::Reset(void) { otPlatReset(this); }
 
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+Error Instance::ResetToBootloader(void) { return otPlatResetToBootloader(this); }
+#endif
+
 #if OPENTHREAD_RADIO
 void Instance::ResetRadioStack(void)
 {
