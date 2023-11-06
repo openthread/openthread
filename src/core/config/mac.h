@@ -426,6 +426,28 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+ *
+ * This setting configures the usage of local time rather than radio time for calculating the
+ * elapsed time since last CSL synchronization event in order to schedule the duration of the
+ * CSL receive window.
+ *
+ * This is done at expense of too short or too long receive windows depending on the drift
+ * between the two clocks within the CSL timeout period. In order to compensate for a too
+ * short receive window, CSL uncertainty can be increased.
+ *
+ * This setting can be useful for platforms in which is important to reduce the number of
+ * radio API calls, for instance when they are costly. One typical situation is a multicore
+ * chip architecture in which different instances of current time are being kept in host and
+ * radio cores. In this case, accessing the radio core current time API requires serialization
+ * and it is more costly than just accessing local host time.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+#define OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD
  *
  * This setting configures the minimum CSL period that could be used, in units of milliseconds.
