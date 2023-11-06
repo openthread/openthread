@@ -321,6 +321,10 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
 exit:
     LogInfo("MGMT_SET finished: %s",
             error == kErrorNone ? StateTlv::StateToString(static_cast<StateTlv::State>(state)) : ErrorToString(error));
+    if (error == kErrorNone && state == StateTlv::kReject)
+    {
+        error = kErrorRejected;
+    }
 
     mMgmtPending = false;
 
