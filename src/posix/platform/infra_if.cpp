@@ -289,6 +289,7 @@ uint32_t InfraNetif::GetFlags(void) const
 {
     int          sock;
     struct ifreq ifReq;
+    uint32_t     flags = 0;
 
     OT_ASSERT(mInfraIfIndex != 0);
 
@@ -299,11 +300,20 @@ uint32_t InfraNetif::GetFlags(void) const
     static_assert(sizeof(ifReq.ifr_name) >= sizeof(mInfraIfName), "mInfraIfName is not of appropriate size.");
     strcpy(ifReq.ifr_name, mInfraIfName);
 
-    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
+    if (ioctl(sock, SIOCGIFFLAGS, &ifReq) == -1)
+    {
+#if OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE
+        otLogCritPlat("The infra link %s may be lost. Exiting.", mInfraIfName);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+#endif
+        ExitNow();
+    }
+    flags = static_cast<uint32_t>(ifReq.ifr_flags);
 
+exit:
     close(sock);
 
-    return static_cast<uint32_t>(ifReq.ifr_flags);
+    return flags;
 }
 
 void InfraNetif::CountAddresses(otSysInfraNetIfAddressCounters &aAddressCounters) const
