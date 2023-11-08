@@ -1419,31 +1419,26 @@ void MeshForwarder::HandleFragment(FrameData            &aFrameData,
     {
         Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddrs.mSource, Neighbor::kInStateAnyExceptInvalid);
 
-        if (neighbor != nullptr)
+        if ((neighbor != nullptr) && (fragmentHeader.GetDatagramOffset() == 0))
         {
             uint16_t tag = fragmentHeader.GetDatagramTag();
 
             if (neighbor->IsLastRxFragmentTagSet())
             {
                 VerifyOrExit(!neighbor->IsLastRxFragmentTagAfter(tag), error = kErrorDuplicated);
-
-                if (neighbor->GetLastRxFragmentTag() == tag)
-                {
-                    VerifyOrExit(fragmentHeader.GetDatagramOffset() != 0, error = kErrorDuplicated);
-
-                    // Duplication suppression for a "next fragment" is handled
-                    // by the code below where the the datagram offset is
-                    // checked against the offset of the corresponding message
-                    // (same datagram tag and size) in Reassembly List. Note
-                    // that if there is no matching message in the Reassembly
-                    // List (e.g., in case the message is already fully
-                    // assembled) the received "next fragment" frame would be
-                    // dropped.
-                }
             }
 
             neighbor->SetLastRxFragmentTag(tag);
         }
+
+        // Duplication suppression for a "next fragment" is handled
+        // by the code below where the the datagram offset is
+        // checked against the offset of the corresponding message
+        // (same datagram tag and size) in Reassembly List. Note
+        // that if there is no matching message in the Reassembly
+        // List (e.g., in case the message is already fully
+        // assembled) the received "next fragment" frame would be
+        // dropped.
     }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
