@@ -72,8 +72,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsEnabled(false)
     , mInfraIf(aInstance)
     , mOmrPrefixManager(aInstance)
-    , mRioPreference(NetworkData::kRoutePreferenceLow)
-    , mUserSetRioPreference(false)
+    , mRioAdvertiser(aInstance)
     , mOnLinkPrefixManager(aInstance)
     , mDiscoveredPrefixTable(aInstance)
     , mRoutePublisher(aInstance)
@@ -151,45 +150,6 @@ RoutingManager::State RoutingManager::GetState(void) const
 
 exit:
     return state;
-}
-
-void RoutingManager::SetRouteInfoOptionPreference(RoutePreference aPreference)
-{
-    LogInfo("User explicitly set RIO Preference to %s", RoutePreferenceToString(aPreference));
-    mUserSetRioPreference = true;
-    UpdateRioPreference(aPreference);
-}
-
-void RoutingManager::ClearRouteInfoOptionPreference(void)
-{
-    VerifyOrExit(mUserSetRioPreference);
-
-    LogInfo("User cleared explicitly set RIO Preference");
-    mUserSetRioPreference = false;
-    SetRioPreferenceBasedOnRole();
-
-exit:
-    return;
-}
-
-void RoutingManager::SetRioPreferenceBasedOnRole(void)
-{
-    UpdateRioPreference(Get<Mle::Mle>().IsRouterOrLeader() ? NetworkData::kRoutePreferenceMedium
-                                                           : NetworkData::kRoutePreferenceLow);
-}
-
-void RoutingManager::UpdateRioPreference(RoutePreference aPreference)
-{
-    VerifyOrExit(mRioPreference != aPreference);
-
-    LogInfo("RIO Preference changed: %s -> %s", RoutePreferenceToString(mRioPreference),
-            RoutePreferenceToString(aPreference));
-    mRioPreference = aPreference;
-
-    ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-
-exit:
-    return;
 }
 
 Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix) const
@@ -377,12 +337,6 @@ void RoutingManager::Stop(void)
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-    mAdvertisedPrefixes.Free();
-#else
-    mAdvertisedPrefixes.Clear();
-#endif
-
     mDiscoveredPrefixTable.RemoveAllEntries();
     mDiscoveredPrefixStaleTimer.Stop();
 
@@ -457,9 +411,9 @@ exit:
 
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
-    if (aEvents.Contains(kEventThreadRoleChanged) && !mUserSetRioPreference)
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        SetRioPreferenceBasedOnRole();
+        mRioAdvertiser.HandleRoleChanged();
     }
 
     mRoutePublisher.HandleNotifierEvents(aEvents);
@@ -620,19 +574,18 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // - One RA Flags Extensions Option (with stub router flag).
     // - One PIO for current local on-link prefix.
     // - At most `kMaxOldPrefixes` for old deprecating on-link prefixes.
-    // - At most twice `kMaxOnMeshPrefixes` RIO for on-mesh prefixes.
-    //   Factor two is used for RIO to account for entries invalidating
-    //   previous prefixes while adding new ones.
+    // - At most 3 times `kMaxOnMeshPrefixes` RIO for on-mesh prefixes.
+    //   Factor three is used for RIOs to account for any new prefix
+    //   with older prefixes entries being deprecated and prefixes
+    //   being invalidated.
 
     static constexpr uint16_t kMaxRaLength =
         sizeof(Ip6::Nd::RouterAdvertMessage::Header) + sizeof(Ip6::Nd::RaFlagsExtOption) +
         sizeof(Ip6::Nd::PrefixInfoOption) + sizeof(Ip6::Nd::PrefixInfoOption) * OnLinkPrefixManager::kMaxOldPrefixes +
-        2 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
+        3 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
 
-    uint8_t                         buffer[kMaxRaLength];
-    Ip6::Nd::RouterAdvertMessage    raMsg(mRaInfo.mHeader, buffer);
-    NetworkData::Iterator           iterator;
-    NetworkData::OnMeshPrefixConfig prefixConfig;
+    uint8_t                      buffer[kMaxRaLength];
+    Ip6::Nd::RouterAdvertMessage raMsg(mRaInfo.mHeader, buffer);
 
     LogInfo("Preparing RA");
 
@@ -653,119 +606,13 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     mOnLinkPrefixManager.AppendAsPiosTo(raMsg);
 
-    // Determine which previously advertised prefixes need to be
-    // invalidated. Under `kInvalidateAllPrevPrefixes` mode we need
-    // to invalidate all. Under `kAdvPrefixesFromNetData` mode, we
-    // check Network Data entries and invalidate any previously
-    // advertised prefix that is no longer present in the Network
-    // Data. We go through all Network Data prefixes and mark the
-    // ones we find in `mAdvertisedPrefixes` as deleted by setting
-    // the prefix length to zero). By the end, the remaining entries
-    // in the array with a non-zero prefix length are invalidated.
-
-    if (aRaTxMode != kInvalidateAllPrevPrefixes)
+    if (aRaTxMode == kInvalidateAllPrevPrefixes)
     {
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-        {
-            if (!prefixConfig.mOnMesh || prefixConfig.mDp ||
-                (prefixConfig.GetPrefix() == mOmrPrefixManager.GetLocalPrefix().GetPrefix()))
-            {
-                continue;
-            }
-
-            mAdvertisedPrefixes.MarkAsDeleted(prefixConfig.GetPrefix());
-        }
-
-        if (mOmrPrefixManager.IsLocalAddedInNetData())
-        {
-            mAdvertisedPrefixes.MarkAsDeleted(mOmrPrefixManager.GetLocalPrefix().GetPrefix());
-        }
+        mRioAdvertiser.InvalidatPrevRios(raMsg);
     }
-
-    for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
+    else
     {
-        if (prefix.GetLength() != 0)
-        {
-            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, /* aRouteLifetime */ 0, mRioPreference));
-            LogRouteInfoOption(prefix, 0, mRioPreference);
-        }
-    }
-
-    // Discover and add prefixes from Network Data to advertise as
-    // RIO in the Router Advertisement message.
-
-    mAdvertisedPrefixes.Clear();
-
-    if (aRaTxMode == kAdvPrefixesFromNetData)
-    {
-        // `mAdvertisedPrefixes` array has a limited size. We add more
-        // important prefixes first in the array to ensure they are
-        // advertised in the RA message. Note that `Add()` method
-        // will ensure to add a prefix only once (will check if
-        // prefix is already present in the array).
-
-        // (1) Local OMR prefix.
-
-        if (mOmrPrefixManager.IsLocalAddedInNetData())
-        {
-            mAdvertisedPrefixes.Add(mOmrPrefixManager.GetLocalPrefix().GetPrefix());
-        }
-
-        // (2) Favored OMR prefix.
-
-        if (!mOmrPrefixManager.GetFavoredPrefix().IsEmpty() && !mOmrPrefixManager.GetFavoredPrefix().IsDomainPrefix())
-        {
-            mAdvertisedPrefixes.Add(mOmrPrefixManager.GetFavoredPrefix().GetPrefix());
-        }
-
-        // (3) All other OMR prefixes.
-
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-        {
-            // Local OMR prefix is added to the array depending on
-            // `mOmrPrefixManager.IsLocalAddedInNetData()` at step (1).
-            // As we iterate through the Network Data prefixes, we skip
-            // over entries matching the local OMR prefix. This
-            // ensures that we stop including it in emitted RA
-            // message as soon as we decide to remove it from Network
-            // Data. Note that upon requesting it to be removed from
-            // Network Data the change needs to be registered with
-            // leader and can take some time to be updated in Network
-            // Data.
-
-            if (prefixConfig.mDp)
-            {
-                continue;
-            }
-
-            if (IsValidOmrPrefix(prefixConfig) &&
-                (prefixConfig.GetPrefix() != mOmrPrefixManager.GetLocalPrefix().GetPrefix()))
-            {
-                mAdvertisedPrefixes.Add(prefixConfig.GetPrefix());
-            }
-        }
-
-        // (4) All other on-mesh prefixes (excluding Domain Prefix).
-
-        iterator = NetworkData::kIteratorInit;
-
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-        {
-            if (prefixConfig.mOnMesh && !prefixConfig.mDp && !IsValidOmrPrefix(prefixConfig))
-            {
-                mAdvertisedPrefixes.Add(prefixConfig.GetPrefix());
-            }
-        }
-
-        for (const OnMeshPrefix &prefix : mAdvertisedPrefixes)
-        {
-            SuccessOrAssert(raMsg.AppendRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRioPreference));
-            LogRouteInfoOption(prefix, kDefaultOmrPrefixLifetime, mRioPreference);
-        }
+        mRioAdvertiser.AppendRios(raMsg);
     }
 
     if (raMsg.ContainsAnyOptions())
@@ -831,9 +678,9 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
         case Ip6::Nd::Option::kTypeRouteInfo:
         {
             // RIO (with non-zero lifetime) should match entries from
-            // `mAdvertisedPrefixes`. We keep track of the number
-            // of matched RIOs and check after the loop ends that all
-            // entries were seen.
+            // `mRioAdvertiser`. We keep track of the number of matched
+            // RIOs and check after the loop ends that all entries were
+            // seen.
 
             const Ip6::Nd::RouteInfoOption &rio = static_cast<const Ip6::Nd::RouteInfoOption &>(option);
 
@@ -842,7 +689,7 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
 
             if (rio.GetRouteLifetime() != 0)
             {
-                VerifyOrExit(mAdvertisedPrefixes.Contains(prefix));
+                VerifyOrExit(mRioAdvertiser.HasAdvertised(prefix));
                 rioCount++;
             }
 
@@ -854,7 +701,7 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
         }
     }
 
-    VerifyOrExit(rioCount == mAdvertisedPrefixes.GetLength());
+    VerifyOrExit(rioCount == mRioAdvertiser.GetAdvertisedRioCount());
 
     isFromManager = true;
 
@@ -1023,16 +870,16 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption
     VerifyOrExit(mOmrPrefixManager.GetLocalPrefix().GetPrefix() != aPrefix);
 
     // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
-    // The `mAdvertisedPrefixes` and the OMR prefix set in Network Data should eventually
+    // The `RioAdvertiser` prefixes and the OMR prefix set in Network Data should eventually
     // be equal, but there is time that they are not synchronized immediately:
-    // 1. Network Data could contain more OMR prefixes than `mAdvertisedPrefixes` because
+    // 1. Network Data could contain more OMR prefixes than `RioAdvertiser` because
     //    we added random delay before Evaluating routing policy when Network Data is changed.
-    // 2. `mAdvertisedPrefixes` could contain more OMR prefixes than Network Data because
+    // 2. `RioAdvertiser` prefixes could contain more OMR prefixes than Network Data because
     //    it takes time to sync a new OMR prefix into Network Data (multicast loopback RA
     //    messages are usually faster than Thread Network Data propagation).
     // They are the reasons why we need both the checks.
 
-    VerifyOrExit(!mAdvertisedPrefixes.Contains(aPrefix));
+    VerifyOrExit(!mRioAdvertiser.HasAdvertised(aPrefix));
     VerifyOrExit(!Get<RoutingManager>().NetworkDataContainsOmrPrefix(aPrefix));
 
     shouldProcess = true;
@@ -2878,18 +2725,235 @@ const char *RoutingManager::OnLinkPrefixManager::StateToString(State aState)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-// OnMeshPrefixArray
+// RioAdvertiser
 
-void RoutingManager::OnMeshPrefixArray::Add(const OnMeshPrefix &aPrefix)
+RoutingManager::RioAdvertiser::RioAdvertiser(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mTimer(aInstance)
+    , mPreference(NetworkData::kRoutePreferenceLow)
+    , mUserSetPreference(false)
+{
+}
+
+void RoutingManager::RioAdvertiser::SetPreference(RoutePreference aPreference)
+{
+    LogInfo("User explicitly set RIO Preference to %s", RoutePreferenceToString(aPreference));
+    mUserSetPreference = true;
+    UpdatePreference(aPreference);
+}
+
+void RoutingManager::RioAdvertiser::ClearPreference(void)
+{
+    VerifyOrExit(mUserSetPreference);
+
+    LogInfo("User cleared explicitly set RIO Preference");
+    mUserSetPreference = false;
+    SetPreferenceBasedOnRole();
+
+exit:
+    return;
+}
+
+void RoutingManager::RioAdvertiser::HandleRoleChanged(void)
+{
+    if (!mUserSetPreference)
+    {
+        SetPreferenceBasedOnRole();
+    }
+}
+
+void RoutingManager::RioAdvertiser::SetPreferenceBasedOnRole(void)
+{
+    UpdatePreference(Get<Mle::Mle>().IsRouterOrLeader() ? NetworkData::kRoutePreferenceMedium
+                                                        : NetworkData::kRoutePreferenceLow);
+}
+
+void RoutingManager::RioAdvertiser::UpdatePreference(RoutePreference aPreference)
+{
+    VerifyOrExit(mPreference != aPreference);
+
+    LogInfo("RIO Preference changed: %s -> %s", RoutePreferenceToString(mPreference),
+            RoutePreferenceToString(aPreference));
+    mPreference = aPreference;
+
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+
+exit:
+    return;
+}
+
+void RoutingManager::RioAdvertiser::InvalidatPrevRios(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+{
+    for (const RioPrefix &prefix : mPrefixes)
+    {
+        AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    mPrefixes.Free();
+#endif
+
+    mPrefixes.Clear();
+    mTimer.Stop();
+}
+
+void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+{
+    TimeMilli                       now      = TimerMilli::GetNow();
+    TimeMilli                       nextTime = now.GetDistantFuture();
+    RioPrefixArray                  oldPrefixes;
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+    const OmrPrefixManager         &omrPrefixManager = Get<RoutingManager>().mOmrPrefixManager;
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    oldPrefixes.TakeFrom(static_cast<RioPrefixArray &&>(mPrefixes));
+#else
+    oldPrefixes = mPrefixes;
+#endif
+
+    mPrefixes.Clear();
+
+    // `mPrefixes` array can have a limited size. We add more
+    // important prefixes first in the array to ensure they are
+    // advertised in the RA message. Note that `Add()` method
+    // will ensure to add a prefix only once (will check if
+    // prefix is already present in the array).
+
+    // (1) Local OMR prefix.
+
+    if (omrPrefixManager.IsLocalAddedInNetData())
+    {
+        mPrefixes.Add(omrPrefixManager.GetLocalPrefix().GetPrefix());
+    }
+
+    // (2) Favored OMR prefix.
+
+    if (!omrPrefixManager.GetFavoredPrefix().IsEmpty() && !omrPrefixManager.GetFavoredPrefix().IsDomainPrefix())
+    {
+        mPrefixes.Add(omrPrefixManager.GetFavoredPrefix().GetPrefix());
+    }
+
+    // (3) All other OMR prefixes.
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    {
+        // Local OMR prefix is added to the array depending on
+        // `omrPrefixManager.IsLocalAddedInNetData()` at step (1).
+        // As we iterate through the Network Data prefixes, we skip
+        // over entries matching the local OMR prefix. This
+        // ensures that we start deprecating it in emitted RA
+        // message as soon as we decide to remove it from Network
+        // Data. Note that upon requesting it to be removed from
+        // Network Data the change needs to be registered with
+        // leader and can take some time to be updated in Network
+        // Data.
+
+        if (prefixConfig.mDp)
+        {
+            continue;
+        }
+
+        if (IsValidOmrPrefix(prefixConfig) &&
+            (prefixConfig.GetPrefix() != omrPrefixManager.GetLocalPrefix().GetPrefix()))
+        {
+            mPrefixes.Add(prefixConfig.GetPrefix());
+        }
+    }
+
+    // (4) All other on-mesh prefixes (excluding Domain Prefix).
+
+    iterator = NetworkData::kIteratorInit;
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    {
+        if (prefixConfig.mOnMesh && !prefixConfig.mDp && !IsValidOmrPrefix(prefixConfig))
+        {
+            mPrefixes.Add(prefixConfig.GetPrefix());
+        }
+    }
+
+    // Determine deprecating prefixes
+
+    for (RioPrefix &prefix : oldPrefixes)
+    {
+        if (mPrefixes.ContainsMatching(prefix.mPrefix))
+        {
+            continue;
+        }
+
+        if (prefix.mIsDeprecating)
+        {
+            if (now >= prefix.mExpirationTime)
+            {
+                AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+                continue;
+            }
+        }
+        else
+        {
+            prefix.mIsDeprecating  = true;
+            prefix.mExpirationTime = now + kDeprecationTime;
+        }
+
+        if (mPrefixes.PushBack(prefix) != kErrorNone)
+        {
+            LogWarn("Too many deprecating on-mesh prefixes, removing %s", prefix.mPrefix.ToString().AsCString());
+            AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+        }
+
+        nextTime = Min(nextTime, prefix.mExpirationTime);
+    }
+
+    // Advertise all prefixes in `mPrefixes`
+
+    for (const RioPrefix &prefix : mPrefixes)
+    {
+        uint32_t lifetime = kDefaultOmrPrefixLifetime;
+
+        if (prefix.mIsDeprecating)
+        {
+            lifetime = TimeMilli::MsecToSec(prefix.mExpirationTime - now);
+        }
+
+        AppendRio(prefix.mPrefix, lifetime, aRaMessage);
+    }
+
+    if (nextTime != now.GetDistantFuture())
+    {
+        mTimer.FireAtIfEarlier(nextTime);
+    }
+}
+
+void RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix            &aPrefix,
+                                              uint32_t                      aRouteLifetime,
+                                              Ip6::Nd::RouterAdvertMessage &aRaMessage)
+{
+    SuccessOrAssert(aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, mPreference));
+    LogRouteInfoOption(aPrefix, aRouteLifetime, mPreference);
+}
+
+void RoutingManager::RioAdvertiser::HandleTimer(void)
+{
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+}
+
+void RoutingManager::RioAdvertiser::RioPrefixArray::Add(const Ip6::Prefix &aPrefix)
 {
     // Checks if `aPrefix` is already present in the array and if not
-    // adds it as new entry.
+    // adds it as a new entry.
 
-    Error error;
+    Error     error;
+    RioPrefix newEntry;
 
-    VerifyOrExit(!Contains(aPrefix));
+    VerifyOrExit(!ContainsMatching(aPrefix));
 
-    error = PushBack(aPrefix);
+    newEntry.Clear();
+    newEntry.mPrefix = aPrefix;
+
+    error = PushBack(newEntry);
 
     if (error != kErrorNone)
     {
@@ -2898,19 +2962,6 @@ void RoutingManager::OnMeshPrefixArray::Add(const OnMeshPrefix &aPrefix)
 
 exit:
     return;
-}
-
-void RoutingManager::OnMeshPrefixArray::MarkAsDeleted(const OnMeshPrefix &aPrefix)
-{
-    // Searches for a matching entry to `aPrefix` and if found marks
-    // it as deleted by setting prefix length to zero.
-
-    OnMeshPrefix *entry = Find(aPrefix);
-
-    if (entry != nullptr)
-    {
-        entry->SetLength(0);
-    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
