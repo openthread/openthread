@@ -54,6 +54,7 @@
 #include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
+#include "common/heap_array.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -954,7 +955,12 @@ private:
 
     typedef Ip6::Prefix OnMeshPrefix;
 
-    class OnMeshPrefixArray : public Array<OnMeshPrefix, kMaxOnMeshPrefixes>
+    class OnMeshPrefixArray :
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+        public Heap::Array<OnMeshPrefix>
+#else
+        public Array<OnMeshPrefix, kMaxOnMeshPrefixes>
+#endif
     {
     public:
         void Add(const OnMeshPrefix &aPrefix);

@@ -47,4 +47,7 @@
 
 #define OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE 1
 
+// Disabled explicitly on posix `toranj` to validate the build with this config
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 0
+
 #endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */
