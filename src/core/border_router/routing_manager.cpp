@@ -186,7 +186,6 @@ void RoutingManager::UpdateRioPreference(RoutePreference aPreference)
             RoutePreferenceToString(aPreference));
     mRioPreference = aPreference;
 
-    VerifyOrExit(mIsRunning);
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
 exit:
@@ -544,6 +543,8 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
     uint32_t  delay = 0;
     TimeMilli evaluateTime;
 
+    VerifyOrExit(mIsRunning);
+
     switch (aMode)
     {
     case kImmediately:
@@ -590,6 +591,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
     }
 #endif
+
+exit:
+    return;
 }
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
@@ -3213,11 +3217,7 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
     mInfraIfPrefix = aPrefix;
 
     LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
-
-    if (Get<RoutingManager>().mIsRunning)
-    {
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
 Nat64::State RoutingManager::Nat64PrefixManager::GetState(void) const
