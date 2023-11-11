@@ -511,7 +511,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
     else if (mle.IsRoutingLocator(aIp6Header.GetDestination()))
     {
         uint16_t rloc16 = aIp6Header.GetDestination().GetIid().GetLocator();
-        VerifyOrExit(mle.IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
+        VerifyOrExit(Mle::IsRouterIdValid(Mle::RouterIdFromRloc16(rloc16)), error = kErrorDrop);
         mMeshDest = rloc16;
     }
     else if (mle.IsAnycastLocator(aIp6Header.GetDestination()))
