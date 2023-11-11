@@ -71,6 +71,16 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     bool    enable;
 
+    /**
+     * @cli srp client autostart (get)
+     * @code
+     * srp client autostart
+     * Disabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientIsAutoStartModeEnabled
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(otSrpClientIsAutoStartModeEnabled(GetInstancePtr()));
@@ -79,10 +89,28 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
 
     SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
 
+    /**
+     * @cli srp client autostart enable
+     * @code
+     * src client autostart enable 
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientEnableAutoStartMode
+     */
     if (enable)
     {
         otSrpClientEnableAutoStartMode(GetInstancePtr(), /* aCallback */ nullptr, /* aContext */ nullptr);
     }
+    /**
+     * @cli srp client autostart disable
+     * @code
+     * src client autostart disable
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientDisableAutoStartMode
+     */
     else
     {
         otSrpClientDisableAutoStartMode(GetInstancePtr());
