@@ -2343,7 +2343,12 @@ Done
 
 ### nat64 cidr \<IPv4 address\>
 
-Sets IPv4 CIDR in the NAT64 translator.
+Sets the IPv4 CIDR in the NAT64 translator.
+
+Note:
+
+- A valid CIDR must have a non-zero prefix length.
+- when updating the CIDR, NAT64 translator will be reset and all existing sessions will be expired.
 
 `OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE` is required.
 
