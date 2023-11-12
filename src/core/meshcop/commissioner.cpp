@@ -41,9 +41,9 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/string.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"
@@ -74,12 +74,8 @@ Commissioner::Commissioner(Instance &aInstance)
 {
     memset(reinterpret_cast<void *>(mJoiners), 0, sizeof(mJoiners));
 
-    mCommissionerAloc.Clear();
-    mCommissionerAloc.mPrefixLength       = 64;
-    mCommissionerAloc.mPreferred          = true;
-    mCommissionerAloc.mValid              = true;
-    mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
-    mCommissionerAloc.mScopeOverrideValid = true;
+    mCommissionerAloc.InitAsThreadOriginMeshLocal();
+    mCommissionerAloc.mPreferred = true;
 
     IgnoreError(SetId("OpenThread Commissioner"));
 
@@ -353,21 +349,10 @@ exit:
 
 Error Commissioner::SetId(const char *aId)
 {
-    Error   error = kErrorNone;
-    uint8_t len;
+    Error error = kErrorNone;
 
     VerifyOrExit(IsDisabled(), error = kErrorInvalidState);
-    VerifyOrExit(aId != nullptr);
-    VerifyOrExit(IsValidUtf8String(aId), error = kErrorInvalidArgs);
-
-    len = static_cast<uint8_t>(StringLength(aId, sizeof(mCommissionerId)));
-
-    // CommissionerIdTlv::SetCommissionerId trims the string to the maximum array size.
-    // Prevent this from happening returning an error.
-    VerifyOrExit(len < CommissionerIdTlv::kMaxLength, error = kErrorInvalidArgs);
-
-    memcpy(mCommissionerId, aId, len);
-    mCommissionerId[len] = '\0';
+    error = StringCopy(mCommissionerId, aId, kStringCheckUtf8Encoding);
 
 exit:
     return error;
@@ -407,8 +392,8 @@ exit:
 
 void Commissioner::SendCommissionerSet(void)
 {
-    Error   error = kErrorNone;
-    Dataset dataset;
+    Error                error = kErrorNone;
+    CommissioningDataset dataset;
 
     VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
@@ -586,26 +571,7 @@ void Commissioner::RemoveJoiner(Joiner &aJoiner, uint32_t aDelay)
 
 Error Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
-    Error   error = kErrorNone;
-    uint8_t len;
-
-    if (aProvisioningUrl == nullptr)
-    {
-        mProvisioningUrl[0] = '\0';
-        ExitNow();
-    }
-
-    VerifyOrExit(IsValidUtf8String(aProvisioningUrl), error = kErrorInvalidArgs);
-
-    len = static_cast<uint8_t>(StringLength(aProvisioningUrl, sizeof(mProvisioningUrl)));
-
-    VerifyOrExit(len < sizeof(mProvisioningUrl), error = kErrorInvalidArgs);
-
-    memcpy(mProvisioningUrl, aProvisioningUrl, len);
-    mProvisioningUrl[len] = '\0';
-
-exit:
-    return error;
+    return StringCopy(mProvisioningUrl, aProvisioningUrl, kStringCheckUtf8Encoding);
 }
 
 void Commissioner::HandleTimer(void)
@@ -705,7 +671,9 @@ exit:
     return;
 }
 
-Error Commissioner::SendMgmtCommissionerSetRequest(const Dataset &aDataset, const uint8_t *aTlvs, uint8_t aLength)
+Error Commissioner::SendMgmtCommissionerSetRequest(const CommissioningDataset &aDataset,
+                                                   const uint8_t              *aTlvs,
+                                                   uint8_t                     aLength)
 {
     Error            error = kErrorNone;
     Coap::Message   *message;
@@ -783,20 +751,17 @@ exit:
 
 Error Commissioner::SendPetition(void)
 {
-    Error             error   = kErrorNone;
-    Coap::Message    *message = nullptr;
-    Tmf::MessageInfo  messageInfo(GetInstance());
-    CommissionerIdTlv commissionerIdTlv;
+    Error            error   = kErrorNone;
+    Coap::Message   *message = nullptr;
+    Tmf::MessageInfo messageInfo(GetInstance());
 
     mTransmitAttempts++;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriLeaderPetition);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    commissionerIdTlv.Init();
-    commissionerIdTlv.SetCommissionerId(mCommissionerId);
+    SuccessOrExit(error = Tlv::Append<CommissionerIdTlv>(*message, mCommissionerId));
 
-    SuccessOrExit(error = commissionerIdTlv.AppendTo(*message));
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(
         error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, Commissioner::HandleLeaderPetitionResponse, this));
@@ -1153,18 +1118,6 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 exit:
     FreeMessageOnError(message, error);
     return error;
-}
-
-void Commissioner::ApplyMeshLocalPrefix(void)
-{
-    VerifyOrExit(mState == kStateActive);
-
-    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-    mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
-
-exit:
-    return;
 }
 
 // LCOV_EXCL_START

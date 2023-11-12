@@ -662,6 +662,33 @@ exit:
     return;
 }
 
+void NetworkData::OutputCommissioningDataset(bool aLocal)
+{
+    otCommissioningDataset dataset;
+
+    VerifyOrExit(!aLocal);
+
+    otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
+
+    OutputLine("Commissioning:");
+
+    dataset.mIsSessionIdSet ? OutputFormat("%u ", dataset.mSessionId) : OutputFormat("- ");
+    dataset.mIsLocatorSet ? OutputFormat("%04x ", dataset.mLocator) : OutputFormat("- ");
+    dataset.mIsJoinerUdpPortSet ? OutputFormat("%u ", dataset.mJoinerUdpPort) : OutputFormat("- ");
+    dataset.mIsSteeringDataSet ? OutputBytes(dataset.mSteeringData.m8, dataset.mSteeringData.mLength)
+                               : OutputFormat("-");
+
+    if (dataset.mHasExtraTlv)
+    {
+        OutputFormat(" e");
+    }
+
+    OutputNewLine();
+
+exit:
+    return;
+}
+
 otError NetworkData::OutputBinary(bool aLocal)
 {
     otError error;
@@ -701,6 +728,8 @@ exit:
  * 44970 01 9a04b000000e10 s 4000
  * Contexts:
  * fd00:dead:beef:cafe::/64 1 c
+ * Commissioning:
+ * 1248 dc00 9988 00000000000120000000000000000000 e
  * Done
  * @endcode
  * @code
@@ -750,6 +779,14 @@ exit:
  * * The prefix
  * * Context ID
  * * Compress flag (`c` if marked or `-` otherwise).
+ * @par
+ * Commissioning Dataset information is printed under `Commissioning` header:
+ * * Session ID if present in Dataset or `-` otherwise
+ * * Border Agent RLOC16 (in hex) if present in Dataset or `-` otherwise
+ * * Joiner UDP port number if present in Dataset or `-` otherwise
+ * * Steering Data (as hex bytes) if present in Dataset or `-` otherwise
+ * * Flags:
+ *   * e: If Dataset contains any extra unknown TLV
  * @par
  * @moreinfo{@netdata}.
  * @csa{br omrprefix}
@@ -809,6 +846,7 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
         OutputRoutes(local);
         OutputServices(local);
         OutputLowpanContexts(local);
+        OutputCommissioningDataset(local);
         error = OT_ERROR_NONE;
     }
 

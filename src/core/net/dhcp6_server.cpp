@@ -39,9 +39,9 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -483,21 +483,6 @@ Error Server::AppendRapidCommit(Message &aMessage)
 
     option.Init();
     return aMessage.Append(option);
-}
-
-void Server::ApplyMeshLocalPrefix(void)
-{
-    for (PrefixAgent &prefixAgent : mPrefixAgents)
-    {
-        if (prefixAgent.IsValid())
-        {
-            PrefixAgent *entry = &prefixAgent;
-
-            Get<ThreadNetif>().RemoveUnicastAddress(entry->GetAloc());
-            entry->GetAloc().GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-            Get<ThreadNetif>().AddUnicastAddress(entry->GetAloc());
-        }
-    }
 }
 
 } // namespace Dhcp6

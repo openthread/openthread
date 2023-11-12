@@ -41,9 +41,9 @@
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/time.h>
 
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 
 #define ABS(value) (((value) >= 0) ? (value) : -(value))
 

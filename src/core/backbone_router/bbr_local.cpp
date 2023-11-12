@@ -36,10 +36,10 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -62,7 +62,7 @@ Local::Local(Instance &aInstance)
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
     // Primary Backbone Router Aloc
-    mBackboneRouterPrimaryAloc.InitAsThreadOriginRealmLocalScope();
+    mBackboneRouterPrimaryAloc.InitAsThreadOriginMeshLocal();
     mBackboneRouterPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::kAloc16BackboneRouterPrimary);
 
     // All Network Backbone Routers Multicast Address.
@@ -364,20 +364,13 @@ exit:
     return error;
 }
 
-void Local::ApplyMeshLocalPrefix(void)
+void Local::ApplyNewMeshLocalPrefix(void)
 {
     VerifyOrExit(IsEnabled());
 
     Get<BackboneTmfAgent>().UnsubscribeMulticast(mAllNetworkBackboneRouters);
     mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     Get<BackboneTmfAgent>().SubscribeMulticast(mAllNetworkBackboneRouters);
-
-    if (IsPrimary())
-    {
-        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
-        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
-    }
 
 exit:
     return;

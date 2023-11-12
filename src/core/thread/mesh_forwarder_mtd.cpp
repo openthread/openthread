@@ -37,21 +37,21 @@
 
 namespace ot {
 
-Error MeshForwarder::SendMessage(Message &aMessage)
+void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 {
-    aMessage.SetDirectTransmission();
-    aMessage.SetOffset(0);
-    aMessage.SetDatagramTag(0);
-    aMessage.SetTimestampToNow();
+    Message &message = *aMessagePtr.Release();
 
-    mSendQueue.Enqueue(aMessage);
+    message.SetDirectTransmission();
+    message.SetOffset(0);
+    message.SetDatagramTag(0);
+    message.SetTimestampToNow();
+
+    mSendQueue.Enqueue(message);
     mScheduleTransmissionTask.Post();
 
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(aMessage);
+    ApplyDirectTxQueueLimit(message);
 #endif
-
-    return kErrorNone;
 }
 
 Error MeshForwarder::EvictMessage(Message::Priority aPriority)

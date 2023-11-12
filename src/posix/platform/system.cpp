@@ -121,6 +121,13 @@ static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 }
 #endif
 
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket)
+{
+    ot::Posix::InfraNetif::Get().SetInfraNetif(aInfraNetifName, aIcmp6Socket);
+}
+#endif
+
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
@@ -143,7 +150,8 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
-    ot::Posix::InfraNetif::Get().Init(aPlatformConfig->mBackboneInterfaceName);
+    ot::Posix::InfraNetif::Get().Init();
+
 #endif
 
     gNetifName[0] = '\0';
@@ -164,8 +172,10 @@ exit:
     return;
 }
 
-void platformSetUp(void)
+void platformSetUp(otPlatformConfig *aPlatformConfig)
 {
+    OT_UNUSED_VARIABLE(aPlatformConfig);
+
     VerifyOrExit(!gDryRun);
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -173,6 +183,11 @@ void platformSetUp(void)
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+    if (aPlatformConfig->mBackboneInterfaceName != nullptr && strlen(aPlatformConfig->mBackboneInterfaceName) > 0)
+    {
+        otSysSetInfraNetif(aPlatformConfig->mBackboneInterfaceName,
+                           ot::Posix::InfraNetif::CreateIcmp6Socket(aPlatformConfig->mBackboneInterfaceName));
+    }
     ot::Posix::InfraNetif::Get().SetUp();
 #endif
 
@@ -206,7 +221,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     gInstance = otInstanceInitSingle();
     OT_ASSERT(gInstance != nullptr);
 
-    platformSetUp();
+    platformSetUp(aPlatformConfig);
 
     return gInstance;
 }

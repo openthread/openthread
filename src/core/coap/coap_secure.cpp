@@ -30,10 +30,10 @@
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/new.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
 

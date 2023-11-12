@@ -44,13 +44,13 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/extended_panid.hpp"
 #include "net/ip6.hpp"
 #include "net/nat64_translator.hpp"
@@ -186,7 +186,6 @@ void RoutingManager::UpdateRioPreference(RoutePreference aPreference)
             RoutePreferenceToString(aPreference));
     mRioPreference = aPreference;
 
-    VerifyOrExit(mIsRunning);
     ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 
 exit:
@@ -362,7 +361,11 @@ void RoutingManager::Stop(void)
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+    mAdvertisedPrefixes.Free();
+#else
     mAdvertisedPrefixes.Clear();
+#endif
 
     mDiscoveredPrefixTable.RemoveAllEntries();
     mDiscoveredPrefixStaleTimer.Stop();
@@ -540,6 +543,8 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
     uint32_t  delay = 0;
     TimeMilli evaluateTime;
 
+    VerifyOrExit(mIsRunning);
+
     switch (aMode)
     {
     case kImmediately:
@@ -586,6 +591,9 @@ void RoutingManager::ScheduleRoutingPolicyEvaluation(ScheduleMode aMode)
         }
     }
 #endif
+
+exit:
+    return;
 }
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
@@ -3209,11 +3217,7 @@ void RoutingManager::Nat64PrefixManager::HandleDiscoverDone(const Ip6::Prefix &a
     mInfraIfPrefix = aPrefix;
 
     LogInfo("Infraif NAT64 prefix: %s", mInfraIfPrefix.IsValidNat64() ? mInfraIfPrefix.ToString().AsCString() : "none");
-
-    if (Get<RoutingManager>().mIsRunning)
-    {
-        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
+    Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
 }
 
 Nat64::State RoutingManager::Nat64PrefixManager::GetState(void) const

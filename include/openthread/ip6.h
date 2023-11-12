@@ -144,6 +144,8 @@ struct otIp6Address
 typedef struct otIp6Address otIp6Address;
 
 /**
+ * @struct otIp6Prefix
+ *
  * Represents an IPv6 prefix.
  *
  */
@@ -178,15 +180,16 @@ enum
  */
 typedef struct otNetifAddress
 {
-    otIp6Address           mAddress;                ///< The IPv6 unicast address.
-    uint8_t                mPrefixLength;           ///< The Prefix length (in bits).
-    uint8_t                mAddressOrigin;          ///< The IPv6 address origin.
-    bool                   mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
-    bool                   mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
-    bool                   mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
-    unsigned int           mScopeOverride : 4;      ///< The IPv6 scope of this address.
-    bool                   mRloc : 1;               ///< TRUE if the address is an RLOC, FALSE otherwise.
-    struct otNetifAddress *mNext;                   ///< A pointer to the next network interface address.
+    otIp6Address mAddress;                ///< The IPv6 unicast address.
+    uint8_t      mPrefixLength;           ///< The Prefix length (in bits).
+    uint8_t      mAddressOrigin;          ///< The IPv6 address origin.
+    bool         mPreferred : 1;          ///< TRUE if the address is preferred, FALSE otherwise.
+    bool         mValid : 1;              ///< TRUE if the address is valid, FALSE otherwise.
+    bool         mScopeOverrideValid : 1; ///< TRUE if the mScopeOverride value is valid, FALSE otherwise.
+    unsigned int mScopeOverride : 4;      ///< The IPv6 scope of this address.
+    bool         mRloc : 1;               ///< TRUE if the address is an RLOC, FALSE otherwise.
+    bool         mMeshLocal : 1;          ///< TRUE if the address is mesh-local, FALSE otherwise.
+    const struct otNetifAddress *mNext;   ///< A pointer to the next network interface address.
 } otNetifAddress;
 
 /**
@@ -296,6 +299,7 @@ bool otIp6IsEnabled(otInstance *aInstance);
  * @retval OT_ERROR_NONE          Successfully added (or updated) the Network Interface Address.
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NO_BUFS       The Network Interface is already storing the maximum allowed external addresses.
+ *
  */
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress);
 
@@ -308,6 +312,7 @@ otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAdd
  * @retval OT_ERROR_NONE          Successfully removed the Network Interface Address.
  * @retval OT_ERROR_INVALID_ARGS  The IP Address indicated by @p aAddress is an internal address.
  * @retval OT_ERROR_NOT_FOUND     The IP Address indicated by @p aAddress was not found.
+ *
  */
 otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
@@ -317,8 +322,21 @@ otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAd
  * @param[in]  aInstance A pointer to an OpenThread instance.
  *
  * @returns A pointer to the first Network Interface Address.
+ *
  */
 const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance);
+
+/**
+ * Indicates whether or not a unicast IPv6 address is assigned to the Thread interface.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ * @param[in]  aAddress  A pointer to the unicast address.
+ *
+ * @retval TRUE   If @p aAddress is assigned to the Thread interface.
+ * @retval FALSE  If @p aAddress is not assigned to the Thread interface.
+ *
+ */
+bool otIp6HasUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress);
 
 /**
  * Subscribes the Thread interface to a Network Interface Multicast Address.
@@ -450,8 +468,6 @@ typedef void (*otIp6ReceiveCallback)(otMessage *aMessage, void *aContext);
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
 /**
- * @struct otIp6AddressInfo
- *
  * Represents IPv6 address information.
  *
  */
@@ -528,7 +544,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  * @retval OT_ERROR_INVALID_ARGS            The message's metadata is invalid, e.g. the message uses
- * `OT_MESSAGE_ORIGIN_THREAD_NETIF` as the origin.
+ *                                          `OT_MESSAGE_ORIGIN_THREAD_NETIF` as the origin.
  *
  */
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage);
@@ -849,7 +865,7 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
 /**
  * Sets the Mesh Local IID (for test purpose).
  *
- * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` must be enabled.
+ * Requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[in]   aIid        A pointer to the Mesh Local IID to set.

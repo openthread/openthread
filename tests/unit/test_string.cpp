@@ -366,6 +366,36 @@ void TestStringParseUint8(void)
     printf("\n\n -- PASS\n");
 }
 
+void TestStringCopy(void)
+{
+    char buffer[10];
+    char smallBuffer[1];
+
+    printf("\nTest 11: StringCopy() function\n");
+
+    SuccessOrQuit(StringCopy(buffer, "foo", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, "foo"));
+
+    SuccessOrQuit(StringCopy(buffer, nullptr, kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, ""));
+
+    SuccessOrQuit(StringCopy(buffer, "", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, ""));
+
+    SuccessOrQuit(StringCopy(buffer, "123456789", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(buffer, "123456789"));
+
+    VerifyOrQuit(StringCopy(buffer, "1234567890") == kErrorInvalidArgs);
+    VerifyOrQuit(StringCopy(buffer, "1234567890abcdef") == kErrorInvalidArgs);
+
+    SuccessOrQuit(StringCopy(smallBuffer, "", kStringCheckUtf8Encoding));
+    VerifyOrQuit(StringMatch(smallBuffer, ""));
+
+    VerifyOrQuit(StringCopy(smallBuffer, "a") == kErrorInvalidArgs);
+
+    printf(" -- PASS\n");
+}
+
 // gcc-4 does not support constexpr function
 #if __GNUC__ > 4
 static_assert(ot::AreStringsInOrder("a", "b"), "AreStringsInOrder() failed");
@@ -389,6 +419,7 @@ int main(void)
     ot::TestStringMatch();
     ot::TestStringToLowercase();
     ot::TestStringParseUint8();
+    ot::TestStringCopy();
     printf("\nAll tests passed.\n");
     return 0;
 }

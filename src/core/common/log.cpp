@@ -38,9 +38,10 @@
 #include <openthread/platform/logging.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
+#include "instance/instance.hpp"
 
 /*
  * Verify debug UART dependency.
@@ -169,99 +170,120 @@ template void Logger::DumpAtLevel<kLogLevelDebg>(const char *aModuleName,
                                                  const void *aData,
                                                  uint16_t    aDataLength);
 
-void Logger::DumpLine(const char *aModuleName, LogLevel aLogLevel, const uint8_t *aData, const uint16_t aDataLength)
-{
-    ot::String<kStringLineLength> string;
-
-    string.Append("|");
-
-    for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
-    {
-        if (i < aDataLength)
-        {
-            string.Append(" %02X", aData[i]);
-        }
-        else
-        {
-            string.Append(" ..");
-        }
-
-        if (!((i + 1) % 8))
-        {
-            string.Append(" |");
-        }
-    }
-
-    string.Append(" ");
-
-    for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
-    {
-        char c = '.';
-
-        if (i < aDataLength)
-        {
-            char byteAsChar = static_cast<char>(0x7f & aData[i]);
-
-            if (isprint(byteAsChar))
-            {
-                c = byteAsChar;
-            }
-        }
-
-        string.Append("%c", c);
-    }
-
-    LogInModule(aModuleName, aLogLevel, "%s", string.AsCString());
-}
-
 void Logger::DumpInModule(const char *aModuleName,
                           LogLevel    aLogLevel,
                           const char *aText,
                           const void *aData,
                           uint16_t    aDataLength)
 {
-    constexpr uint16_t kWidth         = 72;
-    constexpr uint16_t kTextSuffixLen = sizeof("[ len=000]") - 1;
-
-    uint16_t                      txtLen = StringLength(aText, kWidth - kTextSuffixLen) + kTextSuffixLen;
-    ot::String<kStringLineLength> string;
+    HexDumpInfo info;
 
     VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
 
-    for (uint16_t i = 0; i < static_cast<uint16_t>((kWidth - txtLen) / 2); i++)
+    info.mDataBytes  = reinterpret_cast<const uint8_t *>(aData);
+    info.mDataLength = aDataLength;
+    info.mTitle      = aText;
+    info.mIterator   = 0;
+
+    while (GenerateNextHexDumpLine(info) == kErrorNone)
     {
-        string.Append("=");
+        LogInModule(aModuleName, aLogLevel, "%s", info.mLine);
     }
-
-    string.Append("[%s len=%03u]", aText, aDataLength);
-
-    for (uint16_t i = 0; i < static_cast<uint16_t>(kWidth - txtLen - (kWidth - txtLen) / 2); i++)
-    {
-        string.Append("=");
-    }
-
-    LogInModule(aModuleName, aLogLevel, "%s", string.AsCString());
-
-    for (uint16_t i = 0; i < aDataLength; i += kDumpBytesPerLine)
-    {
-        DumpLine(aModuleName, aLogLevel, static_cast<const uint8_t *>(aData) + i,
-                 Min(static_cast<uint8_t>(aDataLength - i), kDumpBytesPerLine));
-    }
-
-    string.Clear();
-
-    for (uint16_t i = 0; i < kWidth; i++)
-    {
-        string.Append("-");
-    }
-
-    LogInModule(aModuleName, aLogLevel, "%s", string.AsCString());
 
 exit:
     return;
 }
+
 #endif // OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 #endif // OT_SHOULD_LOG
+
+Error GenerateNextHexDumpLine(HexDumpInfo &aInfo)
+{
+    constexpr uint16_t kIterTableStartLine = 0;
+    constexpr uint16_t kIterFirstDataLine  = NumericLimits<uint16_t>::kMax - 2;
+    constexpr uint16_t kIterTableEndLine   = NumericLimits<uint16_t>::kMax - 1;
+    constexpr uint16_t kIterFinished       = NumericLimits<uint16_t>::kMax;
+    constexpr uint16_t kWidth              = 72;
+    constexpr uint16_t kTitleSuffixLen     = sizeof("[ len=000]") - 1;
+    constexpr uint16_t kDumpBytesPerLine   = 16;
+
+    Error        error = kErrorNone;
+    StringWriter writer(aInfo.mLine, sizeof(aInfo.mLine));
+
+    switch (aInfo.mIterator)
+    {
+    case kIterTableStartLine:
+    {
+        uint16_t txtLen = StringLength(aInfo.mTitle, kWidth - kTitleSuffixLen) + kTitleSuffixLen;
+
+        writer.AppendCharMultipleTimes('=', static_cast<uint16_t>((kWidth - txtLen) / 2));
+        writer.Append("[%s len=%03u]", aInfo.mTitle, aInfo.mDataLength);
+        writer.AppendCharMultipleTimes('=', static_cast<uint16_t>(kWidth - txtLen - (kWidth - txtLen) / 2));
+        aInfo.mIterator = kIterFirstDataLine;
+        break;
+    }
+
+    case kIterTableEndLine:
+        writer.AppendCharMultipleTimes('-', kWidth);
+        aInfo.mIterator = kIterFinished;
+        break;
+
+    case kIterFinished:
+        error = kErrorNotFound;
+        break;
+
+    case kIterFirstDataLine:
+        aInfo.mIterator = 0;
+        OT_FALL_THROUGH;
+
+    default:
+    {
+        uint16_t startIndex = aInfo.mIterator;
+        uint16_t endIndex   = aInfo.mIterator + kDumpBytesPerLine;
+
+        writer.Append("|");
+
+        for (uint16_t i = startIndex; i < endIndex; i++)
+        {
+            (i < aInfo.mDataLength) ? writer.Append(" %02X", aInfo.mDataBytes[i]) : writer.Append("   ");
+
+            if ((i % 8) == 7)
+            {
+                writer.Append(" |");
+            }
+        }
+
+        writer.Append(" ");
+
+        for (uint16_t i = startIndex; i < endIndex; i++)
+        {
+            char c = ' ';
+
+            if (i < aInfo.mDataLength)
+            {
+                uint8_t byte = aInfo.mDataBytes[i];
+
+                c = ((byte < 127) && isprint(static_cast<char>(byte))) ? static_cast<char>(byte) : '.';
+            }
+
+            writer.Append("%c", c);
+        }
+
+        writer.Append(" |");
+
+        aInfo.mIterator = endIndex;
+
+        if (aInfo.mIterator >= aInfo.mDataLength)
+        {
+            aInfo.mIterator = kIterTableEndLine;
+        }
+
+        break;
+    }
+    }
+
+    return error;
+}
 
 } // namespace ot

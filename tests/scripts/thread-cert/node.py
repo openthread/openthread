@@ -2336,8 +2336,8 @@ class NodeImpl:
 
     def get_netdata(self):
         raw_netdata = self.netdata_show()
-        netdata = {'Prefixes': [], 'Routes': [], 'Services': [], 'Contexts': []}
-        key_list = ['Prefixes', 'Routes', 'Services', 'Contexts']
+        netdata = {'Prefixes': [], 'Routes': [], 'Services': [], 'Contexts': [], 'Commissioning': []}
+        key_list = ['Prefixes', 'Routes', 'Services', 'Contexts', 'Commissioning']
         key = None
 
         for i in range(0, len(raw_netdata)):

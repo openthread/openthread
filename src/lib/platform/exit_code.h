@@ -82,6 +82,12 @@ enum
      * No response from radio spinel.
      */
     OT_EXIT_RADIO_SPINEL_NO_RESPONSE = 6,
+
+    /**
+     * Invalid state.
+     */
+    OT_EXIT_INVALID_STATE = 7,
+
 };
 
 /**

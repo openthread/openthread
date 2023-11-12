@@ -34,8 +34,8 @@
 #include "common/arg_macros.hpp"
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
-#include "common/instance.hpp"
 #include "common/time.hpp"
+#include "instance/instance.hpp"
 #include "net/dns_dso.hpp"
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE

@@ -40,12 +40,12 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
 #include "thread/child.hpp"
@@ -187,7 +187,7 @@ void Mac::Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanD
 
     if (aScanChannels == 0)
     {
-        aScanChannels = GetSupportedChannelMask().GetMask();
+        aScanChannels = mSupportedChannelMask.GetMask();
     }
 
     mScanChannelMask.SetMask(aScanChannels);
@@ -474,7 +474,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 {
     ChannelMask newMask = aMask;
 
-    newMask.Intersect(ChannelMask(Get<Radio>().GetSupportedChannelMask()));
+    newMask.Intersect(mSupportedChannelMask);
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
@@ -1659,6 +1659,8 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());
 
+    SuccessOrExit(aAckFrame.ValidatePsdu());
+
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecurityEncMic32);
 
@@ -2105,6 +2107,21 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     UpdateIdleMode();
 }
 
+Error Mac::SetRegion(uint16_t aRegionCode)
+{
+    Error       error;
+    ChannelMask oldMask = mSupportedChannelMask;
+
+    SuccessOrExit(error = Get<Radio>().SetRegion(aRegionCode));
+    mSupportedChannelMask.SetMask(Get<Radio>().GetSupportedChannelMask());
+    IgnoreError(Get<Notifier>().Update(oldMask, mSupportedChannelMask, kEventSupportedChannelMaskChanged));
+
+exit:
+    return error;
+}
+
+Error Mac::GetRegion(uint16_t &aRegionCode) const { return Get<Radio>().GetRegion(aRegionCode); }
+
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 const uint32_t *Mac::GetDirectRetrySuccessHistogram(uint8_t &aNumberOfEntries)
 {
@@ -2210,12 +2227,9 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 
 void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const
 {
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && OPENTHREAD_CONFIG_MULTI_RADIO
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
     if (aFrame.GetRadioType() == kRadioTypeIeee802154)
-#elif OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    if (true)
-#else
-    if (false)
 #endif
     {
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
@@ -2224,10 +2238,22 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryC
         LogInfo("Frame tx attempt %u/%u failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
                 aFrame.ToInfoString().AsCString());
     }
-    else
+#else
+    OT_UNUSED_VARIABLE(aRetryCount);
+    OT_UNUSED_VARIABLE(aWillRetx);
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    if (aFrame.GetRadioType() == kRadioTypeTrel)
+#endif
     {
-        LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        if (Get<Trel::Interface>().IsEnabled())
+        {
+            LogInfo("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
+        }
     }
+#endif
 }
 
 void Mac::LogBeacon(const char *aActionText) const { LogInfo("%s Beacon", aActionText); }

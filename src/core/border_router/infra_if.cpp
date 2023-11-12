@@ -37,9 +37,9 @@
 
 #include "border_router/routing_manager.hpp"
 #include "common/as_core_type.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
+#include "instance/instance.hpp"
 #include "net/icmp6.hpp"
 
 namespace ot {
@@ -60,7 +60,6 @@ Error InfraIf::Init(uint32_t aIfIndex)
     Error error = kErrorNone;
 
     VerifyOrExit(!mInitialized, error = kErrorInvalidState);
-    VerifyOrExit(aIfIndex > 0, error = kErrorInvalidArgs);
 
     mIfIndex     = aIfIndex;
     mInitialized = true;

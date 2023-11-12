@@ -3091,6 +3091,17 @@ Signal a platform reset.
 > reset
 ```
 
+### reset bootloader
+
+Signal a platform reset to bootloader mode, if supported.
+
+Requires `OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE`.
+
+```bash
+> reset bootloader
+Done
+```
+
 ### rloc16
 
 Get the Thread RLOC16 value.

@@ -47,7 +47,6 @@
 #include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/error.hpp"
-#include "common/extension.hpp"
 #include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -57,6 +56,7 @@
 #include "common/timer.hpp"
 #include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
+#include "instance/extension.hpp"
 #include "mac/link_raw.hpp"
 #include "radio/radio.hpp"
 #include "utils/otns.hpp"
@@ -235,6 +235,18 @@ public:
      *
      */
     void Reset(void);
+
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    /**
+     * Triggers a platform reset to bootloader mode, if supported.
+     *
+     * @retval kErrorNone        Reset to bootloader successfully.
+     * @retval kErrorBusy        Failed due to another operation is ongoing.
+     * @retval kErrorNotCapable  Not capable of resetting to bootloader.
+     *
+     */
+    Error ResetToBootloader(void);
+#endif
 
 #if OPENTHREAD_RADIO
     /**

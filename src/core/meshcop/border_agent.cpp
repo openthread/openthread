@@ -38,11 +38,11 @@
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
 #include "common/heap.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/settings.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -240,7 +240,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mIdInitialized(false)
 #endif
 {
-    mCommissionerAloc.InitAsThreadOriginRealmLocalScope();
+    mCommissionerAloc.InitAsThreadOriginMeshLocal();
 }
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
@@ -334,7 +334,7 @@ template <> void BorderAgent::HandleTmf<kUriProxyTx>(Coap::Message &aMessage, co
 
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
 
-    SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
+    SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo));
     mUdpProxyPort = udpEncapHeader.GetSourcePort();
 
     LogInfo("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
@@ -649,21 +649,6 @@ void BorderAgent::Stop(void)
     mUdpProxyPort = 0;
 
     LogInfo("Border Agent stopped");
-
-exit:
-    return;
-}
-
-void BorderAgent::ApplyMeshLocalPrefix(void)
-{
-    VerifyOrExit(mState == kStateActive);
-
-    if (Get<ThreadNetif>().HasUnicastAddress(mCommissionerAloc))
-    {
-        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-        mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
-    }
 
 exit:
     return;

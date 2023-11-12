@@ -808,10 +808,11 @@ public:
     /**
      * Tries to reset the co-processor.
      *
-     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM or SPINEL_RESET_STACK.
+     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM, SPINEL_RESET_STACK, or SPINEL_RESET_BOOTLOADER.
      *
      * @retval  OT_ERROR_NONE               Successfully removed item from the property.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
      *
      */
     otError SendReset(uint8_t aResetType);
@@ -1011,10 +1012,25 @@ private:
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
     }
 
+    otError SetMacKey(uint8_t         aKeyIdMode,
+                      uint8_t         aKeyId,
+                      const otMacKey &aPrevKey,
+                      const otMacKey &aCurrKey,
+                      const otMacKey &NextKey);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
+#endif
+
+    static void LogIfFail(const char *aText, otError aError);
+
+    static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+    static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+    static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+    static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+    static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
+
     uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
     void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
-
-    void LogIfFail(const char *aText, otError aError);
 
     otInstance *mInstance;
 
@@ -1050,10 +1066,11 @@ private:
     otExtAddress mIeeeEui64;
 
     State mState;
-    bool  mIsPromiscuous : 1;     ///< Promiscuous mode.
-    bool  mIsReady : 1;           ///< NCP ready.
-    bool  mSupportsLogStream : 1; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
-    bool  mIsTimeSynced : 1;      ///< Host has calculated the time difference between host and RCP.
+    bool  mIsPromiscuous : 1;             ///< Promiscuous mode.
+    bool  mIsReady : 1;                   ///< NCP ready.
+    bool  mSupportsLogStream : 1;         ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
+    bool  mSupportsResetToBootloader : 1; ///< RCP supports resetting into bootloader mode.
+    bool  mIsTimeSynced : 1;              ///< Host has calculated the time difference between host and RCP.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 

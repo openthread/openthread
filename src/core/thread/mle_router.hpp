@@ -769,6 +769,8 @@ private:
     MeshCoP::SteeringData mSteeringData;
 #endif
 
+    Ip6::Netif::UnicastAddress mLeaderAloc;
+
     Callback<otThreadDiscoveryRequestCallback> mDiscoveryRequestCallback;
 };
 

@@ -38,9 +38,9 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "meshcop/timestamp.hpp"
@@ -179,7 +179,7 @@ exit:
     return rval;
 }
 
-const Tlv *Dataset::GetTlv(Tlv::Type aType) const { return Tlv::FindTlv(mTlvs, mLength, aType); }
+const Tlv *Dataset::GetTlv(Tlv::Type aType) const { return As<Tlv>(Tlv::FindTlv(mTlvs, mLength, aType)); }
 
 void Dataset::ConvertTo(Info &aDatasetInfo) const
 {

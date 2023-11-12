@@ -39,10 +39,10 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac.hpp"
 #include "net/netif.hpp"
 #include "thread/mesh_forwarder.hpp"
@@ -82,39 +82,20 @@ Server::Server(Instance &aInstance)
 
 Error Server::SetVendorName(const char *aVendorName)
 {
-    return SetVendorString(mVendorName, sizeof(mVendorName), aVendorName);
+    return StringCopy(mVendorName, aVendorName, kStringCheckUtf8Encoding);
 }
 
 Error Server::SetVendorModel(const char *aVendorModel)
 {
-    return SetVendorString(mVendorModel, sizeof(mVendorModel), aVendorModel);
+    return StringCopy(mVendorModel, aVendorModel, kStringCheckUtf8Encoding);
 }
 
 Error Server::SetVendorSwVersion(const char *aVendorSwVersion)
 {
-    return SetVendorString(mVendorSwVersion, sizeof(mVendorSwVersion), aVendorSwVersion);
+    return StringCopy(mVendorSwVersion, aVendorSwVersion, kStringCheckUtf8Encoding);
 }
 
-Error Server::SetVendorString(char *aDestString, uint16_t kMaxSize, const char *aSrcString)
-{
-    Error    error = kErrorInvalidArgs;
-    uint16_t length;
-
-    VerifyOrExit(aSrcString != nullptr);
-
-    length = StringLength(aSrcString, kMaxSize);
-    VerifyOrExit(length < kMaxSize);
-
-    VerifyOrExit(IsValidUtf8String(aSrcString));
-
-    memcpy(aDestString, aSrcString, length + 1);
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
-#endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+#endif
 
 void Server::PrepareMessageInfoForDest(const Ip6::Address &aDestination, Tmf::MessageInfo &aMessageInfo) const
 {

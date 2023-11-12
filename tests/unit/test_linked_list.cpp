@@ -34,9 +34,9 @@
 #include <openthread/config.h>
 
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/linked_list.hpp"
 #include "common/owning_list.hpp"
+#include "instance/instance.hpp"
 
 #include "test_util.h"
 

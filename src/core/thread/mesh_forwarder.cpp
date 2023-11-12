@@ -36,11 +36,11 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/time_ticker.hpp"
+#include "instance/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
@@ -1419,31 +1419,26 @@ void MeshForwarder::HandleFragment(FrameData            &aFrameData,
     {
         Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(aMacAddrs.mSource, Neighbor::kInStateAnyExceptInvalid);
 
-        if (neighbor != nullptr)
+        if ((neighbor != nullptr) && (fragmentHeader.GetDatagramOffset() == 0))
         {
             uint16_t tag = fragmentHeader.GetDatagramTag();
 
             if (neighbor->IsLastRxFragmentTagSet())
             {
                 VerifyOrExit(!neighbor->IsLastRxFragmentTagAfter(tag), error = kErrorDuplicated);
-
-                if (neighbor->GetLastRxFragmentTag() == tag)
-                {
-                    VerifyOrExit(fragmentHeader.GetDatagramOffset() != 0, error = kErrorDuplicated);
-
-                    // Duplication suppression for a "next fragment" is handled
-                    // by the code below where the the datagram offset is
-                    // checked against the offset of the corresponding message
-                    // (same datagram tag and size) in Reassembly List. Note
-                    // that if there is no matching message in the Reassembly
-                    // List (e.g., in case the message is already fully
-                    // assembled) the received "next fragment" frame would be
-                    // dropped.
-                }
             }
 
             neighbor->SetLastRxFragmentTag(tag);
         }
+
+        // Duplication suppression for a "next fragment" is handled
+        // by the code below where the the datagram offset is
+        // checked against the offset of the corresponding message
+        // (same datagram tag and size) in Reassembly List. Note
+        // that if there is no matching message in the Reassembly
+        // List (e.g., in case the message is already fully
+        // assembled) the received "next fragment" frame would be
+        // dropped.
     }
 
 #endif // OPENTHREAD_CONFIG_MULTI_RADIO
@@ -1666,7 +1661,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
     aMessage.SetLoopbackToHostAllowed(true);
     aMessage.SetOrigin(Message::kOriginThreadNetif);
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &aLinkInfo);
+    return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage), &aLinkInfo);
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,
@@ -1707,24 +1702,23 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 Error MeshForwarder::SendEmptyMessage(void)
 {
-    Error    error   = kErrorNone;
-    Message *message = nullptr;
+    Error             error = kErrorNone;
+    OwnedPtr<Message> messagePtr;
 
     VerifyOrExit(mEnabled && !Get<Mac::Mac>().GetRxOnWhenIdle() &&
                      Get<Mle::MleRouter>().GetParent().IsStateValidOrRestoring(),
                  error = kErrorInvalidState);
 
-    message = Get<MessagePool>().Allocate(Message::kTypeMacEmptyData);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    messagePtr.Reset(Get<MessagePool>().Allocate(Message::kTypeMacEmptyData));
+    VerifyOrExit(messagePtr != nullptr, error = kErrorNoBufs);
 
-    SuccessOrExit(error = SendMessage(*message));
+    SendMessage(messagePtr.PassOwnership());
 
 exit:
-    FreeMessageOnError(message, error);
     LogDebg("Send empty message, error:%s", ErrorToString(error));
     return error;
 }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#endif
 
 bool MeshForwarder::CalcIePresent(const Message *aMessage)
 {

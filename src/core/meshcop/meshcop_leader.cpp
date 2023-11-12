@@ -40,10 +40,10 @@
 #include "coap/coap_message.hpp"
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -67,43 +67,28 @@ template <> void Leader::HandleTmf<kUriLeaderPetition>(Coap::Message &aMessage, 
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    CommissioningData data;
-    CommissionerIdTlv commissionerId;
-    StateTlv::State   state = StateTlv::kReject;
+    CommissioningData             data;
+    CommissionerIdTlv::StringType commissionerId;
+    StateTlv::State               state = StateTlv::kReject;
 
     LogInfo("Received %s", UriToString<kUriLeaderPetition>());
 
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
+
     VerifyOrExit(Get<Mle::MleRouter>().IsRoutingLocator(aMessageInfo.GetPeerAddr()));
-    SuccessOrExit(Tlv::FindTlv(aMessage, commissionerId));
+
+    SuccessOrExit(Tlv::Find<CommissionerIdTlv>(aMessage, commissionerId));
 
     if (mTimer.IsRunning())
     {
-        VerifyOrExit((commissionerId.GetCommissionerIdLength() == mCommissionerId.GetCommissionerIdLength()) &&
-                     (!strncmp(commissionerId.GetCommissionerId(), mCommissionerId.GetCommissionerId(),
-                               commissionerId.GetCommissionerIdLength())));
-
+        VerifyOrExit(StringMatch(mCommissionerId, commissionerId));
         ResignCommissioner();
     }
 
-    data.mBorderAgentLocator.Init();
-    data.mBorderAgentLocator.SetBorderAgentLocator(aMessageInfo.GetPeerAddr().GetIid().GetLocator());
+    data.Init(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), ++mSessionId);
+    SuccessOrExit(Get<NetworkData::Leader>().SetCommissioningData(&data, data.GetLength()));
 
-    data.mCommissionerSessionId.Init();
-    data.mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
-
-    data.mSteeringData.Init();
-    data.mSteeringData.SetLength(1);
-    data.mSteeringData.Clear();
-
-    SuccessOrExit(
-        Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&data), data.GetLength()));
-
-    mCommissionerId = commissionerId;
-
-    if (mCommissionerId.GetLength() > CommissionerIdTlv::kMaxLength)
-    {
-        mCommissionerId.SetLength(CommissionerIdTlv::kMaxLength);
-    }
+    IgnoreError(StringCopy(mCommissionerId, commissionerId));
 
     state = StateTlv::kAccept;
     mTimer.Start(Time::SecToMsec(kTimeoutLeaderPetition));
@@ -126,7 +111,7 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
 
     if (mTimer.IsRunning())
     {
-        SuccessOrExit(error = mCommissionerId.AppendTo(*message));
+        SuccessOrExit(error = Tlv::Append<CommissionerIdTlv>(*message, mCommissionerId));
     }
 
     if (aState == StateTlv::kAccept)
@@ -152,12 +137,13 @@ template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage,
 
     LogInfo("Received %s", UriToString<kUriLeaderKeepAlive>());
 
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
+
     SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
 
     SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(aMessage, sessionId));
 
-    borderAgentLocator =
-        As<BorderAgentLocatorTlv>(Get<NetworkData::Leader>().GetCommissioningDataSubTlv(Tlv::kBorderAgentLocator));
+    borderAgentLocator = Get<NetworkData::Leader>().FindInCommissioningData<BorderAgentLocatorTlv>();
 
     if ((borderAgentLocator == nullptr) || (sessionId != mSessionId))
     {
@@ -231,6 +217,7 @@ exit:
 Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
     Error error = kErrorNone;
+
     VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
                  error = kErrorInvalidArgs);
     mDelayTimerMinimal = aDelayTimerMinimal;
@@ -253,13 +240,12 @@ exit:
 
 void Leader::SetEmptyCommissionerData(void)
 {
-    CommissionerSessionIdTlv mCommissionerSessionId;
+    CommissionerSessionIdTlv sessionIdTlv;
 
-    mCommissionerSessionId.Init();
-    mCommissionerSessionId.SetCommissionerSessionId(++mSessionId);
+    sessionIdTlv.Init();
+    sessionIdTlv.SetCommissionerSessionId(++mSessionId);
 
-    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(reinterpret_cast<uint8_t *>(&mCommissionerSessionId),
-                                                                sizeof(Tlv) + mCommissionerSessionId.GetLength()));
+    IgnoreError(Get<NetworkData::Leader>().SetCommissioningData(&sessionIdTlv, sizeof(CommissionerSessionIdTlv)));
 }
 
 void Leader::ResignCommissioner(void)
@@ -268,6 +254,25 @@ void Leader::ResignCommissioner(void)
     SetEmptyCommissionerData();
 
     LogInfo("commissioner inactive");
+}
+
+void Leader::CommissioningData::Init(uint16_t aBorderAgentRloc16, uint16_t aSessionId)
+{
+    mBorderAgentLocatorTlv.Init();
+    mBorderAgentLocatorTlv.SetBorderAgentLocator(aBorderAgentRloc16);
+
+    mSessionIdTlv.Init();
+    mSessionIdTlv.SetCommissionerSessionId(aSessionId);
+
+    mSteeringDataTlv.Init();
+    mSteeringDataTlv.SetLength(1);
+    mSteeringDataTlv.Clear();
+}
+
+uint8_t Leader::CommissioningData::GetLength(void) const
+{
+    return static_cast<uint8_t>(sizeof(BorderAgentLocatorTlv) + sizeof(CommissionerSessionIdTlv) +
+                                mSteeringDataTlv.GetSize());
 }
 
 } // namespace MeshCoP

@@ -99,7 +99,7 @@ Error Translator::SendMessage(Message &aMessage)
 
     VerifyOrExit(result == kForward);
 
-    error = Get<Ip6::Ip6>().SendRaw(aMessage);
+    error = Get<Ip6::Ip6>().SendRaw(OwnedPtr<Message>(&aMessage).PassOwnership());
     freed = true;
 
 exit:

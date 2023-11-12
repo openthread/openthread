@@ -46,23 +46,23 @@ namespace ot {
 
 RegisterLogModule("MeshForwarder");
 
-Error MeshForwarder::SendMessage(Message &aMessage)
+void MeshForwarder::SendMessage(OwnedPtr<Message> aMessagePtr)
 {
-    Error error = kErrorNone;
+    Message &message = *aMessagePtr.Release();
 
-    aMessage.SetOffset(0);
-    aMessage.SetDatagramTag(0);
-    aMessage.SetTimestampToNow();
-    mSendQueue.Enqueue(aMessage);
+    message.SetOffset(0);
+    message.SetDatagramTag(0);
+    message.SetTimestampToNow();
+    mSendQueue.Enqueue(message);
 
-    switch (aMessage.GetType())
+    switch (message.GetType())
     {
     case Message::kTypeIp6:
     {
         Ip6::Header         ip6Header;
         const Ip6::Address &destination = ip6Header.GetDestination();
 
-        IgnoreError(aMessage.Read(0, ip6Header));
+        IgnoreError(message.Read(0, ip6Header));
 
         if (destination.IsMulticast())
         {
@@ -72,10 +72,10 @@ Error MeshForwarder::SendMessage(Message &aMessage)
             // device's sleepy child, thus there should be no direct transmission.
             if (!destination.IsMulticastLargerThanRealmLocal())
             {
-                aMessage.SetDirectTransmission();
+                message.SetDirectTransmission();
             }
 
-            if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
+            if (message.GetSubType() != Message::kSubTypeMplRetransmission)
             {
                 // Check if we need to forward the multicast message
                 // to any sleepy child. This is skipped for MPL retx
@@ -89,7 +89,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
                 {
                     if (!child.IsRxOnWhenIdle() && (destinedForAll || child.HasIp6Address(destination)))
                     {
-                        mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+                        mIndirectSender.AddMessageForSleepyChild(message, child);
                     }
                 }
             }
@@ -98,14 +98,14 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         {
             Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(destination);
 
-            if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !aMessage.IsDirectTransmission() &&
+            if ((neighbor != nullptr) && !neighbor->IsRxOnWhenIdle() && !message.IsDirectTransmission() &&
                 Get<ChildTable>().Contains(*neighbor))
             {
-                mIndirectSender.AddMessageForSleepyChild(aMessage, *static_cast<Child *>(neighbor));
+                mIndirectSender.AddMessageForSleepyChild(message, *static_cast<Child *>(neighbor));
             }
             else
             {
-                aMessage.SetDirectTransmission();
+                message.SetDirectTransmission();
             }
         }
 
@@ -114,33 +114,33 @@ Error MeshForwarder::SendMessage(Message &aMessage)
 
     case Message::kTypeSupervision:
     {
-        Child *child = Get<ChildSupervisor>().GetDestination(aMessage);
+        Child *child = Get<ChildSupervisor>().GetDestination(message);
         OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
-        mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
+        mIndirectSender.AddMessageForSleepyChild(message, *child);
         break;
     }
 
     default:
-        aMessage.SetDirectTransmission();
+        message.SetDirectTransmission();
         break;
     }
 
     // Ensure that the message is marked for direct tx and/or for indirect tx
     // to a sleepy child. Otherwise, remove the message.
 
-    if (RemoveMessageIfNoPendingTx(aMessage))
+    if (RemoveMessageIfNoPendingTx(message))
     {
         ExitNow();
     }
 
 #if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    ApplyDirectTxQueueLimit(aMessage);
+    ApplyDirectTxQueueLimit(message);
 #endif
 
     mScheduleTransmissionTask.Post();
 
 exit:
-    return error;
+    return;
 }
 
 void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
@@ -186,7 +186,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
             message.SetLoopbackToHostAllowed(true);
             message.SetOrigin(Message::kOriginHostTrusted);
 
-            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(message));
+            IgnoreError(Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&message)));
             continue;
         }
 #endif
@@ -534,7 +534,7 @@ Error MeshForwarder::UpdateIp6RouteFtd(const Ip6::Header &aIp6Header, Message &a
         }
         else if (aloc16 <= Mle::kAloc16CommissionerEnd)
         {
-            SuccessOrExit(error = MeshCoP::GetBorderAgentRloc(Get<ThreadNetif>(), mMeshDest));
+            SuccessOrExit(error = Get<NetworkData::Leader>().FindBorderAgentRloc(mMeshDest));
         }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -655,8 +655,7 @@ void MeshForwarder::SendDestinationUnreachable(uint16_t aMeshSource, const Ip6::
 
 void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSource, const ThreadLinkInfo &aLinkInfo)
 {
-    Error              error   = kErrorNone;
-    Message           *message = nullptr;
+    Error              error = kErrorNone;
     Mac::Addresses     meshAddrs;
     Lowpan::MeshHeader meshHeader;
 
@@ -688,6 +687,7 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
     }
     else if (meshHeader.GetHopsLeft() > 0)
     {
+        OwnedPtr<Message> messagePtr;
         Message::Priority priority = Message::kPriorityNormal;
 
         Get<Mle::MleRouter>().ResolveRoutingLoops(aMacSource.GetShort(), meshAddrs.mDestination.GetShort());
@@ -697,32 +697,32 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
         meshHeader.DecrementHopsLeft();
 
         GetForwardFramePriority(aFrameData, meshAddrs, priority);
-        message =
-            Get<MessagePool>().Allocate(Message::kType6lowpan, /* aReserveHeader */ 0, Message::Settings(priority));
-        VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+        messagePtr.Reset(
+            Get<MessagePool>().Allocate(Message::kType6lowpan, /* aReserveHeader */ 0, Message::Settings(priority)));
+        VerifyOrExit(messagePtr != nullptr, error = kErrorNoBufs);
 
-        SuccessOrExit(error = meshHeader.AppendTo(*message));
-        SuccessOrExit(error = message->AppendData(aFrameData));
+        SuccessOrExit(error = meshHeader.AppendTo(*messagePtr));
+        SuccessOrExit(error = messagePtr->AppendData(aFrameData));
 
-        message->SetLinkInfo(aLinkInfo);
+        messagePtr->SetLinkInfo(aLinkInfo);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // We set the received radio type on the message in order for it
         // to be logged correctly from LogMessage().
-        message->SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
+        messagePtr->SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
 #endif
 
-        LogMessage(kMessageReceive, *message, kErrorNone, &aMacSource);
+        LogMessage(kMessageReceive, *messagePtr, kErrorNone, &aMacSource);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Since the message will be forwarded, we clear the radio
         // type on the message to allow the radio type for tx to be
         // selected later (based on the radios supported by the next
         // hop).
-        message->ClearRadioType();
+        messagePtr->ClearRadioType();
 #endif
 
-        IgnoreError(SendMessage(*message));
+        SendMessage(messagePtr.PassOwnership());
     }
 
 exit:
@@ -731,7 +731,6 @@ exit:
     {
         LogInfo("Dropping rx mesh frame, error:%s, len:%d, src:%s, sec:%s", ErrorToString(error),
                 aFrameData.GetLength(), aMacSource.ToString().AsCString(), ToYesNo(aLinkInfo.IsLinkSecurityEnabled()));
-        FreeMessage(message);
     }
 }
 

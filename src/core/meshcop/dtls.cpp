@@ -44,12 +44,12 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/timer.hpp"
 #include "crypto/mbedtls.hpp"
 #include "crypto/sha256.hpp"
+#include "instance/instance.hpp"
 #include "thread/thread_netif.hpp"
 
 #if OPENTHREAD_CONFIG_DTLS_ENABLE

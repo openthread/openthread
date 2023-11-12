@@ -123,10 +123,10 @@ public:
 
         /**
          * Clears and initializes the unicast address as a valid (but not preferred), thread-origin,
-         * realm-local scope (overridden) address with 64-bit prefix length.
+         * mesh-local address using the realm-local scope (overridden) address with 64-bit prefix length.
          *
          */
-        void InitAsThreadOriginRealmLocalScope(void);
+        void InitAsThreadOriginMeshLocal(void);
 
         /**
          * Clears and initializes the unicast address as a valid (but not preferred), thread-origin, global
@@ -214,6 +214,22 @@ public:
          *
          */
         AddressOrigin GetOrigin(void) const { return static_cast<AddressOrigin>(mAddressOrigin); }
+
+        /**
+         * Returns the next unicast address.
+         *
+         * @returns A pointer to the next unicast address.
+         *
+         */
+        const UnicastAddress *GetNext(void) const { return static_cast<const UnicastAddress *>(mNext); }
+
+        /**
+         * Returns the next unicast address.
+         *
+         * @returns A pointer to the next unicast address.
+         *
+         */
+        UnicastAddress *GetNext(void) { return static_cast<UnicastAddress *>(AsNonConst(mNext)); }
 
     private:
         bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
@@ -412,7 +428,7 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval TRUE   If @p aAddress is assigned to the network interface,
+     * @retval TRUE   If @p aAddress is assigned to the network interface.
      * @retval FALSE  If @p aAddress is not assigned to the network interface.
      *
      */
@@ -423,7 +439,7 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval TRUE   If @p aAddress is assigned to the network interface,
+     * @retval TRUE   If @p aAddress is assigned to the network interface.
      * @retval FALSE  If @p aAddress is not assigned to the network interface.
      *
      */
@@ -629,6 +645,14 @@ public:
      *
      */
     bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddress::Iterator(*this).IsDone(); }
+
+    /**
+     * Applies the new mesh local prefix.
+     *
+     * Updates all mesh-local unicast addresses and prefix-based multicast addresses of the network interface.
+     *
+     */
+    void ApplyNewMeshLocalPrefix(void);
 
 protected:
     /**

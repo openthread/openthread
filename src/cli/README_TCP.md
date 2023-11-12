@@ -31,20 +31,20 @@ On node 2, initialize the TCP CLI module, connect to node 1, and send a simple m
 
 ### Result
 
-After running the `tcp connect` command on node 1, you should see a printout on node 1 similar to below:
+After running the `tcp connect` command on node 2, you should see a printout on node 2 similar to below:
 
 ```bash
 TCP: Connection established
 ```
 
-In addition, you should also see a printout on node 2 similar to below:
+In addition, you should also see a printout on node 1 similar to below:
 
 ```bash
 Accepted connection from [fe80:0:0:0:8f3:f602:bf9b:52f2]:49152
 TCP: Connection established
 ```
 
-After running the `tcp send` command on node 1, you should see a printout on node 2 similar to below:
+After running the `tcp send` command on node 2, you should see a printout on node 1 similar to below:
 
 ```bash
 TCP: Received 5 bytes: hello

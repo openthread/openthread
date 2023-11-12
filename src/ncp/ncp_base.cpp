@@ -1211,6 +1211,14 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
         SuccessOrAssert(
             error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_POWER_ON));
     }
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    else if (reset_type == SPINEL_RESET_BOOTLOADER)
+    {
+        // Signal a platform reset to bootloader mode.
+        // If implemented, this function shouldn't return.
+        error = otInstanceResetToBootloader(mInstance);
+    }
+#endif
     else
 #endif
     {
@@ -1841,6 +1849,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 #if OPENTHREAD_RADIO
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_API_VERSION));
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_MIN_HOST_API_VERSION));
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER));
 #endif
 
 #if OPENTHREAD_PLATFORM_POSIX

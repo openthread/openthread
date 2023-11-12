@@ -276,11 +276,34 @@ template <> otError Interpreter::Process<Cmd("version")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("reset")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
+    otError error = OT_ERROR_NONE;
 
-    otInstanceReset(GetInstancePtr());
+    if (aArgs[0].IsEmpty())
+    {
+        otInstanceReset(GetInstancePtr());
+    }
 
-    return OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+    /**
+     * @cli reset bootloader
+     * @code
+     * reset bootloader
+     * @endcode
+     * @cparam reset bootloader
+     * @par api_copy
+     * #otInstanceResetToBootloader
+     */
+    else if (aArgs[0] == "bootloader")
+    {
+        error = otInstanceResetToBootloader(GetInstancePtr());
+    }
+#endif
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
 }
 
 void Interpreter::ProcessLine(char *aBuf)
@@ -6068,23 +6091,8 @@ template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[])
         SuccessOrExit(error = aArgs[1].ParseAsIp6Address(config.mSource));
 
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        {
-            bool                  valid        = false;
-            const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(GetInstancePtr());
-
-            for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
-            {
-                if (otIp6IsAddressEqual(&addr->mAddress, &config.mSource))
-                {
-                    valid = true;
-                    break;
-                }
-            }
-
-            VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
-        }
+        VerifyOrExit(otIp6HasUnicastAddress(GetInstancePtr(), &config.mSource), error = OT_ERROR_INVALID_ARGS);
 #endif
-
         aArgs += 2;
     }
 
@@ -6254,70 +6262,19 @@ void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, 
 
 void Interpreter::HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx)
 {
-    OT_UNUSED_VARIABLE(aIsTx);
+    otLogHexDumpInfo info;
+
+    info.mDataBytes  = aFrame->mPsdu;
+    info.mDataLength = aFrame->mLength;
+    info.mTitle      = (aIsTx) ? "TX" : "RX";
+    info.mIterator   = 0;
 
     OutputNewLine();
 
-    for (size_t i = 0; i < 44; i++)
+    while (otLogGenerateNextHexDumpLine(&info) == OT_ERROR_NONE)
     {
-        OutputFormat("=");
+        OutputLine("%s", info.mLine);
     }
-
-    OutputFormat("[len = %3u]", aFrame->mLength);
-
-    for (size_t i = 0; i < 28; i++)
-    {
-        OutputFormat("=");
-    }
-
-    OutputNewLine();
-
-    for (size_t i = 0; i < aFrame->mLength; i += 16)
-    {
-        OutputFormat("|");
-
-        for (size_t j = 0; j < 16; j++)
-        {
-            if (i + j < aFrame->mLength)
-            {
-                OutputFormat(" %02X", aFrame->mPsdu[i + j]);
-            }
-            else
-            {
-                OutputFormat(" ..");
-            }
-        }
-
-        OutputFormat("|");
-
-        for (size_t j = 0; j < 16; j++)
-        {
-            if (i + j < aFrame->mLength)
-            {
-                if (31 < aFrame->mPsdu[i + j] && aFrame->mPsdu[i + j] < 127)
-                {
-                    OutputFormat(" %c", aFrame->mPsdu[i + j]);
-                }
-                else
-                {
-                    OutputFormat(" ?");
-                }
-            }
-            else
-            {
-                OutputFormat(" .");
-            }
-        }
-
-        OutputLine("|");
-    }
-
-    for (size_t i = 0; i < 83; i++)
-    {
-        OutputFormat("-");
-    }
-
-    OutputNewLine();
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -6673,7 +6630,7 @@ exit:
  * Done
  * @endcode
  * @par api_copy
- * #otPlatRadioGetRegion
+ * #otLinkGetRegion
  */
 template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 {
@@ -6682,7 +6639,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        SuccessOrExit(error = otPlatRadioGetRegion(GetInstancePtr(), &regionCode));
+        SuccessOrExit(error = otLinkGetRegion(GetInstancePtr(), &regionCode));
         OutputLine("%c%c", regionCode >> 8, regionCode & 0xff);
     }
     /**
@@ -6692,7 +6649,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
      * Done
      * @endcode
      * @par api_copy
-     * #otPlatRadioSetRegion
+     * #otLinkSetRegion
      * @par
      * Changing this can affect the transmit power limit.
      */
@@ -6703,7 +6660,7 @@ template <> otError Interpreter::Process<Cmd("region")>(Arg aArgs[])
 
         regionCode = static_cast<uint16_t>(static_cast<uint16_t>(aArgs[0].GetCString()[0]) << 8) +
                      static_cast<uint16_t>(aArgs[0].GetCString()[1]);
-        error = otPlatRadioSetRegion(GetInstancePtr(), regionCode);
+        error = otLinkSetRegion(GetInstancePtr(), regionCode);
     }
 
 exit:

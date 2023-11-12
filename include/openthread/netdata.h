@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_NETDATA_H_
 #define OPENTHREAD_NETDATA_H_
 
+#include <openthread/commissioner.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -241,6 +242,15 @@ otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aI
 otError otNetDataGetNextLowpanContextInfo(otInstance            *aInstance,
                                           otNetworkDataIterator *aIterator,
                                           otLowpanContextInfo   *aContextInfo);
+
+/**
+ * Gets the Commissioning Dataset from the partition's Network Data.
+ *
+ * @param[in]  aInstance   A pointer to the OpenThread instance.
+ * @param[out] aDataset    A pointer to a `otCommissioningDataset` to populate.
+ *
+ */
+void otNetDataGetCommissioningDataset(otInstance *aInstance, otCommissioningDataset *aDataset);
 
 /**
  * Get the Network Data Version.

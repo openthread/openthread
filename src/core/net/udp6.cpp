@@ -39,8 +39,8 @@
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "instance/instance.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
@@ -355,7 +355,7 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
     else
 #endif
     {
-        SuccessOrExit(error = SendDatagram(aMessage, messageInfoLocal, kProtoUdp));
+        SuccessOrExit(error = SendDatagram(aMessage, messageInfoLocal));
     }
 
 exit:
@@ -427,7 +427,7 @@ Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
     return Get<Ip6>().NewMessage(sizeof(Header) + aReserved, aSettings);
 }
 
-Error Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
+Error Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo)
 {
     Error error = kErrorNone;
 
@@ -451,7 +451,7 @@ Error Udp::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
         SuccessOrExit(error = aMessage.Prepend(udpHeader));
         aMessage.SetOffset(0);
 
-        error = Get<Ip6>().SendDatagram(aMessage, aMessageInfo, aIpProto);
+        error = Get<Ip6>().SendDatagram(aMessage, aMessageInfo, kProtoUdp);
     }
 
 exit:

@@ -36,10 +36,10 @@
 #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {

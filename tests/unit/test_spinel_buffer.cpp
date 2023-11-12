@@ -29,9 +29,9 @@
 #include <ctype.h>
 
 #include "common/code_utils.hpp"
-#include "common/instance.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
+#include "instance/instance.hpp"
 #include "lib/spinel/spinel_buffer.hpp"
 
 #include "test_platform.h"

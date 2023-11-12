@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (364)
+#define OPENTHREAD_API_VERSION (370)
 
 /**
  * @addtogroup api-instance
@@ -254,6 +254,20 @@ void otRemoveStateChangeCallback(otInstance *aInstance, otStateChangedCallback a
  *
  */
 void otInstanceReset(otInstance *aInstance);
+
+/**
+ * Triggers a platform reset to bootloader mode, if supported.
+ *
+ * Requires `OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE`.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval OT_ERROR_NONE         Reset to bootloader successfully.
+ * @retval OT_ERROR_BUSY         Failed due to another operation is ongoing.
+ * @retval OT_ERROR_NOT_CAPABLE  Not capable of resetting to bootloader.
+ *
+ */
+otError otInstanceResetToBootloader(otInstance *aInstance);
 
 /**
  * Deletes all the settings stored on non-volatile memory, and then triggers a platform reset.

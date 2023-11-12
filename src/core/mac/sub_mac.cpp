@@ -39,12 +39,12 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/num_utils.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_frame.hpp"
 
 namespace ot {
@@ -352,7 +352,11 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
         // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
         if ((mCslPeriod > 0) && aFrame->mInfo.mRxInfo.mAckedWithSecEnhAck)
         {
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+            mCslLastSync = TimerMicro::GetNow();
+#else
             mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
+#endif
         }
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -613,9 +617,13 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aErro
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // Actual synchronization timestamp should be from the sent frame instead of the current time.
         // Assuming the error here since it is bounded and has very small effect on the final window duration.
-        if (mCslPeriod > 0)
+        if (aAckFrame != nullptr && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
         {
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+            mCslLastSync = TimerMicro::GetNow();
+#else
             mCslLastSync = TimeMicro(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance())));
+#endif
         }
 #endif
         break;
@@ -1232,9 +1240,13 @@ void SubMac::HandleCslTimer(void)
 void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
 {
     uint32_t semiPeriod = mCslPeriod * kUsPerTenSymbols / 2;
-    uint32_t curTime    = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
-    uint32_t elapsed;
-    uint32_t semiWindow;
+    uint32_t curTime, elapsed, semiWindow;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
+    curTime = TimerMicro::GetNow();
+#else
+    curTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
+#endif
 
     elapsed = curTime - mCslLastSync.GetValue();
 

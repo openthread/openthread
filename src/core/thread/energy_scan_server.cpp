@@ -37,9 +37,9 @@
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "instance/instance.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "thread/thread_netif.hpp"
@@ -207,8 +207,10 @@ exit:
 
 void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
+    uint16_t borderAgentRloc;
+
     if (aEvents.Contains(kEventThreadNetdataChanged) && (mReportMessage != nullptr) &&
-        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
+        Get<NetworkData::Leader>().FindBorderAgentRloc(borderAgentRloc) != kErrorNone)
     {
         mReportMessage->Free();
         mReportMessage = nullptr;

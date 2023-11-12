@@ -37,12 +37,12 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
+#include "instance/instance.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
@@ -55,18 +55,37 @@ namespace NetworkData {
 
 RegisterLogModule("NetworkData");
 
-void LeaderBase::Reset(void)
+Leader::Leader(Instance &aInstance)
+    : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
+    , mMaxLength(0)
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
+    , mIsClone(false)
+#endif
+    , mWaitingForNetDataSync(false)
+    , mContextIds(aInstance)
+    , mTimer(aInstance)
+#endif
+{
+    Reset();
+}
+
+void Leader::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();
     mStableVersion = Random::NonCrypto::GetUint8();
     SetLength(0);
     SignalNetDataChanged();
+
+#if OPENTHREAD_FTD
+    mContextIds.Clear();
+#endif
 }
 
-Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
-                               const ServiceData &aServiceData,
-                               bool               aServerStable,
-                               uint8_t           &aServiceId) const
+Error Leader::GetServiceId(uint32_t           aEnterpriseNumber,
+                           const ServiceData &aServiceData,
+                           bool               aServerStable,
+                           uint8_t           &aServiceId) const
 {
     Error         error    = kErrorNotFound;
     Iterator      iterator = kIteratorInit;
@@ -89,7 +108,7 @@ exit:
     return error;
 }
 
-Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
+Error Leader::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
 {
     Error               error    = kErrorNotFound;
     Iterator            iterator = kIteratorInit;
@@ -113,7 +132,7 @@ Error LeaderBase::GetPreferredNat64Prefix(ExternalRouteConfig &aConfig) const
     return error;
 }
 
-const PrefixTlv *LeaderBase::FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
+const PrefixTlv *Leader::FindNextMatchingPrefixTlv(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
     // This method iterates over Prefix TLVs which match a given IPv6
     // `aAddress`. If `aPrevTlv` is `nullptr` we start from the
@@ -135,7 +154,7 @@ const PrefixTlv *LeaderBase::FindNextMatchingPrefixTlv(const Ip6::Address &aAddr
     return prefixTlv;
 }
 
-Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
+Error Leader::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
     const PrefixTlv  *prefixTlv = nullptr;
     const ContextTlv *contextTlv;
@@ -168,7 +187,7 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
     return (aContext.mPrefix.GetLength() > 0) ? kErrorNone : kErrorNotFound;
 }
 
-Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
+Error Leader::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
 {
     Error            error = kErrorNotFound;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
@@ -200,7 +219,7 @@ exit:
     return error;
 }
 
-void LeaderBase::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
+void Leader::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
 {
     aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
@@ -208,7 +227,7 @@ void LeaderBase::GetContextForMeshLocalPrefix(Lowpan::Context &aContext) const
     aContext.mIsValid      = true;
 }
 
-bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
+bool Leader::IsOnMesh(const Ip6::Address &aAddress) const
 {
     const PrefixTlv *prefixTlv = nullptr;
     bool             isOnMesh  = false;
@@ -237,7 +256,7 @@ exit:
     return isOnMesh;
 }
 
-Error LeaderBase::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const
+Error Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
     Error            error     = kErrorNoRoute;
     const PrefixTlv *prefixTlv = nullptr;
@@ -264,18 +283,17 @@ exit:
     return error;
 }
 
-template <typename EntryType>
-int LeaderBase::CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const
+template <typename EntryType> int Leader::CompareRouteEntries(const EntryType &aFirst, const EntryType &aSecond) const
 {
     // `EntryType` can be `HasRouteEntry` or `BorderRouterEntry`.
 
     return CompareRouteEntries(aFirst.GetPreference(), aFirst.GetRloc(), aSecond.GetPreference(), aSecond.GetRloc());
 }
 
-int LeaderBase::CompareRouteEntries(int8_t   aFirstPreference,
-                                    uint16_t aFirstRloc,
-                                    int8_t   aSecondPreference,
-                                    uint16_t aSecondRloc) const
+int Leader::CompareRouteEntries(int8_t   aFirstPreference,
+                                uint16_t aFirstRloc,
+                                int8_t   aSecondPreference,
+                                uint16_t aSecondRloc) const
 {
     // Performs three-way comparison between two BR entries.
 
@@ -312,7 +330,7 @@ exit:
     return result;
 }
 
-Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const
+Error Leader::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDestination, uint16_t &aRloc16) const
 {
     Error                error           = kErrorNoRoute;
     const PrefixTlv     *prefixTlv       = nullptr;
@@ -359,7 +377,7 @@ Error LeaderBase::ExternalRouteLookup(uint8_t aDomainId, const Ip6::Address &aDe
     return error;
 }
 
-Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const
+Error Leader::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16) const
 {
     Error                    error = kErrorNoRoute;
     TlvIterator              subTlvIterator(aPrefix);
@@ -392,12 +410,12 @@ Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t &aRloc16
     return error;
 }
 
-Error LeaderBase::SetNetworkData(uint8_t        aVersion,
-                                 uint8_t        aStableVersion,
-                                 Type           aType,
-                                 const Message &aMessage,
-                                 uint16_t       aOffset,
-                                 uint16_t       aLength)
+Error Leader::SetNetworkData(uint8_t        aVersion,
+                             uint8_t        aStableVersion,
+                             Type           aType,
+                             const Message &aMessage,
+                             uint16_t       aOffset,
+                             uint16_t       aLength)
 {
     Error error = kErrorNone;
 
@@ -428,101 +446,126 @@ exit:
     return error;
 }
 
-Error LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
+const CommissioningDataTlv *Leader::FindCommissioningData(void) const
 {
-    Error                 error = kErrorNone;
-    CommissioningDataTlv *commissioningDataTlv;
+    return NetworkDataTlv::Find<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
+}
 
-    RemoveCommissioningData();
+const MeshCoP::Tlv *Leader::FindCommissioningDataSubTlv(uint8_t aType) const
+{
+    const MeshCoP::Tlv   *subTlv  = nullptr;
+    const NetworkDataTlv *dataTlv = FindCommissioningData();
 
-    if (aValueLength > 0)
-    {
-        VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = kErrorNoBufs);
-        commissioningDataTlv = As<CommissioningDataTlv>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
-        VerifyOrExit(commissioningDataTlv != nullptr, error = kErrorNoBufs);
+    VerifyOrExit(dataTlv != nullptr);
+    subTlv = As<MeshCoP::Tlv>(Tlv::FindTlv(dataTlv->GetValue(), dataTlv->GetLength(), aType));
 
-        commissioningDataTlv->Init();
-        commissioningDataTlv->SetLength(aValueLength);
-        memcpy(commissioningDataTlv->GetValue(), aValue, aValueLength);
-    }
+exit:
+    return subTlv;
+}
 
-    mVersion++;
-    SignalNetDataChanged();
+Error Leader::ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16_t &aValue) const
+{
+    Error               error  = kErrorNone;
+    const MeshCoP::Tlv *subTlv = FindCommissioningDataSubTlv(aType);
+
+    VerifyOrExit(subTlv != nullptr, error = kErrorNotFound);
+    VerifyOrExit(subTlv->GetLength() >= sizeof(uint16_t), error = kErrorParse);
+    aValue = Encoding::BigEndian::ReadUint16(subTlv->GetValue());
 
 exit:
     return error;
 }
 
-const CommissioningDataTlv *LeaderBase::GetCommissioningData(void) const
+void Leader::GetCommissioningDataset(MeshCoP::CommissioningDataset &aDataset) const
 {
-    return NetworkDataTlv::Find<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
-}
+    const CommissioningDataTlv *dataTlv = FindCommissioningData();
+    const MeshCoP::Tlv         *subTlv;
+    const MeshCoP::Tlv         *endTlv;
 
-const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const
-{
-    const MeshCoP::Tlv   *rval = nullptr;
-    const NetworkDataTlv *commissioningDataTlv;
+    aDataset.Clear();
 
-    commissioningDataTlv = GetCommissioningData();
-    VerifyOrExit(commissioningDataTlv != nullptr);
+    VerifyOrExit(dataTlv != nullptr);
 
-    rval = MeshCoP::Tlv::FindTlv(commissioningDataTlv->GetValue(), commissioningDataTlv->GetLength(), aType);
+    aDataset.mIsLocatorSet       = (FindBorderAgentRloc(aDataset.mLocator) == kErrorNone);
+    aDataset.mIsSessionIdSet     = (FindCommissioningSessionId(aDataset.mSessionId) == kErrorNone);
+    aDataset.mIsJoinerUdpPortSet = (FindJoinerUdpPort(aDataset.mJoinerUdpPort) == kErrorNone);
+    aDataset.mIsSteeringDataSet  = (FindSteeringData(AsCoreType(&aDataset.mSteeringData)) == kErrorNone);
 
-exit:
-    return rval;
-}
+    // Determine if the Commissioning data has any extra unknown TLVs
 
-bool LeaderBase::IsJoiningEnabled(void) const
-{
-    const MeshCoP::Tlv *steeringData;
-    bool                rval = false;
+    subTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue());
+    endTlv = reinterpret_cast<const MeshCoP::Tlv *>(dataTlv->GetValue() + dataTlv->GetLength());
 
-    VerifyOrExit(GetCommissioningDataSubTlv(MeshCoP::Tlv::kBorderAgentLocator) != nullptr);
-
-    steeringData = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringData != nullptr);
-
-    for (int i = 0; i < steeringData->GetLength(); i++)
+    for (; subTlv < endTlv; subTlv = subTlv->GetNext())
     {
-        if (steeringData->GetValue()[i] != 0)
+        switch (subTlv->GetType())
         {
-            ExitNow(rval = true);
+        case MeshCoP::Tlv::kBorderAgentLocator:
+        case MeshCoP::Tlv::kSteeringData:
+        case MeshCoP::Tlv::kJoinerUdpPort:
+        case MeshCoP::Tlv::kCommissionerSessionId:
+            break;
+        default:
+            ExitNow(aDataset.mHasExtraTlv = true);
         }
     }
-
-exit:
-    return rval;
-}
-
-void LeaderBase::RemoveCommissioningData(void)
-{
-    CommissioningDataTlv *tlv = GetCommissioningData();
-
-    VerifyOrExit(tlv != nullptr);
-    RemoveTlv(tlv);
 
 exit:
     return;
 }
 
-Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
+Error Leader::FindBorderAgentRloc(uint16_t &aRloc16) const
 {
-    Error                 error = kErrorNone;
-    const MeshCoP::Tlv   *steeringDataTlv;
-    MeshCoP::SteeringData steeringData;
+    return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kBorderAgentLocator, aRloc16);
+}
 
-    steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringDataTlv != nullptr, error = kErrorInvalidState);
+Error Leader::FindCommissioningSessionId(uint16_t &aSessionId) const
+{
+    return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kCommissionerSessionId, aSessionId);
+}
 
-    As<MeshCoP::SteeringDataTlv>(steeringDataTlv)->CopyTo(steeringData);
+Error Leader::FindJoinerUdpPort(uint16_t &aPort) const
+{
+    return ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::kJoinerUdpPort, aPort);
+}
 
-    VerifyOrExit(steeringData.Contains(aFilterIndexes), error = kErrorNotFound);
+Error Leader::FindSteeringData(MeshCoP::SteeringData &aSteeringData) const
+{
+    Error                           error           = kErrorNone;
+    const MeshCoP::SteeringDataTlv *steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
+
+    VerifyOrExit(steeringDataTlv != nullptr, error = kErrorNotFound);
+    steeringDataTlv->CopyTo(aSteeringData);
 
 exit:
     return error;
 }
 
-Error LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
+bool Leader::IsJoiningAllowed(void) const
+{
+    bool                  isAllowed = false;
+    MeshCoP::SteeringData steeringData;
+
+    SuccessOrExit(FindSteeringData(steeringData));
+    isAllowed = !steeringData.IsEmpty();
+
+exit:
+    return isAllowed;
+}
+
+Error Leader::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
+{
+    Error                 error = kErrorInvalidState;
+    MeshCoP::SteeringData steeringData;
+
+    SuccessOrExit(FindSteeringData(steeringData));
+    error = steeringData.Contains(aFilterIndexes) ? kErrorNone : kErrorNotFound;
+
+exit:
+    return error;
+}
+
+Error Leader::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
 {
     FilterIndexes   filterIndexes;
     Mac::ExtAddress joinerId;
@@ -533,7 +576,7 @@ Error LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
     return SteeringDataCheck(filterIndexes);
 }
 
-Error LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
+Error Leader::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
 {
     FilterIndexes filterIndexes;
 
@@ -542,7 +585,7 @@ Error LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDisce
     return SteeringDataCheck(filterIndexes);
 }
 
-void LeaderBase::SignalNetDataChanged(void)
+void Leader::SignalNetDataChanged(void)
 {
     mMaxLength = Max(mMaxLength, GetLength());
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);

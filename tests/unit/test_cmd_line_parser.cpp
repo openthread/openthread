@@ -32,7 +32,7 @@
 
 #include <openthread/config.h>
 
-#include "common/instance.hpp"
+#include "instance/instance.hpp"
 #include "utils/parse_cmdline.hpp"
 
 #include "test_util.hpp"

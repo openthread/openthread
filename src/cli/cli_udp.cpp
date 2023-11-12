@@ -78,6 +78,7 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * Assigns an IPv6 address and a port to an open socket, which binds the socket for communication.
  * Assigning the IPv6 address and port is referred to as naming the socket.
  * @sa otUdpBind
+ * @sa @udp
  */
 template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
@@ -126,6 +127,7 @@ exit:
  * `InvalidState` when the preferred NAT64 prefix is unavailable.
  * @par api_copy
  * #otUdpConnect
+ * @sa @udp
  */
 template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
@@ -247,6 +249,7 @@ exit:
  * @csa{udp bind}
  * @csa{udp connect}
  * @sa otUdpSend
+ * @sa @udp
  */
 template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 {

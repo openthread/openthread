@@ -111,6 +111,7 @@ typedef struct otCommissioningDataset
     bool mIsSessionIdSet : 1;     ///< TRUE if Commissioner Session Id is set, FALSE otherwise.
     bool mIsSteeringDataSet : 1;  ///< TRUE if Steering Data is set, FALSE otherwise.
     bool mIsJoinerUdpPortSet : 1; ///< TRUE if Joiner UDP Port is set, FALSE otherwise.
+    bool mHasExtraTlv : 1;        ///< TRUE if the Dataset contains any extra unknown sub-TLV, FALSE otherwise.
 } otCommissioningDataset;
 
 #define OT_JOINER_MAX_PSKD_LENGTH 32 ///< Maximum string length of a Joiner PSKd (does not include null char).

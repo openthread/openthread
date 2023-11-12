@@ -126,6 +126,7 @@ public:
      */
     static constexpr uint8_t kMaxProvisioningUrlLength = OT_PROVISIONING_URL_MAX_SIZE;
 
+    static constexpr uint8_t kMaxCommissionerIdLength  = 64; ///< Max length of Commissioner ID TLV.
     static constexpr uint8_t kMaxVendorNameLength      = 32; ///< Max length of Vendor Name TLV.
     static constexpr uint8_t kMaxVendorModelLength     = 32; ///< Max length of Vendor Model TLV.
     static constexpr uint8_t kMaxVendorSwVersionLength = 16; ///< Max length of Vendor SW Version TLV.
@@ -164,43 +165,6 @@ public:
     const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
     /**
-     * Reads the requested TLV out of @p aMessage.
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[in]   aMaxLength  Maximum number of bytes to read.
-     * @param[out]  aTlv        A reference to the TLV that will be copied to.
-     *
-     * @retval kErrorNone      Successfully copied the TLV.
-     * @retval kErrorNotFound  Could not find the TLV with Type @p aType.
-     *
-     */
-    static Error FindTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
-    {
-        return ot::Tlv::FindTlv(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
-    }
-
-    /**
-     * Reads the requested TLV out of @p aMessage.
-     *
-     * Can be used independent of whether the read TLV (from message) is an Extended TLV or not.
-     *
-     * @tparam      TlvType     The TlvType to search for (must be a sub-class of `Tlv`).
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[out]  aTlv        A reference to the TLV that will be copied to.
-     *
-     * @retval kErrorNone      Successfully copied the TLV.
-     * @retval kErrorNotFound  Could not find the TLV with Type @p aType.
-     *
-     */
-
-    template <typename TlvType> static Error FindTlv(const Message &aMessage, TlvType &aTlv)
-    {
-        return ot::Tlv::FindTlv(aMessage, aTlv);
-    }
-
-    /**
      * Indicates whether a TLV appears to be well-formed.
      *
      * @param[in]  aTlv  A reference to the TLV.
@@ -209,63 +173,6 @@ public:
      *
      */
     static bool IsValid(const Tlv &aTlv);
-
-    /**
-     * Searches in a given sequence of TLVs to find the first TLV with a given template Type.
-     *
-     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
-     * @param[in]  aType       The TLV Type to search for.
-     *
-     * @returns A pointer to the TLV if found, or `nullptr` if not found.
-     *
-     */
-    static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
-    {
-        return AsNonConst(FindTlv(AsConst(aTlvsStart), aTlvsLength, aType));
-    }
-
-    /**
-     * Searches in a given sequence of TLVs to find the first TLV with a given template Type.
-     *
-     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
-     * @param[in]  aType       The TLV Type to search for.
-     *
-     * @returns A pointer to the TLV if found, or `nullptr` if not found.
-     *
-     */
-    static const Tlv *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType);
-
-    /**
-     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
-     * `TlvType`.
-     *
-     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
-     *
-     * @returns A pointer to the TLV if found, or `nullptr` if not found.
-     *
-     */
-    template <typename TlvType> static TlvType *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength)
-    {
-        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
-    }
-
-    /**
-     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
-     * `TlvType`.
-     *
-     * @param[in]  aTlvsStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aTlvsLength The length (number of bytes) in TLV sequence.
-     *
-     * @returns A pointer to the TLV if found, or `nullptr` if not found.
-     *
-     */
-    template <typename TlvType> static const TlvType *FindTlv(const uint8_t *aTlvsStart, uint16_t aTlvsLength)
-    {
-        return As<TlvType>(FindTlv(aTlvsStart, aTlvsLength, static_cast<Tlv::Type>(TlvType::kType)));
-    }
 
 } OT_TOOL_PACKED_END;
 
@@ -341,6 +248,12 @@ typedef UintTlvInfo<Tlv::kPeriod, uint16_t> PeriodTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kScanDuration, uint16_t> ScanDurationTlv;
+
+/**
+ * Defines Commissioner ID TLV constants and type.s
+ *
+ */
+typedef StringTlvInfo<Tlv::kCommissionerId, Tlv::kMaxCommissionerIdLength> CommissionerIdTlv;
 
 /**
  * Implements Channel TLV generation and parsing.
@@ -848,62 +761,6 @@ public:
 
 private:
     uint16_t mLocator;
-} OT_TOOL_PACKED_END;
-
-/**
- * Implements the Commissioner ID TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CommissionerIdTlv : public Tlv, public TlvInfo<Tlv::kCommissionerId>
-{
-public:
-    static constexpr uint8_t kMaxLength = 64; ///< maximum length (bytes)
-
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCommissionerId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Returns the Commissioner ID length.
-     *
-     * @returns The Commissioner ID length.
-     *
-     */
-    uint8_t GetCommissionerIdLength(void) const
-    {
-        return GetLength() <= sizeof(mCommissionerId) ? GetLength() : sizeof(mCommissionerId);
-    }
-
-    /**
-     * Returns the Commissioner ID value.
-     *
-     * @returns The Commissioner ID value.
-     *
-     */
-    const char *GetCommissionerId(void) const { return mCommissionerId; }
-
-    /**
-     * Sets the Commissioner ID value.
-     *
-     * @param[in]  aCommissionerId  A pointer to the Commissioner ID value.
-     *
-     */
-    void SetCommissionerId(const char *aCommissionerId)
-    {
-        uint16_t length = StringLength(aCommissionerId, sizeof(mCommissionerId));
-        memcpy(mCommissionerId, aCommissionerId, length);
-        SetLength(static_cast<uint8_t>(length));
-    }
-
-private:
-    char mCommissionerId[kMaxLength];
 } OT_TOOL_PACKED_END;
 
 /**
