@@ -1794,11 +1794,7 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
 {
-    Iterator &iterator = static_cast<Iterator &>(aIterator);
-
-    iterator.SetInitTime();
-    iterator.SetRouter(mRouters.GetHead());
-    iterator.SetEntry(mRouters.IsEmpty() ? nullptr : mRouters.GetHead()->mEntries.GetHead());
+    static_cast<Iterator &>(aIterator).Init(mRouters);
 }
 
 Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &aIterator,
@@ -1810,7 +1806,7 @@ Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &a
     VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
     OT_ASSERT(iterator.GetEntry() != nullptr);
 
-    aEntry.mRouterAddress       = iterator.GetRouter()->mAddress;
+    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter);
     aEntry.mPrefix              = iterator.GetEntry()->GetPrefix();
     aEntry.mIsOnLink            = iterator.GetEntry()->IsOnLinkPrefix();
     aEntry.mMsecSinceLastUpdate = iterator.GetInitTime() - iterator.GetEntry()->GetLastUpdateTime();
@@ -1819,21 +1815,60 @@ Error RoutingManager::DiscoveredPrefixTable::GetNextEntry(PrefixTableIterator &a
     aEntry.mRoutePreference =
         static_cast<otRoutePreference>(aEntry.mIsOnLink ? 0 : iterator.GetEntry()->GetRoutePreference());
 
-    // Advance the iterator
-    iterator.SetEntry(iterator.GetEntry()->GetNext());
-
-    if (iterator.GetEntry() == nullptr)
-    {
-        iterator.SetRouter(iterator.GetRouter()->GetNext());
-
-        if (iterator.GetRouter() != nullptr)
-        {
-            iterator.SetEntry(iterator.GetRouter()->mEntries.GetHead());
-        }
-    }
+    iterator.Advance(Iterator::kToNextEntry);
 
 exit:
     return error;
+}
+
+Error RoutingManager::DiscoveredPrefixTable::GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const
+{
+    Error     error    = kErrorNone;
+    Iterator &iterator = static_cast<Iterator &>(aIterator);
+
+    VerifyOrExit(iterator.GetRouter() != nullptr, error = kErrorNotFound);
+
+    iterator.GetRouter()->CopyInfoTo(aEntry);
+    iterator.Advance(Iterator::kToNextRouter);
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// DiscoveredPrefixTable::Iterator
+
+void RoutingManager::DiscoveredPrefixTable::Iterator::Init(const LinkedList<Router> &aRouters)
+{
+    SetInitTime();
+    SetRouter(aRouters.GetHead());
+    SetEntry(aRouters.IsEmpty() ? nullptr : aRouters.GetHead()->mEntries.GetHead());
+}
+
+void RoutingManager::DiscoveredPrefixTable::Iterator::Advance(AdvanceMode aMode)
+{
+    switch (aMode)
+    {
+    case kToNextEntry:
+        SetEntry(GetEntry()->GetNext());
+
+        if (GetEntry() != nullptr)
+        {
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case kToNextRouter:
+        SetRouter(GetRouter()->GetNext());
+
+        if (GetRouter() != nullptr)
+        {
+            SetEntry(GetRouter()->mEntries.GetHead());
+        }
+
+        break;
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -1955,6 +1990,17 @@ uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint
     }
 
     return delay;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// DiscoveredPrefixTable::Router
+
+void RoutingManager::DiscoveredPrefixTable::Router::CopyInfoTo(RouterEntry &aEntry) const
+{
+    aEntry.mAddress                  = mAddress;
+    aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
+    aEntry.mOtherConfigFlag          = mOtherConfigFlag;
+    aEntry.mStubRouterFlag           = mStubRouterFlag;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

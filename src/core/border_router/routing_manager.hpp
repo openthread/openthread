@@ -87,6 +87,7 @@ public:
     typedef NetworkData::RoutePreference       RoutePreference;     ///< Route preference (high, medium, low).
     typedef otBorderRoutingPrefixTableIterator PrefixTableIterator; ///< Prefix Table Iterator.
     typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
+    typedef otBorderRoutingRouterEntry         RouterEntry;         ///< Router Entry.
 
     /**
      * This constant specifies the maximum number of route prefixes that may be published by `RoutingManager`
@@ -466,6 +467,21 @@ public:
         return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
     }
 
+    /**
+     * Iterates over discovered router entries on infrastructure link.
+     *
+     * @param[in,out] aIterator  An iterator.
+     * @param[out]    aEntry     A reference to the entry to populate.
+     *
+     * @retval kErrorNone        Got the next router info, @p aEntry is updated and @p aIterator is advanced.
+     * @retval kErrorNotFound    No more routers.
+     *
+     */
+    Error GetNextRouterEntry(PrefixTableIterator &aIterator, RouterEntry &aEntry) const
+    {
+        return mDiscoveredPrefixTable.GetNextRouter(aIterator, aEntry);
+    }
+
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     /**
      * Determines whether to enable/disable SRP server when the auto-enable mode is changed on SRP server.
@@ -621,6 +637,7 @@ private:
 
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
+        Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
 
         void HandleEntryTimer(void);
         void HandleRouterTimer(void);
@@ -758,6 +775,7 @@ private:
 
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker) const { return mEntries.IsEmpty(); }
+            void CopyInfoTo(RouterEntry &aEntry) const;
 
             Router           *mNext;
             Ip6::Address      mAddress;
@@ -772,12 +790,23 @@ private:
         class Iterator : public PrefixTableIterator
         {
         public:
+            enum AdvanceMode : uint8_t
+            {
+                kToNextEntry,
+                kToNextRouter,
+            };
+
+            void Init(const LinkedList<Router> &aRouters);
+            void Advance(AdvanceMode aMode);
+
             const Router *GetRouter(void) const { return static_cast<const Router *>(mPtr1); }
-            void          SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
             const Entry  *GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
-            void          SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
             TimeMilli     GetInitTime(void) const { return TimeMilli(mData32); }
-            void          SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+
+        private:
+            void SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
+            void SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
+            void SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
         void         ProcessRaHeader(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);

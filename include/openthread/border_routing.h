@@ -89,21 +89,33 @@ typedef struct otBorderRoutingPrefixTableIterator
 } otBorderRoutingPrefixTableIterator;
 
 /**
+ * Represents a discovered router on the infrastructure link.
+ *
+ */
+typedef struct otBorderRoutingRouterEntry
+{
+    otIp6Address mAddress;                      ///< IPv6 address of the router.
+    bool         mManagedAddressConfigFlag : 1; ///< The router's Managed Address Config flag (`M` flag).
+    bool         mOtherConfigFlag : 1;          ///< The router's Other Config flag (`O` flag).
+    bool         mStubRouterFlag : 1;           ///< The router's Stub Router flag.
+} otBorderRoutingRouterEntry;
+
+/**
  * Represents an entry from the discovered prefix table.
  *
  * The entries in the discovered table track the Prefix/Route Info Options in the received Router Advertisement messages
- * from other routers on infrastructure link.
+ * from other routers on the infrastructure link.
  *
  */
 typedef struct otBorderRoutingPrefixTableEntry
 {
-    otIp6Address      mRouterAddress;       ///< IPv6 address of the router.
-    otIp6Prefix       mPrefix;              ///< The discovered IPv6 prefix.
-    bool              mIsOnLink;            ///< Indicates whether the prefix is on-link or route prefix.
-    uint32_t          mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
-    uint32_t          mValidLifetime;       ///< Valid lifetime of the prefix (in seconds).
-    otRoutePreference mRoutePreference;     ///< Route preference when `mIsOnlink` is false.
-    uint32_t          mPreferredLifetime;   ///< Preferred lifetime of the on-link prefix when `mIsOnLink` is true.
+    otBorderRoutingRouterEntry mRouter;              ///< Information about the router advertising this prefix.
+    otIp6Prefix                mPrefix;              ///< The discovered IPv6 prefix.
+    bool                       mIsOnLink;            ///< Indicates whether the prefix is on-link or route prefix.
+    uint32_t                   mMsecSinceLastUpdate; ///< Milliseconds since last update of this prefix.
+    uint32_t                   mValidLifetime;       ///< Valid lifetime of the prefix (in seconds).
+    otRoutePreference          mRoutePreference;     ///< Route preference when `mIsOnlink` is false.
+    uint32_t                   mPreferredLifetime;   ///< Preferred lifetime of the on-link prefix when `mIsOnLink`.
 } otBorderRoutingPrefixTableEntry;
 
 /**
@@ -391,6 +403,9 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 /**
  * Iterates over the entries in the Border Router's discovered prefix table.
  *
+ * Prefix entries associated with the same discovered router on an infrastructure link are guaranteed to be grouped
+ * together (retrieved back-to-back).
+ *
  * @param[in]     aInstance    The OpenThread instance.
  * @param[in,out] aIterator    A pointer to the iterator.
  * @param[out]    aEntry       A pointer to the entry to populate.
@@ -402,6 +417,21 @@ void otBorderRoutingPrefixTableInitIterator(otInstance *aInstance, otBorderRouti
 otError otBorderRoutingGetNextPrefixTableEntry(otInstance                         *aInstance,
                                                otBorderRoutingPrefixTableIterator *aIterator,
                                                otBorderRoutingPrefixTableEntry    *aEntry);
+
+/**
+ * Iterates over the discovered router entries on the infrastructure link.
+ *
+ * @param[in]     aInstance    The OpenThread instance.
+ * @param[in,out] aIterator    A pointer to the iterator.
+ * @param[out]    aEntry       A pointer to the entry to populate.
+ *
+ * @retval OT_ERROR_NONE        Iterated to the next router, @p aEntry and @p aIterator are updated.
+ * @retval OT_ERROR_NOT_FOUND   No more router entries.
+ *
+ */
+otError otBorderRoutingGetNextRouterEntry(otInstance                         *aInstance,
+                                          otBorderRoutingPrefixTableIterator *aIterator,
+                                          otBorderRoutingRouterEntry         *aEntry);
 
 /**
  * Enables / Disables DHCPv6 Prefix Delegation.
