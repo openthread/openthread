@@ -1460,6 +1460,18 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE>(void)
+{
+    bool    enabled;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otPlatRadioSetRxOnWhenIdle(mInstance, enabled);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_15_4_PANID>(void)
 {
     return mEncoder.WriteUint16(otLinkGetPanId(mInstance));

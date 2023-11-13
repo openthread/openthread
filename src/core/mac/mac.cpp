@@ -414,7 +414,7 @@ void Mac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
 #endif
     }
 
-    mLinks.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
+    mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 
 exit:
@@ -2103,7 +2103,7 @@ void Mac::SetPromiscuous(bool aPromiscuous)
     mShouldDelaySleep = false;
 #endif
 
-    mLinks.SetRxOnWhenBackoff(mRxOnWhenIdle || mPromiscuous);
+    mLinks.SetRxOnWhenIdle(mRxOnWhenIdle || mPromiscuous);
     UpdateIdleMode();
 }
 

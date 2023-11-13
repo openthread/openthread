@@ -420,7 +420,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 9
+#define SPINEL_RCP_API_VERSION 10
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -2127,6 +2127,17 @@ enum
      *
      */
     SPINEL_PROP_MAC_DATA_POLL_PERIOD = SPINEL_PROP_MAC__BEGIN + 10,
+
+    /// MAC RxOnWhenIdle mode
+    /** Format: `b`
+     *
+     * Set to true to enable RxOnWhenIdle or false to disable it.
+     * When True, the radio is expected to stay in receive state during
+     * idle periods. When False, the radio is expected to switch to sleep
+     * state during idle periods.
+     *
+     */
+    SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE = SPINEL_PROP_MAC__BEGIN + 11,
 
     SPINEL_PROP_MAC__END = 0x40,
 
