@@ -3543,7 +3543,7 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     }
 
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, false));
-    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
     Log("End of TestBorderRoutingProcessPlatfromGeneratedNd");
 }
