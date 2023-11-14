@@ -402,17 +402,17 @@ public:
     }
 
     /**
-     * Indicates whether radio should stay in Receive or Sleep during CSMA backoff.
+     * Indicates whether radio should stay in Receive or Sleep during idle periods.
      *
-     * @param[in]  aRxOnWhenBackoff  TRUE to keep radio in Receive, FALSE to put to Sleep during CSMA backoff.
+     * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive, FALSE to put to Sleep during idle periods.
      *
      */
-    void SetRxOnWhenBackoff(bool aRxOnWhenBackoff)
+    void SetRxOnWhenIdle(bool aRxOnWhenIdle)
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-        mSubMac.SetRxOnWhenBackoff(aRxOnWhenBackoff);
+        mSubMac.SetRxOnWhenIdle(aRxOnWhenIdle);
 #endif
-        OT_UNUSED_VARIABLE(aRxOnWhenBackoff);
+        OT_UNUSED_VARIABLE(aRxOnWhenIdle);
     }
 
     /**

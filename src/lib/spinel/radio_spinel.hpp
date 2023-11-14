@@ -104,6 +104,18 @@ public:
     otError SetPromiscuous(bool aEnable);
 
     /**
+     * Sets the status of RxOnWhenIdle mode.
+     *
+     * @param[in]   aEnable     Whether to enable or disable RxOnWhenIdle mode.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     *
+     */
+    otError SetRxOnWhenIdle(bool aEnable);
+
+    /**
      * Sets the Short Address for address filtering.
      *
      * @param[in] aShortAddress  The IEEE 802.15.4 Short Address.
@@ -1067,6 +1079,7 @@ private:
 
     State mState;
     bool  mIsPromiscuous : 1;             ///< Promiscuous mode.
+    bool  mRxOnWhenIdle : 1;              ///< RxOnWhenIdle mode.
     bool  mIsReady : 1;                   ///< NCP ready.
     bool  mSupportsLogStream : 1;         ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     bool  mSupportsResetToBootloader : 1; ///< RCP supports resetting into bootloader mode.

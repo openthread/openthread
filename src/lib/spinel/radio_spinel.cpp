@@ -70,6 +70,7 @@ RadioSpinel::RadioSpinel(void)
     , mRxSensitivity(0)
     , mState(kStateDisabled)
     , mIsPromiscuous(false)
+    , mRxOnWhenIdle(true)
     , mIsReady(false)
     , mSupportsLogStream(false)
     , mSupportsResetToBootloader(false)
@@ -867,6 +868,18 @@ otError RadioSpinel::SetPromiscuous(bool aEnable)
     uint8_t mode = (aEnable ? SPINEL_MAC_PROMISCUOUS_MODE_NETWORK : SPINEL_MAC_PROMISCUOUS_MODE_OFF);
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_PROMISCUOUS_MODE, SPINEL_DATATYPE_UINT8_S, mode));
     mIsPromiscuous = aEnable;
+
+exit:
+    return error;
+}
+
+otError RadioSpinel::SetRxOnWhenIdle(bool aEnable)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mRxOnWhenIdle != aEnable);
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE, SPINEL_DATATYPE_BOOL_S, aEnable));
+    mRxOnWhenIdle = aEnable;
 
 exit:
     return error;
@@ -2134,6 +2147,11 @@ void RadioSpinel::RestoreProperties(void)
         }
     }
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
+
+    if ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0)
+    {
+        SuccessOrDie(Set(SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE, SPINEL_DATATYPE_BOOL_S, mRxOnWhenIdle));
+    }
 
     CalcRcpTimeOffset();
 }

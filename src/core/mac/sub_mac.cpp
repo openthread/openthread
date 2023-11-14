@@ -76,7 +76,7 @@ void SubMac::Init(void)
     mTransmitRetries = 0;
     mShortAddress    = kShortAddrInvalid;
     mExtAddress.Clear();
-    mRxOnWhenBackoff   = true;
+    mRxOnWhenIdle      = true;
     mEnergyScanMaxRssi = Radio::kInvalidRssi;
     mEnergyScanEndTime = Time{0};
 #if OPENTHREAD_CONFIG_MAC_ADD_DELAY_ON_NO_ACK_ERROR_BEFORE_RETRY
@@ -141,10 +141,14 @@ otRadioCaps SubMac::GetCaps(void) const
     caps |= OT_RADIO_CAPS_RECEIVE_TIMING;
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_ON_WHEN_IDLE_ENABLE
+    caps |= OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
+#endif
+
 #else
     caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
            OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
-           OT_RADIO_CAPS_RECEIVE_TIMING;
+           OT_RADIO_CAPS_RECEIVE_TIMING | OT_RADIO_CAPS_RX_ON_WHEN_IDLE;
 #endif
 
     return caps;
@@ -174,6 +178,20 @@ void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
     Get<Radio>().SetExtendedAddress(address);
 
     LogDebg("RadioExtAddress: %s", mExtAddress.ToString().AsCString());
+}
+
+void SubMac::SetRxOnWhenIdle(bool aRxOnWhenIdle)
+{
+    mRxOnWhenIdle = aRxOnWhenIdle;
+
+    if (RadioSupportsRxOnWhenIdle())
+    {
+#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
+        Get<Radio>().SetRxOnWhenIdle(mRxOnWhenIdle);
+#endif
+    }
+
+    LogDebg("RxOnWhenIdle: %d", mRxOnWhenIdle);
 }
 
 Error SubMac::Enable(void)
@@ -211,17 +229,22 @@ exit:
 
 Error SubMac::Sleep(void)
 {
-    Error error = Get<Radio>().Sleep();
+    Error error = kErrorNone;
 
+    VerifyOrExit(ShouldHandleTransitionToSleep());
+
+    error = Get<Radio>().Sleep();
+
+exit:
     if (error != kErrorNone)
     {
         LogWarn("RadioSleep() failed, error: %s", ErrorToString(error));
-        ExitNow();
+    }
+    else
+    {
+        SetState(kStateSleep);
     }
 
-    SetState(kStateSleep);
-
-exit:
     return error;
 }
 
@@ -511,7 +534,7 @@ void SubMac::StartTimerForBackoff(uint8_t aBackoffExponent)
     backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << aBackoffExponent));
     backoff *= (kUnitBackoffPeriod * Radio::kSymbolTime);
 
-    if (mRxOnWhenBackoff)
+    if (mRxOnWhenIdle)
     {
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
     }
@@ -977,6 +1000,8 @@ bool SubMac::ShouldHandleTransmitTargetTime(void) const
 exit:
     return swTxDelay;
 }
+
+bool SubMac::ShouldHandleTransitionToSleep(void) const { return (mRxOnWhenIdle || !RadioSupportsRxOnWhenIdle()); }
 
 void SubMac::SetState(State aState)
 {
