@@ -734,6 +734,14 @@ public:
     const Header &GetHeader(void) const { return *reinterpret_cast<const Header *>(mData.GetBytes()); }
 
     /**
+     * Gets the RA message's header.
+     *
+     * @returns The RA message's header.
+     *
+     */
+    Header &GetHeader(void) { return *reinterpret_cast<Header *>(AsNonConst(mData.GetBytes())); }
+
+    /**
      * Appends a Prefix Info Option to the RA message.
      *
      * The appended Prefix Info Option will have both on-link (L) and autonomous address-configuration (A) flags set.
