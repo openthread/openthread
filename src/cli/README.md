@@ -2351,7 +2351,6 @@ Note:
 - A valid CIDR must have a non-zero prefix length.
 - When updating the CIDR, NAT64 translator will be reset and all existing sessions will be expired.
 
-
 ```bash
 > nat64 cidr 192.168.100.0/24
 Done
