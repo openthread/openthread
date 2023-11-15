@@ -120,9 +120,9 @@ public:
      */
     enum Dhcp6PdState : uint8_t
     {
-        kDhcp6PdStateDisabled = OT_BORDER_ROUTING_STATE_DISABLED, ///< Disabled.
-        kDhcp6PdStateStopped  = OT_BORDER_ROUTING_STATE_STOPPED,  ///< Enabled, but currently stopped.
-        kDhcp6PdStateRunning  = OT_BORDER_ROUTING_STATE_RUNNING,  ///< Enabled, and running.
+        kDhcp6PdStateDisabled = OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED, ///< Disabled.
+        kDhcp6PdStateStopped  = OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,  ///< Enabled, but currently stopped.
+        kDhcp6PdStateRunning  = OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,  ///< Enabled, and running.
     };
 
     /**
@@ -1138,14 +1138,15 @@ private:
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
+        void               Start(void);
+        void               Stop(void);
         bool               IsRunning(void) const { return GetState() == Dhcp6PdState::kDhcp6PdStateRunning; }
         bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
         Dhcp6PdState       GetState(void) const
         {
-            // TODO: We need to stop and inform the platform when there is already a GUA prefix advertised in the
-            // network.
-            return mEnabled ? kDhcp6PdStateRunning : kDhcp6PdStateDisabled;
+            return mEnabled ? (mIsRunning ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateStopped)
+                            : Dhcp6PdState::kDhcp6PdStateDisabled;
         }
 
         void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
@@ -1161,11 +1162,13 @@ private:
 
     private:
         Error Process(const Ip6::Nd::RouterAdvertMessage &aMessage);
+        void  EvaluateStateChange(Dhcp6PdState aOldState);
         void  WithdrawPrefix(void);
 
         using PlatformOmrPrefixTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
 
         bool                         mEnabled;
+        bool                         mIsRunning;
         PlatformOmrPrefixTimer       mTimer;
         DiscoveredPrefixTable::Entry mPrefix;
     };
