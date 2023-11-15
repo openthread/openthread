@@ -2117,8 +2117,8 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList &aTlvList,
-                                   const RxChallenge &aChallenge,
+Error Mle::SendChildUpdateResponse(const TlvList         &aTlvList,
+                                   const RxChallenge     &aChallenge,
                                    const Mac::ExtAddress &aExtAddress)
 {
     Error        error = kErrorNone;
