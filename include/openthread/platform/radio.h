@@ -119,7 +119,7 @@ enum
  * The value is a bit-field indicating the capabilities supported by the radio. See `OT_RADIO_CAPS_*` definitions.
  *
  */
-typedef uint8_t otRadioCaps;
+typedef uint16_t otRadioCaps;
 
 /**
  * Defines constants that are used to indicate different radio capabilities. See `otRadioCaps`.
@@ -136,6 +136,7 @@ enum
     OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
     OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
     OT_RADIO_CAPS_RECEIVE_TIMING   = 1 << 7, ///< Radio supports rx at specific time.
+    OT_RADIO_CAPS_RX_ON_WHEN_IDLE  = 1 << 8, ///< Radio supports RxOnWhenIdle handling.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -620,6 +621,38 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  *
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
+
+/**
+ * Sets the rx-on-when-idle state to the radio platform.
+ *
+ * There are a few situations that the radio can enter sleep state if the device is in rx-off-when-idle state but
+ * it's hard and costly for the SubMac to identify these situations and instruct the radio to enter sleep:
+ *
+ * - Finalization of a regular frame reception task, provided that:
+ *   - The frame is received without errors and passes the filtering and it's not an spurious ACK.
+ *   - ACK is not requested or transmission of ACK is not possible due to internal conditions.
+ * - Finalization of a frame transmission or transmission of an ACK frame, when ACK is not requested in the transmitted
+ *   frame.
+ * - Finalization of the reception operation of a requested ACK due to:
+ *   - ACK timeout expiration.
+ *   - Reception of an invalid ACK or not an ACK frame.
+ *   - Reception of the proper ACK, unless the transmitted frame was a Data Request Command and the frame pending bit
+ *     on the received ACK is set to true. In this case the radio platform implementation SHOULD keep the receiver on
+ *     until a determined timeout which triggers an idle period start.`OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT` can be
+ *     taken as a reference for this.
+ * - Finalization of a stand alone CCA task.
+ * - Finalization of a CCA operation with busy result during CSMA/CA procedure.
+ * - Finalization of an Energy Detection task.
+ * - Finalization of a radio reception window scheduled with `otPlatRadioReceiveAt`.
+ *
+ * If a platform supports `OT_RADIO_CAPS_RX_ON_WHEN_IDLE` it must also support `OT_RADIO_CAPS_CSMA_BACKOFF` and handle
+ * idle periods after CCA as described above.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aEnable      TRUE to keep radio in Receive state, FALSE to put to Sleep state during idle periods.
+ *
+ */
+void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnable);
 
 /**
  * Update MAC keys and key index

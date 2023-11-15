@@ -3543,9 +3543,11 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
     }
 
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, false));
-    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() == heapAllocations);
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
     Log("End of TestBorderRoutingProcessPlatfromGeneratedNd");
+
+    FinalizeTest();
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 

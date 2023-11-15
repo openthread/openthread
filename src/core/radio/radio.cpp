@@ -61,6 +61,7 @@ void Radio::Init(void)
     SetMacFrameCounter(0);
 
     SetPromiscuous(false);
+    SetRxOnWhenIdle(true);
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 }
 #endif // OPENTHREAD_RADIO

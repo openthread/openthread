@@ -278,12 +278,12 @@ public:
     }
 
     /**
-     * Indicates whether radio should stay in Receive or Sleep during CSMA backoff.
+     * Indicates whether radio should stay in Receive or Sleep during idle periods.
      *
-     * @param[in]  aRxOnWhenBackoff  TRUE to keep radio in Receive, FALSE to put to Sleep during CSMA backoff.
+     * @param[in]  aRxOnWhenIdle  TRUE to keep radio in Receive, FALSE to put to Sleep during idle periods.
      *
      */
-    void SetRxOnWhenBackoff(bool aRxOnWhenBackoff) { mRxOnWhenBackoff = aRxOnWhenBackoff; }
+    void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
      * Enables the radio.
@@ -604,6 +604,7 @@ private:
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
     bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
     bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
+    bool RadioSupportsRxOnWhenIdle(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RX_ON_WHEN_IDLE) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
@@ -611,6 +612,7 @@ private:
     bool ShouldHandleRetries(void) const;
     bool ShouldHandleEnergyScan(void) const;
     bool ShouldHandleTransmitTargetTime(void) const;
+    bool ShouldHandleTransitionToSleep(void) const;
 
     void ProcessTransmitSecurity(void);
     void SignalFrameCounterUsed(uint32_t aFrameCounter, uint8_t aKeyId);
@@ -642,7 +644,7 @@ private:
     uint8_t      mTransmitRetries;
     ShortAddress mShortAddress;
     ExtAddress   mExtAddress;
-    bool         mRxOnWhenBackoff : 1;
+    bool         mRxOnWhenIdle : 1;
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     bool mRadioFilterEnabled : 1;
 #endif

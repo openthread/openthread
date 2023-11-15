@@ -260,6 +260,12 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnabled)
     OT_UNUSED_VARIABLE(aEnabled);
 }
 
+void otPlatRadioSetRxOnWhenIdle(otInstance *aInstance, bool aEnabled)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnabled);
+}
+
 bool otPlatRadioIsEnabled(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

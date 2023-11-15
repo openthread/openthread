@@ -435,6 +435,14 @@ public:
     void SetPromiscuous(bool aEnable);
 
     /**
+     * Indicates whether radio should stay in Receive or Sleep during idle periods.
+     *
+     * @param[in]  aEnable   TRUE to keep radio in Receive, FALSE to put to Sleep during idle periods.
+     *
+     */
+    void SetRxOnWhenIdle(bool aEnable);
+
+    /**
      * Returns the current state of the radio.
      *
      * Is not required by OpenThread. It may be used for debugging and/or application-specific purposes.
@@ -833,6 +841,8 @@ inline bool Radio::GetPromiscuous(void) { return otPlatRadioGetPromiscuous(GetIn
 
 inline void Radio::SetPromiscuous(bool aEnable) { otPlatRadioSetPromiscuous(GetInstancePtr(), aEnable); }
 
+inline void Radio::SetRxOnWhenIdle(bool aEnable) { otPlatRadioSetRxOnWhenIdle(GetInstancePtr(), aEnable); }
+
 inline otRadioState Radio::GetState(void) { return otPlatRadioGetState(GetInstancePtr()); }
 
 inline Error Radio::Enable(void)
@@ -973,6 +983,8 @@ inline Error Radio::SetCcaEnergyDetectThreshold(int8_t) { return kErrorNotImplem
 inline bool Radio::GetPromiscuous(void) { return false; }
 
 inline void Radio::SetPromiscuous(bool) {}
+
+inline void Radio::SetRxOnWhenIdle(bool) {}
 
 inline otRadioState Radio::GetState(void) { return OT_RADIO_STATE_DISABLED; }
 

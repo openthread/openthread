@@ -126,6 +126,8 @@ OT_TOOL_WEAK void otPlatRadioSetShortAddress(otInstance *, uint16_t) {}
 
 OT_TOOL_WEAK void otPlatRadioSetPromiscuous(otInstance *, bool) {}
 
+OT_TOOL_WEAK void otPlatRadioSetRxOnWhenIdle(otInstance *, bool) {}
+
 OT_TOOL_WEAK bool otPlatRadioIsEnabled(otInstance *) { return true; }
 
 OT_TOOL_WEAK otError otPlatRadioEnable(otInstance *) { return OT_ERROR_NONE; }

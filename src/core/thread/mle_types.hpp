@@ -617,6 +617,17 @@ inline uint16_t ChildIdFromRloc16(uint16_t aRloc16) { return aRloc16 & kMaxChild
 inline uint8_t RouterIdFromRloc16(uint16_t aRloc16) { return aRloc16 >> kRouterIdOffset; }
 
 /**
+ * Indicates whether or not a given Router ID is valid.
+ *
+ * @param[in]  aRouterId  The Router ID value to check.
+ *
+ * @retval TRUE   If @p aRouterId is in correct range [0..62].
+ * @retval FALSE  If @p aRouterId is not a valid Router ID.
+ *
+ */
+inline bool IsRouterIdValid(uint8_t aRouterId) { return aRouterId <= kMaxRouterId; }
+
+/**
  * Returns whether the two RLOC16 have the same Router ID.
  *
  * @param[in]  aRloc16A  The first RLOC16 value.
