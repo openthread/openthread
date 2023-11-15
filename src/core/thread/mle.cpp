@@ -3520,7 +3520,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         {
             Mac::CslAccuracy cslAccuracy;
 
-            if (aRxInfo.mMessage.ReadCslClocAccuracyTlv(cslAccuracy) == kErrorNone)
+            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
             {
                 // MUST include CSL timeout TLV when request includes CSL accuracy
                 tlvList.Add(Tlv::kCslTimeout);

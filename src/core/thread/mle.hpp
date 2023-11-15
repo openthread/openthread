@@ -1230,7 +1230,9 @@ private:
     Error      SendChildUpdateRequest(ChildUpdateRequestMode aMode);
     Error      SendDataRequestAfterDelay(const Ip6::Address &aDestination, uint16_t aDelay);
     Error      SendChildUpdateRequest(void);
-    Error      SendChildUpdateResponse(const TlvList &aTlvList, const RxChallenge &aChallenge, const Mac::ExtAddress &aExtAddress);
+    Error      SendChildUpdateResponse(const TlvList         &aTlvList,
+                                       const RxChallenge     &aChallenge,
+                                       const Mac::ExtAddress &aExtAddress);
     void       SetRloc16(uint16_t aRloc16);
     void       SetStateDetached(void);
     void       SetStateChild(uint16_t aRloc16);
