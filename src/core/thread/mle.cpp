@@ -3464,11 +3464,11 @@ exit:
 
 void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 {
-    Error           error = kErrorNone;
-    uint16_t        sourceAddress;
-    RxChallenge     challenge;
-    TlvList         requestedTlvList;
-    TlvList         tlvList;
+    Error       error = kErrorNone;
+    uint16_t    sourceAddress;
+    RxChallenge challenge;
+    TlvList     requestedTlvList;
+    TlvList     tlvList;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
