@@ -96,7 +96,9 @@ namespace Mle {
  *
  */
 
+#if OPENTHREAD_FTD
 class MleRouter;
+#endif
 
 /**
  * Implements MLE functionality required by the Thread EndDevices, Router, and Leader roles.
@@ -104,7 +106,9 @@ class MleRouter;
  */
 class Mle : public InstanceLocator, private NonCopyable
 {
+#if OPENTHREAD_FTD
     friend class MleRouter;
+#endif
     friend class DiscoverScanner;
     friend class ot::Instance;
     friend class ot::Notifier;
@@ -699,6 +703,16 @@ public:
         return (&aAddress == &mLinkLocalAllThreadNodes) || (&aAddress == &mRealmLocalAllThreadNodes);
     }
 
+    /**
+     * Determines the next hop towards an RLOC16 destination.
+     *
+     * @param[in]  aDestination  The RLOC16 of the destination.
+     *
+     * @returns A RLOC16 of the next hop if a route is known, kInvalidRloc16 otherwise.
+     *
+     */
+    uint16_t GetNextHop(uint16_t aDestination) const;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * Gets the CSL timeout.
@@ -1219,7 +1233,6 @@ private:
     void       InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
     void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
     Error      CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
-    uint16_t   GetNextHop(uint16_t aDestination) const;
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
     void       SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);

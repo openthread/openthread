@@ -713,7 +713,9 @@ template <> inline RadioSelector &Instance::Get(void) { return mRadioSelector; }
 
 template <> inline Mle::Mle &Instance::Get(void) { return mMleRouter; }
 
+#if OPENTHREAD_FTD
 template <> inline Mle::MleRouter &Instance::Get(void) { return mMleRouter; }
+#endif
 
 template <> inline Mle::DiscoverScanner &Instance::Get(void) { return mDiscoverScanner; }
 

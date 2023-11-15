@@ -395,7 +395,18 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
 uint16_t otThreadGetVersion(void) { return kThreadVersion; }
 
-bool otThreadIsSingleton(otInstance *aInstance) { return AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton(); }
+bool otThreadIsSingleton(otInstance *aInstance)
+{
+    bool isSingleton = false;
+
+#if OPENTHREAD_FTD
+    isSingleton = AsCoreType(aInstance).Get<Mle::MleRouter>().IsSingleton();
+#else
+    OT_UNUSED_VARIABLE(aInstance);
+#endif
+
+    return isSingleton;
+}
 
 otError otThreadDiscover(otInstance              *aInstance,
                          uint32_t                 aScanChannels,
