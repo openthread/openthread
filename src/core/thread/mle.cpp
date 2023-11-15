@@ -2117,9 +2117,9 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList         &aTlvList,
-                                   const RxChallenge     &aChallenge,
-                                   const Mac::ExtAddress &aExtAddress)
+Error Mle::SendChildUpdateResponse(const TlvList      &aTlvList,
+                                   const RxChallenge  &aChallenge,
+                                   const Ip6::Address &aDestination)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -2183,8 +2183,7 @@ Error Mle::SendChildUpdateResponse(const TlvList         &aTlvList,
         }
     }
 
-    destination.SetToLinkLocalAddress(aExtAddress);
-    SuccessOrExit(error = message->SendTo(destination));
+    SuccessOrExit(error = message->SendTo(aDestination));
 
     Log(kMessageSend, kTypeChildUpdateResponseAsChild, destination);
 
@@ -3470,7 +3469,6 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
     RxChallenge     challenge;
     TlvList         requestedTlvList;
     TlvList         tlvList;
-    Mac::ExtAddress extAddr;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aRxInfo.mMessage, sourceAddress));
@@ -3557,8 +3555,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
 #endif
 
     // Send the response to the requester, regardless if it's this device's parent or not
-    aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
-    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge, extAddr));
+    SuccessOrExit(error = SendChildUpdateResponse(tlvList, challenge, aRxInfo.mMessageInfo.GetPeerAddr()));
 
 exit:
     LogProcessError(kTypeChildUpdateRequestAsChild, error);
