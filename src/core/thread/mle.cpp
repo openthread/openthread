@@ -2117,7 +2117,9 @@ exit:
     return error;
 }
 
-Error Mle::SendChildUpdateResponse(const TlvList &aTlvList, const RxChallenge &aChallenge, const Mac::ExtAddress &aExtAddress)
+Error Mle::SendChildUpdateResponse(const TlvList &aTlvList,
+                                   const RxChallenge &aChallenge,
+                                   const Mac::ExtAddress &aExtAddress)
 {
     Error        error = kErrorNone;
     Ip6::Address destination;
@@ -3518,7 +3520,7 @@ void Mle::HandleChildUpdateRequest(RxInfo &aRxInfo)
         {
             Mac::CslAccuracy cslAccuracy;
 
-            if (aRxInfo.mMessage.ReadCslClockAccuracyTlv(cslAccuracy) == kErrorNone)
+            if (aRxInfo.mMessage.ReadCslClocAccuracyTlv(cslAccuracy) == kErrorNone)
             {
                 // MUST include CSL timeout TLV when request includes CSL accuracy
                 tlvList.Add(Tlv::kCslTimeout);
@@ -4232,6 +4234,8 @@ const char *Mle::MessageTypeToString(MessageType aType)
 const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction)
 {
     const char *str = "";
+
+    OT_UNUSED_VARIABLE(aAction); // Not currently used in non-FTD builds
 
     switch (aType)
     {
