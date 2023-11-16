@@ -290,71 +290,28 @@ exit:
 
 Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 {
-    Error          error;
+    static const Tlv::Type kTlvTypes[] = {
+        Tlv::kNetworkKey,      Tlv::kMeshLocalPrefix, Tlv::kExtendedPanId, Tlv::kNetworkName,
+        Tlv::kActiveTimestamp, Tlv::kChannelMask,     Tlv::kPskc,          Tlv::kSecurityPolicy,
+    };
+
+    Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
     Dataset        dataset;
-    NetworkNameTlv networkName;
-    const Tlv     *tlv;
-    NetworkKey     networkKey;
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriJoinerEntrust);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    Get<KeyManager>().GetNetworkKey(networkKey);
-    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, networkKey));
-    SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
-    SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<ExtendedPanIdManager>().GetExtPanId()));
+    SuccessOrExit(error = Get<ActiveDatasetManager>().Read(dataset));
 
-    networkName.Init();
-    networkName.SetNetworkName(Get<NetworkNameManager>().GetNetworkName().GetAsData());
-    SuccessOrExit(error = networkName.AppendTo(*message));
-
-    IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
-
-    if ((tlv = dataset.GetTlv<ActiveTimestampTlv>()) != nullptr)
+    for (Tlv::Type tlvType : kTlvTypes)
     {
+        const Tlv *tlv = dataset.GetTlv(tlvType);
+
+        VerifyOrExit(tlv != nullptr, error = kErrorInvalidState);
         SuccessOrExit(error = tlv->AppendTo(*message));
-    }
-    else
-    {
-        ActiveTimestampTlv activeTimestamp;
-        activeTimestamp.Init();
-        SuccessOrExit(error = activeTimestamp.AppendTo(*message));
-    }
-
-    if ((tlv = dataset.GetTlv<ChannelMaskTlv>()) != nullptr)
-    {
-        SuccessOrExit(error = tlv->AppendTo(*message));
-    }
-    else
-    {
-        ChannelMaskBaseTlv channelMask;
-        channelMask.Init();
-        SuccessOrExit(error = channelMask.AppendTo(*message));
-    }
-
-    if ((tlv = dataset.GetTlv<PskcTlv>()) != nullptr)
-    {
-        SuccessOrExit(error = tlv->AppendTo(*message));
-    }
-    else
-    {
-        PskcTlv pskc;
-        pskc.Init();
-        SuccessOrExit(error = pskc.AppendTo(*message));
-    }
-
-    if ((tlv = dataset.GetTlv<SecurityPolicyTlv>()) != nullptr)
-    {
-        SuccessOrExit(error = tlv->AppendTo(*message));
-    }
-    else
-    {
-        SecurityPolicyTlv securityPolicy;
-        securityPolicy.Init();
-        SuccessOrExit(error = securityPolicy.AppendTo(*message));
     }
 
     SuccessOrExit(error = Tlv::Append<NetworkKeySequenceTlv>(*message, Get<KeyManager>().GetCurrentKeySequence()));
