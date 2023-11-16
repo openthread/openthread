@@ -92,7 +92,7 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
     /**
      * @cli srp client autostart enable
      * @code
-     * src client autostart enable 
+     * src client autostart enable
      * Done
      * @endcode
      * @par api_copy
@@ -175,7 +175,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
     /**
      * @cli srp client host name (set, get)
      * @code
-     * srp client host name dev4312 
+     * srp client host name dev4312
      * Done
      * @endcode
      * @code
@@ -230,7 +230,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * @endcode
      * @par
      * Returns the state of the SRP client host. Possible states:
-     *   * `ToAdd`: Item to be added/registered.  
+     *   * `ToAdd`: Item to be added/registered.
      *	 * `Adding`: Item is being added/registered.
      *   * `ToRefresh`: Item to be refreshed for lease renewal.
      *   * `Refreshing`: Item is beig refreshed.
@@ -238,7 +238,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      *   * `Removing`: Item is being removed.
      *   * `Registered`': Item is registered with server.
      *   * `Removed`: Item has been removed.
-     */*
+     */
     else if (aArgs[0] == "state")
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -247,24 +247,24 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
     else if (aArgs[0] == "address")
     {
         /**
-	 * @cli srp client host address (get)
-	 * @code
-	 * srp client host address
-	 * auto
-	 * Done
-	 * @endcode
-	 * @code
-	 * srp client host address
-	 * fd00:0:0:0:0:0:0:1234
-	 * fd00:0:0:0:0:0:0:beef
-	 * Done
-	 * @endcode
-	 * @par
-	 * Indicates whether auto address mode is enabled. If auto address mode is not
-	 * enabled, then the list of SRP client host addresses is returned.
-	 * @sa otSrpClientGetHostInfo
-	 */
-	if (aArgs[1].IsEmpty())
+         * @cli srp client host address (get)
+         * @code
+         * srp client host address
+         * auto
+         * Done
+         * @endcode
+         * @code
+         * srp client host address
+         * fd00:0:0:0:0:0:0:1234
+         * fd00:0:0:0:0:0:0:beef
+         * Done
+         * @endcode
+         * @par
+         * Indicates whether auto address mode is enabled. If auto address mode is not
+         * enabled, then the list of SRP client host addresses is returned.
+         * @sa otSrpClientGetHostInfo
+         */
+        if (aArgs[1].IsEmpty())
         {
             const otSrpClientHostInfo *hostInfo = otSrpClientGetHostInfo(GetInstancePtr());
 
@@ -281,33 +281,33 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
             }
         }
         /**
-	 * @cli srp client host address (set)
-	 * @code
-	 * srp client host address auto
-	 * Done
-	 * @endcode
-	 * @code
-	 * srp client host address fd00::cafe
-	 * Done
-	 * @endcode
-	 * @cparam client host address [auto|@ca{address...}]
-	 *   * Use the `auto` parameter to enable auto host address mode.
-	 *     When enabled, the client automatically uses all Thread `netif`
-	 *     unicast addresses except for link-local and mesh-local
-	 *     addresses. If there is no valid address, the mesh local
-	 *     EID address gets added. The SRP client automatically
-	 *     re-registers if addresses on the Thread `netif` are
-	 *     added or removed.
-	 *   * Explicitly specify the list of host addresses, separating
-	 *     each address by a comma. You can set this list while the client is
-	 *     running. This will also disable auto host address mode.
-	 * @par
-	 * Enable auto host address mode or explicitly set the list of host
-	 * addresses.
-	 * @sa otSrpClientEnableAutoHostAddress
-	 * @sa otSrpClientSetHostAddresses
-	 */
-	else if (aArgs[1] == "auto")
+         * @cli srp client host address (set)
+         * @code
+         * srp client host address auto
+         * Done
+         * @endcode
+         * @code
+         * srp client host address fd00::cafe
+         * Done
+         * @endcode
+         * @cparam client host address [auto|@ca{address...}]
+         *   * Use the `auto` parameter to enable auto host address mode.
+         *     When enabled, the client automatically uses all Thread `netif`
+         *     unicast addresses except for link-local and mesh-local
+         *     addresses. If there is no valid address, the mesh local
+         *     EID address gets added. The SRP client automatically
+         *     re-registers if addresses on the Thread `netif` are
+         *     added or removed.
+         *   * Explicitly specify the list of host addresses, separating
+         *     each address by a comma. You can set this list while the client is
+         *     running. This will also disable auto host address mode.
+         * @par
+         * Enable auto host address mode or explicitly set the list of host
+         * addresses.
+         * @sa otSrpClientEnableAutoHostAddress
+         * @sa otSrpClientSetHostAddresses
+         */
+        else if (aArgs[1] == "auto")
         {
             error = otSrpClientEnableAutoHostAddress(GetInstancePtr());
         }
@@ -530,15 +530,14 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
         OutputServiceList(0, otSrpClientGetServices(GetInstancePtr()));
     }
     /**
-     * @cli srp client service add 
+     * @cli srp client service add
      * @code
      * srp client service add ins1 _test1._udp 777
      * Done
      * @endcode
-     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}] [@ca{txt}]
-     * Use names for the `instancename` and `servicename` parameters that help
-     * describe the behavior and function that the device provides. The
-     * 'servicename` paramater can can optionally include a list of service
+     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}]
+     * [@ca{txt}] Use names for the `instancename` and `servicename` parameters that help describe the behavior and
+     * function that the device provides. The 'servicename` paramater can can optionally include a list of service
      * subtype labels that are separated by commas. The examples here use
      * generic naming.
      * The `priority` and `weight` (`weight` is given as a `uint16_t` value)
@@ -619,7 +618,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @endcode
      * @par
      * Gets or sets the service key record inclusion mode in the SRP client.
-     * This command requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` to be enabled. 
+     * This command requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` to be enabled.
      * The `key` record is optional in the Service Description Instruction (but is required
      * and always included in the Host Description Instruction). The default behavior
      * of the SRP client is to not include the `key` record. This command is
