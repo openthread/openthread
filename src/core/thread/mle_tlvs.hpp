@@ -1028,31 +1028,44 @@ private:
 };
 
 /**
- * Implements Channel TLV generation and parsing.
+ * Implements Channel TLV value format.
+ *
+ * This is used by both Channel TLV and CSL Channel TLV.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelTlv : public Tlv, public TlvInfo<Tlv::kChannel>
+class ChannelTlvValue
 {
 public:
     /**
-     * Initializes the TLV.
+     * Default constructor.
      *
      */
-    void Init(void)
+    ChannelTlvValue(void) = default;
+
+    /**
+     * Initializes the `ChannelTlvValue` with a given channel page and channel values.
+     *
+     * @param[in] aChannelPage   The channel page.
+     * @param[in] aChannel       The channel.
+     *
+     */
+    ChannelTlvValue(uint8_t aChannelPage, uint16_t aChannel)
+        : mChannelPage(aChannelPage)
+        , mChannel(HostSwap16(aChannel))
     {
-        SetType(kChannel);
-        SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
     /**
-     * Indicates whether or not the TLV appears to be well-formed.
+     * Initializes the `ChannelTlvValue` with zero channel page and a given channel value.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in] aChannel       The channel.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    ChannelTlvValue(uint16_t aChannel)
+        : ChannelTlvValue(0, aChannel)
+    {
+    }
 
     /**
      * Returns the Channel Page value.
@@ -1090,6 +1103,18 @@ private:
     uint8_t  mChannelPage;
     uint16_t mChannel;
 } OT_TOOL_PACKED_END;
+
+/**
+ * Defines Channel TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kChannel, ChannelTlvValue> ChannelTlv;
+
+/**
+ * Defines CSL Channel TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kCslChannel, ChannelTlvValue> CslChannelTlv;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
@@ -1163,73 +1188,6 @@ private:
 } OT_TOOL_PACKED_END;
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
-/**
- * Implements CSL Channel TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class CslChannelTlv : public Tlv, public TlvInfo<Tlv::kCslChannel>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kCslChannel);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Channel Page value.
-     *
-     * @returns The Channel Page value.
-     *
-     */
-    uint8_t GetChannelPage(void) const { return mChannelPage; }
-
-    /**
-     * Sets the Channel Page value.
-     *
-     * @param[in]  aChannelPage  The Channel Page value.
-     *
-     */
-    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
-
-    /**
-     * Returns the Channel value.
-     *
-     * @returns The Channel value.
-     *
-     */
-    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
-
-    /**
-     * Sets the Channel value.
-     *
-     * @param[in]  aChannel  The Channel value.
-     *
-     */
-    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
-
-private:
-    uint8_t  mChannelPage;
-    uint16_t mChannel;
-} OT_TOOL_PACKED_END;
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
