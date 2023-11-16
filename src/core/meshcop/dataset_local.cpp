@@ -90,9 +90,7 @@ exit:
 
 Error DatasetLocal::Read(Dataset &aDataset) const
 {
-    DelayTimerTlv *delayTimer;
-    uint32_t       elapsed;
-    Error          error;
+    Error error;
 
     error = Get<Settings>().ReadOperationalDataset(mType, aDataset);
     VerifyOrExit(error == kErrorNone, aDataset.mLength = 0);
@@ -108,19 +106,25 @@ Error DatasetLocal::Read(Dataset &aDataset) const
     }
     else
     {
-        delayTimer = aDataset.GetTlv<DelayTimerTlv>();
-        VerifyOrExit(delayTimer);
+        uint32_t elapsed;
+        uint32_t delayTimer;
+        Tlv     *tlv = aDataset.GetTlv(Tlv::kDelayTimer);
 
-        elapsed = TimerMilli::GetNow() - mUpdateTime;
+        VerifyOrExit(tlv != nullptr);
 
-        if (delayTimer->GetDelayTimer() > elapsed)
+        elapsed    = TimerMilli::GetNow() - mUpdateTime;
+        delayTimer = tlv->ReadValueAs<DelayTimerTlv>();
+
+        if (delayTimer > elapsed)
         {
-            delayTimer->SetDelayTimer(delayTimer->GetDelayTimer() - elapsed);
+            delayTimer -= elapsed;
         }
         else
         {
-            delayTimer->SetDelayTimer(0);
+            delayTimer = 0;
         }
+
+        tlv->WriteValueAs<DelayTimerTlv>(delayTimer);
     }
 
     aDataset.mUpdateTime = TimerMilli::GetNow();

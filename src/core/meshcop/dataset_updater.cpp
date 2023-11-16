@@ -143,9 +143,10 @@ void DatasetUpdater::PreparePendingDataset(void)
     }
 
     {
-        ActiveTimestampTlv *tlv = dataset.GetTlv<ActiveTimestampTlv>();
+        Timestamp timestamp = dataset.GetTlv(Tlv::kActiveTimestamp)->ReadValueAs<ActiveTimestampTlv>();
 
-        tlv->GetTimestamp().AdvanceRandomTicks();
+        timestamp.AdvanceRandomTicks();
+        dataset.SetTimestamp(Dataset::kActive, timestamp);
     }
 
     SuccessOrExit(error = Get<PendingDatasetManager>().Save(dataset));

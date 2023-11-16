@@ -190,7 +190,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(As<ActiveTimestampTlv>(cur)->GetTimestamp());
+            aDatasetInfo.SetActiveTimestamp(cur->ReadValueAs<ActiveTimestampTlv>());
             break;
 
         case Tlv::kChannel:
@@ -210,19 +210,19 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         }
 
         case Tlv::kDelayTimer:
-            aDatasetInfo.SetDelay(As<DelayTimerTlv>(cur)->GetDelayTimer());
+            aDatasetInfo.SetDelay(cur->ReadValueAs<DelayTimerTlv>());
             break;
 
         case Tlv::kExtendedPanId:
-            aDatasetInfo.SetExtendedPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
+            aDatasetInfo.SetExtendedPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kMeshLocalPrefix:
-            aDatasetInfo.SetMeshLocalPrefix(As<MeshLocalPrefixTlv>(cur)->GetMeshLocalPrefix());
+            aDatasetInfo.SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
             break;
 
         case Tlv::kNetworkKey:
-            aDatasetInfo.SetNetworkKey(As<NetworkKeyTlv>(cur)->GetNetworkKey());
+            aDatasetInfo.SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
             break;
 
         case Tlv::kNetworkName:
@@ -230,15 +230,15 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             break;
 
         case Tlv::kPanId:
-            aDatasetInfo.SetPanId(As<PanIdTlv>(cur)->GetPanId());
+            aDatasetInfo.SetPanId(cur->ReadValueAs<PanIdTlv>());
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(As<PendingTimestampTlv>(cur)->GetTimestamp());
+            aDatasetInfo.SetPendingTimestamp(cur->ReadValueAs<PendingTimestampTlv>());
             break;
 
         case Tlv::kPskc:
-            aDatasetInfo.SetPskc(As<PskcTlv>(cur)->GetPskc());
+            aDatasetInfo.SetPskc(cur->ReadValueAs<PskcTlv>());
             break;
 
         case Tlv::kSecurityPolicy:
@@ -366,21 +366,20 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
 Error Dataset::GetTimestamp(Type aType, Timestamp &aTimestamp) const
 {
-    Error error = kErrorNone;
+    Error      error = kErrorNone;
+    const Tlv *tlv;
 
     if (aType == kActive)
     {
-        const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
-
+        tlv = GetTlv(Tlv::kActiveTimestamp);
         VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
-        aTimestamp = tlv->GetTimestamp();
+        aTimestamp = tlv->ReadValueAs<ActiveTimestampTlv>();
     }
     else
     {
-        const PendingTimestampTlv *tlv = GetTlv<PendingTimestampTlv>();
-
+        tlv = GetTlv(Tlv::kPendingTimestamp);
         VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
-        aTimestamp = tlv->GetTimestamp();
+        aTimestamp = tlv->ReadValueAs<PendingTimestampTlv>();
     }
 
 exit:
@@ -479,19 +478,19 @@ Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t      elapsed    = TimerMilli::GetNow() - mUpdateTime;
-            DelayTimerTlv delayTimer = *As<DelayTimerTlv>(cur);
+            uint32_t elapsed    = TimerMilli::GetNow() - mUpdateTime;
+            uint32_t delayTimer = cur->ReadValueAs<DelayTimerTlv>();
 
-            if (delayTimer.GetDelayTimer() > elapsed)
+            if (delayTimer > elapsed)
             {
-                delayTimer.SetDelayTimer(delayTimer.GetDelayTimer() - elapsed);
+                delayTimer -= elapsed;
             }
             else
             {
-                delayTimer.SetDelayTimer(0);
+                delayTimer = 0;
             }
 
-            SuccessOrExit(error = delayTimer.AppendTo(aMessage));
+            SuccessOrExit(error = Tlv::Append<DelayTimerTlv>(aMessage, delayTimer));
         }
         else
         {
@@ -545,11 +544,11 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         }
 
         case Tlv::kPanId:
-            mac.SetPanId(As<PanIdTlv>(cur)->GetPanId());
+            mac.SetPanId(cur->ReadValueAs<PanIdTlv>());
             break;
 
         case Tlv::kExtendedPanId:
-            aInstance.Get<ExtendedPanIdManager>().SetExtPanId(As<ExtendedPanIdTlv>(cur)->GetExtendedPanId());
+            aInstance.Get<ExtendedPanIdManager>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kNetworkName:
@@ -558,30 +557,29 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
         case Tlv::kNetworkKey:
         {
-            const NetworkKeyTlv *key = As<NetworkKeyTlv>(cur);
-            NetworkKey           networkKey;
+            NetworkKey networkKey;
 
             keyManager.GetNetworkKey(networkKey);
 
-            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != networkKey))
+            if (aIsNetworkKeyUpdated && (cur->ReadValueAs<NetworkKeyTlv>() != networkKey))
             {
                 *aIsNetworkKeyUpdated = true;
             }
 
-            keyManager.SetNetworkKey(key->GetNetworkKey());
+            keyManager.SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
             break;
         }
 
 #if OPENTHREAD_FTD
 
         case Tlv::kPskc:
-            keyManager.SetPskc(As<PskcTlv>(cur)->GetPskc());
+            keyManager.SetPskc(cur->ReadValueAs<PskcTlv>());
             break;
 
 #endif
 
         case Tlv::kMeshLocalPrefix:
-            aInstance.Get<Mle::MleRouter>().SetMeshLocalPrefix(As<MeshLocalPrefixTlv>(cur)->GetMeshLocalPrefix());
+            aInstance.Get<Mle::MleRouter>().SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
             break;
 
         case Tlv::kSecurityPolicy:

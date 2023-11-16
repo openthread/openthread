@@ -183,6 +183,12 @@ public:
 
 protected:
     /**
+     * Default Delay Timer value for a Pending Operational Dataset (ms)
+     *
+     */
+    static constexpr uint32_t kDefaultDelayTimer = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY;
+
+    /**
      * Defines a generic Dataset TLV to read from a message.
      *
      */

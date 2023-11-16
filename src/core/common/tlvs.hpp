@@ -173,6 +173,74 @@ public:
      */
     Error AppendTo(Message &aMessage) const;
 
+    /**
+     * Reads the value of TLV treating it as a given simple TLV type.
+     *
+     * This method requires the TLV to be already validated, in particular, its length MUST NOT be less than the
+     * required size of the value type. The TLV MUST NOT be extended. If these conditions are not met, the behavior of
+     * this method is undefined.
+     *
+     * @tparam  SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
+     *
+     * @returns The TLV value as `SimpleTlvType::ValueType`.
+     *
+     */
+    template <typename SimpleTlvType> const typename SimpleTlvType::ValueType &ReadValueAs(void) const
+    {
+        return *reinterpret_cast<const typename SimpleTlvType::ValueType *>(this + 1);
+    }
+
+    /**
+     * Reads the value of TLV treating it as a given integer-value TLV type.
+     *
+     * This method requires the TLV to be already validated, in particular, its length MUST NOT be less than the
+     * required size of the value type. The TLV MUST NOT be extended. If these conditions are not met, the behavior of
+     * this method is undefined.
+     *
+     * @tparam  UintTlvType     The integer simple TLV type to read (must be a sub-class of `UintTlvInfo`).
+     *
+     * @returns The TLV value as `UintTlvInfo::UintValueType`.
+     *
+     */
+    template <typename UintTlvType> typename UintTlvType::UintValueType ReadValueAs(void) const
+    {
+        return BigEndian::Read<typename UintTlvType::UintValueType>(reinterpret_cast<const uint8_t *>(this + 1));
+    }
+
+    /**
+     * Writes the value of TLV treating it as a given simple TLV type.
+     *
+     * This method requires the TLV to be already validated, in particular, its length MUST NOT be less than the
+     * required size of the value type. The TLV MUST NOT be extended. If these conditions are not met, the behavior of
+     * this method is undefined.
+     *
+     * @tparam  SimpleTlvType   The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
+     *
+     * @param[in] aValue   The new TLV value.
+     *
+     */
+    template <typename SimpleTlvType> void WriteValueAs(const typename SimpleTlvType::ValueType &aValue)
+    {
+        memcpy(this + 1, &aValue, sizeof(aValue));
+    }
+
+    /**
+     * Writes the value of TLV treating it as a given integer-value TLV type.
+     *
+     * This method requires the TLV to be already validated, in particular, its length MUST NOT be less than the
+     * required size of the value type. The TLV MUST NOT be extended. If these conditions are not met, the behavior of
+     * this method is undefined.
+     *
+     * @tparam  UintTlvType     The integer simple TLV type to read (must be a sub-class of `UintTlvInfo`).
+     *
+     * @param[in]  aValue   The new TLV value.
+     *
+     */
+    template <typename UintTlvType> void WriteValueAs(typename UintTlvType::UintValueType aValue)
+    {
+        return BigEndian::Write<typename UintTlvType::UintValueType>(aValue, reinterpret_cast<uint8_t *>(this + 1));
+    }
+
     //------------------------------------------------------------------------------------------------------------------
     // Static methods for reading/finding/appending TLVs in a `Message`.
 

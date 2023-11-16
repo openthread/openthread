@@ -203,16 +203,18 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                DelayTimerTlv &delayTimerTlv = As<DelayTimerTlv>(datasetTlv);
+                uint32_t delayTimer = datasetTlv.ReadValueAs<DelayTimerTlv>();
 
-                if (doesAffectNetworkKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
+                if (doesAffectNetworkKey && delayTimer < kDefaultDelayTimer)
                 {
-                    delayTimerTlv.SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
+                    delayTimer = kDefaultDelayTimer;
                 }
-                else if (delayTimerTlv.GetDelayTimer() < Get<Leader>().GetDelayTimerMinimal())
+                else
                 {
-                    delayTimerTlv.SetDelayTimer(Get<Leader>().GetDelayTimerMinimal());
+                    delayTimer = Max(delayTimer, Get<Leader>().GetDelayTimerMinimal());
                 }
+
+                datasetTlv.WriteValueAs<DelayTimerTlv>(delayTimer);
             }
 
                 OT_FALL_THROUGH;

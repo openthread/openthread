@@ -45,51 +45,52 @@ namespace MeshCoP {
 
 bool Tlv::IsValid(const Tlv &aTlv)
 {
-    bool rval = true;
+    bool    isValid   = true;
+    uint8_t minLength = 0;
 
     switch (aTlv.GetType())
     {
-    case Tlv::kChannel:
-        rval = As<ChannelTlv>(aTlv).IsValid();
-        break;
-
     case Tlv::kPanId:
-        rval = As<PanIdTlv>(aTlv).IsValid();
+        minLength = sizeof(PanIdTlv::UintValueType);
         break;
-
     case Tlv::kExtendedPanId:
-        rval = As<ExtendedPanIdTlv>(aTlv).IsValid();
+        minLength = sizeof(ExtendedPanIdTlv::ValueType);
         break;
-
-    case Tlv::kNetworkName:
-        rval = As<NetworkNameTlv>(aTlv).IsValid();
-        break;
-
-    case Tlv::kNetworkKey:
-        rval = As<NetworkKeyTlv>(aTlv).IsValid();
-        break;
-
     case Tlv::kPskc:
-        rval = As<PskcTlv>(aTlv).IsValid();
+        minLength = sizeof(PskcTlv::ValueType);
+        break;
+    case Tlv::kNetworkKey:
+        minLength = sizeof(NetworkKeyTlv::ValueType);
+        break;
+    case Tlv::kMeshLocalPrefix:
+        minLength = sizeof(MeshLocalPrefixTlv::ValueType);
         break;
 
-    case Tlv::kMeshLocalPrefix:
-        rval = As<MeshLocalPrefixTlv>(aTlv).IsValid();
+    case Tlv::kChannel:
+        isValid = As<ChannelTlv>(aTlv).IsValid();
+        break;
+    case Tlv::kNetworkName:
+        isValid = As<NetworkNameTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kSecurityPolicy:
-        rval = As<SecurityPolicyTlv>(aTlv).IsValid();
+        isValid = As<SecurityPolicyTlv>(aTlv).IsValid();
         break;
 
     case Tlv::kChannelMask:
-        rval = As<ChannelMaskTlv>(aTlv).IsValid();
+        isValid = As<ChannelMaskTlv>(aTlv).IsValid();
         break;
 
     default:
         break;
     }
 
-    return rval;
+    if (minLength > 0)
+    {
+        isValid = (aTlv.GetLength() >= minLength);
+    }
+
+    return isValid;
 }
 
 NameData NetworkNameTlv::GetNetworkName(void) const

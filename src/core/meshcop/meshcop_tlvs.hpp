@@ -316,98 +316,16 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements PAN ID TLV generation and parsing.
+ * Defines PAN ID TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class PanIdTlv : public Tlv, public UintTlvInfo<Tlv::kPanId, uint16_t>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPanId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the PAN ID value.
-     *
-     * @returns The PAN ID value.
-     *
-     */
-    uint16_t GetPanId(void) const { return BigEndian::HostSwap16(mPanId); }
-
-    /**
-     * Sets the PAN ID value.
-     *
-     * @param[in]  aPanId  The PAN ID value.
-     *
-     */
-    void SetPanId(uint16_t aPanId) { mPanId = BigEndian::HostSwap16(aPanId); }
-
-private:
-    uint16_t mPanId;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<Tlv::kPanId, uint16_t> PanIdTlv;
 
 /**
- * Implements Extended PAN ID TLV generation and parsing.
+ * Defines Extended PAN ID TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ExtendedPanIdTlv : public Tlv, public SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kExtendedPanId);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Extended PAN ID value.
-     *
-     * @returns The Extended PAN ID value.
-     *
-     */
-    const ExtendedPanId &GetExtendedPanId(void) const { return mExtendedPanId; }
-
-    /**
-     * Sets the Extended PAN ID value.
-     *
-     * @param[in]  aExtendedPanId  An Extended PAN ID value.
-     *
-     */
-    void SetExtendedPanId(const ExtendedPanId &aExtendedPanId) { mExtendedPanId = aExtendedPanId; }
-
-private:
-    ExtendedPanId mExtendedPanId;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kExtendedPanId, ExtendedPanId> ExtendedPanIdTlv;
 
 /**
  * Implements Network Name TLV generation and parsing.
@@ -457,203 +375,28 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements PSKc TLV generation and parsing.
+ * Defines PSKc TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class PskcTlv : public Tlv, public SimpleTlvInfo<Tlv::kPskc, Pskc>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPskc);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the PSKc value.
-     *
-     * @returns The PSKc value.
-     *
-     */
-    const Pskc &GetPskc(void) const { return mPskc; }
-
-    /**
-     * Sets the PSKc value.
-     *
-     * @param[in]  aPskc  A pointer to the PSKc value.
-     *
-     */
-    void SetPskc(const Pskc &aPskc) { mPskc = aPskc; }
-
-private:
-    Pskc mPskc;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kPskc, Pskc> PskcTlv;
 
 /**
- * Implements Network Network Key TLV generation and parsing.
+ * Defines Network Key TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class NetworkKeyTlv : public Tlv, public SimpleTlvInfo<Tlv::kNetworkKey, NetworkKey>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkKey);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Network Network Key value.
-     *
-     * @returns The Network Network Key value.
-     *
-     */
-    const NetworkKey &GetNetworkKey(void) const { return mNetworkKey; }
-
-    /**
-     * Sets the Network Network Key value.
-     *
-     * @param[in]  aNetworkKey  The Network Network Key.
-     *
-     */
-    void SetNetworkKey(const NetworkKey &aNetworkKey) { mNetworkKey = aNetworkKey; }
-
-private:
-    NetworkKey mNetworkKey;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kNetworkKey, NetworkKey> NetworkKeyTlv;
 
 /**
- * Implements Network Key Sequence TLV generation and parsing.
+ * Defines Network Key Sequence TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class NetworkKeySequenceTlv : public Tlv, public UintTlvInfo<Tlv::kNetworkKeySequence, uint32_t>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kNetworkKeySequence);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Network Key Sequence value.
-     *
-     * @returns The Network Key Sequence value.
-     *
-     */
-    uint32_t GetNetworkKeySequence(void) const { return BigEndian::HostSwap32(mNetworkKeySequence); }
-
-    /**
-     * Sets the Network Key Sequence value.
-     *
-     * @param[in]  aNetworkKeySequence  The Network Key Sequence value.
-     *
-     */
-    void SetNetworkKeySequence(uint32_t aNetworkKeySequence)
-    {
-        mNetworkKeySequence = BigEndian::HostSwap32(aNetworkKeySequence);
-    }
-
-private:
-    uint32_t mNetworkKeySequence;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<Tlv::kNetworkKeySequence, uint32_t> NetworkKeySequenceTlv;
 
 /**
- * Implements Mesh Local Prefix TLV generation and parsing.
+ * Defines Mesh Local Prefix TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class MeshLocalPrefixTlv : public Tlv, public SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kMeshLocalPrefix);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the size (in bytes) of the Mesh Local Prefix field.
-     *
-     * @returns The size (in bytes) of the Mesh Local Prefix field (8 bytes).
-     *
-     */
-    uint8_t GetMeshLocalPrefixLength(void) const { return sizeof(mMeshLocalPrefix); }
-
-    /**
-     * Returns the Mesh Local Prefix value.
-     *
-     * @returns The Mesh Local Prefix value.
-     *
-     */
-    const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const { return mMeshLocalPrefix; }
-
-    /**
-     * Sets the Mesh Local Prefix value.
-     *
-     * @param[in]  aMeshLocalPrefix  A pointer to the Mesh Local Prefix value.
-     *
-     */
-    void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix) { mMeshLocalPrefix = aMeshLocalPrefix; }
-
-private:
-    Ip6::NetworkPrefix mMeshLocalPrefix;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kMeshLocalPrefix, Ip6::NetworkPrefix> MeshLocalPrefixTlv;
 
 class SteeringData;
 
@@ -868,60 +611,10 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * Implements Active Timestamp TLV generation and parsing.
+ * Defines Active Timestamp TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kActiveTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        mTimestamp.Clear();
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Gets the timestamp.
-     *
-     * @returns The timestamp.
-     *
-     */
-    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
-
-    /**
-     * Returns a reference to the timestamp.
-     *
-     * @returns A reference to the timestamp.
-     *
-     */
-    Timestamp &GetTimestamp(void) { return mTimestamp; }
-
-    /**
-     * Sets the timestamp.
-     *
-     * @param[in] aTimestamp   The new timestamp.
-     *
-     */
-    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
-
-private:
-    Timestamp mTimestamp;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp> ActiveTimestampTlv;
 
 /**
  * Implements State TLV generation and parsing.
@@ -955,168 +648,22 @@ public:
 };
 
 /**
- * Implements Joiner UDP Port TLV generation and parsing.
+ * Defines Joiner UDP Port TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class JoinerUdpPortTlv : public Tlv, public UintTlvInfo<Tlv::kJoinerUdpPort, uint16_t>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kJoinerUdpPort);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the UDP Port value.
-     *
-     * @returns The UDP Port value.
-     *
-     */
-    uint16_t GetUdpPort(void) const { return BigEndian::HostSwap16(mUdpPort); }
-
-    /**
-     * Sets the UDP Port value.
-     *
-     * @param[in]  aUdpPort  The UDP Port value.
-     *
-     */
-    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = BigEndian::HostSwap16(aUdpPort); }
-
-private:
-    uint16_t mUdpPort;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<Tlv::kJoinerUdpPort, uint16_t> JoinerUdpPortTlv;
 
 /**
- * Implements Pending Timestamp TLV generation and parsing.
+ * Defines Pending Timestamp TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kPendingTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        mTimestamp.Clear();
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Gets the timestamp.
-     *
-     * @returns The timestamp.
-     *
-     */
-    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
-
-    /**
-     * Returns a reference to the timestamp.
-     *
-     * @returns A reference to the timestamp.
-     *
-     */
-    Timestamp &GetTimestamp(void) { return mTimestamp; }
-
-    /**
-     * Sets the timestamp.
-     *
-     * @param[in] aTimestamp   The new timestamp.
-     *
-     */
-    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
-
-private:
-    Timestamp mTimestamp;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp> PendingTimestampTlv;
 
 /**
- * Implements Delay Timer TLV generation and parsing.
+ * Defines Delay Timer TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class DelayTimerTlv : public Tlv, public UintTlvInfo<Tlv::kDelayTimer, uint32_t>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kDelayTimer);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
-
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * Returns the Delay Timer value.
-     *
-     * @returns The Delay Timer value.
-     *
-     */
-    uint32_t GetDelayTimer(void) const { return BigEndian::HostSwap32(mDelayTimer); }
-
-    /**
-     * Sets the Delay Timer value.
-     *
-     * @param[in]  aDelayTimer  The Delay Timer value.
-     *
-     */
-    void SetDelayTimer(uint32_t aDelayTimer) { mDelayTimer = BigEndian::HostSwap32(aDelayTimer); }
-
-    static constexpr uint32_t kMaxDelayTimer = 259200; ///< Maximum delay timer value for a Pending Dataset in seconds
-
-    /**
-     * Minimum Delay Timer value for a Pending Operational Dataset (ms)
-     *
-     */
-    static constexpr uint32_t kDelayTimerMinimal = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY;
-
-    /**
-     * Default Delay Timer value for a Pending Operational Dataset (ms)
-     *
-     */
-    static constexpr uint32_t kDelayTimerDefault = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY;
-
-private:
-    uint32_t mDelayTimer;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<Tlv::kDelayTimer, uint32_t> DelayTimerTlv;
 
 // forward declare ChannelMaskTlv
 class ChannelMaskTlv;
