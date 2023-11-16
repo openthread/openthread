@@ -122,6 +122,22 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
+/**
+ * @cli srp client callback (set, get)
+ * @code
+ * srp client callback enable
+ * Done
+ * @endcode
+ * @code
+ * srp client callback
+ * Enabled
+ * Done
+ * @endcode
+ * @cparam srp client callback [@ca{enable}|@ca{disable}]
+ * @par
+ * Sets or enables/disables printing callback events from the SRP client.
+ * @sa otSrpClientSetCallback
+ */
 template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -142,10 +158,38 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli srp client host
+     * @code
+     * srp client host
+     * name:"dev4312", state:Registered, addrs:[fd00:0:0:0:0:0:0:1234, fd00:0:0:0:0:0:0:beef]
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientGetHostInfo
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputHostInfo(0, *otSrpClientGetHostInfo(GetInstancePtr()));
     }
+    /**
+     * @cli srp client host name (set, get)
+     * @code
+     * srp client host name dev4312 
+     * Done
+     * @endcode
+     * @code
+     * srp client host name
+     * dev4312
+     * Done
+     * @endcode
+     * @cparam srp client host name [@sa {name}
+     * To set the client host name when the host has either been removed or not yet
+     * registered with the server, use the `name` parameter.]
+     * @par
+     * Sets or returns the host name of the SRP client.
+     * @sa otSrpClientSetHostName
+     */
     else if (aArgs[0] == "name")
     {
         if (aArgs[1].IsEmpty())
@@ -177,6 +221,24 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
             IgnoreError(otSrpClientSetHostName(GetInstancePtr(), hostName));
         }
     }
+    /**
+     * @cli srp client host state
+     * @code
+     * srp client host state
+     * Registered
+     * Done
+     * @endcode
+     * @par
+     * Returns the state of the SRP client host. Possible states:
+     *   * `ToAdd`: Item to be added/registered.  
+     *	 * `Adding`: Item is being added/registered.
+     *   * `ToRefresh`: Item to be refreshed for lease renewal.
+     *   * `Refreshing`: Item is beig refreshed.
+     *   * `ToRemove`: Item to be removed.
+     *   * `Removing`: Item is being removed.
+     *   * `Registered`': Item is registered with server.
+     *   * `Removed`: Item has been removed.
+     */*
     else if (aArgs[0] == "state")
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -184,7 +246,25 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
     }
     else if (aArgs[0] == "address")
     {
-        if (aArgs[1].IsEmpty())
+        /**
+	 * @cli srp client host address (get)
+	 * @code
+	 * srp client host address
+	 * auto
+	 * Done
+	 * @endcode
+	 * @code
+	 * srp client host address
+	 * fd00:0:0:0:0:0:0:1234
+	 * fd00:0:0:0:0:0:0:beef
+	 * Done
+	 * @endcode
+	 * @par
+	 * Indicates whether auto address mode is enabled. If auto address mode is not
+	 * enabled, then the list of SRP client host addresses is returned.
+	 * @sa otSrpClientGetHostInfo
+	 */
+	if (aArgs[1].IsEmpty())
         {
             const otSrpClientHostInfo *hostInfo = otSrpClientGetHostInfo(GetInstancePtr());
 
@@ -200,7 +280,34 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
                 }
             }
         }
-        else if (aArgs[1] == "auto")
+        /**
+	 * @cli srp client host address (set)
+	 * @code
+	 * srp client host address auto
+	 * Done
+	 * @endcode
+	 * @code
+	 * srp client host address fd00::cafe
+	 * Done
+	 * @endcode
+	 * @cparam client host address [@ca{auto}|@ca{address...}]
+	 *   * Use the `auto` parameter to enable auto host address mode.
+	 *     When enabled, the client automatically uses all Thread `netif`
+	 *     unicast addresses except for link-local and mesh-local
+	 *     addresses. If there is no valid address, the mesh local
+	 *     EID address gets added. The SRP client automatically
+	 *     re-registers if addresses on the Thread `netif` are
+	 *     added or removed.
+	 *   * Explicitly specify the list of host addresses, separating
+	 *     each address by a comma. You can set this list while the client is
+	 *     running. This will also disable auto host address mode.
+	 * @par
+	 * Enable auto host address mode or explicitly set the list of host
+	 * addresses.
+	 * @sa otSrpClientEnableAutoHostAddress
+	 * @sa otSrpClientSetHostAddresses
+	 */
+	else if (aArgs[1] == "auto")
         {
             error = otSrpClientEnableAutoHostAddress(GetInstancePtr());
         }
@@ -237,6 +344,23 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
             IgnoreError(otSrpClientSetHostAddresses(GetInstancePtr(), hostAddressArray, numAddresses));
         }
     }
+    /**
+     * @cli srp client host remove
+     * @code
+     * srp client host remove 1
+     * Done
+     * @endcode
+     * @cparam srp client host remove [@sa{removekeylease} [@sa{sendunregtoserver}]]
+     *  * The parameter `removekeylease` is an optional boolean value that indicates
+     *    whether the host key lease should also be removed (default is `false`).
+     *  * The parameter `sendunregtoserver` is optional boolean value that indicates
+     *    whether the client host should send an `update` message to the server
+     *    whenver client host information is not yet registered with the
+     *    server (default is `false`). This parameter can be specified only if the
+     *    `removekeylease` parameter is specified first in the command.
+     * @par api_copy
+     * #otSrpClientRemoveHostAndServices
+     */
     else if (aArgs[0] == "remove")
     {
         bool removeKeyLease    = false;
@@ -255,6 +379,16 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 
         error = otSrpClientRemoveHostAndServices(GetInstancePtr(), removeKeyLease, sendUnregToServer);
     }
+    /**
+     * @cli srp client host clear
+     * @code
+     * srp client host clear
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientClearHostAndServices
+     * @sa otSrpClientBuffersFreeAllServices
+     */
     else if (aArgs[0] == "clear")
     {
         VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
@@ -270,11 +404,45 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp client leaseinterval (set, get)
+ * @code
+ * srp client leaseinterval 3600
+ * Done
+ * @endcode
+ * @code
+ * srp client leaseinterval
+ * 3600
+ * Done
+ * @endcode
+ * @cparam srp client leaseinterval [@sa{interval}]
+ * @par
+ * Sets or gets the lease interval in seconds.
+ * @sa otSrpClientSetLeaseInterval
+ * @sa otSrpClientGetLeaseInterval
+ */
 template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
+/**
+ * @cli srp client keyleaseinterval (set, get)
+ * @code
+ * srp client keyleaseinterval 864000
+ * Done
+ * @endcode
+ * @code
+ * srp client keyleaseinterval
+ * 864000
+ * Done
+ * @endcode
+ * @cparam srp client keyleaseinterval [@sa{interval}]
+ * @par
+ * Sets or gets the key lease interval in seconds.
+ * @sa otSrpClientSetKeyLeaseInterval
+ * @sa otSrpClientGetKeyLeaseInterval
+ */
 template <> otError SrpClient::Process<Cmd("keyleaseinterval")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval,
@@ -286,6 +454,16 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
     otError           error          = OT_ERROR_NONE;
     const otSockAddr *serverSockAddr = otSrpClientGetServerAddress(GetInstancePtr());
 
+    /**
+     * @cli srp client server
+     * @code
+     * srp client server
+     * [fd00:0:0:0:d88a:618b:384d:e760]:4724
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientGetServerAddress
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputSockAddrLine(*serverSockAddr);
@@ -294,10 +472,30 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
 
     VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
+    /**
+     * @cli srp client server address
+     * @code
+     * srp client server address
+     * fd00:0:0:0:d88a:618b:384d:e760
+     * Done
+     * @endcode
+     * @par
+     * Returns the server's IPv6 address.
+     */
     if (aArgs[0] == "address")
     {
         OutputIp6AddressLine(serverSockAddr->mAddress);
     }
+    /**
+     * @cli srp client server port
+     * @code
+     * srp client server port
+     * 4724
+     * Done
+     * @endcode
+     * @par
+     * Returns the server's port number.
+     */
     else if (aArgs[0] == "port")
     {
         OutputLine("%u", serverSockAddr->mPort);
@@ -316,14 +514,69 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     bool    isRemove;
 
+    /**
+     * @cli srp client service
+     * @code
+     * srp client service
+     * instance:"ins2", name:"_test2._udp,_sub1,_sub2", state:Registered, port:111, priority:1, weight:1
+     * instance:"ins1", name:"_test1._udp", state:Registered, port:777, priority:0, weight:0
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otSrpClientGetServices
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputServiceList(0, otSrpClientGetServices(GetInstancePtr()));
     }
+    /**
+     * @cli srp client service add 
+     * @code
+     * srp client service add ins1 _test1._udp 777
+     * Done
+     * @endcode
+     * @cparam srp client service add @sa{instancename} @sa{servicename}
+     * @sa{port} [@sa{priority}] [@sa{weight}] [@sa{txt}]
+     * Use names for the `instancename` and `servicename` parameters that help
+     * describe the behavior and function that the device provides. The
+     * 'servicename` paramater can can optionally include a list of service
+     * subtype labels that are separated by commas. The examples here use
+     * generic naming.
+     *
+     * The `priority` and `weight` (`weight` is given as a `uint16_t` value)
+     * parameters are optional, and if not provided
+     * zero is used. The optional `txt` parameter allows for additional information
+     * to be added to describe the service. The `txt` vaule must be in
+     * hex-string format and is treated as an already encoded TXT data byte
+     * sequence. If not provided, `txt` is considered empty.
+     * @par
+     * Add a service with a given instance name, service name, and port number.
+     * @sa otSrpClientAddService
+     */
     else if (aArgs[0] == "add")
     {
         error = ProcessServiceAdd(aArgs);
     }
+    /**
+     * @cli srp client service remove
+     * @code
+     * srp client service remove ins2 _test2._udp
+     * Done
+     * @endcode
+     * @cparam srp client service remove @sa{instancename} @sa{servicename}
+     * @par api_copy
+     * #otSrpClientRemoveService
+     */
+    /**
+     * @cli srp client service name clear
+     * @code
+     * srp client service clear ins2 _test2._udp
+     * Done
+     * @endcode
+     * @cparam srp client service clear @sa{instancename} @sa{servicename}
+     * @par api_copy
+     * #otSrpClientClearService
+     */
     else if ((isRemove = (aArgs[0] == "remove")) || (aArgs[0] == "clear"))
     {
         // `remove`|`clear` <instance-name> <service-name>
@@ -355,6 +608,27 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
         }
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * @cli srp client service key (set, get)
+     * @code
+     * srp client service key enable
+     * Done
+     * @endcode
+     * @code
+     * srp client service key
+     * Enabled
+     * Done
+     * @endcode
+     * @par
+     * Gets or sets the service key record inclusion mode in the SRP client.
+     * This command requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` to be enabled. 
+     * The `key` record is optional in the Service Description Instruction (but is required
+     * and always included in the Host Description Instruction). The default behavior
+     * of the SRP client is to not include the `key` record. This command is
+     * intended to override the default behavior for testing only
+     * (in a `REFERENCE_DEVICE` build).
+     * @sa otSrpClientIsServiceKeyRecordEnabled
+     */
     else if (aArgs[0] == "key")
     {
         // `key [enable/disable]`
@@ -536,6 +810,16 @@ void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aSe
                aService.mPort, aService.mPriority, aService.mWeight);
 }
 
+/**
+ * @cli srp client start
+ * @code
+ * srp client start fd00::d88a:618b:384d:e760 4724
+ * Done
+ * @endcode
+ * @cparam srp client start @sa{serveraddr} @sa{serverport}
+ * @par api_copy
+ * #otSrpClientStart
+ */
 template <> otError SrpClient::Process<Cmd("start")>(Arg aArgs[])
 {
     otError    error = OT_ERROR_NONE;
@@ -551,6 +835,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp client state
+ * @code
+ * srp client state
+ * Enabled
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpClientIsRunning
+ */
 template <> otError SrpClient::Process<Cmd("state")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -563,6 +857,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp client stop
+ * @code
+ * srp client stop
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otSrpClientStop
+ */
 template <> otError SrpClient::Process<Cmd("stop")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -574,6 +877,23 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp client ttl (set, get)
+ * @code
+ * srp client ttl 3600
+ * Done
+ * @endcode
+ * @code
+ * srp client ttl
+ * 3600
+ * Done
+ * @endcode
+ * @cparam srp client ttl [@sa{value}]
+ * @par
+ * Sets or gets the `ttl` in seconds.
+ * @sa otSrpClientSetTtl
+ * @sa otSrpClientGetTtl
+ */
 template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetTtl, otSrpClientSetTtl);
