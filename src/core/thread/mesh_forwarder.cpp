@@ -1157,7 +1157,11 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
         if (aAllowNeighborRemove && (Mle::IsActiveRouter(aNeighbor.GetRloc16())) &&
             (aNeighbor.GetLinkFailures() >= aFailLimit))
         {
+#if OPENTHREAD_FTD
             Get<Mle::MleRouter>().RemoveRouterLink(static_cast<Router &>(aNeighbor));
+#else
+            IgnoreError(Get<Mle::Mle>().BecomeDetached());
+#endif
         }
     }
 }

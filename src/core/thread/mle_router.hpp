@@ -770,33 +770,9 @@ DeclareTmfHandler(MleRouter, kUriAddressRelease);
 
 #if OPENTHREAD_MTD
 
-class MleRouter : public Mle
-{
-    friend class Mle;
-    friend class ot::Instance;
+typedef Mle MleRouter;
 
-public:
-    explicit MleRouter(Instance &aInstance)
-        : Mle(aInstance)
-    {
-    }
-
-    bool IsSingleton(void) const { return false; }
-
-    uint16_t GetNextHop(uint16_t aDestination) const { return Mle::GetNextHop(aDestination); }
-
-    Error RemoveNeighbor(Neighbor &) { return BecomeDetached(); }
-    void  RemoveRouterLink(Router &) { IgnoreError(BecomeDetached()); }
-
-    Error SendChildUpdateRequest(void) { return Mle::SendChildUpdateRequest(); }
-
-    Error CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
-    {
-        return Mle::CheckReachability(aMeshDest, aIp6Header);
-    }
-};
-
-#endif // OPENTHREAD_MTD
+#endif
 
 } // namespace Mle
 
