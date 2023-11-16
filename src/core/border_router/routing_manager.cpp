@@ -3338,28 +3338,35 @@ RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     mPrefix.Clear();
 }
 
-void RoutingManager::PdPrefixManager::Start(void)
+void RoutingManager::PdPrefixManager::StartStop(bool aStart)
 {
     Dhcp6PdState oldState = GetState();
 
-    VerifyOrExit(!mIsRunning);
-    mIsRunning = true;
+    VerifyOrExit(aStart != mIsRunning);
+    mIsRunning = aStart;
     EvaluateStateChange(oldState);
 
 exit:
     return;
 }
 
-void RoutingManager::PdPrefixManager::Stop(void)
+RoutingManager::Dhcp6PdState RoutingManager::PdPrefixManager::GetState(void) const
 {
-    Dhcp6PdState oldState = GetState();
+    Dhcp6PdState state = kDhcp6PdStateDisabled;
 
-    VerifyOrExit(!mIsRunning);
-    mIsRunning = false;
-    EvaluateStateChange(oldState);
+    if (mEnabled)
+    {
+        if (mIsRunning)
+        {
+            state = kDhcp6PdStateRunning;
+        }
+        else
+        {
+            state = kDhcp6PdStateStopped;
+        }
+    }
 
-exit:
-    return;
+    return state;
 }
 
 void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
@@ -3369,16 +3376,16 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     VerifyOrExit(aOldState != newState);
     switch (newState)
     {
-    case Dhcp6PdState::kDhcp6PdStateDisabled:
+    case kDhcp6PdStateDisabled:
         LogInfo("PdPrefixManager: Disabled");
         WithdrawPrefix();
         break;
-    case Dhcp6PdState::kDhcp6PdStateStopped:
+    case kDhcp6PdStateStopped:
         LogInfo("PdPrefixManager: Stopped");
         // TODO: We may also want to inform the platform that PD is stopped.
         WithdrawPrefix();
         break;
-    case Dhcp6PdState::kDhcp6PdStateRunning:
+    case kDhcp6PdStateRunning:
         LogInfo("PdPrefixManager: Running");
         break;
     }

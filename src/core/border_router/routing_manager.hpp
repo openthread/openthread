@@ -1138,16 +1138,12 @@ private:
         explicit PdPrefixManager(Instance &aInstance);
 
         void               SetEnabled(bool aEnabled);
-        void               Start(void);
-        void               Stop(void);
+        void               Start(void) { StartStop(/* aStart= */ true); }
+        void               Stop(void) { StartStop(/* aStart= */ false); }
         bool               IsRunning(void) const { return GetState() == Dhcp6PdState::kDhcp6PdStateRunning; }
         bool               HasPrefix(void) const { return IsValidOmrPrefix(mPrefix.GetPrefix()); }
         const Ip6::Prefix &GetPrefix(void) const { return mPrefix.GetPrefix(); }
-        Dhcp6PdState       GetState(void) const
-        {
-            return mEnabled ? (mIsRunning ? Dhcp6PdState::kDhcp6PdStateRunning : Dhcp6PdState::kDhcp6PdStateStopped)
-                            : Dhcp6PdState::kDhcp6PdStateDisabled;
-        }
+        Dhcp6PdState       GetState(void) const;
 
         void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
@@ -1164,6 +1160,7 @@ private:
         Error Process(const Ip6::Nd::RouterAdvertMessage &aMessage);
         void  EvaluateStateChange(Dhcp6PdState aOldState);
         void  WithdrawPrefix(void);
+        void  StartStop(bool aStart);
 
         using PlatformOmrPrefixTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
 
