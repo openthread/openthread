@@ -535,14 +535,12 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service add ins1 _test1._udp 777
      * Done
      * @endcode
-     * @cparam srp client service add @sa{instancename} @sa{servicename}
-     * @sa{port} [@sa{priority}] [@sa{weight}] [@sa{txt}]
+     * @cparam srp client service add @sa{instancename} @sa{servicename} @sa{port} [@sa{priority}] [@sa{weight}] [@sa{txt}]
      * Use names for the `instancename` and `servicename` parameters that help
      * describe the behavior and function that the device provides. The
      * 'servicename` paramater can can optionally include a list of service
      * subtype labels that are separated by commas. The examples here use
      * generic naming.
-     *
      * The `priority` and `weight` (`weight` is given as a `uint16_t` value)
      * parameters are optional, and if not provided
      * zero is used. The optional `txt` parameter allows for additional information
@@ -550,7 +548,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * hex-string format and is treated as an already encoded TXT data byte
      * sequence. If not provided, `txt` is considered empty.
      * @par
-     * Add a service with a given instance name, service name, and port number.
+     * Adds a service with a given instance name, service name, and port number.
      * @sa otSrpClientAddService
      */
     else if (aArgs[0] == "add")
