@@ -183,7 +183,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * dev4312
      * Done
      * @endcode
-     * @cparam srp client host name [@sa {name}
+     * @cparam srp client host name [@ca{name}]
      * To set the client host name when the host has either been removed or not yet
      * registered with the server, use the `name` parameter.]
      * @par
@@ -290,7 +290,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
 	 * srp client host address fd00::cafe
 	 * Done
 	 * @endcode
-	 * @cparam client host address [@ca{auto}|@ca{address...}]
+	 * @cparam client host address [auto|@ca{address...}]
 	 *   * Use the `auto` parameter to enable auto host address mode.
 	 *     When enabled, the client automatically uses all Thread `netif`
 	 *     unicast addresses except for link-local and mesh-local
@@ -350,7 +350,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * srp client host remove 1
      * Done
      * @endcode
-     * @cparam srp client host remove [@sa{removekeylease} [@sa{sendunregtoserver}]]
+     * @cparam srp client host remove [@ca{removekeylease}] [@ca{sendunregtoserver}]
      *  * The parameter `removekeylease` is an optional boolean value that indicates
      *    whether the host key lease should also be removed (default is `false`).
      *  * The parameter `sendunregtoserver` is optional boolean value that indicates
@@ -415,7 +415,7 @@ exit:
  * 3600
  * Done
  * @endcode
- * @cparam srp client leaseinterval [@sa{interval}]
+ * @cparam srp client leaseinterval [@ca{interval}]
  * @par
  * Sets or gets the lease interval in seconds.
  * @sa otSrpClientSetLeaseInterval
@@ -437,7 +437,7 @@ template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
  * 864000
  * Done
  * @endcode
- * @cparam srp client keyleaseinterval [@sa{interval}]
+ * @cparam srp client keyleaseinterval [@ca{interval}]
  * @par
  * Sets or gets the key lease interval in seconds.
  * @sa otSrpClientSetKeyLeaseInterval
@@ -535,7 +535,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service add ins1 _test1._udp 777
      * Done
      * @endcode
-     * @cparam srp client service add @sa{instancename} @sa{servicename} @sa{port} [@sa{priority}] [@sa{weight}] [@sa{txt}]
+     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}] [@ca{txt}]
      * Use names for the `instancename` and `servicename` parameters that help
      * describe the behavior and function that the device provides. The
      * 'servicename` paramater can can optionally include a list of service
@@ -886,7 +886,7 @@ exit:
  * 3600
  * Done
  * @endcode
- * @cparam srp client ttl [@sa{value}]
+ * @cparam srp client ttl [@ca{value}]
  * @par
  * Sets or gets the `ttl` in seconds.
  * @sa otSrpClientSetTtl
