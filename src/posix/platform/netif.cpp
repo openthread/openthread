@@ -1636,7 +1636,18 @@ static void processNetlinkEvent(otInstance *aInstance)
 
     length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
-    VerifyOrExit(length > 0);
+#if defined(__linux__)
+#define HEADER_SIZE sizeof(nlmsghdr)
+#else
+#define HEADER_SIZE sizeof(rt_msghdr)
+#endif
+
+    // Ensures full netlink header is received
+    if (length < static_cast<ssize_t>(HEADER_SIZE))
+    {
+        otLogWarnPlat("[netif] Unexpected netlink recv() result: %ld", static_cast<long>(length));
+        ExitNow();
+    }
 
 #if defined(__linux__)
     for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
