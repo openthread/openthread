@@ -1302,6 +1302,9 @@ void TestDnsTxtEntry(void)
     const char kKey6[] = "boolKey";  // Should be encoded as "boolKey" (without `=`).
     const char kKey7[] = "emptyKey"; // Should be encoded as "emptyKey=".
 
+    const char    kKey8[]   = "1234567890123456789012345678901234567890123456789012345678901234567890";
+    const uint8_t kValue8[] = "abcd";
+
     // Invalid key
     const char kShortKey[] = "";
 
@@ -1312,6 +1315,17 @@ void TestDnsTxtEntry(void)
     const uint8_t kEncodedTxt5[] = {12, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', 'a'};
     const uint8_t kEncodedTxt6[] = {7, 'b', 'o', 'o', 'l', 'K', 'e', 'y'};
     const uint8_t kEncodedTxt7[] = {9, 'e', 'm', 'p', 't', 'y', 'K', 'e', 'y', '='};
+    const uint8_t kEncodedTxt8[] = {
+        75,                                               // length
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 10
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 20
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 30
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 40
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 50
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 60
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', // 70
+        '=', 'a', 'b', 'c', 'd',
+    };
 
     const uint8_t kInvalidEncodedTxt1[] = {4, 'a', '=', 'b'}; // Incorrect length
 
@@ -1327,6 +1341,7 @@ void TestDnsTxtEntry(void)
         Dns::TxtEntry(kKey5, kValue5, sizeof(kValue5)),
         Dns::TxtEntry(kKey6, nullptr, 0),
         Dns::TxtEntry(kKey7, kValue1, 0),
+        Dns::TxtEntry(kKey8, kValue8, sizeof(kValue8)),
     };
 
     const EncodedTxtData kEncodedTxtData[] = {
@@ -1381,7 +1396,7 @@ void TestDnsTxtEntry(void)
         SuccessOrQuit(iterator.GetNextEntry(txtEntry), "TxtEntry::GetNextEntry() failed");
         printf("key:\"%s\" valueLen:%d\n", txtEntry.mKey != nullptr ? txtEntry.mKey : "(null)", txtEntry.mValueLength);
 
-        if (expectedKeyLength > Dns::TxtEntry::kMaxKeyLength)
+        if (expectedKeyLength > Dns::TxtEntry::kMaxIterKeyLength)
         {
             // When the key is longer than recommended max key length,
             // the full encoded string is returned in `mValue` and
