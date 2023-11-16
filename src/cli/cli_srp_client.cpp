@@ -561,7 +561,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service remove ins2 _test2._udp
      * Done
      * @endcode
-     * @cparam srp client service remove @sa{instancename} @sa{servicename}
+     * @cparam srp client service remove @ca{instancename} @ca{servicename}
      * @par api_copy
      * #otSrpClientRemoveService
      */
@@ -571,7 +571,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service clear ins2 _test2._udp
      * Done
      * @endcode
-     * @cparam srp client service clear @sa{instancename} @sa{servicename}
+     * @cparam srp client service clear @ca{instancename} @ca{servicename}
      * @par api_copy
      * #otSrpClientClearService
      */
@@ -814,7 +814,7 @@ void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aSe
  * srp client start fd00::d88a:618b:384d:e760 4724
  * Done
  * @endcode
- * @cparam srp client start @sa{serveraddr} @sa{serverport}
+ * @cparam srp client start @ca{serveraddr} @ca{serverport}
  * @par api_copy
  * #otSrpClientStart
  */
