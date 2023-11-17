@@ -35,6 +35,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/bbr_local.hpp"
+#include "backbone_router/multicast_listeners_table.hpp"
 #include "backbone_router/ndproxy_table.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -1048,6 +1049,9 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
 {
     Error  error = kErrorNone;
     Header header;
+    bool   forwardThread;
+
+    OT_UNUSED_VARIABLE(forwardThread);
 
     SuccessOrExit(error = header.ParseFrom(*aMessagePtr));
     VerifyOrExit(!header.GetSource().IsMulticast(), error = kErrorInvalidSourceAddress);
@@ -1068,6 +1072,26 @@ Error Ip6::SendRaw(OwnedPtr<Message> aMessagePtr)
 
     if (header.GetDestination().IsMulticast())
     {
+#if OPENTHREAD_CONFIG_FILTER_LOCAL_ORIGINATED_MULTICAST_PACKETS
+        // For multicast packet originating from untrusted source on host and passed to OT stack,
+        // only forward to thread network if destination is in the multicast listener table.
+        if (aMessagePtr->IsOriginHostUntrusted() && Get<ThreadNetif>().HasUnicastAddress(header.GetSource()))
+        {
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE && OPENTHREAD_FTD && \
+    OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+            forwardThread = (header.GetDestination().IsMulticastLargerThanRealmLocal() &&
+                             Get<BackboneRouter::MulticastListenersTable>().HasListener(header.GetDestination()));
+#else
+            forwardThread = false;
+#endif
+            if (!forwardThread)
+            {
+                LogInfo("Dropping host originated multicast packet when destination is not MLR subscribed.");
+            }
+            VerifyOrExit(forwardThread, error = kErrorDrop);
+        }
+#endif
+
         SuccessOrExit(error = InsertMplOption(*aMessagePtr, header));
     }
 

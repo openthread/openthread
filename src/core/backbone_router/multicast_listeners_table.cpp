@@ -308,6 +308,21 @@ exit:
     return error;
 }
 
+bool MulticastListenersTable::HasListener(const Ip6::Address &aAddress) const
+{
+    bool hasListener = false;
+
+    for (uint16_t i = 0; i < mNumValidListeners; i++)
+    {
+        if (mListeners[i].GetAddress() == aAddress)
+        {
+            hasListener = true;
+            break;
+        }
+    }
+    return hasListener;
+}
+
 } // namespace BackboneRouter
 
 } // namespace ot

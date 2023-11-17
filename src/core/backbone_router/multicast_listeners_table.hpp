@@ -197,6 +197,16 @@ public:
      */
     Error GetNext(Listener::Iterator &aIterator, Listener::Info &aInfo);
 
+    /**
+     * Checks if a given address has a listener.
+     *
+     * @param[in] aAddress    An Ipv6 address
+     *
+     * @retval true           @p aAddress has a listener
+     * @retval false          @p aAddress doesn't have a listener
+     */
+    bool HasListener(const Ip6::Address &aAddress) const;
+
 private:
     static constexpr uint16_t kTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
