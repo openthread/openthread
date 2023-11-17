@@ -1665,6 +1665,12 @@ static void processNetlinkEvent(otInstance *aInstance)
 #endif
         switch (msg->nlmsg_type)
         {
+#if defined(__linux__)
+        case NLMSG_DONE:
+            // NLMSG_DONE indicates the end of the netlink message, exits now
+            ExitNow();
+#endif
+
         case RTM_NEWADDR:
         case RTM_DELADDR:
             processNetifAddrEvent(aInstance, msg);
