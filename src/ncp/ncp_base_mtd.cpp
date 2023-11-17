@@ -2432,7 +2432,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CHANNEL_MONITOR_CHANN
 {
     otError  error       = OT_ERROR_NONE;
     uint32_t channelMask = otLinkGetSupportedChannelMask(mInstance);
-    uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
+    uint8_t  channelNum  = sizeof(channelMask) * kBitsPerByte;
 
     for (uint8_t channel = 0; channel < channelNum; channel++)
     {

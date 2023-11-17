@@ -33,8 +33,6 @@
 
 #include "aes_ccm.hpp"
 
-#include <limits.h>
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"

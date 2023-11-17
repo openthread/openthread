@@ -90,6 +90,7 @@
 #include <openthread/radio_stats.h>
 #endif
 #include "common/new.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
 
@@ -1291,7 +1292,7 @@ template <> otError Interpreter::Process<Cmd("channel")>(Arg aArgs[])
             if (otChannelMonitorIsEnabled(GetInstancePtr()))
             {
                 uint32_t channelMask = otLinkGetSupportedChannelMask(GetInstancePtr());
-                uint8_t  channelNum  = sizeof(channelMask) * CHAR_BIT;
+                uint8_t  channelNum  = BitSizeOf(channelMask);
 
                 OutputLine("interval: %lu", ToUlong(otChannelMonitorGetSampleInterval(GetInstancePtr())));
                 OutputLine("threshold: %d", otChannelMonitorGetRssiThreshold(GetInstancePtr()));
@@ -2611,7 +2612,7 @@ template <> otError Interpreter::Process<Cmd("discover")>(Arg aArgs[])
         uint8_t channel;
 
         SuccessOrExit(error = aArgs[0].ParseAsUint8(channel));
-        VerifyOrExit(channel < sizeof(scanChannels) * CHAR_BIT, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(channel < BitSizeOf(scanChannels), error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << channel;
     }
 
@@ -7113,7 +7114,7 @@ template <> otError Interpreter::Process<Cmd("scan")>(Arg aArgs[])
         uint8_t channel;
 
         SuccessOrExit(error = aArgs->ParseAsUint8(channel));
-        VerifyOrExit(channel < sizeof(scanChannels) * CHAR_BIT, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(channel < BitSizeOf(scanChannels), error = OT_ERROR_INVALID_ARGS);
         scanChannels = 1 << channel;
     }
 

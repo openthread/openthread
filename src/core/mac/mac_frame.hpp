@@ -36,12 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include <limits.h>
-#include <stdint.h>
-
 #include "common/as_core_type.hpp"
 #include "common/const_cast.hpp"
 #include "common/encoding.hpp"
+#include "common/numeric_limits.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/network_name.hpp"
 
@@ -1115,9 +1113,9 @@ protected:
     static constexpr uint8_t kKeyIdModeMask = 3 << 3;
 
     static constexpr uint8_t kMic0Size   = 0;
-    static constexpr uint8_t kMic32Size  = 32 / CHAR_BIT;
-    static constexpr uint8_t kMic64Size  = 64 / CHAR_BIT;
-    static constexpr uint8_t kMic128Size = 128 / CHAR_BIT;
+    static constexpr uint8_t kMic32Size  = 32 / kBitsPerByte;
+    static constexpr uint8_t kMic64Size  = 64 / kBitsPerByte;
+    static constexpr uint8_t kMic128Size = 128 / kBitsPerByte;
     static constexpr uint8_t kMaxMicSize = kMic128Size;
 
     static constexpr uint8_t kKeySourceSizeMode0 = 0;

@@ -43,6 +43,7 @@
 #include "common/encoding.hpp"
 #include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/serial_number.hpp"
 #include "common/settings.hpp"
@@ -654,7 +655,7 @@ uint32_t Mle::GetAttachStartDelay(void) const
         uint16_t       counter = mAttachCounter - 1;
         const uint32_t ratio   = kAttachBackoffMaxInterval / kAttachBackoffMinInterval;
 
-        if ((counter < sizeof(ratio) * CHAR_BIT) && ((1UL << counter) <= ratio))
+        if ((counter < BitSizeOf(ratio)) && ((1UL << counter) <= ratio))
         {
             delay = kAttachBackoffMinInterval;
             delay <<= counter;

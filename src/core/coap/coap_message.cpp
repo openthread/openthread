@@ -551,7 +551,7 @@ Error Option::Iterator::ReadOptionValue(uint64_t &aUintValue) const
 
     for (uint16_t pos = 0; pos < mOption.mLength; pos++)
     {
-        aUintValue <<= CHAR_BIT;
+        aUintValue <<= kBitsPerByte;
         aUintValue |= buffer[pos];
     }
 

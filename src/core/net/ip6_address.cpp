@@ -132,7 +132,7 @@ bool Prefix::operator<(const Prefix &aOther) const
         ExitNow();
     }
 
-    isSmaller = GetBytes()[matchedLength / CHAR_BIT] < aOther.GetBytes()[matchedLength / CHAR_BIT];
+    isSmaller = GetBytes()[matchedLength / kBitsPerByte] < aOther.GetBytes()[matchedLength / kBitsPerByte];
 
 exit:
     return isSmaller;
@@ -150,7 +150,7 @@ uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, ui
 
         if (diff == 0)
         {
-            matchedLength += CHAR_BIT;
+            matchedLength += kBitsPerByte;
         }
         else
         {
@@ -405,8 +405,8 @@ void Address::CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
     // the case where `aNumBits` may not be a multiple of 8. It leaves the
     // remaining bits beyond `aNumBits` in `aDst` unchanged.
 
-    uint8_t numBytes  = aNumBits / CHAR_BIT;
-    uint8_t extraBits = aNumBits % CHAR_BIT;
+    uint8_t numBytes  = aNumBits / kBitsPerByte;
+    uint8_t extraBits = aNumBits % kBitsPerByte;
 
     memcpy(aDst, aSrc, numBytes);
 
@@ -520,7 +520,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
     Clear();
     SetPrefix(aPrefix);
 
-    ip6Index = aPrefix.GetLength() / CHAR_BIT;
+    ip6Index = aPrefix.GetLength() / kBitsPerByte;
 
     for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
     {

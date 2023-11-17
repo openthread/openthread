@@ -27,12 +27,12 @@
 
 #include "changed_props_set.hpp"
 
-#include <limits.h>
-
 #include "common/code_utils.hpp"
 
 namespace ot {
 namespace Ncp {
+
+static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
 
 // ----------------------------------------------------------------------------
 // MARK: ChangedPropsSet class
@@ -95,7 +95,7 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
 
 uint8_t ChangedPropsSet::GetNumEntries(void) const
 {
-    static_assert(OT_ARRAY_LENGTH(mSupportedProps) <= sizeof(mChangedSet) * CHAR_BIT,
+    static_assert(OT_ARRAY_LENGTH(mSupportedProps) <= sizeof(mChangedSet) * kBitsPerByte,
                   "Changed set size is smaller than number of entries in `mSupportedProps[]` array");
 
     return OT_ARRAY_LENGTH(mSupportedProps);

@@ -37,6 +37,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/locator_getters.hpp"
+#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
@@ -858,7 +859,7 @@ Error Lowpan::DecompressExtensionHeader(Message &aMessage, FrameData &aFrameData
     }
 
     // length
-    hdr[1] = BitVectorBytes(sizeof(hdr) + len) - 1;
+    hdr[1] = BytesForBitSize(sizeof(hdr) + len) - 1;
 
     SuccessOrExit(aMessage.AppendBytes(hdr, sizeof(hdr)));
     aMessage.MoveOffset(sizeof(hdr));

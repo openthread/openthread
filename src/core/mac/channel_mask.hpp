@@ -36,10 +36,10 @@
 
 #include "openthread-core-config.h"
 
-#include <limits.h>
 #include <openthread/platform/radio.h>
 
 #include "common/equatable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "radio/radio.hpp"
 
@@ -147,7 +147,7 @@ public:
      */
     bool ContainsChannel(uint8_t aChannel) const
     {
-        return (aChannel < sizeof(mMask) * CHAR_BIT) ? ((1UL << aChannel) & mMask) != 0 : false;
+        return (aChannel < BitSizeOf(mMask)) ? ((1UL << aChannel) & mMask) != 0 : false;
     }
 
     /**
@@ -158,7 +158,7 @@ public:
      */
     void AddChannel(uint8_t aChannel)
     {
-        if (aChannel < sizeof(mMask) * CHAR_BIT)
+        if (aChannel < BitSizeOf(mMask))
         {
             mMask |= (1UL << aChannel);
         }
@@ -172,7 +172,7 @@ public:
      */
     void RemoveChannel(uint8_t aChannel)
     {
-        if (aChannel < sizeof(mMask) * CHAR_BIT)
+        if (aChannel < BitSizeOf(mMask))
         {
             mMask &= ~(1UL << aChannel);
         }

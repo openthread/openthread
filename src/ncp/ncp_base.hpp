@@ -151,6 +151,8 @@ public:
     bool ShouldDeferHostSend(void);
 
 protected:
+    static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
+
     typedef otError (NcpBase::*PropertyHandler)(void);
 
     /**

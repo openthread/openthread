@@ -479,6 +479,8 @@
 /// Macro for generating bit masks using bit index from the spec
 #define SPINEL_BIT_MASK(bit_index, field_bit_count) ((1 << ((field_bit_count)-1)) >> (bit_index))
 
+#define SPINEL_BITS_PER_BYTE 8 // Number of bits in a byte
+
 // ----------------------------------------------------------------------------
 
 #if defined(__cplusplus)

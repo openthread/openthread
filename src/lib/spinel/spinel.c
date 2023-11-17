@@ -46,7 +46,6 @@
 #include "spinel.h"
 
 #include <errno.h>
-#include <limits.h>
 
 #ifndef SPINEL_PLATFORM_HEADER
 /* These are all already included in the spinel platform header
@@ -241,7 +240,7 @@ spinel_ssize_t spinel_packed_uint_decode(const uint8_t *bytes, spinel_size_t len
 
     do
     {
-        if ((len < sizeof(uint8_t)) || (i >= sizeof(unsigned int) * CHAR_BIT))
+        if ((len < sizeof(uint8_t)) || (i >= sizeof(unsigned int) * SPINEL_BITS_PER_BYTE))
         {
             ret = -1;
             break;

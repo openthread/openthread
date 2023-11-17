@@ -32,7 +32,9 @@
  */
 
 #include "ip4_types.hpp"
-#include "ip6_address.hpp"
+
+#include "common/numeric_limits.hpp"
+#include "net/ip6_address.hpp"
 
 namespace ot {
 namespace Ip4 {
@@ -92,7 +94,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
     OT_ASSERT(Ip6::Prefix::IsValidNat64PrefixLength(aPrefixLength));
 
-    ip6Index = aPrefixLength / CHAR_BIT;
+    ip6Index = aPrefixLength / kBitsPerByte;
 
     for (uint8_t &i : mFields.m8)
     {

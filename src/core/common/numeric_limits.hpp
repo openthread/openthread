@@ -38,6 +38,28 @@
 
 namespace ot {
 
+static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
+
+/**
+ * Returns the bit-size (number of bits) of a given type or variable.
+ *
+ * @param[in] aItem   The item (type or variable or expression) to get the bit-size of.
+ *
+ * @returns Number of bits of @p aItem.
+ *
+ */
+#define BitSizeOf(aItem) (sizeof(aItem) * kBitsPerByte)
+
+/**
+ * Determines number of byes to represent a given number of bits.
+ *
+ * @param[in] aBitSize    The bit-size (number of bits).
+ *
+ * @returns Number of bytes to represent @p aBitSize.
+ *
+ */
+#define BytesForBitSize(aBitSize) static_cast<uint8_t>(((aBitSize) + (kBitsPerByte - 1)) / kBitsPerByte)
+
 /**
  * Provides a way to query properties of arithmetic types.
  *
