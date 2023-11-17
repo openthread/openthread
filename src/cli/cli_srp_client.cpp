@@ -353,9 +353,9 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * @cparam srp client host remove [@ca{removekeylease}] [@ca{sendunregtoserver}]
      *  * The parameter `removekeylease` is an optional boolean value that indicates
      *    whether the host key lease should also be removed (default is `false`).
-     *  * The parameter `sendunregtoserver` is optional boolean value that indicates
-     *    whether the client host should send an `update` message to the server
-     *    whenver client host information is not yet registered with the
+     *  * The parameter `sendunregtoserver` is an optional boolean value that indicates
+     *    whether the client host should send an "update" message to the server
+     *    even when the client host information has not yet been registered with the
      *    server (default is `false`). This parameter can be specified only if the
      *    `removekeylease` parameter is specified first in the command.
      * @par api_copy
@@ -540,12 +540,12 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * function that the device provides. The 'servicename` paramater can can optionally include a list of service
      * subtype labels that are separated by commas. The examples here use
      * generic naming.
-     * The `priority` and `weight` (`weight` is given as a `uint16_t` value)
+     * The `priority` and `weight` (both are `uint16_t` values)
      * parameters are optional, and if not provided
-     * zero is used. The optional `txt` parameter allows for additional information
-     * to be added to describe the service. The `txt` vaule must be in
+     * zero is used. The optional `txt` parameter sets the TXT data associated
+     * with the service. The `txt` vaule must be in
      * hex-string format and is treated as an already encoded TXT data byte
-     * sequence. If not provided, `txt` is considered empty.
+     * sequence.
      * @par
      * Adds a service with a given instance name, service name, and port number.
      * @sa otSrpClientAddService
