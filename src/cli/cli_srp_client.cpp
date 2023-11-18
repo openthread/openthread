@@ -78,8 +78,9 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
      * Disabled
      * Done
      * @endcode
-     * @par api_copy
-     * #otSrpClientIsAutoStartModeEnabled
+     * @par
+     * Indicates the current state of auto-start mode (enabled or disabled).
+     * @sa otSrpClientIsAutoStartModeEnabled
      */
     if (aArgs[0].IsEmpty())
     {
@@ -95,8 +96,26 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
      * src client autostart enable
      * Done
      * @endcode
-     * @par api_copy
-     * #otSrpClientEnableAutoStartMode
+     * @par
+     * Enables auto-start mode.
+     * @par
+     * When auto-start is enabled, the SRP client monitors Thread
+     * network data to discover SRP servers, to select the preferred
+     * server, and to automatically start and stop the client when
+     * an SRP server is detected.
+     * @par
+     * Three categories of network data entries indicate the presence of an SRP sever,
+     * and are preferred in the following order:
+     *  1. Unicast entries in which the server address is included in the service
+     *  data. If there are multiple options, the option with the lowest numerical
+     *  IPv6 address is preferred.
+     *  1. Anycast entries that each have a sequence number. The largest sequence
+     *  number as specified by Serial Number Arithmetic Logic
+     *  in RFC-1982 is preferred.
+     *  1. Unicast entries in which the server address information is included
+     *  with the server data. If there are multiple options, the option with the
+     *  lowest numerical IPv6 address is preferred.
+     * @sa otSrpClientEnableAutoStartMode
      */
     if (enable)
     {
@@ -108,8 +127,12 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
      * src client autostart disable
      * Done
      * @endcode
-     * @par api_copy
-     * #otSrpClientDisableAutoStartMode
+     * @par
+     * Disables the auto-start mode.
+     * @par
+     * Disabling auto-start mode does not stop a running client.
+     * However, the SRP client stops monitoring Thread network data.
+     * @sa otSrpClientDisableAutoStartMode
      */
     else
     {
@@ -185,7 +208,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * @endcode
      * @cparam srp client host name [@ca{name}]
      * To set the client host name when the host has either been removed or not yet
-     * registered with the server, use the `name` parameter.]
+     * registered with the server, use the `name` parameter.
      * @par
      * Sets or returns the host name of the SRP client.
      * @sa otSrpClientSetHostName
@@ -236,7 +259,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      *   * `Refreshing`: Item is beig refreshed.
      *   * `ToRemove`: Item to be removed.
      *   * `Removing`: Item is being removed.
-     *   * `Registered`': Item is registered with server.
+     *   * `Registered`: Item is registered with server.
      *   * `Removed`: Item has been removed.
      */
     else if (aArgs[0] == "state")
@@ -358,8 +381,10 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      *    even when the client host information has not yet been registered with the
      *    server (default is `false`). This parameter can be specified only if the
      *    `removekeylease` parameter is specified first in the command.
-     * @par api_copy
-     * #otSrpClientRemoveHostAndServices
+     * @par
+     * Removes SRP client host information and all services from the SRP server.
+     * @sa otSrpClientRemoveHostAndServices
+     * @sa otSrpClientSetHostName
      */
     else if (aArgs[0] == "remove")
     {
@@ -385,8 +410,9 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * srp client host clear
      * Done
      * @endcode
-     * @par api_copy
-     * #otSrpClientClearHostAndServices
+     * @par
+     * Clears all host information and all services.
+     * @sa otSrpClientClearHostAndServices
      * @sa otSrpClientBuffersFreeAllServices
      */
     else if (aArgs[0] == "clear")
@@ -461,8 +487,11 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
      * [fd00:0:0:0:d88a:618b:384d:e760]:4724
      * Done
      * @endcode
-     * @par api_copy
-     * #otSrpClientGetServerAddress
+     * @par
+     * Gets the socket address (IPv6 address and port number) of the SRP server
+     * that is being used by the SRP client. If the client is not running, the address
+     * is unspecified (all zeros) with a port number of 0.
+     * @sa otSrpClientGetServerAddress
      */
     if (aArgs[0].IsEmpty())
     {
@@ -561,8 +590,9 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam srp client service remove @ca{instancename} @ca{servicename}
-     * @par api_copy
-     * #otSrpClientRemoveService
+     * @par
+     * Requests a service to be unregistered with the SRP server.
+     * @sa otSrpClientRemoveService
      */
     /**
      * @cli srp client service name clear
@@ -571,8 +601,10 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam srp client service clear @ca{instancename} @ca{servicename}
-     * @par api_copy
-     * #otSrpClientClearService
+     * @par
+     * Clears a service, immediately removing it from the client service list,
+     * with no interaction with the SRP server.
+     * @sa otSrpClientClearService
      */
     else if ((isRemove = (aArgs[0] == "remove")) || (aArgs[0] == "clear"))
     {
@@ -618,12 +650,6 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @endcode
      * @par
      * Gets or sets the service key record inclusion mode in the SRP client.
-     * This command requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` to be enabled.
-     * The `key` record is optional in the Service Description Instruction (but is required
-     * and always included in the Host Description Instruction). The default behavior
-     * of the SRP client is to not include the `key` record. This command is
-     * intended to override the default behavior for testing only
-     * (in a `REFERENCE_DEVICE` build).
      * @sa otSrpClientIsServiceKeyRecordEnabled
      */
     else if (aArgs[0] == "key")
@@ -814,8 +840,9 @@ void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aSe
  * Done
  * @endcode
  * @cparam srp client start @ca{serveraddr} @ca{serverport}
- * @par api_copy
- * #otSrpClientStart
+ * @par
+ * Starts the SRP client operation.
+ * @sa otSrpClientStart
  */
 template <> otError SrpClient::Process<Cmd("start")>(Arg aArgs[])
 {
