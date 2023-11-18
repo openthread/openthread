@@ -478,8 +478,6 @@ bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
     return false;
 }
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-
 otError otPlatCryptoEcdsaGenerateAndImportKey(otCryptoKeyRef aKeyRef)
 {
     OT_UNUSED_VARIABLE(aKeyRef);
@@ -516,6 +514,8 @@ otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKe
 
     return OT_ERROR_NONE;
 }
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aThreshold)
 {
