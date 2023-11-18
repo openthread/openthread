@@ -106,7 +106,7 @@ void TestNetworkDataIterator(void)
 {
     static constexpr uint8_t kMaxRlocsArray = 10;
 
-    ot::Instance       *instance;
+    Instance           *instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig rconfig;
     OnMeshPrefixConfig  pconfig;
@@ -496,7 +496,7 @@ void TestNetworkDataIterator(void)
 class TestNetworkData : public Local
 {
 public:
-    explicit TestNetworkData(ot::Instance &aInstance)
+    explicit TestNetworkData(Instance &aInstance)
         : Local(aInstance)
     {
     }
@@ -583,7 +583,7 @@ public:
 
 void TestNetworkDataFindNextService(void)
 {
-    ot::Instance *instance;
+    Instance *instance;
 
     printf("\n\n-------------------------------------------------");
     printf("\nTestNetworkDataFindNextService()\n");
@@ -616,7 +616,7 @@ void TestNetworkDataDsnSrpServices(void)
         }
     };
 
-    ot::Instance *instance;
+    Instance *instance;
 
     printf("\n\n-------------------------------------------------");
     printf("\nTestNetworkDataDsnSrpServices()\n");
@@ -764,7 +764,7 @@ void TestNetworkDataDsnSrpAnycastSeqNumSelection(void)
         uint8_t        mPreferredSeqNum;
     };
 
-    ot::Instance *instance;
+    Instance *instance;
 
     printf("\n\n-------------------------------------------------");
     printf("\nTestNetworkDataDsnSrpAnycastSeqNumSelection()\n");

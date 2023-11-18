@@ -35,6 +35,8 @@
 #include "test_util.h"
 #include "thread/neighbor.hpp"
 
+namespace ot {
+
 extern "C" {
 uint32_t       otNetifAddress_Size_c();
 uint32_t       otNetifAddress_offset_mNext_c();
@@ -95,11 +97,11 @@ void test_packed_union(void)
 
 void test_packed_enum(void)
 {
-    ot::Neighbor neighbor;
-    neighbor.SetState(ot::Neighbor::kStateValid);
+    Neighbor neighbor;
+    neighbor.SetState(Neighbor::kStateValid);
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "OT_TOOL_PACKED failed 4");
+    VerifyOrQuit(neighbor.GetState() == Neighbor::kStateValid, "OT_TOOL_PACKED failed 4");
 }
 
 void test_addr_sizes(void)
@@ -171,9 +173,11 @@ void TestToolchain(void)
     test_packed_alignment();
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestToolchain();
+    ot::TestToolchain();
     printf("All tests passed\n");
     return 0;
 }

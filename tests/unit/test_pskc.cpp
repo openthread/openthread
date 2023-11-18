@@ -33,6 +33,8 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+namespace ot {
+
 #if OPENTHREAD_FTD
 
 void TestMinimumPassphrase(void)
@@ -97,21 +99,19 @@ void TestExampleInSpec(void)
     testFreeInstance(instance);
 }
 
+} // namespace ot
+
+#endif // OPENTHREAD_FTD
+
 int main(void)
 {
-    TestMinimumPassphrase();
-    TestMaximumPassphrase();
-    TestExampleInSpec();
+#if OPENTHREAD_FTD
+    ot::TestMinimumPassphrase();
+    ot::TestMaximumPassphrase();
+    ot::TestExampleInSpec();
     printf("All tests passed\n");
-    return 0;
-}
-
-#else // #if OPENTHREAD_FTD
-
-int main(void)
-{
+#else
     printf("PSKc generation is not supported on non-ftd build\n");
+#endif
     return 0;
 }
-
-#endif // #if OPENTHREAD_FTD
