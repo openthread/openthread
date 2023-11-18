@@ -65,6 +65,7 @@
 #include "cli/cli_dns.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
+#include "cli/cli_link_metrics.hpp"
 #include "cli/cli_mac_filter.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
@@ -113,6 +114,7 @@ class Interpreter : public OutputImplementer, public Output
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
+    friend class LinkMetrics;
     friend class NetworkData;
     friend class SrpClient;
     friend class SrpServer;
@@ -412,12 +414,6 @@ private:
 #if OPENTHREAD_FTD
     void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    otError ProcessLinkMetricsQuery(Arg aArgs[]);
-    otError ProcessLinkMetricsMgmt(Arg aArgs[]);
-    otError ProcessLinkMetricsProbe(Arg aArgs[]);
-    otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags);
-#endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     static void HandleLocateResult(void               *aContext,
                                    otError             aError,
@@ -507,35 +503,6 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
-
-    static void HandleLinkMetricsReport(const otIp6Address        *aAddress,
-                                        const otLinkMetricsValues *aMetricsValues,
-                                        otLinkMetricsStatus        aStatus,
-                                        void                      *aContext);
-
-    void HandleLinkMetricsReport(const otIp6Address        *aAddress,
-                                 const otLinkMetricsValues *aMetricsValues,
-                                 otLinkMetricsStatus        aStatus);
-
-    static void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress,
-                                              otLinkMetricsStatus aStatus,
-                                              void               *aContext);
-
-    void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, otLinkMetricsStatus aStatus);
-
-    static void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                                 const otExtAddress        *aExtAddress,
-                                                 const otLinkMetricsValues *aMetricsValues,
-                                                 void                      *aContext);
-
-    void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
-                                          const otExtAddress        *aExtAddress,
-                                          const otLinkMetricsValues *aMetricsValues);
-
-    const char *LinkMetricsStatusToStr(otLinkMetricsStatus aStatus);
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
@@ -624,6 +591,9 @@ private:
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     History mHistory;
 #endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+    LinkMetrics mLinkMetrics;
+#endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
@@ -631,10 +601,6 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     bool mLocateInProgress : 1;
-#endif
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
-    bool mLinkMetricsQueryInProgress : 1;
 #endif
 };
 
