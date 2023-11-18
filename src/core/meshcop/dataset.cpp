@@ -605,5 +605,45 @@ void Dataset::ConvertToActive(void)
 
 const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+void Dataset::SaveTlvInSecureStorageAndClearValue(Tlv::Type aTlvType, Crypto::Storage::KeyRef aKeyRef)
+{
+    using namespace ot::Crypto::Storage;
+
+    Tlv *tlv = GetTlv(aTlvType);
+
+    VerifyOrExit(tlv != nullptr);
+    VerifyOrExit(tlv->GetLength() > 0);
+
+    SuccessOrAssert(ImportKey(aKeyRef, kKeyTypeRaw, kKeyAlgorithmVendor, kUsageExport, kTypePersistent, tlv->GetValue(),
+                              tlv->GetLength()));
+
+    memset(tlv->GetValue(), 0, tlv->GetLength());
+
+exit:
+    return;
+}
+
+Error Dataset::ReadTlvFromSecureStorage(Tlv::Type aTlvType, Crypto::Storage::KeyRef aKeyRef)
+{
+    using namespace ot::Crypto::Storage;
+
+    Error  error = kErrorNone;
+    Tlv   *tlv   = GetTlv(aTlvType);
+    size_t readLength;
+
+    VerifyOrExit(tlv != nullptr);
+    VerifyOrExit(tlv->GetLength() > 0);
+
+    SuccessOrExit(error = ExportKey(aKeyRef, tlv->GetValue(), tlv->GetLength(), readLength));
+    VerifyOrExit(readLength == tlv->GetLength(), error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
 } // namespace MeshCoP
 } // namespace ot

@@ -918,6 +918,35 @@ public:
      */
     static const char *TypeToString(Type aType);
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+    /**
+     * Saves a given TLV value in secure storage and clears the TLV value by setting all value bytes to zero.
+     *
+     * If the Dataset does not contain the @p aTlvType, no action is performed.
+     *
+     * @param[in] aTlvType    The TLV type.
+     * @param[in] aKeyRef     The `KeyRef` to use with secure storage.
+     *
+     */
+    void SaveTlvInSecureStorageAndClearValue(Tlv::Type aTlvType, Crypto::Storage::KeyRef aKeyRef);
+
+    /**
+     * Reads and updates a given TLV value in Dataset from secure storage.
+     *
+     * If the Dataset does not contain the @p aTlvType, no action is performed and `kErrorNone` is returned.
+     *
+     * @param[in] aTlvType    The TLV type.
+     * @param[in] aKeyRef     The `KeyRef` to use with secure storage.
+     *
+     * @retval kErrorNone    Successfully read the TLV value from secure storage and updated the Dataset.
+     * @retval KErrorFailed  Could not read the @aKeyRef from secure storage.
+     *
+     */
+    Error ReadTlvFromSecureStorage(Tlv::Type aTlvType, Crypto::Storage::KeyRef aKeyRef);
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
 private:
     void RemoveTlv(Tlv *aTlv);
 
