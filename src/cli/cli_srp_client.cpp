@@ -322,7 +322,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          *     re-registers if addresses on the Thread `netif` are
          *     added or removed.
          *   * Explicitly specify the list of host addresses, separating
-         *     each address by a comma. You can set this list while the client is
+         *     each address by a space. You can set this list while the client is
          *     running. This will also disable auto host address mode.
          * @par
          * Enable auto host address mode or explicitly set the list of host
@@ -568,17 +568,13 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service add ins2 _test2._udp,_sub1,_sub2 111 1 1
      * Done
      * @endcode
-     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}] [@ca{txt}]
-     * Use names for the `instancename` and `servicename` parameters that help describe the behavior and
-     * function that the device provides. The 'servicename` paramater can can optionally include a list of service
-     * subtype labels that are separated by commas. The examples here use
-     * generic naming.
-     * The `priority` and `weight` (both are `uint16_t` values)
-     * parameters are optional, and if not provided
-     * zero is used. The optional `txt` parameter sets the TXT data associated
-     * with the service. The `txt` vaule must be in
-     * hex-string format and is treated as an already encoded TXT data byte
-     * sequence.
+     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}]
+     * [@ca{txt}]
+     * The 'servicename` paramater can can optionally include a list of service subtype labels that are
+     * separated by commas. The examples here use generic naming. The `priority` and `weight` (both are `uint16_t`
+     * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT data
+     * associated with the service. The `txt` vaule must be in hex-string format and is treated as an already encoded
+     * TXT data byte sequence.
      * @par
      * Adds a service with a given instance name, service name, and port number.
      * @sa otSrpClientAddService
