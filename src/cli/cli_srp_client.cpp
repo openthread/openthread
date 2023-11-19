@@ -569,7 +569,8 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}]
-     * [@ca{txt}] Use names for the `instancename` and `servicename` parameters that help describe the behavior and
+     * [@ca{txt}]
+     * Use names for the `instancename` and `servicename` parameters that help describe the behavior and
      * function that the device provides. The 'servicename` paramater can can optionally include a list of service
      * subtype labels that are separated by commas. The examples here use
      * generic naming.
