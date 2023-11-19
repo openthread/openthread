@@ -564,6 +564,10 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service add ins1 _test1._udp 777
      * Done
      * @endcode
+     * @code
+     * srp client service add ins2 _test2._udp,_sub1,_sub2 111 1 1
+     * Done
+     * @endcode
      * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}]
      * [@ca{txt}] Use names for the `instancename` and `servicename` parameters that help describe the behavior and
      * function that the device provides. The 'servicename` paramater can can optionally include a list of service
