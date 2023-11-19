@@ -285,7 +285,7 @@ void AesCcm::GenerateNonce(const Mac::ExtAddress &aAddress,
     memcpy(aNonce, aAddress.m8, sizeof(Mac::ExtAddress));
     aNonce += sizeof(Mac::ExtAddress);
 
-    Encoding::BigEndian::WriteUint32(aFrameCounter, aNonce);
+    BigEndian::WriteUint32(aFrameCounter, aNonce);
     aNonce += sizeof(uint32_t);
 
     aNonce[0] = aSecurityLevel;

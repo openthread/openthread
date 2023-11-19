@@ -1246,7 +1246,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessag
 
             SuccessOrExit(
                 error = aMessagePtr->Read(aMessagePtr->GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
-            destPort = HostSwap16(destPort);
+            destPort = BigEndian::HostSwap16(destPort);
 
             if (destPort == Tmf::kUdpPort)
             {
@@ -1262,7 +1262,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessag
 
             SuccessOrExit(
                 error = aMessagePtr->Read(aMessagePtr->GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
-            destPort = HostSwap16(destPort);
+            destPort = BigEndian::HostSwap16(destPort);
 
             if (nextHeader == kProtoUdp)
             {

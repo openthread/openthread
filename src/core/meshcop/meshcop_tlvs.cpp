@@ -183,7 +183,7 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
 #endif
 
     SetChannelPage(channelPage);
-    mChannel = HostSwap16(aChannel);
+    mChannel = BigEndian::HostSwap16(aChannel);
 }
 
 const char *StateTlv::StateToString(State aState)

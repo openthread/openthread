@@ -267,7 +267,7 @@ public:
 
         if (mWriteFrameStart + kHeaderSize + aSkipLength <= GetArrayEnd(mBuffer))
         {
-            Encoding::LittleEndian::WriteUint16(aSkipLength, mWriteFrameStart + kHeaderSkipLengthOffset);
+            LittleEndian::WriteUint16(aSkipLength, mWriteFrameStart + kHeaderSkipLengthOffset);
             mWritePointer    = GetFrame();
             mRemainingLength = static_cast<uint16_t>(mBuffer + kSize - mWritePointer);
             error            = OT_ERROR_NONE;
@@ -282,10 +282,7 @@ public:
      * @returns The length (number of bytes) of the reserved buffer.
      *
      */
-    uint16_t GetSkipLength(void) const
-    {
-        return Encoding::LittleEndian::ReadUint16(mWriteFrameStart + kHeaderSkipLengthOffset);
-    }
+    uint16_t GetSkipLength(void) const { return LittleEndian::ReadUint16(mWriteFrameStart + kHeaderSkipLengthOffset); }
 
     /**
      * Gets a pointer to the start of the current frame.
@@ -323,8 +320,7 @@ public:
         }
         else
         {
-            Encoding::LittleEndian::WriteUint16(GetSkipLength() + GetLength(),
-                                                mWriteFrameStart + kHeaderTotalLengthOffset);
+            LittleEndian::WriteUint16(GetSkipLength() + GetLength(), mWriteFrameStart + kHeaderTotalLengthOffset);
             mWriteFrameStart = mWritePointer;
             IgnoreError(SetSkipLength(0));
         }
@@ -377,8 +373,8 @@ public:
 
         if (aFrame != mWriteFrameStart)
         {
-            uint16_t totalLength = Encoding::LittleEndian::ReadUint16(aFrame + kHeaderTotalLengthOffset);
-            uint16_t skipLength  = Encoding::LittleEndian::ReadUint16(aFrame + kHeaderSkipLengthOffset);
+            uint16_t totalLength = LittleEndian::ReadUint16(aFrame + kHeaderTotalLengthOffset);
+            uint16_t skipLength  = LittleEndian::ReadUint16(aFrame + kHeaderSkipLengthOffset);
 
             aLength = totalLength - skipLength;
             aFrame += kHeaderSize + skipLength;

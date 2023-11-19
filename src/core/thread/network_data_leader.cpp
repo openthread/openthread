@@ -470,7 +470,7 @@ Error Leader::ReadCommissioningDataUint16SubTlv(MeshCoP::Tlv::Type aType, uint16
 
     VerifyOrExit(subTlv != nullptr, error = kErrorNotFound);
     VerifyOrExit(subTlv->GetLength() >= sizeof(uint16_t), error = kErrorParse);
-    aValue = Encoding::BigEndian::ReadUint16(subTlv->GetValue());
+    aValue = BigEndian::ReadUint16(subTlv->GetValue());
 
 exit:
     return error;

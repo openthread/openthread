@@ -59,11 +59,6 @@
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-using ot::Encoding::BigEndian::ReadUint24;
-using ot::Encoding::BigEndian::WriteUint24;
-
 /**
  * Implements MeshCoP TLV generation and parsing.
  *
@@ -304,7 +299,7 @@ public:
      * @returns The Channel value.
      *
      */
-    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
+    uint16_t GetChannel(void) const { return BigEndian::HostSwap16(mChannel); }
 
     /**
      * Sets the Channel value.
@@ -353,7 +348,7 @@ public:
      * @returns The PAN ID value.
      *
      */
-    uint16_t GetPanId(void) const { return HostSwap16(mPanId); }
+    uint16_t GetPanId(void) const { return BigEndian::HostSwap16(mPanId); }
 
     /**
      * Sets the PAN ID value.
@@ -361,7 +356,7 @@ public:
      * @param[in]  aPanId  The PAN ID value.
      *
      */
-    void SetPanId(uint16_t aPanId) { mPanId = HostSwap16(aPanId); }
+    void SetPanId(uint16_t aPanId) { mPanId = BigEndian::HostSwap16(aPanId); }
 
 private:
     uint16_t mPanId;
@@ -588,7 +583,7 @@ public:
      * @returns The Network Key Sequence value.
      *
      */
-    uint32_t GetNetworkKeySequence(void) const { return HostSwap32(mNetworkKeySequence); }
+    uint32_t GetNetworkKeySequence(void) const { return BigEndian::HostSwap32(mNetworkKeySequence); }
 
     /**
      * Sets the Network Key Sequence value.
@@ -596,7 +591,10 @@ public:
      * @param[in]  aNetworkKeySequence  The Network Key Sequence value.
      *
      */
-    void SetNetworkKeySequence(uint32_t aNetworkKeySequence) { mNetworkKeySequence = HostSwap32(aNetworkKeySequence); }
+    void SetNetworkKeySequence(uint32_t aNetworkKeySequence)
+    {
+        mNetworkKeySequence = BigEndian::HostSwap32(aNetworkKeySequence);
+    }
 
 private:
     uint32_t mNetworkKeySequence;
@@ -749,7 +747,7 @@ public:
      * @returns The Border Agent Locator value.
      *
      */
-    uint16_t GetBorderAgentLocator(void) const { return HostSwap16(mLocator); }
+    uint16_t GetBorderAgentLocator(void) const { return BigEndian::HostSwap16(mLocator); }
 
     /**
      * Sets the Border Agent Locator value.
@@ -757,7 +755,7 @@ public:
      * @param[in]  aLocator  The Border Agent Locator value.
      *
      */
-    void SetBorderAgentLocator(uint16_t aLocator) { mLocator = HostSwap16(aLocator); }
+    void SetBorderAgentLocator(uint16_t aLocator) { mLocator = BigEndian::HostSwap16(aLocator); }
 
 private:
     uint16_t mLocator;
@@ -796,7 +794,7 @@ public:
      * @returns The Commissioner Session ID value.
      *
      */
-    uint16_t GetCommissionerSessionId(void) const { return HostSwap16(mSessionId); }
+    uint16_t GetCommissionerSessionId(void) const { return BigEndian::HostSwap16(mSessionId); }
 
     /**
      * Sets the Commissioner Session ID value.
@@ -804,7 +802,7 @@ public:
      * @param[in]  aSessionId  The Commissioner Session ID value.
      *
      */
-    void SetCommissionerSessionId(uint16_t aSessionId) { mSessionId = HostSwap16(aSessionId); }
+    void SetCommissionerSessionId(uint16_t aSessionId) { mSessionId = BigEndian::HostSwap16(aSessionId); }
 
 private:
     uint16_t mSessionId;
@@ -857,8 +855,8 @@ private:
     static constexpr uint8_t kThread11FlagsLength = 1; // The Thread 1.1 Security Policy Flags length.
     static constexpr uint8_t kThread12FlagsLength = 2; // The Thread 1.2 Security Policy Flags length.
 
-    void     SetRotationTime(uint16_t aRotationTime) { mRotationTime = HostSwap16(aRotationTime); }
-    uint16_t GetRotationTime(void) const { return HostSwap16(mRotationTime); }
+    void     SetRotationTime(uint16_t aRotationTime) { mRotationTime = BigEndian::HostSwap16(aRotationTime); }
+    uint16_t GetRotationTime(void) const { return BigEndian::HostSwap16(mRotationTime); }
     uint8_t  GetFlagsLength(void) const { return GetLength() - sizeof(mRotationTime); }
 
     uint16_t mRotationTime;
@@ -989,7 +987,7 @@ public:
      * @returns The UDP Port value.
      *
      */
-    uint16_t GetUdpPort(void) const { return HostSwap16(mUdpPort); }
+    uint16_t GetUdpPort(void) const { return BigEndian::HostSwap16(mUdpPort); }
 
     /**
      * Sets the UDP Port value.
@@ -997,7 +995,7 @@ public:
      * @param[in]  aUdpPort  The UDP Port value.
      *
      */
-    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = HostSwap16(aUdpPort); }
+    void SetUdpPort(uint16_t aUdpPort) { mUdpPort = BigEndian::HostSwap16(aUdpPort); }
 
 private:
     uint16_t mUdpPort;
@@ -1092,7 +1090,7 @@ public:
      * @returns The Delay Timer value.
      *
      */
-    uint32_t GetDelayTimer(void) const { return HostSwap32(mDelayTimer); }
+    uint32_t GetDelayTimer(void) const { return BigEndian::HostSwap32(mDelayTimer); }
 
     /**
      * Sets the Delay Timer value.
@@ -1100,7 +1098,7 @@ public:
      * @param[in]  aDelayTimer  The Delay Timer value.
      *
      */
-    void SetDelayTimer(uint32_t aDelayTimer) { mDelayTimer = HostSwap32(aDelayTimer); }
+    void SetDelayTimer(uint32_t aDelayTimer) { mDelayTimer = BigEndian::HostSwap32(aDelayTimer); }
 
     static constexpr uint32_t kMaxDelayTimer = 259200; ///< Maximum delay timer value for a Pending Dataset in seconds
 
@@ -1264,7 +1262,7 @@ public:
      * @returns The Channel Mask value.
      *
      */
-    uint32_t GetMask(void) const { return Encoding::Reverse32(HostSwap32(mMask)); }
+    uint32_t GetMask(void) const { return Reverse32(BigEndian::HostSwap32(mMask)); }
 
     /**
      * Sets the Channel Mask value.
@@ -1272,7 +1270,7 @@ public:
      * @param[in]  aMask  The Channel Mask value.
      *
      */
-    void SetMask(uint32_t aMask) { mMask = HostSwap32(Encoding::Reverse32(aMask)); }
+    void SetMask(uint32_t aMask) { mMask = BigEndian::HostSwap32(Reverse32(aMask)); }
 
 private:
     uint32_t mMask;
@@ -1495,7 +1493,7 @@ public:
      * @returns The Vendor Stack Vendor OUI value.
      *
      */
-    uint32_t GetOui(void) const { return ReadUint24(mOui); }
+    uint32_t GetOui(void) const { return BigEndian::ReadUint24(mOui); }
 
     /**
      * Returns the Stack Vendor OUI value.
@@ -1503,7 +1501,7 @@ public:
      * @param[in]  aOui  The Vendor Stack Vendor OUI value.
      *
      */
-    void SetOui(uint32_t aOui) { WriteUint24(aOui, mOui); }
+    void SetOui(uint32_t aOui) { BigEndian::WriteUint24(aOui, mOui); }
 
     /**
      * Returns the Build value.
@@ -1511,7 +1509,7 @@ public:
      * @returns The Build value.
      *
      */
-    uint16_t GetBuild(void) const { return (HostSwap16(mBuildRevision) & kBuildMask) >> kBuildOffset; }
+    uint16_t GetBuild(void) const { return (BigEndian::HostSwap16(mBuildRevision) & kBuildMask) >> kBuildOffset; }
 
     /**
      * Sets the Build value.
@@ -1521,8 +1519,8 @@ public:
      */
     void SetBuild(uint16_t aBuild)
     {
-        mBuildRevision =
-            HostSwap16((HostSwap16(mBuildRevision) & ~kBuildMask) | ((aBuild << kBuildOffset) & kBuildMask));
+        mBuildRevision = BigEndian::HostSwap16((BigEndian::HostSwap16(mBuildRevision) & ~kBuildMask) |
+                                               ((aBuild << kBuildOffset) & kBuildMask));
     }
 
     /**
@@ -1531,7 +1529,7 @@ public:
      * @returns The Revision value.
      *
      */
-    uint8_t GetRevision(void) const { return (HostSwap16(mBuildRevision) & kRevMask) >> kRevOffset; }
+    uint8_t GetRevision(void) const { return (BigEndian::HostSwap16(mBuildRevision) & kRevMask) >> kRevOffset; }
 
     /**
      * Sets the Revision value.
@@ -1541,7 +1539,8 @@ public:
      */
     void SetRevision(uint8_t aRevision)
     {
-        mBuildRevision = HostSwap16((HostSwap16(mBuildRevision) & ~kRevMask) | ((aRevision << kRevOffset) & kRevMask));
+        mBuildRevision = BigEndian::HostSwap16((BigEndian::HostSwap16(mBuildRevision) & ~kRevMask) |
+                                               ((aRevision << kRevOffset) & kRevMask));
     }
 
     /**
@@ -1620,7 +1619,7 @@ public:
      * @returns The source port.
      *
      */
-    uint16_t GetSourcePort(void) const { return HostSwap16(mSourcePort); }
+    uint16_t GetSourcePort(void) const { return BigEndian::HostSwap16(mSourcePort); }
 
     /**
      * Updates the source port.
@@ -1628,7 +1627,7 @@ public:
      * @param[in]   aSourcePort     The source port.
      *
      */
-    void SetSourcePort(uint16_t aSourcePort) { mSourcePort = HostSwap16(aSourcePort); }
+    void SetSourcePort(uint16_t aSourcePort) { mSourcePort = BigEndian::HostSwap16(aSourcePort); }
 
     /**
      * Returns the destination port.
@@ -1636,7 +1635,7 @@ public:
      * @returns The destination port.
      *
      */
-    uint16_t GetDestinationPort(void) const { return HostSwap16(mDestinationPort); }
+    uint16_t GetDestinationPort(void) const { return BigEndian::HostSwap16(mDestinationPort); }
 
     /**
      * Updates the destination port.
@@ -1644,7 +1643,7 @@ public:
      * @param[in]   aDestinationPort    The destination port.
      *
      */
-    void SetDestinationPort(uint16_t aDestinationPort) { mDestinationPort = HostSwap16(aDestinationPort); }
+    void SetDestinationPort(uint16_t aDestinationPort) { mDestinationPort = BigEndian::HostSwap16(aDestinationPort); }
 
 private:
     uint16_t mSourcePort;
@@ -1886,7 +1885,7 @@ public:
      * @returns The Vendor OUI value.
      *
      */
-    uint32_t GetOui(void) const { return ReadUint24(mOui); }
+    uint32_t GetOui(void) const { return BigEndian::ReadUint24(mOui); }
 
     /**
      * Sets the Vendor OUI value.
@@ -1894,7 +1893,7 @@ public:
      * @param[in]  aOui The Vendor OUI value.
      *
      */
-    void SetOui(uint32_t aOui) { return WriteUint24(aOui, mOui); }
+    void SetOui(uint32_t aOui) { return BigEndian::WriteUint24(aOui, mOui); }
 
     /**
      * Returns the Adv Data length.

@@ -31,8 +31,6 @@
 
 #include "test_util.hpp"
 
-using ot::Encoding::BigEndian::ReadUint16;
-
 namespace ot {
 namespace Ip4 {
 
@@ -91,7 +89,8 @@ void TestIp4Header(void)
 
     // Verify the offsets to different fields.
 
-    VerifyOrQuit(ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength, "kTotalLength is incorrect");
+    VerifyOrQuit(BigEndian::ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength,
+                 "kTotalLength is incorrect");
     VerifyOrQuit(headerBytes[Header::kProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
     VerifyOrQuit(headerBytes[Header::kTtlOffset] == kTtl, "kTtl is incorrect");
     VerifyOrQuit(memcmp(&headerBytes[Header::kSourceAddressOffset], &source, sizeof(source)) == 0,
@@ -116,7 +115,8 @@ void TestIp4Header(void)
                  "Source address is incorrect");
     VerifyOrQuit(memcmp(&headerBytes[Header::kDestinationAddressOffset], &destination, sizeof(destination)) == 0,
                  "Destination address is incorrect");
-    VerifyOrQuit(ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength, "kTotalLength is incorrect");
+    VerifyOrQuit(BigEndian::ReadUint16(headerBytes + Header::kTotalLengthOffset) == kTotalLength,
+                 "kTotalLength is incorrect");
     VerifyOrQuit(headerBytes[Header::kProtocolOffset] == kProtoIcmp, "kProtocol is incorrect");
     VerifyOrQuit(headerBytes[Header::kTtlOffset] == kTtl, "kTtl is incorrect");
 }

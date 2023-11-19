@@ -49,8 +49,6 @@
 namespace ot {
 namespace Ip6 {
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 /**
  * @addtogroup core-ip6-icmp6
  *
@@ -158,7 +156,7 @@ public:
          * @returns The ICMPv6 message checksum.
          *
          */
-        uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
+        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
 
         /**
          * Sets the ICMPv6 message checksum.
@@ -166,7 +164,7 @@ public:
          * @param[in]  aChecksum  The ICMPv6 message checksum.
          *
          */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
         /**
          * Returns the ICMPv6 message ID for Echo Requests and Replies.
@@ -174,7 +172,7 @@ public:
          * @returns The ICMPv6 message ID.
          *
          */
-        uint16_t GetId(void) const { return HostSwap16(mData.m16[0]); }
+        uint16_t GetId(void) const { return BigEndian::HostSwap16(mData.m16[0]); }
 
         /**
          * Sets the ICMPv6 message ID for Echo Requests and Replies.
@@ -182,7 +180,7 @@ public:
          * @param[in]  aId  The ICMPv6 message ID.
          *
          */
-        void SetId(uint16_t aId) { mData.m16[0] = HostSwap16(aId); }
+        void SetId(uint16_t aId) { mData.m16[0] = BigEndian::HostSwap16(aId); }
 
         /**
          * Returns the ICMPv6 message sequence for Echo Requests and Replies.
@@ -190,7 +188,7 @@ public:
          * @returns The ICMPv6 message sequence.
          *
          */
-        uint16_t GetSequence(void) const { return HostSwap16(mData.m16[1]); }
+        uint16_t GetSequence(void) const { return BigEndian::HostSwap16(mData.m16[1]); }
 
         /**
          * Sets the ICMPv6 message sequence for Echo Requests and Replies.
@@ -198,7 +196,7 @@ public:
          * @param[in]  aSequence  The ICMPv6 message sequence.
          *
          */
-        void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
+        void SetSequence(uint16_t aSequence) { mData.m16[1] = BigEndian::HostSwap16(aSequence); }
     } OT_TOOL_PACKED_END;
 
     /**

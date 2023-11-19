@@ -107,7 +107,7 @@ void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &a
 
 void Address::SynthesizeFromCidrAndHost(const Cidr &aCidr, const uint32_t aHost)
 {
-    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (HostSwap32(aHost) & aCidr.HostMask());
+    mFields.m32 = (aCidr.mAddress.mFields.m32 & aCidr.SubnetMask()) | (BigEndian::HostSwap32(aHost) & aCidr.HostMask());
 }
 
 void Address::ToString(StringWriter &aWriter) const

@@ -216,7 +216,7 @@ template <typename UintType> Error Tlv::ReadUintTlv(const Message &aMessage, uin
     Error error;
 
     SuccessOrExit(error = ReadTlvValue(aMessage, aOffset, &aValue, sizeof(aValue)));
-    aValue = Encoding::BigEndian::HostSwap<UintType>(aValue);
+    aValue = BigEndian::HostSwap<UintType>(aValue);
 
 exit:
     return error;
@@ -294,7 +294,7 @@ Error Tlv::AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringL
 
 template <typename UintType> Error Tlv::AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue)
 {
-    UintType value = Encoding::BigEndian::HostSwap<UintType>(aValue);
+    UintType value = BigEndian::HostSwap<UintType>(aValue);
 
     return AppendTlv(aMessage, aType, &value, sizeof(UintType));
 }

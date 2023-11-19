@@ -190,7 +190,7 @@ public:
          * @returns The RLOC16.
          *
          */
-        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+        uint16_t GetRloc16(void) const { return LittleEndian::HostSwap16(mRloc16); }
 
         /**
          * Sets the RLOC16.
@@ -198,7 +198,7 @@ public:
          * @param[in] aRloc16  The RLOC16.
          *
          */
-        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = LittleEndian::HostSwap16(aRloc16); }
 
         /**
          * Returns the key sequence.
@@ -206,7 +206,7 @@ public:
          * @returns The key sequence.
          *
          */
-        uint32_t GetKeySequence(void) const { return Encoding::LittleEndian::HostSwap32(mKeySequence); }
+        uint32_t GetKeySequence(void) const { return LittleEndian::HostSwap32(mKeySequence); }
 
         /**
          * Sets the key sequence.
@@ -214,7 +214,7 @@ public:
          * @param[in] aKeySequence  The key sequence.
          *
          */
-        void SetKeySequence(uint32_t aKeySequence) { mKeySequence = Encoding::LittleEndian::HostSwap32(aKeySequence); }
+        void SetKeySequence(uint32_t aKeySequence) { mKeySequence = LittleEndian::HostSwap32(aKeySequence); }
 
         /**
          * Returns the MLE frame counter.
@@ -222,7 +222,7 @@ public:
          * @returns The MLE frame counter.
          *
          */
-        uint32_t GetMleFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMleFrameCounter); }
+        uint32_t GetMleFrameCounter(void) const { return LittleEndian::HostSwap32(mMleFrameCounter); }
 
         /**
          * Sets the MLE frame counter.
@@ -232,7 +232,7 @@ public:
          */
         void SetMleFrameCounter(uint32_t aMleFrameCounter)
         {
-            mMleFrameCounter = Encoding::LittleEndian::HostSwap32(aMleFrameCounter);
+            mMleFrameCounter = LittleEndian::HostSwap32(aMleFrameCounter);
         }
 
         /**
@@ -241,7 +241,7 @@ public:
          * @returns The MAC frame counter.
          *
          */
-        uint32_t GetMacFrameCounter(void) const { return Encoding::LittleEndian::HostSwap32(mMacFrameCounter); }
+        uint32_t GetMacFrameCounter(void) const { return LittleEndian::HostSwap32(mMacFrameCounter); }
 
         /**
          * Sets the MAC frame counter.
@@ -251,7 +251,7 @@ public:
          */
         void SetMacFrameCounter(uint32_t aMacFrameCounter)
         {
-            mMacFrameCounter = Encoding::LittleEndian::HostSwap32(aMacFrameCounter);
+            mMacFrameCounter = LittleEndian::HostSwap32(aMacFrameCounter);
         }
 
         /**
@@ -260,7 +260,7 @@ public:
          * @returns The previous partition ID.
          *
          */
-        uint32_t GetPreviousPartitionId(void) const { return Encoding::LittleEndian::HostSwap32(mPreviousPartitionId); }
+        uint32_t GetPreviousPartitionId(void) const { return LittleEndian::HostSwap32(mPreviousPartitionId); }
 
         /**
          * Sets the previous partition id.
@@ -270,7 +270,7 @@ public:
          */
         void SetPreviousPartitionId(uint32_t aPreviousPartitionId)
         {
-            mPreviousPartitionId = Encoding::LittleEndian::HostSwap32(aPreviousPartitionId);
+            mPreviousPartitionId = LittleEndian::HostSwap32(aPreviousPartitionId);
         }
 
         /**
@@ -311,7 +311,7 @@ public:
          * @returns The Thread version.
          *
          */
-        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+        uint16_t GetVersion(void) const { return LittleEndian::HostSwap16(mVersion); }
 
         /**
          * Sets the Thread version.
@@ -319,7 +319,7 @@ public:
          * @param[in] aVersion  The Thread version.
          *
          */
-        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+        void SetVersion(uint16_t aVersion) { mVersion = LittleEndian::HostSwap16(aVersion); }
 
     private:
         void Log(Action aAction) const;
@@ -381,7 +381,7 @@ public:
          * @returns The Thread version.
          *
          */
-        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+        uint16_t GetVersion(void) const { return LittleEndian::HostSwap16(mVersion); }
 
         /**
          * Sets the Thread version.
@@ -389,7 +389,7 @@ public:
          * @param[in] aVersion  The Thread version.
          *
          */
-        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+        void SetVersion(uint16_t aVersion) { mVersion = LittleEndian::HostSwap16(aVersion); }
 
     private:
         void Log(Action aAction) const;
@@ -443,7 +443,7 @@ public:
          * @returns The child timeout.
          *
          */
-        uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
+        uint32_t GetTimeout(void) const { return LittleEndian::HostSwap32(mTimeout); }
 
         /**
          * Sets the child timeout.
@@ -451,7 +451,7 @@ public:
          * @param[in] aTimeout  The child timeout.
          *
          */
-        void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
+        void SetTimeout(uint32_t aTimeout) { mTimeout = LittleEndian::HostSwap32(aTimeout); }
 
         /**
          * Returns the RLOC16.
@@ -459,7 +459,7 @@ public:
          * @returns The RLOC16.
          *
          */
-        uint16_t GetRloc16(void) const { return Encoding::LittleEndian::HostSwap16(mRloc16); }
+        uint16_t GetRloc16(void) const { return LittleEndian::HostSwap16(mRloc16); }
 
         /**
          * Sets the RLOC16.
@@ -467,7 +467,7 @@ public:
          * @param[in] aRloc16  The RLOC16.
          *
          */
-        void SetRloc16(uint16_t aRloc16) { mRloc16 = Encoding::LittleEndian::HostSwap16(aRloc16); }
+        void SetRloc16(uint16_t aRloc16) { mRloc16 = LittleEndian::HostSwap16(aRloc16); }
 
         /**
          * Returns the Thread device mode.
@@ -491,7 +491,7 @@ public:
          * @returns The Thread version.
          *
          */
-        uint16_t GetVersion(void) const { return Encoding::LittleEndian::HostSwap16(mVersion); }
+        uint16_t GetVersion(void) const { return LittleEndian::HostSwap16(mVersion); }
 
         /**
          * Sets the Thread version.
@@ -499,7 +499,7 @@ public:
          * @param[in] aVersion  The Thread version.
          *
          */
-        void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
+        void SetVersion(uint16_t aVersion) { mVersion = LittleEndian::HostSwap16(aVersion); }
 
     private:
         void Log(Action aAction) const;
@@ -705,7 +705,7 @@ public:
          * @returns The server port number.
          *
          */
-        uint16_t GetServerPort(void) const { return Encoding::LittleEndian::HostSwap16(mServerPort); }
+        uint16_t GetServerPort(void) const { return LittleEndian::HostSwap16(mServerPort); }
 
         /**
          * Sets the server port number.
@@ -713,7 +713,7 @@ public:
          * @param[in] aPort  The server port number.
          *
          */
-        void SetServerPort(uint16_t aPort) { mServerPort = Encoding::LittleEndian::HostSwap16(aPort); }
+        void SetServerPort(uint16_t aPort) { mServerPort = LittleEndian::HostSwap16(aPort); }
 
     private:
         void Log(Action aAction) const;
@@ -750,7 +750,7 @@ public:
          * @returns The server port number.
          *
          */
-        uint16_t GetPort(void) const { return Encoding::LittleEndian::HostSwap16(mPort); }
+        uint16_t GetPort(void) const { return LittleEndian::HostSwap16(mPort); }
 
         /**
          * Sets the server port number.
@@ -758,7 +758,7 @@ public:
          * @param[in] aPort  The server port number.
          *
          */
-        void SetPort(uint16_t aPort) { mPort = Encoding::LittleEndian::HostSwap16(aPort); }
+        void SetPort(uint16_t aPort) { mPort = LittleEndian::HostSwap16(aPort); }
 
     private:
         void Log(Action aAction) const;

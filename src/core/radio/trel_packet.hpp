@@ -154,7 +154,7 @@ public:
      * @returns The PAN Identifier field.
      *
      */
-    Mac::PanId GetPanId(void) const { return Encoding::BigEndian::HostSwap16(mPanId); }
+    Mac::PanId GetPanId(void) const { return BigEndian::HostSwap16(mPanId); }
 
     /**
      * Sets the PAN Identifier field in the header.
@@ -162,7 +162,7 @@ public:
      * @param[in] aPanId   A PAN Identifier.
      *
      */
-    void SetPanId(Mac::PanId aPanId) { mPanId = Encoding::BigEndian::HostSwap16(aPanId); }
+    void SetPanId(Mac::PanId aPanId) { mPanId = BigEndian::HostSwap16(aPanId); }
 
     /**
      * Gets the packet number field from the header.
@@ -170,7 +170,7 @@ public:
      * @returns The packet number field.
      *
      */
-    uint32_t GetPacketNumber(void) const { return Encoding::BigEndian::HostSwap32(mPacketNumber); }
+    uint32_t GetPacketNumber(void) const { return BigEndian::HostSwap32(mPacketNumber); }
 
     /**
      * Sets the packet number field in the header.
@@ -178,7 +178,7 @@ public:
      * @param[in] aPacketNumber  The packet number.
      *
      */
-    void SetPacketNumber(uint32_t aPacketNumber) { mPacketNumber = Encoding::BigEndian::HostSwap32(aPacketNumber); }
+    void SetPacketNumber(uint32_t aPacketNumber) { mPacketNumber = BigEndian::HostSwap32(aPacketNumber); }
 
     /**
      * Gets the source MAC address field from the header.

@@ -46,8 +46,6 @@
 
 namespace ot {
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 class Message;
 
 /**
@@ -641,7 +639,7 @@ public:
      * Returns the Length value.
      *
      */
-    uint16_t GetLength(void) const { return HostSwap16(mLength); }
+    uint16_t GetLength(void) const { return BigEndian::HostSwap16(mLength); }
 
     /**
      * Sets the Length value.
@@ -652,7 +650,7 @@ public:
     void SetLength(uint16_t aLength)
     {
         Tlv::SetLength(kExtendedLength);
-        mLength = HostSwap16(aLength);
+        mLength = BigEndian::HostSwap16(aLength);
     }
 
 private:

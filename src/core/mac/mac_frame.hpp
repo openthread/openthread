@@ -48,11 +48,6 @@
 namespace ot {
 namespace Mac {
 
-using ot::Encoding::LittleEndian::HostSwap16;
-using ot::Encoding::LittleEndian::HostSwap64;
-using ot::Encoding::LittleEndian::ReadUint24;
-using ot::Encoding::LittleEndian::WriteUint24;
-
 /**
  * @addtogroup core-mac
  *
@@ -89,7 +84,7 @@ public:
      * @returns the IE Element Id.
      *
      */
-    uint16_t GetId(void) const { return (HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
+    uint16_t GetId(void) const { return (LittleEndian::HostSwap16(mFields.m16) & kIdMask) >> kIdOffset; }
 
     /**
      * Sets the IE Element Id.
@@ -99,7 +94,8 @@ public:
      */
     void SetId(uint16_t aId)
     {
-        mFields.m16 = HostSwap16((HostSwap16(mFields.m16) & ~kIdMask) | ((aId << kIdOffset) & kIdMask));
+        mFields.m16 = LittleEndian::HostSwap16((LittleEndian::HostSwap16(mFields.m16) & ~kIdMask) |
+                                               ((aId << kIdOffset) & kIdMask));
     }
 
     /**
@@ -159,7 +155,7 @@ public:
      * @returns The Vendor OUI.
      *
      */
-    uint32_t GetVendorOui(void) const { return ReadUint24(mOui); }
+    uint32_t GetVendorOui(void) const { return LittleEndian::ReadUint24(mOui); }
 
     /**
      * Sets the Vendor OUI.
@@ -167,7 +163,7 @@ public:
      * @param[in]  aVendorOui  A Vendor OUI.
      *
      */
-    void SetVendorOui(uint32_t aVendorOui) { WriteUint24(aVendorOui, mOui); }
+    void SetVendorOui(uint32_t aVendorOui) { LittleEndian::WriteUint24(aVendorOui, mOui); }
 
     /**
      * Returns the Vendor IE sub-type.
@@ -238,7 +234,7 @@ public:
      * @returns the network time, in microseconds.
      *
      */
-    uint64_t GetTime(void) const { return HostSwap64(mTime); }
+    uint64_t GetTime(void) const { return LittleEndian::HostSwap64(mTime); }
 
     /**
      * Sets the network time.
@@ -246,7 +242,7 @@ public:
      * @param[in]  aTime  The network time.
      *
      */
-    void SetTime(uint64_t aTime) { mTime = HostSwap64(aTime); }
+    void SetTime(uint64_t aTime) { mTime = LittleEndian::HostSwap64(aTime); }
 
 private:
     uint8_t  mSequence;
@@ -1559,7 +1555,7 @@ public:
      */
     void Init(void)
     {
-        mSuperframeSpec     = HostSwap16(kSuperFrameSpec);
+        mSuperframeSpec     = LittleEndian::HostSwap16(kSuperFrameSpec);
         mGtsSpec            = 0;
         mPendingAddressSpec = 0;
     }
@@ -1573,7 +1569,8 @@ public:
      */
     bool IsValid(void) const
     {
-        return (mSuperframeSpec == HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) && (mPendingAddressSpec == 0);
+        return (mSuperframeSpec == LittleEndian::HostSwap16(kSuperFrameSpec)) && (mGtsSpec == 0) &&
+               (mPendingAddressSpec == 0);
     }
 
     /**
@@ -1754,7 +1751,7 @@ public:
      * @returns the CSL Period.
      *
      */
-    uint16_t GetPeriod(void) const { return HostSwap16(mPeriod); }
+    uint16_t GetPeriod(void) const { return LittleEndian::HostSwap16(mPeriod); }
 
     /**
      * Sets the CSL Period.
@@ -1762,7 +1759,7 @@ public:
      * @param[in]  aPeriod  The CSL Period.
      *
      */
-    void SetPeriod(uint16_t aPeriod) { mPeriod = HostSwap16(aPeriod); }
+    void SetPeriod(uint16_t aPeriod) { mPeriod = LittleEndian::HostSwap16(aPeriod); }
 
     /**
      * Returns the CSL Phase.
@@ -1770,7 +1767,7 @@ public:
      * @returns the CSL Phase.
      *
      */
-    uint16_t GetPhase(void) const { return HostSwap16(mPhase); }
+    uint16_t GetPhase(void) const { return LittleEndian::HostSwap16(mPhase); }
 
     /**
      * Sets the CSL Phase.
@@ -1778,7 +1775,7 @@ public:
      * @param[in]  aPhase  The CSL Phase.
      *
      */
-    void SetPhase(uint16_t aPhase) { mPhase = HostSwap16(aPhase); }
+    void SetPhase(uint16_t aPhase) { mPhase = LittleEndian::HostSwap16(aPhase); }
 
 private:
     uint16_t mPhase;

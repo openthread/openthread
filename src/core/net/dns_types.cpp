@@ -43,8 +43,6 @@
 namespace ot {
 namespace Dns {
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 Error Header::SetRandomMessageId(void)
 {
     return Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&mMessageId), sizeof(mMessageId));
@@ -244,7 +242,7 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
 
     OT_ASSERT(aOffset < kPointerLabelTypeUint16);
 
-    value = HostSwap16(aOffset | kPointerLabelTypeUint16);
+    value = BigEndian::HostSwap16(aOffset | kPointerLabelTypeUint16);
 
     ExitNow(error = aMessage.Append(value));
 
@@ -528,7 +526,7 @@ Error Name::LabelIterator::GetNextLabel(void)
 
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
-            nextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            nextLabelOffset = mMessage.GetOffset() + (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
             VerifyOrExit(nextLabelOffset < mNextLabelOffset, error = kErrorParse);
             mNextLabelOffset = nextLabelOffset;
 
