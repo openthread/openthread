@@ -149,6 +149,8 @@ jobs:
         ./tests/toranj/build.sh posix-15.4+trel
         git clean -dfx
         ./tests/toranj/build.sh posix-trel
+        git clean -dfx
+        ./tests/toranj/build.sh --enable-plat-key-ref all
 
   upload-coverage:
     needs:
