@@ -651,6 +651,8 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @endcode
      * @par
      * Gets or sets the service key record inclusion mode in the SRP client.
+     * This command is intended for testing only, and requires that
+     * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` be enabled.
      * @sa otSrpClientIsServiceKeyRecordEnabled
      */
     else if (aArgs[0] == "key")
