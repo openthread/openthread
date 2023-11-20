@@ -57,8 +57,8 @@ static const uint8_t sMottoText[]      = "Think good thoughts, say good words, d
 static const uint8_t sMysteryText[]    = "4871(\\):|(3$}{4|/4/2%14(\\)";
 static const uint8_t sHexText[]        = "0123456789abcdef";
 
-static ot::Instance *sInstance;
-static MessagePool  *sMessagePool;
+static Instance    *sInstance;
+static MessagePool *sMessagePool;
 
 struct CallbackContext
 {

@@ -37,16 +37,18 @@
 
 #include "test_util.hpp"
 
-using ot::Utils::CmdLineParser::ParseAsBool;
-using ot::Utils::CmdLineParser::ParseAsHexString;
-using ot::Utils::CmdLineParser::ParseAsHexStringSegment;
-using ot::Utils::CmdLineParser::ParseAsInt16;
-using ot::Utils::CmdLineParser::ParseAsInt32;
-using ot::Utils::CmdLineParser::ParseAsInt8;
-using ot::Utils::CmdLineParser::ParseAsUint16;
-using ot::Utils::CmdLineParser::ParseAsUint32;
-using ot::Utils::CmdLineParser::ParseAsUint64;
-using ot::Utils::CmdLineParser::ParseAsUint8;
+namespace ot {
+
+using Utils::CmdLineParser::ParseAsBool;
+using Utils::CmdLineParser::ParseAsHexString;
+using Utils::CmdLineParser::ParseAsHexStringSegment;
+using Utils::CmdLineParser::ParseAsInt16;
+using Utils::CmdLineParser::ParseAsInt32;
+using Utils::CmdLineParser::ParseAsInt8;
+using Utils::CmdLineParser::ParseAsUint16;
+using Utils::CmdLineParser::ParseAsUint32;
+using Utils::CmdLineParser::ParseAsUint64;
+using Utils::CmdLineParser::ParseAsUint8;
 
 template <typename ValueType> struct TestCase
 {
@@ -352,10 +354,12 @@ void TestParsingHexStrings(void)
     }
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestParsingInts();
-    TestParsingHexStrings();
+    ot::TestParsingInts();
+    ot::TestParsingHexStrings();
 
     printf("All tests passed\n");
     return 0;
