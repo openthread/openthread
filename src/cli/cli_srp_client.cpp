@@ -106,13 +106,13 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
      * @par
      * Three categories of network data entries indicate the presence of an SRP sever,
      * and are preferred in the following order:
-     *  1. Unicast entries in which the server address is included in the service
+     *  -# Unicast entries in which the server address is included in the service
      *  data. If there are multiple options, the option with the lowest numerical
      *  IPv6 address is preferred.
-     *  1. Anycast entries that each have a sequence number. The largest sequence
+     *  -# Anycast entries that each have a sequence number. The largest sequence
      *  number as specified by Serial Number Arithmetic Logic
      *  in RFC-1982 is preferred.
-     *  1. Unicast entries in which the server address information is included
+     *  -# Unicast entries in which the server address information is included
      *  with the server data. If there are multiple options, the option with the
      *  lowest numerical IPv6 address is preferred.
      * @sa otSrpClientEnableAutoStartMode
@@ -146,7 +146,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
 /**
- * @cli srp client callback (set, get)
+ * @cli srp client callback (enable/disable, get)
  * @code
  * srp client callback enable
  * Done
@@ -158,7 +158,7 @@ exit:
  * @endcode
  * @cparam srp client callback [@ca{enable}|@ca{disable}]
  * @par
- * Sets or enables/disables printing callback events from the SRP client.
+ * Gets or enables/disables printing callback events from the SRP client.
  * @sa otSrpClientSetCallback
  */
 template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
@@ -313,7 +313,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          * srp client host address fd00::cafe
          * Done
          * @endcode
-         * @cparam client host address [auto|@ca{address...}]
+         * @cparam srp client host address [auto|@ca{address...}]
          *   * Use the `auto` parameter to enable auto host address mode.
          *     When enabled, the client automatically uses all Thread `netif`
          *     unicast addresses except for link-local and mesh-local
@@ -568,8 +568,9 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * srp client service add ins2 _test2._udp,_sub1,_sub2 111 1 1
      * Done
      * @endcode
-     * @cparam srp client service add @ca{instancename} @ca{servicename} @ca{port} [@ca{priority}] [@ca{weight}]
-     * [@ca{txt}]
+     * @cparam srp client service add @ca{instancename} @ca{servicename} <!--
+     * * -->                          @ca{port} [@ca{priority}] <!--
+     * * -->                          @ca{weight}] [@ca{txt}]
      * The 'servicename` paramater can can optionally include a list of service subtype labels that are
      * separated by commas. The examples here use generic naming. The `priority` and `weight` (both are `uint16_t`
      * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT data
@@ -914,7 +915,7 @@ exit:
  * @endcode
  * @cparam srp client ttl [@ca{value}]
  * @par
- * Sets or gets the `ttl` in seconds.
+ * Sets or gets the `ttl`(time to live) value in seconds.
  * @sa otSrpClientSetTtl
  * @sa otSrpClientGetTtl
  */
