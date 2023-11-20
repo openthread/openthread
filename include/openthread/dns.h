@@ -62,6 +62,8 @@ extern "C" {
 
 #define OT_DNS_TXT_KEY_MAX_LENGTH 9 ///< Recommended maximum length of TXT record key string (RFC 6763 - section 6.4).
 
+#define OT_DNS_TXT_KEY_ITER_MAX_LENGTH 64 ///< Maximum length of TXT key string supported by `otDnsTxtEntryIterator`.
+
 /**
  * Represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
  *
@@ -104,7 +106,7 @@ typedef struct otDnsTxtEntryIterator
 {
     const void *mPtr;
     uint16_t    mData[2];
-    char        mChar[OT_DNS_TXT_KEY_MAX_LENGTH + 1];
+    char        mChar[OT_DNS_TXT_KEY_ITER_MAX_LENGTH + 1];
 } otDnsTxtEntryIterator;
 
 /**
@@ -127,9 +129,9 @@ void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *
  * data buffer used to initialize the iterator MUST persist and remain unchanged. Otherwise the behavior of this
  * function is undefined.
  *
- * If the parsed key string length is smaller than or equal to `OT_DNS_TXT_KEY_MAX_LENGTH` (recommended max key length)
- * the key string is returned in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to NULL and the
- * entire encoded TXT entry string is returned in `mValue` and `mValueLength`.
+ * If the parsed key string length is smaller than or equal to `OT_DNS_TXT_KEY_ITER_MAX_LENGTH` the key string is
+ * returned in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to NULL and the entire encoded TXT
+ * entry string is returned in `mValue` and `mValueLength`.
  *
  * @param[in]  aIterator   A pointer to the iterator (MUST NOT be NULL).
  * @param[out] aEntry      A pointer to a `otDnsTxtEntry` structure to output the parsed/read entry (MUST NOT be NULL).
