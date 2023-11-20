@@ -351,7 +351,7 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage           *a
 
     uint8_t                                           status;
     Error                                             error;
-    Ip6::Address                                      failedAddresses[Ip6AddressesTlv::kMaxAddresses];
+    Ip6::Address                                      failedAddresses[Ip6AddressesTlv::kMaxAddresses]{};
     uint8_t                                           failedAddressNum = 0;
     Callback<otIp6RegisterMulticastListenersCallback> callbackCopy     = mRegisterMulticastListenersCallback;
 
@@ -447,7 +447,7 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message      
 
     uint8_t      status;
     Error        error;
-    Ip6::Address failedAddresses[Ip6AddressesTlv::kMaxAddresses];
+    Ip6::Address failedAddresses[Ip6AddressesTlv::kMaxAddresses]{};
     uint8_t      failedAddressNum = 0;
 
     error = ParseMulticastListenerRegistrationResponse(aResult, aMessage, status, failedAddresses, failedAddressNum);
