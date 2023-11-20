@@ -93,7 +93,7 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
     /**
      * @cli srp client autostart enable
      * @code
-     * src client autostart enable
+     * srp client autostart enable
      * Done
      * @endcode
      * @par
@@ -124,7 +124,7 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
     /**
      * @cli srp client autostart disable
      * @code
-     * src client autostart disable
+     * srp client autostart disable
      * Done
      * @endcode
      * @par
@@ -374,13 +374,13 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam srp client host remove [@ca{removekeylease}] [@ca{sendunregtoserver}]
-     *  * The parameter `removekeylease` is an optional boolean value that indicates
-     *    whether the host key lease should also be removed (default is `false`).
-     *  * The parameter `sendunregtoserver` is an optional boolean value that indicates
-     *    whether the client host should send an "update" message to the server
-     *    even when the client host information has not yet been registered with the
-     *    server (default is `false`). This parameter can be specified only if the
-     *    `removekeylease` parameter is specified first in the command.
+     *   * The parameter `removekeylease` is an optional boolean value that indicates
+     *     whether the host key lease should also be removed (default is `false`).
+     *   * The parameter `sendunregtoserver` is an optional boolean value that indicates
+     *     whether the client host should send an "update" message to the server
+     *     even when the client host information has not yet been registered with the
+     *     server (default is `false`). This parameter can be specified only if the
+     *     `removekeylease` parameter is specified first in the command.
      * @par
      * Removes SRP client host information and all services from the SRP server.
      * @sa otSrpClientRemoveHostAndServices
@@ -484,7 +484,7 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
      * @cli srp client server
      * @code
      * srp client server
-     * [fd00:0:0:0:d88a:618b:384d:e760]:4724
+     * \\[fd00:0:0:0:d88a:618b:384d:e760\\]:4724
      * Done
      * @endcode
      * @par
@@ -570,7 +570,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @endcode
      * @cparam srp client service add @ca{instancename} @ca{servicename} <!--
      * * -->                          @ca{port} [@ca{priority}] <!--
-     * * -->                          @ca{weight}] [@ca{txt}]
+     * * -->                          [@ca{weight}] [@ca{txt}]
      * The `servicename` paramater can optionally include a list of service subtype labels that are
      * separated by commas. The examples here use generic naming. The `priority` and `weight` (both are `uint16_t`
      * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT data
