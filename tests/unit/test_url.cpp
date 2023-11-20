@@ -36,8 +36,8 @@ namespace Url {
 
 void TestSimple(void)
 {
-    char         url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
-    ot::Url::Url args;
+    char url[] = "spinel:///dev/ttyUSB0?baudrate=115200";
+    Url  args;
 
     VerifyOrQuit(!args.Init(url));
 
@@ -53,8 +53,8 @@ void TestSimple(void)
 
 void TestSimpleNoQueryString(void)
 {
-    char         url[] = "spinel:///dev/ttyUSB0";
-    ot::Url::Url args;
+    char url[] = "spinel:///dev/ttyUSB0";
+    Url  args;
 
     VerifyOrQuit(!args.Init(url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
@@ -67,9 +67,9 @@ void TestSimpleNoQueryString(void)
 
 void TestEmptyValue(void)
 {
-    char         url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
-    ot::Url::Url args;
-    const char  *arg = nullptr;
+    char        url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
+    Url         args;
+    const char *arg = nullptr;
 
     VerifyOrQuit(!args.Init(url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
@@ -85,8 +85,8 @@ void TestEmptyValue(void)
 
 void TestMultipleProtocols(void)
 {
-    char         url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
-    ot::Url::Url args;
+    char url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
+    Url  args;
 
     VerifyOrQuit(!args.Init(url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
@@ -97,9 +97,9 @@ void TestMultipleProtocols(void)
 
 void TestMultipleProtocolsAndDuplicateParameters(void)
 {
-    char         url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
-    ot::Url::Url args;
-    const char  *arg = nullptr;
+    char        url[] = "spinel+exec:///path/to/ot-rcp?arg=1&arg=arg2&arg=3";
+    Url         args;
+    const char *arg = nullptr;
 
     VerifyOrQuit(!args.Init(url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/path/to/ot-rcp"));
@@ -126,10 +126,10 @@ void TestIntValue(void)
     char int16url[] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=-0X03&val4=-400&val5=+500&val6=32768&val7=-32769";
     char int32url[] =
         "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=-0X03&val4=-40000&val5=+50000&val6=2147483648&val7=-2147483649";
-    ot::Url::Url args;
-    int8_t       int8val;
-    int16_t      int16val;
-    int32_t      int32val;
+    Url     args;
+    int8_t  int8val;
+    int16_t int16val;
+    int32_t int32val;
 
     VerifyOrQuit(!args.Init(int8url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
@@ -199,10 +199,10 @@ void TestUintValue(void)
     char uint16url[] = "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03&val4=-400&val5=+500&val6=65536&val7=-1";
     char uint32url[] =
         "spinel:///dev/ttyUSB0?val1=1&val2=0x02&val3=0X03&val4=-40000&val5=+70000&val6=4294967296&val7=-1";
-    ot::Url::Url args;
-    uint8_t      uint8val;
-    uint16_t     uint16val;
-    uint32_t     uint32val;
+    Url      args;
+    uint8_t  uint8val;
+    uint16_t uint16val;
+    uint32_t uint32val;
 
     VerifyOrQuit(!args.Init(uint8url));
     VerifyOrQuit(!strcmp(args.GetPath(), "/dev/ttyUSB0"));

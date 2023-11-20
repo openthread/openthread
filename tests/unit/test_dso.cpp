@@ -38,6 +38,8 @@
 #include "instance/instance.hpp"
 #include "net/dns_dso.hpp"
 
+namespace ot {
+
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
 extern "C" {
@@ -73,7 +75,7 @@ void AdvanceTime(uint32_t aDuration)
 
     Log(" AdvanceTime for %u.%03u", aDuration / 1000, aDuration % 1000);
 
-    while (ot::TimeMilli(sAlarmTime) <= ot::TimeMilli(time))
+    while (TimeMilli(sAlarmTime) <= TimeMilli(time))
     {
         sNow = sAlarmTime;
         otPlatAlarmMilliFired(sInstance);
@@ -82,7 +84,6 @@ void AdvanceTime(uint32_t aDuration)
     sNow = time;
 }
 
-namespace ot {
 namespace Dns {
 
 OT_TOOL_PACKED_BEGIN
@@ -1218,9 +1219,10 @@ void TestDso(void)
 }
 
 } // namespace Dns
-} // namespace ot
 
 #endif // OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+
+} // namespace ot
 
 int main(void)
 {

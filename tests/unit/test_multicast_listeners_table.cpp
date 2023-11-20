@@ -42,7 +42,7 @@
 
 namespace ot {
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 using namespace ot::BackboneRouter;
 

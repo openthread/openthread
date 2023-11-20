@@ -36,6 +36,8 @@
 #include "common/debug.hpp"
 #include "crypto/hkdf_sha256.hpp"
 
+namespace ot {
+
 struct TestVector
 {
     const uint8_t *mInKey;
@@ -126,11 +128,11 @@ void TestHkdfSha256(void)
 
     VerifyOrQuit(instance != nullptr);
 
-    for (const TestVector *test = &kTestVectors[0]; test < ot::GetArrayEnd(kTestVectors); test++)
+    for (const TestVector *test = &kTestVectors[0]; test < GetArrayEnd(kTestVectors); test++)
     {
-        ot::Crypto::HkdfSha256 hkdf;
-        uint8_t                outKey[kMaxOuttKey];
-        ot::Crypto::Key        testInputKey;
+        Crypto::HkdfSha256 hkdf;
+        uint8_t            outKey[kMaxOuttKey];
+        Crypto::Key        testInputKey;
 
         printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         DumpBuffer("\nInput Key", test->mInKey, test->mInKeyLength);
@@ -159,9 +161,11 @@ void TestHkdfSha256(void)
     testFreeInstance(instance);
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestHkdfSha256();
+    ot::TestHkdfSha256();
     printf("All tests passed\n");
     return 0;
 }

@@ -43,9 +43,9 @@
 #include "net/icmp6.hpp"
 #include "net/nd6.hpp"
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+namespace ot {
 
-using namespace ot;
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 // Logs a message and adds current time (sNow) as "<hours>:<min>:<secs>.<msec>"
 #define Log(...)                                                                                         \
@@ -111,7 +111,7 @@ static constexpr otOperationalDataset kDataset = {
         },
 };
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 static uint32_t sNow = 0;
 static uint32_t sAlarmTime;
@@ -3553,31 +3553,33 @@ void TestBorderRoutingProcessPlatfromGeneratedNd(void)
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+} // namespace ot
+
 int main(void)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    TestSamePrefixesFromMultipleRouters();
-    TestOmrSelection();
-    TestDefaultRoute();
-    TestAdvNonUlaRoute();
-    TestLocalOnLinkPrefixDeprecation();
+    ot::TestSamePrefixesFromMultipleRouters();
+    ot::TestOmrSelection();
+    ot::TestDefaultRoute();
+    ot::TestAdvNonUlaRoute();
+    ot::TestLocalOnLinkPrefixDeprecation();
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    TestDomainPrefixAsOmr();
+    ot::TestDomainPrefixAsOmr();
 #endif
-    TestExtPanIdChange();
-    TestConflictingPrefix();
-    TestRouterNsProbe();
+    ot::TestExtPanIdChange();
+    ot::TestConflictingPrefix();
+    ot::TestRouterNsProbe();
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
-    TestSavedOnLinkPrefixes();
+    ot::TestSavedOnLinkPrefixes();
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    TestAutoEnableOfSrpServer();
+    ot::TestAutoEnableOfSrpServer();
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
-    TestNat64PrefixSelection();
+    ot::TestNat64PrefixSelection();
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    TestBorderRoutingProcessPlatfromGeneratedNd();
+    ot::TestBorderRoutingProcessPlatfromGeneratedNd();
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     printf("All tests passed\n");

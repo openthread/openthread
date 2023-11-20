@@ -82,7 +82,7 @@ void TestMacAddress(void)
     const uint8_t           kExtAddr[OT_EXT_ADDRESS_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0};
     const Mac::ShortAddress kShortAddr                    = 0x1234;
 
-    ot::Instance   *instance;
+    Instance       *instance;
     Mac::Address    addr;
     Mac::ExtAddress extAddr;
     uint8_t         buffer[OT_EXT_ADDRESS_SIZE];

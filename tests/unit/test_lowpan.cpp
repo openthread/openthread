@@ -31,11 +31,9 @@
 #include "test_platform.h"
 #include "test_util.hpp"
 
-using namespace ot;
-
 namespace ot {
 
-ot::Instance   *sInstance;
+Instance       *sInstance;
 Ip6::Ip6       *sIp6;
 Lowpan::Lowpan *sLowpan;
 
@@ -2091,9 +2089,9 @@ void TestLowpanFragmentHeader(void)
 
 int main(void)
 {
-    TestLowpanIphc();
-    TestLowpanMeshHeader();
-    TestLowpanFragmentHeader();
+    ot::TestLowpanIphc();
+    ot::TestLowpanMeshHeader();
+    ot::TestLowpanFragmentHeader();
 
     printf("All tests passed\n");
     return 0;

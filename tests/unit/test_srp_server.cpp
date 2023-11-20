@@ -49,9 +49,9 @@
 #define ENABLE_SRP_TEST 0
 #endif
 
-#if ENABLE_SRP_TEST
+namespace ot {
 
-using namespace ot;
+#if ENABLE_SRP_TEST
 
 // Logs a message and adds current time (sNow) as "<hours>:<min>:<secs>.<msec>"
 #define Log(...)                                                                                          \
@@ -60,7 +60,7 @@ using namespace ot;
 
 static constexpr uint16_t kMaxRaSize = 800;
 
-static ot::Instance *sInstance;
+static Instance *sInstance;
 
 static uint32_t sNow = 0;
 static uint32_t sAlarmTime;
@@ -1028,16 +1028,18 @@ void TestUpdateLeaseShortVariant(void)
 
 #endif // ENABLE_SRP_TEST
 
+} // namespace ot
+
 int main(void)
 {
 #if ENABLE_SRP_TEST
-    TestSrpServerBase();
-    TestSrpServerReject();
-    TestSrpServerIgnore();
-    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
-    TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
+    ot::TestSrpServerBase();
+    ot::TestSrpServerReject();
+    ot::TestSrpServerIgnore();
+    ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ true);
+    ot::TestSrpServerClientRemove(/* aShouldRemoveKeyLease */ false);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    TestUpdateLeaseShortVariant();
+    ot::TestUpdateLeaseShortVariant();
 #endif
     printf("All tests passed\n");
 #else
