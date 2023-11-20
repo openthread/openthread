@@ -3329,6 +3329,21 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+const char *RoutingManager::Dhcp6PdStateToString(Dhcp6PdState aState)
+{
+    static const char *const kStateStrings[] = {
+        "Disabled", // (0) kDisabled
+        "Stopped",  // (1) kStopped
+        "Running",  // (2) kRunning
+    };
+
+    static_assert(0 == kDhcp6PdStateDisabled, "kDhcp6PdStateDisabled value is incorrect");
+    static_assert(1 == kDhcp6PdStateStopped, "kDhcp6PdStateStopped value is incorrect");
+    static_assert(2 == kDhcp6PdStateRunning, "kDhcp6PdStateRunning value is incorrect");
+
+    return kStateStrings[aState];
+}
+
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
@@ -3356,14 +3371,7 @@ RoutingManager::Dhcp6PdState RoutingManager::PdPrefixManager::GetState(void) con
 
     if (mEnabled)
     {
-        if (mIsRunning)
-        {
-            state = kDhcp6PdStateRunning;
-        }
-        else
-        {
-            state = kDhcp6PdStateStopped;
-        }
+        state = mIsRunning ? kDhcp6PdStateRunning : kDhcp6PdStateStopped;
     }
 
     return state;
@@ -3374,19 +3382,18 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     Dhcp6PdState newState = GetState();
 
     VerifyOrExit(aOldState != newState);
+    LogInfo("PdPrefixManager: %s -> %s", Dhcp6PdStateToString(aOldState), Dhcp6PdStateToString(newState));
+
+    // TODO: We may also want to inform the platform that PD is stopped.
     switch (newState)
     {
     case kDhcp6PdStateDisabled:
-        LogInfo("PdPrefixManager: Disabled");
         WithdrawPrefix();
         break;
     case kDhcp6PdStateStopped:
-        LogInfo("PdPrefixManager: Stopped");
-        // TODO: We may also want to inform the platform that PD is stopped.
         WithdrawPrefix();
         break;
     case kDhcp6PdStateRunning:
-        LogInfo("PdPrefixManager: Running");
         break;
     }
 
