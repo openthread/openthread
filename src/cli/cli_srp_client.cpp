@@ -484,7 +484,7 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
      * @cli srp client server
      * @code
      * srp client server
-     * \\[fd00:0:0:0:d88a:618b:384d:e760\\]:4724
+     * * \\[fd00:0:0:0:d88a:618b:384d:e760\\]:4724
      * Done
      * @endcode
      * @par
