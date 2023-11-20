@@ -136,12 +136,12 @@ void JoinerDiscerner::CopyTo(Mac::ExtAddress &aExtAddress) const
     OT_ASSERT(IsValid());
 
     // Write full bytes
-    while (remaining >= CHAR_BIT)
+    while (remaining >= kBitsPerByte)
     {
         *cur = static_cast<uint8_t>(value & 0xff);
-        value >>= CHAR_BIT;
+        value >>= kBitsPerByte;
         cur--;
-        remaining -= CHAR_BIT;
+        remaining -= kBitsPerByte;
     }
 
     // Write any remaining bits (not a full byte)
@@ -168,11 +168,11 @@ JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 {
     InfoString string;
 
-    if (mLength <= sizeof(uint16_t) * CHAR_BIT)
+    if (mLength <= BitSizeOf(uint16_t))
     {
         string.Append("0x%04x", static_cast<uint16_t>(mValue));
     }
-    else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
+    else if (mLength <= BitSizeOf(uint32_t))
     {
         string.Append("0x%08lx", ToUlong(static_cast<uint32_t>(mValue)));
     }

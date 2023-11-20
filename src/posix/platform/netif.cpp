@@ -295,15 +295,17 @@ static bool sIsSyncingState = false;
 static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+#define BITS_PER_BYTE 8
+#define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * BITS_PER_BYTE)
+
 static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixLen)
 {
-#define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * CHAR_BIT)
+    ot::Ip6::Address addr;
+
     if (prefixLen > MAX_PREFIX_LENGTH)
     {
         prefixLen = MAX_PREFIX_LENGTH;
     }
-
-    ot::Ip6::Address addr;
 
     addr.Clear();
     addr.SetPrefix(allOnes, prefixLen);

@@ -36,7 +36,6 @@
 
 #include "openthread-core-config.h"
 
-#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -51,6 +50,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 #include "meshcop/extended_panid.hpp"
@@ -481,7 +481,7 @@ public:
 private:
     static uint8_t MaskFor(uint8_t aRouterId) { return (0x80 >> (aRouterId % 8)); }
 
-    uint8_t mRouterIdSet[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    uint8_t mRouterIdSet[BytesForBitSize(Mle::kMaxRouterId + 1)];
 } OT_TOOL_PACKED_END;
 
 class TxChallenge;

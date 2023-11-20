@@ -26,8 +26,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <limits.h>
-
 #include "common/array.hpp"
 #include "common/encoding.hpp"
 #include "common/string.hpp"
@@ -328,8 +326,8 @@ bool CheckPrefix(const Ip6::Address &aAddress, const uint8_t *aPrefix, uint8_t a
 
     for (uint8_t bit = 0; bit < aPrefixLength; bit++)
     {
-        uint8_t index = bit / CHAR_BIT;
-        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+        uint8_t index = bit / kBitsPerByte;
+        uint8_t mask  = (0x80 >> (bit % kBitsPerByte));
 
         if ((aAddress.mFields.m8[index] & mask) != (aPrefix[index] & mask))
         {
@@ -349,8 +347,8 @@ bool CheckPrefixInIid(const Ip6::InterfaceIdentifier &aIid, const uint8_t *aPref
 
     for (uint8_t bit = 64; bit < aPrefixLength; bit++)
     {
-        uint8_t index = bit / CHAR_BIT;
-        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+        uint8_t index = bit / kBitsPerByte;
+        uint8_t mask  = (0x80 >> (bit % kBitsPerByte));
 
         if ((aIid.mFields.m8[index - 8] & mask) != (aPrefix[index] & mask))
         {
@@ -368,10 +366,10 @@ bool CheckInterfaceId(const Ip6::Address &aAddress1, const Ip6::Address &aAddres
 
     bool matches = true;
 
-    for (size_t bit = aPrefixLength; bit < sizeof(Ip6::Address) * CHAR_BIT; bit++)
+    for (size_t bit = aPrefixLength; bit < sizeof(Ip6::Address) * kBitsPerByte; bit++)
     {
-        uint8_t index = bit / CHAR_BIT;
-        uint8_t mask  = (0x80 >> (bit % CHAR_BIT));
+        uint8_t index = bit / kBitsPerByte;
+        uint8_t mask  = (0x80 >> (bit % kBitsPerByte));
 
         if ((aAddress1.mFields.m8[index] & mask) != (aAddress2.mFields.m8[index] & mask))
         {
@@ -405,7 +403,7 @@ void TestIp6AddressSetPrefix(void)
         memcpy(address.mFields.m8, prefix, sizeof(address));
         printf("Prefix is %s\n", address.ToString().AsCString());
 
-        for (size_t prefixLength = 0; prefixLength <= sizeof(Ip6::Address) * CHAR_BIT; prefixLength++)
+        for (size_t prefixLength = 0; prefixLength <= sizeof(Ip6::Address) * kBitsPerByte; prefixLength++)
         {
             ip6Prefix.Clear();
             ip6Prefix.Set(prefix, prefixLength);

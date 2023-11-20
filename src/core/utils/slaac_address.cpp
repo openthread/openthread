@@ -39,6 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
@@ -303,7 +304,7 @@ Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress, uint8_t &aDadCoun
     for (uint16_t count = 0; count < kMaxIidCreationAttempts; count++, aDadCounter++)
     {
         sha256.Start();
-        sha256.Update(aAddress.mAddress.mFields.m8, BitVectorBytes(aAddress.mPrefixLength));
+        sha256.Update(aAddress.mAddress.mFields.m8, BytesForBitSize(aAddress.mPrefixLength));
 
         sha256.Update(netIface);
         sha256.Update(aDadCounter);

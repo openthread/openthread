@@ -45,7 +45,6 @@
 #endif
 #endif
 
-#include <limits.h>
 #include <stdint.h>
 
 namespace ot {
@@ -81,8 +80,6 @@ inline uint32_t Reverse32(uint32_t v)
 
     return v;
 }
-
-#define BitVectorBytes(x) static_cast<uint8_t>(((x) + (CHAR_BIT - 1)) / CHAR_BIT)
 
 namespace BigEndian {
 

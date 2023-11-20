@@ -28,6 +28,7 @@
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "instance/instance.hpp"
 #include "net/checksum.hpp"
@@ -160,7 +161,7 @@ void CorruptMessage(Message &aMessage)
 
     SuccessOrQuit(aMessage.Read(byteOffset, byte));
 
-    bitOffset = Random::NonCrypto::GetUint8InRange(0, CHAR_BIT);
+    bitOffset = Random::NonCrypto::GetUint8InRange(0, kBitsPerByte);
 
     byte ^= (1 << bitOffset);
 

@@ -36,14 +36,14 @@
 
 #include "openthread-core-config.h"
 
-#include <stdint.h>
-
 #include <openthread/ip6.h>
 
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
 
@@ -73,8 +73,8 @@ OT_TOOL_PACKED_BEGIN
 class NetworkPrefix : public otIp6NetworkPrefix, public Equatable<NetworkPrefix>, public Clearable<NetworkPrefix>
 {
 public:
-    static constexpr uint8_t kSize   = OT_IP6_PREFIX_SIZE;            ///< Size in bytes.
-    static constexpr uint8_t kLength = OT_IP6_PREFIX_SIZE * CHAR_BIT; ///< Length of Network Prefix in bits.
+    static constexpr uint8_t kSize   = OT_IP6_PREFIX_SIZE;   ///< Size in bytes.
+    static constexpr uint8_t kLength = kSize * kBitsPerByte; ///< Length of Network Prefix in bits.
 
     /**
      * Generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
@@ -96,8 +96,8 @@ OT_TOOL_PACKED_BEGIN
 class Prefix : public otIp6Prefix, public Clearable<Prefix>, public Unequatable<Prefix>
 {
 public:
-    static constexpr uint8_t kMaxLength = OT_IP6_ADDRESS_SIZE * CHAR_BIT; ///< Max length of a prefix in bits.
-    static constexpr uint8_t kMaxSize   = OT_IP6_ADDRESS_SIZE;            ///< Max (byte) size of a prefix.
+    static constexpr uint8_t kMaxSize   = OT_IP6_ADDRESS_SIZE;     ///< Max (byte) size of a prefix.
+    static constexpr uint8_t kMaxLength = kMaxSize * kBitsPerByte; ///< Max length of a prefix in bits.
 
     static constexpr uint16_t kInfoStringSize = OT_IP6_PREFIX_STRING_SIZE; ///< Info string size (`ToString()`).
 
@@ -283,7 +283,7 @@ public:
      * @returns The size (in bytes) of the prefix.
      *
      */
-    static uint8_t SizeForLength(uint8_t aLength) { return BitVectorBytes(aLength); }
+    static uint8_t SizeForLength(uint8_t aLength) { return BytesForBitSize(aLength); }
 
     /**
      * Returns the number of IPv6 prefix bits that match.

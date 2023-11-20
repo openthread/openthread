@@ -40,6 +40,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
+#include "common/numeric_limits.hpp"
 
 namespace ot {
 
@@ -122,7 +123,7 @@ public:
     }
 
 private:
-    uint8_t mMask[BitVectorBytes(N)];
+    uint8_t mMask[BytesForBitSize(N)];
 };
 
 /**
