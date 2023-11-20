@@ -46,9 +46,6 @@
 
 namespace ot {
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 /**
  * Implements Network Layer TLV generation and parsing.
  *

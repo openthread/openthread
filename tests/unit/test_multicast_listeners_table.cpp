@@ -100,7 +100,7 @@ void TestMulticastListenersTable(void)
         Ip6::Address address;
 
         address                = static_cast<const Ip6::Address &>(MA401);
-        address.mFields.m16[7] = HostSwap16(i);
+        address.mFields.m16[7] = BigEndian::HostSwap16(i);
 
         SuccessOrQuit(table.Add(address, TimerMilli::GetNow() + i));
         VerifyOrQuit(table.Count() == i + 1, "Table count is wrong");

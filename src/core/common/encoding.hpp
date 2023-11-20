@@ -48,7 +48,6 @@
 #include <stdint.h>
 
 namespace ot {
-namespace Encoding {
 
 inline uint16_t Swap16(uint16_t v) { return (((v & 0x00ffU) << 8) & 0xff00) | (((v & 0xff00U) >> 8) & 0x00ff); }
 
@@ -380,7 +379,7 @@ inline void WriteUint64(uint64_t aValue, uint8_t *aBuffer)
 }
 
 } // namespace LittleEndian
-} // namespace Encoding
+
 } // namespace ot
 
 #endif // ENCODING_HPP_

@@ -224,7 +224,7 @@ void Link::BeginTransmit(void)
         }
 
         // Prepare the ack frame (FCF followed by sequence number)
-        Encoding::LittleEndian::WriteUint16(fcf, mAckFrameBuffer);
+        LittleEndian::WriteUint16(fcf, mAckFrameBuffer);
         mAckFrameBuffer[sizeof(fcf)] = mTxFrame.GetSequence();
 
         mRxFrame.mPsdu    = mAckFrameBuffer;

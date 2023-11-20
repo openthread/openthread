@@ -65,9 +65,6 @@ class Address;
  */
 namespace Ip4 {
 
-using Encoding::BigEndian::HostSwap16;
-using Encoding::BigEndian::HostSwap32;
-
 using Ecn = Ip6::Ecn;
 
 /**
@@ -279,7 +276,7 @@ private:
     {
         // Note: Using LL suffix to make it a uint64 since /32 is a valid CIDR, and right shifting 32 bits is undefined
         // for uint32.
-        return HostSwap32(0xffffffffLL >> mLength);
+        return BigEndian::HostSwap32(0xffffffffLL >> mLength);
     }
 
     uint32_t SubnetMask(void) const { return ~HostMask(); }
@@ -386,7 +383,7 @@ public:
      * @returns The IPv4 Payload Length value.
      *
      */
-    uint16_t GetTotalLength(void) const { return HostSwap16(mTotalLength); }
+    uint16_t GetTotalLength(void) const { return BigEndian::HostSwap16(mTotalLength); }
 
     /**
      * Sets the IPv4 Payload Length value.
@@ -394,7 +391,7 @@ public:
      * @param[in]  aLength  The IPv4 Payload Length value.
      *
      */
-    void SetTotalLength(uint16_t aLength) { mTotalLength = HostSwap16(aLength); }
+    void SetTotalLength(uint16_t aLength) { mTotalLength = BigEndian::HostSwap16(aLength); }
 
     /**
      * Returns the IPv4 payload protocol.
@@ -418,7 +415,7 @@ public:
      * @returns The checksum field in the IPv4 header.
      *
      */
-    uint16_t GetChecksum(void) const { return HostSwap16(mHeaderChecksum); }
+    uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mHeaderChecksum); }
 
     /**
      * Sets the IPv4 header checksum, the checksum is in host endian.
@@ -426,7 +423,7 @@ public:
      * @param[in] aChecksum The checksum for the IPv4 header.
      *
      */
-    void SetChecksum(uint16_t aChecksum) { mHeaderChecksum = HostSwap16(aChecksum); }
+    void SetChecksum(uint16_t aChecksum) { mHeaderChecksum = BigEndian::HostSwap16(aChecksum); }
 
     /**
      * Returns the IPv4 Identification value.
@@ -434,7 +431,7 @@ public:
      * @returns The IPv4 Identification value.
      *
      */
-    uint16_t GetIdentification(void) const { return HostSwap16(mIdentification); }
+    uint16_t GetIdentification(void) const { return BigEndian::HostSwap16(mIdentification); }
 
     /**
      * Sets the IPv4 Identification value.
@@ -442,7 +439,7 @@ public:
      * @param[in] aIdentification The IPv4 Identification value.
      *
      */
-    void SetIdentification(uint16_t aIdentification) { mIdentification = HostSwap16(aIdentification); }
+    void SetIdentification(uint16_t aIdentification) { mIdentification = BigEndian::HostSwap16(aIdentification); }
 
     /**
      * Returns the IPv4 Time-to-Live value.
@@ -527,7 +524,7 @@ public:
      * @returns Whether don't fragment flag is set.
      *
      */
-    bool GetDf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsDf; }
+    bool GetDf(void) const { return BigEndian::HostSwap16(mFlagsFragmentOffset) & kFlagsDf; }
 
     /**
      * Returns the Mf flag in the IPv4 header.
@@ -535,7 +532,7 @@ public:
      * @returns Whether more fragments flag is set.
      *
      */
-    bool GetMf(void) const { return HostSwap16(mFlagsFragmentOffset) & kFlagsMf; }
+    bool GetMf(void) const { return BigEndian::HostSwap16(mFlagsFragmentOffset) & kFlagsMf; }
 
     /**
      * Returns the fragment offset in the IPv4 header.
@@ -543,7 +540,7 @@ public:
      * @returns The fragment offset of the IPv4 packet.
      *
      */
-    uint16_t GetFragmentOffset(void) const { return HostSwap16(mFlagsFragmentOffset) & kFragmentOffsetMask; }
+    uint16_t GetFragmentOffset(void) const { return BigEndian::HostSwap16(mFlagsFragmentOffset) & kFragmentOffsetMask; }
 
 private:
     // IPv4 header
@@ -660,7 +657,7 @@ public:
          * @returns The checksum of the ICMP message.
          *
          */
-        uint16_t GetChecksum(void) const { return HostSwap16(mChecksum); }
+        uint16_t GetChecksum(void) const { return BigEndian::HostSwap16(mChecksum); }
 
         /**
          * Sets the checksum field in the ICMP message.
@@ -668,7 +665,7 @@ public:
          * @param[in] aChecksum The checksum of the ICMP message.
          *
          */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
         /**
          * Returns the rest of header field in the ICMP message.

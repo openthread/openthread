@@ -68,8 +68,6 @@ namespace ot {
  */
 namespace Lowpan {
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 /**
  * Represents a LOWPAN_IPHC Context.
  *
@@ -475,8 +473,8 @@ public:
          */
         void Init(uint16_t aSize, uint16_t aTag)
         {
-            mDispatchSize = HostSwap16(kFirstDispatch | (aSize & kSizeMask));
-            mTag          = HostSwap16(aTag);
+            mDispatchSize = BigEndian::HostSwap16(kFirstDispatch | (aSize & kSizeMask));
+            mTag          = BigEndian::HostSwap16(aTag);
         }
 
     private:
@@ -506,8 +504,8 @@ public:
          */
         void Init(uint16_t aSize, uint16_t aTag, uint16_t aOffset)
         {
-            mDispatchSize = HostSwap16(kNextDispatch | (aSize & kSizeMask));
-            mTag          = HostSwap16(aTag);
+            mDispatchSize = BigEndian::HostSwap16(kNextDispatch | (aSize & kSizeMask));
+            mTag          = BigEndian::HostSwap16(aTag);
             mOffset       = static_cast<uint8_t>(aOffset >> 3);
         }
 

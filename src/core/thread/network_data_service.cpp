@@ -299,7 +299,7 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
                 // IPv6 address.
                 aInfo.mSockAddr.GetAddress().SetToRoutingLocator(Get<Mle::Mle>().GetMeshLocalPrefix(),
                                                                  aIterator.mServerSubTlv->GetServer16());
-                aInfo.mSockAddr.SetPort(Encoding::BigEndian::ReadUint16(data.GetBytes()));
+                aInfo.mSockAddr.SetPort(BigEndian::ReadUint16(data.GetBytes()));
                 aInfo.mOrigin = DnsSrpUnicast::kFromServerData;
                 aInfo.mRloc16 = aIterator.mServerSubTlv->GetServer16();
                 ExitNow();

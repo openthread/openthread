@@ -49,9 +49,6 @@
 namespace ot {
 namespace MeshCoP {
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 /**
  * Implements Timestamp generation and parsing.
  *
@@ -80,7 +77,7 @@ public:
      */
     uint64_t GetSeconds(void) const
     {
-        return (static_cast<uint64_t>(HostSwap16(mSeconds16)) << 32) + HostSwap32(mSeconds32);
+        return (static_cast<uint64_t>(BigEndian::HostSwap16(mSeconds16)) << 32) + BigEndian::HostSwap32(mSeconds32);
     }
 
     /**
@@ -91,8 +88,8 @@ public:
      */
     void SetSeconds(uint64_t aSeconds)
     {
-        mSeconds16 = HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
-        mSeconds32 = HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
+        mSeconds16 = BigEndian::HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
+        mSeconds32 = BigEndian::HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
     }
 
     /**
@@ -101,7 +98,7 @@ public:
      * @returns The Ticks value.
      *
      */
-    uint16_t GetTicks(void) const { return HostSwap16(mTicks) >> kTicksOffset; }
+    uint16_t GetTicks(void) const { return BigEndian::HostSwap16(mTicks) >> kTicksOffset; }
 
     /**
      * Sets the Ticks value.
@@ -111,7 +108,8 @@ public:
      */
     void SetTicks(uint16_t aTicks)
     {
-        mTicks = HostSwap16((HostSwap16(mTicks) & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
+        mTicks = BigEndian::HostSwap16((BigEndian::HostSwap16(mTicks) & ~kTicksMask) |
+                                       ((aTicks << kTicksOffset) & kTicksMask));
     }
 
     /**
@@ -120,7 +118,7 @@ public:
      * @returns The Authoritative value.
      *
      */
-    bool GetAuthoritative(void) const { return (HostSwap16(mTicks) & kAuthoritativeMask) != 0; }
+    bool GetAuthoritative(void) const { return (BigEndian::HostSwap16(mTicks) & kAuthoritativeMask) != 0; }
 
     /**
      * Sets the Authoritative value.
@@ -130,8 +128,8 @@ public:
      */
     void SetAuthoritative(bool aAuthoritative)
     {
-        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) |
-                            ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
+        mTicks = BigEndian::HostSwap16((BigEndian::HostSwap16(mTicks) & kTicksMask) |
+                                       ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
     }
 
     /**

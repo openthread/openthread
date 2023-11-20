@@ -89,7 +89,7 @@ void Checksum::WriteToMessage(uint16_t aOffset, Message &aMessage) const
         checksum = ~checksum;
     }
 
-    checksum = Encoding::BigEndian::HostSwap16(checksum);
+    checksum = BigEndian::HostSwap16(checksum);
 
     aMessage.Write(aOffset, checksum);
 }

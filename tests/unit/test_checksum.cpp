@@ -51,7 +51,7 @@ uint16_t CalculateChecksum(const void *aBuffer, uint16_t aLength)
 
     while (aLength >= sizeof(uint16_t))
     {
-        sum += Encoding::BigEndian::ReadUint16(bytes);
+        sum += BigEndian::ReadUint16(bytes);
         bytes += sizeof(uint16_t);
         aLength -= sizeof(uint16_t);
     }
@@ -102,8 +102,8 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
 
     data.mPseudoHeader.mSource        = aSource;
     data.mPseudoHeader.mDestination   = aDestination;
-    data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap32(aIpProto);
-    data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap32(payloadLength);
+    data.mPseudoHeader.mProtocol      = BigEndian::HostSwap32(aIpProto);
+    data.mPseudoHeader.mPayloadLength = BigEndian::HostSwap32(payloadLength);
 
     SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength));
 
@@ -141,8 +141,8 @@ uint16_t CalculateChecksum(const Ip4::Address &aSource,
 
     data.mPseudoHeader.mSource        = aSource;
     data.mPseudoHeader.mDestination   = aDestination;
-    data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap16(aIpProto);
-    data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap16(payloadLength);
+    data.mPseudoHeader.mProtocol      = BigEndian::HostSwap16(aIpProto);
+    data.mPseudoHeader.mPayloadLength = BigEndian::HostSwap16(payloadLength);
 
     SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength));
 

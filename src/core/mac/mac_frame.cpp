@@ -47,11 +47,6 @@
 namespace ot {
 namespace Mac {
 
-using ot::Encoding::LittleEndian::ReadUint16;
-using ot::Encoding::LittleEndian::ReadUint32;
-using ot::Encoding::LittleEndian::WriteUint16;
-using ot::Encoding::LittleEndian::WriteUint32;
-
 void HeaderIe::Init(uint16_t aId, uint8_t aLen)
 {
     Init();
@@ -237,9 +232,9 @@ void Frame::InitMacHeader(Type             aType,
     mLength += GetFcsSize();
 }
 
-uint16_t Frame::GetFrameControlField(void) const { return ReadUint16(mPsdu); }
+uint16_t Frame::GetFrameControlField(void) const { return LittleEndian::ReadUint16(mPsdu); }
 
-void Frame::SetFrameControlField(uint16_t aFcf) { WriteUint16(aFcf, mPsdu); }
+void Frame::SetFrameControlField(uint16_t aFcf) { LittleEndian::WriteUint16(aFcf, mPsdu); }
 
 Error Frame::ValidatePsdu(void) const
 {
@@ -364,7 +359,7 @@ Error Frame::GetDstPanId(PanId &aPanId) const
     uint8_t index = FindDstPanIdIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
-    aPanId = ReadUint16(&mPsdu[index]);
+    aPanId = LittleEndian::ReadUint16(&mPsdu[index]);
 
 exit:
     return error;
@@ -375,7 +370,7 @@ void Frame::SetDstPanId(PanId aPanId)
     uint8_t index = FindDstPanIdIndex();
 
     OT_ASSERT(index != kInvalidIndex);
-    WriteUint16(aPanId, &mPsdu[index]);
+    LittleEndian::WriteUint16(aPanId, &mPsdu[index]);
 }
 
 uint8_t Frame::FindDstAddrIndex(void) const { return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0); }
@@ -390,7 +385,7 @@ Error Frame::GetDstAddr(Address &aAddress) const
     switch (GetFrameControlField() & kFcfDstAddrMask)
     {
     case kFcfDstAddrShort:
-        aAddress.SetShort(ReadUint16(&mPsdu[index]));
+        aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
 
     case kFcfDstAddrExt:
@@ -409,7 +404,7 @@ exit:
 void Frame::SetDstAddr(ShortAddress aShortAddress)
 {
     OT_ASSERT((GetFrameControlField() & kFcfDstAddrMask) == kFcfDstAddrShort);
-    WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
+    LittleEndian::WriteUint16(aShortAddress, &mPsdu[FindDstAddrIndex()]);
 }
 
 void Frame::SetDstAddr(const ExtAddress &aExtAddress)
@@ -515,7 +510,7 @@ Error Frame::GetSrcPanId(PanId &aPanId) const
     uint8_t index = FindSrcPanIdIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
-    aPanId = ReadUint16(&mPsdu[index]);
+    aPanId = LittleEndian::ReadUint16(&mPsdu[index]);
 
 exit:
     return error;
@@ -527,7 +522,7 @@ Error Frame::SetSrcPanId(PanId aPanId)
     uint8_t index = FindSrcPanIdIndex();
 
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
-    WriteUint16(aPanId, &mPsdu[index]);
+    LittleEndian::WriteUint16(aPanId, &mPsdu[index]);
 
 exit:
     return error;
@@ -575,7 +570,7 @@ Error Frame::GetSrcAddr(Address &aAddress) const
     switch (fcf & kFcfSrcAddrMask)
     {
     case kFcfSrcAddrShort:
-        aAddress.SetShort(ReadUint16(&mPsdu[index]));
+        aAddress.SetShort(LittleEndian::ReadUint16(&mPsdu[index]));
         break;
 
     case kFcfSrcAddrExt:
@@ -603,7 +598,7 @@ void Frame::SetSrcAddr(ShortAddress aShortAddress)
     OT_ASSERT((GetFrameControlField() & kFcfSrcAddrMask) == kFcfSrcAddrShort);
     OT_ASSERT(index != kInvalidIndex);
 
-    WriteUint16(aShortAddress, &mPsdu[index]);
+    LittleEndian::WriteUint16(aShortAddress, &mPsdu[index]);
 }
 
 void Frame::SetSrcAddr(const ExtAddress &aExtAddress)
@@ -703,7 +698,7 @@ Error Frame::GetFrameCounter(uint32_t &aFrameCounter) const
     // Security Control
     index += kSecurityControlSize;
 
-    aFrameCounter = ReadUint32(&mPsdu[index]);
+    aFrameCounter = LittleEndian::ReadUint32(&mPsdu[index]);
 
 exit:
     return error;
@@ -718,7 +713,7 @@ void Frame::SetFrameCounter(uint32_t aFrameCounter)
     // Security Control
     index += kSecurityControlSize;
 
-    WriteUint32(aFrameCounter, &mPsdu[index]);
+    LittleEndian::WriteUint32(aFrameCounter, &mPsdu[index]);
 
     static_cast<Mac::TxFrame *>(this)->SetIsHeaderUpdated(true);
 }
@@ -1396,7 +1391,7 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
     {
         fcf |= kFcfFramePending;
     }
-    WriteUint16(fcf, mPsdu);
+    LittleEndian::WriteUint16(fcf, mPsdu);
 
     mPsdu[kSequenceIndex] = aFrame.GetSequence();
 

@@ -51,9 +51,6 @@
 #include "net/ip6.hpp"
 #include "thread/network_data_types.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
-
 namespace ot {
 namespace Ip6 {
 namespace Nd {
@@ -235,7 +232,7 @@ public:
      * @param[in]  aValidLifetime  The valid lifetime in seconds.
      *
      */
-    void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = HostSwap32(aValidLifetime); }
+    void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = BigEndian::HostSwap32(aValidLifetime); }
 
     /**
      * THis method gets the valid lifetime of the prefix in seconds.
@@ -243,7 +240,7 @@ public:
      * @returns  The valid lifetime in seconds.
      *
      */
-    uint32_t GetValidLifetime(void) const { return HostSwap32(mValidLifetime); }
+    uint32_t GetValidLifetime(void) const { return BigEndian::HostSwap32(mValidLifetime); }
 
     /**
      * Sets the preferred lifetime of the prefix in seconds.
@@ -251,7 +248,10 @@ public:
      * @param[in]  aPreferredLifetime  The preferred lifetime in seconds.
      *
      */
-    void SetPreferredLifetime(uint32_t aPreferredLifetime) { mPreferredLifetime = HostSwap32(aPreferredLifetime); }
+    void SetPreferredLifetime(uint32_t aPreferredLifetime)
+    {
+        mPreferredLifetime = BigEndian::HostSwap32(aPreferredLifetime);
+    }
 
     /**
      * THis method returns the preferred lifetime of the prefix in seconds.
@@ -259,7 +259,7 @@ public:
      * @returns  The preferred lifetime in seconds.
      *
      */
-    uint32_t GetPreferredLifetime(void) const { return HostSwap32(mPreferredLifetime); }
+    uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
 
     /**
      * Sets the prefix.
@@ -367,7 +367,7 @@ public:
      * @param[in]  aLifetime  The lifetime of the route in seconds.
      *
      */
-    void SetRouteLifetime(uint32_t aLifetime) { mRouteLifetime = HostSwap32(aLifetime); }
+    void SetRouteLifetime(uint32_t aLifetime) { mRouteLifetime = BigEndian::HostSwap32(aLifetime); }
 
     /**
      * Gets Route Lifetime in seconds.
@@ -375,7 +375,7 @@ public:
      * @returns  The Route Lifetime in seconds.
      *
      */
-    uint32_t GetRouteLifetime(void) const { return HostSwap32(mRouteLifetime); }
+    uint32_t GetRouteLifetime(void) const { return BigEndian::HostSwap32(mRouteLifetime); }
 
     /**
      * Sets the prefix and adjusts the option length based on the prefix length.
@@ -562,7 +562,7 @@ public:
          * @param[in]  aChecksum  The checksum value.
          *
          */
-        void SetChecksum(uint16_t aChecksum) { mChecksum = HostSwap16(aChecksum); }
+        void SetChecksum(uint16_t aChecksum) { mChecksum = BigEndian::HostSwap16(aChecksum); }
 
         /**
          * Sets the Router Lifetime in seconds.
@@ -570,7 +570,7 @@ public:
          * @param[in]  aRouterLifetime  The router lifetime in seconds.
          *
          */
-        void SetRouterLifetime(uint16_t aRouterLifetime) { mRouterLifetime = HostSwap16(aRouterLifetime); }
+        void SetRouterLifetime(uint16_t aRouterLifetime) { mRouterLifetime = BigEndian::HostSwap16(aRouterLifetime); }
 
         /**
          * Gets the Router Lifetime (in seconds).
@@ -580,7 +580,7 @@ public:
          * @returns  The router lifetime in seconds.
          *
          */
-        uint16_t GetRouterLifetime(void) const { return HostSwap16(mRouterLifetime); }
+        uint16_t GetRouterLifetime(void) const { return BigEndian::HostSwap16(mRouterLifetime); }
 
         /**
          * Sets the default router preference.

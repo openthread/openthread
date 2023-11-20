@@ -119,7 +119,7 @@ bool JoinerDiscerner::Matches(const Mac::ExtAddress &aJoinerId) const
 
     mask = GetMask();
 
-    return (Encoding::BigEndian::ReadUint64(aJoinerId.m8) & mask) == (mValue & mask);
+    return (BigEndian::ReadUint64(aJoinerId.m8) & mask) == (mValue & mask);
 }
 
 void JoinerDiscerner::CopyTo(Mac::ExtAddress &aExtAddress) const

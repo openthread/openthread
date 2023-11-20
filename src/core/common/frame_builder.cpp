@@ -54,24 +54,18 @@ void FrameBuilder::Init(void *aBuffer, uint16_t aLength)
 
 Error FrameBuilder::AppendUint8(uint8_t aUint8) { return Append<uint8_t>(aUint8); }
 
-Error FrameBuilder::AppendBigEndianUint16(uint16_t aUint16)
-{
-    return Append<uint16_t>(Encoding::BigEndian::HostSwap16(aUint16));
-}
+Error FrameBuilder::AppendBigEndianUint16(uint16_t aUint16) { return Append<uint16_t>(BigEndian::HostSwap16(aUint16)); }
 
-Error FrameBuilder::AppendBigEndianUint32(uint32_t aUint32)
-{
-    return Append<uint32_t>(Encoding::BigEndian::HostSwap32(aUint32));
-}
+Error FrameBuilder::AppendBigEndianUint32(uint32_t aUint32) { return Append<uint32_t>(BigEndian::HostSwap32(aUint32)); }
 
 Error FrameBuilder::AppendLittleEndianUint16(uint16_t aUint16)
 {
-    return Append<uint16_t>(Encoding::LittleEndian::HostSwap16(aUint16));
+    return Append<uint16_t>(LittleEndian::HostSwap16(aUint16));
 }
 
 Error FrameBuilder::AppendLittleEndianUint32(uint32_t aUint32)
 {
-    return Append<uint32_t>(Encoding::LittleEndian::HostSwap32(aUint32));
+    return Append<uint32_t>(LittleEndian::HostSwap32(aUint32));
 }
 
 Error FrameBuilder::AppendBytes(const void *aBuffer, uint16_t aLength)

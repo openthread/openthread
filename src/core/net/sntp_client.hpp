@@ -50,8 +50,6 @@
 namespace ot {
 namespace Sntp {
 
-using ot::Encoding::BigEndian::HostSwap32;
-
 /**
  * Implements SNTP client.
  *
@@ -153,40 +151,70 @@ private:
         uint8_t GetPrecision(void) const { return mPrecision; }
         void    SetPrecision(uint8_t aPrecision) { mPrecision = aPrecision; }
 
-        uint32_t GetRootDelay(void) const { return HostSwap32(mRootDelay); }
-        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = HostSwap32(aRootDelay); }
+        uint32_t GetRootDelay(void) const { return BigEndian::HostSwap32(mRootDelay); }
+        void     SetRootDelay(uint32_t aRootDelay) { mRootDelay = BigEndian::HostSwap32(aRootDelay); }
 
-        uint32_t GetRootDispersion(void) const { return HostSwap32(mRootDispersion); }
-        void     SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = HostSwap32(aRootDispersion); }
+        uint32_t GetRootDispersion(void) const { return BigEndian::HostSwap32(mRootDispersion); }
+        void SetRootDispersion(uint32_t aRootDispersion) { mRootDispersion = BigEndian::HostSwap32(aRootDispersion); }
 
-        uint32_t GetReferenceId(void) const { return HostSwap32(mReferenceId); }
-        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = HostSwap32(aReferenceId); }
+        uint32_t GetReferenceId(void) const { return BigEndian::HostSwap32(mReferenceId); }
+        void     SetReferenceId(uint32_t aReferenceId) { mReferenceId = BigEndian::HostSwap32(aReferenceId); }
 
         char *GetKissCode(void) { return reinterpret_cast<char *>(&mReferenceId); }
 
-        uint32_t GetReferenceTimestampSeconds(void) const { return HostSwap32(mReferenceTimestampSeconds); }
-        void SetReferenceTimestampSeconds(uint32_t aTimestamp) { mReferenceTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetReferenceTimestampSeconds(void) const { return BigEndian::HostSwap32(mReferenceTimestampSeconds); }
+        void     SetReferenceTimestampSeconds(uint32_t aTimestamp)
+        {
+            mReferenceTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetReferenceTimestampFraction(void) const { return HostSwap32(mReferenceTimestampFraction); }
-        void SetReferenceTimestampFraction(uint32_t aFraction) { mReferenceTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetReferenceTimestampFraction(void) const
+        {
+            return BigEndian::HostSwap32(mReferenceTimestampFraction);
+        }
+        void SetReferenceTimestampFraction(uint32_t aFraction)
+        {
+            mReferenceTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetOriginateTimestampSeconds(void) const { return HostSwap32(mOriginateTimestampSeconds); }
-        void SetOriginateTimestampSeconds(uint32_t aTimestamp) { mOriginateTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetOriginateTimestampSeconds(void) const { return BigEndian::HostSwap32(mOriginateTimestampSeconds); }
+        void     SetOriginateTimestampSeconds(uint32_t aTimestamp)
+        {
+            mOriginateTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetOriginateTimestampFraction(void) const { return HostSwap32(mOriginateTimestampFraction); }
-        void SetOriginateTimestampFraction(uint32_t aFraction) { mOriginateTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetOriginateTimestampFraction(void) const
+        {
+            return BigEndian::HostSwap32(mOriginateTimestampFraction);
+        }
+        void SetOriginateTimestampFraction(uint32_t aFraction)
+        {
+            mOriginateTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetReceiveTimestampSeconds(void) const { return HostSwap32(mReceiveTimestampSeconds); }
-        void     SetReceiveTimestampSeconds(uint32_t aTimestamp) { mReceiveTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetReceiveTimestampSeconds(void) const { return BigEndian::HostSwap32(mReceiveTimestampSeconds); }
+        void     SetReceiveTimestampSeconds(uint32_t aTimestamp)
+        {
+            mReceiveTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetReceiveTimestampFraction(void) const { return HostSwap32(mReceiveTimestampFraction); }
-        void     SetReceiveTimestampFraction(uint32_t aFraction) { mReceiveTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetReceiveTimestampFraction(void) const { return BigEndian::HostSwap32(mReceiveTimestampFraction); }
+        void     SetReceiveTimestampFraction(uint32_t aFraction)
+        {
+            mReceiveTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
-        uint32_t GetTransmitTimestampSeconds(void) const { return HostSwap32(mTransmitTimestampSeconds); }
-        void SetTransmitTimestampSeconds(uint32_t aTimestamp) { mTransmitTimestampSeconds = HostSwap32(aTimestamp); }
+        uint32_t GetTransmitTimestampSeconds(void) const { return BigEndian::HostSwap32(mTransmitTimestampSeconds); }
+        void     SetTransmitTimestampSeconds(uint32_t aTimestamp)
+        {
+            mTransmitTimestampSeconds = BigEndian::HostSwap32(aTimestamp);
+        }
 
-        uint32_t GetTransmitTimestampFraction(void) const { return HostSwap32(mTransmitTimestampFraction); }
-        void SetTransmitTimestampFraction(uint32_t aFraction) { mTransmitTimestampFraction = HostSwap32(aFraction); }
+        uint32_t GetTransmitTimestampFraction(void) const { return BigEndian::HostSwap32(mTransmitTimestampFraction); }
+        void     SetTransmitTimestampFraction(uint32_t aFraction)
+        {
+            mTransmitTimestampFraction = BigEndian::HostSwap32(aFraction);
+        }
 
     private:
         static constexpr uint8_t kNtpVersion    = 4;                      // Current NTP version.
