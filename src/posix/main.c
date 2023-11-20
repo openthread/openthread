@@ -34,7 +34,6 @@
 #include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

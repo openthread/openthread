@@ -27,6 +27,11 @@
  */
 
 #include <assert.h>
+#ifdef __linux__
+#include <signal.h>
+#include <sys/prctl.h>
+#endif
+
 #include <openthread-core-config.h>
 #include <openthread/config.h>
 
@@ -96,6 +101,12 @@ static const otCliCommand kCommands[] = {
 int main(int argc, char *argv[])
 {
     otInstance *instance;
+
+#ifdef __linux__
+    // Ensure we terminate this process if the
+    // parent process dies.
+    prctl(PR_SET_PDEATHSIG, SIGHUP);
+#endif
 
     OT_SETUP_RESET_JUMP(argv);
 
