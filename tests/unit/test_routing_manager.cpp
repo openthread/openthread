@@ -945,7 +945,7 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
         {
             Log("   on-link prefix:%s, valid:%u, preferred:%u, router:%s, age:%u",
                 AsCoreType(&entry.mPrefix).ToString().AsCString(), entry.mValidLifetime, entry.mPreferredLifetime,
-                AsCoreType(&entry.mRouterAddress).ToString().AsCString(), entry.mMsecSinceLastUpdate / 1000);
+                AsCoreType(&entry.mRouter.mAddress).ToString().AsCString(), entry.mMsecSinceLastUpdate / 1000);
 
             onLinkPrefixCount++;
 
@@ -954,7 +954,7 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
                 const OnLinkPrefix &onLinkPrefix = aOnLinkPrefixes[index];
 
                 if ((onLinkPrefix.mPrefix == AsCoreType(&entry.mPrefix)) &&
-                    (AsCoreType(&entry.mRouterAddress) == onLinkPrefix.mRouterAddress))
+                    (AsCoreType(&entry.mRouter.mAddress) == onLinkPrefix.mRouterAddress))
                 {
                     VerifyOrQuit(entry.mValidLifetime == onLinkPrefix.mValidLifetime);
                     VerifyOrQuit(entry.mPreferredLifetime == onLinkPrefix.mPreferredLifetime);
@@ -967,7 +967,7 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
         {
             Log("   route prefix:%s, valid:%u, prf:%s, router:%s, age:%u",
                 AsCoreType(&entry.mPrefix).ToString().AsCString(), entry.mValidLifetime,
-                PreferenceToString(entry.mRoutePreference), AsCoreType(&entry.mRouterAddress).ToString().AsCString(),
+                PreferenceToString(entry.mRoutePreference), AsCoreType(&entry.mRouter.mAddress).ToString().AsCString(),
                 entry.mMsecSinceLastUpdate / 1000);
 
             routePrefixCount++;
@@ -977,7 +977,7 @@ void VerifyPrefixTable(const OnLinkPrefix *aOnLinkPrefixes,
                 const RoutePrefix &routePrefix = aRoutePrefixes[index];
 
                 if ((routePrefix.mPrefix == AsCoreType(&entry.mPrefix)) &&
-                    (AsCoreType(&entry.mRouterAddress) == routePrefix.mRouterAddress))
+                    (AsCoreType(&entry.mRouter.mAddress) == routePrefix.mRouterAddress))
                 {
                     VerifyOrQuit(entry.mValidLifetime == routePrefix.mValidLifetime);
                     VerifyOrQuit(static_cast<int8_t>(entry.mRoutePreference) == routePrefix.mPreference);

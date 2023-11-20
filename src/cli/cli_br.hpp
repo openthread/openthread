@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/border_routing.h>
+
 #include "cli/cli_config.h"
 #include "cli/cli_output.hpp"
 
@@ -92,6 +94,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
+    void    OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry);
 };
 
 } // namespace Cli

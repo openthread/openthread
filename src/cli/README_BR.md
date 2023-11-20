@@ -15,6 +15,7 @@ Usage : `br [command] ...`
 - [prefixtable](#prefixtable)
 - [rioprf](#rioprf)
 - [routeprf](#routeprf)
+- [routers](#routers)
 - [state](#state)
 
 ## Command Details
@@ -35,6 +36,7 @@ onlinkprefix
 prefixtable
 rioprf
 routeprf
+routers
 state
 Done
 ```
@@ -180,10 +182,24 @@ Usage: `br prefixtable`
 
 Get the discovered prefixes by Border Routing Manager on the infrastructure link.
 
+Info per prefix entry:
+
+- The prefix
+- Whether the prefix is on-link or route
+- Milliseconds since last received Router Advertisement containing this prefix
+- Prefix lifetime in seconds
+- Preferred lifetime in seconds only if prefix is on-link
+- Route preference (low, med, high) only if prefix is route (not on-link)
+- The router IPv6 address which advertising this prefix
+- Flags in received Router Advertisement header:
+  - M: Managed Address Config flag
+  - O: Other Config flag
+  - Stub: Stub Router flag (indicates whether the router is a stub router)
+
 ```bash
 > br prefixtable
-prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med, router:ff02:0:0:0:0:0:0:1
-prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800, router:ff02:0:0:0:0:0:0:1
+prefix:fd00:1234:5678:0::/64, on-link:no, ms-since-rx:29526, lifetime:1800, route-prf:med, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+prefix:1200:abba:baba:0::/64, on-link:yes, ms-since-rx:29527, lifetime:1800, preferred:1800, router:ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
 Done
 ```
 
@@ -252,5 +268,25 @@ Clear a previously set preference value for publishing routes in Thread Network 
 
 ```bash
 > br routeprf clear
+Done
+```
+
+### routers
+
+Usage: `br routers`
+
+Get the list of discovered routers by Border Routing Manager on the infrastructure link.
+
+Info per router:
+
+- The router IPv6 address
+- Flags in received Router Advertisement header:
+  - M: Managed Address Config flag
+  - O: Other Config flag
+  - Stub: Stub Router flag (indicates whether the router is a stub router)
+
+```bash
+> br routers
+ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
 Done
 ```
