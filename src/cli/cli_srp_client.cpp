@@ -571,10 +571,10 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @cparam srp client service add @ca{instancename} @ca{servicename} <!--
      * * -->                          @ca{port} [@ca{priority}] <!--
      * * -->                          [@ca{weight}] [@ca{txt}]
-     * The `servicename` paramater can optionally include a list of service subtype labels that are
+     * The `servicename` parameter can optionally include a list of service subtype labels that are
      * separated by commas. The examples here use generic naming. The `priority` and `weight` (both are `uint16_t`
      * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT data
-     * associated with the service. The `txt` vaule must be in hex-string format and is treated as an already encoded
+     * associated with the service. The `txt` value must be in hex-string format and is treated as an already encoded
      * TXT data byte sequence.
      * @par
      * Adds a service with a given instance name, service name, and port number.
