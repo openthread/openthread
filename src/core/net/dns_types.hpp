@@ -1054,6 +1054,14 @@ public:
     static constexpr uint8_t kMaxKeyLength = OT_DNS_TXT_KEY_MAX_LENGTH;
 
     /**
+     * Maximum length of TXT key string supported by `Iterator`.
+     *
+     * This is selected to be longer than recommended `kMaxKeyLength` to handle cases where longer keys are used.
+     *
+     */
+    static constexpr uint8_t kMaxIterKeyLength = OT_DNS_TXT_KEY_ITER_MAX_LENGTH;
+
+    /**
      * Represents an iterator for TXT record entries (key/value pairs).
      *
      */
@@ -1080,9 +1088,9 @@ public:
          * The `Iterator` instance MUST be initialized using `Init()` before calling this method and the TXT data
          * buffer used to initialize the iterator MUST persist and remain unchanged.
          *
-         * If the parsed key string length is smaller than or equal to `kMaxKeyLength` (recommended max key length)
-         * the key string is returned in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to NULL and
-         * the entire encoded TXT entry is returned in `mValue` and `mValueLength`.
+         * If the parsed key string length is smaller than or equal to `kMaxIterKeyLength` the key string is returned
+         * in `mKey` in @p aEntry. But if the key is longer, then `mKey` is set to `nullptr` the entire encoded TXT
+         * entry is returned in `mValue` and `mValueLength`.
          *
          * @param[out] aEntry          A reference to a `TxtEntry` to output the parsed/read entry.
          *

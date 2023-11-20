@@ -34,7 +34,9 @@
 #include "common/trickle_timer.hpp"
 #include "instance/instance.hpp"
 
-static ot::Instance *sInstance;
+namespace ot {
+
+static Instance *sInstance;
 
 static uint32_t sNow = 0;
 static uint32_t sAlarmTime;
@@ -53,8 +55,6 @@ void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 
 } // extern "C"
-
-namespace ot {
 
 void AdvanceTime(uint32_t aDuration)
 {

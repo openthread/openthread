@@ -35,6 +35,8 @@
 #include "common/timer.hpp"
 #include "instance/instance.hpp"
 
+namespace ot {
+
 enum
 {
     kCallCountIndexAlarmStop = 0,
@@ -91,19 +93,19 @@ uint32_t otPlatAlarmMicroGetNow(void) { return sNow; }
 void InitCounters(void) { memset(sCallCount, 0, sizeof(sCallCount)); }
 
 /**
- * `TestTimer` sub-classes `ot::TimerMilli` and provides a handler and a counter to keep track of number of times timer
+ * `TestTimer` sub-classes `TimerMilli` and provides a handler and a counter to keep track of number of times timer
  * gets fired.
  */
 template <typename TimerType> class TestTimer : public TimerType
 {
 public:
-    explicit TestTimer(ot::Instance &aInstance)
+    explicit TestTimer(Instance &aInstance)
         : TimerType(aInstance, TestTimer::HandleTimerFired)
         , mFiredCounter(0)
     {
     }
 
-    static void HandleTimerFired(ot::Timer &aTimer) { static_cast<TestTimer &>(aTimer).HandleTimerFired(); }
+    static void HandleTimerFired(Timer &aTimer) { static_cast<TestTimer &>(aTimer).HandleTimerFired(); }
 
     void HandleTimerFired(void)
     {
@@ -115,7 +117,7 @@ public:
 
     void ResetFiredCounter(void) { mFiredCounter = 0; }
 
-    static void RemoveAll(ot::Instance &aInstance) { TimerType::RemoveAll(aInstance); }
+    static void RemoveAll(Instance &aInstance) { TimerType::RemoveAll(aInstance); }
 
 private:
     uint32_t mFiredCounter; //< Number of times timer has been fired so far
@@ -123,10 +125,10 @@ private:
 
 template <typename TimerType> void AlarmFired(otInstance *aInstance);
 
-template <> void AlarmFired<ot::TimerMilli>(otInstance *aInstance) { otPlatAlarmMilliFired(aInstance); }
+template <> void AlarmFired<TimerMilli>(otInstance *aInstance) { otPlatAlarmMilliFired(aInstance); }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <> void AlarmFired<ot::TimerMicro>(otInstance *aInstance) { otPlatAlarmMicroFired(aInstance); }
+template <> void AlarmFired<TimerMicro>(otInstance *aInstance) { otPlatAlarmMicroFired(aInstance); }
 #endif
 
 /**
@@ -136,7 +138,7 @@ template <typename TimerType> int TestOneTimer(void)
 {
     const uint32_t       kTimeT0        = 1000;
     const uint32_t       kTimerInterval = 10;
-    ot::Instance        *instance       = testInitInstance();
+    Instance            *instance       = testInitInstance();
     TestTimer<TimerType> timer(*instance);
 
     // Test one Timer basic operation.
@@ -262,7 +264,7 @@ template <typename TimerType> int TestTwoTimers(void)
 {
     const uint32_t       kTimeT0        = 1000;
     const uint32_t       kTimerInterval = 10;
-    ot::Instance        *instance       = testInitInstance();
+    Instance            *instance       = testInitInstance();
     TestTimer<TimerType> timer1(*instance);
     TestTimer<TimerType> timer2(*instance);
 
@@ -338,7 +340,7 @@ template <typename TimerType> int TestTwoTimers(void)
 
     sNow += kTimerInterval;
 
-    timer2.StartAt(ot::TimeMilli(kTimeT0), kTimerInterval - 2); // Timer 2 is even before timer 1
+    timer2.StartAt(TimeMilli(kTimeT0), kTimerInterval - 2); // Timer 2 is even before timer 1
 
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 0, "Handler CallCount Failed.");
     VerifyOrQuit(timer1.IsRunning() == true, "Timer running Failed.");
@@ -385,7 +387,7 @@ template <typename TimerType> int TestTwoTimers(void)
 
     sNow += kTimerInterval + 5;
 
-    timer2.Start(ot::Timer::kMaxDelay);
+    timer2.Start(Timer::kMaxDelay);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 1, "Start CallCount Failed.");
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStop] == 0, "Stop CallCount Failed.");
@@ -401,12 +403,12 @@ template <typename TimerType> int TestTwoTimers(void)
     VerifyOrQuit(sCallCount[kCallCountIndexTimerHandler] == 1, "Handler CallCount Failed.");
     VerifyOrQuit(timer1.GetFiredCounter() == 1, "Fire Counter failed.");
     VerifyOrQuit(sPlatT0 == sNow, "Start params Failed.");
-    VerifyOrQuit(sPlatDt == ot::Timer::kMaxDelay, "Start params Failed.");
+    VerifyOrQuit(sPlatDt == Timer::kMaxDelay, "Start params Failed.");
     VerifyOrQuit(timer1.IsRunning() == false, "Timer running Failed.");
     VerifyOrQuit(timer2.IsRunning() == true, "Timer running Failed.");
     VerifyOrQuit(sTimerOn == true, "Platform Timer State Failed.");
 
-    sNow += ot::Timer::kMaxDelay;
+    sNow += Timer::kMaxDelay;
     AlarmFired<TimerType>(instance);
 
     VerifyOrQuit(sCallCount[kCallCountIndexAlarmStart] == 2, "Start CallCount Failed.");
@@ -436,7 +438,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
     const uint32_t kNumTriggers               = 7;
     const uint32_t kTimeT0[kNumTimers]        = {1000, 1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008};
     const uint32_t kTimerInterval[kNumTimers] = {
-        20, 100, (ot::Timer::kMaxDelay - kTimeT0[2]), 100000, 1000000, 10, ot::Timer::kMaxDelay, 200, 200, 200};
+        20, 100, (Timer::kMaxDelay - kTimeT0[2]), 100000, 1000000, 10, Timer::kMaxDelay, 200, 200, 200};
     // Expected timer fire order
     // timer #     Trigger time
     //   5            1014
@@ -450,7 +452,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
     //   2          kMaxDuration
     //   6   kMaxDuration + 1005
     const uint32_t kTriggerTimes[kNumTriggers] = {
-        1014, 1020, 1100, 1207, 101004, ot::Timer::kMaxDelay, ot::Timer::kMaxDelay + kTimeT0[6]};
+        1014, 1020, 1100, 1207, 101004, Timer::kMaxDelay, Timer::kMaxDelay + kTimeT0[6]};
     // Expected timers fired by each kTriggerTimes[] value
     //  Trigger #    Timers Fired
     //    0             5
@@ -478,7 +480,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
 
     const uint32_t kTimerStartCountAfterTrigger[kNumTriggers] = {3, 4, 5, 7, 9, 11, 11};
 
-    ot::Instance *instance = testInitInstance();
+    Instance *instance = testInitInstance();
 
     TestTimer<TimerType>  timer0(*instance);
     TestTimer<TimerType>  timer1(*instance);
@@ -567,12 +569,12 @@ template <typename TimerType> int TestTenTimers(void)
 {
     // Time shift to change the start/fire time of ten timers.
     const uint32_t kTimeShift[] = {
-        0, 100000U, 0U - 1U, 0U - 1100U, ot::Timer::kMaxDelay, ot::Timer::kMaxDelay + 1020U,
+        0, 100000U, 0U - 1U, 0U - 1100U, Timer::kMaxDelay, Timer::kMaxDelay + 1020U,
     };
 
     size_t i;
 
-    for (i = 0; i < ot::GetArrayLength(kTimeShift); i++)
+    for (i = 0; i < GetArrayLength(kTimeShift); i++)
     {
         TenTimers<TimerType>(kTimeShift[i]);
     }
@@ -587,10 +589,10 @@ int TestTimerTime(void)
 {
     const uint32_t kMaxTime      = 0xffffffff;
     const uint32_t kStartTimes[] = {0, 100, kMaxTime / 2, kMaxTime - 100, kMaxTime};
-    const uint32_t kDurations[]  = {1, 100, ot::Timer::kMaxDelay - 1, ot::Timer::kMaxDelay};
+    const uint32_t kDurations[]  = {1, 100, Timer::kMaxDelay - 1, Timer::kMaxDelay};
 
-    ot::Time t1;
-    ot::Time t2;
+    Time t1;
+    Time t2;
 
     for (uint32_t startTime : kStartTimes)
     {
@@ -680,13 +682,15 @@ template <typename TimerType> void RunTimerTests(void)
     TestTenTimers<TimerType>();
 }
 
+} // namespace ot
+
 int main(void)
 {
-    RunTimerTests<ot::TimerMilli>();
+    ot::RunTimerTests<ot::TimerMilli>();
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    RunTimerTests<ot::TimerMicro>();
+    ot::RunTimerTests<ot::TimerMicro>();
 #endif
-    TestTimerTime();
+    ot::TestTimerTime();
     printf("All tests passed\n");
     return 0;
 }

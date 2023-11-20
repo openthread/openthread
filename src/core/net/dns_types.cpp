@@ -951,7 +951,7 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
     const char *cur;
     char       *keyBuffer = GetKeyBuffer();
 
-    static_assert(sizeof(mChar) == TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
+    static_assert(sizeof(mChar) >= TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
 
     VerifyOrExit(GetTxtData() != nullptr, error = kErrorParse);
 
@@ -983,9 +983,9 @@ Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
                 ExitNow();
             }
 
-            if (index >= kMaxKeyLength)
+            if (index >= sizeof(mChar) - 1)
             {
-                // The key is larger than recommended max key length.
+                // The key is larger than supported key string length.
                 // In this case, we return the full encoded string in
                 // `mValue` and `mValueLength` and set `mKey` to
                 // `nullptr`.

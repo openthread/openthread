@@ -263,7 +263,7 @@ Error Interface::ParsePeerInfoTxtData(const Peer::Info       &aInfo,
     while ((error = iterator.GetNextEntry(entry)) == kErrorNone)
     {
         // If the TXT data happens to have entries with key longer
-        // than `kMaxKeyLength`, `mKey` would be `nullptr` and full
+        // than `kMaxIterKeyLength`, `mKey` would be `nullptr` and full
         // entry would be placed in `mValue`. We skip over such
         // entries.
         if (entry.mKey == nullptr)

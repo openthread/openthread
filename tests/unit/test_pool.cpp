@@ -35,12 +35,14 @@
 
 #include "test_util.h"
 
+namespace ot {
+
 struct EntryBase
 {
     EntryBase *mNext;
 };
 
-struct Entry : public EntryBase, ot::LinkedListEntry<Entry>
+struct Entry : public EntryBase, LinkedListEntry<Entry>
 {
 public:
     Entry(void)
@@ -48,7 +50,7 @@ public:
     {
     }
 
-    void Init(ot::Instance &) { mInitWithInstance = true; }
+    void Init(Instance &) { mInitWithInstance = true; }
 
     bool IsInitializedWithInstance(void) const { return mInitWithInstance; }
 
@@ -61,7 +63,7 @@ enum : uint16_t
     kPoolSize = 11,
 };
 
-typedef ot::Pool<Entry, kPoolSize> EntryPool;
+typedef Pool<Entry, kPoolSize> EntryPool;
 
 static Entry sNonPoolEntry;
 
@@ -118,9 +120,9 @@ void TestPool(EntryPool &aPool, bool aInitWithInstance)
 
 void TestPool(void)
 {
-    ot::Instance *instance = testInitInstance();
-    EntryPool     pool1;
-    EntryPool     pool2(*instance);
+    Instance *instance = testInitInstance();
+    EntryPool pool1;
+    EntryPool pool2(*instance);
 
     TestPool(pool1, /* aInitWithInstance */ false);
     TestPool(pool2, /* aInitWithInstance */ true);
@@ -128,9 +130,11 @@ void TestPool(void)
     testFreeInstance(instance);
 }
 
+} // namespace ot
+
 int main(void)
 {
-    TestPool();
+    ot::TestPool();
     printf("All tests passed\n");
     return 0;
 }

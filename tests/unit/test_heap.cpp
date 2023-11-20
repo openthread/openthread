@@ -38,6 +38,8 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+namespace ot {
+
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 /**
@@ -175,10 +177,12 @@ void RunTimerTests(void)
 
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
+} // namespace ot
+
 int main(void)
 {
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    RunTimerTests();
+    ot::RunTimerTests();
     printf("All tests passed\n");
 #endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     return 0;
