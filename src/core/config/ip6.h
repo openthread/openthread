@@ -178,8 +178,12 @@
  * Define as 1 to enable support for TLS over TCP.
  *
  */
-#if OPENTHREAD_CONFIG_TCP_ENABLE && !defined(OPENTHREAD_CONFIG_TLS_ENABLE)
+#ifndef OPENTHREAD_CONFIG_TLS_ENABLE
+#if OPENTHREAD_CONFIG_TCP_ENABLE
 #define OPENTHREAD_CONFIG_TLS_ENABLE 1
+#else
+#define OPENTHREAD_CONFIG_TLS_ENABLE 0
+#endif
 #endif
 
 /**
