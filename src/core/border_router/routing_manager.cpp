@@ -620,6 +620,12 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     LogInfo("Preparing RA");
 
+    mDiscoveredPrefixTable.DetermineAndSetFlags(raMsg);
+
+    LogInfo("- RA Header - flags - M:%u O:%u", raMsg.GetHeader().IsManagedAddressConfigFlagSet(),
+            raMsg.GetHeader().IsOtherConfigFlagSet());
+    LogInfo("- RA Header - default route - lifetime:%u", raMsg.GetHeader().GetRouterLifetime());
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
     SuccessOrAssert(raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
     LogInfo("- FlagsExt - StubRouter:1");
@@ -1242,7 +1248,7 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6
 
     UpdateRouterOnRx(*router);
 
-    RemoveRoutersWithNoEntries();
+    RemoveRoutersWithNoEntriesOrFlags();
 
 exit:
     return;
@@ -1472,7 +1478,7 @@ void RoutingManager::DiscoveredPrefixTable::RemovePrefix(const Entry::Matcher &a
     VerifyOrExit(!removedEntries.IsEmpty());
 
     FreeEntries(removedEntries);
-    RemoveRoutersWithNoEntries();
+    RemoveRoutersWithNoEntriesOrFlags();
 
     SignalTableChanged();
 
@@ -1482,21 +1488,17 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::RemoveAllEntries(void)
 {
-    // Remove all entries from the table and unpublish them
-    // from Network Data.
+    // Remove all entries from the table.
 
     for (Router &router : mRouters)
     {
-        if (!router.mEntries.IsEmpty())
-        {
-            SignalTableChanged();
-        }
-
         FreeEntries(router.mEntries);
     }
 
-    RemoveRoutersWithNoEntries();
+    FreeRouters(mRouters);
     mEntryTimer.Stop();
+
+    SignalTableChanged();
 }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold)
@@ -1592,11 +1594,11 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::CalculateNextStaleTime(TimeMill
     return foundOnLink ? Min(onLinkStaleTime, routeStaleTime) : routeStaleTime;
 }
 
-void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntries(void)
+void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntriesOrFlags(void)
 {
     LinkedList<Router> routersToFree;
 
-    mRouters.RemoveAllMatching(Router::kContainsNoEntries, routersToFree);
+    mRouters.RemoveAllMatching(Router::kContainsNoEntriesOrFlags, routersToFree);
     FreeRouters(routersToFree);
 }
 
@@ -1668,7 +1670,7 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
         router.mEntries.RemoveAllMatching(Entry::ExpirationChecker(now), expiredEntries);
     }
 
-    RemoveRoutersWithNoEntries();
+    RemoveRoutersWithNoEntriesOrFlags();
 
     if (!expiredEntries.IsEmpty())
     {
@@ -1790,6 +1792,42 @@ void RoutingManager::DiscoveredPrefixTable::SendNeighborSolicitToRouter(const Ro
 
 exit:
     return;
+}
+
+void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+{
+    // Determine the `M` and `O` flags to include in the RA message
+    // header `aRaMessage` to be emitted.
+    //
+    // If any discovered router on infrastructure which is not itself a
+    // stub router (e.g., another Thread BR) includes the `M` or `O`
+    // flag, we also include the same flag.
+    //
+    // If a router has failed to respond to max number of NS probe
+    // attempts, we consider it as offline and ignore its flags.
+
+    for (const Router &router : mRouters)
+    {
+        if (router.mStubRouterFlag)
+        {
+            continue;
+        }
+
+        if (router.mNsProbeCount > Router::kMaxNsProbes)
+        {
+            continue;
+        }
+
+        if (router.mManagedAddressConfigFlag)
+        {
+            aRaMessage.GetHeader().SetManagedAddressConfigFlag();
+        }
+
+        if (router.mOtherConfigFlag)
+        {
+            aRaMessage.GetHeader().SetOtherConfigFlag();
+        }
+    }
 }
 
 void RoutingManager::DiscoveredPrefixTable::InitIterator(PrefixTableIterator &aIterator) const
@@ -1994,6 +2032,27 @@ uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint
 
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Router
+
+bool RoutingManager::DiscoveredPrefixTable::Router::Matches(EmptyChecker aChecker) const
+{
+    // Checks whether or not a `Router` instance has any useful info. An
+    // entry can be removed if it does not advertise M or O flags and
+    // also does not have any advertised prefix entries (RIO/PIO). If
+    // the router already failed to respond to max NS probe attempts,
+    // we consider it as offline and therefore do not consider its
+    // flags anymore.
+
+    OT_UNUSED_VARIABLE(aChecker);
+
+    bool hasFlags = false;
+
+    if (mNsProbeCount <= kMaxNsProbes)
+    {
+        hasFlags = (mManagedAddressConfigFlag || mOtherConfigFlag);
+    }
+
+    return !hasFlags && mEntries.IsEmpty();
+}
 
 void RoutingManager::DiscoveredPrefixTable::Router::CopyInfoTo(RouterEntry &aEntry) const
 {

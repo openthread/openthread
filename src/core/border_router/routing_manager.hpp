@@ -635,6 +635,8 @@ private:
 
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
+        void DetermineAndSetFlags(Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
+
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
@@ -770,11 +772,11 @@ private:
 
             enum EmptyChecker : uint8_t
             {
-                kContainsNoEntries
+                kContainsNoEntriesOrFlags
             };
 
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
-            bool Matches(EmptyChecker) const { return mEntries.IsEmpty(); }
+            bool Matches(EmptyChecker aChecker) const;
             void CopyInfoTo(RouterEntry &aEntry) const;
 
             Router           *mNext;
@@ -816,7 +818,7 @@ private:
         bool         Contains(const Entry::Checker &aChecker) const;
         void         RemovePrefix(const Entry::Matcher &aMatcher);
         void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
-        void         RemoveRoutersWithNoEntries(void);
+        void         RemoveRoutersWithNoEntriesOrFlags(void);
         void         FreeRouters(LinkedList<Router> &aRouters);
         void         FreeEntries(LinkedList<Entry> &aEntries);
         void         UpdateNetworkDataOnChangeTo(Entry &aEntry);
