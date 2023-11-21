@@ -1366,11 +1366,19 @@ const Address *Ip6::SelectSourceAddress(const Address &aDestination) const
                 continue;
             }
         }
-        else if (addr.mPreferred && !bestAddr->mPreferred)
+        else if (addr.mPreferred != bestAddr->mPreferred)
         {
             // Rule 3: Avoid deprecated addresses
-            bestAddr     = &addr;
-            bestMatchLen = matchLen;
+
+            if (addr.mPreferred)
+            {
+                bestAddr     = &addr;
+                bestMatchLen = matchLen;
+            }
+            else
+            {
+                continue;
+            }
         }
         else if (matchLen > bestMatchLen)
         {
