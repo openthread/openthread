@@ -44,6 +44,7 @@
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
+#include "common/array.hpp"
 #include "common/callback.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -143,6 +144,13 @@ public:
 #endif
 
 private:
+    class AddressArray : public Array<Ip6::Address, Ip6AddressesTlv::kMaxAddresses>
+    {
+    public:
+        bool IsEmptyOrContains(const Ip6::Address &aAddress) const { return IsEmpty() || Contains(aAddress); }
+        void AddUnique(const Ip6::Address &aAddress);
+    };
+
     void HandleNotifierEvents(Events aEvents);
 
     void  SendMulticastListenerRegistration(void);
@@ -162,8 +170,7 @@ private:
     static Error ParseMulticastListenerRegistrationResponse(Error          aResult,
                                                             Coap::Message *aMessage,
                                                             uint8_t       &aStatus,
-                                                            Ip6::Address  *aFailedAddresses,
-                                                            uint8_t       &aFailedAddressNum);
+                                                            AddressArray  &aFailedAddresses);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     static void HandleRegisterMulticastListenersResponse(void                *aContext,
@@ -189,16 +196,7 @@ private:
 #endif
 
     void SetMulticastAddressMlrState(MlrState aFromState, MlrState aToState);
-    void FinishMulticastListenerRegistration(bool                aSuccess,
-                                             const Ip6::Address *aFailedAddresses,
-                                             uint8_t             aFailedAddressNum);
-
-    void        AppendToUniqueAddressList(Ip6::Address (&aAddresses)[Ip6AddressesTlv::kMaxAddresses],
-                                          uint8_t            &aAddressNum,
-                                          const Ip6::Address &aAddress);
-    static bool AddressListContains(const Ip6::Address *aAddressList,
-                                    uint8_t             aAddressListSize,
-                                    const Ip6::Address &aAddress);
+    void FinishMulticastListenerRegistration(bool aSuccess, const AddressArray &aFailedAddresses);
 
     void ScheduleSend(uint16_t aDelay);
     void UpdateTimeTickerRegistration(void);
@@ -208,11 +206,7 @@ private:
 
     void        LogMulticastAddresses(void);
     void        CheckInvariants(void) const;
-    static void LogMlrResponse(Error               aResult,
-                               Error               aError,
-                               uint8_t             aStatus,
-                               const Ip6::Address *aFailedAddresses,
-                               uint8_t             aFailedAddressNum);
+    static void LogMlrResponse(Error aResult, Error aError, uint8_t aStatus, const AddressArray &aFailedAddresses);
 
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     Callback<otIp6RegisterMulticastListenersCallback> mRegisterMulticastListenersCallback;
