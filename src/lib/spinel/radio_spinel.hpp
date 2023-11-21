@@ -908,6 +908,14 @@ public:
      */
     static otError SpinelStatusToOtError(spinel_status_t aStatus);
 
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    /**
+     * Restore the properties of Radio Co-processor (RCP).
+     *
+     */
+    void RestoreProperties(void);
+#endif
+
 private:
     enum
     {
@@ -1016,9 +1024,6 @@ private:
     void HandleRcpTimeout(void);
     void RecoverFromRcpFailure(void);
 
-#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    void RestoreProperties(void);
-#endif
     void UpdateParseErrorCount(otError aError)
     {
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
