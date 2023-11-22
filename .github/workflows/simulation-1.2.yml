@@ -142,6 +142,9 @@ jobs:
     - name: Build
       run: |
         ./script/test build
+    - name: Build with OT_CSL_RECEIVER_LOCAL_TIME_SYNC
+      run: |
+        OT_BUILDDIR="${PWD}/build_csl_receiver_local_time_sync" OT_OPTIONS="-DOT_CSL_RECEIVER_LOCAL_TIME_SYNC=ON" ./script/test build
     - name: Get Thread-Wireshark
       run: |
         ./script/test get_thread_wireshark
@@ -153,6 +156,9 @@ jobs:
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
+    - name: Run with OT_CSL_RECEIVER_LOCAL_TIME_SYNC
+      run: |
+        OT_BUILDDIR="${PWD}/build_csl_receiver_local_time_sync" ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
     - name: Check Crash
       if: ${{ failure() }}
       run: |
