@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <openthread/logging.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
