@@ -58,6 +58,7 @@ public:
     {
     }
 
+    bool IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void SetUp(void);
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
@@ -110,7 +111,6 @@ private:
     void    Remove(const Ip6::Address &aAddress);
     void    UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
     bool    HasMulticastListener(const Ip6::Address &aAddress) const;
-    bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void    InitMulticastRouterSock(void);
     void    FinalizeMulticastRouterSock(void);
     void    ProcessMulticastRouterMessages(void);

@@ -188,6 +188,14 @@ unsigned int otSysGetThreadNetifIndex(void);
 const char *otSysGetInfraNetifName(void);
 
 /**
+ * Returns the infrastructure network interface index.
+ *
+ * @returns The infrastructure network interface index.
+ *
+ */
+uint32_t otSysGetInfraNetifIndex(void);
+
+/**
  * Returns the radio spinel metrics.
  *
  * @returns The radio spinel metrics.
