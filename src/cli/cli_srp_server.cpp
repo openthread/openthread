@@ -43,6 +43,26 @@
 namespace ot {
 namespace Cli {
 
+/**
+ * @cli srp server addrmode (set,get)
+ * @code
+ * srp server addrmode anycast
+ * Done
+ * @endcode
+ * @code
+ * srp server addrmode
+ * anycast
+ * Done
+ * @endcode
+ * @cparam [@ca{unicast}|@ca{anycast}]
+ * @par
+ * Sets or gets  the address mode used by the SRP server.
+ * @par
+ * The address mode tells the SRP server how to determine its address and port number,
+ * which then get published in the Thread network data.
+ * @sa otSrpServerGetAddressMode
+ * @sa otServerSetAddressMode
+ */
 template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_ARGS;
@@ -75,27 +95,9 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-/**
- * @cli srp server auto
- * @code
- * srp server auto
- * Disabled
- * Done
- * @endcode
- * @par api_copy
- * #otSrpServerIsAutoEnableMode
- */
+
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
-    /**
-     * @cli srp server auto enable
-     * @code
-     * srp server auto enable
-     * Done
-     * @endcode
-     * @par api_copy
-     * #otSrpServerSetAutoEnableMode
-     */
     return Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode,
                                                               otSrpServerSetAutoEnableMode);
 }
