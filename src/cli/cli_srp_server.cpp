@@ -54,14 +54,14 @@ namespace Cli {
  * anycast
  * Done
  * @endcode
- * @cparam [@ca{unicast}|@ca{anycast}]
+ * @cparam srp server addrmode [@ca{unicast}|@ca{anycast}]
  * @par
  * Sets or gets  the address mode used by the SRP server.
  * @par
  * The address mode tells the SRP server how to determine its address and port number,
  * which then get published in the Thread network data.
  * @sa otSrpServerGetAddressMode
- * @sa otServerSetAddressMode
+ * @sa otSrpServerSetAddressMode
  */
 template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 {
