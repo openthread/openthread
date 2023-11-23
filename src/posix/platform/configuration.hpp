@@ -55,8 +55,8 @@ class Configuration
 {
 public:
     Configuration(void)
-        : mFactoryConfigFile(kFactoryConfigFile)
-        , mProductConfigFile(kProductConfigFile)
+        : mFactoryConfigFile(OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE)
+        , mProductConfigFile(OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE)
         , mRegionCode(0)
         , mSupportedChannelMask(kDefaultChannelMask)
         , mPreferredChannelMask(kDefaultChannelMask)
@@ -114,17 +114,17 @@ public:
     bool IsValid(void) const;
 
 private:
-    const char               *kFactoryConfigFile       = OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE;
-    const char               *kProductConfigFile       = OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE;
-    const char               *kKeyCalibratedPower      = "calibrated_power";
-    const char               *kKeyTargetPower          = "target_power";
-    const char               *kKeyRegionDomainMapping  = "region_domain_mapping";
-    const char               *kKeySupportedChannelMask = "supported_channel_mask";
-    const char               *kKeyPreferredChannelMask = "preferred_channel_mask";
-    const char               *kCommaDelimiter          = ",";
-    static constexpr uint16_t kMaxValueSize            = 512;
-    static constexpr uint16_t kRegionCodeWorldWide     = 0x5757;    // Region Code: "WW"
-    static constexpr uint32_t kDefaultChannelMask      = 0x7fff800; // Channel 11 ~ 26
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+    static const char kKeyCalibratedPower[];
+#endif
+    static const char         kKeyTargetPower[];
+    static const char         kKeyRegionDomainMapping[];
+    static const char         kKeySupportedChannelMask[];
+    static const char         kKeyPreferredChannelMask[];
+    static const char         kCommaDelimiter[];
+    static constexpr uint16_t kMaxValueSize        = 512;
+    static constexpr uint16_t kRegionCodeWorldWide = 0x5757;    // Region Code: "WW"
+    static constexpr uint32_t kDefaultChannelMask  = 0x7fff800; // Channel 11 ~ 26
 
     uint16_t StringToRegionCode(const char *aString) const
     {
