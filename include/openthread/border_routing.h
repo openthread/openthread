@@ -119,6 +119,17 @@ typedef struct otBorderRoutingPrefixTableEntry
 } otBorderRoutingPrefixTableEntry;
 
 /**
+ * Represents a group of data of platform-generated RA messages processed.
+ *
+ */
+typedef struct otPdProcessedRaInfo
+{
+    uint32_t mNumPlatformRaReceived;   ///< The number of platform generated RA handled by ProcessPlatfromGeneratedRa.
+    uint32_t mNumPlatformPioProcessed; ///< The number of PIO processed for adding OMR prefixes.
+    uint32_t mLastPlatformRaMsec;      ///< The timestamp of last processed RA message.
+} otPdProcessedRaInfo;
+
+/**
  * Represents the state of Border Routing Manager.
  *
  */
@@ -306,6 +317,21 @@ otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
  *
  */
 otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPrefixTableEntry *aPrefixInfo);
+
+/**
+ * Gets the data of platform generated RA message processed..
+ *
+ * `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` must be enabled.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[out]  aPrefixInfo  A pointer to where the prefix info will be output to.
+ *
+ * @retval  OT_ERROR_NONE           Successfully retrieved the Info.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NOT_FOUND      There are no valid Info on this BR.
+ *
+ */
+otError otBorderRoutingGetPdProcessedRaInfo(otInstance *aInstance, otPdProcessedRaInfo *aPdProcessedRaInfo);
 
 /**
  * Gets the currently favored Off-Mesh-Routable (OMR) Prefix.

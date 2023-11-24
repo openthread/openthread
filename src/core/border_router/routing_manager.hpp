@@ -88,6 +88,7 @@ public:
     typedef otBorderRoutingPrefixTableIterator PrefixTableIterator; ///< Prefix Table Iterator.
     typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
     typedef otBorderRoutingRouterEntry         RouterEntry;         ///< Router Entry.
+    typedef otPdProcessedRaInfo                PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
 
     /**
      * This constant specifies the maximum number of route prefixes that may be published by `RoutingManager`
@@ -292,6 +293,18 @@ public:
      *
      */
     Error GetPdOmrPrefix(PrefixTableEntry &aPrefixInfo) const;
+
+    /**
+     * Returns platform generated RA message processed information.
+     *
+     * @param[out] aPdProcessedRaInfo      A reference to where the PD processed RA info will be output to.
+     *
+     * @retval kErrorNone           Successfully retrieved the Info.
+     * @retval kErrorNotFound       There are no valid RA process info on this BR.
+     * @retval kErrorInvalidState   The Border Routing Manager is not initialized yet.
+     *
+     */
+    Error GetPdProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo);
 #endif
 
     /**
@@ -1178,6 +1191,7 @@ private:
 
         void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
+        Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
 
         static const char *StateToString(Dhcp6PdState aState);
@@ -1199,6 +1213,9 @@ private:
 
         bool                         mEnabled;
         bool                         mIsRunning;
+        uint32_t                     mNumPlatformPioProcessed;
+        uint32_t                     mNumPlatformRaReceived;
+        TimeMilli                    mLastPlatformRaTime;
         PlatformOmrPrefixTimer       mTimer;
         DiscoveredPrefixTable::Entry mPrefix;
     };
