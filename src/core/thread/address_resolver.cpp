@@ -785,7 +785,7 @@ void AddressResolver::HandleTmf<kUriAddressError>(Coap::Message &aMessage, const
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
 
-    for (const Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
+    for (Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
         if (address.GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {

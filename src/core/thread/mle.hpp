@@ -531,6 +531,14 @@ public:
     const Ip6::Address &GetMeshLocal64(void) const { return mMeshLocal64.GetAddress(); }
 
     /**
+     * Returns a reference to the ML-EID as a `Netif::UnicastAddress`.
+     *
+     * @returns A reference to the ML-EID.
+     *
+     */
+    Ip6::Netif::UnicastAddress &GetMeshLocal64UnicastAddress(void) { return mMeshLocal64; }
+
+    /**
      * Returns the Router ID of the Leader.
      *
      * @returns The Router ID of the Leader.

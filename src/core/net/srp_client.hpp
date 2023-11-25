@@ -1001,6 +1001,8 @@ private:
     void  Pause(void);
     void  HandleNotifierEvents(Events aEvents);
     void  HandleRoleChanged(void);
+    bool  ShouldUpdateHostAutoAddresses(void) const;
+    bool  ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const;
     Error UpdateHostInfoStateOnAddressChange(void);
     void  UpdateServiceStateToRemove(Service &aService);
     State GetState(void) const { return mState; }
@@ -1065,7 +1067,6 @@ private:
     State   mState;
     uint8_t mTxFailureRetryCount : 4;
     bool    mShouldRemoveKeyLease : 1;
-    bool    mAutoHostAddressAddedMeshLocal : 1;
     bool    mSingleServiceMode : 1;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
@@ -1073,6 +1074,7 @@ private:
 #endif
 
     uint16_t mUpdateMessageId;
+    uint16_t mAutoHostAddressCount;
     uint32_t mRetryWaitInterval;
 
     TimeMilli mLeaseRenewTime;
