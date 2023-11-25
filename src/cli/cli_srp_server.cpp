@@ -103,6 +103,23 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 }
 #endif
 
+/**
+ * @cli srp server domain (set,get)
+ * @code
+ * srp server domain thread.service.arpa.
+ * Done
+ * @endcode
+ * @code
+ * srp server domain
+ * thread.service.arpa.
+ * Done
+ * @endcode
+ * @cparam srp server domain [@ca{domain-name}]
+ * @par
+ * Sets or retunrs the domain name of the SRP server.
+ * @sa otSrpServerSetDomain
+ * @sa otSrpServerGetDomain
+ */
 template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -119,6 +136,23 @@ template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli srp server state
+ * @code
+ * srp server state
+ * running
+ * Done
+ * @endcode
+ * @par
+ * Returns one of the following possible states of the SRP server:
+ *  * `disabled`: The SRP server is not enabled.
+ *  * `stopped`: The SRP server is enabled but not active due to existing
+ *               SRP servers that are already active in the Thread network.
+ *               The SRP server may become active when the existing
+ *               SRP servers are no longer active within the Thread network.
+ *  * `running`: The SRP server is active and can  handle service registrations.
+ * @sa otSrpServerGetState
+ */
 template <> otError SrpServer::Process<Cmd("state")>(Arg aArgs[])
 {
     static const char *const kStateStrings[] = {
@@ -147,6 +181,17 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli srp server (disable,enable)
+ * @code
+ * srp server disable
+ * Done
+ * @endcode
+ * @cparam srp server [@ca{disable}|@ca{enable}]
+ * @par
+ * Disables or enables the SRP server.
+ * @sa otSrpServerSetEnabled
+ */
 template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -180,6 +225,26 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp server lease
+ * @code
+ * srp server lease 1800 7200 86400 1209600
+ * Done
+ * @endcode
+ * @code
+ * srp server lease
+ * min lease: 1800
+ * max lease: 7200
+ * min key-lease: 86400
+ * max key-lease: 1209600
+ * Done
+ * @endcode
+ * @cparam srp server lease [@ca{min-lease}] [@ca{max-lease}] [@ca{min-key-lease}] [@ca{max-key-lease}]
+ * @par
+ * Sets or gets the SRP server lease values in number of seconds.
+ * @sa otSrpServerSetLeaseConfig
+ * @sa otSrpServerGetLeaseConfig
+ */
 template <> otError SrpServer::Process<Cmd("lease")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -208,6 +273,24 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp server host
+ * @code
+ * srp server host
+ * srp-api-test-1.default.service.arpa.
+ *     deleted: false
+ *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+ * srp-api-test-0.default.service.arpa.
+ *     deleted: false
+ *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+ * Done
+ * @endcode
+ * @par
+ * Returns information about all registered SRP server hosts.
+ * @sa otSrpServerGetNextHost
+ * @sa otSrpServerHostGetFullName
+ * @sa otSrpServerHostGetAddresses
+ */
 template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -270,6 +353,46 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
     OutputFormat("]");
 }
 
+/**
+ * @cli srp server service
+ * @code
+ * srp server service
+ * srp-api-test-1._ipps._tcp.default.service.arpa.
+ *     deleted: false
+ *     subtypes: (null)
+ *     port: 49152
+ *     priority: 0
+ *     weight: 0
+ *     ttl: 7200
+ *     lease: 7200
+ *     key-lease: 1209600
+ *     TXT: [616263, xyz=585960]
+ *     host: srp-api-test-1.default.service.arpa.
+ *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+ * srp-api-test-0._ipps._tcp.default.service.arpa.
+ *     deleted: false
+ *     subtypes: _sub1,_sub2
+ *     port: 49152
+ *     priority: 0
+ *     weight: 0
+ *     ttl: 3600
+ *     lease: 3600
+ *     key-lease: 1209600
+ *     TXT: [616263, xyz=585960]
+ *     host: srp-api-test-0.default.service.arpa.
+ *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+ *     Done
+ * @endcode
+ * @par
+ * Retunrs information about registered services.
+ * @par
+ * The `TXT` record is displayed
+ * as an array of entries. If an entry contains a key, the key is printed in
+ * ASCII format. The value portion is printed in hexadecimal bytes.
+ * @sa otSrpServerServiceGetServiceName
+ * @sa otSrpServerServiceGetInstanceName
+ * @sa otSrpServerServiceGetSubTypeServiceNameAt
+ */
 template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 {
     otError                error = OT_ERROR_NONE;
@@ -342,6 +465,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli srp server seqnum (set,get)
+ * @code
+ * srp server seqnum 20
+ * Done
+ * @endcode
+ * @code
+ * srp server seqnum
+ * 20
+ * Done
+ * @endcode
+ * @cparam srp server seqnum [@ca{seqnum}]
+ * @par
+ * Sets or gets the sequence number used with the anycast address mode.
+ * The sequence number is included in the "DNS/SRP Service Anycast Address"
+ * entry that is published in the Network Data.
+ * @sa otSrpServerSetAnycastModeSequenceNumber
+ * @sa otSrpServerGetAnycastModeSequenceNumber
+ */
 template <> otError SrpServer::Process<Cmd("seqnum")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
