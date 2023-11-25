@@ -249,8 +249,8 @@ otError otIp6RegisterMulticastListeners(otInstance                             *
                                         otIp6RegisterMulticastListenersCallback aCallback,
                                         void                                   *aContext)
 {
-    return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(aAddresses, aAddressNum, aTimeout,
-                                                                              aCallback, aContext);
+    return AsCoreType(aInstance).Get<MlrManager>().RegisterMulticastListeners(AsCoreTypePtr(aAddresses), aAddressNum,
+                                                                              aTimeout, aCallback, aContext);
 }
 #endif
 
