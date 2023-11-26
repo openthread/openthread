@@ -645,12 +645,18 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationWaitingForData;
     }
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD
+    else if (IsPending(kOperationTransmitDataIndirect))
+    {
+        mOperation = kOperationTransmitDataIndirect;
+    }
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     else if (IsPending(kOperationTransmitDataCsl) && TimerMilli::GetNow() >= mCslTxFireTime)
     {
         mOperation = kOperationTransmitDataCsl;
     }
 #endif
+#endif // OPENTHREAD_FTD
     else if (IsPending(kOperationActiveScan))
     {
         mOperation = kOperationActiveScan;
@@ -663,12 +669,6 @@ void Mac::PerformNextOperation(void)
     {
         mOperation = kOperationTransmitBeacon;
     }
-#if OPENTHREAD_FTD
-    else if (IsPending(kOperationTransmitDataIndirect))
-    {
-        mOperation = kOperationTransmitDataIndirect;
-    }
-#endif // OPENTHREAD_FTD
     else if (IsPending(kOperationTransmitPoll) && (!IsPending(kOperationTransmitDataDirect) || mShouldTxPollBeforeData))
     {
         mOperation = kOperationTransmitPoll;
