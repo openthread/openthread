@@ -136,7 +136,7 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
  * @endcode
  * @cparam srp server domain [@ca{domain-name}]
  * @par
- * Sets or retunrs the domain name of the SRP server.
+ * Sets or returns the domain name of the SRP server.
  * @sa otSrpServerSetDomain
  * @sa otSrpServerGetDomain
  */
@@ -401,10 +401,10 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  *     TXT: [616263, xyz=585960]
  *     host: srp-api-test-0.default.service.arpa.
  *     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
- *     Done
+ * Done
  * @endcode
  * @par
- * Retunrs information about registered services.
+ * Returns information about registered services.
  * @par
  * The `TXT` record is displayed
  * as an array of entries. If an entry contains a key, the key is printed in
