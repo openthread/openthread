@@ -96,6 +96,26 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+/**
+ * @cli srp server auto (enable,disable)
+ * @code
+ * srp server auto enable
+ * Done
+ * @endcode
+ * @code
+ * srp server auto
+ * Enabled
+ * Done
+ * @endcode
+ * @cparam srp server auto [@ca{enable}|@ca{disable}]
+ * @par
+ * Enables or disables the auto-enable mode on the SRP server.
+ * @par
+ * When this mode is enabled, the Border Routing Manager controls if and when
+ * to enable or disable the SRP server.
+ * @sa otSrpServerSetAutoEnableMode
+ * @sa otSrpServerIsAutoEnableMode
+ */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
     return Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode,
