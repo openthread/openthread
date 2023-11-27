@@ -1149,6 +1149,8 @@ private:
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
 
+        static const char *StateToString(Dhcp6PdState aState);
+
         static bool IsValidPdPrefix(const Ip6::Prefix &aPrefix)
         {
             // We should accept ULA prefix since it could be used by the internet infrastructure like NAT64.
@@ -1207,10 +1209,6 @@ private:
 
     static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
     static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    static const char *Dhcp6PdStateToString(Dhcp6PdState aState);
-#endif
 
     using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
     using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;

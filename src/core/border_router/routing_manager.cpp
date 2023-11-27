@@ -3329,7 +3329,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-const char *RoutingManager::Dhcp6PdStateToString(Dhcp6PdState aState)
+const char *RoutingManager::PdPrefixManager::StateToString(Dhcp6PdState aState)
 {
     static const char *const kStateStrings[] = {
         "Disabled", // (0) kDisabled
@@ -3382,14 +3382,12 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     Dhcp6PdState newState = GetState();
 
     VerifyOrExit(aOldState != newState);
-    LogInfo("PdPrefixManager: %s -> %s", Dhcp6PdStateToString(aOldState), Dhcp6PdStateToString(newState));
+    LogInfo("PdPrefixManager: %s -> %s", StateToString(aOldState), StateToString(newState));
 
     // TODO: We may also want to inform the platform that PD is stopped.
     switch (newState)
     {
     case kDhcp6PdStateDisabled:
-        WithdrawPrefix();
-        break;
     case kDhcp6PdStateStopped:
         WithdrawPrefix();
         break;
