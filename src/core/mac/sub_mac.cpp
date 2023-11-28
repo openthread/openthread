@@ -1268,7 +1268,7 @@ void SubMac::GetCslWindowEdges(uint32_t &aAhead, uint32_t &aAfter)
     uint32_t curTime, elapsed, semiWindow;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_LOCAL_TIME_SYNC
-    curTime = TimerMicro::GetNow();
+    curTime = TimerMicro::GetNow().GetValue();
 #else
     curTime = static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance()));
 #endif
