@@ -342,6 +342,9 @@ void RoutingManager::Start(void)
         mOmrPrefixManager.Start();
         mRoutePublisher.Start();
         mRsSender.Start();
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        mPdPrefixManager.Start();
+#endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         mNat64PrefixManager.Start();
 #endif
@@ -354,7 +357,9 @@ void RoutingManager::Stop(void)
 
     mOmrPrefixManager.Stop();
     mOnLinkPrefixManager.Stop();
-
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+    mPdPrefixManager.Stop();
+#endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
     mNat64PrefixManager.Stop();
 #endif
@@ -3429,12 +3434,74 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+const char *RoutingManager::PdPrefixManager::StateToString(Dhcp6PdState aState)
+{
+    static const char *const kStateStrings[] = {
+        "Disabled", // (0) kDisabled
+        "Stopped",  // (1) kStopped
+        "Running",  // (2) kRunning
+    };
+
+    static_assert(0 == kDhcp6PdStateDisabled, "kDhcp6PdStateDisabled value is incorrect");
+    static_assert(1 == kDhcp6PdStateStopped, "kDhcp6PdStateStopped value is incorrect");
+    static_assert(2 == kDhcp6PdStateRunning, "kDhcp6PdStateRunning value is incorrect");
+
+    return kStateStrings[aState];
+}
+
 RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
+    , mIsRunning(false)
     , mTimer(aInstance)
 {
     mPrefix.Clear();
+}
+
+void RoutingManager::PdPrefixManager::StartStop(bool aStart)
+{
+    Dhcp6PdState oldState = GetState();
+
+    VerifyOrExit(aStart != mIsRunning);
+    mIsRunning = aStart;
+    EvaluateStateChange(oldState);
+
+exit:
+    return;
+}
+
+RoutingManager::Dhcp6PdState RoutingManager::PdPrefixManager::GetState(void) const
+{
+    Dhcp6PdState state = kDhcp6PdStateDisabled;
+
+    if (mEnabled)
+    {
+        state = mIsRunning ? kDhcp6PdStateRunning : kDhcp6PdStateStopped;
+    }
+
+    return state;
+}
+
+void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState)
+{
+    Dhcp6PdState newState = GetState();
+
+    VerifyOrExit(aOldState != newState);
+    LogInfo("PdPrefixManager: %s -> %s", StateToString(aOldState), StateToString(newState));
+
+    // TODO: We may also want to inform the platform that PD is stopped.
+    switch (newState)
+    {
+    case kDhcp6PdStateDisabled:
+    case kDhcp6PdStateStopped:
+        WithdrawPrefix();
+        break;
+    case kDhcp6PdStateRunning:
+        break;
+    }
+
+exit:
+    return;
 }
 
 Error RoutingManager::PdPrefixManager::GetPrefixInfo(PrefixTableEntry &aInfo) const
@@ -3472,7 +3539,7 @@ void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *
     Error                                     error = kErrorNone;
     Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
 
-    VerifyOrExit(mEnabled, LogWarn("Ignore platform generated RA since PD is disabled."));
+    VerifyOrExit(IsRunning(), LogWarn("Ignore platform generated RA since PD is disabled or not running."));
     packet.Init(aRouterAdvert, aLength);
     error = Process(Ip6::Nd::RouterAdvertMessage(packet));
 
@@ -3563,15 +3630,11 @@ exit:
 
 void RoutingManager::PdPrefixManager::SetEnabled(bool aEnabled)
 {
+    Dhcp6PdState oldState = GetState();
+
     VerifyOrExit(mEnabled != aEnabled);
-
     mEnabled = aEnabled;
-    if (!aEnabled)
-    {
-        WithdrawPrefix();
-    }
-
-    LogInfo("PdPrefixManager is %s", aEnabled ? "enabled" : "disabled");
+    EvaluateStateChange(oldState);
 
 exit:
     return;
