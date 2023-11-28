@@ -334,8 +334,8 @@ Error GeneratePskc(const char          *aPassPhrase,
     memcpy(salt + saltLen, aNetworkName.GetAsCString(), networkNameLen);
     saltLen += networkNameLen;
 
-    otPlatCryptoPbkdf2GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
-                                  OT_PSKC_MAX_SIZE, aPskc.m8);
+    error = otPlatCryptoPbkdf2GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen,
+                                          16384, OT_PSKC_MAX_SIZE, aPskc.m8);
 
 exit:
     return error;
