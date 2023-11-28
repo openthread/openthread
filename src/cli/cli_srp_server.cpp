@@ -56,7 +56,7 @@ namespace Cli {
  * @endcode
  * @cparam srp server addrmode [@ca{unicast}|@ca{anycast}]
  * @par
- * Sets or gets  the address mode used by the SRP server.
+ * Gets or sets the address mode used by the SRP server.
  * @par
  * The address mode tells the SRP server how to determine its address and port number,
  * which then get published in the Thread network data.
@@ -113,8 +113,8 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
  * @par
  * When this mode is enabled, the Border Routing Manager controls if and when
  * to enable or disable the SRP server.
- * @sa otSrpServerSetAutoEnableMode
  * @sa otSrpServerIsAutoEnableMode
+ * @sa otSrpServerSetAutoEnableMode
  */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
@@ -124,7 +124,7 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 #endif
 
 /**
- * @cli srp server domain (set,get)
+ * @cli srp server domain (get,set)
  * @code
  * srp server domain thread.service.arpa.
  * Done
@@ -137,8 +137,8 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
  * @cparam srp server domain [@ca{domain-name}]
  * @par
  * Sets or returns the domain name of the SRP server.
- * @sa otSrpServerSetDomain
  * @sa otSrpServerGetDomain
+ * @sa otSrpServerSetDomain
  */
 template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
 {
@@ -170,7 +170,7 @@ template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
  *               SRP servers that are already active in the Thread network.
  *               The SRP server may become active when the existing
  *               SRP servers are no longer active within the Thread network.
- *  * `running`: The SRP server is active and can  handle service registrations.
+ *  * `running`: The SRP server is active and can handle service registrations.
  * @sa otSrpServerGetState
  */
 template <> otError SrpServer::Process<Cmd("state")>(Arg aArgs[])
@@ -202,12 +202,12 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
 }
 
 /**
- * @cli srp server (disable,enable)
+ * @cli srp server (enable,disable)
  * @code
  * srp server disable
  * Done
  * @endcode
- * @cparam srp server [@ca{disable}|@ca{enable}]
+ * @cparam srp server [@ca{enable}|@ca{disable}]
  * @par
  * Disables or enables the SRP server.
  * @sa otSrpServerSetEnabled
@@ -246,7 +246,7 @@ exit:
 }
 
 /**
- * @cli srp server lease
+ * @cli srp server lease (get,set)
  * @code
  * srp server lease 1800 7200 86400 1209600
  * Done
@@ -261,9 +261,9 @@ exit:
  * @endcode
  * @cparam srp server lease [@ca{min-lease}] [@ca{max-lease}] [@ca{min-key-lease}] [@ca{max-key-lease}]
  * @par
- * Sets or gets the SRP server lease values in number of seconds.
- * @sa otSrpServerSetLeaseConfig
+ * Gets or sets the SRP server lease values in number of seconds.
  * @sa otSrpServerGetLeaseConfig
+ * @sa otSrpServerSetLeaseConfig
  */
 template <> otError SrpServer::Process<Cmd("lease")>(Arg aArgs[])
 {
@@ -308,8 +308,8 @@ exit:
  * @par
  * Returns information about all registered SRP server hosts.
  * @sa otSrpServerGetNextHost
- * @sa otSrpServerHostGetFullName
  * @sa otSrpServerHostGetAddresses
+ * @sa otSrpServerHostGetFullName
  */
 template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
 {
@@ -409,8 +409,8 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  * The `TXT` record is displayed
  * as an array of entries. If an entry contains a key, the key is printed in
  * ASCII format. The value portion is printed in hexadecimal bytes.
- * @sa otSrpServerServiceGetServiceName
  * @sa otSrpServerServiceGetInstanceName
+ * @sa otSrpServerServiceGetServiceName
  * @sa otSrpServerServiceGetSubTypeServiceNameAt
  */
 template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
