@@ -43,6 +43,15 @@
 namespace ot {
 namespace Posix {
 
+#if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
+const char Configuration::kKeyCalibratedPower[] = "calibrated_power";
+#endif
+const char Configuration::kKeyTargetPower[]          = "target_power";
+const char Configuration::kKeyRegionDomainMapping[]  = "region_domain_mapping";
+const char Configuration::kKeySupportedChannelMask[] = "supported_channel_mask";
+const char Configuration::kKeyPreferredChannelMask[] = "preferred_channel_mask";
+const char Configuration::kCommaDelimiter[]          = ",";
+
 otError Configuration::SetRegion(uint16_t aRegionCode)
 {
     otError       error = OT_ERROR_NONE;
