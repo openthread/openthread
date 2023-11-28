@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 /**
- * @cli srp server addrmode (set,get)
+ * @cli srp server addrmode (get,set)
  * @code
  * srp server addrmode anycast
  * Done
@@ -54,7 +54,7 @@ namespace Cli {
  * anycast
  * Done
  * @endcode
- * @cparam srp server addrmode [@ca{unicast}|@ca{anycast}]
+ * @cparam srp server addrmode [@ca{anycast}|@ca{unicast}]
  * @par
  * Gets or sets the address mode used by the SRP server.
  * @par
@@ -136,7 +136,7 @@ template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
  * @endcode
  * @cparam srp server domain [@ca{domain-name}]
  * @par
- * Sets or returns the domain name of the SRP server.
+ * Gets or sets the domain name of the SRP server.
  * @sa otSrpServerGetDomain
  * @sa otSrpServerSetDomain
  */
@@ -209,7 +209,7 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
  * @endcode
  * @cparam srp server [@ca{enable}|@ca{disable}]
  * @par
- * Disables or enables the SRP server.
+ * Enables or disables the SRP server.
  * @sa otSrpServerSetEnabled
  */
 template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
@@ -486,7 +486,7 @@ exit:
 }
 
 /**
- * @cli srp server seqnum (set,get)
+ * @cli srp server seqnum (get,set)
  * @code
  * srp server seqnum 20
  * Done
@@ -498,11 +498,11 @@ exit:
  * @endcode
  * @cparam srp server seqnum [@ca{seqnum}]
  * @par
- * Sets or gets the sequence number used with the anycast address mode.
+ * Gets or sets the sequence number used with the anycast address mode.
  * The sequence number is included in the "DNS/SRP Service Anycast Address"
  * entry that is published in the Network Data.
- * @sa otSrpServerSetAnycastModeSequenceNumber
  * @sa otSrpServerGetAnycastModeSequenceNumber
+ * @sa otSrpServerSetAnycastModeSequenceNumber
  */
 template <> otError SrpServer::Process<Cmd("seqnum")>(Arg aArgs[])
 {
