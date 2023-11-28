@@ -259,7 +259,7 @@ exit:
  * max key-lease: 1209600
  * Done
  * @endcode
- * @cparam srp server lease [@ca{min-lease}] [@ca{max-lease}] [@ca{min-key-lease}] [@ca{max-key-lease}]
+ * @cparam srp server lease [@ca{min-lease} @ca{max-lease} @ca{min-key-lease} @ca{max-key-lease}]
  * @par
  * Gets or sets the SRP server lease values in number of seconds.
  * @sa otSrpServerGetLeaseConfig
@@ -306,7 +306,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Returns information about all registered SRP server hosts.
+ * Returns information about all registered hosts.
  * @sa otSrpServerGetNextHost
  * @sa otSrpServerHostGetAddresses
  * @sa otSrpServerHostGetFullName
