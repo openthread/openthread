@@ -113,6 +113,8 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
  * @par
  * When this mode is enabled, the Border Routing Manager controls if and when
  * to enable or disable the SRP server.
+ * @par
+ * This command requires that `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` be enabled.
  * @sa otSrpServerIsAutoEnableMode
  * @sa otSrpServerSetAutoEnableMode
  */
