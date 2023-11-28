@@ -743,14 +743,18 @@ otError otPlatCryptoEcdsaVerifyUsingKeyRef(otCryptoKeyRef                    aKe
  * @param[in]     aKeyLen            Length of generated key in bytes.
  * @param[out]    aKey               A pointer to the generated key.
  *
+ * @retval OT_ERROR_NONE          A new key-pair was generated successfully.
+ * @retval OT_ERROR_NO_BUFS       Failed to allocate buffer for key generation.
+ * @retval OT_ERROR_NOT_CAPABLE   Feature not supported.
+ * @retval OT_ERROR_FAILED        Failed to generate key.
  */
-void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
-                                   uint16_t       aPasswordLen,
-                                   const uint8_t *aSalt,
-                                   uint16_t       aSaltLen,
-                                   uint32_t       aIterationCounter,
-                                   uint16_t       aKeyLen,
-                                   uint8_t       *aKey);
+otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
+                                      uint16_t       aPasswordLen,
+                                      const uint8_t *aSalt,
+                                      uint16_t       aSaltLen,
+                                      uint32_t       aIterationCounter,
+                                      uint16_t       aKeyLen,
+                                      uint8_t       *aKey);
 
 /**
  * @}

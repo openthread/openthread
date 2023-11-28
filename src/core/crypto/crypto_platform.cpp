@@ -716,13 +716,13 @@ OT_TOOL_WEAK otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *a
 
 #if OPENTHREAD_FTD
 
-OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
-                                                uint16_t       aPasswordLen,
-                                                const uint8_t *aSalt,
-                                                uint16_t       aSaltLen,
-                                                uint32_t       aIterationCounter,
-                                                uint16_t       aKeyLen,
-                                                uint8_t       *aKey)
+OT_TOOL_WEAK otError otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
+                                                   uint16_t       aPasswordLen,
+                                                   const uint8_t *aSalt,
+                                                   uint16_t       aSaltLen,
+                                                   uint32_t       aIterationCounter,
+                                                   uint16_t       aKeyLen,
+                                                   uint8_t       *aKey)
 {
 #if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
     const size_t kBlockSize = MBEDTLS_CMAC_MAX_BLOCK_SIZE;
@@ -737,6 +737,8 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
     uint8_t *key          = aKey;
     uint16_t keyLen       = aKeyLen;
     uint16_t useLen       = 0;
+    Error    error        = kErrorNone;
+    int      ret;
 
     OT_ASSERT(aSaltLen <= sizeof(prfInput));
     memcpy(prfInput, aSalt, aSaltLen);
@@ -757,12 +759,14 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
         prfInput[aSaltLen + 3] = static_cast<uint8_t>(blockCounter);
 
         // Calculate U_1
-        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, prfInput, aSaltLen + 4,
-                                 reinterpret_cast<uint8_t *>(keyBlock));
+        ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, prfInput, aSaltLen + 4,
+                                       reinterpret_cast<uint8_t *>(keyBlock));
+        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
         // Calculate U_2
-        mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock), kBlockSize,
-                                 reinterpret_cast<uint8_t *>(prfOne));
+        ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(keyBlock), kBlockSize,
+                                       reinterpret_cast<uint8_t *>(prfOne));
+        VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
         for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
         {
@@ -772,11 +776,13 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
         for (uint32_t i = 1; i < aIterationCounter; ++i)
         {
             // Calculate U_{2 * i - 1}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne), kBlockSize,
-                                     reinterpret_cast<uint8_t *>(prfTwo));
+            ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfOne),
+                                           kBlockSize, reinterpret_cast<uint8_t *>(prfTwo));
+            VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
             // Calculate U_{2 * i}
-            mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo), kBlockSize,
-                                     reinterpret_cast<uint8_t *>(prfOne));
+            ret = mbedtls_aes_cmac_prf_128(aPassword, aPasswordLen, reinterpret_cast<const uint8_t *>(prfTwo),
+                                           kBlockSize, reinterpret_cast<uint8_t *>(prfOne));
+            VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
             for (uint32_t j = 0; j < kBlockSize / sizeof(long); ++j)
             {
@@ -789,6 +795,9 @@ OT_TOOL_WEAK void otPlatCryptoPbkdf2GenerateKey(const uint8_t *aPassword,
         key += useLen;
         keyLen -= useLen;
     }
+
+exit:
+    return error;
 }
 
 #endif // #if OPENTHREAD_FTD
