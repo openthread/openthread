@@ -133,6 +133,10 @@ void DatasetUpdater::PreparePendingDataset(void)
         {
             timestamp = *Get<PendingDatasetManager>().GetTimestamp();
         }
+        else
+        {
+            timestamp.Clear();
+        }
 
         timestamp.AdvanceRandomTicks();
         dataset.SetTimestamp(Dataset::kPending, timestamp);
