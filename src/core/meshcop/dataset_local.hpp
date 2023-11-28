@@ -184,13 +184,28 @@ public:
     Error Save(const Dataset &aDataset);
 
 private:
-    bool IsActive(void) const { return (mType == Dataset::kActive); }
-    void SetTimestamp(const Dataset &aDataset);
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    struct SecurelyStoredTlv
+    {
+        Crypto::Storage::KeyRef GetKeyRef(Dataset::Type aType) const
+        {
+            return (aType == Dataset::kActive) ? mActiveKeyRef : mPendingKeyRef;
+        }
+
+        Tlv::Type               mTlvType;
+        Crypto::Storage::KeyRef mActiveKeyRef;
+        Crypto::Storage::KeyRef mPendingKeyRef;
+    };
+
+    static const SecurelyStoredTlv kSecurelyStoredTlvs[];
+
     void MoveKeysToSecureStorage(Dataset &aDataset) const;
     void DestroySecurelyStoredKeys(void) const;
     void EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
 #endif
+
+    bool IsActive(void) const { return (mType == Dataset::kActive); }
+    void SetTimestamp(const Dataset &aDataset);
 
     Timestamp     mTimestamp;            ///< Active or Pending Timestamp
     TimeMilli     mUpdateTime;           ///< Local time last updated
