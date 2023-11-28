@@ -146,7 +146,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
 /**
- * @cli srp client callback (enable/disable, get)
+ * @cli srp client callback (get,enable/disable)
  * @code
  * srp client callback enable
  * Done
@@ -196,7 +196,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
         OutputHostInfo(0, *otSrpClientGetHostInfo(GetInstancePtr()));
     }
     /**
-     * @cli srp client host name (set, get)
+     * @cli srp client host name (get,set)
      * @code
      * srp client host name dev4312
      * Done
@@ -210,7 +210,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * To set the client host name when the host has either been removed or not yet
      * registered with the server, use the `name` parameter.
      * @par
-     * Sets or returns the host name of the SRP client.
+     * Gets or sets the host name of the SRP client.
      * @sa otSrpClientSetHostName
      */
     else if (aArgs[0] == "name")
@@ -412,8 +412,8 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * @endcode
      * @par
      * Clears all host information and all services.
-     * @sa otSrpClientClearHostAndServices
      * @sa otSrpClientBuffersFreeAllServices
+     * @sa otSrpClientClearHostAndServices
      */
     else if (aArgs[0] == "clear")
     {
@@ -431,7 +431,7 @@ exit:
 }
 
 /**
- * @cli srp client leaseinterval (set, get)
+ * @cli srp client leaseinterval (get,set)
  * @code
  * srp client leaseinterval 3600
  * Done
@@ -443,9 +443,9 @@ exit:
  * @endcode
  * @cparam srp client leaseinterval [@ca{interval}]
  * @par
- * Sets or gets the lease interval in seconds.
- * @sa otSrpClientSetLeaseInterval
+ * Gets or sets the lease interval in seconds.
  * @sa otSrpClientGetLeaseInterval
+ * @sa otSrpClientSetLeaseInterval
  */
 template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
 {
@@ -453,7 +453,7 @@ template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
 }
 
 /**
- * @cli srp client keyleaseinterval (set, get)
+ * @cli srp client keyleaseinterval (get,set)
  * @code
  * srp client keyleaseinterval 864000
  * Done
@@ -465,9 +465,9 @@ template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
  * @endcode
  * @cparam srp client keyleaseinterval [@ca{interval}]
  * @par
- * Sets or gets the key lease interval in seconds.
- * @sa otSrpClientSetKeyLeaseInterval
+ * Gets or sets the key lease interval in seconds.
  * @sa otSrpClientGetKeyLeaseInterval
+ * @sa otSrpClientSetKeyLeaseInterval
  */
 template <> otError SrpClient::Process<Cmd("keyleaseinterval")>(Arg aArgs[])
 {
@@ -639,7 +639,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
-     * @cli srp client service key (set, get)
+     * @cli srp client service key (get,set)
      * @code
      * srp client service key enable
      * Done
@@ -905,7 +905,7 @@ exit:
 }
 
 /**
- * @cli srp client ttl (set, get)
+ * @cli srp client ttl (get,set)
  * @code
  * srp client ttl 3600
  * Done
@@ -917,9 +917,9 @@ exit:
  * @endcode
  * @cparam srp client ttl [@ca{value}]
  * @par
- * Sets or gets the `ttl`(time to live) value in seconds.
- * @sa otSrpClientSetTtl
+ * Gets or sets the `ttl`(time to live) value in seconds.
  * @sa otSrpClientGetTtl
+ * @sa otSrpClientSetTtl
  */
 template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
 {
