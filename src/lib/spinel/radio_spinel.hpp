@@ -50,7 +50,7 @@ namespace Spinel {
  * Maximum number of Spinel Interface IDs.
  *
  */
-#ifdef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
 #else
 static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
