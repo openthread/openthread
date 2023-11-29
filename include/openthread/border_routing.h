@@ -445,6 +445,18 @@ otError otBorderRoutingGetNextRouterEntry(otInstance                         *aI
 void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * Gets the current state of DHCPv6 Prefix Delegation.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The current state of DHCPv6 Prefix Delegation.
+ *
+ */
+otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance);
+
+/**
  * @}
  *
  */
