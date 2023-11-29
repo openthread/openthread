@@ -39,6 +39,7 @@
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #include <openthread/backbone_router.h>
+#include <openthread/backbone_router_ftd.h>
 #include <openthread/ip6.h>
 
 #include "coap/coap.hpp"
@@ -72,10 +73,10 @@ static_assert(kParentAggregateDelay > 1, "kParentAggregateDelay should be larger
  */
 enum DomainPrefixEvent : uint8_t
 {
-    kDomainPrefixAdded,     ///< Domain Prefix Added.
-    kDomainPrefixRemoved,   ///< Domain Prefix Removed.
-    kDomainPrefixRefreshed, ///< Domain Prefix Changed.
-    kDomainPrefixUnchanged, ///< Domain Prefix did not change.
+    kDomainPrefixAdded     = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED,   ///< Domain Prefix Added.
+    kDomainPrefixRemoved   = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, ///< Domain Prefix Removed.
+    kDomainPrefixRefreshed = OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, ///< Domain Prefix Changed.
+    kDomainPrefixUnchanged,                                            ///< Domain Prefix did not change.
 };
 
 /**

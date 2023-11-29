@@ -51,19 +51,19 @@ RegisterLogModule("BbrLocal");
 
 Local::Local(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mIsServiceAdded(false)
     , mState(kStateDisabled)
-    , mMlrTimeout(kDefaultMlrTimeout)
-    , mReregistrationDelay(kDefaultRegistrationDelay)
-    , mRegistrationTimeout(0)
     , mSequenceNumber(Random::NonCrypto::GetUint8() % 127)
     , mRegistrationJitter(kDefaultRegistrationJitter)
-    , mIsServiceAdded(false)
+    , mReregistrationDelay(kDefaultRegistrationDelay)
+    , mRegistrationTimeout(0)
+    , mMlrTimeout(kDefaultMlrTimeout)
 {
     mDomainPrefixConfig.GetPrefix().SetLength(0);
 
     // Primary Backbone Router Aloc
-    mBackboneRouterPrimaryAloc.InitAsThreadOriginMeshLocal();
-    mBackboneRouterPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::kAloc16BackboneRouterPrimary);
+    mBbrPrimaryAloc.InitAsThreadOriginMeshLocal();
+    mBbrPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::kAloc16BackboneRouterPrimary);
 
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
@@ -110,7 +110,7 @@ void Local::Reset(void)
     if (mState == kStatePrimary)
     {
         // Increase sequence number when changing from Primary to Secondary.
-        SequenceNumberIncrease();
+        IncrementSequenceNumber();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         SetState(kStateSecondary);
     }
@@ -168,7 +168,7 @@ Error Local::SetConfig(const Config &aConfig)
     }
 
 exit:
-    LogBackboneRouterService("Set", error);
+    LogService(kActionSet, error);
     return error;
 }
 
@@ -199,7 +199,7 @@ Error Local::AddService(RegisterMode aMode)
     mIsServiceAdded = true;
 
 exit:
-    LogBackboneRouterService("Add", error);
+    LogService(kActionAdd, error);
     return error;
 }
 
@@ -212,28 +212,31 @@ void Local::RemoveService(void)
     mIsServiceAdded = false;
 
 exit:
-    LogBackboneRouterService("Remove", error);
+    LogService(kActionRemove, error);
 }
 
 void Local::SetState(State aState)
 {
     VerifyOrExit(mState != aState);
 
-    if (mState == kStateDisabled)
+    switch (mState)
     {
+    case kStateDisabled:
         // Update All Network Backbone Routers Multicast Address for both Secondary and Primary state.
         mAllNetworkBackboneRouters.SetMulticastNetworkPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        break;
+    case kStateSecondary:
+        break;
+    case kStatePrimary:
+        Get<ThreadNetif>().RemoveUnicastAddress(mBbrPrimaryAloc);
+        break;
     }
 
-    if (mState == kStatePrimary)
+    if (aState == kStatePrimary)
     {
-        Get<ThreadNetif>().RemoveUnicastAddress(mBackboneRouterPrimaryAloc);
-    }
-    else if (aState == kStatePrimary)
-    {
-        // Add Primary Backbone Router Aloc for Primary Backbone Router.
-        mBackboneRouterPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-        Get<ThreadNetif>().AddUnicastAddress(mBackboneRouterPrimaryAloc);
+        // Add Primary Backbone Router ALOC for Primary Backbone Router.
+        mBbrPrimaryAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+        Get<ThreadNetif>().AddUnicastAddress(mBbrPrimaryAloc);
     }
 
     mState = aState;
@@ -274,7 +277,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Config
         mSequenceNumber      = aConfig.mSequenceNumber;
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
-        SequenceNumberIncrease();
+        IncrementSequenceNumber();
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
         IgnoreError(AddService(kForceRegistration));
     }
@@ -353,7 +356,7 @@ Error Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     }
 
     mDomainPrefixConfig = aConfig;
-    LogDomainPrefix("Set", kErrorNone);
+    LogDomainPrefix(kActionSet, kErrorNone);
 
     if (IsEnabled())
     {
@@ -394,22 +397,10 @@ void Local::HandleDomainPrefixUpdate(DomainPrefixEvent aEvent)
         Get<BackboneTmfAgent>().SubscribeMulticast(mAllDomainBackboneRouters);
     }
 
-    if (mDomainPrefixCallback.IsSet())
+    if (aEvent != kDomainPrefixUnchanged)
     {
-        switch (aEvent)
-        {
-        case kDomainPrefixAdded:
-            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_ADDED, Get<Leader>().GetDomainPrefix());
-            break;
-        case kDomainPrefixRemoved:
-            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_REMOVED, Get<Leader>().GetDomainPrefix());
-            break;
-        case kDomainPrefixRefreshed:
-            mDomainPrefixCallback.Invoke(OT_BACKBONE_ROUTER_DOMAIN_PREFIX_CHANGED, Get<Leader>().GetDomainPrefix());
-            break;
-        default:
-            break;
-        }
+        mDomainPrefixCallback.InvokeIfSet(static_cast<otBackboneRouterDomainPrefixEvent>(aEvent),
+                                          Get<Leader>().GetDomainPrefix());
     }
 
 exit:
@@ -425,10 +416,10 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
         error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mDomainPrefixConfig.GetPrefix());
     }
 
-    LogDomainPrefix("Remove", error);
+    LogDomainPrefix(kActionRemove, error);
 }
 
-void Local::SequenceNumberIncrease(void)
+void Local::IncrementSequenceNumber(void)
 {
     switch (mSequenceNumber)
     {
@@ -455,21 +446,38 @@ void Local::AddDomainPrefixToNetworkData(void)
         error = Get<NetworkData::Local>().AddOnMeshPrefix(mDomainPrefixConfig);
     }
 
-    LogDomainPrefix("Add", error);
+    LogDomainPrefix(kActionAdd, error);
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
-void Local::LogDomainPrefix(const char *aAction, Error aError)
+
+const char *Local::ActionToString(Action aAction)
 {
-    LogInfo("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
+    static const char *const kActionStrings[] = {
+        "Set",    // (0) kActionSet
+        "Add",    // (1) kActionAdd
+        "Remove", // (2) kActionRemove
+    };
+
+    static_assert(0 == kActionSet, "kActionSet value is incorrect");
+    static_assert(1 == kActionAdd, "kActionAdd value is incorrect");
+    static_assert(2 == kActionRemove, "kActionRemove value is incorrect");
+
+    return kActionStrings[aAction];
+}
+
+void Local::LogDomainPrefix(Action aAction, Error aError)
+{
+    LogInfo("%s Domain Prefix: %s, %s", ActionToString(aAction), mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
             ErrorToString(aError));
 }
 
-void Local::LogBackboneRouterService(const char *aAction, Error aError)
+void Local::LogService(Action aAction, Error aError)
 {
-    LogInfo("%s BBR Service: seqno (%u), delay (%us), timeout (%lus), %s", aAction, mSequenceNumber,
+    LogInfo("%s BBR Service: seqno (%u), delay (%us), timeout (%lus), %s", ActionToString(aAction), mSequenceNumber,
             mReregistrationDelay, ToUlong(mMlrTimeout), ErrorToString(aError));
 }
+
 #endif
 
 } // namespace BackboneRouter
