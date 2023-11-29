@@ -144,6 +144,12 @@ jobs:
         ninja test
         # Validate posix builds with different radio configs
         git clean -dfx
+        ./tests/toranj/build.sh ncp-15.4
+        git clean -dfx
+        ./tests/toranj/build.sh ncp-trel
+        git clean -dfx
+        ./tests/toranj/build.sh ncp-15.4+trel
+        git clean -dfx
         ./tests/toranj/build.sh posix-15.4
         git clean -dfx
         ./tests/toranj/build.sh posix-15.4+trel
