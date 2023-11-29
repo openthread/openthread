@@ -95,7 +95,7 @@ public:
      * @retval the minimal delay timer (in ms).
      *
      */
-    uint32_t GetDelayTimerMinimal(void) const;
+    uint32_t GetDelayTimerMinimal(void) const { return mDelayTimerMinimal; }
 
     /**
      * Sets empty Commissioner Data TLV in the Thread Network Data.
@@ -104,6 +104,7 @@ public:
     void SetEmptyCommissionerData(void);
 
 private:
+    static constexpr uint32_t kMinDelayTimer         = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY; // (msec)
     static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
     OT_TOOL_PACKED_BEGIN

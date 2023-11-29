@@ -168,6 +168,23 @@ inline uint64_t ReadUint64(const uint8_t *aBuffer)
 }
 
 /**
+ * Reads a `UintType` integer value from a given buffer assuming big-endian encoding.
+ *
+ * @tparam  UintType   The unsigned int type.
+ *
+ * @param[in] aBuffer   Pointer to the buffer to read from.
+ *
+ * @returns The `UintType` value read from the buffer.
+ *
+ */
+template <typename UintType> UintType Read(const uint8_t *aBuffer);
+
+template <> inline uint8_t  Read(const uint8_t *aBuffer) { return *aBuffer; }
+template <> inline uint16_t Read(const uint8_t *aBuffer) { return ReadUint16(aBuffer); }
+template <> inline uint32_t Read(const uint8_t *aBuffer) { return ReadUint32(aBuffer); }
+template <> inline uint64_t Read(const uint8_t *aBuffer) { return ReadUint64(aBuffer); }
+
+/**
  * Writes a `uint16_t` value to a given buffer using big-endian encoding.
  *
  * @param[in]  aValue    The value to write to buffer.
@@ -227,6 +244,22 @@ inline void WriteUint64(uint64_t aValue, uint8_t *aBuffer)
     aBuffer[6] = (aValue >> 8) & 0xff;
     aBuffer[7] = (aValue >> 0) & 0xff;
 }
+
+/**
+ * Writes a `UintType` integer value to a given buffer assuming big-endian encoding.
+ *
+ * @tparam  UintType   The unsigned int type.
+ *
+ * @param[in] aValue    The value to write to buffer.
+ * @param[in] aBuffer   Pointer to the buffer to write to.
+ *
+ */
+template <typename UintType> void Write(UintType aValue, uint8_t *aBuffer);
+
+template <> inline void Write(uint8_t aValue, uint8_t *aBuffer) { *aBuffer = aValue; }
+template <> inline void Write(uint16_t aValue, uint8_t *aBuffer) { WriteUint16(aValue, aBuffer); }
+template <> inline void Write(uint32_t aValue, uint8_t *aBuffer) { WriteUint32(aValue, aBuffer); }
+template <> inline void Write(uint64_t aValue, uint8_t *aBuffer) { WriteUint64(aValue, aBuffer); }
 
 } // namespace BigEndian
 
@@ -318,6 +351,23 @@ inline uint64_t ReadUint64(const uint8_t *aBuffer)
 }
 
 /**
+ * Reads a `UintType` integer value from a given buffer assuming little-endian encoding.
+ *
+ * @tparam  UintType   The unsigned int type.
+ *
+ * @param[in] aBuffer   Pointer to the buffer to read from.
+ *
+ * @returns The `UintType` value read from the buffer.
+ *
+ */
+template <typename UintType> UintType Read(const uint8_t *aBuffer);
+
+template <> inline uint8_t  Read(const uint8_t *aBuffer) { return *aBuffer; }
+template <> inline uint16_t Read(const uint8_t *aBuffer) { return ReadUint16(aBuffer); }
+template <> inline uint32_t Read(const uint8_t *aBuffer) { return ReadUint32(aBuffer); }
+template <> inline uint64_t Read(const uint8_t *aBuffer) { return ReadUint64(aBuffer); }
+
+/**
  * Writes a `uint16_t` value to a given buffer using little-endian encoding.
  *
  * @param[in]  aValue    The value to write to buffer.
@@ -377,6 +427,22 @@ inline void WriteUint64(uint64_t aValue, uint8_t *aBuffer)
     aBuffer[6] = (aValue >> 48) & 0xff;
     aBuffer[7] = (aValue >> 56) & 0xff;
 }
+
+/**
+ * Writes a `UintType` integer value to a given buffer assuming little-endian encoding.
+ *
+ * @tparam  UintType   The unsigned int type.
+ *
+ * @param[in] aValue    The value to write to buffer.
+ * @param[in] aBuffer   Pointer to the buffer to write to.
+ *
+ */
+template <typename UintType> void Write(UintType aValue, uint8_t *aBuffer);
+
+template <> inline void Write(uint8_t aValue, uint8_t *aBuffer) { *aBuffer = aValue; }
+template <> inline void Write(uint16_t aValue, uint8_t *aBuffer) { WriteUint16(aValue, aBuffer); }
+template <> inline void Write(uint32_t aValue, uint8_t *aBuffer) { WriteUint32(aValue, aBuffer); }
+template <> inline void Write(uint64_t aValue, uint8_t *aBuffer) { WriteUint64(aValue, aBuffer); }
 
 } // namespace LittleEndian
 
