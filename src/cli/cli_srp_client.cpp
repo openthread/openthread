@@ -146,7 +146,7 @@ exit:
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
 /**
- * @cli srp client callback (get,enable/disable)
+ * @cli srp client callback (get,enable,disable)
  * @code
  * srp client callback enable
  * Done
