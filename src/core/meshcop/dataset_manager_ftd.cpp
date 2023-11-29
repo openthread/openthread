@@ -302,7 +302,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     IgnoreError(Read(dataset));
 
-    if (dataset.GetTlv<ActiveTimestampTlv>() == nullptr)
+    if (!dataset.Contains<ActiveTimestampTlv>())
     {
         Timestamp timestamp;
 
@@ -310,7 +310,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(Tlv::kActiveTimestamp, timestamp));
     }
 
-    if (dataset.GetTlv<ChannelTlv>() == nullptr)
+    if (!dataset.Contains<ChannelTlv>())
     {
         ChannelTlv tlv;
         tlv.Init();
@@ -318,7 +318,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(tlv));
     }
 
-    if (dataset.GetTlv<ChannelMaskTlv>() == nullptr)
+    if (!dataset.Contains<ChannelMaskTlv>())
     {
         ChannelMaskTlv tlv;
         tlv.Init();
@@ -326,17 +326,17 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(tlv));
     }
 
-    if (dataset.GetTlv<ExtendedPanIdTlv>() == nullptr)
+    if (!dataset.Contains<ExtendedPanIdTlv>())
     {
         IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<ExtendedPanIdManager>().GetExtPanId()));
     }
 
-    if (dataset.GetTlv<MeshLocalPrefixTlv>() == nullptr)
+    if (!dataset.Contains<MeshLocalPrefixTlv>())
     {
         IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     }
 
-    if (dataset.GetTlv<NetworkKeyTlv>() == nullptr)
+    if (!dataset.Contains<NetworkKeyTlv>())
     {
         NetworkKey networkKey;
 
@@ -344,19 +344,19 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, networkKey));
     }
 
-    if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
+    if (!dataset.Contains<NetworkNameTlv>())
     {
         NameData nameData = Get<NetworkNameManager>().GetNetworkName().GetAsData();
 
         IgnoreError(dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
 
-    if (dataset.GetTlv<PanIdTlv>() == nullptr)
+    if (!dataset.Contains<PanIdTlv>())
     {
         IgnoreError(dataset.SetTlv(Tlv::kPanId, Get<Mac::Mac>().GetPanId()));
     }
 
-    if (dataset.GetTlv<PskcTlv>() == nullptr)
+    if (!dataset.Contains<PskcTlv>())
     {
         Pskc pskc;
 
@@ -372,7 +372,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
     }
 
-    if (dataset.GetTlv<SecurityPolicyTlv>() == nullptr)
+    if (!dataset.Contains<SecurityPolicyTlv>())
     {
         SecurityPolicyTlv tlv;
 

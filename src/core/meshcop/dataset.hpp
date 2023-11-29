@@ -623,6 +623,31 @@ public:
     bool IsValid(void) const;
 
     /**
+     * Indicates whether or not a given TLV type is present in the Dataset.
+     *
+     * @param[in] aType  The TLV type to check.
+     *
+     * @retval TRUE    TLV with @p aType is present in the Dataset.
+     * @retval FALSE   TLV with @p aType is not present in the Dataset.
+     *
+     */
+    bool ContainsTlv(Tlv::Type aType) const { return (GetTlv(aType) != nullptr); }
+
+    /**
+     * Indicates whether or not a given TLV type is present in the Dataset.
+     *
+     * @tparam  aTlvType  The TLV type to check.
+     *
+     * @retval TRUE    TLV of @p aTlvType is present in the Dataset.
+     * @retval FALSE   TLV of @p aTlvType is not present in the Dataset.
+     *
+     */
+    template <typename TlvType> bool Contains(void) const
+    {
+        return ContainsTlv(static_cast<Tlv::Type>(TlvType::kType));
+    }
+
+    /**
      * Returns a pointer to the TLV with a given type.
      *
      * @param[in] aType  A TLV type.
