@@ -187,7 +187,7 @@ fd00:0:0:0:0:0:0:beef
 Done
 ```
 
-Enable auto host address mode. When enabled client will automatically use all Thread netif unicast addresses excluding all link-local and mesh-local addresses. If there is no valid address, then Mesh Local EID address is added. SRP client will automatically re-register if/when addresses on Thread netif get changed (e.g., new address is added or existing address is removed).
+Enable auto host address mode. When enabled client will automatically use all preferred Thread netif unicast addresses excluding all link-local and mesh-local addresses. If there is no preferred address, then Mesh Local EID address is added. SRP client will automatically re-register if/when addresses on Thread netif get changed (e.g., new address is added or existing address is removed or marked as non-preferred).
 
 ```bash
 > srp client host address auto

@@ -315,12 +315,12 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          * @endcode
          * @cparam srp client host address [auto|@ca{address...}]
          *   * Use the `auto` parameter to enable auto host address mode.
-         *     When enabled, the client automatically uses all Thread `netif`
-         *     unicast addresses except for link-local and mesh-local
+         *     When enabled, the client automatically uses all preferred Thread
+         *     `netif` unicast addresses except for link-local and mesh-local
          *     addresses. If there is no valid address, the mesh local
          *     EID address gets added. The SRP client automatically
          *     re-registers if addresses on the Thread `netif` are
-         *     added or removed.
+         *     added or removed or marked as non-preferred.
          *   * Explicitly specify the list of host addresses, separating
          *     each address by a space. You can set this list while the client is
          *     running. This will also disable auto host address mode.
