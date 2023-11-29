@@ -97,6 +97,7 @@ source_set("openthread") {
     "platform/memory.h",
     "platform/messagepool.h",
     "platform/misc.h",
+    "platform/multipan.h",
     "platform/otns.h",
     "platform/radio.h",
     "platform/settings.h",

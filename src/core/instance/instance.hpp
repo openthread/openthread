@@ -186,6 +186,21 @@ public:
       */
     static Instance *Init(void *aBuffer, size_t *aBufferSize);
 
+#if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+    /**
+     * This static method initializes the OpenThread instance.
+     *
+     * This method utilizes static buffer to initialize the OpenThread instance.
+     * This function must be called before any other calls on OpenThread instance.
+     *
+     * @param[in] aIdx The index of the OpenThread instance to initialize.
+     *
+     * @returns  A pointer to the new OpenThread instance.
+     *
+     */
+    static Instance *InitMultiple(uint8_t aIdx);
+#endif
+
 #else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
     /**

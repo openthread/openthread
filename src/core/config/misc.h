@@ -142,6 +142,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+ *
+ * Define to 1 to enable multipan RCP support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#define OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
  *
  * Define to 1 to enable Thread Test Harness reference device support.
@@ -518,6 +528,26 @@
  */
 #ifndef OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
 #define OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+ *
+ * Define to 1 to enable multiple static instance support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+#define OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM
+ *
+ * Define number of OpenThread instance for static allocation buffer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM
+#define OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM 3
 #endif
 
 /**

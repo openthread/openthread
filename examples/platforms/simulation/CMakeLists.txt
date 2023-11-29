@@ -68,6 +68,7 @@ add_library(openthread-simulation
     infra_if.c
     logging.c
     misc.c
+    multipan.c
     radio.c
     spi-stubs.c
     system.c

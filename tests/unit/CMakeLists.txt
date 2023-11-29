@@ -32,27 +32,75 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
+set(COMMON_INCLUDES_RCP
+    ${COMMON_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/src/core/radio
+)
+
 set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
-add_library(ot-test-platform
+set(COMMON_COMPILE_OPTIONS_RCP
+    -DOPENTHREAD_RADIO=1
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
+    -DOPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=0
+)
+
+set(MULTIPAN_RCP_COMPILE_OPTIONS
+    -DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1
+    -DOPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE=1
+    -DOPENTHREAD_CONFIG_LOG_PREPEND_UPTIME=0
+    -DOPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE=0 # used to skip backoff and request tx from platform directly.
+    -DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1
+)
+
+add_library(ot-test-platform-ftd
+    test_platform.cpp
+    test_util.cpp
+)
+add_library(ot-test-platform-rcp
     test_platform.cpp
     test_util.cpp
 )
 
-target_include_directories(ot-test-platform
+target_include_directories(ot-test-platform-ftd
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(ot-test-platform
+target_include_directories(ot-test-platform-rcp
+    PRIVATE
+	${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-platform-ftd
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(ot-test-platform
+target_compile_options(ot-test-platform-rcp
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS_RCP}
+)
+
+if(OT_MULTIPAN_RCP)
+    target_compile_options(ot-test-platform-rcp
+        PRIVATE
+            "-DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1"
+            "-DOPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE=1"
+            "-DOPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+    )
+endif()
+
+target_link_libraries(ot-test-platform-ftd
+    PRIVATE
+        ot-config
+        ${OT_MBEDTLS}
+)
+
+target_link_libraries(ot-test-platform-rcp
     PRIVATE
         ot-config
         ${OT_MBEDTLS}
@@ -61,12 +109,19 @@ target_link_libraries(ot-test-platform
 set(COMMON_LIBS
     openthread-spinel-ncp
     openthread-hdlc
-    ot-test-platform
+    ot-test-platform-ftd
     openthread-ftd
-    ot-test-platform
+    ot-test-platform-ftd
     ${OT_MBEDTLS}
     ot-config
     openthread-ftd
+)
+
+set(COMMON_LIBS_RCP
+    ot-test-platform-rcp
+    openthread-rcp
+    ${OT_MBEDTLS}
+    ot-config
 )
 
 add_executable(ot-test-aes
@@ -747,6 +802,40 @@ target_link_libraries(ot-test-multicast-listeners-table
 )
 
 add_test(NAME ot-test-multicast-listeners-table COMMAND ot-test-multicast-listeners-table)
+
+if(OT_MULTIPAN_RCP)
+    add_executable(ot-test-multipan-rcp-instances
+        test_multipan_rcp_instances.cpp
+    )
+
+    target_include_directories(ot-test-multipan-rcp-instances
+        PRIVATE
+            ${COMMON_INCLUDES_RCP}
+    )
+
+    target_compile_options(ot-test-multipan-rcp-instances
+        PRIVATE
+            ${COMMON_COMPILE_OPTIONS_RCP}
+            ${MULTIPAN_RCP_COMPILE_OPTIONS}
+    )
+
+    target_compile_definitions(ot-test-multipan-rcp-instances
+        PRIVATE
+            "OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE=1"
+    )
+
+    target_compile_options(ot-config-radio
+        INTERFACE
+            "-DOPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE=0" # used to skip backoff and request tx from platform directly.
+    )
+
+    target_link_libraries(ot-test-multipan-rcp-instances
+        PRIVATE
+            ${COMMON_LIBS_RCP}
+    )
+
+    add_test(NAME ot-test-multipan-rcp-instances COMMAND ot-test-multipan-rcp-instances)
+ endif()
 
 add_test(NAME ot-test-nat64 COMMAND ot-test-nat64)
 

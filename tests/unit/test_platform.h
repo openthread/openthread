@@ -38,6 +38,7 @@
 #include <openthread/platform/entropy.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/misc.h>
+#include <openthread/platform/multipan.h>
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
@@ -46,6 +47,9 @@
 #include "test_util.h"
 
 ot::Instance *testInitInstance(void);
-void          testFreeInstance(otInstance *aInstance);
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+ot::Instance *testInitAdditionalInstance(uint8_t id);
+#endif
+void testFreeInstance(otInstance *aInstance);
 
 #endif // TEST_PLATFORM_H

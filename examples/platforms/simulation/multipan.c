@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,52 +26,41 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-core-config.h"
+#include "platform-simulation.h"
 
-#include <openthread/ncp.h>
+#include <errno.h>
+#include <sys/time.h>
 
-#include "common/code_utils.hpp"
-
-#include "ncp/ncp_config.h"
-
-#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-#include "utils/uart.h"
-
-void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength) { otNcpHdlcReceive(aBuf, aBufLength); }
-
-void otPlatUartSendDone(void) { otNcpHdlcSendDone(); }
-#endif
-
-#if !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
-#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-static int NcpSend(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    IgnoreError(otPlatUartSend(aBuf, aBufLength));
-    return aBufLength;
-}
-#endif
-
-void otAppNcpInit(otInstance *aInstance)
-{
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-    otNcpSpiInit(aInstance);
-#else
-    IgnoreError(otPlatUartEnable());
-
-    otNcpHdlcInit(aInstance, NcpSend);
-#endif
-}
+#include <openthread/platform/multipan.h>
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-void otAppNcpInitMulti(otInstance **aInstances, uint8_t aCount)
-{
-#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
-#error Multipan support not implemented for SPI
-#else
-    IgnoreError(otPlatUartEnable());
+static otInstance *sActiveInstance;
+#endif
 
-    otNcpHdlcInitMulti(aInstances, aCount, NcpSend);
+otError otPlatMultipanGetActiveInstance(otInstance **aInstance)
+{
+    otError error = OT_ERROR_NOT_IMPLEMENTED;
+    OT_UNUSED_VARIABLE(aInstance);
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    *aInstance = sActiveInstance;
+    error      = OT_ERROR_NONE;
 #endif
+
+    return error;
 }
+
+otError otPlatMultipanSetActiveInstance(otInstance *aInstance, bool aCompletePending)
+{
+    otError error = OT_ERROR_NOT_IMPLEMENTED;
+
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aCompletePending);
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    sActiveInstance = aInstance;
+    error           = OT_ERROR_NONE;
 #endif
-#endif // !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+
+    return error;
+}
