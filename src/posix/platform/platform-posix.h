@@ -410,67 +410,10 @@ extern char gNetifName[IFNAMSIZ];
 extern unsigned int gNetifIndex;
 
 /**
- * Initializes platform Backbone network.
- *
- * @note This function is called before OpenThread instance is created.
- *
- * @param[in]   aInterfaceName  A pointer to Thread network interface name.
- *
- */
-void platformBackboneInit(const char *aInterfaceName);
-
-/**
- * Sets up platform Backbone network.
- *
- * @note This function is called after OpenThread instance is created.
- *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- *
- */
-void platformBackboneSetUp(void);
-
-/**
- * Tears down platform Backbone network.
- *
- * @note This function is called before OpenThread instance is destructed.
- *
- */
-void platformBackboneTearDown(void);
-
-/**
- * Shuts down the platform Backbone network.
- *
- * @note This function is called after OpenThread instance is destructed.
- *
- */
-void platformBackboneDeinit(void);
-
-/**
- * Performs notifies state changes to platform Backbone network.
- *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
- * @param[in]   aFlags          Flags that denote the state change events.
- *
- */
-void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags);
-
-/**
  * A pointer to the OpenThread instance.
  *
  */
 extern otInstance *gInstance;
-
-/**
- * The name of Backbone network interface.
- *
- */
-extern char gBackboneNetifName[IFNAMSIZ];
-
-/**
- * The index of Backbone network interface.
- *
- */
-extern unsigned int gBackboneNetifIndex;
 
 /**
  * Tells if the infrastructure interface is running.

@@ -124,7 +124,6 @@ endif()
 
 add_library(openthread-posix
     alarm.cpp
-    backbone.cpp
     backtrace.cpp
     configuration.cpp
     config_file.cpp
