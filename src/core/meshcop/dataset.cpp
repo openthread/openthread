@@ -179,7 +179,7 @@ exit:
     return rval;
 }
 
-const Tlv *Dataset::GetTlv(Tlv::Type aType) const { return As<Tlv>(Tlv::FindTlv(mTlvs, mLength, aType)); }
+const Tlv *Dataset::FindTlv(Tlv::Type aType) const { return As<Tlv>(Tlv::FindTlv(mTlvs, mLength, aType)); }
 
 void Dataset::ConvertTo(Info &aDatasetInfo) const
 {
@@ -286,7 +286,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         Timestamp activeTimestamp;
 
         aDatasetInfo.GetActiveTimestamp(activeTimestamp);
-        IgnoreError(SetTlv(Tlv::kActiveTimestamp, activeTimestamp));
+        IgnoreError(Write<ActiveTimestampTlv>(activeTimestamp));
     }
 
     if (aDatasetInfo.IsPendingTimestampPresent())
@@ -294,12 +294,12 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         Timestamp pendingTimestamp;
 
         aDatasetInfo.GetPendingTimestamp(pendingTimestamp);
-        IgnoreError(SetTlv(Tlv::kPendingTimestamp, pendingTimestamp));
+        IgnoreError(Write<PendingTimestampTlv>(pendingTimestamp));
     }
 
     if (aDatasetInfo.IsDelayPresent())
     {
-        IgnoreError(SetTlv(Tlv::kDelayTimer, aDatasetInfo.GetDelay()));
+        IgnoreError(Write<DelayTimerTlv>(aDatasetInfo.GetDelay()));
     }
 
     if (aDatasetInfo.IsChannelPresent())
@@ -307,7 +307,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(aDatasetInfo.GetChannel());
-        IgnoreError(SetTlv(tlv));
+        IgnoreError(WriteTlv(tlv));
     }
 
     if (aDatasetInfo.IsChannelMaskPresent())
@@ -315,39 +315,39 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(aDatasetInfo.GetChannelMask());
-        IgnoreError(SetTlv(tlv));
+        IgnoreError(WriteTlv(tlv));
     }
 
     if (aDatasetInfo.IsExtendedPanIdPresent())
     {
-        IgnoreError(SetTlv(Tlv::kExtendedPanId, aDatasetInfo.GetExtendedPanId()));
+        IgnoreError(Write<ExtendedPanIdTlv>(aDatasetInfo.GetExtendedPanId()));
     }
 
     if (aDatasetInfo.IsMeshLocalPrefixPresent())
     {
-        IgnoreError(SetTlv(Tlv::kMeshLocalPrefix, aDatasetInfo.GetMeshLocalPrefix()));
+        IgnoreError(Write<MeshLocalPrefixTlv>(aDatasetInfo.GetMeshLocalPrefix()));
     }
 
     if (aDatasetInfo.IsNetworkKeyPresent())
     {
-        IgnoreError(SetTlv(Tlv::kNetworkKey, aDatasetInfo.GetNetworkKey()));
+        IgnoreError(Write<NetworkKeyTlv>(aDatasetInfo.GetNetworkKey()));
     }
 
     if (aDatasetInfo.IsNetworkNamePresent())
     {
         NameData nameData = aDatasetInfo.GetNetworkName().GetAsData();
 
-        IgnoreError(SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
+        IgnoreError(WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
 
     if (aDatasetInfo.IsPanIdPresent())
     {
-        IgnoreError(SetTlv(Tlv::kPanId, aDatasetInfo.GetPanId()));
+        IgnoreError(Write<PanIdTlv>(aDatasetInfo.GetPanId()));
     }
 
     if (aDatasetInfo.IsPskcPresent())
     {
-        IgnoreError(SetTlv(Tlv::kPskc, aDatasetInfo.GetPskc()));
+        IgnoreError(Write<PskcTlv>(aDatasetInfo.GetPskc()));
     }
 
     if (aDatasetInfo.IsSecurityPolicyPresent())
@@ -356,7 +356,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
         tlv.Init();
         tlv.SetSecurityPolicy(aDatasetInfo.GetSecurityPolicy());
-        IgnoreError(SetTlv(tlv));
+        IgnoreError(WriteTlv(tlv));
     }
 
     mUpdateTime = TimerMilli::GetNow();
@@ -371,13 +371,13 @@ Error Dataset::GetTimestamp(Type aType, Timestamp &aTimestamp) const
 
     if (aType == kActive)
     {
-        tlv = GetTlv(Tlv::kActiveTimestamp);
+        tlv = FindTlv(Tlv::kActiveTimestamp);
         VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
         aTimestamp = tlv->ReadValueAs<ActiveTimestampTlv>();
     }
     else
     {
-        tlv = GetTlv(Tlv::kPendingTimestamp);
+        tlv = FindTlv(Tlv::kPendingTimestamp);
         VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
         aTimestamp = tlv->ReadValueAs<PendingTimestampTlv>();
     }
@@ -388,35 +388,38 @@ exit:
 
 void Dataset::SetTimestamp(Type aType, const Timestamp &aTimestamp)
 {
-    IgnoreError(SetTlv((aType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, aTimestamp));
+    if (aType == kActive)
+    {
+        IgnoreError(Write<ActiveTimestampTlv>(aTimestamp));
+    }
+    else
+    {
+        IgnoreError(Write<PendingTimestampTlv>(aTimestamp));
+    }
 }
 
-Error Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
+Error Dataset::WriteTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
     Error    error          = kErrorNone;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
-    Tlv     *old            = GetTlv(aType);
-    Tlv      tlv;
+    Tlv     *oldTlv         = FindTlv(aType);
+    Tlv     *newTlv;
 
-    if (old != nullptr)
+    if (oldTlv != nullptr)
     {
-        bytesAvailable += sizeof(Tlv) + old->GetLength();
+        bytesAvailable += sizeof(Tlv) + oldTlv->GetLength();
     }
 
     VerifyOrExit(sizeof(Tlv) + aLength <= bytesAvailable, error = kErrorNoBufs);
 
-    if (old != nullptr)
-    {
-        RemoveTlv(old);
-    }
+    RemoveTlv(oldTlv);
 
-    tlv.SetType(aType);
-    tlv.SetLength(aLength);
-    memcpy(mTlvs + mLength, &tlv, sizeof(Tlv));
-    mLength += sizeof(Tlv);
+    newTlv = GetTlvsEnd();
+    mLength += sizeof(Tlv) + aLength;
 
-    memcpy(mTlvs + mLength, aValue, aLength);
-    mLength += aLength;
+    newTlv->SetType(aType);
+    newTlv->SetLength(aLength);
+    memcpy(newTlv->GetValue(), aValue, aLength);
 
     mUpdateTime = TimerMilli::GetNow();
 
@@ -424,7 +427,7 @@ exit:
     return error;
 }
 
-Error Dataset::SetTlv(const Tlv &aTlv) { return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength()); }
+Error Dataset::WriteTlv(const Tlv &aTlv) { return WriteTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength()); }
 
 Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
@@ -444,16 +447,7 @@ exit:
     return error;
 }
 
-void Dataset::RemoveTlv(Tlv::Type aType)
-{
-    Tlv *tlv;
-
-    VerifyOrExit((tlv = GetTlv(aType)) != nullptr);
-    RemoveTlv(tlv);
-
-exit:
-    return;
-}
+void Dataset::RemoveTlv(Tlv::Type aType) { RemoveTlv(FindTlv(aType)); }
 
 Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
 {
@@ -504,11 +498,14 @@ exit:
 
 void Dataset::RemoveTlv(Tlv *aTlv)
 {
-    uint8_t *start  = reinterpret_cast<uint8_t *>(aTlv);
-    uint16_t length = sizeof(Tlv) + aTlv->GetLength();
+    if (aTlv != nullptr)
+    {
+        uint8_t *start  = reinterpret_cast<uint8_t *>(aTlv);
+        uint16_t length = sizeof(Tlv) + aTlv->GetLength();
 
-    memmove(start, start + length, mLength - (static_cast<uint8_t>(start - mTlvs) + length));
-    mLength -= length;
+        memmove(start, start + length, mLength - (static_cast<uint8_t>(start - mTlvs) + length));
+        mLength -= length;
+    }
 }
 
 Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated) const
@@ -609,7 +606,7 @@ void Dataset::SaveTlvInSecureStorageAndClearValue(Tlv::Type aTlvType, Crypto::St
 {
     using namespace ot::Crypto::Storage;
 
-    Tlv *tlv = GetTlv(aTlvType);
+    Tlv *tlv = FindTlv(aTlvType);
 
     VerifyOrExit(tlv != nullptr);
     VerifyOrExit(tlv->GetLength() > 0);
@@ -628,7 +625,7 @@ Error Dataset::ReadTlvFromSecureStorage(Tlv::Type aTlvType, Crypto::Storage::Key
     using namespace ot::Crypto::Storage;
 
     Error  error = kErrorNone;
-    Tlv   *tlv   = GetTlv(aTlvType);
+    Tlv   *tlv   = FindTlv(aTlvType);
     size_t readLength;
 
     VerifyOrExit(tlv != nullptr);

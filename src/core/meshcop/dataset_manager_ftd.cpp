@@ -220,7 +220,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
                 OT_FALL_THROUGH;
 
             default:
-                SuccessOrExit(dataset.SetTlv(datasetTlv));
+                SuccessOrExit(dataset.WriteTlv(datasetTlv));
                 break;
             }
 
@@ -307,7 +307,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         Timestamp timestamp;
 
         timestamp.Clear();
-        IgnoreError(dataset.SetTlv(Tlv::kActiveTimestamp, timestamp));
+        IgnoreError(dataset.Write<ActiveTimestampTlv>(timestamp));
     }
 
     if (!dataset.Contains<ChannelTlv>())
@@ -315,7 +315,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         ChannelTlv tlv;
         tlv.Init();
         tlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
-        IgnoreError(dataset.SetTlv(tlv));
+        IgnoreError(dataset.WriteTlv(tlv));
     }
 
     if (!dataset.Contains<ChannelMaskTlv>())
@@ -323,17 +323,17 @@ Error ActiveDatasetManager::GenerateLocal(void)
         ChannelMaskTlv tlv;
         tlv.Init();
         tlv.SetChannelMask(Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
-        IgnoreError(dataset.SetTlv(tlv));
+        IgnoreError(dataset.WriteTlv(tlv));
     }
 
     if (!dataset.Contains<ExtendedPanIdTlv>())
     {
-        IgnoreError(dataset.SetTlv(Tlv::kExtendedPanId, Get<ExtendedPanIdManager>().GetExtPanId()));
+        IgnoreError(dataset.Write<ExtendedPanIdTlv>(Get<ExtendedPanIdManager>().GetExtPanId()));
     }
 
     if (!dataset.Contains<MeshLocalPrefixTlv>())
     {
-        IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
+        IgnoreError(dataset.Write<MeshLocalPrefixTlv>(Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     }
 
     if (!dataset.Contains<NetworkKeyTlv>())
@@ -341,19 +341,19 @@ Error ActiveDatasetManager::GenerateLocal(void)
         NetworkKey networkKey;
 
         Get<KeyManager>().GetNetworkKey(networkKey);
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, networkKey));
+        IgnoreError(dataset.Write<NetworkKeyTlv>(networkKey));
     }
 
     if (!dataset.Contains<NetworkNameTlv>())
     {
         NameData nameData = Get<NetworkNameManager>().GetNetworkName().GetAsData();
 
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
+        IgnoreError(dataset.WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
 
     if (!dataset.Contains<PanIdTlv>())
     {
-        IgnoreError(dataset.SetTlv(Tlv::kPanId, Get<Mac::Mac>().GetPanId()));
+        IgnoreError(dataset.Write<PanIdTlv>(Get<Mac::Mac>().GetPanId()));
     }
 
     if (!dataset.Contains<PskcTlv>())
@@ -369,7 +369,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
             SuccessOrExit(error = pskc.GenerateRandom());
         }
 
-        IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
+        IgnoreError(dataset.Write<PskcTlv>(pskc));
     }
 
     if (!dataset.Contains<SecurityPolicyTlv>())
@@ -378,7 +378,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
         tlv.Init();
         tlv.SetSecurityPolicy(Get<KeyManager>().GetSecurityPolicy());
-        IgnoreError(dataset.SetTlv(tlv));
+        IgnoreError(dataset.WriteTlv(tlv));
     }
 
     SuccessOrExit(error = mLocal.Save(dataset));
@@ -432,17 +432,14 @@ void PendingDatasetManager::ApplyActiveDataset(const Timestamp &aTimestamp, Coap
 
         SuccessOrExit(datasetTlv.ReadFromMessage(aMessage, offset));
         offset += static_cast<uint16_t>(datasetTlv.GetSize());
-        IgnoreError(dataset.SetTlv(datasetTlv));
+        IgnoreError(dataset.WriteTlv(datasetTlv));
     }
 
-    // add delay timer tlv
-    IgnoreError(dataset.SetTlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal()));
+    IgnoreError(dataset.Write<DelayTimerTlv>(Get<Leader>().GetDelayTimerMinimal()));
 
-    // add pending timestamp tlv
     dataset.SetTimestamp(Dataset::kPending, aTimestamp);
     IgnoreError(DatasetManager::Save(dataset));
 
-    // reset delay timer
     StartDelayTimer();
 
 exit:

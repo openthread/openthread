@@ -226,7 +226,7 @@ Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     SuccessOrExit(error = Read(dataset));
 
-    channelMaskTlv = dataset.GetTlv<ChannelMaskTlv>();
+    channelMaskTlv = As<ChannelMaskTlv>(dataset.FindTlv(Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != nullptr, error = kErrorNotFound);
     VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
 
@@ -418,7 +418,7 @@ void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
                 continue;
             }
 
-            if ((tlv = dataset.GetTlv(static_cast<Tlv::Type>(aTlvs[index]))) != nullptr)
+            if ((tlv = dataset.FindTlv(static_cast<Tlv::Type>(aTlvs[index]))) != nullptr)
             {
                 SuccessOrExit(error = tlv->AppendTo(*message));
             }
@@ -746,7 +746,7 @@ void PendingDatasetManager::StartDelayTimer(void)
 
     mDelayTimer.Stop();
 
-    tlv = dataset.GetTlv(Tlv::kDelayTimer);
+    tlv = dataset.FindTlv(Tlv::kDelayTimer);
     VerifyOrExit(tlv != nullptr);
 
     delay = tlv->ReadValueAs<DelayTimerTlv>();
@@ -770,7 +770,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
 
     // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
     // the remainder and wait some more.
-    if ((tlv = dataset.GetTlv(Tlv::kDelayTimer)) != nullptr)
+    if ((tlv = dataset.FindTlv(Tlv::kDelayTimer)) != nullptr)
     {
         uint32_t elapsed = mDelayTimer.GetFireTime() - dataset.GetUpdateTime();
         uint32_t delay   = tlv->ReadValueAs<DelayTimerTlv>();
