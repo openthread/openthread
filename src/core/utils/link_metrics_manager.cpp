@@ -85,6 +85,7 @@ Error LinkMetricsManager::GetLinkMetricsValueByExtAddr(const Mac::ExtAddress    
 
     subject = mSubjectList.FindMatching(aExtAddress);
     VerifyOrExit(subject != nullptr, error = kErrorNotFound);
+    VerifyOrExit(subject->mState == kActive || subject->mState == kRenewing, error = kErrorInvalidState);
 
     aMetricsValues.mLinkMarginValue = subject->mData.mLinkMargin;
     aMetricsValues.mRssiValue       = subject->mData.mRssi;
