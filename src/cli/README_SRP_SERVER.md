@@ -8,6 +8,7 @@ See [README_SRP.md](README_SRP.md).
 
 - [help](#help)
 - [addrmode](#addrmode)
+- [auto](#auto)
 - [disable](#disable)
 - [domain](#domain)
 - [enable](#enable)
@@ -28,6 +29,7 @@ Print SRP server help menu.
 ```bash
 > srp server help
 addrmode
+auto
 disable
 domain
 enable
@@ -64,6 +66,25 @@ Done
 
 > srp server addrmode
 anycast
+Done
+```
+
+### auto
+
+Usage: `srp server auto [enable|disable]`
+
+Enables or disables the auto-enable mode on the SRP server.
+
+When this mode is enabled, the Border Routing Manager controls if and when to enable or disable the SRP server.
+
+This command requires that `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` be enabled.
+
+```bash
+> srp server auto enable
+Done
+
+> srp server auto
+Enabled
 Done
 ```
 
