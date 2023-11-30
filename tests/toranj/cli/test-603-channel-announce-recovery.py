@@ -46,43 +46,47 @@ print('Starting \'{}\''.format(test_name))
 speedup = 40
 cli.Node.set_time_speedup_factor(speedup)
 
-router = cli.Node()
+r1 = cli.Node()
+r2 = cli.Node()
 c1 = cli.Node()
 c2 = cli.Node()
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Form topology
 
-router.form('announce-tst', channel=11)
+r1.form('announce-tst', channel=11)
 
-c1.join(router, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
-c2.join(router, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
+r2.join(r1, cli.JOIN_TYPE_ROUTER)
+c1.join(r1, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
+c2.join(r1, cli.JOIN_TYPE_SLEEPY_END_DEVICE)
 c1.set_pollperiod(500)
 c2.set_pollperiod(500)
 
-verify(router.get_state() == 'leader')
+verify(r1.get_state() == 'leader')
+verify(r2.get_state() == 'router')
 verify(c1.get_state() == 'child')
 verify(c2.get_state() == 'child')
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test Implementation
 
-# Stop c2
+# Stop c2 and r2
 
+r2.thread_stop()
 c2.thread_stop()
 
 # Switch the rest of network to channel 26
-router.cli('channel manager change 26')
+r1.cli('channel manager change 26')
 
 
 def check_channel_changed_to_26_on_r1_c1():
-    for node in [router, c1]:
+    for node in [r1, c1]:
         verify(int(node.get_channel()) == 26)
 
 
 verify_within(check_channel_changed_to_26_on_r1_c1, 10)
 
-# Now re-enable c2 and verify that it does attach to router and is on
+# Now re-enable c2 and verify that it does attach to r1 and is on
 # channel 26. c2 would go through the ML Announce recovery.
 
 c2.thread_start()
@@ -99,6 +103,20 @@ verify_within(check_c2_is_attched, 20)
 
 # Check that c2 is now on channel 26.
 verify(int(c2.get_channel()) == 26)
+
+# Now re-enable r2, and verify that it switches to channel 26
+# after processing announce from r1.
+
+r2.thread_start()
+verify(int(r2.get_channel()) == 11)
+
+
+def check_r2_switches_to_channel_26():
+    verify(r2.get_state() != 'detached')
+    verify(int(r2.get_channel()) == 26)
+
+
+verify_within(check_r2_switches_to_channel_26, 60)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
