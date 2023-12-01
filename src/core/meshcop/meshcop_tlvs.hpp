@@ -1365,23 +1365,23 @@ public:
      * @retval FALSE  If the Commercial Commissioning Mode flag is not set.
      *
      */
-    bool IsCommercialCommissioningMode(void) const { return (mFlags & kCCMMask) != 0; }
+    bool IsCommercialCommissioningMode(void) const { return (mFlags & kCcmMask) != 0; }
 
     /**
      * Sets the Commercial Commissioning Mode flag.
      *
-     * @param[in]  aCCM  TRUE if set, FALSE otherwise.
+     * @param[in]  aCcm  TRUE if set, FALSE otherwise.
      *
      */
-    void SetCommercialCommissioningMode(bool aCCM)
+    void SetCommercialCommissioningMode(bool aCcm)
     {
-        if (aCCM)
+        if (aCcm)
         {
-            mFlags |= kCCMMask;
+            mFlags |= kCcmMask;
         }
         else
         {
-            mFlags &= ~kCCMMask;
+            mFlags &= ~kCcmMask;
         }
     }
 
@@ -1390,8 +1390,8 @@ private:
     static constexpr uint8_t kVersionMask   = 0xf << kVersionOffset;
     static constexpr uint8_t kNativeOffset  = 3;
     static constexpr uint8_t kNativeMask    = 1 << kNativeOffset;
-    static constexpr uint8_t kCCMOffset     = 2;
-    static constexpr uint8_t kCCMMask       = 1 << kCCMOffset;
+    static constexpr uint8_t kCcmOffset     = 2;
+    static constexpr uint8_t kCcmMask       = 1 << kCcmOffset;
 
     uint8_t mFlags;
     uint8_t mReserved;
