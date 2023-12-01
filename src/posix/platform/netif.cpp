@@ -900,6 +900,7 @@ exit:
 static void processNat64StateChange(void)
 {
     otIp4Cidr translatorCidr;
+    otError   error = OT_ERROR_NONE;
 
     // Skip if NAT64 translator has not been configured with a CIDR.
     SuccessOrExit(otNat64GetCidr(gInstance, &translatorCidr));
@@ -910,7 +911,10 @@ static void processNat64StateChange(void)
 
         if (sActiveNat64Cidr.mLength != 0)
         {
-            DeleteIp4Route(sActiveNat64Cidr);
+            if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
+            {
+                otLogWarnPlat("[netif] failed to delete route for NAT64: %s", otThreadErrorToString(error));
+            }
         }
         sActiveNat64Cidr = translatorCidr;
 
@@ -920,12 +924,18 @@ static void processNat64StateChange(void)
 
     if (otNat64GetTranslatorState(gInstance) == OT_NAT64_STATE_ACTIVE)
     {
-        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
+        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] failed to add route for NAT64: %s", otThreadErrorToString(error));
+        }
         otLogInfoPlat("[netif] Adding route for NAT64");
     }
     else if (sActiveNat64Cidr.mLength > 0) // Translator is not active.
     {
-        DeleteIp4Route(sActiveNat64Cidr);
+        if ((error = DeleteIp4Route(sActiveNat64Cidr)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] failed to delete route for NAT64: %s", otThreadErrorToString(error));
+        }
         otLogInfoPlat("[netif] Deleting route for NAT64");
     }
 
@@ -1301,7 +1311,10 @@ static void processNetifLinkEvent(otInstance *aInstance, struct nlmsghdr *aNetli
     if (isUp && sActiveNat64Cidr.mLength > 0)
     {
         // Recover NAT64 route.
-        AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority);
+        if ((error = AddIp4Route(sActiveNat64Cidr, kNat64RoutePriority)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] failed to add route for NAT64: %s", otThreadErrorToString(error));
+        }
     }
 #endif
 
@@ -2080,10 +2093,14 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
 void nat64Init(void)
 {
     otIp4Cidr cidr;
+    otError   error = OT_ERROR_NONE;
 
     if (otIp4CidrFromString(OPENTHREAD_POSIX_CONFIG_NAT64_CIDR, &cidr) == OT_ERROR_NONE && cidr.mLength != 0)
     {
-        otNat64SetIp4Cidr(gInstance, &cidr);
+        if ((error = otNat64SetIp4Cidr(gInstance, &cidr)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("[netif] failed to set CIDR for NAT64: %s", otThreadErrorToString(error));
+        }
     }
     else
     {
