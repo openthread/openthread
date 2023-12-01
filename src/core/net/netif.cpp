@@ -377,10 +377,24 @@ exit:
     return;
 }
 
-void Netif::RemoveUnicastAddress(const UnicastAddress &aAddress)
+void Netif::RemoveUnicastAddress(UnicastAddress &aAddress)
 {
     SuccessOrExit(mUnicastAddresses.Remove(aAddress));
+    aAddress.mSrpRegistered = false;
     SignalUnicastAddressChange(kAddressRemoved, aAddress);
+
+exit:
+    return;
+}
+
+void Netif::UpdatePreferredFlagOn(UnicastAddress &aAddress, bool aPreferred)
+{
+    VerifyOrExit(HasUnicastAddress(aAddress));
+    VerifyOrExit(aAddress.mPreferred != aPreferred);
+
+    SignalUnicastAddressChange(kAddressRemoved, aAddress);
+    aAddress.mPreferred = aPreferred;
+    SignalUnicastAddressChange(kAddressAdded, aAddress);
 
 exit:
     return;
@@ -443,9 +457,10 @@ Error Netif::AddExternalUnicastAddress(const UnicastAddress &aAddress)
     entry = mExtUnicastAddressPool.Allocate();
     VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
-    *entry            = aAddress;
-    entry->mRloc      = false;
-    entry->mMeshLocal = false;
+    *entry                = aAddress;
+    entry->mRloc          = false;
+    entry->mMeshLocal     = false;
+    entry->mSrpRegistered = false;
 
     mUnicastAddresses.Push(*entry);
     SignalUnicastAddressChange(kAddressAdded, *entry);
@@ -504,6 +519,7 @@ void Netif::ApplyNewMeshLocalPrefix(void)
         if (address.mMeshLocal)
         {
             SignalUnicastAddressChange(kAddressRemoved, address);
+            address.mSrpRegistered = false;
             address.GetAddress().SetPrefix(Get<Mle::Mle>().GetMeshLocalPrefix());
             SignalUnicastAddressChange(kAddressAdded, address);
         }

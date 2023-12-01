@@ -189,6 +189,7 @@ typedef struct otNetifAddress
     unsigned int mScopeOverride : 4;      ///< The IPv6 scope of this address.
     bool         mRloc : 1;               ///< TRUE if the address is an RLOC, FALSE otherwise.
     bool         mMeshLocal : 1;          ///< TRUE if the address is mesh-local, FALSE otherwise.
+    bool         mSrpRegistered : 1;      ///< Used by OT core only (indicates whether registered by SRP Client).
     const struct otNetifAddress *mNext;   ///< A pointer to the next network interface address.
 } otNetifAddress;
 

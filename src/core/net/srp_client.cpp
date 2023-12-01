@@ -244,13 +244,13 @@ Client::Client(Instance &aInstance)
     , mState(kStateStopped)
     , mTxFailureRetryCount(0)
     , mShouldRemoveKeyLease(false)
-    , mAutoHostAddressAddedMeshLocal(false)
     , mSingleServiceMode(false)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mServiceKeyRecordEnabled(false)
     , mUseShortLeaseOption(false)
 #endif
     , mUpdateMessageId(0)
+    , mAutoHostAddressCount(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
     , mTtl(0)
     , mLease(0)
@@ -421,20 +421,11 @@ void Client::HandleNotifierEvents(Events aEvents)
     }
 #endif
 
-    if (mHostInfo.IsAutoAddressEnabled())
+    if (aEvents.ContainsAny(kEventIp6AddressAdded | kEventIp6AddressRemoved | kEventThreadMeshLocalAddrChanged) &&
+        ShouldUpdateHostAutoAddresses())
     {
-        Events::Flags eventFlags = (kEventIp6AddressAdded | kEventIp6AddressRemoved);
-
-        if (mAutoHostAddressAddedMeshLocal)
-        {
-            eventFlags |= kEventThreadMeshLocalAddrChanged;
-        }
-
-        if (aEvents.ContainsAny(eventFlags))
-        {
-            IgnoreError(UpdateHostInfoStateOnAddressChange());
-            UpdateState();
-        }
+        IgnoreError(UpdateHostInfoStateOnAddressChange());
+        UpdateState();
     }
 }
 
@@ -494,6 +485,13 @@ Error Client::EnableAutoHostAddress(void)
     VerifyOrExit(!mHostInfo.IsAutoAddressEnabled());
     SuccessOrExit(error = UpdateHostInfoStateOnAddressChange());
 
+    for (Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        unicastAddress.mSrpRegistered = false;
+    }
+
+    mAutoHostAddressCount = 0;
+
     mHostInfo.EnableAutoAddress();
     UpdateState();
 
@@ -513,6 +511,68 @@ Error Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddre
 
 exit:
     return error;
+}
+
+bool Client::ShouldUpdateHostAutoAddresses(void) const
+{
+    bool                        shouldUpdate    = false;
+    uint16_t                    registeredCount = 0;
+    Ip6::Netif::UnicastAddress &ml64            = Get<Mle::Mle>().GetMeshLocal64UnicastAddress();
+
+    VerifyOrExit(mHostInfo.IsAutoAddressEnabled());
+
+    // Check all addresses on `ThreadNetif` excluding the mesh local
+    // EID (`ml64`). If any address should be registered but is not,
+    // or if any address was registered earlier but no longer should
+    // be, the host information needs to be re-registered to update
+    // the addresses. If there is no eligible address, then `ml64`
+    // should be registered, so its status is checked. Finally, the
+    // number of addresses that should be registered is verified
+    // against the previous value `mAutoHostAddressCount` to handle
+    // the case where an earlier registered address is now removed.
+
+    for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+    {
+        if (&unicastAddress == &ml64)
+        {
+            continue;
+        }
+
+        if (ShouldHostAutoAddressRegister(unicastAddress) != unicastAddress.mSrpRegistered)
+        {
+            ExitNow(shouldUpdate = true);
+        }
+
+        if (unicastAddress.mSrpRegistered)
+        {
+            registeredCount++;
+        }
+    }
+
+    if (registeredCount == 0)
+    {
+        ExitNow(shouldUpdate = !ml64.mSrpRegistered);
+    }
+
+    shouldUpdate = (registeredCount != mAutoHostAddressCount);
+
+exit:
+    return shouldUpdate;
+}
+
+bool Client::ShouldHostAutoAddressRegister(const Ip6::Netif::UnicastAddress &aUnicastAddress) const
+{
+    bool shouldRegister = false;
+
+    VerifyOrExit(aUnicastAddress.mValid);
+    VerifyOrExit(aUnicastAddress.mPreferred);
+    VerifyOrExit(!aUnicastAddress.GetAddress().IsLinkLocal());
+    VerifyOrExit(!Get<Mle::Mle>().IsMeshLocalAddress(aUnicastAddress.GetAddress()));
+
+    shouldRegister = true;
+
+exit:
+    return shouldRegister;
 }
 
 Error Client::UpdateHostInfoStateOnAddressChange(void)
@@ -1244,25 +1304,29 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo)
         // and mesh-local addresses. If no address is appended, we include
         // the mesh local EID.
 
-        mAutoHostAddressAddedMeshLocal = true;
+        mAutoHostAddressCount = 0;
 
-        for (const Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
+        for (Ip6::Netif::UnicastAddress &unicastAddress : Get<ThreadNetif>().GetUnicastAddresses())
         {
-            const Ip6::Address &address = unicastAddress.GetAddress();
-
-            if (address.IsLinkLocal() || Get<Mle::Mle>().IsMeshLocalAddress(address) || !unicastAddress.mPreferred ||
-                !unicastAddress.mValid)
+            if (ShouldHostAutoAddressRegister(unicastAddress))
             {
-                continue;
+                SuccessOrExit(error = AppendAaaaRecord(unicastAddress.GetAddress(), aMessage, aInfo));
+                unicastAddress.mSrpRegistered = true;
+                mAutoHostAddressCount++;
             }
-
-            SuccessOrExit(error = AppendAaaaRecord(address, aMessage, aInfo));
-            mAutoHostAddressAddedMeshLocal = false;
+            else
+            {
+                unicastAddress.mSrpRegistered = false;
+            }
         }
 
-        if (mAutoHostAddressAddedMeshLocal)
+        if (mAutoHostAddressCount == 0)
         {
-            SuccessOrExit(error = AppendAaaaRecord(Get<Mle::Mle>().GetMeshLocal64(), aMessage, aInfo));
+            Ip6::Netif::UnicastAddress &ml64 = Get<Mle::Mle>().GetMeshLocal64UnicastAddress();
+
+            SuccessOrExit(error = AppendAaaaRecord(ml64.GetAddress(), aMessage, aInfo));
+            ml64.mSrpRegistered = true;
+            mAutoHostAddressCount++;
         }
     }
     else
