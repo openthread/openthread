@@ -319,10 +319,10 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     if (!dataset.Contains<ChannelMaskTlv>())
     {
-        ChannelMaskTlv tlv;
-        tlv.Init();
-        tlv.SetChannelMask(Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
-        IgnoreError(dataset.WriteTlv(tlv));
+        ChannelMaskTlv::Value value;
+
+        ChannelMaskTlv::PrepareValue(value, Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
+        IgnoreError(dataset.WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
     }
 
     if (!dataset.Contains<ExtendedPanIdTlv>())

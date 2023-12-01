@@ -36,6 +36,18 @@
 
 namespace ot {
 
+const uint8_t Radio::kSupportedChannelPages[kNumChannelPages] = {
+#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+    kChannelPage0,
+#endif
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+    kChannelPage2,
+#endif
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE,
+#endif
+};
+
 #if OPENTHREAD_RADIO
 void Radio::Init(void)
 {

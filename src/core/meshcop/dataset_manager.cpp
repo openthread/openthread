@@ -228,7 +228,7 @@ Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
 
     channelMaskTlv = As<ChannelMaskTlv>(dataset.FindTlv(Tlv::kChannelMask));
     VerifyOrExit(channelMaskTlv != nullptr, error = kErrorNotFound);
-    VerifyOrExit((mask = channelMaskTlv->GetChannelMask()) != 0);
+    SuccessOrExit(channelMaskTlv->ReadChannelMask(mask));
 
     aChannelMask.SetMask(mask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 

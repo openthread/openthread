@@ -63,12 +63,11 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 template <>
 void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    uint8_t                 count;
-    uint16_t                period;
-    uint16_t                scanDuration;
-    uint32_t                mask;
-    MeshCoP::Tlv            tlv;
-    MeshCoP::ChannelMaskTlv channelMaskTlv;
+    uint8_t      count;
+    uint16_t     period;
+    uint16_t     scanDuration;
+    uint32_t     mask;
+    MeshCoP::Tlv tlv;
 
     VerifyOrExit(aMessage.IsPostRequest());
 
@@ -76,15 +75,13 @@ void EnergyScanServer::HandleTmf<kUriEnergyScan>(Coap::Message &aMessage, const 
     SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
     SuccessOrExit(Tlv::Find<MeshCoP::ScanDurationTlv>(aMessage, scanDuration));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
 
     FreeMessage(mReportMessage);
     mReportMessage = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(kUriEnergyReport);
     VerifyOrExit(mReportMessage != nullptr);
 
-    channelMaskTlv.Init();
-    channelMaskTlv.SetChannelMask(mask);
-    SuccessOrExit(channelMaskTlv.AppendTo(*mReportMessage));
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::AppendTo(*mReportMessage, mask));
 
     tlv.SetType(MeshCoP::Tlv::kEnergyList);
     SuccessOrExit(mReportMessage->Append(tlv));

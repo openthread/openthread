@@ -60,10 +60,9 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
                                        uint16_t            aPeriod,
                                        const Ip6::Address &aAddress)
 {
-    Error                   error = kErrorNone;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message          *message = nullptr;
+    Error            error = kErrorNone;
+    Tmf::MessageInfo messageInfo(GetInstance());
+    Coap::Message   *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
@@ -74,9 +73,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
 
-    channelMask.Init();
-    channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = channelMask.AppendTo(*message));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, aChannelMask));
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::CountTlv>(*message, aCount));
     SuccessOrExit(error = Tlv::Append<MeshCoP::PeriodTlv>(*message, aPeriod));
