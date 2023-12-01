@@ -108,7 +108,7 @@ Error DatasetLocal::Read(Dataset &aDataset) const
     {
         uint32_t elapsed;
         uint32_t delayTimer;
-        Tlv     *tlv = aDataset.GetTlv(Tlv::kDelayTimer);
+        Tlv     *tlv = aDataset.FindTlv(Tlv::kDelayTimer);
 
         VerifyOrExit(tlv != nullptr);
 

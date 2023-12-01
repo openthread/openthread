@@ -631,7 +631,7 @@ public:
      * @retval FALSE   TLV with @p aType is not present in the Dataset.
      *
      */
-    bool ContainsTlv(Tlv::Type aType) const { return (GetTlv(aType) != nullptr); }
+    bool ContainsTlv(Tlv::Type aType) const { return (FindTlv(aType) != nullptr); }
 
     /**
      * Indicates whether or not a given TLV type is present in the Dataset.
@@ -648,46 +648,100 @@ public:
     }
 
     /**
-     * Returns a pointer to the TLV with a given type.
+     * Searches for a given TLV type in the Dataset.
      *
-     * @param[in] aType  A TLV type.
+     * @param[in] aType  The TLV type to find.
      *
-     * @returns A pointer to the TLV or `nullptr` if none is found.
+     * @returns A pointer to the TLV or `nullptr` if not found.
      *
      */
-    Tlv *GetTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->GetTlv(aType)); }
+    Tlv *FindTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->FindTlv(aType)); }
 
     /**
-     * Returns a pointer to the TLV with a given type.
+     * Searches for a given TLV type in the Dataset.
      *
-     * @param[in] aType  The TLV type.
+     * @param[in] aType  The TLV type to find.
      *
-     * @returns A pointer to the TLV or `nullptr` if none is found.
+     * @returns A pointer to the TLV or `nullptr` if not found.
      *
      */
-    const Tlv *GetTlv(Tlv::Type aType) const;
+    const Tlv *FindTlv(Tlv::Type aType) const;
 
     /**
-     * Returns a pointer to the TLV with a given template type `TlvType`
+     * Writes a TLV to the Dataset.
      *
-     * @returns A pointer to the TLV or `nullptr` if none is found.
+     * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aTlv     A reference to the TLV.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
      *
      */
-    template <typename TlvType> TlvType *GetTlv(void)
+    Error WriteTlv(const Tlv &aTlv);
+
+    /**
+     * Writes a TLV in the Dataset.
+     *
+     * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in]  aType     The TLV type.
+     * @param[in]  aValue    A pointer to a buffer containing the TLV value.
+     * @param[in]  aLength   The TLV length.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
+     *
+     */
+    Error WriteTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
+
+    /**
+     * Writes a simple TLV in the Dataset.
+     *
+     * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @tparam  SimpleTlvType   The simple TLV type (must be a sub-class of `SimpleTlvInfo`).
+     *
+     * @param[in] aValue   The TLV value.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
+     *
+     */
+    template <typename SimpleTlvType> Error Write(const typename SimpleTlvType::ValueType &aValue)
     {
-        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        return WriteTlv(static_cast<Tlv::Type>(SimpleTlvType::kType), &aValue, sizeof(aValue));
     }
 
     /**
-     * Returns a pointer to the TLV with a given template type `TlvType`
+     * Writes a `uint` TLV in the Dataset.
      *
-     * @returns A pointer to the TLV or `nullptr` if none is found.
+     * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
+     *
+     * @tparam  UintTlvType     The integer simple TLV type (must be a sub-class of `UintTlvInfo`).
+     *
+     * @param[in]  aValue   The TLV value.
+     *
+     * @retval kErrorNone    Successfully updated the TLV.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
      *
      */
-    template <typename TlvType> const TlvType *GetTlv(void) const
+    template <typename UintTlvType> Error Write(typename UintTlvType::UintValueType aValue)
     {
-        return As<TlvType>(GetTlv(static_cast<Tlv::Type>(TlvType::kType)));
+        typename UintTlvType::UintValueType value = BigEndian::HostSwap(aValue);
+
+        return WriteTlv(static_cast<Tlv::Type>(UintTlvType::kType), &value, sizeof(value));
     }
+
+    /**
+     * Removes a TLV from the Dataset.
+     *
+     * If the Dataset does not contain the given TLV type, no action is performed.
+     *
+     * @param[in] aType  The TLV type to remove.
+     *
+     */
+    void RemoveTlv(Tlv::Type aType);
 
     /**
      * Returns a pointer to the byte representation of the Dataset.
@@ -767,55 +821,6 @@ public:
     void SetTimestamp(Type aType, const Timestamp &aTimestamp);
 
     /**
-     * Sets a TLV in the Dataset.
-     *
-     * @param[in]  aTlv  A reference to the TLV.
-     *
-     * @retval kErrorNone    Successfully set the TLV.
-     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
-     *
-     */
-    Error SetTlv(const Tlv &aTlv);
-
-    /**
-     * Sets a TLV with a given TLV Type and Value.
-     *
-     * @param[in] aType     The TLV Type.
-     * @param[in] aValue    A pointer to TLV Value.
-     * @param[in] aLength   The TLV Length in bytes (length of @p aValue).
-     *
-     * @retval kErrorNone    Successfully set the TLV.
-     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
-     *
-     */
-    Error SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
-
-    /**
-     * Sets a TLV with a given TLV Type and Value.
-     *
-     * @tparam ValueType    The type of TLV's Value.
-     *
-     * Specializations of this template method are provided for `uint16_t` and `uint32_t` types which ensure big-endian
-     * encoding is used.
-     *
-     * @param[in] aType     The TLV Type.
-     * @param[in] aValue    The TLV Value (of type `ValueType`).
-     *
-     * @retval kErrorNone    Successfully set the TLV.
-     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
-     *
-     */
-    template <typename ValueType> Error SetTlv(Tlv::Type aType, const ValueType &aValue)
-    {
-        static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
-        static_assert(!TypeTraits::IsSame<ValueType, uint16_t>::kValue, "Specialization must be used for uint16_t");
-        static_assert(!TypeTraits::IsSame<ValueType, uint32_t>::kValue, "Specialization must be used for uint32_t");
-        static_assert(!TypeTraits::IsSame<ValueType, uint64_t>::kValue, "Specialization must be used for uint64_t");
-
-        return SetTlv(aType, &aValue, sizeof(ValueType));
-    }
-
-    /**
      * Reads the Dataset from a given message and checks that it is well-formed and valid.
      *
      * @param[in]  aMessage  The message to read from.
@@ -858,14 +863,6 @@ public:
      *
      */
     void SetFrom(const otOperationalDatasetTlvs &aDataset);
-
-    /**
-     * Removes a TLV from the Dataset.
-     *
-     * @param[in] aType The type of a specific TLV.
-     *
-     */
-    void RemoveTlv(Tlv::Type aType);
 
     /**
      * Appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
@@ -979,40 +976,6 @@ private:
     TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
 };
-
-/**
- * This is a template specialization of `SetTlv<ValueType>` with a `uint16_t` value type.
- *
- * @param[in] aType     The TLV Type.
- * @param[in] aValue    The TLV value (as `uint16_t`).
- *
- * @retval kErrorNone    Successfully set the TLV.
- * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
- *
- */
-template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint16_t &aValue)
-{
-    uint16_t value = BigEndian::HostSwap16(aValue);
-
-    return SetTlv(aType, &value, sizeof(uint16_t));
-}
-
-/**
- * This is a template specialization of `SetTlv<ValueType>` with a `uint32_t` value type
- *
- * @param[in] aType     The TLV Type.
- * @param[in] aValue    The TLV value (as `uint32_t`).
- *
- * @retval kErrorNone    Successfully set the TLV.
- * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
- *
- */
-template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue)
-{
-    uint32_t value = BigEndian::HostSwap32(aValue);
-
-    return SetTlv(aType, &value, sizeof(uint32_t));
-}
 
 } // namespace MeshCoP
 

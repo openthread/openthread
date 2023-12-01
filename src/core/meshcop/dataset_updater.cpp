@@ -123,7 +123,7 @@ void DatasetUpdater::PreparePendingDataset(void)
     {
         uint32_t delay = kDefaultDelay;
 
-        SuccessOrExit(error = dataset.SetTlv(Tlv::kDelayTimer, delay));
+        SuccessOrExit(error = dataset.Write<DelayTimerTlv>(delay));
     }
 
     {
@@ -143,7 +143,7 @@ void DatasetUpdater::PreparePendingDataset(void)
     }
 
     {
-        Timestamp timestamp = dataset.GetTlv(Tlv::kActiveTimestamp)->ReadValueAs<ActiveTimestampTlv>();
+        Timestamp timestamp = dataset.FindTlv(Tlv::kActiveTimestamp)->ReadValueAs<ActiveTimestampTlv>();
 
         timestamp.AdvanceRandomTicks();
         dataset.SetTimestamp(Dataset::kActive, timestamp);

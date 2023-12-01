@@ -308,7 +308,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 
     for (Tlv::Type tlvType : kTlvTypes)
     {
-        const Tlv *tlv = dataset.GetTlv(tlvType);
+        const Tlv *tlv = dataset.FindTlv(tlvType);
 
         VerifyOrExit(tlv != nullptr, error = kErrorInvalidState);
         SuccessOrExit(error = tlv->AppendTo(*message));
