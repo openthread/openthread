@@ -53,13 +53,15 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
+ * @def OPENTHREAD_CONFIG_DROP_MSG_IF_NEXT_FRAG_TX_DELAYED_BY_REASSEMBLY_TIMEOUT
  *
- * The reassembly timeout between 6LoWPAN fragments in seconds.
+ * Define as 1 for OpenThread to drops a message if the transmission between two fragments is delayed by more than the
+ * reassembly timeout (2 seconds) on the receiver. After the reassembly timeout sending the remaining fragments would
+ * not be useful since the receiver have already dropped the message and would ignore the new received fragments.
  *
  */
-#ifndef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
-#define OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT 2
+#ifndef OPENTHREAD_CONFIG_DROP_MSG_IF_NEXT_FRAG_TX_DELAYED_BY_REASSEMBLY_TIMEOUT
+#define OPENTHREAD_CONFIG_DROP_MSG_IF_NEXT_FRAG_TX_DELAYED_BY_REASSEMBLY_TIMEOUT 1
 #endif
 
 /**

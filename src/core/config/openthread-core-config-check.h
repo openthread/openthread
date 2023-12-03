@@ -673,4 +673,9 @@
         "OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD and OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT
+#error "OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT was removed; "\
+       " And the timeout constant is now fixed within the Thread spec to two seconds"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

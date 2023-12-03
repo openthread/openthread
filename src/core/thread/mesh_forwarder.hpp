@@ -379,7 +379,7 @@ private:
     static constexpr uint8_t kFailedRouterTransmissions      = 4;
     static constexpr uint8_t kFailedCslDataPollTransmissions = 15;
 
-    static constexpr uint8_t kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT; // in seconds.
+    static constexpr uint8_t kReassemblyTimeout      = 2;                       // in seconds.
     static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
     static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
 
@@ -398,19 +398,16 @@ private:
 
     enum MessageAction : uint8_t
     {
-        kMessageReceive,         // Indicates that the message was received.
-        kMessageTransmit,        // Indicates that the message was sent.
-        kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,            // Indicates that the outbound message is dropped (e.g., dst unknown).
-        kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
-        kMessageEvict,           // Indicates that the message was evicted.
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        kMessageMarkEcn,       // Indicates that ECN is marked on an outbound message by delay-aware queue management.
-        kMessageQueueMgmtDrop, // Indicates that an outbound message is dropped by delay-aware queue management.
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        kMessageFullQueueDrop, // Indicates message drop due to reaching max allowed frames in direct tx queue.
-#endif
+        kMessageReceive,           // Message was received.
+        kMessageTransmit,          // Message was sent.
+        kMessagePrepareIndirect,   // Message is being prepared for indirect tx.
+        kMessageDrop,              // Outbound message is dropped (e.g., dst unknown).
+        kMessageReassemblyDrop,    // Received message is being dropped from reassembly list.
+        kMessageEvict,             // Message was evicted.
+        kMessageMarkEcn,           // ECN is marked on a message by delay-aware queue management.
+        kMessageQueueMgmtDrop,     // Message is dropped by delay-aware queue management (too long in queue).
+        kMessageFullQueueDrop,     // Message drop due to reaching max allowed frames in direct tx queue.
+        kMessageNextFragDelayDrop, // Message is dropped since next fragment tx is delayed by more than timeout.
     };
 
     enum AnycastType : uint8_t

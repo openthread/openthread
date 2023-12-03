@@ -587,6 +587,17 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
             continue;
         }
 
+#if OPENTHREAD_CONFIG_DROP_MSG_IF_NEXT_FRAG_TX_DELAYED_BY_REASSEMBLY_TIMEOUT
+        if ((curMessage->GetOffset() > 0) &&
+            (TimerMilli::GetNow() - curMessage->GetTimestamp() > TimeMilli::SecToMsec(kReassemblyTimeout)))
+        {
+            LogMessage(kMessageNextFragDelayDrop, *curMessage);
+            FinalizeMessageDirectTx(*curMessage, kErrorDrop);
+            RemoveMessageIfNoPendingTx(*curMessage);
+            continue;
+        }
+#endif
+
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
         if (UpdateEcnOrDrop(*curMessage, /* aPreparingToSend */ true) == kErrorDrop)
         {
@@ -1258,6 +1269,9 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 
     if (mMessageNextOffset < mSendMessage->GetLength())
     {
+#if OPENTHREAD_CONFIG_DROP_MSG_IF_NEXT_FRAG_TX_DELAYED_BY_REASSEMBLY_TIMEOUT
+        mSendMessage->SetTimestampToNow();
+#endif
         mSendMessage->SetOffset(mMessageNextOffset);
         ExitNow();
     }
@@ -1831,13 +1845,10 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
         "Dropping",                    // (3) kMessageDrop
         "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
         "Evicting",                    // (5) kMessageEvict
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        "Marked ECN",            // (6) kMessageMarkEcn
-        "Dropping (queue mgmt)", // (7) kMessageQueueMgmtDrop
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-        "Dropping (dir queue full)", // (8) kMessageFullQueueDrop
-#endif
+        "Marked ECN",                  // (6) kMessageMarkEcn
+        "Dropping (queue mgmt)",       // (7) kMessageQueueMgmtDrop
+        "Dropping (dir queue full)",   // (8) kMessageFullQueueDrop
+        "Dropping (next frag delay)",  // (9) "kMessageNextFragDelayDrop"
     };
 
     const char *string = kMessageActionStrings[aAction];
@@ -1848,17 +1859,10 @@ const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aE
     static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
     static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
     static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     static_assert(kMessageMarkEcn == 6, "kMessageMarkEcn is incorrect");
     static_assert(kMessageQueueMgmtDrop == 7, "kMessageQueueMgmtDrop is incorrect");
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
     static_assert(kMessageFullQueueDrop == 8, "kMessageFullQueueDrop is incorrect");
-#endif
-#else
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
-    static_assert(kMessageFullQueueDrop == 6, "kMessageFullQueueDrop is incorrect");
-#endif
-#endif
+    static_assert(kMessageNextFragDelayDrop == 9, "kMessageNextFragDelayDrop is incorrect");
 
     if ((aAction == kMessageTransmit) && (aError != kErrorNone))
     {
@@ -1964,21 +1968,15 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
     case kMessageReceive:
     case kMessageTransmit:
     case kMessagePrepareIndirect:
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     case kMessageMarkEcn:
-#endif
         logLevel = (aError == kErrorNone) ? kLogLevelInfo : kLogLevelNote;
         break;
-
     case kMessageDrop:
     case kMessageReassemblyDrop:
     case kMessageEvict:
-#if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
     case kMessageQueueMgmtDrop:
-#endif
-#if (OPENTHREAD_CONFIG_MAX_FRAMES_IN_DIRECT_TX_QUEUE > 0)
     case kMessageFullQueueDrop:
-#endif
+    case kMessageNextFragDelayDrop:
         logLevel = kLogLevelNote;
         break;
     }
