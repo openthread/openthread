@@ -137,8 +137,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
         local_nat64_prefix = br.get_br_nat64_prefix()
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, local_nat64_prefix)
 
         #
@@ -150,15 +150,15 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_routes()[0])
 
         br.remove_route(SMALL_NAT64_PREFIX)
         br.register_netdata()
         self.simulator.go(10)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_routes()[0])
 
         #
         # Case 3.
@@ -169,15 +169,15 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertNotEqual(local_nat64_prefix, br.get_netdata_nat64_routes()[0])
 
         br.remove_route(LARGE_NAT64_PREFIX)
         br.register_netdata()
         self.simulator.go(10)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(local_nat64_prefix, br.get_netdata_nat64_routes()[0])
 
         #
         # Case 4. Disable and re-enable border routing on the border router.
@@ -186,7 +186,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         # NAT64 prefix is withdrawn from Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 0)
 
         br.enable_br()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
@@ -256,17 +256,17 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(5)
 
         # NAT64 prefix is withdrawn from Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 0)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 0)
 
         br.enable_ether()
         self.simulator.go(80)
 
         # Same NAT64 prefix is advertised to Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(nat64_prefix, br.get_netdata_nat64_routes()[0])
         # Same NAT64 prefix is advertised to Network Data.
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(nat64_prefix, br.get_netdata_nat64_routes()[0])
 
 
 if __name__ == '__main__':

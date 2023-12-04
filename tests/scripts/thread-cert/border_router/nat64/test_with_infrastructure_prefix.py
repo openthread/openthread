@@ -94,8 +94,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         # Case 1 No infra-derived OMR prefix. BR publishes its local prefix.
         local_nat64_prefix = br.get_br_nat64_prefix()
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, local_nat64_prefix)
 
         self.assertDictIncludes(br.nat64_state, {
@@ -112,8 +112,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(favored_nat64_prefix, local_nat64_prefix)
         infra_nat64_prefix = favored_nat64_prefix
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, infra_nat64_prefix)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
@@ -126,8 +126,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertNotEqual(infra_nat64_prefix, br.get_netdata_nat64_prefix()[0])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertNotEqual(infra_nat64_prefix, br.get_netdata_nat64_routes()[0])
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_IDLE,
             'Translator': NAT64_STATE_NOT_RUNNING
@@ -137,7 +137,7 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(10)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
         self.assertEqual(nat64_prefix, infra_nat64_prefix)
 
         # Case 4 No change when a smaller prefix in low preference is present
@@ -145,8 +145,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         br.register_netdata()
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 2)
-        self.assertEqual(br.get_netdata_nat64_prefix(), [infra_nat64_prefix, SMALL_NAT64_PREFIX])
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 2)
+        self.assertEqual(br.get_netdata_nat64_routes(), [infra_nat64_prefix, SMALL_NAT64_PREFIX])
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_NOT_RUNNING
@@ -162,8 +162,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
 
         local_nat64_prefix = br.get_br_nat64_prefix()
         self.assertNotEqual(local_nat64_prefix, infra_nat64_prefix)
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(br.get_netdata_nat64_prefix()[0], local_nat64_prefix)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], local_nat64_prefix)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_ACTIVE
@@ -174,8 +174,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
         self.assertEqual(br.get_br_favored_nat64_prefix(), infra_nat64_prefix)
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(br.get_netdata_nat64_prefix()[0], infra_nat64_prefix)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], infra_nat64_prefix)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_NOT_RUNNING
@@ -188,8 +188,8 @@ class Nat64SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(NAT64_PREFIX_REFRESH_DELAY)
 
         self.assertEqual(br.get_br_favored_nat64_prefix(), SMALL_NAT64_PREFIX)
-        self.assertEqual(len(br.get_netdata_nat64_prefix()), 1)
-        self.assertEqual(br.get_netdata_nat64_prefix()[0], SMALL_NAT64_PREFIX)
+        self.assertEqual(len(br.get_netdata_nat64_routes()), 1)
+        self.assertEqual(br.get_netdata_nat64_routes()[0], SMALL_NAT64_PREFIX)
         self.assertDictIncludes(br.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
             'Translator': NAT64_STATE_NOT_RUNNING

@@ -102,8 +102,8 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
         self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
-        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_routes()), 1)
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
@@ -122,8 +122,8 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         self.assertEqual(len(br.get_netdata_omr_prefixes()), 1)
         self.assertEqual(len(router.get_netdata_omr_prefixes()), 1)
-        self.assertEqual(len(br.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router.get_netdata_non_nat64_routes()), 1)
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)

@@ -126,7 +126,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
         logging.info("ROUTER1 addrs: %r", router1.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
 
         host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
         self.assertTrue(router1.ping(host_on_link_addr))
@@ -166,10 +166,10 @@ class MultiThreadNetworks(thread_cert.TestCase):
         # but don't remove the external routes for the radvd on-link prefix
         # immediately, because the SLAAC addresses are still valid.
 
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 1)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
 

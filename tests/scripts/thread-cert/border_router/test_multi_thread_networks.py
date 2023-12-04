@@ -130,10 +130,10 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         # Each BR should independently register an external route for the on-link prefix
         # and OMR prefix in another Thread Network.
-        self.assertEqual(br1.get_netdata_non_nat64_prefixes(), ['fc00::/7'])
-        self.assertEqual(router1.get_netdata_non_nat64_prefixes(), ['fc00::/7'])
-        self.assertEqual(br2.get_netdata_non_nat64_prefixes(), ['fc00::/7'])
-        self.assertEqual(router2.get_netdata_non_nat64_prefixes(), ['fc00::/7'])
+        self.assertEqual(br1.get_netdata_non_nat64_routes(), ['fc00::/7'])
+        self.assertEqual(router1.get_netdata_non_nat64_routes(), ['fc00::/7'])
+        self.assertEqual(br2.get_netdata_non_nat64_routes(), ['fc00::/7'])
+        self.assertEqual(router2.get_netdata_non_nat64_routes(), ['fc00::/7'])
 
         self.assertTrue(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
         self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
