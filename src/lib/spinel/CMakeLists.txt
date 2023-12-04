@@ -62,6 +62,17 @@ set(COMMON_SOURCES
     spinel_encoder.cpp
 )
 
+set(OT_SPINEL_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for Spinel")
+set(OT_SPINEL_VENDOR_HOOK_HEADER "" CACHE STRING "set vendor hook header file for Spinel")
+if(OT_SPINEL_VENDOR_HOOK_SOURCE)
+    target_compile_definitions(openthread-spinel-rcp PUBLIC "OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK=1")
+    target_compile_definitions(openthread-spinel-ncp PUBLIC "OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK=1")
+    target_compile_definitions(openthread-spinel-rcp PUBLIC "OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER=\"${OT_SPINEL_VENDOR_HOOK_HEADER}\"")
+    target_compile_definitions(openthread-spinel-ncp PUBLIC "OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER=\"${OT_SPINEL_VENDOR_HOOK_HEADER}\"")
+    list(APPEND COMMON_SOURCES ${OT_SPINEL_VENDOR_HOOK_SOURCE_DIR}${OT_SPINEL_VENDOR_HOOK_SOURCE})
+    list(APPEND COMMON_INCLUDES ${OT_SPINEL_VENDOR_HOOK_SOURCE_DIR})
+endif()
+
 target_include_directories(openthread-radio-spinel PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-ncp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})

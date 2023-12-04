@@ -195,6 +195,7 @@ target_include_directories(openthread-posix PRIVATE
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/third_party/mbedtls/repo/include
+    ${OT_SPINEL_VENDOR_HOOK_SOURCE_DIR}
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )

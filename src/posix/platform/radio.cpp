@@ -296,7 +296,7 @@ void Radio::GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeade
 } // namespace Posix
 } // namespace ot
 
-static ot::Spinel::RadioSpinel &GetRadioSpinel(void) { return sRadio.GetRadioSpinel(); }
+ot::Spinel::RadioSpinel &GetRadioSpinel(void) { return sRadio.GetRadioSpinel(); }
 
 void platformRadioDeinit(void) { GetRadioSpinel().Deinit(); }
 

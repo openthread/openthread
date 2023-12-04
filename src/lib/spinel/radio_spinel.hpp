@@ -1065,6 +1065,26 @@ public:
      */
     void RestoreProperties(void);
 #endif
+#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+    /**
+     * Defines a vendor "set property handler" hook to process vendor spinel properties.
+     *
+     * The vendor handler should return `OT_ERROR_NOT_FOUND` status if it does not support "set" operation for the
+     * given property key. Otherwise, the vendor handler should behave like other property set handlers, i.e., it
+     * should first decode the value from the input spinel frame and then perform the corresponding set operation. The
+     * handler should not prepare the spinel response and therefore should not write anything to the NCP buffer. The
+     * `otError` returned from handler (other than `OT_ERROR_NOT_FOUND`) indicates the error in either parsing of the
+     * input or the error of the set operation. In case of a successful "set", `NcpBase` set command handler will call
+     * the `VendorGetPropertyHandler()` for the same property key to prepare the response.
+     *
+     * @param[in] aPropKey  The spinel property key.
+     *
+     * @returns OT_ERROR_NOT_FOUND if it does not support the given property key, otherwise the error in either parsing
+     *          of the input or the "set" operation.
+     *
+     */
+    otError VendorHandleValueIs(spinel_prop_key_t aPropKey);
+#endif
 
 private:
     enum

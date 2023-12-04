@@ -89,4 +89,24 @@
 #define OPENTHREAD_SPINEL_CONFIG_BROADCAST_IID SPINEL_HEADER_IID_3
 #endif
 
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+ *
+ * Enables compilation of vendor specific code for Spinel
+ *
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#define OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK 0
+#endif
+
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
+ *
+ * Header file defining class VendorRadioSpinel
+ *
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
+#define OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER "lib/spinel/example_vendor_hook.hpp"
+#endif
+
 #endif // OPENTHREAD_SPINEL_CONFIG_H_

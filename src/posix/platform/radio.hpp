@@ -35,6 +35,11 @@
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/spi_interface.hpp"
 #include "posix/platform/vendor_interface.hpp"
+#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
+#include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
+#endif
+#endif
 
 namespace ot {
 namespace Posix {
@@ -104,8 +109,12 @@ private:
 #error "No Spinel interface is specified!"
 #endif
 
-    RadioUrl                 mRadioUrl;
-    Spinel::RadioSpinel      mRadioSpinel;
+    RadioUrl mRadioUrl;
+#if OPENTHREAD_ENABLE_SPINEL_VENDOR_HOOK
+    Spinel::VendorRadioSpinel mRadioSpinel;
+#else
+    Spinel::RadioSpinel     mRadioSpinel;
+#endif
     Spinel::SpinelInterface *mSpinelInterface;
 
     OT_DEFINE_ALIGNED_VAR(mSpinelInterfaceRaw, kSpinelInterfaceRawSize, uint64_t);
