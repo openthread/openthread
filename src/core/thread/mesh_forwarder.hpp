@@ -552,7 +552,7 @@ private:
                                  Message::Priority       aPriority);
     Error HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
     void  ClearReassemblyList(void);
-    void  RemoveMessage(Message &aMessage);
+    void  EvictMessage(Message &aMessage);
     void  HandleDiscoverComplete(void);
 
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
@@ -564,6 +564,7 @@ private:
     void UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove, uint8_t aFailLimit);
     void HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
     void UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
+    void FinalizeMessageDirectTx(Message &aMessage, Error aError);
     bool RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void HandleTimeTick(void);
