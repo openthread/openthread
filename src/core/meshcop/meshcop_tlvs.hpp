@@ -54,6 +54,7 @@
 #include "net/ip6_address.hpp"
 #include "radio/radio.hpp"
 #include "thread/key_manager.hpp"
+#include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 
 namespace ot {
@@ -245,75 +246,22 @@ typedef UintTlvInfo<Tlv::kPeriod, uint16_t> PeriodTlv;
 typedef UintTlvInfo<Tlv::kScanDuration, uint16_t> ScanDurationTlv;
 
 /**
- * Defines Commissioner ID TLV constants and type.s
+ * Defines Commissioner ID TLV constants and types.
  *
  */
 typedef StringTlvInfo<Tlv::kCommissionerId, Tlv::kMaxCommissionerIdLength> CommissionerIdTlv;
 
 /**
- * Implements Channel TLV generation and parsing.
+ * Implements Channel TLV value format.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ChannelTlv : public Tlv, public TlvInfo<Tlv::kChannel>
-{
-public:
-    /**
-     * Initializes the TLV.
-     *
-     */
-    void Init(void)
-    {
-        SetType(kChannel);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-    }
+typedef Mle::ChannelTlvValue ChannelTlvValue;
 
-    /**
-     * Indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const;
-
-    /**
-     * Returns the ChannelPage value.
-     *
-     * @returns The ChannelPage value.
-     *
-     */
-    uint8_t GetChannelPage(void) const { return mChannelPage; }
-
-    /**
-     * Sets the ChannelPage value.
-     *
-     * @param[in]  aChannelPage  The ChannelPage value.
-     *
-     */
-    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
-
-    /**
-     * Returns the Channel value.
-     *
-     * @returns The Channel value.
-     *
-     */
-    uint16_t GetChannel(void) const { return BigEndian::HostSwap16(mChannel); }
-
-    /**
-     * Sets the Channel value.
-     * Note: This method also sets the channel page according to the channel value.
-     *
-     * @param[in]  aChannel  The Channel value.
-     *
-     */
-    void SetChannel(uint16_t aChannel);
-
-private:
-    uint8_t  mChannelPage;
-    uint16_t mChannel;
-} OT_TOOL_PACKED_END;
+/**
+ * Defines Channel TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kChannel, ChannelTlvValue> ChannelTlv;
 
 /**
  * Defines PAN ID TLV constants and types.

@@ -65,9 +65,9 @@ bool Tlv::IsValid(const Tlv &aTlv)
     case Tlv::kMeshLocalPrefix:
         minLength = sizeof(MeshLocalPrefixTlv::ValueType);
         break;
-
     case Tlv::kChannel:
-        isValid = As<ChannelTlv>(aTlv).IsValid();
+        VerifyOrExit(aTlv.GetLength() >= sizeof(ChannelTlvValue), isValid = false);
+        isValid = aTlv.ReadValueAs<ChannelTlv>().IsValid();
         break;
     case Tlv::kNetworkName:
         isValid = As<NetworkNameTlv>(aTlv).IsValid();
@@ -90,6 +90,7 @@ bool Tlv::IsValid(const Tlv &aTlv)
         isValid = (aTlv.GetLength() >= minLength);
     }
 
+exit:
     return isValid;
 }
 
@@ -141,51 +142,6 @@ void SecurityPolicyTlv::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
     SetRotationTime(aSecurityPolicy.mRotationTime);
     aSecurityPolicy.GetFlags(mFlags, sizeof(mFlags));
-}
-
-bool ChannelTlv::IsValid(void) const
-{
-    bool ret = false;
-
-    VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
-    VerifyOrExit(mChannelPage < BitSizeOf(uint32_t));
-    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
-    VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
-    ret = true;
-
-exit:
-    return ret;
-}
-
-void ChannelTlv::SetChannel(uint16_t aChannel)
-{
-    uint8_t channelPage = OT_RADIO_CHANNEL_PAGE_0;
-
-#if OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
-    if ((OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX))
-    {
-        channelPage = OT_RADIO_CHANNEL_PAGE_0;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-    if ((OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX))
-    {
-        channelPage = OT_RADIO_CHANNEL_PAGE_2;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
-    if ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN == aChannel) ||
-        ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN < aChannel) &&
-         (aChannel <= OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX)))
-    {
-        channelPage = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE;
-    }
-#endif
-
-    SetChannelPage(channelPage);
-    mChannel = BigEndian::HostSwap16(aChannel);
 }
 
 const char *StateTlv::StateToString(State aState)

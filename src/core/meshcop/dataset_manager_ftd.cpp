@@ -82,7 +82,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     StateTlv::State    state                    = StateTlv::kReject;
     Dataset            dataset;
     Timestamp          activeTimestamp;
-    ChannelTlv         channel;
+    ChannelTlvValue    channelValue;
     uint16_t           sessionId;
     Ip6::NetworkPrefix meshLocalPrefix;
     NetworkKey         networkKey;
@@ -116,12 +116,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         VerifyOrExit(Timestamp::Compare(&activeTimestamp, mLocal.GetTimestamp()) > 0);
     }
 
-    // check channel
-    if (Tlv::FindTlv(aMessage, channel) == kErrorNone)
+    if (Tlv::Find<ChannelTlv>(aMessage, channelValue) == kErrorNone)
     {
-        VerifyOrExit(channel.IsValid());
+        VerifyOrExit(channelValue.IsValid());
 
-        if (channel.GetChannel() != Get<Mac::Mac>().GetPanChannel())
+        if (channelValue.GetChannel() != Get<Mac::Mac>().GetPanChannel())
         {
             doesAffectConnectivity = true;
         }
@@ -312,10 +311,10 @@ Error ActiveDatasetManager::GenerateLocal(void)
 
     if (!dataset.Contains<ChannelTlv>())
     {
-        ChannelTlv tlv;
-        tlv.Init();
-        tlv.SetChannel(Get<Mac::Mac>().GetPanChannel());
-        IgnoreError(dataset.WriteTlv(tlv));
+        ChannelTlvValue channelValue;
+
+        channelValue.SetChannelAndPage(Get<Mac::Mac>().GetPanChannel());
+        IgnoreError(dataset.Write<ChannelTlv>(channelValue));
     }
 
     if (!dataset.Contains<ChannelMaskTlv>())

@@ -194,7 +194,7 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             break;
 
         case Tlv::kChannel:
-            aDatasetInfo.SetChannel(As<ChannelTlv>(cur)->GetChannel());
+            aDatasetInfo.SetChannel(cur->ReadValueAs<ChannelTlv>().GetChannel());
             break;
 
         case Tlv::kChannelMask:
@@ -304,10 +304,10 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsChannelPresent())
     {
-        ChannelTlv tlv;
-        tlv.Init();
-        tlv.SetChannel(aDatasetInfo.GetChannel());
-        IgnoreError(WriteTlv(tlv));
+        ChannelTlvValue channelValue;
+
+        channelValue.SetChannelAndPage(aDatasetInfo.GetChannel());
+        IgnoreError(Write<ChannelTlv>(channelValue));
     }
 
     if (aDatasetInfo.IsChannelMaskPresent())
@@ -527,7 +527,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         {
         case Tlv::kChannel:
         {
-            uint8_t channel = static_cast<uint8_t>(As<ChannelTlv>(cur)->GetChannel());
+            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<ChannelTlv>().GetChannel());
 
             error = mac.SetPanChannel(channel);
 

@@ -1096,6 +1096,23 @@ public:
      */
     void SetChannel(uint16_t aChannel) { mChannel = BigEndian::HostSwap16(aChannel); }
 
+    /**
+     * Sets the Channel and determines and sets the Channel Page from the given channel.
+     *
+     * @param[in]  aChannel  The Channel value.
+     *
+     */
+    void SetChannelAndPage(uint16_t aChannel);
+
+    /**
+     * Indicates whether or not the Channel and Channel Page values are valid.
+     *
+     * @retval TRUE   If the Channel and Channel Page values are valid.
+     * @retval FALSE  If the Channel and Channel Page values are not valid.
+     *
+     */
+    bool IsValid(void) const;
+
 private:
     uint8_t  mChannelPage;
     uint16_t mChannel;

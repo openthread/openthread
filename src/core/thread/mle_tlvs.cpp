@@ -34,6 +34,8 @@
 #include "mle_tlvs.hpp"
 
 #include "common/code_utils.hpp"
+#include "common/numeric_limits.hpp"
+#include "radio/radio.hpp"
 
 namespace ot {
 namespace Mle {
@@ -92,6 +94,47 @@ int8_t ConnectivityTlv::GetParentPriority(void) const
 void ConnectivityTlv::SetParentPriority(int8_t aParentPriority)
 {
     mFlags = static_cast<uint8_t>(Preference::To2BitUint(aParentPriority) << kFlagsParentPriorityOffset);
+}
+
+void ChannelTlvValue::SetChannelAndPage(uint16_t aChannel)
+{
+    uint8_t channelPage = OT_RADIO_CHANNEL_PAGE_0;
+
+#if OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
+    if ((OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN <= aChannel) && (aChannel <= OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX))
+    {
+        channelPage = OT_RADIO_CHANNEL_PAGE_2;
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+    if ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN == aChannel) ||
+        ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN < aChannel) &&
+         (aChannel <= OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX)))
+    {
+        channelPage = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE;
+    }
+#endif
+
+    SetChannelPage(channelPage);
+    SetChannel(aChannel);
+}
+
+bool ChannelTlvValue::IsValid(void) const
+{
+    bool     isValid = false;
+    uint16_t channel;
+
+    VerifyOrExit(mChannelPage < BitSizeOf(uint32_t));
+    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
+
+    channel = GetChannel();
+    VerifyOrExit((Radio::kChannelMin <= channel) && (channel <= Radio::kChannelMax));
+
+    isValid = true;
+
+exit:
+    return isValid;
 }
 
 } // namespace Mle
