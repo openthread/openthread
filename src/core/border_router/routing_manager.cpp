@@ -214,6 +214,17 @@ Error RoutingManager::GetPdOmrPrefix(PrefixTableEntry &aPrefixInfo) const
 exit:
     return error;
 }
+
+Error RoutingManager::GetPdProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    error = mPdPrefixManager.GetProcessedRaInfo(aPdProcessedRaInfo);
+
+exit:
+    return error;
+}
 #endif
 
 Error RoutingManager::GetFavoredOmrPrefix(Ip6::Prefix &aPrefix, RoutePreference &aPreference) const
@@ -3453,6 +3464,9 @@ RoutingManager::PdPrefixManager::PdPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mEnabled(false)
     , mIsRunning(false)
+    , mNumPlatformPioProcessed(0)
+    , mNumPlatformRaReceived(0)
+    , mLastPlatformRaTime(0)
     , mTimer(aInstance)
 {
     mPrefix.Clear();
@@ -3519,6 +3533,20 @@ exit:
     return error;
 }
 
+Error RoutingManager::PdPrefixManager::GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsRunning() && HasPrefix(), error = kErrorNotFound);
+
+    aPdProcessedRaInfo.mNumPlatformRaReceived   = mNumPlatformRaReceived;
+    aPdProcessedRaInfo.mNumPlatformPioProcessed = mNumPlatformPioProcessed;
+    aPdProcessedRaInfo.mLastPlatformRaMsec      = TimerMilli::GetNow() - mLastPlatformRaTime;
+
+exit:
+    return error;
+}
+
 void RoutingManager::PdPrefixManager::WithdrawPrefix(void)
 {
     VerifyOrExit(HasPrefix());
@@ -3542,6 +3570,8 @@ void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *
     VerifyOrExit(IsRunning(), LogWarn("Ignore platform generated RA since PD is disabled or not running."));
     packet.Init(aRouterAdvert, aLength);
     error = Process(Ip6::Nd::RouterAdvertMessage(packet));
+    mNumPlatformRaReceived++;
+    mLastPlatformRaTime = TimerMilli::GetNow();
 
 exit:
     if (error != kErrorNone)
@@ -3568,7 +3598,7 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
         {
             continue;
         }
-
+        mNumPlatformPioProcessed++;
         entry.SetFrom(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
 
         if (!IsValidPdPrefix(entry.GetPrefix()))

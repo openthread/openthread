@@ -907,6 +907,8 @@ typedef struct otBorderRoutingCounters
     otPacketsAndBytes mInboundMulticast;  ///< The counters for inbound multicast.
     otPacketsAndBytes mOutboundUnicast;   ///< The counters for outbound unicast.
     otPacketsAndBytes mOutboundMulticast; ///< The counters for outbound multicast.
+    otPacketsAndBytes mInboundInternet;   ///< The counters for inbound Internet when DHCPv6 PD enabled.
+    otPacketsAndBytes mOutboundInternet;  ///< The counters for outbound Internet when DHCPv6 PD enabled.
     uint32_t          mRaRx;              ///< The number of received RA packets.
     uint32_t          mRaTxSuccess;       ///< The number of RA packets successfully transmitted.
     uint32_t          mRaTxFailure;       ///< The number of RA packets failed to transmit.

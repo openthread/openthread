@@ -1456,7 +1456,9 @@ Error Ip6::RouteLookup(const Address &aSource, const Address &aDestination) cons
 #if OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 void Ip6::UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLength, bool aIsInbound)
 {
-    otPacketsAndBytes *counter = nullptr;
+    static constexpr uint8_t kPrefixLength   = 48;
+    otPacketsAndBytes       *counter         = nullptr;
+    otPacketsAndBytes       *internetCounter = nullptr;
 
     VerifyOrExit(!aHeader.GetSource().IsLinkLocal());
     VerifyOrExit(!aHeader.GetDestination().IsLinkLocal());
@@ -1466,7 +1468,10 @@ void Ip6::UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLe
     if (aIsInbound)
     {
         VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetSource()));
-
+        if (!aHeader.GetSource().MatchesPrefix(aHeader.GetDestination().GetPrefix().m8, kPrefixLength))
+        {
+            internetCounter = &mBorderRoutingCounters.mInboundInternet;
+        }
         if (aHeader.GetDestination().IsMulticast())
         {
             VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
@@ -1480,7 +1485,10 @@ void Ip6::UpdateBorderRoutingCounters(const Header &aHeader, uint16_t aMessageLe
     else
     {
         VerifyOrExit(!Get<Netif>().HasUnicastAddress(aHeader.GetDestination()));
-
+        if (!aHeader.GetSource().MatchesPrefix(aHeader.GetDestination().GetPrefix().m8, kPrefixLength))
+        {
+            internetCounter = &mBorderRoutingCounters.mOutboundInternet;
+        }
         if (aHeader.GetDestination().IsMulticast())
         {
             VerifyOrExit(aHeader.GetDestination().IsMulticastLargerThanRealmLocal());
@@ -1498,6 +1506,11 @@ exit:
     {
         counter->mPackets += 1;
         counter->mBytes += aMessageLength;
+    }
+    if (internetCounter)
+    {
+        internetCounter->mPackets += 1;
+        internetCounter->mBytes += aMessageLength;
     }
 }
 #endif

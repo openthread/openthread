@@ -104,6 +104,13 @@ otError otBorderRoutingGetPdOmrPrefix(otInstance *aInstance, otBorderRoutingPref
 
     return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdOmrPrefix(*aPrefixInfo);
 }
+
+otError otBorderRoutingGetPdProcessedRaInfo(otInstance *aInstance, otPdProcessedRaInfo *aPdProcessedRaInfo)
+{
+    AssertPointerIsNotNull(aPdProcessedRaInfo);
+
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetPdProcessedRaInfo(*aPdProcessedRaInfo);
+}
 #endif
 
 otError otBorderRoutingGetFavoredOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix, otRoutePreference *aPreference)
