@@ -41,6 +41,7 @@ source_set("openthread") {
   public = [
     "backbone_router.h",
     "backbone_router_ftd.h",
+    "ble_secure.h",
     "border_agent.h",
     "border_router.h",
     "border_routing.h",
@@ -84,6 +85,7 @@ source_set("openthread") {
     "ping_sender.h",
     "platform/alarm-micro.h",
     "platform/alarm-milli.h",
+    "platform/ble.h",
     "platform/border_routing.h",
     "platform/crypto.h",
     "platform/debug_uart.h",
@@ -115,6 +117,7 @@ source_set("openthread") {
     "srp_client_buffers.h",
     "srp_server.h",
     "tasklet.h",
+    "tcat.h",
     "tcp.h",
     "tcp_ext.h",
     "thread.h",

@@ -81,6 +81,9 @@ if (openthread_enable_core_config_args) {
     # Enable backbone router functionality
     openthread_config_backbone_router_enable = false
 
+    # Enable BLE based commissioning functionality
+    openthread_config_ble_tcat_enable = false
+
     # Enable border agent support
     openthread_config_border_agent_enable = false
 

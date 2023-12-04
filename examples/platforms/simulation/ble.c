@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2023, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,40 +26,50 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes compile-time configurations for DTLS.
- *
- */
+#include <openthread/platform/ble.h>
 
-#ifndef CONFIG_DTLS_H_
-#define CONFIG_DTLS_H_
+otError otPlatBleEnable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
-#include "config/border_agent.h"
-#include "config/coap.h"
-#include "config/commissioner.h"
-#include "config/joiner.h"
+otError otPlatBleDisable(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
-/**
- * @def OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
- *
- * The max length of the OpenThread dtls content buffer.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN
-#define OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN MBEDTLS_SSL_IN_CONTENT_LEN
-#endif
+otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aInterval);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
-/**
- * @def OPENTHREAD_CONFIG_DTLS_ENABLE
- *
- *  Define to 1 to enable DTLS.
- *
- */
-#ifndef OPENTHREAD_CONFIG_DTLS_ENABLE
-#define OPENTHREAD_CONFIG_DTLS_ENABLE                                                     \
-    (OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-     OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE)
-#endif
+otError otPlatBleGapAdvStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 
-#endif // CONFIG_DTLS_H_
+otError otPlatBleGapDisconnect(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMtu);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aPacket);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}

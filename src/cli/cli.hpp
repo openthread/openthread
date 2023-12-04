@@ -71,6 +71,7 @@
 #include "cli/cli_output.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
+#include "cli/cli_tcat.hpp"
 #include "cli/cli_tcp.hpp"
 #include "cli/cli_udp.hpp"
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -593,6 +594,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     LinkMetrics mLinkMetrics;
+#endif
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
+    Tcat mTcat;
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

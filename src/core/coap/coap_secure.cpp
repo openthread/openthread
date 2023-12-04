@@ -28,13 +28,14 @@
 
 #include "coap_secure.hpp"
 
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
+#if OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
 
 #include "common/locator_getters.hpp"
 #include "common/log.hpp"
 #include "common/new.hpp"
 #include "instance/instance.hpp"
-#include "meshcop/dtls.hpp"
+#include "meshcop/secure_transport.hpp"
+
 #include "thread/thread_netif.hpp"
 
 /**
@@ -67,7 +68,7 @@ exit:
     return error;
 }
 
-Error CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext)
+Error CoapSecure::Start(MeshCoP::SecureTransport::TransportCallback aCallback, void *aContext)
 {
     Error error = kErrorNone;
 
@@ -98,7 +99,7 @@ Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCal
 void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
     static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
-                      static_cast<uint16_t>(MeshCoP::Dtls::kPskMaxLength),
+                      static_cast<uint16_t>(MeshCoP::SecureTransport::kPskMaxLength),
                   "The maximum length of DTLS PSK is smaller than joiner PSKd");
 
     SuccessOrAssert(mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
@@ -224,4 +225,4 @@ exit:
 } // namespace Coap
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
+#endif // OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE
