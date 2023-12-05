@@ -141,10 +141,10 @@ class MultiBorderRouters(thread_cert.TestCase):
         self.assertEqual(br1_omr_prefix, br1.get_netdata_omr_prefixes()[0])
 
         # Each BR should independently register an external route for the on-link prefix.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 2)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 2)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 2)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 2)
 
         br1_on_link_prefix = br1.get_br_on_link_prefix()
 
@@ -192,10 +192,10 @@ class MultiBorderRouters(thread_cert.TestCase):
         # There should be no changes to the external route for the
         # on-link prefix, given that the on-link prefix is derived
         # from the Extended PAN ID.
-        self.assertEqual(len(br1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_non_nat64_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_non_nat64_prefixes()), 1)
+        self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router1.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(br2.get_netdata_non_nat64_routes()), 1)
+        self.assertEqual(len(router2.get_netdata_non_nat64_routes()), 1)
 
         br2_on_link_prefix = br2.get_br_on_link_prefix()
 

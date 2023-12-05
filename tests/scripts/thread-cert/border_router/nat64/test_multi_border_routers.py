@@ -131,8 +131,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.assertNotEqual(br2_local_nat64_prefix, br2.get_br_favored_nat64_prefix())
         br2_infra_nat64_prefix = br2.get_br_favored_nat64_prefix()
 
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, br2_infra_nat64_prefix)
         self.assertNotEqual(nat64_prefix, br1_local_nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
@@ -151,8 +151,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         br2.nat64_set_enabled(False)
         self.simulator.go(10)
 
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, br1_local_nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
             'PrefixManager': NAT64_STATE_ACTIVE,
@@ -174,8 +174,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         self.simulator.go(10)
         self.assertEqual(br2_local_nat64_prefix, br2.get_br_favored_nat64_prefix())
 
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(nat64_prefix, br1_local_nat64_prefix)
         self.assertNotEqual(nat64_prefix, br2_local_nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
@@ -194,8 +194,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         br1.nat64_set_enabled(False)
 
         self.simulator.go(10)
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
@@ -214,8 +214,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         br1.nat64_set_enabled(True)
 
         self.simulator.go(10)
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br1_local_nat64_prefix, nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
@@ -233,8 +233,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #
         br2.disable_br()
         self.simulator.go(10)
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(br1_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {
@@ -252,8 +252,8 @@ class Nat64MultiBorderRouter(thread_cert.TestCase):
         #
         br2.enable_br()
         self.simulator.go(10)
-        self.assertEqual(len(br1.get_netdata_nat64_prefix()), 1)
-        nat64_prefix = br1.get_netdata_nat64_prefix()[0]
+        self.assertEqual(len(br1.get_netdata_nat64_routes()), 1)
+        nat64_prefix = br1.get_netdata_nat64_routes()[0]
         self.assertEqual(br1_local_nat64_prefix, nat64_prefix)
         self.assertNotEqual(br2_local_nat64_prefix, nat64_prefix)
         self.assertDictIncludes(br1.nat64_state, {

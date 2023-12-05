@@ -2177,13 +2177,21 @@ class NodeImpl:
         self.send_command(cmd)
         return self._expect_command_output()[0]
 
-    def get_netdata_non_nat64_prefixes(self):
-        prefixes = []
+    def get_netdata_non_nat64_routes(self):
+        nat64_routes = []
         routes = self.get_routes()
         for route in routes:
             if 'n' not in route.split(' ')[1]:
-                prefixes.append(route.split(' ')[0])
-        return prefixes
+                nat64_routes.append(route.split(' ')[0])
+        return nat64_routes
+
+    def get_netdata_nat64_routes(self):
+        nat64_routes = []
+        routes = self.get_routes()
+        for route in routes:
+            if 'n' in route.split(' ')[1]:
+                nat64_routes.append(route.split(' ')[0])
+        return nat64_routes
 
     def get_br_nat64_prefix(self):
         cmd = 'br nat64prefix local'
@@ -2301,14 +2309,6 @@ class NodeImpl:
                 }
                 continue
         return {'protocol': protocol_counters, 'errors': error_counters}
-
-    def get_netdata_nat64_prefix(self):
-        prefixes = []
-        routes = self.get_routes()
-        for route in routes:
-            if 'n' in route.split(' ')[1]:
-                prefixes.append(route.split(' ')[0])
-        return prefixes
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
