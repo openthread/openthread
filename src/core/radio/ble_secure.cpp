@@ -253,7 +253,7 @@ Error BleSecure::HandleBleReceive(uint8_t *aBuf, uint16_t aLength)
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
     // Cannot call Receive(..) directly because Setup(..) and mState are private
-    mTls.HandleUdpReceive(*message, messageInfo);
+    mTls.HandleReceive(*message, messageInfo);
 
 exit:
     FreeMessage(message);
