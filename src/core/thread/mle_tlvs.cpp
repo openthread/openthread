@@ -125,8 +125,7 @@ bool ChannelTlvValue::IsValid(void) const
     bool     isValid = false;
     uint16_t channel;
 
-    VerifyOrExit(mChannelPage < BitSizeOf(uint32_t));
-    VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
+    VerifyOrExit(Radio::SupportsChannelPage(mChannelPage));
 
     channel = GetChannel();
     VerifyOrExit((Radio::kChannelMin <= channel) && (channel <= Radio::kChannelMax));

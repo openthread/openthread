@@ -71,7 +71,7 @@ void AnnounceBeginServer::HandleTmf<kUriAnnounceBegin>(Coap::Message &aMessage, 
     uint16_t period;
 
     VerifyOrExit(aMessage.IsPostRequest());
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
 
     SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
     SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));

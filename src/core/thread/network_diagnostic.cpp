@@ -322,12 +322,9 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
         tlv.Init();
 
-        for (uint8_t page = 0; page < static_cast<uint8_t>(BitSizeOf(Radio::kSupportedChannelPages)); page++)
+        for (uint8_t page : Radio::kSupportedChannelPages)
         {
-            if (Radio::kSupportedChannelPages & (1 << page))
-            {
-                tlv.GetChannelPages()[length++] = page;
-            }
+            tlv.GetChannelPages()[length++] = page;
         }
 
         tlv.SetLength(length);

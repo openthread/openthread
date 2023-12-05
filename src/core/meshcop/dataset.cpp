@@ -199,9 +199,9 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
 
         case Tlv::kChannelMask:
         {
-            uint32_t mask = As<ChannelMaskTlv>(cur)->GetChannelMask();
+            uint32_t mask;
 
-            if (mask != 0)
+            if (As<ChannelMaskTlv>(cur)->ReadChannelMask(mask) == kErrorNone)
             {
                 aDatasetInfo.SetChannelMask(mask);
             }
@@ -312,10 +312,10 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsChannelMaskPresent())
     {
-        ChannelMaskTlv tlv;
-        tlv.Init();
-        tlv.SetChannelMask(aDatasetInfo.GetChannelMask());
-        IgnoreError(WriteTlv(tlv));
+        ChannelMaskTlv::Value value;
+
+        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.GetChannelMask());
+        IgnoreError(WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
     }
 
     if (aDatasetInfo.IsExtendedPanIdPresent())

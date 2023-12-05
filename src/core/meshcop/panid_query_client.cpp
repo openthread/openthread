@@ -62,10 +62,9 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
                                   otCommissionerPanIdConflictCallback aCallback,
                                   void                               *aContext)
 {
-    Error                   error = kErrorNone;
-    MeshCoP::ChannelMaskTlv channelMask;
-    Tmf::MessageInfo        messageInfo(GetInstance());
-    Coap::Message          *message = nullptr;
+    Error            error = kErrorNone;
+    Tmf::MessageInfo messageInfo(GetInstance());
+    Coap::Message   *message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
     VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
@@ -76,9 +75,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     SuccessOrExit(
         error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
 
-    channelMask.Init();
-    channelMask.SetChannelMask(aChannelMask);
-    SuccessOrExit(error = channelMask.AppendTo(*message));
+    SuccessOrExit(error = MeshCoP::ChannelMaskTlv::AppendTo(*message, aChannelMask));
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::PanIdTlv>(*message, aPanId));
 
@@ -106,7 +103,7 @@ void PanIdQueryClient::HandleTmf<kUriPanIdConflict>(Coap::Message &aMessage, con
 
     SuccessOrExit(Tlv::Find<MeshCoP::PanIdTlv>(aMessage, panId));
 
-    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
+    SuccessOrExit(MeshCoP::ChannelMaskTlv::FindIn(aMessage, mask));
 
     mCallback.InvokeIfSet(panId, mask);
 
