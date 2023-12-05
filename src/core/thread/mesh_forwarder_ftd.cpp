@@ -165,6 +165,7 @@ void MeshForwarder::HandleResolved(const Ip6::Address &aEid, Error aError)
         if (aError != kErrorNone)
         {
             LogMessage(kMessageDrop, message, kErrorAddressQuery);
+            FinalizeMessageDirectTx(message, kErrorAddressQuery);
             mSendQueue.DequeueAndFree(message);
             continue;
         }
@@ -259,7 +260,7 @@ Error MeshForwarder::EvictMessage(Message::Priority aPriority)
 exit:
     if ((error == kErrorNone) && (evict != nullptr))
     {
-        RemoveMessage(*evict);
+        EvictMessage(*evict);
     }
 
     return error;
@@ -342,6 +343,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
         }
 
         LogMessage(kMessageDrop, message);
+        FinalizeMessageDirectTx(message, kErrorDrop);
         mSendQueue.DequeueAndFree(message);
     }
 }

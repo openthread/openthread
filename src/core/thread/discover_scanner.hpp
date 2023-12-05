@@ -165,7 +165,7 @@ private:
 
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);
-    void          HandleDiscoveryRequestFrameTxDone(Message &aMessage);
+    void          HandleDiscoveryRequestFrameTxDone(Message &aMessage, Error aError);
     void          Stop(void) { HandleDiscoverComplete(); }
 
     // Methods used from `Mle`

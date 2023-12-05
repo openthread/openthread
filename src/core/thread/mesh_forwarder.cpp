@@ -202,7 +202,7 @@ void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &
     aFrame.SetPayloadLength(0);
 }
 
-void MeshForwarder::RemoveMessage(Message &aMessage)
+void MeshForwarder::EvictMessage(Message &aMessage)
 {
     PriorityQueue *queue = aMessage.GetPriorityQueue();
 
@@ -216,6 +216,8 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
             IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
         }
 #endif
+
+        FinalizeMessageDirectTx(aMessage, kErrorNoBufs);
 
         if (mSendMessage == &aMessage)
         {
@@ -387,7 +389,7 @@ exit:
         mTxQueueStats.UpdateFor(aMessage);
 #endif
         LogMessage(kMessageQueueMgmtDrop, aMessage);
-        aMessage.ClearDirectTransmission();
+        FinalizeMessageDirectTx(aMessage, kErrorDrop);
         RemoveMessageIfNoPendingTx(aMessage);
     }
 
@@ -518,7 +520,7 @@ void MeshForwarder::ApplyDirectTxQueueLimit(Message &aMessage)
 #endif
 
     LogMessage(kMessageFullQueueDrop, aMessage);
-    aMessage.ClearDirectTransmission();
+    FinalizeMessageDirectTx(aMessage, kErrorDrop);
     RemoveMessageIfNoPendingTx(aMessage);
 
 exit:
@@ -642,6 +644,7 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
             mTxQueueStats.UpdateFor(*curMessage);
 #endif
             LogMessage(kMessageDrop, *curMessage, error);
+            FinalizeMessageDirectTx(*curMessage, error);
             mSendQueue.DequeueAndFree(*curMessage);
             continue;
         }
@@ -1261,9 +1264,6 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 
     txError = aFrameTxError;
 
-    mSendMessage->ClearDirectTransmission();
-    mSendMessage->SetOffset(0);
-
     if (aNeighbor != nullptr)
     {
         aNeighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
@@ -1289,39 +1289,54 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
 #endif
 
     LogMessage(kMessageTransmit, *mSendMessage, txError, &aMacDest);
+    FinalizeMessageDirectTx(*mSendMessage, txError);
+    RemoveMessageIfNoPendingTx(*mSendMessage);
 
-    if (mSendMessage->GetType() == Message::kTypeIp6)
+exit:
+    mScheduleTransmissionTask.Post();
+}
+
+void MeshForwarder::FinalizeMessageDirectTx(Message &aMessage, Error aError)
+{
+    // Finalizes the direct transmission of `aMessage`. This can be
+    // triggered by successful delivery (all fragments reaching the
+    // destination), failure of any fragment, queue management
+    // dropping the message, or eviction of message to accommodate
+    // higher priority messages.
+
+    VerifyOrExit(aMessage.IsDirectTransmission());
+
+    aMessage.ClearDirectTransmission();
+    aMessage.SetOffset(0);
+
+    if (aError != kErrorNone)
     {
-        if (mSendMessage->GetTxSuccess())
-        {
-            mIpCounters.mTxSuccess++;
-        }
-        else
-        {
-            mIpCounters.mTxFailure++;
-        }
+        aMessage.SetTxSuccess(false);
     }
 
-    switch (mSendMessage->GetSubType())
+    if (aMessage.GetType() == Message::kTypeIp6)
+    {
+        aMessage.GetTxSuccess() ? mIpCounters.mTxSuccess++ : mIpCounters.mTxFailure++;
+    }
+
+    switch (aMessage.GetSubType())
     {
     case Message::kSubTypeMleDiscoverRequest:
         // Note that `HandleDiscoveryRequestFrameTxDone()` may update
-        // `mSendMessage` and mark it again for direct transmission.
-        Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(*mSendMessage);
+        // `aMessage` and mark it again for direct transmission.
+        Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(aMessage, aError);
         break;
 
     case Message::kSubTypeMleChildIdRequest:
-        Get<Mle::Mle>().HandleChildIdRequestTxDone(*mSendMessage);
+        Get<Mle::Mle>().HandleChildIdRequestTxDone(aMessage);
         break;
 
     default:
         break;
     }
 
-    RemoveMessageIfNoPendingTx(*mSendMessage);
-
 exit:
-    mScheduleTransmissionTask.Post();
+    return;
 }
 
 bool MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
