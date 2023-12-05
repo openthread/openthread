@@ -246,6 +246,14 @@ void otSysCountInfraNetifAddresses(otSysInfraNetIfAddressCounters *aAddressCount
  */
 void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
 
+/**
+ * Returns TRUE if the infrastructure interface is running.
+ *
+ * @returns TRUE if the infrastructure interface is running, FALSE if not.
+ *
+ */
+bool otSysInfraIfIsRunning(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

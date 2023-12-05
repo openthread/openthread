@@ -416,14 +416,6 @@ extern unsigned int gNetifIndex;
 extern otInstance *gInstance;
 
 /**
- * Tells if the infrastructure interface is running.
- *
- * @returns TRUE if the infrastructure interface is running, FALSE if not.
- *
- */
-bool platformInfraIfIsRunning(void);
-
-/**
  * Initializes backtrace module.
  *
  */
