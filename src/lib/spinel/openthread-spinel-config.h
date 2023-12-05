@@ -109,4 +109,14 @@
 #define OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER "lib/spinel/example_vendor_hook.hpp"
 #endif
 
+/**
+ * @def OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS
+ *
+ * Defines the Tx wait duration in seconds.
+ *
+ */
+#ifndef OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS
+#define OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS 5
+#endif
+
 #endif // OPENTHREAD_SPINEL_CONFIG_H_
