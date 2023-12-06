@@ -171,7 +171,7 @@ void otCoapSecureSetClientConnectedCallback(otInstance                     *aIns
                                             otHandleCoapSecureClientConnect aHandler,
                                             void                           *aContext)
 {
-    AsCoreType(aInstance).GetApplicationCoapSecure().SetClientConnectedCallback(aHandler, aContext);
+    AsCoreType(aInstance).GetApplicationCoapSecure().SetConnectedCallback(aHandler, aContext);
 }
 
 void otCoapSecureSetDefaultHandler(otInstance *aInstance, otCoapRequestHandler aHandler, void *aContext)
