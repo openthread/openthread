@@ -55,14 +55,14 @@ CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
 {
 }
 
-Error CoapSecure::Start(uint16_t aPort)
+Error CoapSecure::Start(uint16_t aPort) { return Start(aPort, /* aMaxAttempts */ 0, nullptr, nullptr); }
+
+Error CoapSecure::Start(uint16_t aPort, uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext)
 {
-    Error error = kErrorNone;
+    Error error;
 
-    mConnectedCallback.Clear();
-
-    SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
-    SuccessOrExit(error = mDtls.Bind(aPort));
+    SuccessOrExit(error = Open(aMaxAttempts, aCallback, aContext));
+    error = mDtls.Bind(aPort);
 
 exit:
     return error;
@@ -70,12 +70,25 @@ exit:
 
 Error CoapSecure::Start(MeshCoP::SecureTransport::TransportCallback aCallback, void *aContext)
 {
-    Error error = kErrorNone;
+    Error error;
 
+    SuccessOrExit(error = Open(/* aMaxAttemps */ 0, nullptr, nullptr));
+    error = mDtls.Bind(aCallback, aContext);
+
+exit:
+    return error;
+}
+
+Error CoapSecure::Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext)
+{
+    Error error = kErrorAlready;
+
+    SuccessOrExit(mDtls.SetMaxConnectionAttempts(aMaxAttempts, HandleDtlsAutoClose, this));
+    mAutoStopCallback.Set(aCallback, aContext);
     mConnectedCallback.Clear();
+    SuccessOrExit(mDtls.Open(HandleDtlsReceive, HandleDtlsConnected, this));
 
-    SuccessOrExit(error = mDtls.Open(&CoapSecure::HandleDtlsReceive, &CoapSecure::HandleDtlsConnected, this));
-    SuccessOrExit(error = mDtls.Bind(aCallback, aContext));
+    error = kErrorNone;
 
 exit:
     return error;
@@ -171,6 +184,17 @@ void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
 }
 
 void CoapSecure::HandleDtlsConnected(bool aConnected) { mConnectedCallback.InvokeIfSet(aConnected); }
+
+void CoapSecure::HandleDtlsAutoClose(void *aContext)
+{
+    return static_cast<CoapSecure *>(aContext)->HandleDtlsAutoClose();
+}
+
+void CoapSecure::HandleDtlsAutoClose(void)
+{
+    Stop();
+    mAutoStopCallback.InvokeIfSet();
+}
 
 void CoapSecure::HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
 {
