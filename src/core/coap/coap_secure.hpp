@@ -259,18 +259,6 @@ public:
 #endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
     /**
-     * Sets the connected callback to indicate, when a Client connect to the CoAP Secure server.
-     *
-     * @param[in]  aCallback     A pointer to a function that will be called once DTLS connection is established.
-     * @param[in]  aContext      A pointer to arbitrary context information.
-     *
-     */
-    void SetClientConnectedCallback(ConnectedCallback aCallback, void *aContext)
-    {
-        mConnectedCallback.Set(aCallback, aContext);
-    }
-
-    /**
      * Sets the authentication mode for the CoAP secure connection. It disables or enables the verification
      * of peer certificate.
      *
