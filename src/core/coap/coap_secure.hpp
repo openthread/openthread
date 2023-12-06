@@ -382,7 +382,7 @@ public:
      */
     void HandleUdpReceive(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
-        return mDtls.HandleUdpReceive(aMessage, aMessageInfo);
+        return mDtls.HandleReceive(aMessage, aMessageInfo);
     }
 
     /**

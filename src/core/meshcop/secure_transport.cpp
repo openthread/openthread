@@ -144,7 +144,7 @@ Error SecureTransport::Open(ReceiveHandler aReceiveHandler, ConnectedHandler aCo
 
     VerifyOrExit(mState == kStateClosed, error = kErrorAlready);
 
-    SuccessOrExit(error = mSocket.Open(&SecureTransport::HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Open(&SecureTransport::HandleReceive, this));
 
     mConnectedCallback.Set(aConnectedHandler, aContext);
     mReceiveCallback.Set(aReceiveHandler, aContext);
@@ -169,12 +169,12 @@ exit:
     return error;
 }
 
-void SecureTransport::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+void SecureTransport::HandleReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<SecureTransport *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
+    static_cast<SecureTransport *>(aContext)->HandleReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
-void SecureTransport::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     switch (mState)
     {

@@ -435,7 +435,15 @@ public:
      */
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
 
-    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    /**
+     * Checks and handles a received message provided to the SecureTransport object. If checks based on
+     * the message info and current connection state pass, the message is processed.
+     *
+     * @param[in]  aMessage  A reference to the message to receive.
+     * @param[in]  aMessageInfo A reference to the message info associated with @p aMessage.
+     *
+     */
+    void HandleReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
     enum State : uint8_t
@@ -530,9 +538,9 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    static void HandleReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    void  HandleSecureTransportReceive(const uint8_t *aBuf, uint16_t aLength);
+    void  HandleReceive(const uint8_t *aBuf, uint16_t aLength);
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     void Process(void);
