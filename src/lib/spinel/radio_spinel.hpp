@@ -1105,9 +1105,12 @@ private:
         kStateTransmitDone, ///< Radio indicated frame transmission is done.
     };
 
-    static constexpr uint32_t kUsPerMs = 1000; ///< Microseconds per millisecond.
+    static constexpr uint32_t kUsPerMs  = 1000;                 ///< Microseconds per millisecond.
+    static constexpr uint32_t kMsPerSec = 1000;                 ///< Milliseconds per second.
+    static constexpr uint32_t kUsPerSec = kUsPerMs * kMsPerSec; ///< Microseconds per second.
     static constexpr uint64_t kTxWaitUs =
-        5000000; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
+        OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS *
+        kUsPerSec; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 

@@ -322,6 +322,7 @@ ot_multi_option(OT_POWER_SUPPLY OT_POWER_SUPPLY_VALUES OPENTHREAD_CONFIG_DEVICE_
 
 ot_int_option(OT_MLE_MAX_CHILDREN OPENTHREAD_CONFIG_MLE_MAX_CHILDREN "set maximum number of children")
 ot_int_option(OT_RCP_RESTORATION_MAX_COUNT OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT "set max RCP restoration count")
+ot_int_option(OT_RCP_TX_WAIT_TIME_SECS OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS "set RCP TX wait TIME in seconds")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
