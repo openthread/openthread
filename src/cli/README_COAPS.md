@@ -87,6 +87,9 @@ coaps response sent
 - [delete](#delete-uri-path-type-payload)
 - [disconnect](#disconnect)
 - [get](#get-uri-path-type)
+- [isclosed](#isclosed)
+- [isconnactive](#isconnactive)
+- [isconnected](#isconnected)
 - [post](#post-uri-path-type-payload)
 - [psk](#psk-psk-pskid)
 - [put](#put-uri-path-type-payload)
@@ -102,11 +105,13 @@ coaps response sent
 
 ```bash
 > coaps help
-help
 connect
 delete
 disconnect
 get
+isclosed
+isconnactive
+isconnected
 post
 psk
 put
@@ -248,6 +253,36 @@ Stops the application coaps service.
 
 ```bash
 > coaps stop
+Done
+```
+
+### isconnected
+
+Indicates whether or not the CoAP secure service is connected.
+
+```bash
+> coaps isconnected
+yes
+Done
+```
+
+### isconnactive
+
+Indicates whether or not the CoAP secure service connection is active (already connected or establishing a connection).
+
+```bash
+> coaps isconnactive
+yes
+Done
+```
+
+### isclosed
+
+Indicates whether or not the CoAP secure service is closed.
+
+```bash
+> coaps isclosed
+no
 Done
 ```
 
