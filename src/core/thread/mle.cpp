@@ -92,6 +92,9 @@ Mle::Mle(Instance &aInstance)
     , mDataRequestAttempts(0)
     , mAnnounceChannel(0)
     , mAlternateChannel(0)
+#if OPENTHREAD_FTD
+    , mLinkRequestAttempts(0)
+#endif
     , mRloc16(Mac::kShortAddrInvalid)
     , mPreviousParentRloc(Mac::kShortAddrInvalid)
     , mAttachCounter(0)
