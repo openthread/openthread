@@ -105,6 +105,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.set_active_dataset(updateExisting=True, network_name='ot-br1-1')
         br1.start()
         self.simulator.go(config.BORDER_ROUTER_STARTUP_DELAY)
+        self.simulator.go(5)  # Needs to wait extra some time to update meshcop service on state changes.
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
@@ -147,6 +148,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         }
 
         br1.set_active_dataset(**dataset)
+        self.simulator.go(10)
 
         self.assertEqual(len(host.browse_mdns_services('_meshcop._udp')), 2)
         self.check_meshcop_service(br1, host)
