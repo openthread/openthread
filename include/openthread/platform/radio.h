@@ -1367,6 +1367,18 @@ extern otError otPlatRadioGetRawPowerSetting(otInstance *aInstance,
                                              uint16_t   *aRawPowerSettingLength);
 
 /**
+ * Set the IEEE EUI-64 for this transceiver, if the OTP is not supported.
+ *
+ * @param[in]  aInstance   The OpenThread instance structure.
+ * @param[in]  aIeeeEui64  The IEEE EUI-64.
+ *
+ * @retval  OT_ERROR_NONE           Successfully.
+ * @retval  OT_ERROR_INVALID_STATE  Failed if the EUI64 is set by the factory.
+ *
+ */
+otError otPlatRadioSetIeeeEui64(otInstance *aInstance, const otExtAddress *aIeeeEui64);
+
+/**
  * @}
  *
  */

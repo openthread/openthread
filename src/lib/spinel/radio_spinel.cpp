@@ -1071,6 +1071,22 @@ otError RadioSpinel::GetIeeeEui64(uint8_t *aIeeeEui64)
     return OT_ERROR_NONE;
 }
 
+otError RadioSpinel::SetIeeeEui64(const otExtAddress &aIeeeEui64)
+{
+    otExtAddress addr;
+    otError      error;
+
+    for (size_t i = 0; i < sizeof(addr); i++)
+    {
+        addr.m8[i] = aIeeeEui64.m8[sizeof(addr) - 1 - i];
+    }
+
+    SuccessOrExit(error = Set(SPINEL_PROP_VENDOR_SET_EUI64_CMD, SPINEL_DATATYPE_EUI64_S, addr.m8));
+    sIeeeEui64 = aIeeeEui64;
+exit:
+    return error;
+}
+
 otError RadioSpinel::SetExtendedAddress(const otExtAddress &aExtAddress)
 {
     otError error;

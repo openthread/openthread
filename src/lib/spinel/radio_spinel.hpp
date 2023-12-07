@@ -253,6 +253,18 @@ public:
     otError GetIeeeEui64(uint8_t *aIeeeEui64);
 
     /**
+     * This method sets the IEEE EUI-64 for this transceiver, if the OTP is not supported.
+     *
+     * @param[in] aInstance   The OpenThread instance structure.
+     * @param[in] aIeeeEui64  The IEEE EUI-64.
+     *
+     * @retval  OT_ERROR_NONE           Succeeded.
+     * @retval  OT_ERROR_INVALID_STATE  Failed if the EUI64 is set by the factory.
+     *
+     */
+    otError SetIeeeEui64(const otExtAddress &aIeeeEui64);
+
+    /**
      * Sets the Extended Address for address filtering.
      *
      * @param[in] aExtAddress  A pointer to the IEEE 802.15.4 Extended Address stored in little-endian byte order.
