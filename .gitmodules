@@ -1,0 +1,4 @@
+[submodule "third_party/c-ares/repo"]
+	path = third_party/c-ares/repo
+	url = https://github.com/c-ares/c-ares.git
+    tag = cares-1_23_0

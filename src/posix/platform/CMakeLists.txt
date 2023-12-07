@@ -172,11 +172,11 @@ target_link_libraries(openthread-posix
 )
 
 option(OT_TARGET_OPENWRT "enable openthread posix for OpenWRT" OFF)
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT OT_TARGET_OPENWRT)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     target_compile_definitions(ot-posix-config
         INTERFACE "OPENTHREAD_POSIX_CONFIG_NAT64_AIL_PREFIX_ENABLE=1"
     )
-    target_link_libraries(openthread-posix PRIVATE anl)
+    target_link_libraries(openthread-posix PRIVATE c-ares::cares)
 endif()
 
 target_compile_definitions(openthread-posix

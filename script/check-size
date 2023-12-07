@@ -121,7 +121,11 @@ build_nrf52840()
     mkdir -p "${OT_TMP_DIR}/${folder}"
     script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/${folder}"
     rm -rf "${OT_TMP_DIR}/${folder}/openthread/*" # replace openthread submodule with latest commit
-    git archive "${sha}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
+
+    # use git clone to keep git submodule info
+    git clone "$(pwd)" "${OT_TMP_DIR}/${folder}/openthread"
+    cd "${OT_TMP_DIR}/${folder}/openthread"
+    git checkout "${sha}"
 
     if [ ! -e "${OT_TMP_DIR}/${folder}/openthread/examples/config/${config_name}" ]; then
         # Check if the the config headers are not present, copy from
@@ -129,7 +133,9 @@ build_nrf52840()
         case "$1" in
             br)
                 rm -rf "${OT_TMP_DIR}/${folder}/openthread/*"
-                git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/${folder}/openthread"
+                git clone "$(pwd)" "${OT_TMP_DIR}/${folder}/openthread"
+                cd "${OT_TMP_DIR}/${folder}/openthread"
+                git checkout "${OT_SHA_NEW}"
                 ;;
             *)
                 mkdir -p "${OT_TMP_DIR}/${folder}/openthread/examples/config"
@@ -137,6 +143,8 @@ build_nrf52840()
                 ;;
         esac
     fi
+
+    cd "${OT_TMP_DIR}/${folder}/openthread"
 
     local cur_dir
 

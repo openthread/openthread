@@ -65,6 +65,8 @@ endif()
 include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
+execute_process(COMMAND git submodule update --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 if(NOT CMAKE_BUILD_TYPE)
     # Check if this is a top-level CMake.
     # If it is not, do not set the CMAKE_BUILD_TYPE because OpenThread is a part of something bigger.

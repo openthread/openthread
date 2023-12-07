@@ -83,7 +83,11 @@ build_nrf52840()
 
     script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}"
     rm -rf "${OT_TMP_DIR}/openthread/*"
-    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/openthread"
+
+    # use git clone to keep git submodule info
+    git clone "$(pwd)" "${OT_TMP_DIR}/openthread"
+    cd "${OT_TMP_DIR}/openthread"
+    git checkout "${OT_SHA_NEW}"
 
     cd "${OT_TMP_DIR}"
     script/build nrf52840 UART_trans "${options[@]}"

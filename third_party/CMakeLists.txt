@@ -26,6 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+add_subdirectory(c-ares)
+
 if(NOT OT_EXTERNAL_MBEDTLS)
     add_subdirectory(mbedtls)
 endif()

@@ -231,7 +231,7 @@ private:
 
     void        ReceiveNetLinkMessage(void);
     bool        HasLinkLocalAddress(void) const;
-    static void DiscoverNat64PrefixDone(union sigval sv);
+    static void DiscoverNat64PrefixDone(void *arg, int status, int timeouts, struct hostent *host);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     void SetInfraNetifIcmp6SocketForBorderRouting(int aIcmp6Socket);
     void ReceiveIcmp6Message(void);
