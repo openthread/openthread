@@ -71,6 +71,7 @@
 
 #include "common/callback.hpp"
 #include "common/locator.hpp"
+#include "common/log.hpp"
 #include "common/message.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
@@ -467,6 +468,15 @@ private:
     static constexpr size_t kSecureTransportKeyBlockSize     = 40;
     static constexpr size_t kSecureTransportRandomBufferSize = 32;
 
+    bool IsStateClosed(void) const { return mState == kStateClosed; }
+    bool IsStateOpen(void) const { return mState == kStateOpen; }
+    bool IsStateInitializing(void) const { return mState == kStateInitializing; }
+    bool IsStateConnecting(void) const { return mState == kStateConnecting; }
+    bool IsStateConnected(void) const { return mState == kStateConnected; }
+    bool IsStateCloseNotify(void) const { return mState == kStateCloseNotify; }
+    bool IsStateConnectingOrConnected(void) const { return mState == kStateConnecting || mState == kStateConnected; }
+    void SetState(State aState);
+
     void  FreeMbedtls(void);
     Error Setup(bool aClient);
 
@@ -544,6 +554,10 @@ private:
     Error HandleSecureTransportSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     void Process(void);
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+    static const char *StateToString(State aState);
+#endif
 
     State mState;
 
