@@ -98,7 +98,7 @@ Routes:
 Services:
 44970 5d c002 s 8400
 Done
-srp client start fded:5114:8263:1fe1:68bc:ec03:c1ad:9325 49154
+> srp client start fded:5114:8263:1fe1:68bc:ec03:c1ad:9325 49154
 Done
 ```
 
