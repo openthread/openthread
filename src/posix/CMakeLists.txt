@@ -85,6 +85,19 @@ elseif(OT_APP_CLI)
     endif()
 endif()
 
+set(OT_POSIX_FACTORY_CONFIG "" CACHE STRING "OpenThread factory config file")
+set(OT_POSIX_PRODUCT_CONFIG "" CACHE STRING "OpenThread product config file")
+
+if (OT_POSIX_FACTORY_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE=\"${OT_POSIX_FACTORY_CONFIG}\"")
+    message(STATUS "OT_POSIX_FACTORY_CONFIG=\"${OT_POSIX_FACTORY_CONFIG}\"")
+endif()
+
+if (OT_POSIX_PRODUCT_CONFIG)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE=\"${OT_POSIX_PRODUCT_CONFIG}\"")
+    message(STATUS "OT_POSIX_PRODUCT_CONFIG=\"${OT_POSIX_PRODUCT_CONFIG}\"")
+endif()
+
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CPACK_GENERATOR "DEB")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenThread Authors (https://github.com/openthread/openthread)")
