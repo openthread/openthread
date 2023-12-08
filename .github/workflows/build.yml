@@ -233,6 +233,9 @@ jobs:
           - gcc_ver: 12
             gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
             gcc_extract_dir: arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi
+          - gcc_ver: 13
+            gcc_download_url: https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-arm-none-eabi.tar.xz
+            gcc_extract_dir: arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
