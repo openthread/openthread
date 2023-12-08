@@ -34,6 +34,8 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
+ot_option(OT_PLATFORM_POSIX_CONFIG_FILE OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE "posix config file")
+
 set(OT_READLINE_VALUES
     "readline"
     "edit"
