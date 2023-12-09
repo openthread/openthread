@@ -909,7 +909,7 @@ private:
         void                    Stop(void);
         void                    Evaluate(void);
         void                    UpdateDefaultRouteFlag(bool aDefaultRoute);
-        bool                    IsLocalAddedInNetData(void) const { return mIsLocalAddedInNetData; }
+        bool                    ShouldAdvertiseLocalAsRio(void) const;
         const Ip6::Prefix      &GetGeneratedPrefix(void) const { return mGeneratedPrefix; }
         const OmrPrefix        &GetLocalPrefix(void) const { return mLocalPrefix; }
         const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
