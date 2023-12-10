@@ -50,7 +50,7 @@
  * The parent search mechanism depends on whether the device is an FTD child or an MTD child.
  *
  * An FTD device receives and processes MLE Advertisements from neighboring routers. It uses this information to track
- * which neighboring routers can be selected as potential new parents and to track the link quality to each.
+ * which neighboring routers can be selected as potential new parents and to track the one-way link quality to each.
  *
  * To select the best potential parent, the FTD device checks the list of neighboring routers and the tracked link
  * quality information. A new parent is selected only if its average RSS has a margin over the current parent RSS

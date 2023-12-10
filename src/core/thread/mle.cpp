@@ -1405,13 +1405,13 @@ bool Mle::HasAcceptableParentCandidate(void) const
         switch (mAttachMode)
         {
         case kBetterPartition:
-        case kSelectedParent:
             break;
 
         case kAnyPartition:
         case kSamePartition:
         case kDowngradeToReed:
         case kBetterParent:
+        case kSelectedParent:
             // Ensure that a Parent Response was received from the
             // current parent to which the device is attached, so
             // that the new parent candidate can be compared with the
@@ -1746,6 +1746,21 @@ void Mle::SendParentRequest(ParentRequestType aType)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
     if (aType == kToSelectedRouter)
     {
+        TxMessage *messageToCurParent = static_cast<TxMessage *>(message->Clone());
+
+        VerifyOrExit(messageToCurParent != nullptr, error = kErrorNoBufs);
+
+        destination.SetToLinkLocalAddress(mParent.GetExtAddress());
+        error = messageToCurParent->SendTo(destination);
+
+        if (error != kErrorNone)
+        {
+            messageToCurParent->Free();
+            ExitNow();
+        }
+
+        Log(kMessageSend, kTypeParentRequestToRouters, destination);
+
         destination.SetToLinkLocalAddress(mParentSearch.GetSelectedParent().GetExtAddress());
     }
     else
