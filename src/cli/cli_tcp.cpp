@@ -324,6 +324,7 @@ exit:
  * address and port is referred to as "naming the TCP endpoint." This binds the
  * endpoint for communication.
  * @sa otTcpBind
+ * @sa @tcp
  */
 template <> otError TcpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
@@ -369,6 +370,7 @@ exit:
  * If the connection establishment is successful, the resulting TCP connection
  * is associated with the example TCP endpoint.
  * @sa otTcpConnect
+ * @sa @tcp
  */
 template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
@@ -449,6 +451,7 @@ exit:
  * @par
  * Sends data over the TCP connection associated with the example TCP endpoint
  * that is provided with the `tcp` CLI.
+ * @sa @tcp
  */
 template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
 {
@@ -683,6 +686,7 @@ exit:
  * Uses the example TCP listener to listen for incoming connections on the
  * specified IPv6 address and port.
  * @sa otTcpListen
+ * @sa @tcp
  */
 template <> otError TcpExample::Process<Cmd("listen")>(Arg aArgs[])
 {
