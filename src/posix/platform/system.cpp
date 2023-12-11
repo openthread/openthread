@@ -54,6 +54,7 @@
 #include "posix/platform/firewall.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/mdns_socket.hpp"
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/udp.hpp"
 
@@ -145,7 +146,10 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().Init();
+#endif
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    ot::Posix::MdnsSocket::Get().Init();
 #endif
 
     gNetifName[0] = '\0';
@@ -197,6 +201,10 @@ void platformSetUp(otPlatformConfig *aPlatformConfig)
     ot::Posix::Udp::Get().SetUp();
 #endif
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    ot::Posix::MdnsSocket::Get().SetUp();
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     ot::Posix::Daemon::Get().SetUp();
 #endif
@@ -244,6 +252,10 @@ void platformTearDown(void)
     ot::Posix::InfraNetif::Get().TearDown();
 #endif
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    ot::Posix::MdnsSocket::Get().TearDown();
+#endif
+
 exit:
     return;
 }
@@ -270,6 +282,10 @@ void platformDeinit(void)
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
     ot::Posix::InfraNetif::Get().Deinit();
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    ot::Posix::MdnsSocket::Get().Deinit();
 #endif
 
 exit:

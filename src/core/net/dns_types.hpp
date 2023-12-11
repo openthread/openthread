@@ -1336,6 +1336,7 @@ public:
     static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address record.
     static constexpr uint16_t kTypeSrv   = 33;  ///< SRV locator record.
     static constexpr uint16_t kTypeOpt   = 41;  ///< Option record.
+    static constexpr uint16_t kTypeNsec  = 47;  ///< NSEC record.
     static constexpr uint16_t kTypeAny   = 255; ///< ANY record.
 
     // Resource Record Class Codes.
@@ -2743,6 +2744,104 @@ private:
 
     uint32_t mLeaseInterval;
     uint32_t mKeyLeaseInterval;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements body format of NSEC record (RFC 3845) for use with mDNS.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NsecRecord : public ResourceRecord
+{
+public:
+    static constexpr uint16_t kType = kTypeNsec; ///< The NSEC record type.
+
+    /**
+     * Represents NSEC Type Bit Map field (RFC 3845 - section 2.1.2)
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class TypeBitMap : public Clearable<TypeBitMap>
+    {
+    public:
+        static constexpr uint8_t kMinSize = 2; ///< Minimum size of a valid `TypeBitMap` (with zero length).
+
+        static constexpr uint8_t kMaxLength = 32; ///< Maximum BitmapLength value.
+
+        /**
+         * Gets the Window Block Number
+         *
+         * @returns The Window Block Number.
+         *
+         */
+        uint8_t GetBlockNumber(void) const { return mBlockNumber; }
+
+        /**
+         * Sets the Window Block Number
+         *
+         * @param[in] aBlockNumber The Window Block Number.
+         *
+         */
+        void SetBlockNumber(uint8_t aBlockNumber) { mBlockNumber = aBlockNumber; }
+
+        /**
+         * Gets the Bitmap length
+         *
+         * @returns The Bitmap length
+         *
+         */
+        uint8_t GetBitmapLength(void) { return mBitmapLength; }
+
+        /**
+         * Gets the total size (number of bytes) of the `TypeBitMap` field.
+         *
+         * @returns The size of the `TypeBitMap`
+         *
+         */
+        uint16_t GetSize(void) const { return (sizeof(mBlockNumber) + sizeof(mBitmapLength) + mBitmapLength); }
+
+        /**
+         * Adds a resource record type to the Bitmap.
+         *
+         * As the types are added to the Bitmap the Bitmap length gets updated accordingly.
+         *
+         * The type space is split into 256 window blocks, each representing the low-order 8 bits of the 16-bit type
+         * value. If @p aType does not match the currently set Window Block Number, no action is performed.
+         *
+         * @param[in] aType   The resource record type to add.
+         *
+         */
+        void AddType(uint16_t aType);
+
+        /**
+         * Indicates whether a given resource record type is present in the Bitmap.
+         *
+         * If @p aType does not match the currently set Window Block Number, this method returns `false`..
+         *
+         * @param[in] aType   The resource record type to check.
+         *
+         * @retval TRUE   The @p aType is present in the Bitmap.
+         * @retval FALSE  The @p aType is not present in the Bitmap.
+         *
+         */
+        bool ContainsType(uint16_t aType) const;
+
+    private:
+        uint8_t mBlockNumber;
+        uint8_t mBitmapLength;
+        uint8_t mBitmaps[kMaxLength];
+    } OT_TOOL_PACKED_END;
+
+    /**
+     * Initializes the NSEC Resource Record by setting its type and class.
+     *
+     * Other record fields (TTL, length remain unchanged/uninitialized.
+     *
+     * @param[in] aClass  The class of the resource record (default is `kClassInternet`).
+     *
+     */
+    void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeNsec, aClass); }
+
 } OT_TOOL_PACKED_END;
 
 /**
