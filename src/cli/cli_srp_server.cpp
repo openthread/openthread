@@ -117,6 +117,7 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
  * This command requires that `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` be enabled.
  * @sa otSrpServerIsAutoEnableMode
  * @sa otSrpServerSetAutoEnableMode
+ * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
@@ -174,6 +175,7 @@ template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
  *               SRP servers are no longer active within the Thread network.
  *  * `running`: The SRP server is active and can handle service registrations.
  * @sa otSrpServerGetState
+ * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("state")>(Arg aArgs[])
 {
@@ -213,6 +215,7 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
  * @par
  * Enables or disables the SRP server.
  * @sa otSrpServerSetEnabled
+ * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
 {
@@ -312,6 +315,7 @@ exit:
  * @sa otSrpServerGetNextHost
  * @sa otSrpServerHostGetAddresses
  * @sa otSrpServerHostGetFullName
+ * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
 {
@@ -414,6 +418,7 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  * @sa otSrpServerServiceGetInstanceName
  * @sa otSrpServerServiceGetServiceName
  * @sa otSrpServerServiceGetSubTypeServiceNameAt
+ * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 {

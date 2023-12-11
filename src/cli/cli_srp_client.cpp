@@ -81,6 +81,7 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
      * @par
      * Indicates the current state of auto-start mode (enabled or disabled).
      * @sa otSrpClientIsAutoStartModeEnabled
+     * @sa @srp
      */
     if (aArgs[0].IsEmpty())
     {
@@ -159,6 +160,7 @@ exit:
  * @cparam srp client callback [@ca{enable}|@ca{disable}]
  * @par
  * Gets or enables/disables printing callback events from the SRP client.
+ * @sa @srp
  * @sa otSrpClientSetCallback
  */
 template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
@@ -212,6 +214,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * @par
      * Gets or sets the host name of the SRP client.
      * @sa otSrpClientSetHostName
+     * @sa @srp
      */
     else if (aArgs[0] == "name")
     {
@@ -286,6 +289,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          * Indicates whether auto address mode is enabled. If auto address mode is not
          * enabled, then the list of SRP client host addresses is returned.
          * @sa otSrpClientGetHostInfo
+         * @sa @srp
          */
         if (aArgs[1].IsEmpty())
         {
@@ -329,6 +333,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          * addresses.
          * @sa otSrpClientEnableAutoHostAddress
          * @sa otSrpClientSetHostAddresses
+         * @sa @srp
          */
         else if (aArgs[1] == "auto")
         {
@@ -385,6 +390,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
      * Removes SRP client host information and all services from the SRP server.
      * @sa otSrpClientRemoveHostAndServices
      * @sa otSrpClientSetHostName
+     * @sa @srp
      */
     else if (aArgs[0] == "remove")
     {
@@ -492,6 +498,7 @@ template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
      * that is being used by the SRP client. If the client is not running, the address
      * is unspecified (all zeros) with a port number of 0.
      * @sa otSrpClientGetServerAddress
+     * @sa @srp
      */
     if (aArgs[0].IsEmpty())
     {
@@ -579,6 +586,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * @par
      * Adds a service with a given instance name, service name, and port number.
      * @sa otSrpClientAddService
+     * @sa @srp
      */
     else if (aArgs[0] == "add")
     {
@@ -654,6 +662,7 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * This command is intended for testing only, and requires that
      * `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` be enabled.
      * @sa otSrpClientIsServiceKeyRecordEnabled
+     * @sa @srp
      */
     else if (aArgs[0] == "key")
     {
@@ -846,6 +855,7 @@ void SrpClient::OutputService(uint8_t aIndentSize, const otSrpClientService &aSe
  * @par
  * Starts the SRP client operation.
  * @sa otSrpClientStart
+ * @sa @srp
  */
 template <> otError SrpClient::Process<Cmd("start")>(Arg aArgs[])
 {
@@ -871,6 +881,7 @@ exit:
  * @endcode
  * @par api_copy
  * #otSrpClientIsRunning
+ * @sa @srp
  */
 template <> otError SrpClient::Process<Cmd("state")>(Arg aArgs[])
 {
