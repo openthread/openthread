@@ -122,6 +122,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     , mDnsDso(*this)
 #endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    , mMdnsCore(*this)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(*this)
 #endif
