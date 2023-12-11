@@ -160,8 +160,8 @@ exit:
  * @cparam srp client callback [@ca{enable}|@ca{disable}]
  * @par
  * Gets or enables/disables printing callback events from the SRP client.
- * @sa @srp
  * @sa otSrpClientSetCallback
+ * @sa @srp
  */
 template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
 {
