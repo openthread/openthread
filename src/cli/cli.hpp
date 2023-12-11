@@ -61,12 +61,14 @@
 #include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
 #include "cli/cli_commissioner.hpp"
+#include "cli/cli_config.h"
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_dns.hpp"
 #include "cli/cli_history.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_link_metrics.hpp"
 #include "cli/cli_mac_filter.hpp"
+#include "cli/cli_mdns.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
 #include "cli/cli_ping.hpp"
@@ -117,6 +119,7 @@ class Interpreter : public OutputImplementer, public Output
     friend class Dns;
     friend class Joiner;
     friend class LinkMetrics;
+    friend class Mdns;
     friend class NetworkData;
     friend class PingSender;
     friend class SrpClient;
@@ -542,6 +545,10 @@ private:
 
 #if OPENTHREAD_CLI_DNS_ENABLE
     Dns mDns;
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+    Mdns mMdns;
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

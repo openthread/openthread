@@ -222,6 +222,9 @@ void otSysProcessDrivers(otInstance *aInstance)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
 #endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SCOKET_IMPLEMENT_POSIX
+    platformMdnsSocketUpdateFdSet(&read_fds, &max_fd);
+#endif
 
     if (otTaskletsArePending(aInstance))
     {
@@ -245,6 +248,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, &read_fds, &write_fds);
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_SIMULATION_MDNS_SCOKET_IMPLEMENT_POSIX
+    platformMdnsSocketProcess(aInstance, &read_fds);
 #endif
 
     if (gTerminate)
