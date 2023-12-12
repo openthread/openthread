@@ -30,8 +30,8 @@
 #define OT_LIB_PLATFORM_RESET_UTIL_H_
 
 #if defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)
-#if __GNUC__ >= 11 || (defined(__clang__) && (defined(__APPLE__) && (__clang_major__ >= 13)) || \
-                       (!defined(__APPLE__) && (__clang_major__ >= 12)))
+#if __GNUC__ >= 11 || (defined(__clang_major__) && ((defined(__APPLE__) && (__clang_major__ >= 13)) || \
+                                                    (!defined(__APPLE__) && (__clang_major__ >= 12))))
 void __gcov_dump(void);
 void __gcov_reset(void);
 
@@ -43,8 +43,8 @@ static void flush_gcov(void)
 #else
 void __gcov_flush(void);
 #define flush_gcov __gcov_flush
-#endif /* __GNUC__ >= 11 || (defined(__clang__) && (defined(__APPLE__) && (__clang_major__ >= 13)) || \
-                             (!defined(__APPLE__) && (__clang_major__ >= 12))) */
+#endif /* __GNUC__ >= 11 || (defined(__clang_major__) && ((defined(__APPLE__) && (__clang_major__ >= 13)) || \
+                                                          (!defined(__APPLE__) && (__clang_major__ >= 12)))) */
 #else
 #define flush_gcov()
 #endif // defined(OPENTHREAD_ENABLE_COVERAGE) && OPENTHREAD_ENABLE_COVERAGE && defined(__GNUC__)

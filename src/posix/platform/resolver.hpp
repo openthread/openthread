@@ -29,6 +29,8 @@
 #ifndef OT_POSIX_PLATFORM_RESOLVER_HPP_
 #define OT_POSIX_PLATFORM_RESOLVER_HPP_
 
+#include "openthread-posix-config.h"
+
 #include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
 

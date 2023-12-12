@@ -41,6 +41,7 @@
 #include <openthread/platform/memory.h>
 
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO snprintf
+#define MBEDTLS_SSL_DTLS_CONNECTION_ID_COMPAT 0
 
 #define MBEDTLS_AES_C
 #if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
@@ -72,6 +73,7 @@
 #define MBEDTLS_NO_PLATFORM_ENTROPY
 #define MBEDTLS_OID_C
 #define MBEDTLS_PK_C
+#define MBEDTLS_PK_HAVE_ECC_KEYS
 #define MBEDTLS_PK_PARSE_C
 #define MBEDTLS_PLATFORM_C
 #define MBEDTLS_PLATFORM_MEMORY
@@ -108,9 +110,11 @@
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 #define MBEDTLS_BASE64_C
+#define MBEDTLS_CAN_ECDH
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECDSA_C
 #define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PK_CAN_ECDSA_SIGN
 #define MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_CRT_PARSE_C
 #endif
@@ -158,10 +162,6 @@
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 
-#include "mbedtls/version.h"
-#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
-    // Configuration sanity check. Done automatically in Mbed TLS >= 3.0.
-    #include "mbedtls/check_config.h"
-#endif
+#include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */

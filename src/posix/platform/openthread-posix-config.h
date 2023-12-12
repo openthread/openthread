@@ -97,15 +97,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
- *
- * Define as 1 to enable max power table support.
- */
-#ifndef OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-#define OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE
  *
  * This setting configures the maximum number of Multicast Forwarding Cache table for POSIX native multicast routing.

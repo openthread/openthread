@@ -382,6 +382,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+ *
+ * Define to 1 to enable support reset to bootloader mode.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_BOOTLOADER_MODE_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
  *
  * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
@@ -588,6 +598,26 @@
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
 #define OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_ENABLE_VENDOR_EXTENSION
+ *
+ * Define to 1 to enable vendor extension support.
+ *
+ */
+#ifndef OPENTHREAD_ENABLE_VENDOR_EXTENSION
+#define OPENTHREAD_ENABLE_VENDOR_EXTENSION 0
+#endif
+
+/**
+ * @def OPENTHREAD_EXAMPLES_SIMULATION
+ *
+ * Define 1 to to enable simulatione example support.
+ *
+ */
+#ifndef OPENTHREAD_EXAMPLES_SIMULATION
+#define OPENTHREAD_EXAMPLES_SIMULATION 0
 #endif
 
 /**
