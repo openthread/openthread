@@ -132,13 +132,19 @@ class MultiBorderRouters(thread_cert.TestCase):
         logging.info("ROUTER2 addrs: %r", router2.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertEqual(len(br1.get_netdata_omr_prefixes()), 1)
-        self.assertEqual(len(router1.get_netdata_omr_prefixes()), 1)
-        self.assertEqual(len(br2.get_netdata_omr_prefixes()), 1)
-        self.assertEqual(len(router2.get_netdata_omr_prefixes()), 1)
+        # The same OMR prefix (derived from partition ID) should be
+        # published by both BRs
+
+        self.assertEqual(len(br1.get_netdata_omr_prefixes()), 2)
+        self.assertEqual(len(router1.get_netdata_omr_prefixes()), 2)
+        self.assertEqual(len(br2.get_netdata_omr_prefixes()), 2)
+        self.assertEqual(len(router2.get_netdata_omr_prefixes()), 2)
+
+        omr_prefixes = br1.get_netdata_omr_prefixes()
+        self.assertEqual(omr_prefixes[0], omr_prefixes[1])
 
         br1_omr_prefix = br1.get_br_omr_prefix()
-        self.assertEqual(br1_omr_prefix, br1.get_netdata_omr_prefixes()[0])
+        self.assertEqual(br1_omr_prefix, omr_prefixes[0])
 
         # Each BR should independently register an external route for the on-link prefix.
         self.assertEqual(len(br1.get_netdata_non_nat64_routes()), 2)

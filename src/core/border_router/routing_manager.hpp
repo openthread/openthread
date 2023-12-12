@@ -99,10 +99,11 @@ public:
      * The number of published entries accounts for:
      * - Route prefix `fc00::/7` or `::/0`
      * - One entry for NAT64 published prefix.
-     * - One extra entry for transitions.
+     * - Local OMR prefix.
+     * - Two extra entries for transitions.
      *
      */
-    static constexpr uint16_t kMaxPublishedPrefixes = 3;
+    static constexpr uint16_t kMaxPublishedPrefixes = 5;
 
     /**
      * Represents the states of `RoutingManager`.
@@ -913,6 +914,10 @@ private:
         const Ip6::Prefix      &GetGeneratedPrefix(void) const { return mGeneratedPrefix; }
         const OmrPrefix        &GetLocalPrefix(void) const { return mLocalPrefix; }
         const FavoredOmrPrefix &GetFavoredPrefix(void) const { return mFavoredPrefix; }
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
+        void GeneratePrefixFromPartitionId(Ip6::Prefix &aPrefix) const;
+        void HandlePatitionIdChanged(void);
+#endif
 
     private:
         static constexpr uint16_t kInfoStringSize = 85;
@@ -920,15 +925,15 @@ private:
         typedef String<kInfoStringSize> InfoString;
 
         void       DetermineFavoredPrefix(void);
-        Error      AddLocalToNetData(void);
-        Error      AddOrUpdateLocalInNetData(void);
-        void       RemoveLocalFromNetData(void);
+        void       PublishLocalPrefix(void);
+        void       PublishOrUpdateLocalPrefix(void);
+        void       UnpublishLocalPrefix(void);
         InfoString LocalToString(void) const;
 
         OmrPrefix        mLocalPrefix;
         Ip6::Prefix      mGeneratedPrefix;
         FavoredOmrPrefix mFavoredPrefix;
-        bool             mIsLocalAddedInNetData;
+        bool             mIsLocalPublished;
         bool             mDefaultRoute;
     };
 

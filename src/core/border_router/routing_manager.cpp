@@ -437,6 +437,11 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
         mOnLinkPrefixManager.HandleExtPanIdChange();
     }
 
+    if (aEvents.Contains(kEventThreadPartitionIdChanged))
+    {
+        mOmrPrefixManager.HandlePatitionIdChanged();
+    }
+
 exit:
     return;
 }
@@ -1975,25 +1980,73 @@ bool RoutingManager::FavoredOmrPrefix::IsFavoredOver(const NetworkData::OnMeshPr
 
 RoutingManager::OmrPrefixManager::OmrPrefixManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mIsLocalAddedInNetData(false)
+    , mIsLocalPublished(false)
     , mDefaultRoute(false)
 {
+    mLocalPrefix.Clear();
+    mGeneratedPrefix.Clear();
 }
 
 void RoutingManager::OmrPrefixManager::Init(const Ip6::Prefix &aBrUlaPrefix)
 {
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
+    OT_UNUSED_VARIABLE(aBrUlaPrefix);
+
+    GeneratePrefixFromPartitionId(mGeneratedPrefix);
+#else
     mGeneratedPrefix = aBrUlaPrefix;
     mGeneratedPrefix.SetSubnetId(kOmrPrefixSubnetId);
     mGeneratedPrefix.SetLength(kOmrPrefixLength);
+#endif
 
     LogInfo("Generated local OMR prefix: %s", mGeneratedPrefix.ToString().AsCString());
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
+
+void RoutingManager::OmrPrefixManager::GeneratePrefixFromPartitionId(Ip6::Prefix &aPrefix) const
+{
+    aPrefix.Clear();
+
+    aPrefix.mPrefix.mFields.m8[0] = 0xfd;
+    BigEndian::WriteUint32(Get<Mle::Mle>().GetLeaderData().GetPartitionId(), &aPrefix.mPrefix.mFields.m8[4]);
+    aPrefix.SetLength(kOmrPrefixLength);
+}
+
+void RoutingManager::OmrPrefixManager::HandlePatitionIdChanged(void)
+{
+    Ip6::Prefix oldPrefix = mGeneratedPrefix;
+
+    GeneratePrefixFromPartitionId(mGeneratedPrefix);
+
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+    VerifyOrExit(mGeneratedPrefix != oldPrefix);
+
+    if (mLocalPrefix.GetPrefix() == oldPrefix)
+    {
+        UnpublishLocalPrefix();
+
+        mLocalPrefix.mPrefix         = mGeneratedPrefix;
+        mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
+        mLocalPrefix.mIsDomainPrefix = false;
+
+        LogInfo("Updating local OMR prefix on partition ID change: %s",
+                mLocalPrefix.GetPrefix().ToString().AsCString());
+
+        Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kImmediately);
+    }
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
 
 void RoutingManager::OmrPrefixManager::Start(void) { DetermineFavoredPrefix(); }
 
 void RoutingManager::OmrPrefixManager::Stop(void)
 {
-    RemoveLocalFromNetData();
+    UnpublishLocalPrefix();
     mFavoredPrefix.Clear();
 }
 
@@ -2032,7 +2085,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
     {
         if (mLocalPrefix.GetPrefix() != Get<RoutingManager>().mPdPrefixManager.GetPrefix())
         {
-            RemoveLocalFromNetData();
+            UnpublishLocalPrefix();
             mLocalPrefix.mPrefix         = Get<RoutingManager>().mPdPrefixManager.GetPrefix();
             mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceMedium;
             mLocalPrefix.mIsDomainPrefix = false;
@@ -2043,7 +2096,7 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
 #endif
         if (mLocalPrefix.GetPrefix() != mGeneratedPrefix)
     {
-        RemoveLocalFromNetData();
+        UnpublishLocalPrefix();
         mLocalPrefix.mPrefix         = mGeneratedPrefix;
         mLocalPrefix.mPreference     = RoutePreference::kRoutePreferenceLow;
         mLocalPrefix.mIsDomainPrefix = false;
@@ -2063,26 +2116,21 @@ void RoutingManager::OmrPrefixManager::Evaluate(void)
                     mFavoredPrefix.GetPrefix().ToString().AsCString(), mLocalPrefix.GetPrefix().ToString().AsCString());
         }
 
-        // The `mFavoredPrefix` remains empty if we fail to publish
-        // the local OMR prefix.
-        SuccessOrExit(AddLocalToNetData());
+        PublishLocalPrefix();
 
         mFavoredPrefix.SetFrom(mLocalPrefix);
     }
     else if (mFavoredPrefix.GetPrefix() == mLocalPrefix.GetPrefix())
     {
-        IgnoreError(AddLocalToNetData());
+        PublishLocalPrefix();
     }
-    else if (mIsLocalAddedInNetData)
+    else if (mIsLocalPublished)
     {
         LogInfo("There is already a favored OMR prefix %s in the Thread network",
                 mFavoredPrefix.GetPrefix().ToString().AsCString());
 
-        RemoveLocalFromNetData();
+        UnpublishLocalPrefix();
     }
-
-exit:
-    return;
 }
 
 bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
@@ -2104,7 +2152,7 @@ bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
     NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
     NetworkData::OnMeshPrefixConfig prefixConfig;
 
-    VerifyOrExit(mIsLocalAddedInNetData);
+    VerifyOrExit(mIsLocalPublished);
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
@@ -2124,24 +2172,20 @@ exit:
     return shouldAdvertise;
 }
 
-Error RoutingManager::OmrPrefixManager::AddLocalToNetData(void)
+void RoutingManager::OmrPrefixManager::PublishLocalPrefix(void)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(!mIsLocalAddedInNetData);
-    SuccessOrExit(error = AddOrUpdateLocalInNetData());
-    mIsLocalAddedInNetData = true;
-
-exit:
-    return error;
+    if (!mIsLocalPublished)
+    {
+        PublishOrUpdateLocalPrefix();
+        mIsLocalPublished = true;
+    }
 }
 
-Error RoutingManager::OmrPrefixManager::AddOrUpdateLocalInNetData(void)
+void RoutingManager::OmrPrefixManager::PublishOrUpdateLocalPrefix(void)
 {
     // Add the local OMR prefix in Thread Network Data or update it
     // (e.g., change default route flag) if it is already added.
 
-    Error                           error;
     NetworkData::OnMeshPrefixConfig config;
 
     config.Clear();
@@ -2153,43 +2197,23 @@ Error RoutingManager::OmrPrefixManager::AddOrUpdateLocalInNetData(void)
     config.mDefaultRoute = mDefaultRoute;
     config.mPreference   = mLocalPrefix.GetPreference();
 
-    error = Get<NetworkData::Local>().AddOnMeshPrefix(config);
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to %s %s in Thread Network Data: %s", !mIsLocalAddedInNetData ? "add" : "update",
-                LocalToString().AsCString(), ErrorToString(error));
-        ExitNow();
-    }
+    SuccessOrAssert(
+        Get<NetworkData::Publisher>().PublishOnMeshPrefix(config, NetworkData::Publisher::kFromRoutingManager));
 
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
-    LogInfo("%s %s in Thread Network Data", !mIsLocalAddedInNetData ? "Added" : "Updated", LocalToString().AsCString());
-
-exit:
-    return error;
+    LogInfo("%s %s in Thread Network Data", !mIsLocalPublished ? "Publishing" : "Updating",
+            LocalToString().AsCString());
 }
 
-void RoutingManager::OmrPrefixManager::RemoveLocalFromNetData(void)
+void RoutingManager::OmrPrefixManager::UnpublishLocalPrefix(void)
 {
-    Error error = kErrorNone;
-
-    VerifyOrExit(mIsLocalAddedInNetData);
-
-    error = Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalPrefix.GetPrefix());
-
-    if (error != kErrorNone)
+    if (mIsLocalPublished)
     {
-        LogWarn("Failed to remove %s from Thread Network Data: %s", LocalToString().AsCString(), ErrorToString(error));
-        ExitNow();
+        IgnoreError(Get<NetworkData::Publisher>().UnpublishPrefix(mLocalPrefix.GetPrefix()));
+        mIsLocalPublished = false;
+        LogInfo("Unpublished %s from Thread Network Data", LocalToString().AsCString());
     }
-
-    mIsLocalAddedInNetData = false;
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    LogInfo("Removed %s from Thread Network Data", LocalToString().AsCString());
-
-exit:
-    return;
 }
 
 void RoutingManager::OmrPrefixManager::UpdateDefaultRouteFlag(bool aDefaultRoute)
@@ -2198,8 +2222,8 @@ void RoutingManager::OmrPrefixManager::UpdateDefaultRouteFlag(bool aDefaultRoute
 
     mDefaultRoute = aDefaultRoute;
 
-    VerifyOrExit(mIsLocalAddedInNetData);
-    IgnoreError(AddOrUpdateLocalInNetData());
+    VerifyOrExit(mIsLocalPublished);
+    PublishOrUpdateLocalPrefix();
 
 exit:
     return;
