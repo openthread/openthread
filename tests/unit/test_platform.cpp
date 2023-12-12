@@ -424,6 +424,10 @@ OT_TOOL_WEAK void otPlatTrelDisable(otInstance *) {}
 OT_TOOL_WEAK void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *) {}
 
 OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t) {}
+
+OT_TOOL_WEAK const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *) { return nullptr; }
+
+OT_TOOL_WEAK void otPlatTrelResetCounters(otInstance *) {}
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

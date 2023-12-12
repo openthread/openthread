@@ -39,6 +39,7 @@
 #include <openthread/dataset.h>
 #include <openthread/ip6.h>
 #include <openthread/platform/radio.h>
+#include "openthread/platform/trel.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -124,6 +125,16 @@ void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator
 const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator);
 
 /**
+ * Returns the number of TREL peers.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  The number of TREL peers.
+ *
+ */
+uint16_t otTrelGetNumberOfPeers(otInstance *aInstance);
+
+/**
  * Sets the filter mode (enables/disables filtering).
  *
  * When filter mode is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
@@ -148,6 +159,30 @@ void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable);
  *
  */
 bool otTrelIsFilterEnabled(otInstance *aInstance);
+
+/**
+ * Represents a group of TREL related counters.
+ *
+ */
+typedef otPlatTrelCounters otTrelCounters;
+
+/**
+ * Gets the TREL counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns  A pointer to the TREL counters.
+ *
+ */
+const otTrelCounters *otTrelGetCounters(otInstance *aInstance);
+
+/**
+ * Resets the TREL counters.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ */
+void otTrelResetCounters(otInstance *aInstance);
 
 /**
  * @}

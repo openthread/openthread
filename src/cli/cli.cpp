@@ -7800,6 +7800,41 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
             }
         }
     }
+    /**
+     * @cli trel counters
+     * @code
+     * trel counters
+     * Inbound:  Packets 32 Bytes 4000
+     * Outbound: Packets 4 Bytes 320 Failures 1
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otTrelGetCounters
+     */
+    else if (aArgs[0] == "counters")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            OutputTrelCounters(*otTrelGetCounters(GetInstancePtr()));
+        }
+        /**
+         * @cli trel counters reset
+         * @code
+         * trel counters reset
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otTrelResetCounters
+         */
+        else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
+        {
+            otTrelResetCounters(GetInstancePtr());
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
     else
     {
         error = OT_ERROR_INVALID_ARGS;
@@ -7808,6 +7843,19 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
 exit:
     return error;
 }
+
+void Interpreter::OutputTrelCounters(const otTrelCounters &aCounters)
+{
+    Uint64StringBuffer u64StringBuffer;
+
+    OutputFormat("Inbound: Packets %s ", Uint64ToString(aCounters.mRxPackets, u64StringBuffer));
+    OutputLine("Bytes %s", Uint64ToString(aCounters.mRxBytes, u64StringBuffer));
+
+    OutputFormat("Outbound: Packets %s ", Uint64ToString(aCounters.mTxPackets, u64StringBuffer));
+    OutputFormat("Bytes %s ", Uint64ToString(aCounters.mTxBytes, u64StringBuffer));
+    OutputLine("Failures %s", Uint64ToString(aCounters.mTxFailure, u64StringBuffer));
+}
+
 #endif
 
 template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])

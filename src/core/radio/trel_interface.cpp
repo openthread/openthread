@@ -352,6 +352,10 @@ void Interface::RemovePeerEntry(Peer &aEntry)
     mPeerTable.PopBack();
 }
 
+const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounters(&GetInstance()); }
+
+void Interface::ResetCounters(void) { otPlatTrelResetCounters(&GetInstance()); }
+
 Error Interface::Send(const Packet &aPacket, bool aIsDiscovery)
 {
     Error error = kErrorNone;

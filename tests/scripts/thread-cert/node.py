@@ -1390,6 +1390,30 @@ class NodeImpl:
 
             raise
 
+    def get_trel_counters(self):
+        cmd = 'trel counters'
+        self.send_command(cmd)
+        result = self._expect_command_output()
+
+        counters = {}
+        for line in result:
+            m = re.match(r'(\w+)\:[^\d]+(\d+)[^\d]+(\d+)(?:[^\d]+(\d+))?', line)
+            if m:
+                groups = m.groups()
+                sub_counters = {
+                    'packets': int(groups[1]),
+                    'bytes': int(groups[2]),
+                }
+                if groups[3]:
+                    sub_counters['failures'] = int(groups[3])
+                counters[groups[0]] = sub_counters
+        return counters
+
+    def reset_trel_counters(self):
+        cmd = 'trel counters reset'
+        self.send_command(cmd)
+        self._expect_done()
+
     def _encode_txt_entry(self, entry):
         """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
 

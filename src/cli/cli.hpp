@@ -483,6 +483,9 @@ private:
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void OutputTrelCounters(const otTrelCounters &aCounters);
+#endif
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
     void OutputNat64Counters(const otNat64Counters &aCounters);
 #endif
