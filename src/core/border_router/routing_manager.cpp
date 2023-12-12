@@ -2085,6 +2085,45 @@ exit:
     return;
 }
 
+bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
+{
+    // Determines whether the local OMR prefix should be advertised as
+    // RIO in emitted RAs. To advertise, we must have decided to
+    // publish it, and it must already be added and present in the
+    // Network Data. This ensures that we only advertise the local
+    // OMR prefix in emitted RAs when, as a Border Router, we can
+    // accept and route messages using an OMR-based address
+    // destination, which requires the prefix to be present in
+    // Network Data. Similarly, we stop advertising (and start
+    // deprecating) the OMR prefix in RAs as soon as we decide to
+    // remove it. After requesting its removal from Network Data, it
+    // may still be present in Network Data for a short interval due
+    // to delays in registering changes with the leader.
+
+    bool                            shouldAdvertise = false;
+    NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig prefixConfig;
+
+    VerifyOrExit(mIsLocalAddedInNetData);
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
+    {
+        if (!IsValidOmrPrefix(prefixConfig))
+        {
+            continue;
+        }
+
+        if (prefixConfig.GetPrefix() == mLocalPrefix.GetPrefix())
+        {
+            shouldAdvertise = true;
+            break;
+        }
+    }
+
+exit:
+    return shouldAdvertise;
+}
+
 Error RoutingManager::OmrPrefixManager::AddLocalToNetData(void)
 {
     Error error = kErrorNone;
@@ -2822,7 +2861,7 @@ void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRa
 
     // (1) Local OMR prefix.
 
-    if (omrPrefixManager.IsLocalAddedInNetData())
+    if (omrPrefixManager.ShouldAdvertiseLocalAsRio())
     {
         mPrefixes.Add(omrPrefixManager.GetLocalPrefix().GetPrefix());
     }
@@ -2840,16 +2879,14 @@ void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRa
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
-        // Local OMR prefix is added to the array depending on
-        // `omrPrefixManager.IsLocalAddedInNetData()` at step (1).
-        // As we iterate through the Network Data prefixes, we skip
-        // over entries matching the local OMR prefix. This
-        // ensures that we start deprecating it in emitted RA
-        // message as soon as we decide to remove it from Network
-        // Data. Note that upon requesting it to be removed from
-        // Network Data the change needs to be registered with
-        // leader and can take some time to be updated in Network
-        // Data.
+        // Decision on whether or not to include the local OMR prefix is
+        // delegated to `OmrPrefixManager.ShouldAdvertiseLocalAsRio()`
+        // at step (1). Here as we iterate over the Network Data
+        // prefixes, we skip entries matching the local OMR prefix.
+        // In particular, `OmrPrefixManager` may have decided to remove the
+        // local prefix and not advertise it anymore, but it may still be
+        // present in the Network Data (due to delay of registering changes
+        // with leader).
 
         if (prefixConfig.mDp)
         {
