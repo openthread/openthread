@@ -101,6 +101,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     : OutputImplementer(aCallback, aContext)
     , Output(aInstance, *this)
     , mCommandIsPending(false)
+    , mInternalDebugCommand(false)
     , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -166,6 +167,16 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 
 void Interpreter::OutputResult(otError aError)
 {
+    if (mInternalDebugCommand)
+    {
+        if (aError != OT_ERROR_NONE)
+        {
+            OutputLine("Error %u: %s", aError, otThreadErrorToString(aError));
+        }
+
+        ExitNow();
+    }
+
     OT_ASSERT(mCommandIsPending);
 
     VerifyOrExit(aError != OT_ERROR_PENDING);
@@ -314,24 +325,30 @@ void Interpreter::ProcessLine(char *aBuf)
 
     OT_ASSERT(aBuf != nullptr);
 
-    // Ignore the command if another command is pending.
-    VerifyOrExit(!mCommandIsPending, args[0].Clear());
-    mCommandIsPending = true;
+    if (!mInternalDebugCommand)
+    {
+        // Ignore the command if another command is pending.
+        VerifyOrExit(!mCommandIsPending, args[0].Clear());
+        mCommandIsPending = true;
 
-    VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+        VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+    }
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
     VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
 
-    LogInput(args);
+    if (!mInternalDebugCommand)
+    {
+        LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
-    {
-        OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
-        ExitNow(error = OT_ERROR_INVALID_STATE);
-    }
+        if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag") && (args[0] != "factoryreset"))
+        {
+            OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
+            ExitNow(error = OT_ERROR_INVALID_STATE);
+        }
 #endif
+    }
 
     error = ProcessCommand(args);
 
@@ -7243,6 +7260,124 @@ exit:
     return error;
 }
 
+/**
+ * @cli debug
+ * @par
+ * Executes a series of CLI commands to gather information about the device and thread network. This is intended for
+ * debugging.
+ * The output will display each executed CLI command preceded by `$`, followed by the corresponding command's
+ * generated output.
+ * The generated output encompasses the following information:
+ * - Version
+ * - Current state
+ * - RLOC16, extended MAC address
+ * - Unicast and multicast IPv6 address list
+ * - Channel
+ * - PAN ID and extended PAN ID
+ * - Network Data
+ * - Partition ID
+ * - Leader Data
+ * @par
+ * If the device is operating as FTD:
+ * - Child and neighbor table
+ * - Router table and next hop info
+ * - Address cache table
+ * - Registered MTD child IPv6 address
+ * - Device properties
+ * @par
+ * If the device supports and acts as an SRP client:
+ * - SRP client state
+ * - SRP client services and host info
+ * @par
+ * If the device supports and acts as an SRP sever:
+ * - SRP server state and address mode
+ * - SRP server registered hosts and services
+ * @par
+ * If the device supports TREL:
+ * - TREL status and peer table
+ * @par
+ * If the device supports and acts as a border router:
+ * - BR state
+ * - BR prefixes (OMR, on-link, NAT64)
+ * - Discovered prefix table
+ */
+template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
+{
+    static constexpr uint16_t kMaxDebugCommandSize = 30;
+
+    static const char *const kDebugCommands[] = {
+        "version",
+        "state",
+        "rloc16",
+        "extaddr",
+        "ipaddrs",
+        "ipmaddrs",
+        "channel",
+        "panid",
+        "extpanid",
+        "netdata show",
+        "netdata show -x",
+        "partitionid",
+        "leaderdata",
+#if OPENTHREAD_FTD
+        "child table",
+        "childip",
+        "neighbor table",
+        "router table",
+        "nexthop",
+        "eidcache",
+#if OPENTHREAD_CONFIG_MLE_DEVICE_PROPERTY_LEADER_WEIGHT_ENABLE
+        "deviceprops",
+#endif
+#endif // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+        "srp client state",
+        "srp client host",
+        "srp client service",
+        "srp client server",
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+        "srp server state",
+        "srp server addrmode",
+        "srp server host",
+        "srp server service",
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        "trel",
+        "trel peers",
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        "br state",
+        "br omrprefix",
+        "br onlinkprefix",
+        "br prefixtable",
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+        "br nat64prefix",
+#endif
+#endif
+        "bufferinfo",
+    };
+
+    char commandString[kMaxDebugCommandSize];
+
+    OT_UNUSED_VARIABLE(aArgs);
+
+    mInternalDebugCommand = true;
+
+    for (const char *debugCommand : kDebugCommands)
+    {
+        strncpy(commandString, debugCommand, sizeof(commandString) - 1);
+        commandString[sizeof(commandString) - 1] = '\0';
+
+        OutputLine("$ %s", commandString);
+        ProcessLine(commandString);
+    }
+
+    mInternalDebugCommand = false;
+
+    return OT_ERROR_NONE;
+}
+
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 template <> otError Interpreter::Process<Cmd("tcat")>(Arg aArgs[]) { return mTcat.Process(aArgs); }
 #endif
@@ -8345,6 +8480,7 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("csl"),
 #endif
         CmdEntry("dataset"),
+        CmdEntry("debug"),
 #if OPENTHREAD_FTD
         CmdEntry("delaytimermin"),
 #endif
