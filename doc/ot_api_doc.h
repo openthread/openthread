@@ -124,7 +124,13 @@
  * @defgroup api-channel-monitor      Channel Monitoring
  * @defgroup api-child-supervision    Child Supervision
  * @defgroup api-coap-group           CoAP
+ * @defgroup api-ble-group            BLE
  *
+ * @{
+ *
+ * @defgroup api-ble                  BLE
+ * @defgroup api-ble-secure           BLE Secure
+
  * @{
  *
  * @defgroup api-coap                 CoAP
@@ -168,6 +174,7 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-ble                 BLE
  * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-dns                 DNS - Platform
  * @defgroup plat-entropy             Entropy

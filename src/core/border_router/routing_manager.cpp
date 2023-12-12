@@ -3760,7 +3760,7 @@ exit:
 
 extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
 {
-    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessPlatfromGeneratedRa(aMessage, aLength);
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessPlatformGeneratedRa(aMessage, aLength);
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 

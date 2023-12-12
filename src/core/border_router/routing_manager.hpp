@@ -283,7 +283,7 @@ public:
     /**
      * Returns the platform provided off-mesh-routable (OMR) prefix.
      *
-     * The prefix is extracted from the platform generated RA messages handled by `ProcessPlatfromGeneratedNd()`.
+     * The prefix is extracted from the platform generated RA messages handled by `ProcessPlatformGeneratedNd()`.
      *
      * @param[out] aPrefixInfo      A reference to where the prefix info will be output to.
      *
@@ -517,7 +517,7 @@ public:
      * @param[in] aLength       The length of the router advertisement message.
      *
      */
-    void ProcessPlatfromGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength)
+    void ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength)
     {
         mPdPrefixManager.ProcessPlatformGeneratedRa(aRouterAdvert, aLength);
     }
