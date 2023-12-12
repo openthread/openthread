@@ -124,13 +124,7 @@
  * @defgroup api-channel-monitor      Channel Monitoring
  * @defgroup api-child-supervision    Child Supervision
  * @defgroup api-coap-group           CoAP
- * @defgroup api-ble-group            BLE
  *
- * @{
- *
- * @defgroup api-ble                  BLE
- * @defgroup api-ble-secure           BLE Secure
-
  * @{
  *
  * @defgroup api-coap                 CoAP
