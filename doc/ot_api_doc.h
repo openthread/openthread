@@ -53,7 +53,7 @@
  * @defgroup api-net                  IPv6 Networking
  * @{
  *
- * @defgroup api-ble-secure           BLE
+ * @defgroup api-ble-secure           BLE Secure
  * @defgroup api-dns                  DNS
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
