@@ -227,6 +227,8 @@ void        SendRouterAdvert(const Ip6::Address &aAddress, const Icmp6Packet &aP
 void        SendNeighborAdvert(const Ip6::Address &aAddress, const Ip6::Nd::NeighborAdvertMessage &aNaMessage);
 void        DiscoverNat64Prefix(const Ip6::Prefix &aPrefix);
 
+extern "C" {
+
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
@@ -245,8 +247,6 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
 //----------------------------------------------------------------------------------------------------------------------
 // `otPlatRadio
-
-extern "C" {
 
 otRadioCaps otPlatRadioGetCaps(otInstance *) { return OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF; }
 
