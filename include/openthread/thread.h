@@ -177,6 +177,7 @@ typedef struct otMleCounters
     uint16_t mAttachAttempts;                ///< Number of attach attempts while device was detached.
     uint16_t mPartitionIdChanges;            ///< Number of changes to partition ID.
     uint16_t mBetterPartitionAttachAttempts; ///< Number of attempts to attach to a better partition.
+    uint16_t mBetterParentAttachAttempts;    ///< Number of attempts to attach to find a better parent (parent search).
 
     /**
      * Role time tracking.

@@ -340,6 +340,12 @@ class Node(object):
     def get_nexthop(self, rloc16):
         return self._cli_single_output('nexthop', rloc16)
 
+    def get_child_max(self):
+        return self._cli_single_output('childmax')
+
+    def set_child_max(self, childmax):
+        self._cli_no_output('childmax', childmax)
+
     def get_parent_info(self):
         outputs = self.cli('parent')
         result = {}
@@ -796,6 +802,15 @@ class Node(object):
 
     def un_allowlist_node(self, node):
         """Removes a given node (of node `Node) from the allowlist"""
+        self._cli_no_output('macfilter addr remove', node.get_ext_addr())
+
+    def denylist_node(self, node):
+        """Adds a given node to the denylist of `self` and enables denylisting on `self`"""
+        self._cli_no_output('macfilter addr add', node.get_ext_addr())
+        self._cli_no_output('macfilter addr denylist')
+
+    def un_denylist_node(self, node):
+        """Removes a given node (of node `Node) from the denylist"""
         self._cli_no_output('macfilter addr remove', node.get_ext_addr())
 
     def set_macfilter_lqi_to_node(self, node, lqi):
