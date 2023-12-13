@@ -124,7 +124,7 @@ typedef struct otBorderRoutingPrefixTableEntry
  */
 typedef struct otPdProcessedRaInfo
 {
-    uint32_t mNumPlatformRaReceived;   ///< The number of platform generated RA handled by ProcessPlatfromGeneratedRa.
+    uint32_t mNumPlatformRaReceived;   ///< The number of platform generated RA handled by ProcessPlatformGeneratedRa.
     uint32_t mNumPlatformPioProcessed; ///< The number of PIO processed for adding OMR prefixes.
     uint32_t mLastPlatformRaMsec;      ///< The timestamp of last processed RA message.
 } otPdProcessedRaInfo;

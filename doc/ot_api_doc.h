@@ -53,6 +53,7 @@
  * @defgroup api-net                  IPv6 Networking
  * @{
  *
+ * @defgroup api-ble-secure           BLE Secure
  * @defgroup api-dns                  DNS
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
@@ -168,6 +169,7 @@
  * @{
  *
  * @defgroup plat-alarm               Alarm
+ * @defgroup plat-ble                 BLE
  * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-dns                 DNS - Platform
  * @defgroup plat-entropy             Entropy
