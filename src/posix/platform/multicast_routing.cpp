@@ -39,7 +39,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if __linux__
+#ifdef __linux__
 #include <linux/mroute6.h>
 #else
 #error "Multicast Routing feature is not ported to non-Linux platforms yet."
