@@ -36,6 +36,16 @@
 #define CONFIG_ANNOUNCE_SENDER_H_
 
 /**
+ * @addtogroup config
+ *
+ * @brief
+ *   This module includes configuration variables for the DNS client.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
  *
  * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
@@ -89,5 +99,10 @@
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL 500
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_ANNOUNCE_SENDER_H_

@@ -36,6 +36,16 @@
 #define CONFIG_BORDER_ROUTING_H_
 
 /**
+ * @addtogroup config
+ *
+ * @brief
+ *   This module includes configuration variables for Border Routing Manager.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
  *
  * Define to 1 to enable Border Routing Manager feature.
@@ -161,5 +171,10 @@
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_MOCK_PLAT_APIS_ENABLE 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_BORDER_ROUTING_H_

@@ -123,4 +123,9 @@
 #define OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM 250
 #endif
 
+/**
+ * @}
+ *
+ */
+
 #endif // CONFIG_BACKBONE_ROUTER_H_
