@@ -191,3 +191,11 @@
  * @}
  *
  */
+/**
+ * @defgroup config          Config Variables
+ * @brief
+ *   This module lists all OpenThread configuration variables.
+ *
+ * @}
+ *
+ */
