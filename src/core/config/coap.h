@@ -36,7 +36,7 @@
 #define CONFIG_COAP_H_
 
 /**
- * @addtogroup config
+ * @addtogroup config-coap
  *
  * @brief
  *   This module includes configuration variables for CoAP.
