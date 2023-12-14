@@ -36,7 +36,7 @@
 #define CONFIG_BACKBONE_ROUTER_H_
 
 /**
- * @addtogroup config
+ * @addtogroup conf-backbone-router
  *
  * @brief
  *   This module include configuration variables for Backbone Router services.
