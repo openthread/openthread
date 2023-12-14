@@ -198,4 +198,16 @@
  *
  * @}
  *
+ * @defgroup config-announce-sender          DNS Client
+ * @defgroup config-backbone-router          Backbone Router Services
+ * @defgroup config-border-agent             Border Agent
+ * @defgroup config-border-router            Border Router
+ * @defgroup config-border-routing           Border Routing Manager
+ * @defgroup config-channel-maanger          Channel Manager
+ * @defgroup config-channel-monitor          Channel Monitor
+ * @defgroup config-child-supervision        Child Supervision
+ * @defgroup config-coap   	      CoAP
+ *
+ * @
+ *
  */
