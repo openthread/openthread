@@ -219,7 +219,7 @@
  * @defgroup config-history-tracker          History Tracker
  * @defgroup config-ip6                      IP6 Service
  * @defgroup config-joiner                   Joiner
- * @defgroup config-link-metrics-manager     
+ * @defgroup config-link-metrics-manager     Test
  *
  * @}
  *
