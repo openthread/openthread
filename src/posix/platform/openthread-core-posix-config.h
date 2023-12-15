@@ -34,6 +34,8 @@
 #ifndef OPENTHREAD_CORE_POSIX_CONFIG_H_
 #define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
+#include "openthread-posix-daemon-config.h"
+
 #ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
 #define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
 #endif
