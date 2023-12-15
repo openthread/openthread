@@ -148,19 +148,34 @@ typedef enum
 } otDnssdQueryType;
 
 /**
+ * Represents the count of queries, responses, failures handled by upstream DNS server.
+ *
+ * Requires `OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE`.
+ */
+typedef struct otUpstreamDnsCounters
+{
+    uint32_t mQueries;   ///< The number of queries forwarded.
+    uint32_t mResponses; ///< The number of responses forwarded.
+    uint32_t mFailures;  ///< The number of upstream DNS failures.
+} otUpstreamDnsCounters;
+
+/**
  * Contains the counters of DNS-SD server.
  *
  */
 typedef struct otDnssdCounters
 {
-    uint32_t mSuccessResponse;        ///< The number of successful responses
-    uint32_t mServerFailureResponse;  ///< The number of server failure responses
-    uint32_t mFormatErrorResponse;    ///< The number of format error responses
-    uint32_t mNameErrorResponse;      ///< The number of name error responses
-    uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses
-    uint32_t mOtherResponse;          ///< The number of other responses
+    uint32_t mSuccessResponse;        ///< The number of successful responses.
+    uint32_t mServerFailureResponse;  ///< The number of server failure responses.
+    uint32_t mFormatErrorResponse;    ///< The number of format error responses.
+    uint32_t mNameErrorResponse;      ///< The number of name error responses.
+    uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses.
+    uint32_t mOtherResponse;          ///< The number of other responses.
 
-    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server
+    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server.
+
+    otUpstreamDnsCounters mUpstreamDnsCounters; ///< The number of queries, responses,
+                                                ///< failures handled by upstream DNS server.
 } otDnssdCounters;
 
 /**

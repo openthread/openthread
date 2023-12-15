@@ -866,6 +866,10 @@ void Server::OnUpstreamQueryDone(UpstreamQueryTransaction &aQueryTransaction, Me
     {
         error = mSocket.SendTo(*aResponseMessage, aQueryTransaction.GetMessageInfo());
     }
+    else
+    {
+        error = kErrorResponseTimeout;
+    }
 
     ResetUpstreamQueryTransaction(aQueryTransaction, error);
 
@@ -886,7 +890,7 @@ Server::UpstreamQueryTransaction *Server::AllocateUpstreamQueryTransaction(const
         }
     }
 
-    VerifyOrExit(newTxn != nullptr);
+    VerifyOrExit(newTxn != nullptr, mCounters.mUpstreamDnsCounters.mFailures++);
 
     newTxn->Init(aMessageInfo);
     LogInfo("Upstream query transaction %d initialized.", static_cast<int>(newTxn - mUpstreamQueryTransactions));
@@ -905,6 +909,7 @@ Error Server::ResolveByUpstream(const Request &aRequest)
     VerifyOrExit(txn != nullptr, error = kErrorNoBufs);
 
     otPlatDnsStartUpstreamQuery(&GetInstance(), txn, aRequest.mMessage);
+    mCounters.mUpstreamDnsCounters.mQueries++;
 
 exit:
     return error;
@@ -1277,10 +1282,12 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
     OT_UNUSED_VARIABLE(index);
     if (aError == kErrorNone)
     {
+        mCounters.mUpstreamDnsCounters.mResponses++;
         LogInfo("Upstream query transaction %d completed.", index);
     }
     else
     {
+        mCounters.mUpstreamDnsCounters.mFailures++;
         LogWarn("Upstream query transaction %d closed: %s.", index, ErrorToString(aError));
     }
     aTxn.Reset();
