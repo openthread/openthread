@@ -36,6 +36,16 @@
 #define CONFIG_DHCP6_CLIENT_H_
 
 /**
+ * @addtogroup config-dhcpv6-client
+ *
+ * @brief
+ *   This module include configuration variables for the DHCPv6 client.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
  *
  * Define to 1 to enable DHCPv6 Client support.
@@ -64,5 +74,10 @@
 #ifndef OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES
 #define OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES 4
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DHCP6_CLIENT_H_

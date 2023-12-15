@@ -36,6 +36,16 @@
 #define CONFIG_DHCP6_SERVER_H_
 
 /**
+ * @addtogroup config-dhcpv6-server
+ *
+ * @brief
+ *   This module include configuration variables for the DHCPv6 server.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
  *
  * Define to 1 to enable DHCPv6 Server support.
@@ -54,5 +64,10 @@
 #ifndef OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES
 #define OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES 4
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DHCP6_SERVER_H_

@@ -36,7 +36,7 @@
 #define CONFIG_BORDER_ROUTER_H_
 
 /**
- * @addtogroup conf-border-router
+ * @addtogroup config-border-router
  *
  * @brief
  *   This module includes configuration variables for Router Router.

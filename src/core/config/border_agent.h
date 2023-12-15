@@ -36,7 +36,7 @@
 #define CONFIG_BORDER_AGENT_H_
 
 /**
- * @addtogroup conf-border-agent
+ * @addtogroup config-border-agent
  *
  * @brief
  *   This module includes configuration variables for Border Agent.

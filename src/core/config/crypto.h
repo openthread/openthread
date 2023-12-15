@@ -30,6 +30,16 @@
 #define CONFIG_CRYPTO_H_
 
 /**
+ * @addtogroup config-crypto
+ *
+ * @brief
+ *   This module include configuration variables for the Crypto Backend Library.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_CRYPTO_LIB
  *
  * Selects the crypto backend library for OpenThread.
@@ -94,5 +104,10 @@
 #endif
 
 #endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_CRYPTO_H_

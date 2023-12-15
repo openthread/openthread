@@ -36,7 +36,7 @@
 #define CONFIG_BORDER_ROUTING_H_
 
 /**
- * @addtogroup conf-border-routing
+ * @addtogroup config-border-routing
  *
  * @brief
  *   This module includes configuration variables for Border Routing Manager.

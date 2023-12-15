@@ -36,6 +36,16 @@
 #define CONFIG_CHANNEL_MANAGER_H_
 
 /**
+ * @addtogroup config-channel-manager
+ *
+ * @brief
+ *   This module include configuration variables for Channel Manager.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
  *
  * Define as 1 to enable Channel Manager support.
@@ -135,5 +145,10 @@
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD (0xffff * 14 / 100)
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_CHANNEL_MANAGER_H_

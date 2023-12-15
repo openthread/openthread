@@ -36,7 +36,7 @@
 #define CONFIG_ANNOUNCE_SENDER_H_
 
 /**
- * @addtogroup conf-announce-sender
+ * @addtogroup config-announce-sender
  *
  * @brief
  *   This module includes configuration variables for the DNS client.

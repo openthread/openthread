@@ -36,6 +36,16 @@
 #define CONFIG_CHANNEL_MONITOR_H_
 
 /**
+ * @addtogroup config-channel-monitor
+ *
+ * @brief
+ *   This module include configuration variables for Channel Monitor.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
  *
  * Define to 1 to enable Channel Monitor support.
@@ -91,5 +101,10 @@
 #ifndef OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW
 #define OPENTHREAD_CONFIG_CHANNEL_MONITOR_SAMPLE_WINDOW 960
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_CHANNEL_MONITOR_H_
