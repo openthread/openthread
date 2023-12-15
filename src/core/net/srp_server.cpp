@@ -796,13 +796,13 @@ exit:
 
 Error Server::ProcessZoneSection(const Message &aMessage, MessageMetadata &aMetadata) const
 {
-    Error    error = kErrorNone;
-    char     name[Dns::Name::kMaxNameSize];
-    uint16_t offset = aMetadata.mOffset;
+    Error             error = kErrorNone;
+    Dns::Name::Buffer name;
+    uint16_t          offset = aMetadata.mOffset;
 
     VerifyOrExit(aMetadata.mDnsHeader.GetZoneRecordCount() == 1, error = kErrorParse);
 
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name));
     // TODO: return `Dns::kResponseNotAuth` for not authorized zone names.
     VerifyOrExit(StringMatch(name, GetDomain(), kStringCaseInsensitiveMatch), error = kErrorSecurity);
     SuccessOrExit(error = aMessage.Read(offset, aMetadata.mDnsZone));
@@ -861,10 +861,10 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
 
     for (uint16_t numRecords = aMetadata.mDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
-        char                name[Dns::Name::kMaxNameSize];
+        Dns::Name::Buffer   name;
         Dns::ResourceRecord record;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name));
 
         SuccessOrExit(error = aMessage.Read(offset, record));
 
@@ -952,9 +952,9 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
 
     for (uint16_t numRecords = aMetadata.mDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
-        char                            serviceName[Dns::Name::kMaxNameSize];
-        char                            instanceLabel[Dns::Name::kMaxLabelSize];
-        char                            instanceServiceName[Dns::Name::kMaxNameSize];
+        Dns::Name::Buffer               serviceName;
+        Dns::Name::LabelBuffer          instanceLabel;
+        Dns::Name::Buffer               instanceServiceName;
         String<Dns::Name::kMaxNameSize> instanceName;
         Dns::PtrRecord                  ptrRecord;
         const char                     *subServiceName;
@@ -962,7 +962,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
         bool                            isSubType;
         bool                            isDelete;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, serviceName, sizeof(serviceName)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, serviceName));
         VerifyOrExit(Dns::Name::IsSubDomainOf(serviceName, GetDomain()), error = kErrorSecurity);
 
         error = Dns::ResourceRecord::ReadRecord(aMessage, offset, ptrRecord);
@@ -977,8 +977,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
 
         SuccessOrExit(error);
 
-        SuccessOrExit(error = ptrRecord.ReadPtrName(aMessage, offset, instanceLabel, sizeof(instanceLabel),
-                                                    instanceServiceName, sizeof(instanceServiceName)));
+        SuccessOrExit(error = ptrRecord.ReadPtrName(aMessage, offset, instanceLabel, instanceServiceName));
         instanceName.Append("%s.%s", instanceLabel, instanceServiceName);
 
         // Class None indicates "Delete an RR from an RRset".
@@ -1076,11 +1075,11 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
 
     for (uint16_t numRecords = aMetadata.mDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
-        char                name[Dns::Name::kMaxNameSize];
+        Dns::Name::Buffer   name;
         Dns::ResourceRecord record;
         Service            *service;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name));
         SuccessOrExit(error = aMessage.Read(offset, record));
 
         if (record.GetClass() == Dns::ResourceRecord::kClassAny)
@@ -1102,9 +1101,8 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
 
         if (record.GetType() == Dns::ResourceRecord::kTypeSrv)
         {
-            Dns::SrvRecord srvRecord;
-            char           hostName[Dns::Name::kMaxNameSize];
-            uint16_t       hostNameLength = sizeof(hostName);
+            Dns::SrvRecord    srvRecord;
+            Dns::Name::Buffer hostName;
 
             VerifyOrExit(record.GetClass() == aMetadata.mDnsZone.GetClass(), error = kErrorFailed);
 
@@ -1113,7 +1111,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
             SuccessOrExit(error = aMessage.Read(offset, srvRecord));
             offset += sizeof(srvRecord);
 
-            SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, hostName, hostNameLength));
+            SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, hostName));
             VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
             VerifyOrExit(aHost.Matches(hostName), error = kErrorFailed);
 
@@ -1179,22 +1177,22 @@ bool Server::IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord)
 
 Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, MessageMetadata &aMetadata) const
 {
-    Error            error = kErrorNone;
-    Dns::OptRecord   optRecord;
-    Dns::LeaseOption leaseOption;
-    Dns::SigRecord   sigRecord;
-    char             name[2]; // The root domain name (".") is expected.
-    uint16_t         offset = aMetadata.mOffset;
-    uint16_t         sigOffset;
-    uint16_t         sigRdataOffset;
-    char             signerName[Dns::Name::kMaxNameSize];
-    uint16_t         signatureLength;
+    Error             error = kErrorNone;
+    Dns::OptRecord    optRecord;
+    Dns::LeaseOption  leaseOption;
+    Dns::SigRecord    sigRecord;
+    char              name[2]; // The root domain name (".") is expected.
+    uint16_t          offset = aMetadata.mOffset;
+    uint16_t          sigOffset;
+    uint16_t          sigRdataOffset;
+    Dns::Name::Buffer signerName;
+    uint16_t          signatureLength;
 
     VerifyOrExit(aMetadata.mDnsHeader.GetAdditionalRecordCount() == 2, error = kErrorFailed);
 
     // EDNS(0) Update Lease Option.
 
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name));
     SuccessOrExit(error = aMessage.Read(offset, optRecord));
 
     SuccessOrExit(error = leaseOption.ReadFrom(aMessage, offset + sizeof(optRecord), optRecord.GetLength()));
@@ -1221,7 +1219,7 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     // SIG(0).
 
     sigOffset = offset;
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name, sizeof(name)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, name));
     SuccessOrExit(error = aMessage.Read(offset, sigRecord));
     VerifyOrExit(sigRecord.IsValid(), error = kErrorParse);
 
@@ -1232,7 +1230,7 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     // implemented because the end device may not be able to get
     // the synchronized date/time.
 
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, signerName, sizeof(signerName)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, offset, signerName));
 
     signatureLength = sigRecord.GetLength() - (offset - sigRdataOffset);
     offset += signatureLength;
@@ -1383,9 +1381,9 @@ void Server::InformUpdateHandlerOrCommit(Error aError, Host &aHost, const Messag
 
             for (const Heap::String &subType : service.mSubTypes)
             {
-                char label[Dns::Name::kMaxLabelSize];
+                Dns::Name::LabelBuffer label;
 
-                IgnoreError(Service::ParseSubTypeServiceName(subType.AsCString(), label, sizeof(label)));
+                IgnoreError(Service::ParseSubTypeServiceName(subType.AsCString(), label));
                 LogInfo("      sub-type: %s", label);
             }
         }
@@ -1892,9 +1890,9 @@ void Server::Service::Log(Action aAction) const
 
         for (const Heap::String &subType : mSubTypes)
         {
-            char label[Dns::Name::kMaxLabelSize];
+            Dns::Name::LabelBuffer label;
 
-            IgnoreError(ParseSubTypeServiceName(subType.AsCString(), label, sizeof(label)));
+            IgnoreError(ParseSubTypeServiceName(subType.AsCString(), label));
             LogInfo("  sub-type: %s", subType.AsCString());
         }
     }
