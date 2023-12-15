@@ -104,7 +104,7 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 
     VerifyOrExit(mSessionSocket != -1);
 
-#if defined(__linux__)
+#ifdef __linux__
     // Don't die on SIGPIPE
     rval = send(mSessionSocket, buf, static_cast<size_t>(rval), MSG_NOSIGNAL);
 #else

@@ -193,18 +193,18 @@ using namespace ot::Posix::Ip6Utils;
 
 #endif // OPENTHREAD_TUN_DEVICE
 
-#if defined(__linux__)
+#ifdef __linux__
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
 static constexpr uint32_t kOmrRoutesPriority = OPENTHREAD_POSIX_CONFIG_OMR_ROUTES_PRIORITY;
 static constexpr uint8_t  kMaxOmrRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_OMR_ROUTES_NUM;
 static uint8_t            sAddedOmrRoutesNum = 0;
 static otIp6Prefix        sAddedOmrRoutes[kMaxOmrRoutesNum];
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && defined(__linux__)
 static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
@@ -319,7 +319,7 @@ static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 }
 #endif
 
-#if defined(__linux__)
+#ifdef __linux__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
 
@@ -432,7 +432,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 }
 
 #pragma GCC diagnostic pop
-#endif // defined(__linux__)
+#endif // __linux__
 
 static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
 {
@@ -441,7 +441,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
     assert(gInstance == aInstance);
     assert(sIpFd >= 0);
 
-#if defined(__linux__)
+#ifdef __linux__
     UpdateUnicastLinux(aInstance, aAddressInfo, aIsAdded);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     {
@@ -569,7 +569,7 @@ static void UpdateLink(otInstance *aInstance)
     SetLinkState(aInstance, otIp6IsEnabled(aInstance));
 }
 
-#if defined(__linux__)
+#ifdef __linux__
 template <size_t N> otError AddRoute(const uint8_t (&aAddress)[N], uint8_t aPrefixLen, uint32_t aPriority)
 {
     constexpr unsigned int kBufSize = 128;
@@ -867,7 +867,7 @@ static otError DeleteIp4Route(const otIp4Cidr &aIp4Cidr)
     return DeleteRoute(aIp4Cidr.mAddress.mFields.m8, aIp4Cidr.mLength);
 }
 #endif
-#endif // defined(__linux__)
+#endif // __linux__
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
@@ -952,10 +952,10 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     }
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && __linux__
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_OMR_ROUTES_ENABLE && defined(__linux__)
         UpdateOmrRoutes(aInstance);
 #endif
-#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && __linux__
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE && defined(__linux__)
         UpdateExternalRoutes(aInstance);
 #endif
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
@@ -1182,7 +1182,7 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
     }
 }
 
-#if defined(__linux__)
+#ifdef __linux__
 
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
@@ -1324,7 +1324,7 @@ exit:
         otLogWarnPlat("[netif] Failed to sync netif state with host: %s", otThreadErrorToString(error));
     }
 }
-#endif // defined(__linux__)
+#endif // __linux__
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
@@ -1558,7 +1558,7 @@ exit:
 
 #endif
 
-#if defined(__linux__)
+#ifdef __linux__
 
 #define ERR_RTA(errmsg, requestPayloadLength) \
     ((struct rtattr *)((char *)(errmsg)) + NLMSG_ALIGN(sizeof(struct nlmsgerr)) + NLMSG_ALIGN(requestPayloadLength))
@@ -1632,7 +1632,7 @@ exit:
     return;
 }
 
-#endif // defined(__linux__)
+#endif // __linux__
 
 static void processNetlinkEvent(otInstance *aInstance)
 {
@@ -1641,7 +1641,7 @@ static void processNetlinkEvent(otInstance *aInstance)
 
     union
     {
-#if defined(__linux__)
+#ifdef __linux__
         nlmsghdr nlMsg;
 #else
         rt_msghdr rtMsg;
@@ -1651,7 +1651,7 @@ static void processNetlinkEvent(otInstance *aInstance)
 
     length = recv(sNetlinkFd, msgBuffer.buffer, sizeof(msgBuffer.buffer), 0);
 
-#if defined(__linux__)
+#ifdef __linux__
 #define HEADER_SIZE sizeof(nlmsghdr)
 #else
 #define HEADER_SIZE sizeof(rt_msghdr)
@@ -1664,7 +1664,7 @@ static void processNetlinkEvent(otInstance *aInstance)
         ExitNow();
     }
 
-#if defined(__linux__)
+#ifdef __linux__
     for (struct nlmsghdr *msg = &msgBuffer.nlMsg; NLMSG_OK(msg, static_cast<size_t>(length));
          msg                  = NLMSG_NEXT(msg, length))
     {
@@ -1680,7 +1680,7 @@ static void processNetlinkEvent(otInstance *aInstance)
 #endif
         switch (msg->nlmsg_type)
         {
-#if defined(__linux__)
+#ifdef __linux__
         case NLMSG_DONE:
             // NLMSG_DONE indicates the end of the netlink message, exits now
             ExitNow();
@@ -1705,7 +1705,7 @@ static void processNetlinkEvent(otInstance *aInstance)
             break;
 #endif
 
-#if !defined(__linux__)
+#ifndef __linux__
         case RTM_IFINFO:
             processNetifInfoEvent(aInstance, msg);
             break;
@@ -1742,7 +1742,7 @@ static void mldListenerInit(void)
     memcpy(&mreq6.ipv6mr_multiaddr, kMLDv2MulticastAddress.mFields.m8, sizeof(kMLDv2MulticastAddress.mFields.m8));
 
     VerifyOrDie(setsockopt(sMLDMonitorFd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq6, sizeof(mreq6)) == 0, OT_EXIT_FAILURE);
-#if defined(__linux__)
+#ifdef __linux__
     VerifyOrDie(setsockopt(sMLDMonitorFd, SOL_SOCKET, SO_BINDTODEVICE, gNetifName,
                            static_cast<socklen_t>(strnlen(gNetifName, IFNAMSIZ))) == 0,
                 OT_EXIT_FAILURE);
@@ -1827,7 +1827,7 @@ exit:
 }
 #endif
 
-#if defined(__linux__)
+#ifdef __linux__
 static void SetAddrGenModeToNone(void)
 {
     struct
@@ -2004,7 +2004,7 @@ static void platformConfigureTunDevice(otPlatformConfig *aPlatformConfig)
 
 static void platformConfigureNetLink(void)
 {
-#if defined(__linux__)
+#ifdef __linux__
     sNetlinkFd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     sNetlinkFd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, kSocketNonBlock);
@@ -2032,7 +2032,7 @@ static void platformConfigureNetLink(void)
     }
 #endif
 
-#if defined(__linux__)
+#ifdef __linux__
     {
         struct sockaddr_nl sa;
 
@@ -2084,7 +2084,7 @@ void platformNetifInit(otPlatformConfig *aPlatformConfig)
     mldListenerInit();
 #endif
 
-#if __linux__
+#ifdef __linux__
     SetAddrGenModeToNone();
 #endif
 }

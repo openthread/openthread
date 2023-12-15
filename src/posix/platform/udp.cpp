@@ -328,7 +328,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
             otLogWarnPlat("No backbone interface given, %s fails.", __func__);
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
-#if __linux__
+#ifdef __linux__
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, otSysGetInfraNetifName(),
                                 strlen(otSysGetInfraNetifName())) == 0,
                      error = OT_ERROR_FAILED);
