@@ -198,15 +198,21 @@
  *
  * @{
  *
- * @defgroup conf-announce-sender          DNS Client
- * @defgroup conf-backbone-router          Backbone Router Services
- * @defgroup conf-border-agent             Border Agent
- * @defgroup conf-border-router            Border Router
- * @defgroup conf-border-routing           Border Routing Manager
- * @defgroup conf-channel-maanger          Channel Manager
- * @defgroup conf-channel-monitor          Channel Monitor
- * @defgroup conf-child-supervision        Child Supervision
- * @defgroup conf-coap   	           CoAP
+ * @defgroup config-announce-sender          Announce Sender
+ * @defgroup config-backbone-router          Backbone Router Services
+ * @defgroup config-border-agent             Border Agent
+ * @defgroup config-border-router            Border Router
+ * @defgroup config-border-routing           Border Routing Manager
+ * @defgroup config-channel-maanger          Channel Manager
+ * @defgroup config-channel-monitor          Channel Monitor
+ * @defgroup config-child-supervision        Child Supervision
+ * @defgroup config-coap         	     CoAP
+ * @defgroup config-commissioner	     Commissioner
+ * @defgroup config-crypto                   Crypto Backend Library
+ * @defgroup config-dataset-updater          Dataset Updater
+ * @defgroup config-dhcp-client              DHCP Client
+ * @defgroup config-dhcp-server              DHCP Server
+ * @defgroup config-diag                     DIAG Service
  *
  * @}
  *
