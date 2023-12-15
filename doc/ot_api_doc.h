@@ -213,6 +213,13 @@
  * @defgroup config-dhcpv6-client            DHCP Client
  * @defgroup config-dhcpv6-server            DHCP Server
  * @defgroup config-diag                     DIAG Service
+ * @defgroup config-dns-client		     DNS Client  
+ * @defgroup config-dns-dso	             DNS Stateful Operations
+ * @defgroup config-dnssd-server             DNS-SD Server 
+ * @defgroup config-history-tracker          History Tracker
+ * @defgroup config-ip6                      IP6 Service
+ * @defgroup config-joiner                   Joiner
+ * @defgroup config-link-metrics-manager     
  *
  * @}
  *
