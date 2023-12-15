@@ -39,7 +39,7 @@
  * @addtogroup config-announce-sender
  *
  * @brief
- *   This module includes configuration variables for the DNS client.
+ *   This module includes configuration variables for the Announce Sender.
  *
  * @{
  *
