@@ -33,7 +33,7 @@
 #ifndef SPINEL_EXTENSION_H
 #define SPINEL_EXTENSION_H
 
-#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
 #include <openthread/thread_ftd.h>
 #include "lib/spinel/radio_spinel.hpp"
@@ -55,5 +55,5 @@ public:
 } // namespace Spinel
 } // namespace ot
 
-#endif // OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #endif // SPINEL_EXTENSION_H

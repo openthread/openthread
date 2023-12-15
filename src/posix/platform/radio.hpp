@@ -35,7 +35,7 @@
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/spi_interface.hpp"
 #include "posix/platform/vendor_interface.hpp"
-#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #endif
@@ -110,7 +110,7 @@ private:
 #endif
 
     RadioUrl mRadioUrl;
-#if OPENTHREAD_ENABLE_SPINEL_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     Spinel::VendorRadioSpinel mRadioSpinel;
 #else
     Spinel::RadioSpinel     mRadioSpinel;

@@ -30,7 +30,7 @@
  *   This file shows how to implement the Radio Spinel vendor hook.
  */
 
-#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
 #include OPENTRHEAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include "common/log.hpp"
@@ -64,4 +64,4 @@ exit:
 
 extern ot::Spinel::RadioSpinel &GetRadioSpinel(void);
 
-#endif // OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
