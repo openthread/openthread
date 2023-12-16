@@ -33,7 +33,17 @@
  */
 
 #ifndef CONFIG_DNS_CLIENT_H_
-#define CONFIG_DNS_CLIENT_H_
+#define CONFIG_DNS_CLIENT_H
+
+/**
+ * @addtogroup config-dns-client
+ *
+ * @brief
+ *   This module include configuration variables for the DNS client.
+ *
+ * @{
+ *
+ */_
 
 #include "config/ip6.h"
 #include "config/srp_client.h"
@@ -180,5 +190,10 @@
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE
 #define OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_QUERY_MAX_SIZE 1024
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DNS_CLIENT_H_

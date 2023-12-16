@@ -36,6 +36,16 @@
 #define CONFIG_PLATFORM_H_
 
 /**
+ * @addtogroup config-platform
+ *
+ * @brief
+ *   This module include configuration variables for platform-specific services.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_PLATFORM_INFO
  *
  * The platform-specific string to insert into the OpenThread version string.
@@ -185,5 +195,10 @@
 #error "Maximum Proprietary Channel Page value currently supported is 31."
 #endif
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_PLATFORM_H_

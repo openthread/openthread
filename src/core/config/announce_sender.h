@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the DNS Client.
+ *   This file includes compile-time configurations for them Announce Sender.
  *
  */
 

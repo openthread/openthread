@@ -36,6 +36,16 @@
 #define CONFIG_NAT64_H_
 
 /**
+ * @addtogroup config-nat64
+ *
+ * @brief
+ *   This module include configuration variables for Nat64.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
  *
  * Define to 1 to enable the internal NAT64 translator.
@@ -74,5 +84,10 @@
 #ifndef OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
 #define OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif

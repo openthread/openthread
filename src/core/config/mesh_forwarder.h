@@ -34,6 +34,16 @@
 #ifndef CONFIG_MESH_FORWARDER_H_
 #define CONFIG_MESH_FORWARDER_H_
 
+/**
+ * @addtogroup config-mesh-forwarder
+ *
+ * @brief
+ *   This module include configuration variables for the Mesh Forwarder.
+ *
+ * @{
+ *
+ */
+
 #include "config/border_router.h"
 
 /**
@@ -199,5 +209,10 @@
 #ifndef OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL
 #define OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_HISTOGRAM_BIN_INTERVAL 10
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_MESH_FORWARDER_H_

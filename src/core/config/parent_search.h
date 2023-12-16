@@ -36,6 +36,16 @@
 #define CONFIG_PARENT_SEARCH_H_
 
 /**
+ * @addtogroup config-parent
+ *
+ * @brief
+ *   This module include configuration variables for Parent Search.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
  *
  * Define as 1 to enable periodic parent search feature.
@@ -92,5 +102,10 @@
 #ifndef OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD
 #define OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD -65
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_PARENT_SEARCH_H_

@@ -36,6 +36,16 @@
 #define CONFIG_LOGGING_H_
 
 /**
+ * @addtogroup config-logging
+ *
+ * @brief
+ *   This module include configuration variables for the Logging service.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_OUTPUT
  *
  * Selects if, and where the LOG output goes to.
@@ -183,5 +193,10 @@
 #ifndef OPENTHREAD_CONFIG_LOG_MAX_SIZE
 #define OPENTHREAD_CONFIG_LOG_MAX_SIZE 150
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_LOGGING_H_

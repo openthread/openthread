@@ -39,7 +39,7 @@
  * @addtogroup config-child-supervision
  *
  * @brief
- *   This module include configuration variables for Backbone Router services.
+ *   This module include configuration variables for Child Supervision.
  *
  * @{
  *

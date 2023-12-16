@@ -35,6 +35,16 @@
 #ifndef CONFIG_NETDATA_PUBLISHER_H_
 #define CONFIG_NETDATA_PUBLISHER_H_
 
+/**
+ * @addtogroup config-netdata-publisher
+ *
+ * @brief
+ *   This module include configuration variables for Network Data Publisher.
+ *
+ * @{
+ *
+ */
+
 #include "config/border_router.h"
 #include "config/border_routing.h"
 #include "config/srp_server.h"
@@ -155,5 +165,10 @@
 #ifndef OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_MAX_PREFIX_ENTRIES 3
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_NETDATA_PUBLISHER_H_

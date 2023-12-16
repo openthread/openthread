@@ -36,6 +36,16 @@
 #define CONFIG_RADIO_LINK_H_
 
 /**
+ * @addtogroup config-radio-link
+ *
+ * @brief
+ *   This module include configuration variables for radio links.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
  *
  * Set to 1 to enable support for IEEE802.15.4 radio link.
@@ -92,5 +102,10 @@
 #ifndef OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
 #define OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT (20 * 1000)
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_RADIO_LINK_H_

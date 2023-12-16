@@ -35,6 +35,16 @@
 #ifndef CONFIG_SECURE_TRANSPORT_H_
 #define CONFIG_SECURE_TRANSPORT_H_
 
+/**
+ * @addtogroup config-secure-transport
+ *
+ * @brief
+ *   This module include configuration variables for Secure Transport.
+ *
+ * @{
+ *
+ */
+
 #include "config/border_agent.h"
 #include "config/coap.h"
 #include "config/commissioner.h"
@@ -65,5 +75,10 @@
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
 #error "OPENTHREAD_CONFIG_DTLS_ENABLE is deprecated please use OPENTHREAD_CONFIG_SECURE_TRANSPORT_ENABLE instead"
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_SECURE_TRANSPORT_H_

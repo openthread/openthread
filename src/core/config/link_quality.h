@@ -36,6 +36,16 @@
 #define CONFIG_LINK_QUALITY_H_
 
 /**
+ * @addtogroup config-link-quality-service
+ *
+ * @brief
+ *   This module include configuration variables for the Link Quality service.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW
  *
  * OpenThread's MAC implementation maintains the average failure rate of CCA (Clear Channel Assessment) operation on
@@ -73,5 +83,10 @@
 #ifndef OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW
 #define OPENTHREAD_CONFIG_IPV6_TX_ERR_RATE_AVERAGING_WINDOW 128
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_LINK_QUALITY_H_

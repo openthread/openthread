@@ -36,6 +36,16 @@
 #define CONFIG_NETWORK_DIAGNOSTIC_H_
 
 /**
+ * @addtogroup config-network-diagnostic
+ *
+ * @brief
+ *   This module include configuration variables for Network Diagnostics.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
  *
  * Specifies the default Vendor Name string.
@@ -81,5 +91,10 @@
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 #define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_NETWORK_DIAGNOSTIC_H_

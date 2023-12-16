@@ -36,6 +36,16 @@
 #define CONFIG_DNS_DSO_H_
 
 /**
+ * @addtogroup config-dns-dso
+ *
+ * @brief
+ *   This module include configuration variables for DNS Stateful Operations.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
  *
  * Define to 1 to enable DSO support.
@@ -86,5 +96,10 @@
 #ifndef OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE
 #define OPENTHREAD_CONFIG_DNS_DSO_MOCK_PLAT_APIS_ENABLE 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DNS_DSO_H_

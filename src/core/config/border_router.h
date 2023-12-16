@@ -39,7 +39,7 @@
  * @addtogroup config-border-router
  *
  * @brief
- *   This module includes configuration variables for Router Router.
+ *   This module includes configuration variables for Border Router services.
  *
  * @{
  *
