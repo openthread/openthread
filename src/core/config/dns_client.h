@@ -33,7 +33,7 @@
  */
 
 #ifndef CONFIG_DNS_CLIENT_H_
-#define CONFIG_DNS_CLIENT_H
+#define CONFIG_DNS_CLIENT_H_
 
 /**
  * @addtogroup config-dns-client
@@ -43,7 +43,7 @@
  *
  * @{
  *
- */_
+ */
 
 #include "config/ip6.h"
 #include "config/srp_client.h"
