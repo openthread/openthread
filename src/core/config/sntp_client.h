@@ -39,7 +39,7 @@
  * @addtogroup config-sntp-client
  *
  * @brief
- *   This module includes configuration variables for SNTP Client.
+ *   This module includes configuration variables for the SNTP Client.
  *
  * @{
  *

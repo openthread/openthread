@@ -42,7 +42,7 @@
 #define OPENTHREAD_CORE_CONFIG_CHECK_H_
 
 /**
- * @addtogroup config-openthread-core-config
+ * @addtogroup config-openthread-core
  *
  * @brief
  *   This module include configuration variables for Openthread core configuration checks.

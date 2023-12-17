@@ -210,8 +210,8 @@
  * @defgroup config-commissioner	     Commissioner
  * @defgroup config-crypto                   Crypto Backend Library
  * @defgroup config-dataset-updater          Dataset Updater
- * @defgroup config-dhcpv6-client            DHCP Client
- * @defgroup config-dhcpv6-server            DHCP Server
+ * @defgroup config-dhcpv6-client            DHCPv6 Client
+ * @defgroup config-dhcpv6-server            DHCPv6 Server
  * @defgroup config-diag                     DIAG Service
  * @defgroup config-dns-client		     DNS Client
  * @defgroup config-dns-dso	             DNS Stateful Operations
@@ -231,7 +231,7 @@
  * @defgroup config-nat64                    NAT64
  * @defgroup config-netdata-publisher        Network Data Publisher
  * @defgroup config-network-diagnostic       Network Diagnostics
- * @defgroup config-openthread-core-config   Openthread Configuration Core Checking
+ * @defgroup config-openthread-core          Openthread Configuration Core Checking
  * @defgroup config-parent-search            Parent Search
  * @defgroup config-ping-sender              Ping Sender
  * @defgroup config-platform                 Platform Specific Services
