@@ -36,7 +36,7 @@
 #define CONFIG_PARENT_SEARCH_H_
 
 /**
- * @addtogroup config-parent
+ * @addtogroup config-parent-search
  *
  * @brief
  *   This module include configuration variables for Parent Search.
