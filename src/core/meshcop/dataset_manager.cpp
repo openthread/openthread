@@ -781,6 +781,21 @@ void PendingDatasetManager::HandleDelayTimer(void)
             ExitNow();
         }
     }
+#if OPENTHREAD_CONFIG_AMEND_PARTIAL_PENDING_OPERATIONAL_DATASET
+    if (dataset.GetTlv(Tlv::kNetworkKey) == nullptr)
+    {
+        Dataset activeDataset;
+        
+        IgnoreError(Get<ActiveDatasetManager>().Read(activeDataset));
+        for (Tlv *cur = activeDataset.GetTlvsStart(); cur < activeDataset.GetTlvsEnd(); cur = cur->GetNext())
+        {
+            if (dataset.GetTlv(cur->GetType()) == nullptr)
+            {
+                IgnoreError(dataset.SetTlv(*cur));
+            }
+        }
+    }
+#endif
 
     LogInfo("pending delay timer expired");
 
