@@ -223,7 +223,25 @@
  * @defgroup config-link-quality             Link Quality
  * @defgroup config-link-raw                 Link Raw Service
  * @defgroup config-logging                  Logging Service
- *
- * @}
+ * @defgroup config-mac                      MAC
+ * @defgroup config-mesh-diag                Mesh Diagnostic
+ * @defgroup config-mesh-forwarder           Mesh Forwarder
+ * @defgroup config-misc                     Miscellaneous Constants
+ * @defgroup config-mle                      MLE Service
+ * @defgroup config-nat64                    NAT64
+ * @defgroup config-netdata-publisher        Network Data Publisher
+ * @defgroup config-network-diagnostic       Network Diagnostics
+ * @defgroup config-openthread-core-config   Openthread Configuration Core Checking
+ * @defgroup config-parent-search            Parent Search
+ * @defgroup config-ping-sender              Ping Sender
+ * @defgroup config-platform                 Platform Specific Services
+ * @defgroup config-power-calibration        Power Calibration
+ * @defgroup config-radio-link               Radio Links
+ * @defgroup config-secure-transport         Secure Transport
+ * @defgroup config-sntp-client              SNTP Client
+ * @defgroup config-srp-client               SRP Client
+ * @defgroup config-srp-server               SRP Server
+ * @defgroup config-time-sync                Time Sync Service
+ * @defgroup config-tmf                      Thread Management Framework Service
  *
  */

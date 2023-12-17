@@ -36,6 +36,16 @@
 #define CONFIG_TIME_SYNC_H_
 
 /**
+ * @addtogroup configi-time-sync
+ *
+ * @brief
+ *   This module includes configuration variables for the Time Sync service.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
  *
  * Define as 1 to enable the time synchronization service feature.
@@ -93,5 +103,10 @@
 #ifndef OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US
 #define OPENTHREAD_CONFIG_TIME_SYNC_JUMP_NOTIF_MIN_US 10000
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_TIME_SYNC_H_

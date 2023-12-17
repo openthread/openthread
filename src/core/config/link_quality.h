@@ -36,7 +36,7 @@
 #define CONFIG_LINK_QUALITY_H_
 
 /**
- * @addtogroup config-link-quality-service
+ * @addtogroup config-link-quality
  *
  * @brief
  *   This module include configuration variables for the Link Quality service.
