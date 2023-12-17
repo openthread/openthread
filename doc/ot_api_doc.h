@@ -244,4 +244,6 @@
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
  *
+ * @}
+ *
  */
