@@ -36,7 +36,7 @@
 #define CONFIG_TIME_SYNC_H_
 
 /**
- * @addtogroup configi-time-sync
+ * @addtogroup config-time-sync
  *
  * @brief
  *   This module includes configuration variables for the Time Sync service.
