@@ -135,7 +135,7 @@ const char *otSysGetRadioUrlHelpString(void)
 namespace ot {
 namespace Posix {
 
-RadioUrl::RadioUrl(const char *aUrl)
+void RadioUrl::Init(const char *aUrl)
 {
     if (aUrl != nullptr)
     {
