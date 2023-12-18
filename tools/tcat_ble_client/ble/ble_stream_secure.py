@@ -30,15 +30,13 @@ import asyncio
 import ssl
 import logging
 
-from .ble_stream import BleStream
-
 logger = logging.getLogger(__name__)
 
 
 class BleStreamSecure:
 
-    def __init__(self, ble_stream: BleStream):
-        self.ble_stream = ble_stream
+    def __init__(self, stream):
+        self.stream = stream
         self.ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         self.incoming = ssl.MemoryBIO()
         self.outgoing = ssl.MemoryBIO()
@@ -67,12 +65,12 @@ class BleStreamSecure:
             # SSLWantWrite means ssl wants to send data over the link,
             # but might need a receive first
             except ssl.SSLWantWriteError:
-                output = await self.ble_stream.recv(4096)
+                output = await self.stream.recv(4096)
                 if output:
                     self.incoming.write(output)
                 data = self.outgoing.read()
                 if data:
-                    await self.ble_stream.send(data)
+                    await self.stream.send(data)
                 await asyncio.sleep(0.1)
 
             # SSLWantRead means ssl wants to receive data from the link,
@@ -80,8 +78,8 @@ class BleStreamSecure:
             except ssl.SSLWantReadError:
                 data = self.outgoing.read()
                 if data:
-                    await self.ble_stream.send(data)
-                output = await self.ble_stream.recv(4096)
+                    await self.stream.send(data)
+                output = await self.stream.recv(4096)
                 if output:
                     self.incoming.write(output)
                 await asyncio.sleep(0.1)
@@ -89,14 +87,14 @@ class BleStreamSecure:
     async def send(self, bytes):
         self.ssl_object.write(bytes)
         encode = self.outgoing.read(4096)
-        await self.ble_stream.send(encode)
+        await self.stream.send(encode)
 
     async def recv(self, buffersize, timeout=1):
         end_time = asyncio.get_event_loop().time() + timeout
-        data = await self.ble_stream.recv(buffersize)
+        data = await self.stream.recv(buffersize)
         while not data and asyncio.get_event_loop().time() < end_time:
             await asyncio.sleep(0.1)
-            data = await self.ble_stream.recv(buffersize)
+            data = await self.stream.recv(buffersize)
         if not data:
             logger.warning('No response when response expected.')
             return b''
@@ -108,10 +106,10 @@ class BleStreamSecure:
                 break
             # if recv called before entire message was received from the link
             except ssl.SSLWantReadError:
-                more = await self.ble_stream.recv(buffersize)
+                more = await self.stream.recv(buffersize)
                 while not more:
                     await asyncio.sleep(0.1)
-                    more = await self.ble_stream.recv(buffersize)
+                    more = await self.stream.recv(buffersize)
                 self.incoming.write(more)
         return decode
 
