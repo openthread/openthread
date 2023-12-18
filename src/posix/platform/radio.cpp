@@ -71,7 +71,7 @@ void Radio::Init(const char *aUrl)
     spinel_iid_t                            iidList[Spinel::kSpinelHeaderMaxNumIid];
     struct ot::Spinel::RadioSpinelCallbacks callbacks;
 
-    mRadioUrl = aUrl;
+    mRadioUrl.Init(aUrl);
     VerifyOrDie(mRadioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
 
     memset(&callbacks, 0, sizeof(callbacks));
