@@ -747,7 +747,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
             break;
         }
     }
-#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     else if (aKey >= SPINEL_PROP_VENDOR__BEGIN && aKey < SPINEL_PROP_VENDOR__END)
     {
         error = VendorHandleValueIs(aKey);

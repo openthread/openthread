@@ -1065,7 +1065,7 @@ public:
      */
     void RestoreProperties(void);
 #endif
-#if OPENTHREAD_SPINEL_CONFIG_ENABLE_VENDOR_HOOK
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     /**
      * Defines a vendor "set property handler" hook to process vendor spinel properties.
      *
