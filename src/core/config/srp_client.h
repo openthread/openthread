@@ -274,7 +274,7 @@
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_WAIT_INTERVAL_JITTER
  *
  * Specifies jitter (in msec) for retry wait interval. If the current retry wait interval is smaller than the jitter
- * then the the wait interval itself is used as jitter (e.g., with jitter 500 msec and if retry interval is 300ms
+ * then the wait interval itself is used as jitter (e.g., with jitter 500 msec and if retry interval is 300ms
  * the retry interval is then randomly selected from [0, 2*300] ms).
  *
  */
