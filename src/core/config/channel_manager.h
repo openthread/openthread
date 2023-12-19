@@ -56,6 +56,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+ *
+ * Define as 1 to enable Channel Manager support for selecting CSL channels.
+ *
+ * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE` must be enabled in addition.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE
+#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY
  *
  * The minimum delay (in seconds) used by Channel Manager module for performing a channel change.

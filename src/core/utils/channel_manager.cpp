@@ -34,7 +34,9 @@
 
 #include "channel_manager.hpp"
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
+    (OPENTHREAD_FTD ||                          \
+     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
 
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
@@ -54,26 +56,51 @@ ChannelManager::ChannelManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSupportedChannelMask(0)
     , mFavoredChannelMask(0)
+#if OPENTHREAD_FTD
     , mDelay(kMinimumDelay)
+#endif
     , mChannel(0)
+    , mChannelSelected(0)
     , mState(kStateIdle)
     , mTimer(aInstance)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
+#if OPENTHREAD_FTD
     , mAutoSelectEnabled(false)
+#endif
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    , mAutoSelectCslEnabled(false)
+#endif
     , mCcaFailureRateThreshold(kCcaFailureRateThreshold)
 {
 }
 
 void ChannelManager::RequestChannelChange(uint8_t aChannel)
 {
-    LogInfo("Request to change to channel %d with delay %d sec", aChannel, mDelay);
+#if OPENTHREAD_FTD
+    if (Get<Mle::Mle>().IsFullThreadDevice() && Get<Mle::Mle>().IsRxOnWhenIdle() && mAutoSelectEnabled)
+    {
+        RequestNetworkChannelChange(aChannel);
+    }
+#endif
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (mAutoSelectCslEnabled)
+    {
+        ChangeCslChannel(aChannel);
+    }
+#endif
+}
 
+#if OPENTHREAD_FTD
+void ChannelManager::RequestNetworkChannelChange(uint8_t aChannel)
+{
+    // Check requested channel != current channel
     if (aChannel == Get<Mac::Mac>().GetPanChannel())
     {
         LogInfo("Already operating on the requested channel %d", aChannel);
         ExitNow();
     }
 
+    LogInfo("Request to change to channel %d with delay %d sec", aChannel, mDelay);
     if (mState == kStateChangeInProgress)
     {
         VerifyOrExit(mChannel != aChannel);
@@ -89,7 +116,36 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
 exit:
     return;
 }
+#endif
 
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+void ChannelManager::ChangeCslChannel(uint8_t aChannel)
+{
+    if (!(!Get<Mle::Mle>().IsRxOnWhenIdle() && Get<Mac::Mac>().IsCslEnabled()))
+    {
+        // cannot select or use other channel
+        ExitNow();
+    }
+
+    if (aChannel == Get<Mac::Mac>().GetCslChannel())
+    {
+        LogInfo("Already operating on the requested channel %d", aChannel);
+        ExitNow();
+    }
+
+    VerifyOrExit(Radio::IsCslChannelValid(aChannel));
+
+    LogInfo("Change to Csl channel %d now.", aChannel);
+
+    mChannel = aChannel;
+    Get<Mac::Mac>().SetCslChannel(aChannel);
+
+exit:
+    return;
+}
+#endif // (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+
+#if OPENTHREAD_FTD
 Error ChannelManager::SetDelay(uint16_t aDelay)
 {
     Error error = kErrorNone;
@@ -153,6 +209,7 @@ void ChannelManager::HandleDatasetUpdateDone(Error aError)
     mState = kStateIdle;
     StartAutoSelectTimer();
 }
+#endif // OPENTHREAD_FTD
 
 void ChannelManager::HandleTimer(void)
 {
@@ -160,12 +217,14 @@ void ChannelManager::HandleTimer(void)
     {
     case kStateIdle:
         LogInfo("Auto-triggered channel select");
-        IgnoreError(RequestChannelSelect(false));
+        IgnoreError(RequestAutoChannelSelect(false));
         StartAutoSelectTimer();
         break;
 
     case kStateChangeRequested:
+#if OPENTHREAD_FTD
         StartDatasetUpdate();
+#endif
         break;
 
     case kStateChangeInProgress:
@@ -236,6 +295,53 @@ bool ChannelManager::ShouldAttemptChannelChange(void)
     return shouldAttempt;
 }
 
+#if OPENTHREAD_FTD
+Error ChannelManager::RequestNetworkChannelSelect(bool aSkipQualityCheck)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = RequestChannelSelect(aSkipQualityCheck));
+    RequestNetworkChannelChange(mChannelSelected);
+
+exit:
+    if ((error == kErrorAbort) || (error == kErrorAlready))
+    {
+        // ignore aborted channel change
+        error = kErrorNone;
+    }
+    return error;
+}
+#endif
+
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+Error ChannelManager::RequestCslChannelSelect(bool aSkipQualityCheck)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = RequestChannelSelect(aSkipQualityCheck));
+    ChangeCslChannel(mChannelSelected);
+
+exit:
+    if ((error == kErrorAbort) || (error == kErrorAlready))
+    {
+        // ignore aborted channel change
+        error = kErrorNone;
+    }
+    return error;
+}
+#endif
+
+Error ChannelManager::RequestAutoChannelSelect(bool aSkipQualityCheck)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = RequestChannelSelect(aSkipQualityCheck));
+    RequestChannelChange(mChannelSelected);
+
+exit:
+    return error;
+}
+
 Error ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 {
     Error    error = kErrorNone;
@@ -246,17 +352,27 @@ Error ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
 
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
-    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange());
+    VerifyOrExit(aSkipQualityCheck || ShouldAttemptChannelChange(), error = kErrorAbort);
 
     SuccessOrExit(error = FindBetterChannel(newChannel, newOccupancy));
 
-    curChannel   = Get<Mac::Mac>().GetPanChannel();
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (Get<Mac::Mac>().IsCslEnabled() && (Get<Mac::Mac>().GetCslChannel() != 0))
+    {
+        curChannel = Get<Mac::Mac>().GetCslChannel();
+    }
+    else
+#endif
+    {
+        curChannel = Get<Mac::Mac>().GetPanChannel();
+    }
+
     curOccupancy = Get<ChannelMonitor>().GetChannelOccupancy(curChannel);
 
     if (newChannel == curChannel)
     {
         LogInfo("Already on best possible channel %d", curChannel);
-        ExitNow();
+        ExitNow(error = kErrorAlready);
     }
 
     LogInfo("Cur channel %d, occupancy 0x%04x - Best channel %d, occupancy 0x%04x", curChannel, curOccupancy,
@@ -269,11 +385,9 @@ Error ChannelManager::RequestChannelSelect(bool aSkipQualityCheck)
         (static_cast<uint16_t>(curOccupancy - newOccupancy) < kThresholdToChangeChannel))
     {
         LogInfo("Occupancy rate diff too small to change channel");
-        ExitNow();
+        ExitNow(error = kErrorAbort);
     }
-
-    RequestChannelChange(newChannel);
-
+    mChannelSelected = newChannel;
 exit:
 
     if (error != kErrorNone)
@@ -289,7 +403,14 @@ void ChannelManager::StartAutoSelectTimer(void)
 {
     VerifyOrExit(mState == kStateIdle);
 
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && \
+     OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (mAutoSelectEnabled || mAutoSelectCslEnabled)
+#elif OPENTHREAD_FTD
     if (mAutoSelectEnabled)
+#elif (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (mAutoSelectCslEnabled)
+#endif
     {
         mTimer.Start(Time::SecToMsec(mAutoSelectInterval));
     }
@@ -302,15 +423,29 @@ exit:
     return;
 }
 
-void ChannelManager::SetAutoChannelSelectionEnabled(bool aEnabled)
+#if OPENTHREAD_FTD
+void ChannelManager::SetAutoNetworkChannelSelectionEnabled(bool aEnabled)
 {
     if (aEnabled != mAutoSelectEnabled)
     {
         mAutoSelectEnabled = aEnabled;
-        IgnoreError(RequestChannelSelect(false));
+        IgnoreError(RequestNetworkChannelSelect(false));
         StartAutoSelectTimer();
     }
 }
+#endif
+
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+void ChannelManager::SetAutoCslChannelSelectionEnabled(bool aEnabled)
+{
+    if (aEnabled != mAutoSelectCslEnabled)
+    {
+        mAutoSelectCslEnabled = aEnabled;
+        IgnoreError(RequestAutoChannelSelect(false));
+        StartAutoSelectTimer();
+    }
+}
+#endif
 
 Error ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
 {
@@ -321,9 +456,19 @@ Error ChannelManager::SetAutoChannelSelectionInterval(uint32_t aInterval)
 
     mAutoSelectInterval = aInterval;
 
-    if (mAutoSelectEnabled && (mState == kStateIdle) && mTimer.IsRunning() && (prevInterval != aInterval))
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && \
+     OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (mAutoSelectEnabled || mAutoSelectCslEnabled)
+#elif OPENTHREAD_FTD
+    if (mAutoSelectEnabled)
+#elif (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+    if (mAutoSelectCslEnabled)
+#endif
     {
-        mTimer.StartAt(mTimer.GetFireTime() - Time::SecToMsec(prevInterval), Time::SecToMsec(aInterval));
+        if ((mState == kStateIdle) && mTimer.IsRunning() && (prevInterval != aInterval))
+        {
+            mTimer.StartAt(mTimer.GetFireTime() - Time::SecToMsec(prevInterval), Time::SecToMsec(aInterval));
+        }
     }
 
 exit:

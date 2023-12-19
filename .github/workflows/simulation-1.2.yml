@@ -236,6 +236,56 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  channel-manager-csl:
+    runs-on: ubuntu-20.04
+    env:
+      CFLAGS: -m32
+      CXXFLAGS: -m32
+      LDFLAGS: -m32
+      COVERAGE: 1
+      THREAD_VERSION: 1.3
+      VIRTUAL_TIME: 1
+      INTER_OP: 1
+      INTER_OP_BBR: 1
+      ADDON_FEAT_1_2: 1
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build python3-setuptools python3-wheel
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        OT_OPTIONS="-DOT_CHANNEL_MANAGER_CSL=ON" ./script/test build
+    - name: Run
+      run: |
+        ulimit -c unlimited
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
+        ./script/test cert_suite ./tests/scripts/thread-cert/test_*.py
+        ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_*.py
+        ./script/test cert_suite ./tests/scripts/thread-cert/addon_test_channel_manager_autocsl*.py
+    - uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+      if: ${{ failure() }}
+      with:
+        name: channel-manager-csl
+        path: ot_testing
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+      with:
+        name: cov-channel-manager-csl
+        path: tmp/coverage.info
+        retention-days: 1
+
   expects:
     runs-on: ubuntu-20.04
     env:
