@@ -39,7 +39,7 @@
  * @addtogroup config-channel-monitor
  *
  * @brief
- *   This module include configuration variables for Channel Monitor.
+ *   This module includes configuration variables for Channel Monitor.
  *
  * @{
  *

@@ -39,7 +39,7 @@
  * @addtogroup config-radio-link
  *
  * @brief
- *   This module include configuration variables for radio links.
+ *   This module includes configuration variables for radio links.
  *
  * @{
  *

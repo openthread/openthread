@@ -33,7 +33,7 @@
  * @addtogroup config-crypto
  *
  * @brief
- *   This module include configuration variables for the Crypto Backend Library.
+ *   This module includes configuration variables for the Crypto Backend Library.
  *
  * @{
  *

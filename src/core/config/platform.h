@@ -39,7 +39,7 @@
  * @addtogroup config-platform
  *
  * @brief
- *   This module include configuration variables for platform-specific services.
+ *   This module includes configuration variables for platform-specific services.
  *
  * @{
  *

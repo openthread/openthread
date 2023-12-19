@@ -39,7 +39,7 @@
  * @addtogroup config-commissioner
  *
  * @brief
- *   This module include configuration variables for the Commissioner.
+ *   This module includes configuration variables for the Commissioner.
  *
  * @{
  *

@@ -39,7 +39,7 @@
  * @addtogroup config-mac
  *
  * @brief
- *   This module include configuration variables for MAC.
+ *   This module includes configuration variables for MAC.
  *
  * @{
  *

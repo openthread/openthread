@@ -39,7 +39,7 @@
  * @addtogroup config-power-calibration
  *
  * @brief
- *   This module include configuration variables for Power Calibration.
+ *   This module includes configuration variables for Power Calibration.
  *
  * @{
  *

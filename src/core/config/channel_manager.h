@@ -39,7 +39,7 @@
  * @addtogroup config-channel-manager
  *
  * @brief
- *   This module include configuration variables for Channel Manager.
+ *   This module includes configuration variables for Channel Manager.
  *
  * @{
  *

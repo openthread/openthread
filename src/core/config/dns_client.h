@@ -39,7 +39,7 @@
  * @addtogroup config-dns-client
  *
  * @brief
- *   This module include configuration variables for the DNS client.
+ *   This module includes configuration variables for the DNS client.
  *
  * @{
  *

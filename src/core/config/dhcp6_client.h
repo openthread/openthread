@@ -39,7 +39,7 @@
  * @addtogroup config-dhcpv6-client
  *
  * @brief
- *   This module include configuration variables for the DHCPv6 client.
+ *   This module includes configuration variables for the DHCPv6 client.
  *
  * @{
  *

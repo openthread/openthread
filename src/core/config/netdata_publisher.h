@@ -39,7 +39,7 @@
  * @addtogroup config-netdata-publisher
  *
  * @brief
- *   This module include configuration variables for Network Data Publisher.
+ *   This module includes configuration variables for Network Data Publisher.
  *
  * @{
  *

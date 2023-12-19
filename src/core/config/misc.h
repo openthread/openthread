@@ -38,7 +38,7 @@
  * @addtogroup config-misc
  *
  * @brief
- *   This module include configuration variables for Miscellaneous constants.
+ *   This module includes configuration variables for Miscellaneous constants.
  *
  * @{
  *

@@ -39,7 +39,7 @@
  * @addtogroup config-secure-transport
  *
  * @brief
- *   This module include configuration variables for Secure Transport.
+ *   This module includes configuration variables for Secure Transport.
  *
  * @{
  *

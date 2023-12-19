@@ -39,7 +39,7 @@
  * @addtogroup config-link-metrics-manager
  *
  * @brief
- *   This module include configuration variables for Link Metrics Manager.
+ *   This module includes configuration variables for Link Metrics Manager.
  *
  * @{
  *

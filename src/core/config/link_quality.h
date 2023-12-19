@@ -39,7 +39,7 @@
  * @addtogroup config-link-quality
  *
  * @brief
- *   This module include configuration variables for the Link Quality service.
+ *   This module includes configuration variables for the Link Quality service.
  *
  * @{
  *

@@ -41,16 +41,6 @@
 #ifndef OPENTHREAD_CORE_CONFIG_CHECK_H_
 #define OPENTHREAD_CORE_CONFIG_CHECK_H_
 
-/**
- * @addtogroup config-openthread-core
- *
- * @brief
- *   This module include configuration variables for Openthread core configuration checks.
- *
- * @{
- *
- */
-
 #if defined(OPENTHREAD_CONFIG_DISABLE_CCA_ON_LAST_ATTEMPT) ||     \
     defined(OPENTHREAD_CONFIG_DISABLE_CSMA_CA_ON_LAST_ATTEMPT) || \
     defined(OPENTHREAD_CONFIG_MAC_DISABLE_CSMA_CA_ON_LAST_ATTEMPT)
@@ -682,10 +672,5 @@
 #error "OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON was replaced with "\
         "OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AHEAD and OPENTHREAD_CONFIG_MIN_RECEIVE_ON_AFTER"
 #endif
-
-/**
- * @}
- *
- */
 
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

@@ -39,7 +39,7 @@
  * @addtogroup config-dnssd-server
  *
  * @brief
- *   This module include configuration variables for the DNS-SD server.
+ *   This module includes configuration variables for the DNS-SD server.
  *
  * @{
  *

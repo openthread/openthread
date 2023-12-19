@@ -39,7 +39,7 @@
  * @addtogroup config-ping-sender
  *
  * @brief
- *   This module include configuration variables for Ping Sender.
+ *   This module includes configuration variables for Ping Sender.
  *
  * @{
  *

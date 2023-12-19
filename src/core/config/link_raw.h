@@ -39,7 +39,7 @@
  * @addtogroup config-link-raw
  *
  * @brief
- *   This module include configuration variables for the Link Raw service.
+ *   This module includes configuration variables for the Link Raw service.
  *
  * @{
  *

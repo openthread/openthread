@@ -39,7 +39,7 @@
  * @addtogroup config-logging
  *
  * @brief
- *   This module include configuration variables for the Logging service.
+ *   This module includes configuration variables for the Logging service.
  *
  * @{
  *

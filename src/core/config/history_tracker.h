@@ -39,7 +39,7 @@
  * @addtogroup config-history-tracker
  *
  * @brief
- *   This module include configuration variables for History Tracker.
+ *   This module includes configuration variables for History Tracker.
  *
  * @{
  *

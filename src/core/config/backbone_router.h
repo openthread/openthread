@@ -39,7 +39,7 @@
  * @addtogroup config-backbone-router
  *
  * @brief
- *   This module include configuration variables for Backbone Router services.
+ *   This module includes configuration variables for Backbone Router services.
  *
  * @{
  *

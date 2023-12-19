@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for them Announce Sender.
+ *   This file includes compile-time configurations for the Announce Sender.
  *
  */
 

@@ -39,7 +39,7 @@
  * @addtogroup config-diag
  *
  * @brief
- *   This module include configuration variables for the DIAG service.
+ *   This module includes configuration variables for the DIAG service.
  *
  * @{
  *

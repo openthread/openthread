@@ -39,7 +39,7 @@
  * @addtogroup config-joiner
  *
  * @brief
- *   This module include configuration variables for the Joiner.
+ *   This module includes configuration variables for the Joiner.
  *
  * @{
  *

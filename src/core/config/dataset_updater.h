@@ -39,7 +39,7 @@
  * @addtogroup config-dataset-updater
  *
  * @brief
- *   This module include configuration variables for Dataset Updater.
+ *   This module includes configuration variables for Dataset Updater.
  *
  * @{
  *

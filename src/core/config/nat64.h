@@ -39,7 +39,7 @@
  * @addtogroup config-nat64
  *
  * @brief
- *   This module include configuration variables for NAT64.
+ *   This module includes configuration variables for NAT64.
  *
  * @{
  *

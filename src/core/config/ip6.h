@@ -39,7 +39,7 @@
  * @addtogroup config-ip6
  *
  * @brief
- *   This module include configuration variables for the IP6 service.
+ *   This module includes configuration variables for the IP6 service.
  *
  * @{
  *

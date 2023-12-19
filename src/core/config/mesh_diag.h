@@ -39,7 +39,7 @@
  * @addtogroup config-mesh-diag
  *
  * @brief
- *   This module include configuration variables for Mesh Diagnostic.
+ *   This module includes configuration variables for Mesh Diagnostic.
  *
  * @{
  *

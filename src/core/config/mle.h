@@ -39,7 +39,7 @@
  * @addtogroup config-mle
  *
  * @brief
- *   This module include configuration variables for the MLE service.
+ *   This module includes configuration variables for the MLE service.
  *
  * @{
  *

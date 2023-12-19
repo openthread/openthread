@@ -38,7 +38,7 @@
  * @addtogroup config-mesh-forwarder
  *
  * @brief
- *   This module include configuration variables for the Mesh Forwarder.
+ *   This module includes configuration variables for the Mesh Forwarder.
  *
  * @{
  *

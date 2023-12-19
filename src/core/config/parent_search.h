@@ -39,7 +39,7 @@
  * @addtogroup config-parent-search
  *
  * @brief
- *   This module include configuration variables for Parent Search.
+ *   This module includes configuration variables for Parent Search.
  *
  * @{
  *
