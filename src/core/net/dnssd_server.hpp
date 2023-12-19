@@ -258,7 +258,7 @@ public:
      * @returns The DNS-SD query type.
      *
      */
-    static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
+    static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, Dns::Name::Buffer &aName);
 
     /**
      * Returns the counters of the DNS-SD server.
@@ -297,8 +297,6 @@ private:
     static constexpr uint16_t kMaxConcurrentUpstreamQueries = 32;
 
     typedef Header::Response ResponseCode;
-    typedef char             DnsName[Name::kMaxNameSize];
-    typedef char             DnsLabel[Name::kMaxLabelSize];
 
     typedef Message      ProxyQuery;
     typedef MessageQueue ProxyQueryList;
@@ -347,7 +345,7 @@ private:
         void         SetResponseCode(ResponseCode aResponseCode) { mHeader.SetResponseCode(aResponseCode); }
         ResponseCode AddQuestionsFrom(const Request &aRequest);
         Error        ParseQueryName(void);
-        void         ReadQueryName(DnsName &aName) const;
+        void         ReadQueryName(Name::Buffer &aName) const;
         bool         QueryNameMatches(const char *aName) const;
         Error        AppendQueryName(void);
         Error        AppendPtrRecord(const char *aInstanceLabel, uint32_t aTtl);
@@ -367,7 +365,7 @@ private:
         void         Send(const Ip6::MessageInfo &aMessageInfo);
         void         Answer(const HostInfo &aHostInfo, const Ip6::MessageInfo &aMessageInfo);
         void         Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip6::MessageInfo &aMessageInfo);
-        Error        ExtractServiceInstanceLabel(const char *aInstanceName, DnsLabel &aLabel);
+        Error        ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
         Error ResolveBySrp(void);
         bool  QueryNameMatchesService(const Srp::Server::Service &aService) const;
@@ -408,7 +406,7 @@ private:
     void        ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
     void        RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Response &aResponse);
     void        Finalize(ProxyQuery &aQuery, ResponseCode aResponseCode);
-    static void ReadQueryName(const Message &aQuery, DnsName &aName);
+    static void ReadQueryName(const Message &aQuery, Name::Buffer &aName);
     static bool QueryNameMatches(const Message &aQuery, const char *aName);
 
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE

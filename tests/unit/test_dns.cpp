@@ -56,20 +56,20 @@ void TestDnsName(void)
         const char    *mExpectedReadName;
     };
 
-    Instance    *instance;
-    MessagePool *messagePool;
-    Message     *message;
-    uint8_t      buffer[kMaxSize];
-    uint16_t     len;
-    uint16_t     offset;
-    char         label[Dns::Name::kMaxLabelSize];
-    uint8_t      labelLength;
-    char         name[Dns::Name::kMaxNameSize];
-    const char  *subDomain;
-    const char  *domain;
-    const char  *domain2;
-    const char  *fullName;
-    const char  *suffixName;
+    Instance              *instance;
+    MessagePool           *messagePool;
+    Message               *message;
+    uint8_t                buffer[kMaxSize];
+    uint16_t               len;
+    uint16_t               offset;
+    Dns::Name::LabelBuffer label;
+    uint8_t                labelLength;
+    Dns::Name::Buffer      name;
+    const char            *subDomain;
+    const char            *domain;
+    const char            *domain2;
+    const char            *fullName;
+    const char            *suffixName;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -254,42 +254,42 @@ void TestDnsName(void)
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "default.service.arpa.";
-    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
     VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
 
     fullName   = "my.service._ipps._tcp.default.service.arpa.";
     suffixName = "_ipps._tcp.default.service.arpa.";
-    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
     VerifyOrQuit(strcmp(name, "my.service") == 0);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "DeFault.SerVice.ARPA.";
-    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
     VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "efault.service.arpa.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "xdefault.service.arpa.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = ".default.service.arpa.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "default.service.arp.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "default.service.arpa.";
     suffixName = "default.service.arpa.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "efault.service.arpa.";
     suffixName = "default.service.arpa.";
-    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name, sizeof(name)) == kErrorParse);
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "default.service.arpa.";
@@ -342,7 +342,7 @@ void TestDnsName(void)
 
         // Read entire name
         offset = 0;
-        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
 
         printf("Read name =\"%s\"\n", name);
 
@@ -633,7 +633,7 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name1Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName1) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::ReadName() returned incorrect offset");
@@ -690,7 +690,7 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name2Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName2) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::ReadName() returned incorrect offset");
@@ -747,7 +747,7 @@ void TestDnsCompressedName(void)
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name3Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName3) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::ReadName() returned incorrect offset");
@@ -801,7 +801,7 @@ void TestDnsCompressedName(void)
 
     // `ReadName()` for name-4 should still succeed since only the first label contains dot char
     offset = name4Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName4) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name4Offset + kName4EncodedSize, "Name::ParseName() returned incorrect offset");
@@ -848,11 +848,11 @@ void TestDnsCompressedName(void)
     SuccessOrQuit(Dns::Name::CompareName(*message2, offset, dnsName4));
 
     offset = 0;
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name1 after `AppendTo()`: \"%s\"\n", name);
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name2 after `AppendTo()`: \"%s\"\n", name);
-    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)));
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name));
     printf("- Name3 after `AppendTo()`: \"%s\"\n", name);
     // `ReadName()` for name-4 will fail due to first label containing dot char.
 
@@ -913,9 +913,9 @@ void TestHeaderAndResourceRecords(void)
     Dns::ResourceRecord record;
     Ip6::Address        hostAddress;
 
-    char    label[Dns::Name::kMaxLabelSize];
-    char    name[Dns::Name::kMaxNameSize];
-    uint8_t buffer[kMaxSize];
+    Dns::Name::LabelBuffer label;
+    Dns::Name::Buffer      name;
+    uint8_t                buffer[kMaxSize];
 
     printf("================================================================\n");
     printf("TestHeaderAndResourceRecords()\n");
@@ -1050,7 +1050,7 @@ void TestHeaderAndResourceRecords(void)
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord));
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
 
-        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, sizeof(label), name, sizeof(name)));
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, name));
         VerifyOrQuit(strcmp(label, instanceLabel) == 0, "Inst label is incorrect");
         VerifyOrQuit(strcmp(name, kServiceName) == 0);
 
@@ -1077,7 +1077,7 @@ void TestHeaderAndResourceRecords(void)
         VerifyOrQuit(numRecords == prevNumRecords - 1, "Incorrect num records");
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord));
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
-        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, sizeof(label), name, sizeof(name)));
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, name));
         printf("    \"%s\" PTR %u %d inst:\"%s\" at \"%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(),
                label, name);
     }
@@ -1125,7 +1125,7 @@ void TestHeaderAndResourceRecords(void)
         VerifyOrQuit(srvRecord.GetPort() == kSrvPort);
         VerifyOrQuit(srvRecord.GetWeight() == kSrvWeight);
         VerifyOrQuit(srvRecord.GetPriority() == kSrvPriority);
-        SuccessOrQuit(srvRecord.ReadTargetHostName(*message, offset, name, sizeof(name)));
+        SuccessOrQuit(srvRecord.ReadTargetHostName(*message, offset, name));
         VerifyOrQuit(strcmp(name, kHostName) == 0);
         printf("    \"%s\" SRV %u %d %d %d %d \"%s\"\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
                srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority(), name);

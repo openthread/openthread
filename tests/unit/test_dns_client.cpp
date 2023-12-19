@@ -357,10 +357,10 @@ struct BrowseInfo
 {
     void Reset(void) { mCallbackCount = 0; }
 
-    uint16_t mCallbackCount;
-    Error    mError;
-    char     mServiceName[Dns::Name::kMaxNameSize];
-    uint16_t mNumInstances;
+    uint16_t          mCallbackCount;
+    Error             mError;
+    Dns::Name::Buffer mServiceName;
+    uint16_t          mNumInstances;
 };
 
 static BrowseInfo sBrowseInfo;
@@ -384,8 +384,8 @@ void BrowseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *
 
     for (uint16_t index = 0;; index++)
     {
-        char  instLabel[Dns::Name::kMaxLabelSize];
-        Error error;
+        Dns::Name::LabelBuffer instLabel;
+        Error                  error;
 
         error = response.GetServiceInstance(index, instLabel, sizeof(instLabel));
 
@@ -423,7 +423,7 @@ struct ResolveServiceInfo
     uint16_t                 mCallbackCount;
     Error                    mError;
     Dns::Client::ServiceInfo mInfo;
-    char                     mNameBuffer[Dns::Name::kMaxNameSize];
+    Dns::Name::Buffer        mNameBuffer;
     uint8_t                  mTxtBuffer[kMaxTxtBuffer];
     Ip6::Address             mHostAddresses[kMaxHostAddresses];
     uint8_t                  mNumHostAddresses;
@@ -434,8 +434,8 @@ static ResolveServiceInfo sResolveServiceInfo;
 void ServiceCallback(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
 {
     const Dns::Client::ServiceResponse &response = AsCoreType(aResponse);
-    char                                instLabel[Dns::Name::kMaxLabelSize];
-    char                                serviceName[Dns::Name::kMaxNameSize];
+    Dns::Name::LabelBuffer              instLabel;
+    Dns::Name::Buffer                   serviceName;
 
     Log("ServiceCallback");
     Log("   Error: %s", ErrorToString(aError));
@@ -912,8 +912,8 @@ void TestDnsClient(void)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-char sLastSubscribeName[Dns::Name::kMaxNameSize];
-char sLastUnsubscribeName[Dns::Name::kMaxNameSize];
+Dns::Name::Buffer sLastSubscribeName;
+Dns::Name::Buffer sLastUnsubscribeName;
 
 void QuerySubscribe(void *aContext, const char *aFullName)
 {
