@@ -29,6 +29,8 @@
 add_library(openthread-rcp)
 
 target_compile_definitions(openthread-rcp PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
     OPENTHREAD_RADIO=1
     OPENTHREAD_RADIO_CLI=0
 )

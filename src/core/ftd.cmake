@@ -30,6 +30,8 @@ add_library(openthread-ftd)
 
 target_compile_definitions(openthread-ftd PRIVATE
     OPENTHREAD_FTD=1
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-ftd PRIVATE

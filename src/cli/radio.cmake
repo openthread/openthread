@@ -30,6 +30,8 @@ add_library(openthread-cli-radio)
 
 target_compile_definitions(openthread-cli-radio
     PRIVATE
+        OPENTHREAD_FTD=0
+        OPENTHREAD_MTD=0
         OPENTHREAD_RADIO=1
         OPENTHREAD_RADIO_CLI=1
 )

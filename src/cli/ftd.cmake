@@ -31,6 +31,8 @@ add_library(openthread-cli-ftd)
 target_compile_definitions(openthread-cli-ftd
     PRIVATE
         OPENTHREAD_FTD=1
+        OPENTHREAD_MTD=0
+        OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-cli-ftd PRIVATE

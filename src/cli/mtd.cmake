@@ -30,7 +30,9 @@ add_library(openthread-cli-mtd)
 
 target_compile_definitions(openthread-cli-mtd
     PRIVATE
+        OPENTHREAD_FTD=0
         OPENTHREAD_MTD=1
+        OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-cli-mtd PRIVATE
