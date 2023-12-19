@@ -39,7 +39,7 @@
  * @addtogroup config-dns-dso
  *
  * @brief
- *   This module include configuration variables for DNS Stateful Operations.
+ *   This module includes configuration variables for DNS Stateful Operations.
  *
  * @{
  *

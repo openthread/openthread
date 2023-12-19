@@ -39,7 +39,7 @@
  * @addtogroup config-network-diagnostic
  *
  * @brief
- *   This module include configuration variables for Network Diagnostics.
+ *   This module includes configuration variables for Network Diagnostics.
  *
  * @{
  *

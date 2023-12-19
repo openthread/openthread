@@ -71,6 +71,36 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+/**
+ * @cli history ipaddr
+ * @code
+ * | Age                  | Event   | Address / PrefixLength                      | Origin |Scope| P | V | R |
+ * +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
+ * |      00:00:04.991    | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+ * |      00:00:44.647    | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+ * |      00:01:07.199    | Added   | fd00:0:0:0:0:0:0:1/64                       | manual |  14 | Y | Y | N |
+ * |      00:02:17.885    | Added   | fdde:ad00:beef:0:0:ff:fe00:fc00/64          | thread |   3 | N | Y | N |
+ * |      00:02:17.885    | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |      00:02:20.107    | Removed | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |      00:02:21.575    | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |      00:02:21.575    | Added   | fdde:ad00:beef:0:ecea:c4fc:ad96:4655/64     | thread |   3 | N | Y | N |
+ * |      00:02:23.904    | Added   | fe80:0:0:0:3c12:a4d2:fbe0:31ad/64           | thread |   2 | Y | Y | N |
+ * Done
+ * @endcode
+ * @cparam
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
     otError                                   error;
