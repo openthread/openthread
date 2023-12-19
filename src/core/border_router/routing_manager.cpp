@@ -3681,6 +3681,13 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessag
     {
         DiscoveredPrefixTable::Entry entry;
 
+
+        if (aMessage->GetHeader().GetPreferredLifetime()==0)
+        {
+            entry.mPrefix.Clear();
+            continue;
+        }
+
         if (option.GetType() != Ip6::Nd::Option::Type::kTypePrefixInfo ||
             !static_cast<const Ip6::Nd::PrefixInfoOption &>(option).IsValid())
         {
