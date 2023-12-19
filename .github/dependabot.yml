@@ -29,6 +29,7 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
+    if: github.repository == "openthread/openthread"
     directory: "/"
     schedule:
       interval: "weekly"
