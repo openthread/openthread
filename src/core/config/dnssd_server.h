@@ -48,7 +48,7 @@
 /**
  * @def OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
  *
- * Define the the DNS-SD Server port.
+ * Define the DNS-SD Server port.
  *
  */
 #ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_PORT
