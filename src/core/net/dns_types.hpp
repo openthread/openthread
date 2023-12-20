@@ -663,6 +663,25 @@ public:
     }
 
     /**
+     * Matches the `Name` with a given set of labels and domain name.
+     *
+     * This method allows the caller to specify name components separately, enabling scenarios like comparing "service
+     * instance name" with separate instance label, service type, and domain strings.
+     *
+     * @p aFirstLabels or @p aSecondLabels can be `nullptr` if not needed. But if non-null, these strings MUST NOT
+     * end with dot. @p aDomain MUST NOT be `nullptr` and MUST always end with a dot `.` character.
+     *
+     * @param[in] aFirstLabels    A string of dot separated labels, MUST NOT end with dot. Can be `nullptr`.
+     * @param[in] aSecondLabels   A string of dot separated labels, MUST NOT end with dot. Can be `nullptr`.
+     * @param[in] aDomain         Domain name. MUST end with dot.
+     *
+     * @retval TRUE   The name matches the given labels.
+     * @retval FALSE  The name does not match the given labels.
+     *
+     */
+    bool Matches(const char *aFirstLabels, const char *aSecondLabels, const char *aDomain) const;
+
+    /**
      * Encodes and appends the name to a message.
      *
      * If the name is empty (not specified), then root "." is appended to @p aMessage. If the name is from a C string
@@ -1094,6 +1113,7 @@ private:
     {
     }
 
+    static bool  CompareAndSkipLabels(const char *&aNamePtr, const char *aLabels, char aExpectedNextChar);
     static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
 
     const char    *mString;  // String containing the name or `nullptr` if name is not from string.
