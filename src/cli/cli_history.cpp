@@ -71,6 +71,38 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+/**
+ * @cli history ipaddr
+ * @code
+ * history ipaddr
+ * | Age                  | Event   | Address / PrefixLength                      | Origin |Scope| P | V | R |
+ * +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
+ * |         00:00:04.991 | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+ * |         00:00:44.647 | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
+ * |         00:01:07.199 | Added   | fd00:0:0:0:0:0:0:1/64                       | manual |  14 | Y | Y | N |
+ * |         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:fc00/64          | thread |   3 | N | Y | N |
+ * |         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |         00:02:20.107 | Removed | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |         00:02:21.575 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | thread |   3 | N | Y | Y |
+ * |         00:02:21.575 | Added   | fdde:ad00:beef:0:ecea:c4fc:ad96:4655/64     | thread |   3 | N | Y | N |
+ * |         00:02:23.904 | Added   | fe80:0:0:0:3c12:a4d2:fbe0:31ad/64           | thread |   2 | Y | Y | N |
+ * Done
+ * @endcode
+ * @code
+ * history ipaddr list 5
+ * 00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+ * 00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+ * 00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no
+ * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
+ * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:yes
+ * Done
+ * @endcode
+ * 
+ *
+ *
+ *
+ *
+ */
 template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
     otError                                   error;
