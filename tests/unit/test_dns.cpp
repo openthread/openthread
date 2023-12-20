@@ -56,6 +56,15 @@ void TestDnsName(void)
         const char    *mExpectedReadName;
     };
 
+    struct TestMatches
+    {
+        const char *mFullName;
+        const char *mFirstLabels;
+        const char *mSecondLabels;
+        const char *mDomain;
+        bool        mShouldMatch;
+    };
+
     Instance              *instance;
     MessagePool           *messagePool;
     Message               *message;
@@ -138,6 +147,25 @@ void TestDnsName(void)
 
     static const char kBadLabel[] = "badlabel";
     static const char kBadName[]  = "bad.name";
+
+    static const TestMatches kTestMatches[] = {
+        {"foo.bar.local.", "foo", "bar", "local.", true},
+        {"foo.bar.local.", "foo.bar", nullptr, "local.", true},
+        {"foo.bar.local.", nullptr, "foo.bar", "local.", true},
+        {"foo.bar.local.", nullptr, nullptr, "foo.bar.local.", true},
+        {"foo.bar.local.", "foo", "ba", "local.", false},
+        {"foo.bar.local.", "fooooo", "bar", "local.", false},
+        {"foo.bar.local.", "foo", "bar", "locall.", false},
+        {"foo.bar.local.", "f", "bar", "local.", false},
+        {"foo.bar.local.", "foo", "barr", "local.", false},
+        {"foo.bar.local.", "foo", "bar", ".local.", false},
+        {"My Lovely Instance._mt._udp.local.", "mY lovely instancE", "_mt._udp", "local.", true},
+        {"My Lovely Instance._mt._udp.local.", "mY lovely instancE._mt", "_udp", "local.", true},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp", "default.service.arpa.", true},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp", "default.service.arpa", false},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp.", "default.service.arpa.", false},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub.", "_srv._udp", "default.service.arpa.", false},
+    };
 
     printf("================================================================\n");
     printf("TestDnsName()\n");
@@ -494,6 +522,25 @@ void TestDnsName(void)
 
         VerifyOrQuit(len == test.mEncodedLength, "Encoded length does not match expected value");
         VerifyOrQuit(memcmp(buffer, test.mEncodedData, len) == 0, "Encoded name data does not match expected data");
+    }
+
+    printf("----------------------------------------------------------------\n");
+    printf("Name::Matches() variations\n");
+
+    for (const TestMatches &test : kTestMatches)
+    {
+        Dns::Name name;
+
+        printf(" \"%s\"\n", test.mFullName);
+
+        name.Set(test.mFullName);
+        VerifyOrQuit(name.Matches(test.mFirstLabels, test.mSecondLabels, test.mDomain) == test.mShouldMatch);
+
+        IgnoreError(message->SetLength(0));
+        SuccessOrQuit(name.AppendTo(*message));
+
+        name.SetFromMessage(*message, 0);
+        VerifyOrQuit(name.Matches(test.mFirstLabels, test.mSecondLabels, test.mDomain) == test.mShouldMatch);
     }
 
     message->Free();

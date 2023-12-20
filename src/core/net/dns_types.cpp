@@ -100,6 +100,68 @@ Error Header::ResponseCodeToError(Response aResponse)
     return error;
 }
 
+bool Name::Matches(const char *aFirstLabels, const char *aSecondLabels, const char *aDomain) const
+{
+    bool        matches = false;
+    const char *namePtr;
+    Buffer      nameBuffer;
+
+    VerifyOrExit(!IsEmpty());
+
+    if (IsFromCString())
+    {
+        namePtr = mString;
+    }
+    else
+    {
+        uint16_t offset = mOffset;
+
+        SuccessOrExit(ReadName(*mMessage, offset, nameBuffer));
+        namePtr = nameBuffer;
+    }
+
+    if (aFirstLabels != nullptr)
+    {
+        matches = CompareAndSkipLabels(namePtr, aFirstLabels, kLabelSeparatorChar);
+        VerifyOrExit(matches);
+    }
+
+    if (aSecondLabels != nullptr)
+    {
+        matches = CompareAndSkipLabels(namePtr, aSecondLabels, kLabelSeparatorChar);
+        VerifyOrExit(matches);
+    }
+
+    matches = CompareAndSkipLabels(namePtr, aDomain, kNullChar);
+
+exit:
+    return matches;
+}
+
+bool Name::CompareAndSkipLabels(const char *&aNamePtr, const char *aLabels, char aExpectedNextChar)
+{
+    // Compares `aNamePtr` to the label string `aLabels` followed by
+    // the `aExpectedNextChar`(using case-insensitive match). Upon
+    // successful comparison, `aNamePtr` is advanced to point after
+    // the matched portion.
+
+    bool     matches = false;
+    uint16_t len     = StringLength(aLabels, kMaxNameSize);
+
+    VerifyOrExit(len < kMaxNameSize);
+
+    VerifyOrExit(StringStartsWith(aNamePtr, aLabels, kStringCaseInsensitiveMatch));
+    aNamePtr += len;
+
+    VerifyOrExit(*aNamePtr == aExpectedNextChar);
+    aNamePtr++;
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
 Error Name::AppendTo(Message &aMessage) const
 {
     Error error;
