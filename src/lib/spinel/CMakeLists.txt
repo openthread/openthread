@@ -30,11 +30,23 @@ add_library(openthread-radio-spinel)
 add_library(openthread-spinel-ncp)
 add_library(openthread-spinel-rcp)
 
+target_compile_definitions(openthread-radio-spinel PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
+)
+
 target_compile_definitions(openthread-spinel-ncp PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
 target_compile_definitions(openthread-spinel-rcp PRIVATE
+    OPENTHREAD_FTD=0
+    OPENTHREAD_MTD=0
+    OPENTHREAD_RADIO=0
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
 )
 
