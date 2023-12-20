@@ -97,11 +97,14 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:yes
  * Done
  * @endcode
- * 
- *
- *
- *
- *
+ * @cparam history ipaddr [@ca{list}] [@ca{num-entries}] 
+ *   * Use the `list` option to display the output in list format. Otherwise,
+ *     the output is shown in table format.
+ *   * Use the `num-entries` option to limit the output to the number of
+ *     most-recent entries specified. If this option is not used, all stored
+ *     IP address will be shown in the output.
+ * @api_copy
+ * #otHistoryTrackerEntryAgeToString
  */
 template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
