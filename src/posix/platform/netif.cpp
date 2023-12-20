@@ -1102,6 +1102,7 @@ static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
         if ((aAddress[firstBytePos] & ((1 << remainingBits) - 1)) != 0)
         {
             isRequiredAnycast = false;
+            ExitNow();
         }
         firstBytePos++;
     }
