@@ -1087,13 +1087,12 @@ exit:
  */
 static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
 {
-    bool    isRequiredAnycast = true;
+    bool    isRequiredAnycast = false;
     uint8_t firstBytePos      = aPrefixLength / 8;
     uint8_t remainingBits     = aPrefixLength % 8;
 
     if (aPrefixLength == OT_IP6_ADDRESS_BITSIZE)
     {
-        isRequiredAnycast = false;
         ExitNow();
     }
 
@@ -1101,19 +1100,21 @@ static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
     {
         if ((aAddress[firstBytePos] & ((1 << remainingBits) - 1)) != 0)
         {
-            isRequiredAnycast = false;
             ExitNow();
         }
         firstBytePos++;
     }
+
     for (int i = firstBytePos; i < OT_IP6_ADDRESS_SIZE; ++i)
     {
         if (aAddress[i] != 0)
         {
-            isRequiredAnycast = false;
-            break;
+            ExitNow();
         }
     }
+
+    isRequiredAnycast = true;
+
 exit:
     return isRequiredAnycast;
 }
@@ -1252,7 +1253,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
             addr6.sin6_family = AF_INET6;
             memcpy(&addr6.sin6_addr, RTA_DATA(rta), sizeof(addr6.sin6_addr));
 
-            // Ignore the required anycast address
+            // Linux allows adding an IPv6 required anycast address to an interface,
+            // which blocks openthread deriving an address by SLAAC and will cause routing issues.
+            // Ignore the required anycast addresses here to allow OpenThread stack generate one when necessary,
+            // and Linux will prefer the non-required anycast address on the interface.
             if (isRequiredAnycast(addr.GetBytes(), ifaddr->ifa_prefixlen))
             {
                 continue;
