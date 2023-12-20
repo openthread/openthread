@@ -28,12 +28,22 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the DNS Client.
+ *   This file includes compile-time configurations for the Announce Sender.
  *
  */
 
 #ifndef CONFIG_ANNOUNCE_SENDER_H_
 #define CONFIG_ANNOUNCE_SENDER_H_
+
+/**
+ * @addtogroup config-announce-sender
+ *
+ * @brief
+ *   This module includes configuration variables for the Announce Sender.
+ *
+ * @{
+ *
+ */
 
 /**
  * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -89,5 +99,10 @@
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL
 #define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL 500
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_ANNOUNCE_SENDER_H_

@@ -35,6 +35,16 @@
 #ifndef CONFIG_MAC_H_
 #define CONFIG_MAC_H_
 
+/**
+ * @addtogroup config-mac
+ *
+ * @brief
+ *   This module includes configuration variables for MAC.
+ *
+ * @{
+ *
+ */
+
 #include "config/time_sync.h"
 
 /**
@@ -586,5 +596,10 @@
 #ifndef OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT
 #define OPENTHREAD_CONFIG_MAC_DATA_POLL_TIMEOUT 100
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_MAC_H_

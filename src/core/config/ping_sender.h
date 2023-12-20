@@ -36,6 +36,16 @@
 #define CONFIG_PING_SENDER_H_
 
 /**
+ * @addtogroup config-ping-sender
+ *
+ * @brief
+ *   This module includes configuration variables for Ping Sender.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_PING_SENDER_ENABLE
  *
  * Define to 1 to enable ping sender module.
@@ -88,5 +98,10 @@
 #ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT
 #define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT 1
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_PING_SENDER_H_

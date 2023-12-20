@@ -36,6 +36,16 @@
 #define CONFIG_LINK_METRICS_MANAGER_H_
 
 /**
+ * @addtogroup config-link-metrics-manager
+ *
+ * @brief
+ *   This module includes configuration variables for Link Metrics Manager.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
  *
  * Define as 1 to enable Link Metrics Manager support.
@@ -54,5 +64,10 @@
 #ifndef OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ON_BY_DEFAULT
 #define OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ON_BY_DEFAULT 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_LINK_METRICS_MANAGER_H_

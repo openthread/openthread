@@ -36,6 +36,16 @@
 #define CONFIG_DATASET_UPDATER_H_
 
 /**
+ * @addtogroup config-dataset-updater
+ *
+ * @brief
+ *   This module includes configuration variables for Dataset Updater.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE
  *
  * Define as 1 to enable Dataset Updater support.
@@ -66,5 +76,10 @@
 #ifndef OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL
 #define OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL 1500
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DATASET_UPDATER_H_

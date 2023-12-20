@@ -36,6 +36,16 @@
 #define CONFIG_POWER_CALIBRATION_H_
 
 /**
+ * @addtogroup config-power-calibration
+ *
+ * @brief
+ *   This module includes configuration variables for Power Calibration.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_POWER_CALIBRATION_ENABLE
  *
  * Define as 1 to enable power calibration support.
@@ -64,5 +74,10 @@
 #ifndef OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES
 #define OPENTHREAD_CONFIG_POWER_CALIBRATION_NUM_CALIBRATED_POWER_ENTRIES 6
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_POWER_CALIBRATION_H_

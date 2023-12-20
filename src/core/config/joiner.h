@@ -36,6 +36,16 @@
 #define CONFIG_JOINER_H_
 
 /**
+ * @addtogroup config-joiner
+ *
+ * @brief
+ *   This module includes configuration variables for the Joiner.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_JOINER_ENABLE
  *
  * Define to 1 to enable Joiner support.
@@ -54,5 +64,10 @@
 #ifndef OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES
 #define OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES 2
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_JOINER_H_

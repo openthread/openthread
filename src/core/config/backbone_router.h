@@ -36,6 +36,16 @@
 #define CONFIG_BACKBONE_ROUTER_H_
 
 /**
+ * @addtogroup config-backbone-router
+ *
+ * @brief
+ *   This module includes configuration variables for Backbone Router services.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
  *
  * Define to 1 to enable Backbone Router support.
@@ -112,5 +122,10 @@
 #ifndef OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM
 #define OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM 250
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_BACKBONE_ROUTER_H_

@@ -36,6 +36,16 @@
 #define CONFIG_DIAG_H_
 
 /**
+ * @addtogroup config-diag
+ *
+ * @brief
+ *   This module includes configuration variables for the DIAG service.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_DIAG_ENABLE
  *
  * Define to 1 to enable Factory Diagnostics support.
@@ -74,5 +84,10 @@
 #ifndef OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_DIAG_H_

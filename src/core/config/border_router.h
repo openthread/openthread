@@ -35,6 +35,16 @@
 #ifndef CONFIG_BORDER_ROUTER_H_
 #define CONFIG_BORDER_ROUTER_H_
 
+/**
+ * @addtogroup config-border-router
+ *
+ * @brief
+ *   This module includes configuration variables for Border Router services.
+ *
+ * @{
+ *
+ */
+
 #include <config/border_routing.h>
 
 /**
@@ -82,5 +92,10 @@
 #ifndef OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_BORDER_ROUTER_H_

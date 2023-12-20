@@ -36,6 +36,16 @@
 #define CONFIG_HISTORY_TRACKER_H_
 
 /**
+ * @addtogroup config-history-tracker
+ *
+ * @brief
+ *   This module includes configuration variables for History Tracker.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
  *
  * Define as 1 to enable History Tracker module.
@@ -162,5 +172,10 @@
 #ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_EXTERNAL_ROUTE_LIST_SIZE 32
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_HISTORY_TRACKER_H_

@@ -35,6 +35,16 @@
 #ifndef CONFIG_SRP_CLIENT_H_
 #define CONFIG_SRP_CLIENT_H_
 
+/**
+ * @addtogroup config-srp-client
+ *
+ * @brief
+ *   This module includes configuration variables for the SRP Client.
+ *
+ * @{
+ *
+ */
+
 #include "config/misc.h"
 
 /**
@@ -401,5 +411,10 @@
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE 64
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_SRP_CLIENT_H_

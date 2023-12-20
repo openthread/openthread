@@ -35,6 +35,16 @@
 #ifndef CONFIG_IP6_H_
 #define CONFIG_IP6_H_
 
+/**
+ * @addtogroup config-ip6
+ *
+ * @brief
+ *   This module includes configuration variables for the IP6 service.
+ *
+ * @{
+ *
+ */
+
 #include "config/border_routing.h"
 
 /**
@@ -201,5 +211,10 @@
 #ifndef OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE
 #define OPENTHREAD_CONFIG_IP6_BR_COUNTERS_ENABLE OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_IP6_H_
