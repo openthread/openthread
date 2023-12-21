@@ -102,9 +102,13 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  *     the output is shown in table format.
  *   * Use the `num-entries` option to limit the output to the number of
  *     most-recent entries specified. If this option is not used, all stored
- *     IP address will be shown in the output.
- * @api_copy
+ *     IP address will be shown in the output. 
+ * @par api_copy
  * #otHistoryTrackerEntryAgeToString
+ * @par
+ * Displays the unicast IPv6 address history.
+ * * test
+ * * test2
  */
 template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
