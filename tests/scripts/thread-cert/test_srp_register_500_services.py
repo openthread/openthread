@@ -132,13 +132,11 @@ class SrpRegister500Services(thread_cert.TestCase):
         for fed in feds():
             self.assertEqual(fed.get_state(), 'child')
 
-        server_addr = server.get_rloc()
-
         for clientid in CLIENT_IDS:
             client = self.nodes[clientid]
+            self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
             client.srp_client_set_host_name(f'client{clientid}')
             client.srp_client_set_host_address(f'2001::{clientid}')
-            client.srp_client_start(server_addr, client.get_srp_server_port())
 
             for instanceid in INSTANCE_IDS:
                 client.srp_client_add_service(f'client{clientid}_{instanceid}', SERVICE_NAME, SERVICE_PORT)

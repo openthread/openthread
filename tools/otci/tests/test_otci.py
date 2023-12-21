@@ -406,8 +406,6 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual([], server.srp_server_get_hosts())
         self.assertEqual('running', server.srp_server_get_state())
 
-        self.assertFalse(client.srp_client_get_autostart())
-        client.srp_client_enable_autostart()
         self.assertTrue(client.srp_client_get_autostart())
         client.wait(3)
         self.assertTrue(client.srp_client_get_state())

@@ -86,10 +86,8 @@ class SrpAutoHostAddress(thread_cert.TestCase):
         self.simulator.go(5)
 
         #-------------------------------------------------------------------
-        # Enable auto start mode on SRP client
+        # Check auto start mode on SRP client
 
-        self.assertEqual(client.srp_client_get_state(), 'Disabled')
-        client.srp_client_enable_auto_start_mode()
         self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
         self.simulator.go(2)
 

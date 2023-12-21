@@ -89,9 +89,10 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         # 1. Register a single service and verify that it works.
         #
 
+        self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
+
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
-        client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
         self.simulator.go(2)
 

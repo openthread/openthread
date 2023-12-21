@@ -84,11 +84,9 @@ class SrpServerRebootPort(thread_cert.TestCase):
         self.assertEqual(server.get_state(), 'router')
 
         #
-        # 1. Enable auto start mode on client and check that server is used.
+        # 1. Check auto start mode on client and check that server is used.
         #
 
-        self.assertEqual(client.srp_client_get_state(), 'Disabled')
-        client.srp_client_enable_auto_start_mode()
         self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
         self.simulator.go(2)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
