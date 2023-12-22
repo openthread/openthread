@@ -98,17 +98,25 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * Done
  * @endcode
  * @cparam history ipaddr [@ca{list}] [@ca{num-entries}] 
- *   * Use the `list` option to display the output in list format. Otherwise,
- *     the output is shown in table format.
- *   * Use the `num-entries` option to limit the output to the number of
- *     most-recent entries specified. If this option is not used, all stored
- *     IP address will be shown in the output. 
- * @par api_copy
- * #otHistoryTrackerEntryAgeToString
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   IP address will be shown in the output. 
  * @par
  * Displays the unicast IPv6 address history.
- * * test
- * * test2
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        hours:minutes:seconds:milliseconds
+ * * Event possible values: `Added` or `Removed`
+ * * Address: Unicast address with its prefix length (in bits).
+ * * Origin possible values: `thread`, `slaac`, `dhcp6`, or `manual`.
+ * * Scope: WHAT POSSIBLE VALUES and what does each value mean????
+ * * Flags: Preferred (P), Valid (V), and RLOC (R) (whether the address is RLOC).
+ *       Q: WHAT is meant by Preferred and Valid?
+ * @sa otHistoryTrackerEntryAgeToString
+ * @sa otHistoryTrackerIterateUnicastAddressHistory
  */
 template <> otError History::Process<Cmd("ipaddr")>(Arg aArgs[])
 {
