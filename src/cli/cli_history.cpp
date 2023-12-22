@@ -75,7 +75,7 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * @cli history ipaddr
  * @code
  * history ipaddr
- * | Age                  | Event   | Address / PrefixLength                      | Origin |Scope| P | V | R |
+ * | Age                  | Event   | Address / Prefix Length                     | Origin |Scope| P | V | R |
  * +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
  * |         00:00:04.991 | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
  * |         00:00:44.647 | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | slaac  |  14 | Y | Y | N |
@@ -102,16 +102,16 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   IP address will be shown in the output. 
+ *   IP address are shown in the output. 
  * @par
  * Displays the unicast IPv6 address history.
  * @par
  * Each entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
- *        hours:minutes:seconds:milliseconds
- * * Event possible values: `Added` or `Removed`
- * * Address: Unicast address with its prefix length (in bits).
- * * Origin possible values: `thread`, `slaac`, `dhcp6`, or `manual`.
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Added` or `Removed`.
+ * * Address/Prefix Length: Unicast address with its prefix length (in bits).
+ * * Origin. Possible value are: `thread`, `slaac`, `dhcp6`, or `manual`.
  * * Scope: WHAT POSSIBLE VALUES and what does each value mean????
  * * Flags: Preferred (P), Valid (V), and RLOC (R) (whether the address is RLOC).
  *       Q: WHAT is meant by Preferred and Valid?
