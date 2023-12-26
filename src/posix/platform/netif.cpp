@@ -1080,6 +1080,46 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
+#ifdef __linux__
+/**
+ * Returns whether the address is a required anycast address (RFC2373, 2.6.1).
+ *
+ */
+static bool isRequiredAnycast(const uint8_t *aAddress, uint8_t aPrefixLength)
+{
+    bool    isRequiredAnycast = false;
+    uint8_t firstBytePos      = aPrefixLength / 8;
+    uint8_t remainingBits     = aPrefixLength % 8;
+
+    if (aPrefixLength == OT_IP6_ADDRESS_BITSIZE)
+    {
+        ExitNow();
+    }
+
+    if (remainingBits != 0)
+    {
+        if ((aAddress[firstBytePos] & ((1 << remainingBits) - 1)) != 0)
+        {
+            ExitNow();
+        }
+        firstBytePos++;
+    }
+
+    for (int i = firstBytePos; i < OT_IP6_ADDRESS_SIZE; ++i)
+    {
+        if (aAddress[i] != 0)
+        {
+            ExitNow();
+        }
+    }
+
+    isRequiredAnycast = true;
+
+exit:
+    return isRequiredAnycast;
+}
+#endif // __linux__
+
 static void processTransmit(otInstance *aInstance)
 {
     otMessage *message = nullptr;
@@ -1212,6 +1252,15 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
             memset(&addr6, 0, sizeof(addr6));
             addr6.sin6_family = AF_INET6;
             memcpy(&addr6.sin6_addr, RTA_DATA(rta), sizeof(addr6.sin6_addr));
+
+            // Linux allows adding an IPv6 required anycast address to an interface,
+            // which blocks openthread deriving an address by SLAAC and will cause routing issues.
+            // Ignore the required anycast addresses here to allow OpenThread stack generate one when necessary,
+            // and Linux will prefer the non-required anycast address on the interface.
+            if (isRequiredAnycast(addr.GetBytes(), ifaddr->ifa_prefixlen))
+            {
+                continue;
+            }
 
             if (aNetlinkMessage->nlmsg_type == RTM_NEWADDR)
             {
