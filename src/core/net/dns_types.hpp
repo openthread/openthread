@@ -666,20 +666,27 @@ public:
      * Matches the `Name` with a given set of labels and domain name.
      *
      * This method allows the caller to specify name components separately, enabling scenarios like comparing "service
-     * instance name" with separate instance label, service type, and domain strings.
+     * instance name" with separate instance label (which can include dot character), service type, and domain strings.
      *
-     * @p aFirstLabels or @p aSecondLabels can be `nullptr` if not needed. But if non-null, these strings MUST NOT
-     * end with dot. @p aDomain MUST NOT be `nullptr` and MUST always end with a dot `.` character.
+     * @p aFirstLabel can be `nullptr` if not needed. But if non-null, it is treated as a single label and can itself
+     * include dot `.` character.
      *
-     * @param[in] aFirstLabels    A string of dot separated labels, MUST NOT end with dot. Can be `nullptr`.
-     * @param[in] aSecondLabels   A string of dot separated labels, MUST NOT end with dot. Can be `nullptr`.
+     * The @p aLabels MUST NOT be `nullptr` and MUST follow  "<label1>.<label2>.<label3>", i.e., a sequence of one or
+     * more labels separated by dot '.' char, and it MUST NOT end with dot `.`.
+     *
+     * @p aDomain MUST NOT be `nullptr` and MUST have at least one label and MUST always end with a dot `.` character.
+     *
+     * If the above conditions are not satisfied, the behavior of this method is undefined.
+     *
+     * @param[in] aFirstLabel     A first label to check. Can be `nullptr`.
+     * @param[in] aLabels         A string of dot separated labels, MUST NOT end with dot.
      * @param[in] aDomain         Domain name. MUST end with dot.
      *
-     * @retval TRUE   The name matches the given labels.
-     * @retval FALSE  The name does not match the given labels.
+     * @retval TRUE   The name matches the given components.
+     * @retval FALSE  The name does not match the given components.
      *
      */
-    bool Matches(const char *aFirstLabels, const char *aSecondLabels, const char *aDomain) const;
+    bool Matches(const char *aFirstLabel, const char *aLabels, const char *aDomain) const;
 
     /**
      * Encodes and appends the name to a message.
@@ -908,6 +915,29 @@ public:
      *
      */
     static Error CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
+
+    /**
+     * Parses and compares multiple name labels from a message.
+     *
+     * Can be used to read and compare a group of labels from an encoded DNS name in a message with possibly more
+     * labels remaining to read.
+     *
+     * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
+     *
+     * @param[in]     aMessage        The message to read the labels from to compare. `aMessage.GetOffset()` MUST point
+     *                                to the start of DNS header (this is used to handle compressed names).
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the labels to read.
+     *                                On exit and only when all labels are successfully read and match @p aLabels,
+     *                                @p aOffset is updated to point to the start of the next label.
+     * @param[in]     aLabels         A pointer to a null terminated string containing the labels to compare with.
+     *
+     * @retval kErrorNone          The labels from @p aMessage matches @p aLabels. @p aOffset is updated.
+     * @retval kErrorNotFound      The labels from @p aMessage does not match @p aLabel (note that @p aOffset is not
+     *                             updated in this case).
+     * @retval kErrorParse         Name could not be parsed (invalid format).
+     *
+     */
+    static Error CompareMultipleLabels(const Message &aMessage, uint16_t &aOffset, const char *aLabels);
 
     /**
      * Parses and compares a full name from a message with a given name.
