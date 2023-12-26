@@ -992,14 +992,14 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
     /**
-     * Extracts label(s) from a full name by checking that it contains a given suffix name (e.g., suffix name can be
+     * Extracts label(s) from a name by checking that it contains a given suffix name (e.g., suffix name can be
      * a domain name) and removing it.
      *
-     * Both @p aName and @p aSuffixName must be full DNS name and end with ('.'), otherwise the behavior of this method
-     * is undefined.
+     * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
+     * `kErrorParse` is returned.
      *
-     * @param[in]   aName           The full name to extract labels from.
-     * @param[in]   aSuffixName     The suffix name (e.g. can be domain name).
+     * @param[in]   aName           The name to extract labels from.
+     * @param[in]   aSuffixName     The suffix name (e.g., can be domain name).
      * @param[out]  aLabels         Pointer to buffer to copy the extracted labels.
      * @param[in]   aLabelsSize     Size of @p aLabels buffer.
      *
@@ -1011,16 +1011,16 @@ public:
     static Error ExtractLabels(const char *aName, const char *aSuffixName, char *aLabels, uint16_t aLabelsSize);
 
     /**
-     * Extracts label(s) from a full name by checking that it contains a given suffix name (e.g., suffix name can be
+     * Extracts label(s) from a name by checking that it contains a given suffix name (e.g., suffix name can be
      * a domain name) and removing it.
      *
-     * Both @p aName and @p aSuffixName must be full DNS name and end with ('.'), otherwise the behavior of this method
-     * is undefined.
+     * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
+     * `kErrorParse` is returned.
      *
      * @tparam      kLabelsBufferSize   Size of the buffer string.
      *
-     * @param[in]   aName           The full name to extract labels from.
-     * @param[in]   aSuffixName     The suffix name (e.g. can be domain name).
+     * @param[in]   aName           The name to extract labels from.
+     * @param[in]   aSuffixName     The suffix name (e.g., can be domain name).
      * @param[out]  aLabelsBuffer   A buffer to copy the extracted labels.
      *
      * @retval kErrorNone     Successfully extracted the labels, @p aLabels is updated.
