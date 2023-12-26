@@ -78,6 +78,25 @@ void Data::SetFrom(Data &&aData)
     TakeFrom(aData);
 }
 
+bool Data::Matches(const uint8_t *aBuffer, uint16_t aLength) const
+{
+    bool matches = false;
+
+    VerifyOrExit(aLength == mData.GetLength());
+
+    if (IsNull())
+    {
+        matches = (aLength == 0);
+    }
+    else
+    {
+        matches = mData.MatchesBytesIn(aBuffer);
+    }
+
+exit:
+    return matches;
+}
+
 void Data::Free(void)
 {
     Heap::Free(mData.GetBytes());

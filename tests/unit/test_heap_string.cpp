@@ -171,11 +171,15 @@ void VerifyData(const Heap::Data &aData, const uint8_t *aBytes, uint16_t aLength
 
     PrintData(aData);
 
+    VerifyOrQuit(aData.Matches(aBytes, aLength));
+    VerifyOrQuit(!aData.Matches(aBytes, aLength + 1));
+
     if (aLength == 0)
     {
         VerifyOrQuit(aData.IsNull());
         VerifyOrQuit(aData.GetBytes() == nullptr);
         VerifyOrQuit(aData.GetLength() == 0);
+        VerifyOrQuit(aData.Matches(nullptr, 0));
     }
     else
     {
@@ -186,6 +190,10 @@ void VerifyData(const Heap::Data &aData, const uint8_t *aBytes, uint16_t aLength
 
         aData.CopyBytesTo(buffer);
         VerifyOrQuit(memcmp(buffer, aBytes, aLength) == 0, "CopyBytesTo() failed");
+
+        VerifyOrQuit(aData.Matches(buffer, aLength));
+        buffer[aLength - 1]++;
+        VerifyOrQuit(!aData.Matches(buffer, aLength));
     }
 }
 
@@ -222,6 +230,10 @@ void TestHeapData(void)
     printf("------------------------------------------------------------------------------------\n");
     printf("After constructor\n");
     VerifyData(data, nullptr, 0);
+
+    VerifyOrQuit(data.Matches(nullptr, 0));
+    VerifyOrQuit(data.Matches(kData1, 0));
+    VerifyOrQuit(!data.Matches(kData1, 1));
 
     printf("------------------------------------------------------------------------------------\n");
     printf("SetFrom(aBuffer, aLength)\n");
