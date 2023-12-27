@@ -1763,8 +1763,19 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     }
 
 exit:
-    mState   = kStateTransmitDone;
-    mTxError = error;
+    // If current spinel frame is parsed failed, there should be some issues related to current transaction.
+    // At this time, recover the RCP immediatly.
+    mState = kStateTransmitDone;
+    if (error != OT_ERROR_PARSE)
+    {
+        mTxError = error;
+    }
+    else
+    {
+        mTxError = kErrorAbort;
+        HandleRcpTimeout();
+        RecoverFromRcpFailure();
+    }
     UpdateParseErrorCount(error);
     LogIfFail("Handle transmit done failed", error);
 }
