@@ -102,7 +102,7 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   IP address are shown in the output. 
+ *   entries are shown in the output. 
  * @par
  * Displays the unicast IPv6 address history.
  * @par
@@ -111,10 +111,11 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
- * * Origin. Possible value are: `thread`, `slaac`, `dhcp6`, or `manual`.
+ * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
  * * Scope: WHAT POSSIBLE VALUES and what does each value mean????
- * * Flags: Preferred (P), Valid (V), and RLOC (R) (whether the address is RLOC).
- *       Q: WHAT is meant by Preferred and Valid?
+ * * Preferred (P): QUESTION: What does this flag indicate?
+ * * Valid (V): WHAT ABOUT THIS FLAG?
+ * * RLOC (R): This flag indicates if the IPv6 address is a routing locator.
  * @sa otHistoryTrackerEntryAgeToString
  * @sa otHistoryTrackerIterateUnicastAddressHistory
  */
@@ -181,6 +182,54 @@ exit:
     return error;
 }
 
+/**
+ * @cli history ipmaddr
+ * @code
+ * history ipmaddr
+ * | Age                  | Event        | Multicast Address                       | Origin |
+ * +----------------------+--------------+-----------------------------------------+--------+
+ * |         00:00:08.592 | Unsubscribed | ff05:0:0:0:0:0:0:1                      | Manual |
+ * |         00:01:25.353 | Subscribed   | ff05:0:0:0:0:0:0:1                      | Manual |
+ * |         00:01:54.953 | Subscribed   | ff03:0:0:0:0:0:0:2                      | Thread |
+ * |         00:01:54.953 | Subscribed   | ff02:0:0:0:0:0:0:2                      | Thread |
+ * |         00:01:59.329 | Subscribed   | ff33:40:fdde:ad00:beef:0:0:1            | Thread |
+ * |         00:01:59.329 | Subscribed   | ff32:40:fdde:ad00:beef:0:0:1            | Thread |
+ * |         00:02:01.129 | Subscribed   | ff03:0:0:0:0:0:0:fc                     | Thread |
+ * |         00:02:01.129 | Subscribed   | ff03:0:0:0:0:0:0:1                      | Thread |
+ * |         00:02:01.129 | Subscribed   | ff02:0:0:0:0:0:0:1                      | Thread |
+ * Done
+ * @endcode
+ * @code
+ * history ipmaddr list
+ * 00:00:25.447 -> event:Unsubscribed address:ff05:0:0:0:0:0:0:1 origin:Manual
+ * 00:01:42.208 -> event:Subscribed address:ff05:0:0:0:0:0:0:1 origin:Manual
+ * 00:02:11.808 -> event:Subscribed address:ff03:0:0:0:0:0:0:2 origin:Thread
+ * 00:02:11.808 -> event:Subscribed address:ff02:0:0:0:0:0:0:2 origin:Thread
+ * 00:02:16.184 -> event:Subscribed address:ff33:40:fdde:ad00:beef:0:0:1 origin:Thread
+ * 00:02:16.184 -> event:Subscribed address:ff32:40:fdde:ad00:beef:0:0:1 origin:Thread
+ * 00:02:17.984 -> event:Subscribed address:ff03:0:0:0:0:0:0:fc origin:Thread
+ * 00:02:17.984 -> event:Subscribed address:ff03:0:0:0:0:0:0:1 origin:Thread
+ * 00:02:17.984 -> event:Subscribed address:ff02:0:0:0:0:0:0:1 origin:Thread
+ * Done
+ * @endcode
+ * @cparam history ipmaddr [@ca{list}] [@ca{num-entries}] 
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output. 
+ * @par
+ * Displays the multicast IPv6 address history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Subscribed` or `Unsubscribed`.
+ * * Multicast Address
+ * * Origin: Possible values are `Thread` or `Manual`.
+ * @sa otHistoryTrackerEntryAgeToString
+ * @sa otHistoryTrackerIterateMulticastAddressHistory
+ */
 template <> otError History::Process<Cmd("ipmaddr")>(Arg aArgs[])
 {
     static const char *const kEventStrings[] = {
@@ -238,6 +287,56 @@ exit:
     return error;
 }
 
+/**
+ * @cli history neighbor
+ * @code
+ * | Age                  | Type   | Event     | Extended Address | RLOC16 | Mode | Ave RSS |
+ * +----------------------+--------+-----------+------------------+--------+------+---------+
+ * |         00:00:29.233 | Child  | Added     | ae5105292f0b9169 | 0x8404 | -    |     -20 |
+ * |         00:01:38.368 | Child  | Removed   | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+ * |         00:04:27.181 | Child  | Changed   | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+ * |         00:04:51.236 | Router | Added     | 865c7ca38a5fa960 | 0x9400 | rdn  |     -20 |
+ * |         00:04:51.587 | Child  | Removed   | 865c7ca38a5fa960 | 0x8402 | rdn  |     -20 |
+ * |         00:05:22.764 | Child  | Changed   | ae5105292f0b9169 | 0x8401 | rn   |     -20 |
+ * |         00:06:40.764 | Child  | Added     | 4ec99efc874a1841 | 0x8403 | r    |     -20 |
+ * |         00:06:44.060 | Child  | Added     | 865c7ca38a5fa960 | 0x8402 | rdn  |     -20 |
+ * |         00:06:49.515 | Child  | Added     | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+ * Done
+ * @endcode
+ * @code
+ * history neighbor list
+ * 00:00:34.753 -> type:Child event:Added extaddr:ae5105292f0b9169 rloc16:0x8404 mode:- rss:-20
+ * 00:01:43.888 -> type:Child event:Removed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+ * 00:04:32.701 -> type:Child event:Changed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+ * 00:04:56.756 -> type:Router event:Added extaddr:865c7ca38a5fa960 rloc16:0x9400 mode:rdn rss:-20
+ * 00:04:57.107 -> type:Child event:Removed extaddr:865c7ca38a5fa960 rloc16:0x8402 mode:rdn rss:-20
+ * 00:05:28.284 -> type:Child event:Changed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:rn rss:-20
+ * 00:06:46.284 -> type:Child event:Added extaddr:4ec99efc874a1841 rloc16:0x8403 mode:r rss:-20
+ * 00:06:49.580 -> type:Child event:Added extaddr:865c7ca38a5fa960 rloc16:0x8402 mode:rdn rss:-20
+ * 00:06:55.035 -> type:Child event:Added extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+ * Done
+ * @endcode
+ * @cparam history neighbor [@ca{list}] [@ca{num-entries}] 
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output. 
+ * @par
+ * Displays the neighbor history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Type: `Child` or `Router`.
+ * * Event: Possible values are `Added`, `Removed`, or `Changed`.
+ * * Extended Address
+ * * RLOC16
+ * * Mode: MLE link mode. WHAT  ARE POSSIBLE VALUES? 
+ * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
+ *   time the entry was recorded.
+ * @sa otHistoryTrackerIterateNeighborHistory
+ */
 template <> otError History::Process<Cmd("neighbor")>(Arg aArgs[])
 {
     static const char *const kEventString[] = {
@@ -389,6 +488,56 @@ exit:
     return error;
 }
 
+/**
+ * @cli history netinfo
+ * @code
+ * history netinfo
+ * | Age                  | Role     | Mode | RLOC16 | Partition ID |
+ * +----------------------+----------+------+--------+--------------+
+ * |         00:00:10.069 | router   | rdn  | 0x6000 |    151029327 |
+ * |         00:02:09.337 | child    | rdn  | 0x2001 |    151029327 |
+ * |         00:02:09.338 | child    | rdn  | 0x2001 |    151029327 |
+ * |         00:07:40.806 | child    | -    | 0x2001 |    151029327 |
+ * |         00:07:42.297 | detached | -    | 0x6000 |            0 |
+ * |         00:07:42.968 | disabled | -    | 0x6000 |            0 |
+ * Done
+ * @endcode
+ * @code
+ * history netinfo list
+ * 00:00:59.467 -> role:router mode:rdn rloc16:0x6000 partition-id:151029327
+ * 00:02:58.735 -> role:child mode:rdn rloc16:0x2001 partition-id:151029327
+ * 00:02:58.736 -> role:child mode:rdn rloc16:0x2001 partition-id:151029327
+ * 00:08:30.204 -> role:child mode:- rloc16:0x2001 partition-id:151029327
+ * 00:08:31.695 -> role:detached mode:- rloc16:0x6000 partition-id:0
+ * 00:08:32.366 -> role:disabled mode:- rloc16:0x6000 partition-id:0
+ * Done
+ * @endcode
+ * @code
+ * history netinfo list 2
+ * | Age                  | Role     | Mode | RLOC16 | Partition ID |
+ * +----------------------+----------+------+--------+--------------+
+ * |         00:02:05.451 | router   | rdn  | 0x6000 |    151029327 |
+ * |         00:04:04.719 | child    | rdn  | 0x2001 |    151029327 |
+ * Done
+ * @endcode
+ * @cparam history netinfo [@ca{list}] [@ca{num-entries}] 
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output. 
+ * @par
+ * Displays the network info history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
+ * * Mode: WHAT ARE POSSIBLE VALUES?
+ * * RLOC16
+ * * Partition ID.  WHAT DOES a VALUE of 0 mean?
+ * @sa otHistoryTrackerIterateNetInfoHistory
+ */
 template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
 {
     otError                            error;
@@ -683,6 +832,58 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
     OutputLine("| %20s | dst: %-70s |", "", addrString);
 }
 
+/**
+ * @cli history prefix
+ * @code
+ * history prefix
+ * | Age                  | Event   | Prefix                                      | Flags     | Pref | RLOC16 |
+ * +----------------------+---------+---------------------------------------------+-----------+------+--------+
+ * |         00:00:10.663 | Added   | fd00:1111:2222:3333::/64                    | paro      | med  | 0x5400 |
+ * |         00:01:02.054 | Removed | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+ * |         00:01:21.136 | Added   | fd00:abba:cddd:0::/64                       | paos      | med  | 0x5400 |
+ * |         00:01:45.144 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x3c00 |
+ * |         00:01:50.944 | Added   | fd00:dead:beef:1::/64                       | paros     | high | 0x5400 |
+ * |         00:01:59.887 | Added   | fd00:dead:beef:1::/64                       | paros     | med  | 0x8800 |
+ * Done
+ * @endcode
+ * @code
+ * history prefix list
+ * 00:04:12.487 -> event:Added prefix:fd00:1111:2222:3333::/64 flags:paro pref:med rloc16:0x5400
+ * 00:05:03.878 -> event:Removed prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+ * 00:05:22.960 -> event:Added prefix:fd00:abba:cddd:0::/64 flags:paos pref:med rloc16:0x5400
+ * 00:05:46.968 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x3c00
+ * 00:05:52.768 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:high rloc16:0x5400
+ * 00:06:01.711 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:med rloc16:0x8800
+ * Done
+ * @endcode
+ * @cparam history prefix [@ca{list}] [@ca{num-entries}] 
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output. 
+ * @par
+ * Displays the network data for the mesh prefix history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Added` or `Removed`.
+ * * Prefix
+ * * Flags/meaning:
+ *     * `p': Preferred flag
+ *     * `a`: Stateless IPv6 address auto-configuration flag.
+ *     * `d`: DHCPv6 IPv6 address configuration flag.
+ *     * `c`: DHCPv6 other-configuration flag.
+ *     * `r`: Default route flag.
+ *     * `o`: On mesh flag.
+ *     * `s`: Stable flag.
+ *     * `n`: Nd Dns flag.
+ *     * `D`: Domain prefix flag.
+ * * Pref: Preference. Values can be either `high`, `med`, or `low`.
+ * * RLOC16
+ * @sa otHistoryTrackerIterateOnMeshPrefixHistory
+ */
 template <> otError History::Process<Cmd("prefix")>(Arg aArgs[])
 {
     otError                                 error;
@@ -733,6 +934,45 @@ exit:
     return error;
 }
 
+/**
+ * @cli history route
+ * @code
+ * history route
+ * | Age                  | Event   | Route                                       | Flags     | Pref | RLOC16 |
+ * +----------------------+---------+---------------------------------------------+-----------+------+--------+
+ * |         00:00:05.456 | Removed | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+ * |         00:00:29.310 | Added   | fd00:1111:0::/48                            | s         | med  | 0x3c00 |
+ * |         00:00:42.822 | Added   | fd00:1111:0::/48                            | s         | med  | 0x5400 |
+ * |         00:01:27.688 | Added   | fd00:aaaa:bbbb:cccc::/64                    | s         | med  | 0x8800 |
+ * Done
+ * @endcode
+ * @code
+ * history route list 2
+ * 00:00:48.704 -> event:Removed route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
+ * 00:01:12.558 -> event:Added route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
+ * Done
+ * @endcode
+ * @cparam history route [@ca{list}] [@ca{num-entries}] 
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output. 
+ * @par
+ * Displays the network data external-route history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Added` or `Removed`.
+ * * Route
+ * * Flags/meaning:
+ *     * `s`: Stable flag.
+ *     * `n`: NAT64 flag.
+ * * Pref: Preference. Values can be either `high`, `med`, or `low`.
+ * * RLOC16
+ * @sa otHistoryTrackerIterateExternalRouteHistory
+ */
 template <> otError History::Process<Cmd("route")>(Arg aArgs[])
 {
     otError                                  error;
