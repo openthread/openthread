@@ -285,6 +285,19 @@ void TestDnsName(void)
     SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
     VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
 
+    fullName   = "my-service._ipps._tcp.default.service.arpa";
+    suffixName = "default.service.arpa";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
+    VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa";
+    suffixName = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa.";
+    suffixName = "default.service.arpa";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
+
     fullName   = "my.service._ipps._tcp.default.service.arpa.";
     suffixName = "_ipps._tcp.default.service.arpa.";
     SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
@@ -295,8 +308,17 @@ void TestDnsName(void)
     SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
     VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
 
+    fullName   = "my-service._ipps._tcp.default.service.arpa";
+    suffixName = "DeFault.SerVice.ARPA";
+    SuccessOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name));
+    VerifyOrQuit(strcmp(name, "my-service._ipps._tcp") == 0);
+
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
     suffixName = "efault.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
+
+    fullName   = "my-service._ipps._tcp.default.service.arpa";
+    suffixName = "efault.service.arpa";
     VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "my-service._ipps._tcp.default.service.arpa.";
@@ -313,6 +335,10 @@ void TestDnsName(void)
 
     fullName   = "default.service.arpa.";
     suffixName = "default.service.arpa.";
+    VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
+
+    fullName   = "default.service.arpa";
+    suffixName = "default.service.arpa";
     VerifyOrQuit(Dns::Name::ExtractLabels(fullName, suffixName, name) == kErrorParse);
 
     fullName   = "efault.service.arpa.";
