@@ -746,26 +746,26 @@ exit:
  *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
  *     * `src`: Source IPv6 address and port number.
  *     * `dst`: Destination IPv6 address and port number (port number is valid
-            for UDP/TCP, otherwise it is 0).
- * Len: IPv6 payload length (excluding the IPv6 header).
- * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
- * Sec: Indicates if link-layer security was used.
- * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
+         for UDP/TCP, otherwise it is 0).
+ * * Len: IPv6 payload length (excluding the IPv6 header).
+ * * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
+ * * Sec: Indicates if link-layer security was used.
+ * * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
  *       `net` (for Thread control messages).
- * RSS: Received Signal Strength (in dBm), averaged over all received fragment
- *      frames that formed the message. For TX history, `NA` (not applicable)
-    is displayed.
- * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
+ * * RSS: Received Signal Strength (in dBm), averaged over all received fragment
+ *        frames that formed the message. For TX history, `NA` (not applicable)
+          is displayed.
+ * * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
  *      transmission is indicated with `TX-F` in table format or
  *      `tx-success:no` in list format. Examples of a failed transmission
  *      include a `tx`getting aborted and no `ack` getting sent from the peer for
  *      any of the message fragments.
- * Neighb: Short address (RLOC16) of the neighbor with whom the message was
+ * * Neighb: Short address (RLOC16) of the neighbor with whom the message was
  *         sent/received. If the frame was broadcast, it is shown as
  *         `bcast` in table format or `0xffff` in list format. If the short
  *         address of the neighbor is not available, it is shown as `unknwn` in
  *         table format or `0xfffe` in list format.
- * Radio: Radio link on which the message was sent/received (useful when
+ * * Radio: Radio link on which the message was sent/received (useful when
           `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
           or `all` (if sent on all radio links).
  * @sa otHistoryTrackerIterateRxHistory
