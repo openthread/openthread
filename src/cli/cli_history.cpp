@@ -90,19 +90,20 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * @endcode
  * @code
  * history ipaddr list 5
- * 00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
- * 00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
- * 00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no
- * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
- * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:yes
- * Done
+ * 00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14
+ * preferred:yes valid:yes rloc:no 00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b
+ * prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no 00:01:22.535 -> event:Added
+ * address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no 00:02:33.221 ->
+ * event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
+ * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no
+ * valid:yes rloc:yes Done
  * @endcode
- * @cparam history ipaddr [@ca{list}] [@ca{num-entries}] 
+ * @cparam history ipaddr [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the unicast IPv6 address history.
  * @par
@@ -212,12 +213,12 @@ exit:
  * 00:02:17.984 -> event:Subscribed address:ff02:0:0:0:0:0:0:1 origin:Thread
  * Done
  * @endcode
- * @cparam history ipmaddr [@ca{list}] [@ca{num-entries}] 
+ * @cparam history ipmaddr [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the multicast IPv6 address history.
  * @par
@@ -316,12 +317,12 @@ exit:
  * 00:06:55.035 -> type:Child event:Added extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
  * Done
  * @endcode
- * @cparam history neighbor [@ca{list}] [@ca{num-entries}] 
+ * @cparam history neighbor [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the neighbor history.
  * @par
@@ -332,7 +333,7 @@ exit:
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
  * * RLOC16
- * * Mode: MLE link mode. WHAT  ARE POSSIBLE VALUES? 
+ * * Mode: MLE link mode. WHAT  ARE POSSIBLE VALUES?
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -402,6 +403,87 @@ exit:
     return error;
 }
 
+/**
+ * @cli history router
+ * @code
+ * history router
+ * | Age                  | Event          | ID (RLOC16) | Next Hop    | Path Cost  |
+ * +----------------------+----------------+-------------+-------------+------------+
+ * |         00:00:05.258 | NextHopChanged |  7 (0x1c00) | 34 (0x8800) | inf ->   3 |
+ * |         00:00:08.604 | NextHopChanged | 34 (0x8800) | 34 (0x8800) | inf ->   2 |
+ * |         00:00:08.604 | Added          |  7 (0x1c00) |        none | inf -> inf |
+ * |         00:00:11.931 | Added          | 34 (0x8800) |        none | inf -> inf |
+ * |         00:00:14.948 | Removed        | 59 (0xec00) |        none | inf -> inf |
+ * |         00:00:14.948 | Removed        | 54 (0xd800) |        none | inf -> inf |
+ * |         00:00:14.948 | Removed        | 34 (0x8800) |        none | inf -> inf |
+ * |         00:00:14.948 | Removed        |  7 (0x1c00) |        none | inf -> inf |
+ * |         00:00:54.795 | NextHopChanged | 59 (0xec00) | 34 (0x8800) |   1 ->   5 |
+ * |         00:02:33.735 | NextHopChanged | 54 (0xd800) |        none |  15 -> inf |
+ * |         00:03:10.915 | CostChanged    | 54 (0xd800) | 34 (0x8800) |  13 ->  15 |
+ * |         00:03:45.716 | NextHopChanged | 54 (0xd800) | 34 (0x8800) |  15 ->  13 |
+ * |         00:03:46.188 | CostChanged    | 54 (0xd800) | 59 (0xec00) |  13 ->  15 |
+ * |         00:04:19.124 | CostChanged    | 54 (0xd800) | 59 (0xec00) |  11 ->  13 |
+ * |         00:04:52.008 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   9 ->  11 |
+ * |         00:05:23.176 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   7 ->   9 |
+ * |         00:05:51.081 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   5 ->   7 |
+ * |         00:06:48.721 | CostChanged    | 54 (0xd800) | 59 (0xec00) |   3 ->   5 |
+ * |         00:07:13.792 | NextHopChanged | 54 (0xd800) | 59 (0xec00) |   1 ->   3 |
+ * |         00:09:28.681 | NextHopChanged |  7 (0x1c00) | 34 (0x8800) | inf ->   3 |
+ * |         00:09:31.882 | Added          |  7 (0x1c00) |        none | inf -> inf |
+ * |         00:09:51.240 | NextHopChanged | 54 (0xd800) | 54 (0xd800) | inf ->   1 |
+ * |         00:09:54.204 | Added          | 54 (0xd800) |        none | inf -> inf |
+ * |         00:10:20.645 | NextHopChanged | 34 (0x8800) | 34 (0x8800) | inf ->   2 |
+ * |         00:10:24.242 | NextHopChanged | 59 (0xec00) | 59 (0xec00) | inf ->   1 |
+ * |         00:10:24.242 | Added          | 34 (0x8800) |        none | inf -> inf |
+ * |         00:10:41.900 | NextHopChanged | 59 (0xec00) |        none |   1 -> inf |
+ * |         00:10:42.480 | Added          |  3 (0x0c00) |  3 (0x0c00) | inf -> inf |
+ * |         00:10:43.614 | Added          | 59 (0xec00) | 59 (0xec00) | inf ->   1 |
+ * Done
+ * @endcode
+ * @code
+ * history router list 20
+ * 00:00:06.959 -> event:NextHopChanged router:7(0x1c00) nexthop:34(0x8800) old-cost:inf new-cost:3
+ * 00:00:10.305 -> event:NextHopChanged router:34(0x8800) nexthop:34(0x8800) old-cost:inf new-cost:2
+ * 00:00:10.305 -> event:Added router:7(0x1c00) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:13.632 -> event:Added router:34(0x8800) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:16.649 -> event:Removed router:59(0xec00) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:16.649 -> event:Removed router:54(0xd800) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:16.649 -> event:Removed router:34(0x8800) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:16.649 -> event:Removed router:7(0x1c00) nexthop:none old-cost:inf new-cost:inf
+ * 00:00:56.496 -> event:NextHopChanged router:59(0xec00) nexthop:34(0x8800) old-cost:1 new-cost:5
+ * 00:02:35.436 -> event:NextHopChanged router:54(0xd800) nexthop:none old-cost:15 new-cost:inf
+ * 00:03:12.616 -> event:CostChanged router:54(0xd800) nexthop:34(0x8800) old-cost:13 new-cost:15
+ * 00:03:47.417 -> event:NextHopChanged router:54(0xd800) nexthop:34(0x8800) old-cost:15 new-cost:13
+ * 00:03:47.889 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:13 new-cost:15
+ * 00:04:20.825 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:11 new-cost:13
+ * 00:04:53.709 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:9 new-cost:11
+ * 00:05:24.877 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:7 new-cost:9
+ * 00:05:52.782 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:5 new-cost:7
+ * 00:06:50.422 -> event:CostChanged router:54(0xd800) nexthop:59(0xec00) old-cost:3 new-cost:5
+ * 00:07:15.493 -> event:NextHopChanged router:54(0xd800) nexthop:59(0xec00) old-cost:1 new-cost:3
+ * 00:09:30.382 -> event:NextHopChanged router:7(0x1c00) nexthop:34(0x8800) old-cost:inf new-cost:3
+ * Done
+ * @endcode
+ * @cparam history router [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output.
+ * @par
+ * Displays the route-table history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Event: Possible values are `Added`, `Removed`, `NextHopChnaged`, or `CostChanged`.
+ * * ID (RLOC16): Router ID and RLOC16 of the router.
+ * * Next Hop: Router ID and RLOC16 of the next hop. If there is no next hop,
+ *             `none` is shown.
+ * * Path Cost: old cost `->` new cost. A value of `inf` indicates an infinite
+ *      	path cost.
+ * @sa otHistoryTrackerIterateRouterHistory
+ */
 template <> otError History::Process<Cmd("router")>(Arg aArgs[])
 {
     static const char *const kEventString[] = {
@@ -513,19 +595,19 @@ exit:
  * Done
  * @endcode
  * @code
- * history netinfo list 2
+ * history netinfo 2
  * | Age                  | Role     | Mode | RLOC16 | Partition ID |
  * +----------------------+----------+------+--------+--------------+
  * |         00:02:05.451 | router   | rdn  | 0x6000 |    151029327 |
  * |         00:04:04.719 | child    | rdn  | 0x2001 |    151029327 |
  * Done
  * @endcode
- * @cparam history netinfo [@ca{list}] [@ca{num-entries}] 
+ * @cparam history netinfo [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the network info history.
  * @par
@@ -581,6 +663,113 @@ exit:
     return error;
 }
 
+/**
+ * @cli history rx
+ * @code
+ * history rx
+ * | Age                  | Type             | Len   | Chksum | Sec | Prio | RSS  |Dir | Neighb | Radio |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xbd26 |  no |  net |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:07.640 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | HopOpts          |    44 | 0x0000 | yes | norm |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:09.263 | src: [fdde:ad00:beef:0:0:ff:fe00:4800]:0                                    |
+ * |                      | dst: [ff03:0:0:0:0:0:0:2]:0                                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    12 | 0x3f7d | yes |  net |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:09.302 | src: [fdde:ad00:beef:0:0:ff:fe00:4800]:61631                                |
+ * |                      | dst: [fdde:ad00:beef:0:0:ff:fe00:4801]:61631                                |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | ICMP6(EchoReqst) |    16 | 0x942c | yes | norm |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:09.304 | src: [fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0                               |
+ * |                      | dst: [fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0                               |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | HopOpts          |    44 | 0x0000 | yes | norm |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:09.304 | src: [fdde:ad00:beef:0:0:ff:fe00:4800]:0                                    |
+ * |                      | dst: [ff03:0:0:0:0:0:0:2]:0                                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0x2e37 |  no |  net |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:21.622 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xe177 |  no |  net |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:26.640 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |   165 | 0x82ee | yes |  net |  -20 | RX | 0x4800 |  15.4 |
+ * |         00:00:30.000 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788                                  |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    93 | 0x52df |  no |  net |  -20 | RX | unknwn |  15.4 |
+ * |         00:00:30.480 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788                                  |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0x5ccf |  no |  net |  -20 | RX | unknwn |  15.4 |
+ * |         00:00:30.772 | src: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * Done
+ * @endcode
+ * @code
+ * history rx list 4
+ * 00:00:13.368
+    type:UDP len:50 checksum:0xbd26 sec:no prio:net rss:-20 from:0x4800 radio:15.4
+    src:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
+    dst:[ff02:0:0:0:0:0:0:1]:19788
+ * 00:00:14.991
+    type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+    src:[fdde:ad00:beef:0:0:ff:fe00:4800]:0
+    dst:[ff03:0:0:0:0:0:0:2]:0
+ * 00:00:15.030
+    type:UDP len:12 checksum:0x3f7d sec:yes prio:net rss:-20 from:0x4800 radio:15.4
+    src:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
+    dst:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
+ * 00:00:15.032
+    type:ICMP6(EchoReqst) len:16 checksum:0x942c sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+    src:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
+    dst:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
+ * Done
+ * @endcode
+ * @cparam history rx [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output.
+ * @par
+ * Displays the IPv6 message RX history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Type:
+ *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
+ *     * `src`: Source IPv6 address and port number.
+ *     * `dst`: Destination IPv6 address and port number (port number is valid
+            for UDP/TCP, otherwise it is 0).
+ * Len: IPv6 payload length (excluding the IPv6 header).
+ * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
+ * Sec: Indicates if link-layer security was used.
+ * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
+ *       `net` (for Thread control messages).
+ * RSS: Received Signal Strength (in dBm), averaged over all received fragment
+ *      frames that formed the message. For TX history, `NA` (not applicable)
+    is displayed.
+ * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
+ *      transmission is indicated with `TX-F` in table format or
+ *      `tx-success:no` in list format. Examples of a failed transmission
+ *      include a `tx`getting aborted and no `ack` getting sent from the peer for
+ *      any of the message fragments.
+ * Neighb: Short address (RLOC16) of the neighbor with whom the message was
+ *         sent/received. If the frame was broadcast, it is shown as
+ *         `bcast` in table format or `0xffff` in list format. If the short
+ *         address of the neighbor is not available, it is shown as `unknwn` in
+ *         table format or `0xfffe` in list format.
+ * Radio: Radio link on which the message was sent/received (useful when
+          `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
+          or `all` (if sent on all radio links).
+ * @sa otHistoryTrackerIterateRxHistory
+ */
 template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRx, aArgs); }
 
 template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRxTx, aArgs); }
@@ -856,12 +1045,12 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  * 00:06:01.711 -> event:Added prefix:fd00:dead:beef:1::/64 flags:paros pref:med rloc16:0x8800
  * Done
  * @endcode
- * @cparam history prefix [@ca{list}] [@ca{num-entries}] 
+ * @cparam history prefix [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the network data for the mesh prefix history.
  * @par
@@ -871,7 +1060,7 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  * * Event: Possible values are `Added` or `Removed`.
  * * Prefix
  * * Flags/meaning:
- *     * `p': Preferred flag
+ *     * `p`: Preferred flag
  *     * `a`: Stateless IPv6 address auto-configuration flag.
  *     * `d`: DHCPv6 IPv6 address configuration flag.
  *     * `c`: DHCPv6 other-configuration flag.
@@ -952,12 +1141,12 @@ exit:
  * 00:01:12.558 -> event:Added route:fd00:1111:0::/48 flags:s pref:med rloc16:0x3c00
  * Done
  * @endcode
- * @cparam history route [@ca{list}] [@ca{num-entries}] 
+ * @cparam history route [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
  * * Use the `num-entries` option to limit the output to the number of
  *   most-recent entries specified. If this option is not used, all stored
- *   entries are shown in the output. 
+ *   entries are shown in the output.
  * @par
  * Displays the network data external-route history.
  * @par
