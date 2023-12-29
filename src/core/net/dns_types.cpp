@@ -100,39 +100,40 @@ Error Header::ResponseCodeToError(Response aResponse)
     return error;
 }
 
-bool Name::Matches(const char *aFirstLabels, const char *aSecondLabels, const char *aDomain) const
+bool Name::Matches(const char *aFirstLabel, const char *aLabels, const char *aDomain) const
 {
-    bool        matches = false;
-    const char *namePtr;
-    Buffer      nameBuffer;
+    bool matches = false;
 
     VerifyOrExit(!IsEmpty());
 
     if (IsFromCString())
     {
-        namePtr = mString;
+        const char *namePtr = mString;
+
+        if (aFirstLabel != nullptr)
+        {
+            matches = CompareAndSkipLabels(namePtr, aFirstLabel, kLabelSeparatorChar);
+            VerifyOrExit(matches);
+        }
+
+        matches = CompareAndSkipLabels(namePtr, aLabels, kLabelSeparatorChar);
+        VerifyOrExit(matches);
+
+        matches = CompareAndSkipLabels(namePtr, aDomain, kNullChar);
     }
     else
     {
         uint16_t offset = mOffset;
 
-        SuccessOrExit(ReadName(*mMessage, offset, nameBuffer));
-        namePtr = nameBuffer;
-    }
+        if (aFirstLabel != nullptr)
+        {
+            SuccessOrExit(CompareLabel(*mMessage, offset, aFirstLabel));
+        }
 
-    if (aFirstLabels != nullptr)
-    {
-        matches = CompareAndSkipLabels(namePtr, aFirstLabels, kLabelSeparatorChar);
-        VerifyOrExit(matches);
+        SuccessOrExit(CompareMultipleLabels(*mMessage, offset, aLabels));
+        SuccessOrExit(CompareName(*mMessage, offset, aDomain));
+        matches = true;
     }
-
-    if (aSecondLabels != nullptr)
-    {
-        matches = CompareAndSkipLabels(namePtr, aSecondLabels, kLabelSeparatorChar);
-        VerifyOrExit(matches);
-    }
-
-    matches = CompareAndSkipLabels(namePtr, aDomain, kNullChar);
 
 exit:
     return matches;
@@ -426,6 +427,27 @@ Error Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char 
     SuccessOrExit(error = iterator.GetNextLabel());
     VerifyOrExit(iterator.CompareLabel(aLabel, kIsSingleLabel), error = kErrorNotFound);
     aOffset = iterator.mNextLabelOffset;
+
+exit:
+    return error;
+}
+
+Error Name::CompareMultipleLabels(const Message &aMessage, uint16_t &aOffset, const char *aLabels)
+{
+    Error         error;
+    LabelIterator iterator(aMessage, aOffset);
+
+    while (true)
+    {
+        SuccessOrExit(error = iterator.GetNextLabel());
+        VerifyOrExit(iterator.CompareLabel(aLabels, !kIsSingleLabel), error = kErrorNotFound);
+
+        if (*aLabels == kNullChar)
+        {
+            aOffset = iterator.mNextLabelOffset;
+            ExitNow();
+        }
+    }
 
 exit:
     return error;

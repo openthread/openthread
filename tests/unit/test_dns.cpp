@@ -59,8 +59,8 @@ void TestDnsName(void)
     struct TestMatches
     {
         const char *mFullName;
-        const char *mFirstLabels;
-        const char *mSecondLabels;
+        const char *mFirstLabel;
+        const char *mLabels;
         const char *mDomain;
         bool        mShouldMatch;
     };
@@ -79,6 +79,7 @@ void TestDnsName(void)
     const char            *domain2;
     const char            *fullName;
     const char            *suffixName;
+    Dns::Name              dnsName;
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -150,9 +151,7 @@ void TestDnsName(void)
 
     static const TestMatches kTestMatches[] = {
         {"foo.bar.local.", "foo", "bar", "local.", true},
-        {"foo.bar.local.", "foo.bar", nullptr, "local.", true},
         {"foo.bar.local.", nullptr, "foo.bar", "local.", true},
-        {"foo.bar.local.", nullptr, nullptr, "foo.bar.local.", true},
         {"foo.bar.local.", "foo", "ba", "local.", false},
         {"foo.bar.local.", "fooooo", "bar", "local.", false},
         {"foo.bar.local.", "foo", "bar", "locall.", false},
@@ -160,11 +159,8 @@ void TestDnsName(void)
         {"foo.bar.local.", "foo", "barr", "local.", false},
         {"foo.bar.local.", "foo", "bar", ".local.", false},
         {"My Lovely Instance._mt._udp.local.", "mY lovely instancE", "_mt._udp", "local.", true},
-        {"My Lovely Instance._mt._udp.local.", "mY lovely instancE._mt", "_udp", "local.", true},
-        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp", "default.service.arpa.", true},
-        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp", "default.service.arpa", false},
-        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub", "_srv._udp.", "default.service.arpa.", false},
-        {"_s1._sub._srv._udp.default.service.arpa.", "_s1._sub.", "_srv._udp", "default.service.arpa.", false},
+        {"My Lovely Instance._mt._udp.local.", nullptr, "mY lovely instancE._mt._udp", "local.", true},
+        {"_s1._sub._srv._udp.default.service.arpa.", "_s1", "_sub._srv._udp", "default.service.arpa.", true},
     };
 
     printf("================================================================\n");
@@ -555,19 +551,47 @@ void TestDnsName(void)
 
     for (const TestMatches &test : kTestMatches)
     {
-        Dns::Name name;
-
         printf(" \"%s\"\n", test.mFullName);
 
-        name.Set(test.mFullName);
-        VerifyOrQuit(name.Matches(test.mFirstLabels, test.mSecondLabels, test.mDomain) == test.mShouldMatch);
+        dnsName.Set(test.mFullName);
+        VerifyOrQuit(dnsName.Matches(test.mFirstLabel, test.mLabels, test.mDomain) == test.mShouldMatch);
 
         IgnoreError(message->SetLength(0));
-        SuccessOrQuit(name.AppendTo(*message));
+        SuccessOrQuit(dnsName.AppendTo(*message));
 
-        name.SetFromMessage(*message, 0);
-        VerifyOrQuit(name.Matches(test.mFirstLabels, test.mSecondLabels, test.mDomain) == test.mShouldMatch);
+        dnsName.SetFromMessage(*message, 0);
+        VerifyOrQuit(dnsName.Matches(test.mFirstLabel, test.mLabels, test.mDomain) == test.mShouldMatch);
     }
+
+    IgnoreError(message->SetLength(0));
+    dnsName.SetFromMessage(*message, 0);
+    SuccessOrQuit(Dns::Name::AppendLabel("Name.With.Dot", *message));
+    SuccessOrQuit(Dns::Name::AppendName("_srv._udp.local.", *message));
+
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("nAme.with.dOT", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv", "_udp.local."));
+
+    VerifyOrQuit(!dnsName.Matches("Name", "With.Dot._srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.", "With.Dot._srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With", "Dot._srv._udp", "local."));
+
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dott", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot.", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._tcp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._udp", "arpa."));
+
+    offset = 0;
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+    dnsName.Set(name);
+
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("nAme.with.dOT", "_srv._udp", "local."));
+    VerifyOrQuit(dnsName.Matches("Name.With.Dot", "_srv", "_udp.local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dott", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot.", "_srv._udp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._tcp", "local."));
+    VerifyOrQuit(!dnsName.Matches("Name.With.Dot", "_srv._udp", "arpa."));
 
     message->Free();
     testFreeInstance(instance);
@@ -600,6 +624,13 @@ void TestDnsCompressedName(void)
     static const char *kName2Labels[] = {"FOO", "F", "ISI", "ARPA"};
     static const char *kName3Labels[] = {"ISI", "ARPA"};
     static const char *kName4Labels[] = {"Human.Readable", "F", "ISI", "ARPA"};
+
+    static const char *kName1MultiLabels[]  = {"F.ISI", "ARPA"};
+    static const char *kName2MultiLabels1[] = {"FOO", "F.ISI.ARPA."};
+    static const char *kName2MultiLabels2[] = {"FOO.F.", "ISI.ARPA."};
+
+    static const char kName1BadMultiLabels[] = "F.ISI.ARPA.MORE";
+    static const char kName2BadMultiLabels[] = "FOO.F.IS";
 
     static const char kExpectedReadName1[] = "F.ISI.ARPA.";
     static const char kExpectedReadName2[] = "FOO.F.ISI.ARPA.";
@@ -712,11 +743,35 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::ReadName() returned incorrect offset");
 
     offset = name1Offset;
-
     for (const char *nameLabel : kName1Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    for (const char *nameLabel : kName1Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName1));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name1Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kBadName) == kErrorNotFound);
+
+    offset = name1Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kName1BadMultiLabels) == kErrorNotFound);
+
+    offset = name1Offset;
+    for (const char *nameLabels : kName1MultiLabels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name1Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName1));
@@ -769,11 +824,42 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::ReadName() returned incorrect offset");
 
     offset = name2Offset;
-
     for (const char *nameLabel : kName2Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    for (const char *nameLabel : kName2Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName2));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kBadName) == kErrorNotFound);
+
+    offset = name2Offset;
+    VerifyOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kName2BadMultiLabels) == kErrorNotFound);
+
+    offset = name2Offset;
+    for (const char *nameLabels : kName2MultiLabels1)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name2Offset;
+    for (const char *nameLabels : kName2MultiLabels2)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabels));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name2Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName2));
@@ -826,11 +912,22 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::ReadName() returned incorrect offset");
 
     offset = name3Offset;
-
     for (const char *nameLabel : kName3Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name3Offset;
+    for (const char *nameLabel : kName3Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name3Offset;
+    SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, kExpectedReadName3));
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name3Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, kExpectedReadName3));
@@ -880,11 +977,18 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name4Offset + kName4EncodedSize, "Name::ParseName() returned incorrect offset");
 
     offset = name4Offset;
-
     for (const char *nameLabel : kName4Labels)
     {
         SuccessOrQuit(Dns::Name::CompareLabel(*message, offset, nameLabel));
     }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
+
+    offset = name4Offset;
+    for (const char *nameLabel : kName4Labels)
+    {
+        SuccessOrQuit(Dns::Name::CompareMultipleLabels(*message, offset, nameLabel));
+    }
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, "."));
 
     offset = name4Offset;
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, *message, offset), "Name::CompareName() with itself failed");
