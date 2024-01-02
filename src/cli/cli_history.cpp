@@ -90,13 +90,12 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * @endcode
  * @code
  * history ipaddr list 5
- * 00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14
- * preferred:yes valid:yes rloc:no 00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b
- * prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no 00:01:22.535 -> event:Added
- * address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no 00:02:33.221 ->
- * event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
- * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no
- * valid:yes rloc:yes Done
+ * 00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+ * 00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:slaac scope:14 preferred:yes valid:yes rloc:no
+ * 00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:manual scope:14 preferred:yes valid:yes rloc:no
+ * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:no
+ * 00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:thread scope:3 preferred:no valid:yes rloc:yes
+ * Done
  * @endcode
  * @cparam history ipaddr [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
@@ -113,9 +112,9 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
- * * Scope: WHAT POSSIBLE VALUES and what does each value mean????
- * * Preferred (P): =QUESTION: What does this flag indicate?=
- * * Valid (V): ==WHAT ABOUT THIS FLAG?==
+ * * Scope: ==ABTIN: WHAT are the POSSIBLE VALUES and what does each value mean?==
+ * * Preferred (P): ==ABTIN: What does this flag indicate?==
+ * * Valid (V): ==ABTIN - WHAT ABOUT THIS FLAG?==
  * * RLOC (R): This flag indicates if the IPv6 address is a routing locator.
  * @sa otHistoryTrackerEntryAgeToString
  * @sa otHistoryTrackerIterateUnicastAddressHistory
