@@ -114,8 +114,8 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
  * * Scope: WHAT POSSIBLE VALUES and what does each value mean????
- * * Preferred (P): QUESTION: What does this flag indicate?
- * * Valid (V): WHAT ABOUT THIS FLAG?
+ * * Preferred (P): =QUESTION: What does this flag indicate?=
+ * * Valid (V): ==WHAT ABOUT THIS FLAG?==
  * * RLOC (R): This flag indicates if the IPv6 address is a routing locator.
  * @sa otHistoryTrackerEntryAgeToString
  * @sa otHistoryTrackerIterateUnicastAddressHistory
