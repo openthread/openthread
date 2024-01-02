@@ -713,21 +713,21 @@ exit:
  * @code
  * history rx list 4
  * 00:00:13.368
-    type:UDP len:50 checksum:0xbd26 sec:no prio:net rss:-20 from:0x4800 radio:15.4
-    src:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
-    dst:[ff02:0:0:0:0:0:0:1]:19788
+       type:UDP len:50 checksum:0xbd26 sec:no prio:net rss:-20 from:0x4800 radio:15.4
+       src:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
+       dst:[ff02:0:0:0:0:0:0:1]:19788
  * 00:00:14.991
-    type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
-    src:[fdde:ad00:beef:0:0:ff:fe00:4800]:0
-    dst:[ff03:0:0:0:0:0:0:2]:0
+       type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+       src:[fdde:ad00:beef:0:0:ff:fe00:4800]:0
+       dst:[ff03:0:0:0:0:0:0:2]:0
  * 00:00:15.030
-    type:UDP len:12 checksum:0x3f7d sec:yes prio:net rss:-20 from:0x4800 radio:15.4
-    src:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
-    dst:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
+       type:UDP len:12 checksum:0x3f7d sec:yes prio:net rss:-20 from:0x4800 radio:15.4
+       src:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
+       dst:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
  * 00:00:15.032
-    type:ICMP6(EchoReqst) len:16 checksum:0x942c sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
-    src:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
-    dst:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
+       type:ICMP6(EchoReqst) len:16 checksum:0x942c sec:yes prio:norm rss:-20 from:0x4800 radio:15.4
+       src:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
+       dst:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
  * Done
  * @endcode
  * @cparam history rx [@ca{list}] [@ca{num-entries}]
@@ -751,29 +751,234 @@ exit:
  * * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
  * * Sec: Indicates if link-layer security was used.
  * * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
- *       `net` (for Thread control messages).
+ *         `net` (for Thread control messages).
  * * RSS: Received Signal Strength (in dBm), averaged over all received fragment
  *        frames that formed the message. For TX history, `NA` (not applicable)
           is displayed.
  * * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
- *      transmission is indicated with `TX-F` in table format or
- *      `tx-success:no` in list format. Examples of a failed transmission
- *      include a `tx`getting aborted and no `ack` getting sent from the peer for
- *      any of the message fragments.
+ *        transmission is indicated with `TX-F` in table format or
+ *        `tx-success:no` in list format. Examples of a failed transmission
+ *        include a `tx`getting aborted and no `ack` getting sent from the peer for
+ *        any of the message fragments.
  * * Neighb: Short address (RLOC16) of the neighbor with whom the message was
- *         sent/received. If the frame was broadcast, it is shown as
- *         `bcast` in table format or `0xffff` in list format. If the short
- *         address of the neighbor is not available, it is shown as `unknwn` in
- *         table format or `0xfffe` in list format.
+ *           sent/received. If the frame was broadcast, it is shown as
+ *           `bcast` in table format or `0xffff` in list format. If the short
+ *           address of the neighbor is not available, it is shown as `unknwn` in
+ *           table format or `0xfffe` in list format.
  * * Radio: Radio link on which the message was sent/received (useful when
-          `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
-          or `all` (if sent on all radio links).
+            `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
+            or `all` (if sent on all radio links).
  * @sa otHistoryTrackerIterateRxHistory
  */
 template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRx, aArgs); }
 
+/**
+ * @cli history rxtx
+ * @code
+ * history rxtx
+ * | Age                  | Type             | Len   | Chksum | Sec | Prio | RSS  |Dir | Neighb | Radio |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | HopOpts          |    44 | 0x0000 | yes | norm |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:09.267 | src: [fdde:ad00:beef:0:0:ff:fe00:800]:0                                     |
+ * |                      | dst: [ff03:0:0:0:0:0:0:2]:0                                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    12 | 0x6c6b | yes |  net |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:09.290 | src: [fdde:ad00:beef:0:0:ff:fe00:800]:61631                                 |
+ * |                      | dst: [fdde:ad00:beef:0:0:ff:fe00:801]:61631                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | ICMP6(EchoReqst) |    16 | 0xc6a2 | yes | norm |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:09.292 | src: [fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0                               |
+ * |                      | dst: [fdde:ad00:beef:0:af4c:3644:882a:3698]:0                               |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | ICMP6(EchoReply) |    16 | 0xc5a2 | yes | norm |  NA  | TX | 0x0800 |  15.4 |
+ * |         00:00:09.292 | src: [fdde:ad00:beef:0:af4c:3644:882a:3698]:0                               |
+ * |                      | dst: [fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0                               |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xaa0d | yes |  net |  NA  | TX | 0x0800 |  15.4 |
+ * |         00:00:09.294 | src: [fdde:ad00:beef:0:0:ff:fe00:801]:61631                                 |
+ * |                      | dst: [fdde:ad00:beef:0:0:ff:fe00:800]:61631                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | HopOpts          |    44 | 0x0000 | yes | norm |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:09.296 | src: [fdde:ad00:beef:0:0:ff:fe00:800]:0                                     |
+ * |                      | dst: [ff03:0:0:0:0:0:0:2]:0                                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xc1d8 |  no |  net |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:09.569 | src: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0x3cb1 |  no |  net |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:16.519 | src: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xeda0 |  no |  net |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:20.599 | src: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:1]:19788                                             |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |   165 | 0xbdfa | yes |  net |  -20 | RX | 0x0800 |  15.4 |
+ * |         00:00:21.059 | src: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * |                      | dst: [fe80:0:0:0:8893:c2cc:d983:1e1c]:19788                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    64 | 0x1c11 |  no |  net |  NA  | TX | 0x0800 |  15.4 |
+ * |         00:00:21.062 | src: [fe80:0:0:0:8893:c2cc:d983:1e1c]:19788                                 |
+ * |                      | dst: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    93 | 0xedff |  no |  net |  -20 | RX | unknwn |  15.4 |
+ * |         00:00:21.474 | src: [fe80:0:0:0:54d9:5153:ffc6:df26]:19788                                 |
+ * |                      | dst: [fe80:0:0:0:8893:c2cc:d983:1e1c]:19788                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    44 | 0xd383 |  no |  net |  NA  | TX | bcast  |  15.4 |
+ * |         00:00:21.811 | src: [fe80:0:0:0:8893:c2cc:d983:1e1c]:19788                                 |
+ * |                      | dst: [ff02:0:0:0:0:0:0:2]:19788                                             |
+ * Done
+ * @endcode
+ * @code
+ * history rxtx list 5
+ * 00:00:02.100
+       type:UDP len:50 checksum:0xd843 sec:no prio:net rss:-20 from:0x0800 radio:15.4
+       src:[fe80:0:0:0:54d9:5153:ffc6:df26]:19788
+       dst:[ff02:0:0:0:0:0:0:1]:19788
+ * 00:00:15.331
+       type:HopOpts len:44 checksum:0x0000 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
+       src:[fdde:ad00:beef:0:0:ff:fe00:800]:0
+       dst:[ff03:0:0:0:0:0:0:2]:0
+ * 00:00:15.354
+       type:UDP len:12 checksum:0x6c6b sec:yes prio:net rss:-20 from:0x0800 radio:15.4
+       src:[fdde:ad00:beef:0:0:ff:fe00:800]:61631
+       dst:[fdde:ad00:beef:0:0:ff:fe00:801]:61631
+ * 00:00:15.356
+       type:ICMP6(EchoReqst) len:16 checksum:0xc6a2 sec:yes prio:norm rss:-20 from:0x0800 radio:15.4
+       src:[fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0
+       dst:[fdde:ad00:beef:0:af4c:3644:882a:3698]:0
+ * 00:00:15.356
+       type:ICMP6(EchoReply) len:16 checksum:0xc5a2 sec:yes prio:norm tx-success:yes to:0x0800 radio:15.4
+       src:[fdde:ad00:beef:0:af4c:3644:882a:3698]:0
+       dst:[fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0
+ * @cparam history rxtx [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output.
+ * @par
+ * Displays the combined IPv6 message RX and TX history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Type:
+ *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
+ *     * `src`: Source IPv6 address and port number.
+ *     * `dst`: Destination IPv6 address and port number (port number is valid
+         for UDP/TCP, otherwise it is 0).
+ * * Len: IPv6 payload length (excluding the IPv6 header).
+ * * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
+ * * Sec: Indicates if link-layer security was used.
+ * * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
+ *         `net` (for Thread control messages).
+ * * RSS: Received Signal Strength (in dBm), averaged over all received fragment
+ *        frames that formed the message. For TX history, `NA` (not applicable)
+          is displayed.
+ * * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
+ *        transmission is indicated with `TX-F` in table format or
+ *        `tx-success:no` in list format. Examples of a failed transmission
+ *        include a `tx`getting aborted and no `ack` getting sent from the peer for
+ *        any of the message fragments.
+ * * Neighb: Short address (RLOC16) of the neighbor with whom the message was
+ *           sent/received. If the frame was broadcast, it is shown as
+ *           `bcast` in table format or `0xffff` in list format. If the short
+ *           address of the neighbor is not available, it is shown as `unknwn` in
+ *           table format or `0xfffe` in list format.
+ * * Radio: Radio link on which the message was sent/received (useful when
+            `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
+            or `all` (if sent on all radio links).
+ * @sa otHistoryTrackerIterateRxHistory
+ * @sa otHistoryTrackerIterateTxHistory
+ */
 template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessRxTxHistory(kRxTx, aArgs); }
 
+/**
+ * @cli history tx
+ * @code
+ * history tx
+ * | Age                  | Type             | Len   | Chksum | Sec | Prio | RSS  |Dir | Neighb | Radio |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | ICMP6(EchoReply) |    16 | 0x932c | yes | norm |  NA  | TX | 0x4800 |  15.4 |
+ * |         00:00:18.798 | src: [fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0                               |
+ * |                      | dst: [fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0                               |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    50 | 0xce87 | yes |  net |  NA  | TX | 0x4800 |  15.4 |
+ * |         00:00:18.800 | src: [fdde:ad00:beef:0:0:ff:fe00:4801]:61631                                |
+ * |                      | dst: [fdde:ad00:beef:0:0:ff:fe00:4800]:61631                                |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    64 | 0xf7ba |  no |  net |  NA  | TX | 0x4800 |  15.4 |
+ * |         00:00:39.499 | src: [fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788                                  |
+ * |                      | dst: [fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788                                 |
+ * +----------------------+------------------+-------+--------+-----+------+------+----+--------+-------+
+ * |                      | UDP              |    44 | 0x26d4 |  no |  net |  NA  | TX | bcast  |  15.4 |
+ * |         00:00:40.256 | src: [fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788                                  |
+ * |                      | dst: [ff02:0:0:0:0:0:0:2]:19788                                             |
+ * Done
+ * @endcode
+ * @code
+ * history tx list
+ * 00:00:23.957
+       type:ICMP6(EchoReply) len:16 checksum:0x932c sec:yes prio:norm tx-success:yes to:0x4800 radio:15.4
+       src:[fdde:ad00:beef:0:dc0e:d6b3:f180:b75b]:0
+       dst:[fdde:ad00:beef:0:ac09:a16b:3204:dc09]:0
+ * 00:00:23.959
+       type:UDP len:50 checksum:0xce87 sec:yes prio:net tx-success:yes to:0x4800 radio:15.4
+       src:[fdde:ad00:beef:0:0:ff:fe00:4801]:61631
+       dst:[fdde:ad00:beef:0:0:ff:fe00:4800]:61631
+ * 00:00:44.658
+       type:UDP len:64 checksum:0xf7ba sec:no prio:net tx-success:yes to:0x4800 radio:15.4
+       src:[fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788
+       dst:[fe80:0:0:0:d03d:d3e7:cc5e:7cd7]:19788
+ * 00:00:45.415
+       type:UDP len:44 checksum:0x26d4 sec:no prio:net tx-success:yes to:0xffff radio:15.4
+       src:[fe80:0:0:0:a4a5:bbac:a8e:bd07]:19788
+       dst:[ff02:0:0:0:0:0:0:2]:19788
+ * Done
+ * @endcode
+ * @cparam history tx [@ca{list}] [@ca{num-entries}]
+ * * Use the `list` option to display the output in list format. Otherwise,
+ *   the output is shown in table format.
+ * * Use the `num-entries` option to limit the output to the number of
+ *   most-recent entries specified. If this option is not used, all stored
+ *   entries are shown in the output.
+ * @par
+ * Displays the IPv6 message TX history.
+ * @par
+ * Each entry provides:
+ * * Age: Time elapsed since the command was issued, and given in the format:
+ *        `hours`:`minutes`:`seconds`:`milliseconds`
+ * * Type:
+ *     * IPv6 message type, such as `UDP`, `TCP`, `HopOpts`, and `ICMP6` (and its subtype).
+ *     * `src`: Source IPv6 address and port number.
+ *     * `dst`: Destination IPv6 address and port number (port number is valid
+         for UDP/TCP, otherwise it is 0).
+ * * Len: IPv6 payload length (excluding the IPv6 header).
+ * * Chksum: Message checksum (valid for UDP, TCP, or ICMP6 messages).
+ * * Sec: Indicates if link-layer security was used.
+ * * Prio: Message priority. Possible values are `low`, `norm`, `high`, or
+ *         `net` (for Thread control messages).
+ * * RSS: Received Signal Strength (in dBm), averaged over all received fragment
+ *        frames that formed the message. For TX history, `NA` (not applicable)
+          is displayed.
+ * * Dir: Shows whether the message was sent (`TX`) or received (`RX`). A failed
+ *        transmission is indicated with `TX-F` in table format or
+ *        `tx-success:no` in list format. Examples of a failed transmission
+ *        include a `tx`getting aborted and no `ack` getting sent from the peer for
+ *        any of the message fragments.
+ * * Neighb: Short address (RLOC16) of the neighbor with whom the message was
+ *           sent/received. If the frame was broadcast, it is shown as
+ *           `bcast` in table format or `0xffff` in list format. If the short
+ *           address of the neighbor is not available, it is shown as `unknwn` in
+ *           table format or `0xfffe` in list format.
+ * * Radio: Radio link on which the message was sent/received (useful when
+            `OPENTHREAD_CONFIG_MULTI_RADIO` is enabled). Can be `15.4`, `trel`,
+            or `all` (if sent on all radio links).
+ * @sa otHistoryTrackerIterateTxHistory
+ */
 template <> otError History::Process<Cmd("tx")>(Arg aArgs[]) { return ProcessRxTxHistory(kTx, aArgs); }
 
 const char *History::MessagePriorityToString(uint8_t aPriority)
