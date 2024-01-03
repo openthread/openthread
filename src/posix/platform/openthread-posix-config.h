@@ -419,4 +419,14 @@
 #define OPENTHREAD_POSIX_CONFIG_EXIT_ON_INFRA_NETIF_LOST_ENABLE 1
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE
+ *
+ * This setting configures the capacity of TREL packet pool for transmission.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE
+#define OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE 5
+#endif
+
 #endif // OPENTHREAD_PLATFORM_CONFIG_H_
