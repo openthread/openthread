@@ -104,9 +104,9 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the unicast IPv6 address history.
+ * Displays the unicast IPv6 address history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
@@ -219,9 +219,9 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the multicast IPv6 address history.
+ * Displays the multicast IPv6 address history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Subscribed` or `Unsubscribed`.
@@ -323,9 +323,9 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the neighbor history.
+ * Displays the neighbor history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Type: `Child` or `Router`.
@@ -470,9 +470,9 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the route-table history.
+ * Displays the route-table history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Added`, `Removed`, `NextHopChnaged`, or `CostChanged`.
@@ -608,15 +608,15 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the network info history.
+ * Displays the network info history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
- * * Mode: WHAT ARE POSSIBLE VALUES?
+ * * Mode: == ABTIN - WHAT ARE POSSIBLE VALUES?==
  * * RLOC16
- * * Partition ID.  WHAT DOES a VALUE of 0 mean?
+ * * Partition ID. ==ABTIN -  WHAT DOES a VALUE of 0 mean?==
  * @sa otHistoryTrackerIterateNetInfoHistory
  */
 template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
@@ -736,9 +736,9 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the IPv6 message RX history.
+ * Displays the IPv6 message RX history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Type:
@@ -852,6 +852,8 @@ template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxT
        type:ICMP6(EchoReply) len:16 checksum:0xc5a2 sec:yes prio:norm tx-success:yes to:0x0800 radio:15.4
        src:[fdde:ad00:beef:0:af4c:3644:882a:3698]:0
        dst:[fdde:ad00:beef:0:efe8:4910:cf95:dee9]:0
+ * Done
+ * @endcode
  * @cparam history rxtx [@ca{list}] [@ca{num-entries}]
  * * Use the `list` option to display the output in list format. Otherwise,
  *   the output is shown in table format.
@@ -859,9 +861,9 @@ template <> otError History::Process<Cmd("rx")>(Arg aArgs[]) { return ProcessRxT
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the combined IPv6 message RX and TX history.
+ * Displays the combined IPv6 message RX and TX history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Type:
@@ -945,9 +947,9 @@ template <> otError History::Process<Cmd("rxtx")>(Arg aArgs[]) { return ProcessR
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the IPv6 message TX history.
+ * Displays the IPv6 message TX history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Type:
@@ -1256,9 +1258,9 @@ void History::OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInf
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the network data for the mesh prefix history.
+ * Displays the network data for the mesh prefix history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
@@ -1352,9 +1354,9 @@ exit:
  *   most-recent entries specified. If this option is not used, all stored
  *   entries are shown in the output.
  * @par
- * Displays the network data external-route history.
+ * Displays the network data external-route history in table or list format.
  * @par
- * Each entry provides:
+ * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Event: Possible values are `Added` or `Removed`.
