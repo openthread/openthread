@@ -165,17 +165,15 @@ typedef struct otUpstreamDnsCounters
  */
 typedef struct otDnssdCounters
 {
-    uint32_t mSuccessResponse;        ///< The number of successful responses.
-    uint32_t mServerFailureResponse;  ///< The number of server failure responses.
-    uint32_t mFormatErrorResponse;    ///< The number of format error responses.
-    uint32_t mNameErrorResponse;      ///< The number of name error responses.
-    uint32_t mNotImplementedResponse; ///< The number of 'not implemented' responses.
-    uint32_t mOtherResponse;          ///< The number of other responses.
-
-    uint32_t mResolvedBySrp; ///< The number of queries completely resolved by the local SRP server.
-
-    otUpstreamDnsCounters mUpstreamDnsCounters; ///< The number of queries, responses,
-                                                ///< failures handled by upstream DNS server.
+    uint32_t              mSuccessResponse;        ///< The number of successful responses.
+    uint32_t              mServerFailureResponse;  ///< The number of server failure responses.
+    uint32_t              mFormatErrorResponse;    ///< The number of format error responses.
+    uint32_t              mNameErrorResponse;      ///< The number of name error responses.
+    uint32_t              mNotImplementedResponse; ///< The number of 'not implemented' responses.
+    uint32_t              mOtherResponse;          ///< The number of other responses.
+    uint32_t              mResolvedBySrp;          ///< The number of queries resolved by the local SRP server.
+    otUpstreamDnsCounters mUpstreamDnsCounters;    ///< The number of queries, responses,
+                                                   ///< failures handled by upstream DNS server.
 } otDnssdCounters;
 
 /**
