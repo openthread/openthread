@@ -112,9 +112,9 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
- * * Scope: ==ABTIN: WHAT are the POSSIBLE VALUES and what does each value mean?==
- * * Preferred (P): ==ABTIN: What does this flag indicate?==
- * * Valid (V): ==ABTIN - WHAT ABOUT THIS FLAG?==
+ * * Scope:
+ * * Preferred (P):
+ * * Valid (V):
  * * RLOC (R): This flag indicates if the IPv6 address is a routing locator.
  * @sa otHistoryTrackerEntryAgeToString
  * @sa otHistoryTrackerIterateUnicastAddressHistory
@@ -332,7 +332,7 @@ exit:
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
  * * RLOC16
- * * Mode: MLE link mode. ==ABTIN - WHAT  ARE POSSIBLE VALUES?==
+ * * Mode: MLE link mode.
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -614,9 +614,9 @@ exit:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
- * * Mode: ==ABTIN - WHAT ARE POSSIBLE VALUES?==
+ * * Mode:
  * * RLOC16
- * * Partition ID. ==ABTIN - WHAT DOES a VALUE of 0 mean?==
+ * * Partition ID.
  * @sa otHistoryTrackerIterateNetInfoHistory
  */
 template <> otError History::Process<Cmd("netinfo")>(Arg aArgs[])
