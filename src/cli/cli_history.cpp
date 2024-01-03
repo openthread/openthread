@@ -332,7 +332,7 @@ exit:
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
  * * RLOC16
- * * Mode: MLE link mode. WHAT  ARE POSSIBLE VALUES?
+ * * Mode: MLE link mode. ==ABTIN - WHAT  ARE POSSIBLE VALUES?==
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -614,7 +614,7 @@ exit:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
- * * Mode: == ABTIN - WHAT ARE POSSIBLE VALUES?==
+ * * Mode: ==ABTIN - WHAT ARE POSSIBLE VALUES?==
  * * RLOC16
  * * Partition ID. ==ABTIN -  WHAT DOES a VALUE of 0 mean?==
  * @sa otHistoryTrackerIterateNetInfoHistory
