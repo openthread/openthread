@@ -35,6 +35,16 @@
 #ifndef CONFIG_SRP_CLIENT_H_
 #define CONFIG_SRP_CLIENT_H_
 
+/**
+ * @addtogroup config-srp-client
+ *
+ * @brief
+ *   This module includes configuration variables for the SRP Client.
+ *
+ * @{
+ *
+ */
+
 #include "config/misc.h"
 
 /**
@@ -274,7 +284,7 @@
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_WAIT_INTERVAL_JITTER
  *
  * Specifies jitter (in msec) for retry wait interval. If the current retry wait interval is smaller than the jitter
- * then the the wait interval itself is used as jitter (e.g., with jitter 500 msec and if retry interval is 300ms
+ * then the wait interval itself is used as jitter (e.g., with jitter 500 msec and if retry interval is 300ms
  * the retry interval is then randomly selected from [0, 2*300] ms).
  *
  */
@@ -401,5 +411,10 @@
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE 64
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_SRP_CLIENT_H_

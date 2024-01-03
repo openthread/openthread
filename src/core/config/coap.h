@@ -36,6 +36,16 @@
 #define CONFIG_COAP_H_
 
 /**
+ * @addtogroup config-coap
+ *
+ * @brief
+ *   This module includes configuration variables for CoAP.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES
  *
  * Maximum number of cached responses for CoAP Confirmable messages.
@@ -96,5 +106,10 @@
 #ifndef OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE 0
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_COAP_H_

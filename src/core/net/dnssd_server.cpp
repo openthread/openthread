@@ -412,12 +412,12 @@ Error Server::Response::ParseQueryName(void)
     // Parses and validates the query name and updates
     // the name compression offsets.
 
-    Error    error = kErrorNone;
-    DnsName  name;
-    uint16_t offset;
+    Error        error = kErrorNone;
+    Name::Buffer name;
+    uint16_t     offset;
 
     offset = sizeof(Header);
-    SuccessOrExit(error = Name::ReadName(*mMessage, offset, name, sizeof(name)));
+    SuccessOrExit(error = Name::ReadName(*mMessage, offset, name));
 
     switch (mType)
     {
@@ -446,9 +446,9 @@ Error Server::Response::ParseQueryName(void)
 
     while (true)
     {
-        DnsLabel label;
-        uint8_t  labelLength = sizeof(label);
-        uint16_t comapreOffset;
+        Name::LabelBuffer label;
+        uint8_t           labelLength = sizeof(label);
+        uint16_t          comapreOffset;
 
         SuccessOrExit(error = Name::ReadLabel(*mMessage, offset, label, labelLength));
 
@@ -472,7 +472,7 @@ exit:
     return error;
 }
 
-void Server::Response::ReadQueryName(DnsName &aName) const { Server::ReadQueryName(*mMessage, aName); }
+void Server::Response::ReadQueryName(Name::Buffer &aName) const { Server::ReadQueryName(*mMessage, aName); }
 
 bool Server::Response::QueryNameMatches(const char *aName) const { return Server::QueryNameMatches(*mMessage, aName); }
 
@@ -526,12 +526,12 @@ Error Server::Response::AppendSrvRecord(const char *aHostName,
                                         uint16_t    aWeight,
                                         uint16_t    aPort)
 {
-    Error     error = kErrorNone;
-    SrvRecord srvRecord;
-    uint16_t  recordOffset;
-    DnsName   hostLabels;
+    Error        error = kErrorNone;
+    SrvRecord    srvRecord;
+    uint16_t     recordOffset;
+    Name::Buffer hostLabels;
 
-    SuccessOrExit(error = Name::ExtractLabels(aHostName, kDefaultDomainName, hostLabels, sizeof(hostLabels)));
+    SuccessOrExit(error = Name::ExtractLabels(aHostName, kDefaultDomainName, hostLabels));
 
     srvRecord.Init();
     srvRecord.SetTtl(aTtl);
@@ -674,7 +674,7 @@ uint8_t Server::GetNameLength(const char *aName)
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Server::Response::Log(void) const
 {
-    DnsName name;
+    Name::Buffer name;
 
     ReadQueryName(name);
     LogInfo("%s query for '%s'", QueryTypeToString(mType), name);
@@ -830,16 +830,16 @@ exit:
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 bool Server::ShouldForwardToUpstream(const Request &aRequest)
 {
-    bool     shouldForward = false;
-    uint16_t readOffset;
-    DnsName  name;
+    bool         shouldForward = false;
+    uint16_t     readOffset;
+    Name::Buffer name;
 
     VerifyOrExit(aRequest.mHeader.IsRecursionDesiredFlagSet());
     readOffset = sizeof(Header);
 
     for (uint16_t i = 0; i < aRequest.mHeader.GetQuestionCount(); i++)
     {
-        SuccessOrExit(Name::ReadName(*aRequest.mMessage, readOffset, name, sizeof(name)));
+        SuccessOrExit(Name::ReadName(*aRequest.mMessage, readOffset, name));
         readOffset += sizeof(Question);
 
         VerifyOrExit(!Name::IsSubDomainOf(name, kDefaultDomainName));
@@ -920,7 +920,7 @@ void Server::ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessag
 {
     ProxyQuery    *query;
     ProxyQueryInfo info;
-    DnsName        name;
+    Name::Buffer   name;
 
     VerifyOrExit(mQuerySubscribe.IsSet());
 
@@ -955,11 +955,11 @@ exit:
     return;
 }
 
-void Server::ReadQueryName(const Message &aQuery, DnsName &aName)
+void Server::ReadQueryName(const Message &aQuery, Name::Buffer &aName)
 {
     uint16_t offset = sizeof(Header);
 
-    IgnoreError(Name::ReadName(aQuery, offset, aName, sizeof(aName)));
+    IgnoreError(Name::ReadName(aQuery, offset, aName));
 }
 
 bool Server::QueryNameMatches(const Message &aQuery, const char *aName)
@@ -984,20 +984,20 @@ void Server::ProxyQueryInfo::UpdateIn(ProxyQuery &aQuery) const
     aQuery.Write(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this);
 }
 
-Error Server::Response::ExtractServiceInstanceLabel(const char *aInstanceName, DnsLabel &aLabel)
+Error Server::Response::ExtractServiceInstanceLabel(const char *aInstanceName, Name::LabelBuffer &aLabel)
 {
-    uint16_t offset;
-    DnsName  serviceName;
+    uint16_t     offset;
+    Name::Buffer serviceName;
 
     offset = mOffsets.mServiceName;
-    IgnoreError(Name::ReadName(*mMessage, offset, serviceName, sizeof(serviceName)));
+    IgnoreError(Name::ReadName(*mMessage, offset, serviceName));
 
-    return Name::ExtractLabels(aInstanceName, serviceName, aLabel, sizeof(aLabel));
+    return Name::ExtractLabels(aInstanceName, serviceName, aLabel);
 }
 
 void Server::RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Response &aResponse)
 {
-    DnsName name;
+    Name::Buffer name;
 
     mProxyQueries.Dequeue(aQuery);
     aInfo.RemoveFrom(aQuery);
@@ -1026,7 +1026,7 @@ void Server::Response::Answer(const ServiceInstanceInfo &aInstanceInfo, const Ip
 
     if (mType == kPtrQuery)
     {
-        DnsLabel instanceLabel;
+        Name::LabelBuffer instanceLabel;
 
         SuccessOrExit(error = ExtractServiceInstanceLabel(aInstanceInfo.mFullName, instanceLabel));
         mSection = kAnswerSection;
@@ -1153,7 +1153,7 @@ const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
     return (query == nullptr) ? mProxyQueries.GetHead() : query->GetNext();
 }
 
-Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize])
+Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, Dns::Name::Buffer &aName)
 {
     const ProxyQuery *query = static_cast<const ProxyQuery *>(aQuery);
     ProxyQueryInfo    info;

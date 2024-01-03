@@ -36,6 +36,16 @@
 #define CONFIG_SNTP_CLIENT_H_
 
 /**
+ * @addtogroup config-sntp-client
+ *
+ * @brief
+ *   This module includes configuration variables for the SNTP Client.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
  *
  * Define to 1 to enable SNTP Client support.
@@ -64,5 +74,10 @@
 #ifndef OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT
 #define OPENTHREAD_CONFIG_SNTP_CLIENT_MAX_RETRANSMIT 2
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_SNTP_CLIENT_H_

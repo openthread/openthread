@@ -36,6 +36,16 @@
 #define CONFIG_MLE_H_
 
 /**
+ * @addtogroup config-mle
+ *
+ * @brief
+ *   This module includes configuration variables for the MLE service.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_MAX_ROUTERS
  *
  * The maximum number of routers in a Thread network.
@@ -337,5 +347,10 @@
 #ifndef OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD
 #define OPENTHREAD_CONFIG_MLE_LINK_METRICS_SERIES_MTD 2
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_MLE_H_

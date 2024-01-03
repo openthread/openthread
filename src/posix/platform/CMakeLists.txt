@@ -185,6 +185,7 @@ target_compile_definitions(openthread-posix
     PRIVATE
         OPENTHREAD_FTD=1
         OPENTHREAD_MTD=0
+        OPENTHREAD_RADIO=0
 )
 
 target_compile_options(openthread-posix PRIVATE

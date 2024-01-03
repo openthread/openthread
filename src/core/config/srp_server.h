@@ -36,6 +36,16 @@
 #define CONFIG_SRP_SERVER_H_
 
 /**
+ * @addtogroup config-srp-server
+ *
+ * @brief
+ *   This module includes configuration variables for the SRP Server.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
  *
  * Define to 1 to enable SRP Server support.
@@ -108,5 +118,10 @@
 #ifndef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT
 #define OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT ((4 * 250u) + 250u)
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_SRP_SERVER_H_

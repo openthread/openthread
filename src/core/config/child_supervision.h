@@ -36,6 +36,16 @@
 #define CONFIG_CHILD_SUPERVISION_H_
 
 /**
+ * @addtogroup config-child-supervision
+ *
+ * @brief
+ *   This module includes configuration variables for Child Supervision.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_INTERVAL
  *
  * The default supervision interval in seconds to use when in child state. Zero indicates no supervision needed.
@@ -85,5 +95,10 @@
 #ifndef OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL
 #define OPENTHREAD_CONFIG_CHILD_SUPERVISION_OLDER_VERSION_CHILD_DEFAULT_INTERVAL 129
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_CHILD_SUPERVISION_H_

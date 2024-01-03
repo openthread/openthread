@@ -36,6 +36,16 @@
 #define CONFIG_COMMISSIONER_H_
 
 /**
+ * @addtogroup config-commissioner
+ *
+ * @brief
+ *   This module includes configuration variables for the Commissioner.
+ *
+ * @{
+ *
+ */
+
+/**
  * @def OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
  *
  * Define to 1 to enable Commissioner support.
@@ -65,5 +75,10 @@
 #ifndef OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT
 #define OPENTHREAD_CONFIG_COMMISSIONER_JOINER_SESSION_TIMEOUT 30
 #endif
+
+/**
+ * @}
+ *
+ */
 
 #endif // CONFIG_COMMISSIONER_H_

@@ -1500,11 +1500,9 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
 const char *spinel_net_role_to_cstr(uint8_t net_role)
 {
     static const struct spinel_cstr spinel_net_cstr[] = {
-        {SPINEL_NET_ROLE_DETACHED, "NET_ROLE_DETACHED"},
-        {SPINEL_NET_ROLE_CHILD, "NET_ROLE_CHILD"},
-        {SPINEL_NET_ROLE_ROUTER, "NET_ROLE_ROUTER"},
-        {SPINEL_NET_ROLE_LEADER, "NET_ROLE_LEADER"},
-        {0, NULL},
+        {SPINEL_NET_ROLE_DETACHED, "NET_ROLE_DETACHED"}, {SPINEL_NET_ROLE_CHILD, "NET_ROLE_CHILD"},
+        {SPINEL_NET_ROLE_ROUTER, "NET_ROLE_ROUTER"},     {SPINEL_NET_ROLE_LEADER, "NET_ROLE_LEADER"},
+        {SPINEL_NET_ROLE_DISABLED, "NET_ROLE_DISABLED"}, {0, NULL},
     };
 
     return spinel_to_cstr(spinel_net_cstr, net_role);

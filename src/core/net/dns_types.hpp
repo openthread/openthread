@@ -511,7 +511,23 @@ public:
      */
     static constexpr uint8_t kMaxLabelLength = kMaxLabelSize - 1;
 
+    /**
+     * Dot character separating labels in a name.
+     *
+     */
     static constexpr char kLabelSeparatorChar = '.';
+
+    /**
+     * Represents a string buffer (with `kMaxNameSize`) intended to hold a DNS name.
+     *
+     */
+    typedef char Buffer[kMaxNameSize];
+
+    /**
+     * Represents a string buffer (with `kMaxLabelSize`) intended to hold a DNS label.
+     *
+     */
+    typedef char LabelBuffer[kMaxLabelSize];
 
     /**
      * Represents the name type.
@@ -645,6 +661,32 @@ public:
         aOffset = mOffset;
         return *mMessage;
     }
+
+    /**
+     * Matches the `Name` with a given set of labels and domain name.
+     *
+     * This method allows the caller to specify name components separately, enabling scenarios like comparing "service
+     * instance name" with separate instance label (which can include dot character), service type, and domain strings.
+     *
+     * @p aFirstLabel can be `nullptr` if not needed. But if non-null, it is treated as a single label and can itself
+     * include dot `.` character.
+     *
+     * The @p aLabels MUST NOT be `nullptr` and MUST follow  "<label1>.<label2>.<label3>", i.e., a sequence of one or
+     * more labels separated by dot '.' char, and it MUST NOT end with dot `.`.
+     *
+     * @p aDomain MUST NOT be `nullptr` and MUST have at least one label and MUST always end with a dot `.` character.
+     *
+     * If the above conditions are not satisfied, the behavior of this method is undefined.
+     *
+     * @param[in] aFirstLabel     A first label to check. Can be `nullptr`.
+     * @param[in] aLabels         A string of dot separated labels, MUST NOT end with dot.
+     * @param[in] aDomain         Domain name. MUST end with dot.
+     *
+     * @retval TRUE   The name matches the given components.
+     * @retval FALSE  The name does not match the given components.
+     *
+     */
+    bool Matches(const char *aFirstLabel, const char *aLabels, const char *aDomain) const;
 
     /**
      * Encodes and appends the name to a message.
@@ -822,6 +864,35 @@ public:
     static Error ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
 
     /**
+     * Reads a full name from a message.
+     *
+     * On successful read, the read name follows  "<label1>.<label2>.<label3>.", i.e., a sequence of labels separated by
+     * dot '.' character. The read name will ALWAYS end with a dot.
+     *
+     * Verifies that the labels after the first label in message do not contain any dot character. If they do,
+     * returns `kErrorParse`.
+     *
+     * @tparam kNameBufferSize         Size of the string buffer array.
+     *
+     * @param[in]     aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
+     *                                 the start of DNS header (this is used to handle compressed names).
+     * @param[in,out] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     *                                 On exit (when parsed successfully), @p aOffset is updated to point to the byte
+     *                                 after the end of name field.
+     * @param[out]    aNameBuffer      Reference to a name string buffer to output the read name.
+     *
+     * @retval kErrorNone         Successfully read the name, @p aNameBuffer and @p Offset are updated.
+     * @retval kErrorParse        Name could not be parsed (invalid format).
+     * @retval kErrorNoBufs       Name could not fit in @p aNameBuffer.
+     *
+     */
+    template <uint16_t kNameBufferSize>
+    static Error ReadName(const Message &aMessage, uint16_t &aOffset, char (&aNameBuffer)[kNameBufferSize])
+    {
+        return ReadName(aMessage, aOffset, aNameBuffer, kNameBufferSize);
+    }
+
+    /**
      * Compares a single name label from a message with a given label string.
      *
      * Can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
@@ -844,6 +915,29 @@ public:
      *
      */
     static Error CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
+
+    /**
+     * Parses and compares multiple name labels from a message.
+     *
+     * Can be used to read and compare a group of labels from an encoded DNS name in a message with possibly more
+     * labels remaining to read.
+     *
+     * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
+     *
+     * @param[in]     aMessage        The message to read the labels from to compare. `aMessage.GetOffset()` MUST point
+     *                                to the start of DNS header (this is used to handle compressed names).
+     * @param[in,out] aOffset         On input, the offset in @p aMessage pointing to the start of the labels to read.
+     *                                On exit and only when all labels are successfully read and match @p aLabels,
+     *                                @p aOffset is updated to point to the start of the next label.
+     * @param[in]     aLabels         A pointer to a null terminated string containing the labels to compare with.
+     *
+     * @retval kErrorNone          The labels from @p aMessage matches @p aLabels. @p aOffset is updated.
+     * @retval kErrorNotFound      The labels from @p aMessage does not match @p aLabel (note that @p aOffset is not
+     *                             updated in this case).
+     * @retval kErrorParse         Name could not be parsed (invalid format).
+     *
+     */
+    static Error CompareMultipleLabels(const Message &aMessage, uint16_t &aOffset, const char *aLabels);
 
     /**
      * Parses and compares a full name from a message with a given name.
@@ -928,14 +1022,14 @@ public:
     static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
     /**
-     * Extracts label(s) from a full name by checking that it contains a given suffix name (e.g., suffix name can be
+     * Extracts label(s) from a name by checking that it contains a given suffix name (e.g., suffix name can be
      * a domain name) and removing it.
      *
-     * Both @p aName and @p aSuffixName must be full DNS name and end with ('.'), otherwise the behavior of this method
-     * is undefined.
+     * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
+     * `kErrorParse` is returned.
      *
-     * @param[in]   aName           The full name to extract labels from.
-     * @param[in]   aSuffixName     The suffix name (e.g. can be domain name).
+     * @param[in]   aName           The name to extract labels from.
+     * @param[in]   aSuffixName     The suffix name (e.g., can be domain name).
      * @param[out]  aLabels         Pointer to buffer to copy the extracted labels.
      * @param[in]   aLabelsSize     Size of @p aLabels buffer.
      *
@@ -945,6 +1039,30 @@ public:
      *
      */
     static Error ExtractLabels(const char *aName, const char *aSuffixName, char *aLabels, uint16_t aLabelsSize);
+
+    /**
+     * Extracts label(s) from a name by checking that it contains a given suffix name (e.g., suffix name can be
+     * a domain name) and removing it.
+     *
+     * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
+     * `kErrorParse` is returned.
+     *
+     * @tparam      kLabelsBufferSize   Size of the buffer string.
+     *
+     * @param[in]   aName           The name to extract labels from.
+     * @param[in]   aSuffixName     The suffix name (e.g., can be domain name).
+     * @param[out]  aLabelsBuffer   A buffer to copy the extracted labels.
+     *
+     * @retval kErrorNone     Successfully extracted the labels, @p aLabels is updated.
+     * @retval kErrorParse    @p aName does not contain @p aSuffixName.
+     * @retval kErrorNoBufs   Could not fit the labels in @p aLabels.
+     *
+     */
+    template <uint16_t kLabelsBufferSize>
+    static Error ExtractLabels(const char *aName, const char *aSuffixName, char (&aLabels)[kLabelsBufferSize])
+    {
+        return ExtractLabels(aName, aSuffixName, aLabels, kLabelsBufferSize);
+    }
 
     /**
      * Tests if a DNS name is a sub-domain of a given domain.
@@ -1025,6 +1143,7 @@ private:
     {
     }
 
+    static bool  CompareAndSkipLabels(const char *&aNamePtr, const char *aLabels, char aExpectedNextChar);
     static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
 
     const char    *mString;  // String containing the name or `nullptr` if name is not from string.
@@ -1660,6 +1779,36 @@ public:
                       char          *aNameBuffer,
                       uint16_t       aNameBufferSize) const;
 
+    /**
+     * Parses and reads the PTR name from a message.
+     *
+     * This is a template variation of the previous method with name and label buffer sizes as template parameters.
+     *
+     * @tparam kLabelBufferSize          The size of label buffer.
+     * @tparam kNameBufferSize           The size of name buffer.
+     *
+     * @param[in]      aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                   DNS header.
+     * @param[in,out]  aOffset           On input, the offset in @p aMessage to the start of PTR name field.
+     *                                   On exit, when successfully read, @p aOffset is updated to point to the byte
+     *                                   after the entire PTR record (skipping over the record).
+     * @param[out]     aLabelBuffer      A char array buffer to output the first label as a null-terminated C string.
+     * @param[out]     aNameBuffer       A char array to output the rest of name (after first label).
+     *
+     * @retval kErrorNone    The PTR name was read successfully. @p aOffset, @aLabelBuffer and @aNameBuffer are updated.
+     * @retval kErrorParse   The PTR record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs  Either label or name could not fit in the related given buffers.
+     *
+     */
+    template <uint16_t kLabelBufferSize, uint16_t kNameBufferSize>
+    Error ReadPtrName(const Message &aMessage,
+                      uint16_t      &aOffset,
+                      char (&aLabelBuffer)[kLabelBufferSize],
+                      char (&aNameBuffer)[kNameBufferSize]) const
+    {
+        return ReadPtrName(aMessage, aOffset, aLabelBuffer, kLabelBufferSize, aNameBuffer, kNameBufferSize);
+    }
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1866,6 +2015,32 @@ public:
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SrvRecord), aNameBuffer,
                                         aNameBufferSize,
                                         /* aSkipRecord */ true);
+    }
+
+    /**
+     * Parses and reads the SRV target host name from a message.
+     *
+     * Also verifies that the SRV record is well-formed (e.g., the record data length `GetLength()` matches
+     * the SRV encoded name).
+     *
+     * @tparam         kNameBufferSize  Size of the name buffer.
+     *
+     * @param[in]      aMessage         The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                  DNS header.
+     * @param[in,out]  aOffset          On input, the offset in @p aMessage to start of target host name field.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire SRV record (skipping over the record).
+     * @param[out]     aNameBuffer      A char array to output the read name as a null-terminated C string
+     *
+     * @retval kErrorNone            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval kErrorParse           The SRV record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs          Name could not fit in @p aNameBuffer.
+     *
+     */
+    template <uint16_t kNameBufferSize>
+    Error ReadTargetHostName(const Message &aMessage, uint16_t &aOffset, char (&aNameBuffer)[kNameBufferSize]) const
+    {
+        return ReadTargetHostName(aMessage, aOffset, aNameBuffer, kNameBufferSize);
     }
 
 private:

@@ -407,6 +407,12 @@ public:
         bool  Matches(const char *aInstanceName) const;
         void  Log(Action aAction) const;
 
+        template <uint16_t kLabelSize>
+        static Error ParseSubTypeServiceName(const char *aSubTypeServiceName, char (&aLabel)[kLabelSize])
+        {
+            return ParseSubTypeServiceName(aSubTypeServiceName, aLabel, kLabelSize);
+        }
+
         Service                  *mNext;
         Heap::String              mInstanceName;
         Heap::String              mInstanceLabel;
