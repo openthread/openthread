@@ -341,8 +341,12 @@ exit:
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
  * * RLOC16
- * * Mode: MLE link mode. For possible values, refer to
- *   @csa mode (get,set).
+ * * Mode: MLE link mode. Possible values:
+ *     * `-`: no flags set (rx-off-when-idle, minimal Thread device,
+ *       stable network data).
+ *     * `r`: rx-on-when-idle
+ *     * `d`: Full Thread Device.
+ *     * `n`: Full Network Data
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -624,8 +628,12 @@ exit:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
- * * Mode: MLE link mode. For possible values, refer to
- *   @csa mode (get,set).
+ * * Mode: MLE link mode. Possible values:
+ *     * `-`: no flags set (rx-off-when-idle, minimal Thread device,
+ *       stable network data).
+ *     * `r`: rx-on-when-idle
+ *     * `d`: Full Thread Device.
+ *     * `n`: Full Network Data
  * * RLOC16
  * * Partition ID.
  * @sa otHistoryTrackerIterateNetInfoHistory
