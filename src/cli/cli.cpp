@@ -4149,7 +4149,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
      * @par api_copy
      * #otThreadSetLinkMode
      * @cparam mode [@ca{rdn}]
-     * - `-`: -: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
+     * - `-`: no flags set (rx-off-when-idle, minimal Thread device, stable network data)
      * - `r`: rx-on-when-idle
      * - `d`: Full Thread Device
      * - `n`: Full Network Data
