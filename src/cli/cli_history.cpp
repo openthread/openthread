@@ -342,7 +342,7 @@ exit:
  * * Extended Address
  * * RLOC16
  * * Mode: MLE link mode. For possible values, refer to
- *         @csa mode (get,set).
+ *   @csa mode (get,set).
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -625,7 +625,7 @@ exit:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
  * * Mode: MLE link mode. For possible values, refer to
- *         @csa mode (get,set).
+ *   @csa mode (get,set).
  * * RLOC16
  * * Partition ID.
  * @sa otHistoryTrackerIterateNetInfoHistory
