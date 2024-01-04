@@ -426,8 +426,8 @@ const otHistoryTrackerExternalRouteInfo *otHistoryTrackerIterateExternalRouteHis
 /**
  * Converts a given entry age to a human-readable string.
  *
- * The entry age string follows the format "<hh>:<mm>:<ss>.<mmmm>" for hours, minutes, seconds and millisecond (if
- * shorter than one day) or "<dd> days <hh>:<mm>:<ss>.<mmmm>" (if longer than one day).
+ * The entry age string follows the format `hours:minutes:seconds:milliseconds` (if
+ * shorter than one day) or `days:hours:minutes:seconds`(if longer than one day).
  *
  * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
  * but the outputted string is always null-terminated.
