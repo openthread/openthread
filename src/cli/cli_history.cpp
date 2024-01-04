@@ -117,10 +117,13 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
  * * Event: Possible values are `Added` or `Removed`.
  * * Address/Prefix Length: Unicast address with its prefix length (in bits).
  * * Origin: Possible value are `thread`, `slaac`, `dhcp6`, or `manual`.
- * * Scope:
- * * Preferred (P):
- * * Valid (V):
+ * * Scope: IPv6 address scope.
+ * * P: Preferred flag.
+ * * V: Valid flag.
  * * RLOC (R): This flag indicates if the IPv6 address is a routing locator.
+ * @note
+ * All commands under `history` require the `OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE`
+ * feature to be enabled.
  * @sa otHistoryTrackerEntryAgeToString
  * @sa otHistoryTrackerIterateUnicastAddressHistory
  */
@@ -338,7 +341,8 @@ exit:
  * * Event: Possible values are `Added`, `Removed`, or `Changed`.
  * * Extended Address
  * * RLOC16
- * * Mode: MLE link mode.
+ * * Mode: MLE link mode. For possible values, refer to
+ *         @csa mode (get,set).
  * * Ave RSS: Average number of frames (in dBm) received from the neighbor at the
  *   time the entry was recorded.
  * @sa otHistoryTrackerIterateNeighborHistory
@@ -620,7 +624,8 @@ exit:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
  * * Role: Device role. Possible values are `router`, `child`, `detached`, or `disabled`.
- * * Mode:
+ * * Mode: MLE link mode. For possible values, refer to
+ *         @csa mode (get,set).
  * * RLOC16
  * * Partition ID.
  * @sa otHistoryTrackerIterateNetInfoHistory
