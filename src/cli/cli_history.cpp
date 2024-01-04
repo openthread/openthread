@@ -295,6 +295,7 @@ exit:
 /**
  * @cli history neighbor
  * @code
+ * history neighbor
  * | Age                  | Type   | Event     | Extended Address | RLOC16 | Mode | Ave RSS |
  * +----------------------+--------+-----------+------------------+--------+------+---------+
  * |         00:00:29.233 | Child  | Added     | ae5105292f0b9169 | 0x8404 | -    |     -20 |
@@ -480,7 +481,7 @@ exit:
  * Each table or list entry provides:
  * * Age: Time elapsed since the command was issued, and given in the format:
  *        `hours`:`minutes`:`seconds`:`milliseconds`
- * * Event: Possible values are `Added`, `Removed`, `NextHopChnaged`, or `CostChanged`.
+ * * Event: Possible values are `Added`, `Removed`, `NextHopChanged`, or `CostChanged`.
  * * ID (RLOC16): Router ID and RLOC16 of the router.
  * * Next Hop: Router ID and RLOC16 of the next hop. If there is no next hop,
  *             `none` is shown.

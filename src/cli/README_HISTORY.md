@@ -345,7 +345,7 @@ Usage `history router [list] [<num-entries>]`
 
 Print the route table history. Each item provides:
 
-- Event (`Added`, `Removed`, `NextHopChnaged`, `CostChanged`)
+- Event (`Added`, `Removed`, `NextHopChanged`, `CostChanged`)
 - Router ID and RLOC16 of router
 - Next Hop (Router ID and RLOC16) - `none` if no next hop.
 - Path cost (old `->` new) - `inf` to indicate infinite path cost.
