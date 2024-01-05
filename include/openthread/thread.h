@@ -238,7 +238,7 @@ typedef void (*otDetachGracefullyCallback)(void *aContext);
  * @param[in] aEnabled  TRUE if Thread is enabled, FALSE otherwise.
  *
  * @retval OT_ERROR_NONE           Successfully started Thread protocol operation.
- * @retval OT_ERROR_INVALID_STATE  The network interface was not not up.
+ * @retval OT_ERROR_INVALID_STATE  The network interface was not up.
  *
  */
 otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled);

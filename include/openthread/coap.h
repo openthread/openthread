@@ -357,7 +357,7 @@ typedef void (*otCoapResponseHandler)(void                *aContext,
 typedef void (*otCoapRequestHandler)(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
 /**
- * Pointer is called when a CoAP message with an block-wise transfer option is received.
+ * Pointer is called when a CoAP message with a block-wise transfer option is received.
  *
  * Is available when OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE configuration
  * is enabled.
