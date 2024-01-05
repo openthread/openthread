@@ -114,6 +114,7 @@
 #include "config/srp_server.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
+#include "config/trel.h"
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

@@ -51,20 +51,19 @@
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#define TREL_MAX_PACKET_SIZE 1400
-#define TREL_PACKET_POOL_SIZE 5
+static constexpr uint16_t kMaxPacketSize = 1400; // The max size of a TREL packet.
 
 typedef struct TxPacket
 {
     struct TxPacket *mNext;
-    uint8_t          mBuffer[TREL_MAX_PACKET_SIZE];
+    uint8_t          mBuffer[kMaxPacketSize];
     uint16_t         mLength;
     otSockAddr       mDestSockAddr;
 } TxPacket;
 
-static uint8_t   sRxPacketBuffer[TREL_MAX_PACKET_SIZE];
+static uint8_t   sRxPacketBuffer[kMaxPacketSize];
 static uint16_t  sRxPacketLength;
-static TxPacket  sTxPacketPool[TREL_PACKET_POOL_SIZE];
+static TxPacket  sTxPacketPool[OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE];
 static TxPacket *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
 static TxPacket *sTxPacketQueueTail; // A circular linked list for queued tx packets.
 
@@ -456,7 +455,7 @@ void otPlatTrelSend(otInstance       *aInstance,
 
     VerifyOrExit(sEnabled);
 
-    assert(aUdpPayloadLen <= TREL_MAX_PACKET_SIZE);
+    assert(aUdpPayloadLen <= kMaxPacketSize);
 
     // We try to send the packet immediately. If it fails (e.g.,
     // network is down) `SendPacket()` returns `OT_ERROR_ABORT`. If

@@ -229,9 +229,12 @@ public:
     bool IsFilterEnabled(void) const { return mFiltered; }
 
 private:
+#if OPENTHREAD_COFNIG_TREL_PEER_TABLE_SIZE != 0
+    static constexpr uint16_t kPeerTableSize = OPENTHREAD_COFNIG_TREL_PEER_TABLE_SIZE;
+#else
     static constexpr uint16_t kPeerTableExtraEntries = 32;
     static constexpr uint16_t kPeerTableSize         = Mle::kMaxRouters + Mle::kMaxChildren + kPeerTableExtraEntries;
-
+#endif
     static const char kTxtRecordExtAddressKey[];
     static const char kTxtRecordExtPanIdKey[];
 
