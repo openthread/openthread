@@ -73,10 +73,11 @@ static uint16_t sPortOffset = 0;
 static bool     sEnabled    = false;
 static uint16_t sUdpPort;
 
-static bool     sServiceRegistered = false;
-static uint16_t sServicePort;
-static uint8_t  sServiceTxtLength;
-static char     sServiceTxtData[TREL_MAX_SERVICE_TXT_DATA_LEN];
+static bool               sServiceRegistered = false;
+static uint16_t           sServicePort;
+static uint8_t            sServiceTxtLength;
+static char               sServiceTxtData[TREL_MAX_SERVICE_TXT_DATA_LEN];
+static otPlatTrelCounters sCounters;
 
 #if DEBUG_LOG
 static void dumpBuffer(const void *aBuffer, uint16_t aLength)
@@ -388,6 +389,8 @@ void otPlatTrelSend(otInstance       *aInstance,
 #if DEBUG_LOG
     fprintf(stderr, "\r\n[trel-sim] otPlatTrelSend(len:%u, port:%u)\r\n", aUdpPayloadLen, aDestSockAddr->mPort);
 #endif
+    ++sCounters.mTxPackets;
+    sCounters.mTxBytes += aUdpPayloadLen;
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -471,6 +474,18 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
 
         processMessage(aInstance, &message, (uint16_t)(rval));
     }
+}
+
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return &sCounters;
+}
+
+void otPlatTrelResetCounters(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    memset(&sCounters, 0, sizeof(sCounters));
 }
 
 //---------------------------------------------------------------------------------------------------------------------

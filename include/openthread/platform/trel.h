@@ -198,6 +198,35 @@ void otPlatTrelSend(otInstance       *aInstance,
 extern void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer, uint16_t aLength);
 
 /**
+ * Represents a group of TREL related counters in the platform layer.
+ *
+ */
+typedef struct otPlatTrelCounters
+{
+    uint64_t mTxPackets; ///< Number of packets successfully transmitted through TREL.
+    uint64_t mTxBytes;   ///< Sum of size of packets successfully transmitted through TREL.
+    uint64_t mTxFailure; ///< Number of packet transmission failures through TREL.
+    uint64_t mRxPackets; ///< Number of packets received through TREL.
+    uint64_t mRxBytes;   ///< Sum of size of packets received through TREL.
+} otPlatTrelCounters;
+
+/**
+ * Gets the pointer to the TREL counters in the platform layer.
+ *
+ * @param[in] aInstance        The OpenThread instance structure.
+ *
+ */
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance);
+
+/**
+ * Resets the TREL counters in the platform layer.
+ *
+ * @param[in] aInstance        The OpenThread instance structure.
+ *
+ */
+void otPlatTrelResetCounters(otInstance *aInstance);
+
+/**
  * @}
  *
  */

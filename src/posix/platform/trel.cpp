@@ -61,11 +61,12 @@ typedef struct TxPacket
     otSockAddr       mDestSockAddr;
 } TxPacket;
 
-static uint8_t   sRxPacketBuffer[kMaxPacketSize];
-static uint16_t  sRxPacketLength;
-static TxPacket  sTxPacketPool[OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE];
-static TxPacket *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
-static TxPacket *sTxPacketQueueTail; // A circular linked list for queued tx packets.
+static uint8_t            sRxPacketBuffer[kMaxPacketSize];
+static uint16_t           sRxPacketLength;
+static TxPacket           sTxPacketPool[OPENTHREAD_POSIX_CONFIG_TREL_TX_PACKET_POOL_SIZE];
+static TxPacket          *sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
+static TxPacket          *sTxPacketQueueTail; // A circular linked list for queued tx packets.
+static otPlatTrelCounters sCounters;
 
 static char sInterfaceName[IFNAMSIZ + 1];
 static bool sInitialized = false;
@@ -186,11 +187,19 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
             error = OT_ERROR_INVALID_STATE;
         }
     }
+    else
+    {
+        ++sCounters.mTxPackets;
+        sCounters.mTxBytes += aLength;
+    }
 
 exit:
     otLogDebgPlat("[trel] SendPacket([%s]:%u) err:%s pkt:%s", Ip6AddrToString(&aDestSockAddr->mAddress),
                   aDestSockAddr->mPort, otThreadErrorToString(error), BufferToString(aBuffer, aLength));
-
+    if (error != OT_ERROR_NONE)
+    {
+        ++sCounters.mTxFailure;
+    }
     return error;
 }
 
@@ -218,6 +227,8 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
 
     if (sEnabled)
     {
+        ++sCounters.mRxPackets;
+        sCounters.mRxBytes += sRxPacketLength;
         otPlatTrelHandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength);
     }
 }
@@ -304,6 +315,8 @@ static void EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
 exit:
     return;
 }
+
+static void ResetCounters() { memset(&sCounters, 0, sizeof(sCounters)); }
 
 //---------------------------------------------------------------------------------------------------------------------
 // trelDnssd
@@ -485,6 +498,21 @@ exit:
     return;
 }
 
+// We keep counters at the platform layer because TREL failures can only be captured accurately within
+// the platform layer as the platform sometimes only queues the packet and the packet will be sent later
+// and the error is only known after sent.
+const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return &sCounters;
+}
+
+void otPlatTrelResetCounters(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    ResetCounters();
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // platformTrel system
 
@@ -506,6 +534,8 @@ void platformTrelInit(const char *aTrelUrl)
 
     InitPacketQueue();
     sInitialized = true;
+
+    ResetCounters();
 }
 
 void platformTrelDeinit(void)

@@ -60,6 +60,12 @@ extern "C" void otPlatTrelHandleReceived(otInstance *aInstance, uint8_t *aBuffer
 extern "C" void otPlatTrelHandleDiscoveredPeerInfo(otInstance *aInstance, const otPlatTrelPeerInfo *aInfo);
 
 /**
+ * Represents a group of TREL counters.
+ *
+ */
+typedef otTrelCounters Counters;
+
+/**
  * Represents a TREL link interface.
  *
  */
@@ -206,6 +212,14 @@ public:
     const Peer *GetNextPeer(PeerIterator &aIterator) const;
 
     /**
+     * Returns the number of TREL peers.
+     *
+     * @returns  The number of TREL peers.
+     *
+     */
+    uint16_t GetNumberOfPeers(void) const { return mPeerTable.GetLength(); }
+
+    /**
      * Sets the filter mode (enables/disables filtering).
      *
      * When filtering is enabled, any rx and tx traffic through TREL interface is silently dropped. This is mainly
@@ -227,6 +241,20 @@ public:
      *
      */
     bool IsFilterEnabled(void) const { return mFiltered; }
+
+    /**
+     * Gets the TREL counters.
+     *
+     * The counters are initialized to zero when the TREL platform is initialized.
+     *
+     */
+    const Counters *GetCounters(void) const;
+
+    /**
+     * Resets the TREL counters.
+     *
+     */
+    void ResetCounters(void);
 
 private:
 #if OPENTHREAD_COFNIG_TREL_PEER_TABLE_SIZE != 0

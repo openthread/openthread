@@ -143,6 +143,23 @@ class TestTrelConnectivity(thread_cert.TestCase):
         self.assertTrue(med1.ping(router2_mleid))
         self.assertTrue(sed1.ping(router2_mleid))
 
+        counters = br1.get_trel_counters()
+        print('br1 trel counters', counters)
+        self.assertTrue(counters['Inbound']['packets'] > 0)
+        self.assertTrue(counters['Inbound']['bytes'] > 0)
+        self.assertTrue(counters['Outbound']['packets'] > 0)
+        self.assertTrue(counters['Outbound']['bytes'] > 0)
+        self.assertTrue(counters['Outbound']['failures'] >= 0)
+
+        br1.reset_trel_counters()
+        counters = br1.get_trel_counters()
+        print('br1 trel counters after reset', counters)
+        self.assertTrue(counters['Inbound']['packets'] == 0)
+        self.assertTrue(counters['Inbound']['bytes'] == 0)
+        self.assertTrue(counters['Outbound']['packets'] == 0)
+        self.assertTrue(counters['Outbound']['bytes'] == 0)
+        self.assertTrue(counters['Outbound']['failures'] == 0)
+
     def verify(self, pv: PacketVerifier):
         pkts: PacketFilter = pv.pkts
         BR1_RLOC16 = pv.vars['BR1_RLOC16']
