@@ -16,7 +16,7 @@ ptyprocess==0.7.0
     # via pexpect
 py==1.11.0
     # via pyshark
-pycryptodome==3.17
+pycryptodome==3.19.1
     # via -r requirements.in
 pyshark==0.4.6
     # via -r requirements.in
