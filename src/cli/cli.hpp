@@ -69,6 +69,7 @@
 #include "cli/cli_mac_filter.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
+#include "cli/cli_ping_sender.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
@@ -117,6 +118,7 @@ class Interpreter : public OutputImplementer, public Output
     friend class Joiner;
     friend class LinkMetrics;
     friend class NetworkData;
+    friend class PingSender;
     friend class SrpClient;
     friend class SrpServer;
 #endif
@@ -382,9 +384,6 @@ private:
     void OutputPrompt(void);
     void OutputResult(otError aError);
 
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    otError ParsePingInterval(const Arg &aArg, uint32_t &aInterval);
-#endif
     static otError ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     static otError ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig);
@@ -458,10 +457,6 @@ private:
     void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
 #endif
 
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
-    static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
-#endif
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
@@ -497,10 +492,6 @@ private:
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    void HandlePingReply(const otPingSenderReply *aReply);
-    void HandlePingStatistics(const otPingSenderStatistics *aStatistics);
-#endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
@@ -602,11 +593,11 @@ private:
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
     Tcat mTcat;
 #endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    PingSender mPingSender;
+#endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    bool mPingIsAsync : 1;
-#endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     bool mLocateInProgress : 1;
 #endif
