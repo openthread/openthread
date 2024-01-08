@@ -408,7 +408,7 @@ otError otDnsBrowseResponseGetServiceName(const otDnsBrowseResponse *aResponse,
  * MUST only be used from `otDnsBrowseCallback`.
  *
  * The response may include multiple service instance records. @p aIndex can be used to iterate through the list. Index
- * zero gives the the first record. When we reach end of the list, `OT_ERROR_NOT_FOUND` is returned.
+ * zero gives the first record. When we reach end of the list, `OT_ERROR_NOT_FOUND` is returned.
  *
  * Note that this function gets the service instance label and not the full service instance name which is of the form
  * `<Instance>.<Service>.<Domain>`.

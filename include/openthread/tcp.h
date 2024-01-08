@@ -231,7 +231,7 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
 /**
  * Represents a TCP endpoint.
  *
- * An TCP endpoint acts an endpoint of TCP connection. It can be used to
+ * A TCP endpoint acts an endpoint of TCP connection. It can be used to
  * initiate TCP connections, and, once a TCP connection is established, send
  * data to and receive data from the connection peer.
  *
