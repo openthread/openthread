@@ -12,6 +12,7 @@ Usage : `br [command] ...`
 - [nat64prefix](#nat64prefix)
 - [omrprefix](#omrprefix)
 - [onlinkprefix](#onlinkprefix)
+- [pd](#pd)
 - [prefixtable](#prefixtable)
 - [rioprf](#rioprf)
 - [routeprf](#routeprf)
@@ -33,6 +34,7 @@ disable
 enable
 omrprefix
 onlinkprefix
+pd
 prefixtable
 rioprf
 routeprf
@@ -173,6 +175,36 @@ Done
 
 > br nat64prefix
 fd14:1078:b3d5:b0b0:0:0::/96
+Done
+```
+
+### pd
+
+Usage: `br pd [enable|disable]`
+
+Enable/Disable the DHCPv6 PD.
+
+```bash
+> br pd enable
+Done
+
+> br pd disable
+Done
+```
+
+Usage: `br pd state`
+
+Get the state of DHCPv6 PD.
+
+`OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` is required.
+
+- `disabled`: DHCPv6 PD is disabled on the border router.
+- `stopped`: DHCPv6 PD in enabled but won't try to request and publish a prefix.
+- `running`: DHCPv6 PD is enabled and will try to request and publish a prefix.
+
+```bash
+> br pd state
+running
 Done
 ```
 

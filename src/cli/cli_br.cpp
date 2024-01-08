@@ -435,6 +435,66 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli br pd (enable,disable)
+     * @code
+     * br pd enable
+     * Done
+     * @endcode
+     * @code
+     * br pd disable
+     * Done
+     * @endcode
+     * @cparam br pd @ca{enable|disable}
+     * @par api_copy
+     * #otBorderRoutingDhcp6PdSetEnabled
+     *
+     */
+    if (Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
+    {
+    }
+    /**
+     * @cli br pd state
+     * @code
+     * br pd state
+     * running
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingDhcp6PdGetState
+     */
+    else if (aArgs[0] == "state")
+    {
+        static const char *const kDhcpv6PdStateStrings[] = {
+            "disabled", // (0) OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED
+            "stopped",  // (1) OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED
+            "running",  // (2) OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING
+        };
+
+        static_assert(0 == OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED,
+                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_DISABLED value is not expected!");
+        static_assert(1 == OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED,
+                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_STOPPED value is not expected!");
+        static_assert(2 == OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING,
+                      "OT_BORDER_ROUTING_DHCP6_PD_STATE_RUNNING value is not expected!");
+
+        OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 /**
  * @cli br routers
  * @code
@@ -638,6 +698,9 @@ otError Br::Process(Arg aArgs[])
 #endif
         CmdEntry("omrprefix"),
         CmdEntry("onlinkprefix"),
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        CmdEntry("pd"),
+#endif
         CmdEntry("prefixtable"),
         CmdEntry("rioprf"),
         CmdEntry("routeprf"),
