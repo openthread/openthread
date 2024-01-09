@@ -46,6 +46,7 @@ set(COMMON_SOURCES
     cli_mac_filter.cpp
     cli_network_data.cpp
     cli_output.cpp
+    cli_ping.cpp
     cli_srp_client.cpp
     cli_srp_server.cpp
     cli_tcat.cpp
