@@ -69,7 +69,7 @@
 #include "cli/cli_mac_filter.hpp"
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_output.hpp"
-#include "cli/cli_ping_sender.hpp"
+#include "cli/cli_ping.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
 #include "cli/cli_tcat.hpp"
@@ -594,7 +594,7 @@ private:
     Tcat mTcat;
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    PingSender mPingSender;
+    PingSender mPing;
 #endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 

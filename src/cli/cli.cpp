@@ -153,7 +153,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mTcat(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    , mPingSender(aInstance, *this)
+    , mPing(aInstance, *this)
 #endif
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     , mLocateInProgress(false)
@@ -5537,7 +5537,7 @@ exit:
  * Note: The command will return InvalidState when the preferred NAT64 prefix is unavailable.
  * @sa otPingSenderPing
  */
-template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[]) { return mPingSender.Process(aArgs); }
+template <> otError Interpreter::Process<Cmd("ping")>(Arg aArgs[]) { return mPing.Process(aArgs); }
 #endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 /**

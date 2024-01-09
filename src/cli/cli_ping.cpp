@@ -28,10 +28,10 @@
 
 /**
  * @file
- *   This file implements the CLI interpreter for Link Metrics function.
+ *   This file implements the CLI interpreter for Ping Sender function.
  */
 
-#include "cli_ping_sender.hpp"
+#include "cli_ping.hpp"
 
 #include <openthread/ping_sender.h>
 
