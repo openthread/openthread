@@ -536,6 +536,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_ROLE>(void)
     switch (otThreadGetDeviceRole(mInstance))
     {
     case OT_DEVICE_ROLE_DISABLED:
+        role = SPINEL_NET_ROLE_DISABLED;
+        break;
+
     case OT_DEVICE_ROLE_DETACHED:
         role = SPINEL_NET_ROLE_DETACHED;
         break;
