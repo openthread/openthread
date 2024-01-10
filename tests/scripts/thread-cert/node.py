@@ -1262,7 +1262,7 @@ class NodeImpl:
         self._expect_done()
 
     def srp_client_disable_auto_start_mode(self):
-        self.send_command(f'srp client autostart able')
+        self.send_command(f'srp client autostart disable')
         self._expect_done()
 
     def srp_client_get_server_address(self):

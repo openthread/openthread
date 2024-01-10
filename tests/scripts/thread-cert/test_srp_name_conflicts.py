@@ -101,9 +101,10 @@ class SrpNameConflicts(thread_cert.TestCase):
         # 1. Register a single service and verify that it works.
         #
 
+        self.assertEqual(client_1.srp_client_get_auto_start_mode(), 'Enabled')
+
         client_1.srp_client_set_host_name('my-host-1')
         client_1.srp_client_set_host_address('2001::1')
-        client_1.srp_client_start(server.get_addrs()[0], client_1.get_srp_server_port())
         client_1.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
@@ -139,9 +140,10 @@ class SrpNameConflicts(thread_cert.TestCase):
         # 2. Register with the same host name from the second client and it should fail.
         #
 
+        self.assertEqual(client_2.srp_client_get_auto_start_mode(), 'Enabled')
+
         client_2.srp_client_set_host_name('my-host-1')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
@@ -160,9 +162,9 @@ class SrpNameConflicts(thread_cert.TestCase):
         # 3. Register with the same service name from the second client and it should fail.
         #
 
+        client_2.srp_client_enable_auto_start_mode()
         client_2.srp_client_set_host_name('my-host-2')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
@@ -182,9 +184,9 @@ class SrpNameConflicts(thread_cert.TestCase):
         # from the second client and it should pass.
         #
 
+        client_2.srp_client_enable_auto_start_mode()
         client_2.srp_client_set_host_name('my-host-2')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-1', '_ipps2._tcp', 12345)
         self.simulator.go(2)
 
@@ -209,9 +211,9 @@ class SrpNameConflicts(thread_cert.TestCase):
         # 5. Register with different host & service instance name, it should succeed.
         #
 
+        client_2.srp_client_enable_auto_start_mode()
         client_2.srp_client_set_host_name('my-host-2')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-2', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
@@ -241,9 +243,9 @@ class SrpNameConflicts(thread_cert.TestCase):
         client_1.srp_client_remove_service('my-service-1', '_ipps._tcp')
         self.simulator.go(2)
 
+        client_2.srp_client_enable_auto_start_mode()
         client_2.srp_client_set_host_name('my-host-2')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
@@ -284,10 +286,10 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         # Client 2 registers the same host & service instance name with Client 1.
         client_2.srp_client_stop()
+        client_2.srp_client_enable_auto_start_mode()
         client_2.srp_client_clear_host()
         client_2.srp_client_set_host_name('my-host-1')
         client_2.srp_client_set_host_address('2001::2')
-        client_2.srp_client_start(server.get_addrs()[0], client_2.get_srp_server_port())
         client_2.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         self.simulator.go(2)
 

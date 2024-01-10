@@ -105,8 +105,6 @@ class SrpAutoStartMode(thread_cert.TestCase):
         client.srp_client_set_host_address('2001::1')
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
 
-        self.assertEqual(client.srp_client_get_state(), 'Disabled')
-        client.srp_client_enable_auto_start_mode()
         self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
         self.simulator.go(WAIT_TIME)
 

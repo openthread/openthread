@@ -237,10 +237,6 @@ class TestDnssd(thread_cert.TestCase):
                                     weight,
                                     addrs,
                                     subtypes=''):
-        client.netdata_show()
-        srp_server_port = client.get_srp_server_port()
-
-        client.srp_client_start(server.get_mleid(), srp_server_port)
         client.srp_client_set_host_name(hostname)
         client.srp_client_set_host_address(*addrs)
         client.srp_client_add_service(instancename, SERVICE + subtypes, port, priority, weight)
