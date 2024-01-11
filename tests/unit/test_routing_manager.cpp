@@ -342,6 +342,36 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     return OT_ERROR_NONE;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+Array<void *, 500> sHeapAllocatedPtrs;
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    void *ptr = calloc(aNum, aSize);
+
+    SuccessOrQuit(sHeapAllocatedPtrs.PushBack(ptr));
+
+    return ptr;
+}
+
+void otPlatFree(void *aPtr)
+{
+    if (aPtr != nullptr)
+    {
+        void **entry = sHeapAllocatedPtrs.Find(aPtr);
+
+        VerifyOrQuit(entry != nullptr, "A heap allocated item is freed twice");
+        sHeapAllocatedPtrs.Remove(*entry);
+    }
+
+    free(aPtr);
+}
+
+#endif
+
 } // extern "C"
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -533,35 +563,6 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 exit:
     return;
 }
-
-//----------------------------------------------------------------------------------------------------------------------
-
-Array<void *, 500> sHeapAllocatedPtrs;
-
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-
-void *otPlatCAlloc(size_t aNum, size_t aSize)
-{
-    void *ptr = calloc(aNum, aSize);
-
-    SuccessOrQuit(sHeapAllocatedPtrs.PushBack(ptr));
-
-    return ptr;
-}
-
-void otPlatFree(void *aPtr)
-{
-    if (aPtr != nullptr)
-    {
-        void **entry = sHeapAllocatedPtrs.Find(aPtr);
-
-        VerifyOrQuit(entry != nullptr, "A heap allocated item is freed twice");
-        sHeapAllocatedPtrs.Remove(*entry);
-    }
-
-    free(aPtr);
-}
-#endif
 
 //----------------------------------------------------------------------------------------------------------------------
 
