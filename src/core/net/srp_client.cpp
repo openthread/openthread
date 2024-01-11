@@ -961,19 +961,16 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPairAsRef &aKeyRef)
 
     if (error == kErrorNone)
     {
-        Crypto::Ecdsa::P256::PublicKey publicKey;
-
-        if (keyPair.GetPublicKey(publicKey) == kErrorNone)
+        if (aKeyRef.ImportKeyPair(keyPair) != kErrorNone)
         {
-            SuccessOrExit(error = aKeyRef.ImportKeyPair(keyPair));
-            IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
-            ExitNow();
+            SuccessOrExit(error = aKeyRef.Generate());
         }
         IgnoreError(Get<Settings>().Delete<Settings::SrpEcdsaKey>());
     }
-
-    error = aKeyRef.Generate();
-
+    else
+    {
+        SuccessOrExit(error = aKeyRef.Generate());
+    }
 exit:
     return error;
 }
