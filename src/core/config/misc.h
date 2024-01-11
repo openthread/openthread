@@ -583,6 +583,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+ *
+ * Define to 1 to enable TCAT over BLE support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#define OPENTHREAD_CONFIG_BLE_TCAT_ENABLE 0
+#endif
+
+/**
  * @}
  *
  */
