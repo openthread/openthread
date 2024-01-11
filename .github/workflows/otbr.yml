@@ -86,11 +86,11 @@ jobs:
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       with:
         name: cov-thread-1-3-backbone-docker
         path: /tmp/coverage/
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       if: ${{ failure() }}
       with:
         name: thread-1-3-backbone-results
@@ -103,7 +103,7 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       with:
         name: cov-thread-1-3-backbone
         path: tmp/coverage.info
@@ -143,7 +143,7 @@ jobs:
             cert_scripts: ./tests/scripts/thread-cert/border_router/nat64/*.py
             packet_verification: 1
             nat64: 1
-            description: "nat64 openthread"
+            description: "nat64"
           - otbr_mdns: "avahi"
             otbr_trel: 0
             cert_scripts: ./tests/scripts/thread-cert/border_router/*.py
@@ -162,7 +162,7 @@ jobs:
             packet_verification: 1
             nat64: 0
             use_core_firewall: 1
-            description: "core firewall"
+            description: "core-firewall"
     name: BR ${{ matrix.description }} (${{ matrix.otbr_mdns }}, TREL=${{matrix.otbr_trel}})
     env:
       REFERENCE_DEVICE: 1
@@ -206,14 +206,14 @@ jobs:
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
         sudo -E ./script/test cert_suite ${{ matrix.cert_scripts }} || (sudo chmod a+r *.log *.json *.pcap && false)
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       with:
-        name: cov-thread-border-router-docker
+        name: cov-br-docker-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: /tmp/coverage/
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       if: ${{ failure() }}
       with:
-        name: thread-border-router-results
+        name: br-results-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: |
           *.pcap
           *.json
@@ -223,9 +223,9 @@ jobs:
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       with:
-        name: cov-thread-border-router
+        name: cov-br-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: tmp/coverage.info
 
   upload-coverage:
@@ -240,9 +240,11 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
-    - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+    - uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
       with:
         path: coverage/
+        pattern: cov-*
+        merge-multiple: true
     - name: Combine Coverage
       continue-on-error: true
       run: |
