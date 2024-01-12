@@ -53,7 +53,7 @@ void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    SuccessOrAssert(EnableCsl(0, Mac::kShortAddrInvalid, nullptr));
+    SuccessOrAssert(ResetCsl());
 #endif
 
     EnableSrcMatch(false);

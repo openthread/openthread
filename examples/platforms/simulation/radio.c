@@ -1331,11 +1331,18 @@ otError otPlatRadioEnableCsl(otInstance         *aInstance,
     OT_UNUSED_VARIABLE(aShortAddr);
     OT_UNUSED_VARIABLE(aExtAddr);
 
-    otError error = OT_ERROR_NONE;
-
     sCslPeriod = aCslPeriod;
 
-    return error;
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioResetCsl(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sCslPeriod = 0;
+
+    return OT_ERROR_NONE;
 }
 
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)

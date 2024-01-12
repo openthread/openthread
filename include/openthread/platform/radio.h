@@ -1132,15 +1132,29 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  *
  * @note Platforms should use CSL peer addresses to include CSL IE when generating enhanced acks.
  *
- * @retval  kErrorNotImplemented Radio driver doesn't support CSL.
- * @retval  kErrorFailed         Other platform specific errors.
- * @retval  kErrorNone           Successfully enabled or disabled CSL.
+ * @retval  OT_ERROR_NOT_IMPLEMENTED Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_FAILED          Other platform specific errors.
+ * @retval  OT_ERROR_NONE            Successfully enabled or disabled CSL.
  *
  */
 otError otPlatRadioEnableCsl(otInstance         *aInstance,
                              uint32_t            aCslPeriod,
                              otShortAddress      aShortAddr,
                              const otExtAddress *aExtAddr);
+
+/**
+ * Reset CSL receiver in the platform.
+ *
+ * @note Defaults to `otPlatRadioEnableCsl(aInstance,0, Mac::kShortAddrInvalid, nullptr);`
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ *
+ * @retval  OT_ERROR_NOT_IMPLEMENTED Radio driver doesn't support CSL.
+ * @retval  OT_ERROR_FAILED          Other platform specific errors.
+ * @retval  OT_ERROR_NONE            Successfully disabled CSL.
+ *
+ */
+otError otPlatRadioResetCsl(otInstance *aInstance);
 
 /**
  * Update CSL sample time in radio driver.

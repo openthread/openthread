@@ -404,6 +404,8 @@ OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress
     return OT_ERROR_NONE;
 }
 
+OT_TOOL_WEAK otError otPlatRadioResetCsl(otInstance *) { return OT_ERROR_NONE; }
+
 OT_TOOL_WEAK void otPlatRadioUpdateCslSampleTime(otInstance *, uint32_t) {}
 
 OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
