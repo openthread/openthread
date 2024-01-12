@@ -46,6 +46,7 @@
  */
 
 #include "config/border_routing.h"
+#include "config/misc.h"
 
 /**
  * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
@@ -188,8 +189,8 @@
  * Define as 1 to enable support for TLS over TCP.
  *
  */
-#if (OPENTHREAD_CONFIG_TCP_ENABLE || OPENTHREAD_CONFIG_BLE_TCAT_ENABLE) && !defined(OPENTHREAD_CONFIG_TLS_ENABLE)
-#define OPENTHREAD_CONFIG_TLS_ENABLE 1
+#ifndef OPENTHREAD_CONFIG_TLS_ENABLE
+#define OPENTHREAD_CONFIG_TLS_ENABLE (OPENTHREAD_CONFIG_TCP_ENABLE || OPENTHREAD_CONFIG_BLE_TCAT_ENABLE)
 #endif
 
 /**
