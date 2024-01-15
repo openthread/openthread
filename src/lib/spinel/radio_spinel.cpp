@@ -122,6 +122,10 @@ RadioSpinel::RadioSpinel(void)
     , mTxRadioEndUs(UINT64_MAX)
     , mRadioTimeRecalcStart(UINT64_MAX)
     , mRadioTimeOffset(UINT64_MAX)
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
+    , mVendorRestorePropertiesCallback(nullptr)
+    , mVendorRestorePropertiesContext(nullptr)
+#endif
 {
     memset(mIidList, SPINEL_HEADER_INVALID_IID, sizeof(mIidList));
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
@@ -758,6 +762,15 @@ exit:
     UpdateParseErrorCount(error);
     LogIfFail("Failed to handle ValueIs", error);
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
+void RadioSpinel::SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback,
+                                                     void                                        *aContext)
+{
+    mVendorRestorePropertiesCallback = aCallback;
+    mVendorRestorePropertiesContext  = aContext;
+}
+#endif
 
 otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
                                      const uint8_t  *aBuffer,
@@ -2266,6 +2279,13 @@ void RadioSpinel::RestoreProperties(void)
     {
         SuccessOrDie(Set(SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE, SPINEL_DATATYPE_BOOL_S, mRxOnWhenIdle));
     }
+
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
+    if (mVendorRestorePropertiesCallback)
+    {
+        mVendorRestorePropertiesCallback(mVendorRestorePropertiesContext);
+    }
+#endif
 
     CalcRcpTimeOffset();
 }
