@@ -191,13 +191,15 @@ jobs:
   delete-coverage-artifacts:
     needs: upload-coverage
     runs-on: ubuntu-20.04
+    permissions:
+      actions: write
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
       with:
         egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-    - uses: geekyeggo/delete-artifact@54ab544f12cdb7b71613a16a2b5a37a9ade990af # v2.0.0
+    - uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v4.1.0
       with:
         name: cov-*
         useGlob: true
