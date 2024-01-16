@@ -299,6 +299,15 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         error = AppendMacCounters(aMessage);
         break;
 
+    case Tlv::kMleCounters:
+    {
+        MleCountersTlv tlv;
+
+        tlv.Init(Get<Mle::Mle>().GetCounters());
+        error = tlv.AppendTo(aMessage);
+        break;
+    }
+
     case Tlv::kVendorName:
         error = Tlv::Append<VendorNameTlv>(aMessage, GetVendorName());
         break;

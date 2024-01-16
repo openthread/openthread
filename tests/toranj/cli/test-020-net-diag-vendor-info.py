@@ -68,6 +68,7 @@ VENDOR_NAME_TLV = 25
 VENDOR_MODEL_TLV = 26
 VENDOR_SW_VERSION_TLV = 27
 THREAD_STACK_VERSION_TLV = 28
+MLE_COUNTERS_TLV = 34
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Check setting vendor name, model, ans sw version
@@ -175,6 +176,10 @@ for line in result[1:]:
         verify(r2.get_version().startswith(line.split(':', 1)[1].strip()))
     else:
         verify(False)
+
+result = r2.cli('networkdiagnostic get', r1_rloc, MLE_COUNTERS_TLV)
+print(len(result) >= 1)
+verify(result[1].startswith("MLE Counters:"))
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
