@@ -131,6 +131,8 @@ jobs:
   delete-coverage-artifacts:
     needs: upload-coverage
     runs-on: ubuntu-20.04
+    permissions:
+      actions: write
     steps:
     - name: Harden Runner
       uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
