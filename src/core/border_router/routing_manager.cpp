@@ -3591,7 +3591,6 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     VerifyOrExit(aOldState != newState);
     LogInfo("PdPrefixManager: %s -> %s", StateToString(aOldState), StateToString(newState));
 
-    // TODO: We may also want to inform the platform that PD is stopped.
     switch (newState)
     {
     case kDhcp6PdStateDisabled:
@@ -3601,6 +3600,11 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     case kDhcp6PdStateRunning:
         break;
     }
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if !OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+    otPlatBorderRoutingRequestDhcp6Pd(&GetInstance(), newState == kDhcp6PdStateRunning);
+#endif // OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 exit:
     return;
@@ -3762,6 +3766,15 @@ extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const u
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessPlatformGeneratedRa(aMessage, aLength);
 }
+
+#if !OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+extern "C" void otPlatBorderRoutingRequestDhcp6Pd(otInstance *aInstance, bool aRequest)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aRequest);
+}
+#endif // OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 } // namespace BorderRouter
