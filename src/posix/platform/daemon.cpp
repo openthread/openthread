@@ -28,6 +28,9 @@
 
 #include "posix/platform/daemon.hpp"
 
+#if defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+#include <cutils/sockets.h>
+#endif
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -169,10 +172,28 @@ exit:
     }
 }
 
-void Daemon::SetUp(void)
+#if defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+void Daemon::createListenSocketOrDie(void)
+{
+    Filename socketFile;
+
+    // Don't use OPENTHREAD_POSIX_DAEMON_SOCKET_NAME because android_get_control_socket
+    // below already assumes parent /dev/socket dir
+    GetFilename(socketFile, "ot-daemon/%s.sock");
+
+    // This returns the init-managed stream socket which is already bind to
+    // /dev/socket/ot-daemon/<interface-name>.sock
+    mListenSocket = android_get_control_socket(socketFile);
+    if (mListenSocket == -1)
+    {
+        DieNowWithMessage("android_get_control_socket", OT_EXIT_ERROR_ERRNO);
+    }
+}
+#else
+void Daemon::createListenSocketOrDie(void)
 {
     struct sockaddr_un sockname;
-    int                ret;
+    int ret;
 
     class AllowAllGuard
     {
@@ -180,7 +201,7 @@ void Daemon::SetUp(void)
         AllowAllGuard(void)
         {
             const char *allowAll = getenv("OT_DAEMON_ALLOW_ALL");
-            mAllowAll            = (allowAll != nullptr && strcmp("1", allowAll) == 0);
+            mAllowAll = (allowAll != nullptr && strcmp("1", allowAll) == 0);
 
             if (mAllowAll)
             {
@@ -196,12 +217,9 @@ void Daemon::SetUp(void)
         }
 
     private:
-        bool   mAllowAll = false;
-        mode_t mMode     = 0;
+        bool mAllowAll = false;
+        mode_t mMode = 0;
     };
-
-    // This allows implementing pseudo reset.
-    VerifyOrExit(mListenSocket == -1);
 
     mListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
 
@@ -246,6 +264,16 @@ void Daemon::SetUp(void)
     {
         DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
     }
+}
+#endif // defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+
+void Daemon::SetUp(void)
+{
+    int ret;
+
+    // This allows implementing pseudo reset.
+    VerifyOrExit(mListenSocket == -1);
+    createListenSocketOrDie();
 
     //
     // only accept 1 connection.
@@ -281,6 +309,8 @@ void Daemon::TearDown(void)
         mSessionSocket = -1;
     }
 
+#if !defined(__ANDROID__) || OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+    // The `mListenSocket` is managed by `init` on Android
     if (mListenSocket != -1)
     {
         close(mListenSocket);
@@ -302,6 +332,7 @@ void Daemon::TearDown(void)
         close(mDaemonLock);
         mDaemonLock = -1;
     }
+#endif
 }
 
 void Daemon::Update(otSysMainloopContext &aContext)
