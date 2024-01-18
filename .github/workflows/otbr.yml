@@ -90,6 +90,7 @@ jobs:
       with:
         name: cov-thread-1-3-backbone-docker
         path: /tmp/coverage/
+        retention-days: 1
     - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       if: ${{ failure() }}
       with:
@@ -107,6 +108,7 @@ jobs:
       with:
         name: cov-thread-1-3-backbone
         path: tmp/coverage.info
+        retention-days: 1
 
   thread-border-router:
     runs-on: ubuntu-20.04
@@ -210,6 +212,7 @@ jobs:
       with:
         name: cov-br-docker-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: /tmp/coverage/
+        retention-days: 1
     - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
       if: ${{ failure() }}
       with:
@@ -227,6 +230,7 @@ jobs:
       with:
         name: cov-br-${{ matrix.description }}-${{ matrix.otbr_mdns }}-${{matrix.otbr_trel}}
         path: tmp/coverage.info
+        retention-days: 1
 
   upload-coverage:
     needs:
@@ -255,14 +259,3 @@ jobs:
       with:
         files: final.info
         fail_ci_if_error: true
-
-  delete-coverage-artifacts:
-    needs: upload-coverage
-    runs-on: ubuntu-20.04
-    permissions:
-      actions: write
-    steps:
-    - uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v4.1.0
-      with:
-        name: cov-*
-        useGlob: true
