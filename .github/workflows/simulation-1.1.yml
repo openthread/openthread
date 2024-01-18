@@ -90,6 +90,7 @@ jobs:
       with:
         name: cov-packet-verification
         path: tmp/coverage.info
+        retention-days: 1
 
   cli-ftd:
     runs-on: ubuntu-20.04
@@ -133,6 +134,7 @@ jobs:
       with:
         name: cov-cli-ftd
         path: tmp/coverage.info
+        retention-days: 1
 
   cli-mtd:
     name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
@@ -183,6 +185,7 @@ jobs:
       with:
         name: cov-cli-mtd-${{ matrix.message_use_heap }}
         path: tmp/coverage.info
+        retention-days: 1
 
   cli-time-sync:
     runs-on: ubuntu-20.04
@@ -226,6 +229,7 @@ jobs:
       with:
         name: cov-cli-time-sync
         path: tmp/coverage.info
+        retention-days: 1
 
   expects:
     runs-on: ubuntu-20.04
@@ -267,6 +271,7 @@ jobs:
       with:
         name: cov-expects
         path: tmp/coverage.info
+        retention-days: 1
 
   ot-commissioner:
     runs-on: ubuntu-22.04
@@ -316,6 +321,7 @@ jobs:
       with:
         name: cov-ot-commissioner
         path: tmp/coverage.info
+        retention-days: 1
 
   multiple-instance:
     runs-on: ubuntu-20.04
@@ -355,6 +361,7 @@ jobs:
       with:
         name: cov-multiple-instance
         path: tmp/coverage.info
+        retention-days: 1
 
   upload-coverage:
     needs:
@@ -391,19 +398,3 @@ jobs:
       with:
         files: final.info
         fail_ci_if_error: true
-
-  delete-coverage-artifacts:
-    needs: upload-coverage
-    runs-on: ubuntu-20.04
-    permissions:
-      actions: write
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v4.1.0
-      with:
-        name: cov-*
-        useGlob: true

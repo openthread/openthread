@@ -96,6 +96,7 @@ jobs:
       with:
         name: cov-otns-unittests
         path: tmp/coverage.info
+        retention-days: 1
 
   examples:
     name: Examples
@@ -197,6 +198,7 @@ jobs:
         with:
           name: cov-otns-stress-tests-${{ matrix.suite }}
           path: tmp/coverage.info
+          retention-days: 1
 
   upload-coverage:
     needs:

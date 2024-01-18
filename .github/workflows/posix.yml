@@ -88,6 +88,7 @@ jobs:
       with:
         name: cov-expects-linux-1
         path: tmp/coverage.info
+        retention-days: 1
     - name: Run TUN Mode
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -125,6 +126,7 @@ jobs:
       with:
         name: cov-expects-linux-2
         path: tmp/coverage.info
+        retention-days: 1
 
   thread-cert:
     runs-on: ubuntu-20.04
@@ -215,6 +217,7 @@ jobs:
       with:
         name: cov-pty-linux-${{ matrix.DAEMON }}
         path: tmp/coverage.info
+        retention-days: 1
 
   pty-macos:
     name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
@@ -282,6 +285,7 @@ jobs:
       with:
         name: cov-rcp-stack-reset
         path: tmp/coverage.info
+        retention-days: 1
 
   upload-coverage:
     needs:
@@ -314,19 +318,3 @@ jobs:
       with:
         files: final.info
         fail_ci_if_error: true
-
-  delete-coverage-artifacts:
-    needs: upload-coverage
-    runs-on: ubuntu-20.04
-    permissions:
-      actions: write
-    steps:
-    - name: Harden Runner
-      uses: step-security/harden-runner@eb238b55efaa70779f274895e782ed17c84f2895 # v2.6.1
-      with:
-        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-    - uses: geekyeggo/delete-artifact@65041433121f7239077fa20be14c0690f70569de # v4.1.0
-      with:
-        name: cov-*
-        useGlob: true
