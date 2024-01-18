@@ -218,6 +218,7 @@ ot_option(OT_MESH_DIAG OPENTHREAD_CONFIG_MESH_DIAG_ENABLE "mesh diag")
 ot_option(OT_MESSAGE_USE_HEAP OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE "heap allocator for message buffers")
 ot_option(OT_MLE_LONG_ROUTES OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE "MLE long routes extension (experimental)")
 ot_option(OT_MLR OPENTHREAD_CONFIG_MLR_ENABLE "Multicast Listener Registration (MLR)")
+ot_option(OT_MULTIPAN_RCP OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE "enable multi-PAN RCP")
 ot_option(OT_MULTIPLE_INSTANCE OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE "multiple instances")
 ot_option(OT_NAT64_BORDER_ROUTING OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE "border routing NAT64")
 ot_option(OT_NAT64_TRANSLATOR OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE "NAT64 translator support")
@@ -248,7 +249,6 @@ ot_option(OT_UDP_FORWARD OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE "UDP forward")
 ot_option(OT_UPTIME OPENTHREAD_CONFIG_UPTIME_ENABLE "uptime")
 
 option(OT_DOC "build OpenThread documentation")
-option(OT_MULTIPAN_RCP "Multi-PAN RCP" OFF)
 message(STATUS "- - - - - - - - - - - - - - - - ")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
