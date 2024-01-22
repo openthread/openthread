@@ -83,6 +83,7 @@
  * @defgroup config-srp-server               SRP Server
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
+ * @defgroup config-trel		     TREL
  *
  * @}
  *
