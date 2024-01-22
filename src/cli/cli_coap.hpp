@@ -78,11 +78,8 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kMaxUriLength  = 32,
-        kMaxBufferSize = 16
-    };
+    static constexpr uint16_t kMaxUriLength  = 32;
+    static constexpr uint16_t kMaxBufferSize = 16;
 
     using Command = CommandEntry<Coap>;
 
