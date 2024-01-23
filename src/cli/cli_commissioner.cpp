@@ -40,6 +40,20 @@
 namespace ot {
 namespace Cli {
 
+/**
+ * @cli commissioner announce
+ * @code
+ * commissioner announce 0x00050000 2 32 fdde:ad00:beef:0:0:ff:fe00:c00
+ * Done
+ * @endcode
+ * @cparam commissioner announce @ca{mask} @ca{count} @ca{period} @ca{destination}
+ *   * `mask`: Bitmask that identifies channels for sending MLE `announce` messages.
+ *   * `count`: Number of MLE `announce` transmissions per channel.
+ *   * `period`: Number of milliseconds between successive MLE `announce` transmissions.
+ *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
+ * @par api_copy 
+ * #otCommissionerAnnounceBegin
+ */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
     otError      error;
