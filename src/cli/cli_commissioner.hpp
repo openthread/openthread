@@ -81,10 +81,7 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kDefaultJoinerTimeout = 120, ///< Default timeout for Joiners, in seconds.
-    };
+    static constexpr uint32_t kDefaultJoinerTimeout = 120; ///< Default timeout for Joiners, in seconds.
 
     using Command = CommandEntry<Commissioner>;
 

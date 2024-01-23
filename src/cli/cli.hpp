@@ -277,14 +277,10 @@ protected:
     static Interpreter *sInterpreter;
 
 private:
-    enum
-    {
-        kIndentSize            = 4,
-        kMaxArgs               = 32,
-        kMaxAutoAddresses      = 8,
-        kMaxLineLength         = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
-        kMaxUserCommandEntries = OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES,
-    };
+    static constexpr uint8_t  kIndentSize            = 4;
+    static constexpr uint16_t kMaxArgs               = 32;
+    static constexpr uint16_t kMaxLineLength         = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH;
+    static constexpr uint16_t kMaxUserCommandEntries = OPENTHREAD_CONFIG_CLI_MAX_USER_CMD_ENTRIES;
 
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
     static constexpr uint32_t kLocateTimeoutMsecs            = 2500;

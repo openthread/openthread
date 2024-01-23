@@ -80,11 +80,8 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    enum : uint8_t
-    {
-        kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES,
-        kIndentSize       = 4,
-    };
+    static constexpr uint8_t kIndentSize       = 4;
+    static constexpr uint8_t kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES;
 
     using Command = CommandEntry<SrpClient>;
 

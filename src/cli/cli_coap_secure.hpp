@@ -84,13 +84,10 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
-    enum
-    {
-        kMaxUriLength   = 32,
-        kMaxBufferSize  = 16,
-        kPskMaxLength   = 32,
-        kPskIdMaxLength = 32
-    };
+    static constexpr uint16_t kMaxUriLength   = 32;
+    static constexpr uint16_t kMaxBufferSize  = 16;
+    static constexpr uint8_t  kPskMaxLength   = 32;
+    static constexpr uint8_t  kPskIdMaxLength = 32;
 
     using Command = CommandEntry<CoapSecure>;
 

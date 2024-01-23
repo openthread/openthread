@@ -399,10 +399,7 @@ exit:
 
 otError UdpExample::PrepareHexStringPayload(otMessage &aMessage, const char *aHexString)
 {
-    enum : uint8_t
-    {
-        kBufferSize = 50,
-    };
+    static constexpr uint16_t kBufferSize = 50;
 
     otError  error;
     uint8_t  buf[kBufferSize];
