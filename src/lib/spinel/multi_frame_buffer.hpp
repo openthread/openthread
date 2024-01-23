@@ -371,7 +371,7 @@ public:
 
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 
-        if (aFrame != mWriteFrameStart)
+        if (HasSavedFrame() && (aFrame != mWriteFrameStart))
         {
             uint16_t totalLength = LittleEndian::ReadUint16(aFrame + kHeaderTotalLengthOffset);
             uint16_t skipLength  = LittleEndian::ReadUint16(aFrame + kHeaderSkipLengthOffset);

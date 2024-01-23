@@ -666,6 +666,9 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
                 ExitNow();
             }
 
+            // this clear is necessary in case the RCP has sent messages between disable and reset
+            mRxFrameBuffer.Clear();
+
             LogInfo("RCP reset: %s", spinel_status_to_cstr(status));
             sIsReady = true;
         }

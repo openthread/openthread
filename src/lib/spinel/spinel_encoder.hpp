@@ -676,6 +676,12 @@ public:
      */
     otError ResetToSaved(void);
 
+    /**
+     * Clear NCP buffer on reset command.
+     *
+     */
+    void ClearNcpBuffer(void);
+
 private:
     enum
     {
