@@ -84,6 +84,7 @@ public:
         kChannelPages        = OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES,
         kTypeList            = OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST,
         kMaxChildTimeout     = OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT,
+        kEui64               = OT_NETWORK_DIAGNOSTIC_TLV_EUI64,
         kVersion             = OT_NETWORK_DIAGNOSTIC_TLV_VERSION,
         kVendorName          = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME,
         kVendorModel         = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL,
@@ -198,6 +199,12 @@ typedef TlvInfo<Tlv::kChildTable> ChildTableTlv;
  *
  */
 typedef UintTlvInfo<Tlv::kMaxChildTimeout, uint32_t> MaxChildTimeoutTlv;
+
+/**
+ * Defines Eui64 TLV constants and types.
+ *
+ */
+typedef SimpleTlvInfo<Tlv::kEui64, Mac::ExtAddress> Eui64Tlv;
 
 /**
  * Defines Version TLV constants and types.

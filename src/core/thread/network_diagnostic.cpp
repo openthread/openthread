@@ -267,6 +267,15 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
         error = Tlv::Append<ModeTlv>(aMessage, Get<Mle::MleRouter>().GetDeviceMode().Get());
         break;
 
+    case Tlv::kEui64:
+    {
+        Mac::ExtAddress eui64;
+
+        Get<Radio>().GetIeeeEui64(eui64);
+        error = Tlv::Append<Eui64Tlv>(aMessage, eui64);
+        break;
+    }
+
     case Tlv::kVersion:
         error = Tlv::Append<VersionTlv>(aMessage, kThreadVersion);
         break;
@@ -1194,6 +1203,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kMaxChildTimeout:
             SuccessOrExit(error = Tlv::Read<MaxChildTimeoutTlv>(aMessage, offset, aTlvInfo.mData.mMaxChildTimeout));
+            break;
+
+        case Tlv::kEui64:
+            SuccessOrExit(error = Tlv::Read<Eui64Tlv>(aMessage, offset, AsCoreType(&aTlvInfo.mData.mEui64)));
             break;
 
         case Tlv::kVersion:
