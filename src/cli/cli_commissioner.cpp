@@ -124,6 +124,21 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
     const otExtAddress *addrPtr = nullptr;
     otJoinerDiscerner   discerner;
 
+    /**
+     * @cli commissioner joiner table
+     * @code
+     * commissioner joiner table
+     * > commissioner joiner table
+     * | ID                    | PSKd                             | Expiration |
+     * +-----------------------+----------------------------------+------------+
+     * |                     * |                           J01NME |      81015 |
+     * |      d45e64fa83f81cf7 |                           J01NME |     101204 |
+     * | 0x0000000000000abc/12 |                           J01NME |     114360 |
+     * Done
+     * @endcode
+     * @par
+     * List all Joiner entries in table format.
+     */
     if (aArgs[0] == "table")
     {
         uint16_t     iter = 0;
@@ -227,6 +242,24 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
         {
             error = otCommissionerAddJoiner(GetInstancePtr(), addrPtr, aArgs[2].GetCString(), timeout);
         }
+        /**
+         * @cli commissioner joiner remove
+         * @code
+         * commissioner joiner remove d45e64fa83f81cf7
+         * Done
+         * @endcode
+         * @code
+         * commissioner joiner remove 0xabc/12
+         * Done
+         * @endcode
+         * @cparam commissioner joiner remove @ca{eui64}|@ca{discerner
+         *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
+         *   * `discerner`: The joiner discerner in the format `number/length`.
+         * @par
+         * Removes a joiner entry.
+         * @sa otCommissionerRemoveJoiner
+         * @sa otCommissionerRemoveJoinerWithDiscerner
+         */
     }
     else if (aArgs[0] == "remove")
     {
@@ -248,6 +281,24 @@ exit:
     return error;
 }
 
+/**
+ * @cli commissioner mgmtget
+ * @code
+ * commissioner mgmtget locator sessionid
+ * Done
+ * @endcode
+ * @cparam commissioner mgmtget [locator] [sessionid] <!--
+ * -->                          [steeringdata] [joinerudpport] <!--
+ * -->                          [-x @ca{TLVs}]
+ *   * `locator`:
+ *   * `sessionid`:
+ *   * `steeringdata`:
+ *   * `joinerudpport`:
+ *   * `TLVs`:
+ * @par
+ * Sends a `MGMT_GET` message to the Leader.
+ * @sa otCommissionerSendMgmtGet
+ */
 template <> otError Commissioner::Process<Cmd("mgmtget")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
