@@ -53,7 +53,7 @@ namespace Cli {
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Announce Begin message. 
- * @sa CommissionerAnnounceBegin
+ * @sa oTCommissionerAnnounceBegin
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
@@ -81,15 +81,17 @@ exit:
  * Done
  * Energy: 00050000 0 0 0 0
  * @endcode
-   * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca {scanDuration} @ca{destination}
+ * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca{scanDuration} @ca{destination}
    * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
    * `count`: Number of IEEE 802.15.4 ED Scans per channel.
    * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
    * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
-   *                 performing an IEEE 802.15.4 ED Scan. 
+   * performing an IEEE 802.15.4 ED Scan. 
    * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
- * Sends an Energy Scan Query message. The contents of `MGMT_ED_REPORT` messages,
+ * Sends an Energy Scan Query message.
+ * @par
+ * The contents of `MGMT_ED_REPORT` messages,
  * such as the Channel Mask and Energy List, are printed as they are received.
  * @sa otCommissionerEnergyScan
  */
