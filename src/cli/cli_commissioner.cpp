@@ -53,7 +53,7 @@ namespace Cli {
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Announce Begin message. 
- * @sa oTCommissionerAnnounceBegin
+ * @sa otCommissionerAnnounceBegin
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
