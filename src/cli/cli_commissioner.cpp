@@ -82,12 +82,12 @@ exit:
  * Energy: 00050000 0 0 0 0
  * @endcode
  * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca{scanDuration} @ca{destination}
-   * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
-   * `count`: Number of IEEE 802.15.4 ED Scans per channel.
-   * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
-   * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
-   * performing an IEEE 802.15.4 ED Scan. 
-   * `destination`: Destination IPv6 address for the message. The message may be multicast.
+     * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
+     * `count`: Number of IEEE 802.15.4 ED Scans per channel.
+     * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
+     * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
+     * performing an IEEE 802.15.4 ED Scan. 
+     * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Energy Scan Query message.
  * @par
@@ -188,6 +188,26 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
         SuccessOrExit(error);
     }
 
+    /**
+     * @cli commissioner joiner add
+     * @code
+     * commissioner joiner add d45e64fa83f81cf7 J01NME
+     * Done
+     * @endcode
+     * @code
+     * commissioner joiner add 0xabc/12 J01NME
+     * Done
+     * @endcode
+     * @cparam commissioner joiner add @ca{eui64}|@ca{discerner} @ca{@pskd} [@ca{timeout}]
+     *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
+     *   * `discerner`: The joiner discerner in the format `number/length`.
+     *   * `pksd`: Pre-Shared Key for the joiner.
+     *   * `timeout`: The joiner timeout in seconds.
+     * @par
+     * Adds a joiner entry.
+     * @sa otCommissionerAddJoiner
+     * @sa otCommissionerAddJoinerWithDiscerner
+     */
     if (aArgs[0] == "add")
     {
         uint32_t timeout = kDefaultJoinerTimeout;
