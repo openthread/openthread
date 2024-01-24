@@ -52,7 +52,7 @@ namespace Cli {
  *   * `period`: Number of milliseconds between successive MLE `Announce` transmissions.
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
- * Sends an Announce Begin message. 
+ * Sends an Announce Begin message.
  * @sa otCommissionerAnnounceBegin
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
@@ -82,12 +82,12 @@ exit:
  * Energy: 00050000 0 0 0 0
  * @endcode
  * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca{scanDuration} @ca{destination}
-     * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
-     * `count`: Number of IEEE 802.15.4 ED Scans per channel.
-     * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
-     * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
-     * performing an IEEE 802.15.4 ED Scan. 
-     * `destination`: Destination IPv6 address for the message. The message may be multicast.
+ * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
+ * `count`: Number of IEEE 802.15.4 ED Scans per channel.
+ * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
+ * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
+ * performing an IEEE 802.15.4 ED Scan.
+ * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Energy Scan Query message.
  * @par
@@ -198,7 +198,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * commissioner joiner add 0xabc/12 J01NME
      * Done
      * @endcode
-     * @cparam commissioner joiner add @ca{eui64}|@ca{discerner pskd} [@ca{timeout}]
+     * @cparam commissioner joiner add @ca{eui64}|@ca{discerner@ca{pskd}} [@ca{timeout}]
      *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
      *   * `discerner`: The joiner discerner in the format `number/length`.
      *   * `pksd`: Pre-Shared Key for the joiner.
