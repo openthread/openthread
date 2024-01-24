@@ -198,7 +198,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * commissioner joiner add 0xabc/12 J01NME
      * Done
      * @endcode
-     * @cparam commissioner joiner add @ca{eui64}|@ca{discerner [@ca{timeout}]
+     * @cparam commissioner joiner add @ca{eui64}|@ca{discerner @ca{pksd}} [@ca{timeout}]
      *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
      *   * `discerner`: The joiner discerner in the format `number/length`.
      *   * `pksd`: Pre-Shared Key for the joiner.
