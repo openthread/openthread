@@ -47,12 +47,13 @@ namespace Cli {
  * Done
  * @endcode
  * @cparam commissioner announce @ca{mask} @ca{count} @ca{period} @ca{destination}
- *   * `mask`: Bitmask that identifies channels for sending MLE `announce` messages.
- *   * `count`: Number of MLE `announce` transmissions per channel.
- *   * `period`: Number of milliseconds between successive MLE `announce` transmissions.
+ *   * `mask`: Bitmask that identifies channels for sending MLE `Announce` messages.
+ *   * `count`: Number of MLE `Announce` transmissions per channel.
+ *   * `period`: Number of milliseconds between successive MLE `Announce` transmissions.
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
- * @par api_copy 
- * #otCommissionerAnnounceBegin
+ * @par
+ * Sends an Announce Begin message. 
+ * @sa CommissionerAnnounceBegin
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
@@ -73,6 +74,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli commissioner energy
+ * @code
+ * commissioner energy 0x00050000 2 32 1000 fdde:ad00:beef:0:0:ff:fe00:c00
+ * Done
+ * Energy: 00050000 0 0 0 0
+ * @endcode
+   * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca {scanDuration} @ca{destination}
+   * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
+   * `count`: Number of IEEE 802.15.4 ED Scans per channel.
+   * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
+   * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
+   *                 performing an IEEE 802.15.4 ED Scan. 
+   * `destination`: Destination IPv6 address for the message. The message may be multicast.
+ * @par
+ * Sends an Energy Scan Query message. The contents of `MGMT_ED_REPORT` messages,
+ * such as the Channel Mask and Energy List, are printed as they are received.
+ * @sa otCommissionerEnergyScan
+ */
 template <> otError Commissioner::Process<Cmd("energy")>(Arg aArgs[])
 {
     otError      error;
