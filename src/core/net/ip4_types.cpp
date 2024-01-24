@@ -66,6 +66,17 @@ exit:
     return error;
 }
 
+Error Address::ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aIp6Address.IsIp4Mapped(), error = kErrorParse);
+    SetBytes(&aIp6Address.GetBytes()[12]);
+
+exit:
+    return error;
+}
+
 void Address::ExtractFromIp6Address(uint8_t aPrefixLength, const Ip6::Address &aIp6Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added

@@ -140,6 +140,16 @@ void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6A
     AsCoreType(aIp4Address).ExtractFromIp6Address(aPrefixLength, AsCoreType(aIp6Address));
 }
 
+otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Address *aIp4Address)
+{
+    return AsCoreType(aIp4Address).ExtractFromIp4MappedIp6Address(AsCoreType(aIp6Address));
+}
+
+void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, otIp6Address *aIp6Address)
+{
+    AsCoreType(aIp6Address).SetToIp4Mapped(AsCoreType(aIp4Address));
+}
+
 otError otIp4AddressFromString(const char *aString, otIp4Address *aAddress)
 {
     AssertPointerIsNotNull(aString);
