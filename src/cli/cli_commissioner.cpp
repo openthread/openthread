@@ -82,12 +82,12 @@ exit:
  * Energy: 00050000 0 0 0 0
  * @endcode
  * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca{scanDuration} @ca{destination}
- * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
- * `count`: Number of IEEE 802.15.4 ED Scans per channel.
- * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
- * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
- * performing an IEEE 802.15.4 ED Scan.
- * `destination`: Destination IPv6 address for the message. The message may be multicast.
+ *   * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
+ *   * `count`: Number of IEEE 802.15.4 ED Scans per channel.
+ *   * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
+ *   * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
+ *     performing an IEEE 802.15.4 ED Scan.
+ *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Energy Scan Query message.
  * @par
@@ -290,11 +290,11 @@ exit:
  * @cparam commissioner mgmtget [locator] [sessionid] <!--
  * -->                          [steeringdata] [joinerudpport] <!--
  * -->                          [-x @ca{TLVs}]
- *   * `locator`:
- *   * `sessionid`:
- *   * `steeringdata`:
- *   * `joinerudpport`:
- *   * `TLVs`:
+ *   * `locator`: Border Router RLOC16.
+ *   * `sessionid`: Commissioner Session ID.
+ *   * `steeringdata`: Steering data.
+ *   * `joinerudpport`: Joiner UDP Port.
+ *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_GET` message to the Leader.
  * @sa otCommissionerSendMgmtGet
@@ -346,6 +346,24 @@ exit:
     return error;
 }
 
+/**
+ * @cli commissioner mgmtset
+ * @code
+ * commissioner mgmtset joinerudpport 9988
+ * Done
+ * @endcode
+ * @cparam commissioner mgmtset [locator @ca{locator}] [sessionid @ca{sessionid}] <!--
+ * -->                          [steeringdata @ca{steeringdata}] [joinerudpport @ca{joinerudpport}] <!--
+ * -->                          [-x @ca{TLVs}]
+ *   * `locator`: Border Router RLOC16.
+ *   * `sessionid`: Commissioner Session ID.
+ *   * `steeringdata`: Steering data.
+ *   * `joinerudpport`: Joiner UDP Port.
+ *   * `TLVs`: The set of TLVs to be retrieved.
+ * @par
+ * Sends a `MGMT_SET` message to the Leader.
+ * @sa otCommissionerSendMgmtSet
+ */
 template <> otError Commissioner::Process<Cmd("mgmtset")>(Arg aArgs[])
 {
     otError                error;
@@ -408,6 +426,25 @@ exit:
     return error;
 }
 
+/**
+ * @cli commissioner panid
+ * @code
+ * commissioner panid 0xdead 0x7fff800 fdde:ad00:beef:0:0:ff:fe00:c00
+ * Done
+ * Conflict: dead, 00000800
+ * @endcode
+ * @cparam commissioner panid @ca{panid} @ca{mask} @ca{destination}
+ *   * `paind`: PAN ID to use to check for conflicts.
+ *   * `mask`; Bitmask that identifies channels to perform IEEE 802.15.4
+ *     Active Scans.
+ *   * `destination`: IPv6 destination address for the message. The message may be multicast.
+ * @par
+ * Send a MGMT_PANID_QUERY message.
+ * @par
+ * The contents of `MGMT_PANID_CONFLICT` messages, such as PAN ID and Channel Mask,
+ * are printed as they are received.
+ * @sa otCommissionerPanIdQuery
+ */
 template <> otError Commissioner::Process<Cmd("panid")>(Arg aArgs[])
 {
     otError      error;
@@ -425,6 +462,17 @@ exit:
     return error;
 }
 
+/**
+ * @cli commissioner provisioningurl
+ * @code
+ * commissioner provisioningurl http://github.com/openthread/openthread
+ * Done
+ * @endcode
+ * @cparam commissioner provisioningurl @ca{provisioningurl}
+ * @par
+ * Sets the Commissioner provisioning URL.
+ * @sa otCommissionerSetProvisioningUrl
+ */
 template <> otError Commissioner::Process<Cmd("provisioningurl")>(Arg aArgs[])
 {
     // If aArgs[0] is empty, `GetCString() will return `nullptr`
@@ -432,6 +480,17 @@ template <> otError Commissioner::Process<Cmd("provisioningurl")>(Arg aArgs[])
     return otCommissionerSetProvisioningUrl(GetInstancePtr(), aArgs[0].GetCString());
 }
 
+/**
+ * @cli commissioner sessionid
+ * @code
+ * commissioner sessionid
+ * 0
+ * Done
+ * @endcode
+ * @par
+ * Gets the current commissioner session ID.
+ * @sa otCommissionerGetSessionId
+ */
 template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -441,6 +500,22 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli commissioner id (get,set)
+ * @code
+ * commissioner id "OpenThread Commissioner"
+ * Done
+ * @endcode
+ * @code
+ * commissioner id
+ * OpenThread Commissioner
+ * Done
+ * @endcode
+ * @cparam commissioner id @ca{name}
+ * @par
+ * Gets or sets the Commissioner ID name.
+ * @sa otCommissionerSetId
+ */
 template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
 {
     otError error;
@@ -458,6 +533,20 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
     return error;
 }
 
+/**
+ * @cli commissioner start
+ * @code
+ * commissioner start
+ * Commissioner: petitioning
+ * Done
+ * Commissioner: active
+ * @endcode
+ * @par
+ * Enables the Thread Commissioner role.
+ * @par
+ * This command causes the device to send `LEAD_PET` and `LEAD_KA` messages.
+ * @sa otCommissionerStart
+ */
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -529,6 +618,18 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
     OutputNewLine();
 }
 
+/**
+ * @cli commissioner stop
+ * @code
+ * commissioner stop
+ * Done
+ * @endcode
+ * @par
+ * Disables the Thread Commissioner role.
+ * @par
+ * This command causes the device to send `LEAD_KA[Reject]` messages.
+ * @sa otCommissionerStop
+ */
 template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -536,6 +637,18 @@ template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
     return otCommissionerStop(GetInstancePtr());
 }
 
+/**
+ * @cli commissioner state
+ * @code
+ * commissioner state
+ * active
+ * Done
+ * @endcode
+ * @par
+ * Returns the current state of the Commissioner. Possible values are
+ * `active`, `disabled`, or `petition` (petitioning to become Commissioner).
+ * @sa otCommissionerState
+ */
 template <> otError Commissioner::Process<Cmd("state")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
