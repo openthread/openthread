@@ -128,7 +128,6 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * @cli commissioner joiner table
      * @code
      * commissioner joiner table
-     * > commissioner joiner table
      * | ID                    | PSKd                             | Expiration |
      * +-----------------------+----------------------------------+------------+
      * |                     * |                           J01NME |      81015 |
@@ -137,7 +136,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * List all Joiner entries in table format.
+     * Lists all joiner entries in table format.
      */
     if (aArgs[0] == "table")
     {
@@ -291,9 +290,9 @@ exit:
  * -->                          [steeringdata] [joinerudpport] <!--
  * -->                          [-x @ca{TLVs}]
  *   * `locator`: Border Router RLOC16.
- *   * `sessionid`: Commissioner Session ID.
+ *   * `sessionid`: Session ID of the commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: Joiner UDP Port.
+ *   * `joinerudpport`: UDP port of the joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_GET` message to the Leader.
@@ -503,7 +502,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 /**
  * @cli commissioner id (get,set)
  * @code
- * commissioner id OpenThread Commissioner
+ * commissioner id OpenThread commissioner
  * Done
  * @endcode
  * @code
@@ -513,7 +512,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
  * @endcode
  * @cparam commissioner id @ca{name}
  * @par
- * Gets or sets the Commissioner ID name.
+ * Gets or sets the commissioner ID name.
  * @sa otCommissionerSetId
  */
 template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
@@ -542,7 +541,7 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
  * Commissioner: active
  * @endcode
  * @par
- * Enables the Thread Commissioner role.
+ * Enables the Thread commissioner role.
  * @par
  * This command causes the device to send `LEAD_PET` and `LEAD_KA` messages.
  * @sa otCommissionerStart
@@ -625,7 +624,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
  * Done
  * @endcode
  * @par
- * Disables the Thread Commissioner role.
+ * Disables the Thread commissioner role.
  * @par
  * This command causes the device to send `LEAD_KA[Reject]` messages.
  * @sa otCommissionerStop
@@ -645,8 +644,8 @@ template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Returns the current state of the Commissioner. Possible values are
- * `active`, `disabled`, or `petition` (petitioning to become Commissioner).
+ * Returns the current state of the commissioner. Possible values are
+ * `active`, `disabled`, or `petition` (petitioning to become commissioner).
  * @sa otCommissionerState
  */
 template <> otError Commissioner::Process<Cmd("state")>(Arg aArgs[])
