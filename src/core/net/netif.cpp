@@ -550,7 +550,7 @@ void Netif::UnicastAddress::InitAsThreadOrigin(bool aPreferred)
 
 void Netif::UnicastAddress::InitAsThreadOriginMeshLocal(void)
 {
-    InitAsThreadOrigin();
+    InitAsThreadOrigin(true);
     SetScopeOverride(Address::kRealmLocalScope);
     mMeshLocal = true;
 }
