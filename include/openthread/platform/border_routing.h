@@ -65,6 +65,22 @@ extern "C" {
  */
 extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+#if !OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+/**
+ * Requests or releases a prefix via DHCPv6 Prefix Delegation (PD) for Thread interface.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ * Requires `OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR = 0`.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @param[in] aRequest  Indicates whether to request (when `true`) or release (when `false`) the prefix.
+ *
+ */
+void otPlatBorderRoutingRequestDhcp6Pd(otInstance *aInstance, bool aRequest);
+#endif // OPENTHREAD_BORDER_ROUTING_DHCP6_PD_REQUESTOR
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 #ifdef __cplusplus
 }
 #endif
