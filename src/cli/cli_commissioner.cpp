@@ -136,7 +136,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * Done
      * @endcode
      * @par
-     * Lists all joiner entries in table format.
+     * Lists all %Joiner entries in table format.
      */
     if (aArgs[0] == "table")
     {
@@ -213,10 +213,10 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      * Done
      * @endcode
      * @cparam commissioner joiner add @ca{eui64}|@ca{discerner pksd} [@ca{timeout}]
-     *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
-     *   * `discerner`: The joiner discerner in the format `number/length`.
+     *   * `eui64`: IEEE EUI-64 of the %Joiner. To match any joiner, use `*`.
+     *   * `discerner`: The %Joiner discerner in the format `number/length`.
      *   * `pksd`: Pre-Shared Key for the joiner.
-     *   * `timeout`: The joiner timeout in seconds.
+     *   * `timeout`: The %Joiner timeout in seconds.
      * @par
      * Adds a joiner entry.
      * @sa otCommissionerAddJoiner
@@ -255,7 +255,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
          *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
          *   * `discerner`: The joiner discerner in the format `number/length`.
          * @par
-         * Removes a joiner entry.
+         * Removes a %Joiner entry.
          * @sa otCommissionerRemoveJoiner
          * @sa otCommissionerRemoveJoinerWithDiscerner
          */
@@ -290,9 +290,9 @@ exit:
  * -->                          [steeringdata] [joinerudpport] <!--
  * -->                          [-x @ca{TLVs}]
  *   * `locator`: Border Router RLOC16.
- *   * `sessionid`: Session ID of the commissioner.
+ *   * `sessionid`: Session ID of the %Commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: UDP port of the joiner.
+ *   * `joinerudpport`: UDP port of the %Joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_GET` message to the Leader.
@@ -355,9 +355,9 @@ exit:
  * -->                          [steeringdata @ca{steeringdata}] [joinerudpport @ca{joinerudpport}] <!--
  * -->                          [-x @ca{TLVs}]
  *   * `locator`: Border Router RLOC16.
- *   * `sessionid`: Session ID of the commissioner.
+ *   * `sessionid`: Session ID of the %Commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: UDP Port of the joiner.
+ *   * `joinerudpport`: UDP Port of the %Joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_SET` message to the Leader.
@@ -469,7 +469,7 @@ exit:
  * @endcode
  * @cparam commissioner provisioningurl @ca{provisioningurl}
  * @par
- * Sets the Commissioner provisioning URL.
+ * Sets the %Commissioner provisioning URL.
  * @sa otCommissionerSetProvisioningUrl
  */
 template <> otError Commissioner::Process<Cmd("provisioningurl")>(Arg aArgs[])
@@ -487,7 +487,7 @@ template <> otError Commissioner::Process<Cmd("provisioningurl")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Gets the current commissioner session ID.
+ * Gets the current %Commissioner session ID.
  * @sa otCommissionerGetSessionId
  */
 template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
@@ -512,7 +512,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
  * @endcode
  * @cparam commissioner id @ca{name}
  * @par
- * Gets or sets the commissioner ID name.
+ * Gets or sets the %Commissioner ID name.
  * @sa otCommissionerSetId
  */
 template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
@@ -541,7 +541,7 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
  * Commissioner: active
  * @endcode
  * @par
- * Enables the Thread commissioner role.
+ * Enables the Thread %Commissioner role.
  * @par
  * This command causes the device to send `LEAD_PET` and `LEAD_KA` messages.
  * @sa otCommissionerStart
@@ -624,7 +624,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
  * Done
  * @endcode
  * @par
- * Disables the Thread commissioner role.
+ * Disables the Thread %Commissioner role.
  * @par
  * This command causes the device to send `LEAD_KA[Reject]` messages.
  * @sa otCommissionerStop
@@ -644,8 +644,8 @@ template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Returns the current state of the commissioner. Possible values are
- * `active`, `disabled`, or `petition` (petitioning to become commissioner).
+ * Returns the current state of the %Commissioner. Possible values are
+ * `active`, `disabled`, or `petition` (petitioning to become %Commissioner).
  * @sa otCommissionerState
  */
 template <> otError Commissioner::Process<Cmd("state")>(Arg aArgs[])
