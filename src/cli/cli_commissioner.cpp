@@ -503,7 +503,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 /**
  * @cli commissioner id (get,set)
  * @code
- * commissioner id "OpenThread Commissioner"
+ * commissioner id OpenThread Commissioner
  * Done
  * @endcode
  * @code
