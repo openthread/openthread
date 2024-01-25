@@ -62,6 +62,15 @@ public:
     typedef void (*ConnectedCallback)(bool aConnected, void *aContext);
 
     /**
+     * Callback to notify when the agent is automatically stopped due to reaching the maximum number of connection
+     * attempts.
+     *
+     * @param[in] aContext    A pointer to arbitrary context information.
+     *
+     */
+    typedef void (*AutoStopCallback)(void *aContext);
+
+    /**
      * Initializes the object.
      *
      * @param[in]  aInstance           A reference to the OpenThread instance.
@@ -80,6 +89,21 @@ public:
      *
      */
     Error Start(uint16_t aPort);
+
+    /**
+     * Starts the secure CoAP agent and sets the maximum number of allowed connection attempts before stopping the
+     * agent automatically.
+     *
+     * @param[in] aPort           The local UDP port to bind to.
+     * @param[in] aMaxAttempts    Maximum number of allowed connection request attempts. Zero indicates no limit.
+     * @param[in] aCallback       Callback to notify if max number of attempts has reached and agent is stopped.
+     * @param[in] aContext        A pointer to arbitrary context to use with `AutoStopCallback`.
+     *
+     * @retval kErrorNone        Successfully started the CoAP agent.
+     * @retval kErrorAlready     Already started.
+     *
+     */
+    Error Start(uint16_t aPort, uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext);
 
     /**
      * Starts the secure CoAP agent, but do not use socket to transmit/receive messages.
@@ -382,6 +406,8 @@ public:
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 private:
+    Error Open(uint16_t aMaxAttempts, AutoStopCallback aCallback, void *aContext);
+
     static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
         return static_cast<CoapSecure &>(aCoapBase).Send(aMessage, aMessageInfo);
@@ -391,6 +417,9 @@ private:
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void        HandleDtlsConnected(bool aConnected);
 
+    static void HandleDtlsAutoClose(void *aContext);
+    void        HandleDtlsAutoClose(void);
+
     static void HandleDtlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength);
     void        HandleDtlsReceive(uint8_t *aBuf, uint16_t aLength);
 
@@ -399,6 +428,7 @@ private:
 
     MeshCoP::SecureTransport    mDtls;
     Callback<ConnectedCallback> mConnectedCallback;
+    Callback<AutoStopCallback>  mAutoStopCallback;
     ot::MessageQueue            mTransmitQueue;
     TaskletContext              mTransmitTask;
 };
