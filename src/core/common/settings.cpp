@@ -106,7 +106,7 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 }
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 void SettingsBase::BorderAgentId::Log(Action aAction) const
 {
     char         buffer[sizeof(BorderAgentId) * 2 + 1];
@@ -115,7 +115,7 @@ void SettingsBase::BorderAgentId::Log(Action aAction) const
     sw.AppendHexBytes(GetId().mId, sizeof(BorderAgentId));
     LogInfo("%s BorderAgentId {id:%s}", ActionToString(aAction), buffer);
 }
-#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
 
 #endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
@@ -531,7 +531,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
             break;
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
         case kKeyBorderAgentId:
             reinterpret_cast<const BorderAgentId *>(aValue)->Log(aAction);
             break;
