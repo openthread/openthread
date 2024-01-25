@@ -355,9 +355,9 @@ exit:
  * -->                          [steeringdata @ca{steeringdata}] [joinerudpport @ca{joinerudpport}] <!--
  * -->                          [-x @ca{TLVs}]
  *   * `locator`: Border Router RLOC16.
- *   * `sessionid`: Commissioner Session ID.
+ *   * `sessionid`: Session ID of the commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: Joiner UDP Port.
+ *   * `joinerudpport`: UDP Port of the joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_SET` message to the Leader.
