@@ -416,6 +416,30 @@ bool otIp4IsAddressEqual(const otIp4Address *aFirst, const otIp4Address *aSecond
  */
 void otIp4ExtractFromIp6Address(uint8_t aPrefixLength, const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
 
+/**
+ * Extracts the IPv4 address from a given IPv4-mapped IPv6 address.
+ *
+ * An IPv4-mapped IPv6 address consists of an 80-bit prefix of zeros, the next 16 bits set to ones, and the remaining,
+ * least-significant 32 bits contain the IPv4 address, e.g., `::ffff:192.0.2.128` representing `192.0.2.128`.
+ *
+ * @param[in]  aIp6Address  An IPv6 address to extract IPv4 from.
+ * @param[out] aIp4Address  An IPv4 address to output the extracted address.
+ *
+ * @retval OT_ERROR_NONE   Extracted the IPv4 address successfully. @p aIp4Address is updated.
+ * @retval OT_ERROR_PARSE  The @p aIp6Address does not follow the IPv4-mapped IPv6 address format.
+ *
+ */
+otError otIp4FromIp4MappedIp6Address(const otIp6Address *aIp6Address, otIp4Address *aIp4Address);
+
+/**
+ * Converts a given IP4 address to an IPv6 address following the IPv4-mapped IPv6 address format.
+ *
+ * @param[in]  aIp4Address  An IPv4 address to convert.
+ * @param[out] aIp6Address  An IPv6 address to set.
+ *
+ */
+void otIp4ToIp4MappedIp6Address(const otIp4Address *aIp4Address, otIp6Address *aIp6Address);
+
 #define OT_IP4_ADDRESS_STRING_SIZE 17 ///< Length of 000.000.000.000 plus a suffix NUL
 
 /**

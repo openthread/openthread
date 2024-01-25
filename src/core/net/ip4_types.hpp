@@ -123,6 +123,17 @@ public:
     void SetBytes(const uint8_t *aBuffer) { memcpy(mFields.m8, aBuffer, kSize); }
 
     /**
+     * Sets the IPv4 address from a given IPv4-mapped IPv6 address.
+     *
+     * @param[in] aIp6Address  An IPv6 address.
+     *
+     * @retval kErrorNone  Set the IPv4 address successfully.
+     * @retval kErrorPase  The @p aIp6Address does not follow the IPv4-mapped IPv6 address format.
+     *
+     */
+    Error ExtractFromIp4MappedIp6Address(const Ip6::Address &aIp6Address);
+
+    /**
      * Sets the IPv4 address by performing NAT64 address translation from a given IPv6 address as specified
      * in RFC 6052.
      *

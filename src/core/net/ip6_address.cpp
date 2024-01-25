@@ -388,6 +388,18 @@ bool Address::IsRealmLocalAllMplForwarders(void) const { return (*this == GetRea
 
 void Address::SetToRealmLocalAllMplForwarders(void) { *this = GetRealmLocalAllMplForwarders(); }
 
+bool Address::IsIp4Mapped(void) const
+{
+    return (mFields.m32[0] == 0) && (mFields.m32[1] == 0) && (mFields.m32[2] == BigEndian::HostSwap32(0xffff));
+}
+
+void Address::SetToIp4Mapped(const Ip4::Address &aIp4Address)
+{
+    Clear();
+    mFields.m16[5] = 0xffff;
+    memcpy(&mFields.m8[12], aIp4Address.GetBytes(), sizeof(Ip4::Address));
+}
+
 bool Address::MatchesPrefix(const Prefix &aPrefix) const
 {
     return Prefix::MatchLength(mFields.m8, aPrefix.GetBytes(), aPrefix.GetBytesSize()) >= aPrefix.GetLength();

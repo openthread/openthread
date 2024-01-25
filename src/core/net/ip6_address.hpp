@@ -809,6 +809,27 @@ public:
     }
 
     /**
+     * Indicates whether or not the IPv6 address follows the IPv4-mapped format.
+     *
+     * An IPv4-mapped IPv6 address consists of an 80-bit prefix of zeros, the next 16 bits set to  ones, and the
+     * remaining, least-significant 32 bits contain the IPv4 address, e.g., `::ffff:192.0.2.128` representing
+     * `192.0.2.128` IPv4 address.
+     *
+     * @retval TRUE   If the IPv6 address follows the IPv4-mapped format.
+     * @retval FALSE  If the IPv6 address does not follow the IPv4-mapped format.
+     *
+     */
+    bool IsIp4Mapped(void) const;
+
+    /**
+     * Sets the IPv6 address to follow the IPv4-mapped IPv6 address for a given IPv4 address.
+     *
+     * @param[in] aIp4Address  An IPv4 address.
+     *
+     */
+    void SetToIp4Mapped(const Ip4::Address &aIp4Address);
+
+    /**
      * Returns the Network Prefix of the IPv6 address (most significant 64 bits of the address).
      *
      * @returns A reference to the Network Prefix.
