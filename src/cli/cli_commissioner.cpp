@@ -56,7 +56,7 @@ namespace Cli {
  * @note Use this command only after successfully starting the %Commissioner role
  * with the `commissioner start` command.
  * @sa otCommissionerAnnounceBegin
- * @csa commissioner_start
+ * @csa commissioner start
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
