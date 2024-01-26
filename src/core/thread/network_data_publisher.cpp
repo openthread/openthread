@@ -658,10 +658,29 @@ void Publisher::DnsSrpServiceEntry::Process(void)
         desiredNumEntries = kDesiredNumAnycast;
         break;
 
-    case kTypeUnicast:
     case kTypeUnicastMeshLocalEid:
+    {
+        Service::DnsSrpAnycast::Info anycastInfo;
+
         CountUnicastEntries(numEntries, numPreferredEntries);
         desiredNumEntries = kDesiredNumUnicast;
+
+        if (Get<Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+        {
+            // If there is any anycast entry in netdata, we set the
+            // desired number of unicast entries (with address added
+            // in server TLV) to zero to remove any added unicast
+            // entry.
+
+            desiredNumEntries = 0;
+        }
+
+        break;
+    }
+
+    case kTypeUnicast:
+        desiredNumEntries = kDesiredNumUnicast;
+        CountUnicastEntries(numEntries, numPreferredEntries);
         break;
     }
 

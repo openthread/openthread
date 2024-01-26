@@ -305,6 +305,37 @@ class NetDataPublisher(thread_cert.TestCase):
             self.assertEqual(node.srp_server_get_state(), 'disabled')
 
         #---------------------------------------------------------------------------------
+        # DNS/SRP unicast and anycast entry
+
+        # Verify that publishing an anycast entry will update the limit
+        # for the unicast MLE-EID address entry and all are removed.
+
+        num = 0
+        for node in routers:
+            node.netdata_publish_dnssrp_unicast_mleid(DNSSRP_PORT)
+            self.simulator.go(WAIT_TIME)
+            num += 1
+            services = leader.get_services()
+            self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNCIAST))
+            self.verify_unicast_services(services)
+
+        leader.netdata_publish_dnssrp_anycast(ANYCAST_SEQ_NUM)
+        self.simulator.go(WAIT_TIME)
+        services = leader.get_services()
+        self.assertEqual(len(services), 1)
+        self.verify_anycast_services(services)
+
+        leader.netdata_unpublish_dnssrp()
+        self.simulator.go(WAIT_TIME)
+
+        services = leader.get_services()
+        self.assertEqual(len(services), min(num, DESIRED_NUM_DNSSRP_UNCIAST))
+        self.verify_unicast_services(services)
+
+        for node in routers:
+            node.netdata_unpublish_dnssrp()
+
+        #---------------------------------------------------------------------------------
         # DNS/SRP entries: Verify publisher preference when removing
         # entries.
         #
