@@ -1053,9 +1053,18 @@ void SecureTransport::HandleTimer(void)
     }
     else if (IsStateCloseNotify())
     {
-        SetState(kStateOpen);
-        mTimer.Stop();
-        mConnectedCallback.InvokeIfSet(false);
+        if ((mMaxConnectionAttempts > 0) && (mRemainingConnectionAttempts == 0))
+        {
+            Close();
+            mConnectedCallback.InvokeIfSet(false);
+            mAutoCloseCallback.InvokeIfSet();
+        }
+        else
+        {
+            SetState(kStateOpen);
+            mTimer.Stop();
+            mConnectedCallback.InvokeIfSet(false);
+        }
     }
 }
 

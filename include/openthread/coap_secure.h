@@ -77,6 +77,15 @@ extern "C" {
 typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext);
 
 /**
+ * Callback function pointer to notify when the CoAP secure agent is automatically stopped due to reaching the maximum
+ * number of connection attempts.
+ *
+ * @param[in] aContext    A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otCoapSecureAutoStopCallback)(void *aContext);
+
+/**
  * Starts the CoAP Secure service.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -86,6 +95,26 @@ typedef void (*otHandleCoapSecureClientConnect)(bool aConnected, void *aContext)
  *
  */
 otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort);
+
+/**
+ * Starts the CoAP secure service and sets the maximum number of allowed connection attempts before stopping the
+ * agent automatically.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ * @param[in] aPort           The local UDP port to bind to.
+ * @param[in] aMaxAttempts    Maximum number of allowed connection request attempts. Zero indicates no limit.
+ * @param[in] aCallback       Callback to notify if max number of attempts has reached and agent is stopped.
+ * @param[in] aContext        A pointer to arbitrary context to use with @p aCallback.
+ *
+ * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
+ * @retval OT_ERROR_ALREADY     Already started.
+ *
+ */
+otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInstance,
+                                             uint16_t                     aPort,
+                                             uint16_t                     aMaxAttempts,
+                                             otCoapSecureAutoStopCallback aCallback,
+                                             void                        *aContext);
 
 /**
  * Stops the CoAP Secure server.
@@ -229,6 +258,17 @@ bool otCoapSecureIsConnected(otInstance *aInstance);
  *
  */
 bool otCoapSecureIsConnectionActive(otInstance *aInstance);
+
+/**
+ * Indicates whether or not the DTLS session is closed.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   The DTLS session is closed.
+ * @retval FALSE  The DTLS session is not closed.
+ *
+ */
+bool otCoapSecureIsClosed(otInstance *aInstance);
 
 /**
  * Sends a CoAP request block-wise over secure DTLS connection.

@@ -103,6 +103,7 @@ private:
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *));
 
     void Stop(void);
 

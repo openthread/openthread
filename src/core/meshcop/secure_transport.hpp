@@ -235,6 +235,15 @@ public:
     bool IsConnected(void) const { return mState == kStateConnected; }
 
     /**
+     * Indicates whether or not the session is closed.
+     *
+     * @retval TRUE   The session is closed.
+     * @retval FALSE  The session is not closed.
+     *
+     */
+    bool IsClosed(void) const { return mState == kStateClosed; }
+
+    /**
      * Disconnects the session.
      *
      */

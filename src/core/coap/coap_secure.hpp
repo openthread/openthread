@@ -65,10 +65,8 @@ public:
      * Callback to notify when the agent is automatically stopped due to reaching the maximum number of connection
      * attempts.
      *
-     * @param[in] aContext    A pointer to arbitrary context information.
-     *
      */
-    typedef void (*AutoStopCallback)(void *aContext);
+    typedef otCoapSecureAutoStopCallback AutoStopCallback;
 
     /**
      * Initializes the object.
@@ -164,6 +162,15 @@ public:
      *
      */
     bool IsConnected(void) const { return mDtls.IsConnected(); }
+
+    /**
+     * Indicates whether or not the DTLS session is closed.
+     *
+     * @retval TRUE   The DTLS session is closed
+     * @retval FALSE  The DTLS session is not closed.
+     *
+     */
+    bool IsClosed(void) const { return mDtls.IsClosed(); }
 
     /**
      * Stops the DTLS connection.

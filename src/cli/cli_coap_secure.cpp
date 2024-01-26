@@ -149,8 +149,9 @@ exit:
 
 template <> otError CoapSecure::Process<Cmd("start")>(Arg aArgs[])
 {
-    otError error          = OT_ERROR_NONE;
-    bool    verifyPeerCert = true;
+    otError  error           = OT_ERROR_NONE;
+    bool     verifyPeerCert  = true;
+    uint16_t maxConnAttempts = 0;
 
     if (!aArgs[0].IsEmpty())
     {
@@ -158,9 +159,13 @@ template <> otError CoapSecure::Process<Cmd("start")>(Arg aArgs[])
         {
             verifyPeerCert = false;
         }
+        else if (aArgs[0] == "true")
+        {
+            verifyPeerCert = true;
+        }
         else
         {
-            VerifyOrExit(aArgs[0] == "true", error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[0].ParseAsUint16(maxConnAttempts));
         }
     }
 
@@ -171,7 +176,8 @@ template <> otError CoapSecure::Process<Cmd("start")>(Arg aArgs[])
     otCoapSecureSetDefaultHandler(GetInstancePtr(), &CoapSecure::DefaultHandler, this);
 #endif
 
-    error = otCoapSecureStart(GetInstancePtr(), OT_DEFAULT_COAP_SECURE_PORT);
+    error = otCoapSecureStartWithMaxConnAttempts(GetInstancePtr(), OT_DEFAULT_COAP_SECURE_PORT, maxConnAttempts,
+                                                 nullptr, nullptr);
 
 exit:
     return error;
@@ -198,6 +204,32 @@ template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
     }
 
     return OT_ERROR_NONE;
+}
+
+template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
+{
+    return ProcessIsRequest(aArgs, otCoapSecureIsClosed);
+}
+
+template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
+{
+    return ProcessIsRequest(aArgs, otCoapSecureIsConnected);
+}
+
+template <> otError CoapSecure::Process<Cmd("isconnactive")>(Arg aArgs[])
+{
+    return ProcessIsRequest(aArgs, otCoapSecureIsConnectionActive);
+}
+
+otError CoapSecure::ProcessIsRequest(Arg aArgs[], bool (*IsChecker)(otInstance *))
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine("%s", IsChecker(GetInstancePtr()) ? "yes" : "no");
+
+exit:
+    return error;
 }
 
 template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
@@ -442,11 +474,13 @@ otError CoapSecure::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("connect"), CmdEntry("delete"),   CmdEntry("disconnect"), CmdEntry("get"),   CmdEntry("post"),
+        CmdEntry("connect"),  CmdEntry("delete"),       CmdEntry("disconnect"),  CmdEntry("get"),
+        CmdEntry("isclosed"), CmdEntry("isconnactive"), CmdEntry("isconnected"), CmdEntry("post"),
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
         CmdEntry("psk"),
 #endif
-        CmdEntry("put"),     CmdEntry("resource"), CmdEntry("set"),        CmdEntry("start"), CmdEntry("stop"),
+        CmdEntry("put"),      CmdEntry("resource"),     CmdEntry("set"),         CmdEntry("start"),
+        CmdEntry("stop"),
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
         CmdEntry("x509"),
 #endif

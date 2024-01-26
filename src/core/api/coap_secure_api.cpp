@@ -50,6 +50,15 @@ otError otCoapSecureStart(otInstance *aInstance, uint16_t aPort)
     return AsCoreType(aInstance).GetApplicationCoapSecure().Start(aPort);
 }
 
+otError otCoapSecureStartWithMaxConnAttempts(otInstance                  *aInstance,
+                                             uint16_t                     aPort,
+                                             uint16_t                     aMaxAttempts,
+                                             otCoapSecureAutoStopCallback aCallback,
+                                             void                        *aContext)
+{
+    return AsCoreType(aInstance).GetApplicationCoapSecure().Start(aPort, aMaxAttempts, aCallback, aContext);
+}
+
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 void otCoapSecureSetCertificate(otInstance    *aInstance,
                                 const uint8_t *aX509Cert,
@@ -121,6 +130,8 @@ bool otCoapSecureIsConnectionActive(otInstance *aInstance)
 {
     return AsCoreType(aInstance).GetApplicationCoapSecure().IsConnectionActive();
 }
+
+bool otCoapSecureIsClosed(otInstance *aInstance) { return AsCoreType(aInstance).GetApplicationCoapSecure().IsClosed(); }
 
 void otCoapSecureStop(otInstance *aInstance) { AsCoreType(aInstance).GetApplicationCoapSecure().Stop(); }
 
