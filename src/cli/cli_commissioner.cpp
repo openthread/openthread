@@ -53,6 +53,8 @@ namespace Cli {
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Announce Begin message.
+ * @note Use this command only after successfully starting the %Commissioner role
+ * with the [`commissioner start` command](reference/cli/commands#commissioner_start)
  * @sa otCommissionerAnnounceBegin
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
@@ -89,10 +91,8 @@ exit:
  *     performing an IEEE 802.15.4 ED Scan.
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
- * Sends an Energy Scan Query message.
+ * Sends an Energy Scan Query message. Command output is printed as it is received.
  * @par
- * The contents of `MGMT_ED_REPORT` messages,
- * such as the Channel Mask and Energy List, are printed as they are received.
  * @sa otCommissionerEnergyScan
  */
 template <> otError Commissioner::Process<Cmd("energy")>(Arg aArgs[])
@@ -251,7 +251,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
          * commissioner joiner remove 0xabc/12
          * Done
          * @endcode
-         * @cparam commissioner joiner remove @ca{eui64}|@ca{discerner
+         * @cparam commissioner joiner remove @ca{eui64}|@ca{discerner}
          *   * `eui64`: IEEE EUI-64 of the joiner. To match any joiner, use `*`.
          *   * `discerner`: The joiner discerner in the format `number/length`.
          * @par
@@ -502,7 +502,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 /**
  * @cli commissioner id (get,set)
  * @code
- * commissioner id OpenThread commissioner
+ * commissioner id OpenThread Commissioner
  * Done
  * @endcode
  * @code
@@ -512,7 +512,7 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
  * @endcode
  * @cparam commissioner id @ca{name}
  * @par
- * Gets or sets the %Commissioner ID name.
+ * Gets or sets the OpenThread %Commissioner ID name.
  * @sa otCommissionerSetId
  */
 template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
@@ -542,8 +542,6 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
  * @endcode
  * @par
  * Enables the Thread %Commissioner role.
- * @par
- * This command causes the device to send `LEAD_PET` and `LEAD_KA` messages.
  * @sa otCommissionerStart
  */
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
@@ -624,9 +622,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
  * Done
  * @endcode
  * @par
- * Disables the Thread %Commissioner role.
- * @par
- * This command causes the device to send `LEAD_KA[Reject]` messages.
+ * Stops the Thread %Commissioner role.
  * @sa otCommissionerStop
  */
 template <> otError Commissioner::Process<Cmd("stop")>(Arg aArgs[])
