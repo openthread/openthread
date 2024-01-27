@@ -55,8 +55,8 @@ namespace Cli {
  * Sends an Announce Begin message.
  * @note Use this command only after successfully starting the %Commissioner role
  * with the `commissioner start` command.
+ * @csa{commissioner start}
  * @sa otCommissionerAnnounceBegin
- * @csa {commissioner start}
  */
 template <> otError Commissioner::Process<Cmd("announce")>(Arg aArgs[])
 {
@@ -93,7 +93,9 @@ exit:
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Energy Scan Query message. Command output is printed as it is received.
- * @par
+ * @note Use this command only after successfully starting the %Commissioner role
+ * with the `commissioner start` command.
+ * @csa{commissioner start}
  * @sa otCommissionerEnergyScan
  */
 template <> otError Commissioner::Process<Cmd("energy")>(Arg aArgs[])
@@ -220,6 +222,9 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
      *   * `timeout`: The %Joiner timeout in seconds.
      * @par
      * Adds a joiner entry.
+     * @note Use this command only after successfully starting the %Commissioner role
+     * with the `commissioner start` command.
+     * @csa{commissioner start}
      * @sa otCommissionerAddJoiner
      * @sa otCommissionerAddJoinerWithDiscerner
      */
@@ -257,6 +262,9 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
          *   * `discerner`: The joiner discerner in the format `number/length`.
          * @par
          * Removes a %Joiner entry.
+         * @note Use this command only after successfully starting the %Commissioner role
+         * with the `commissioner start` command.
+         * @csa{commissioner start}
          * @sa otCommissionerRemoveJoiner
          * @sa otCommissionerRemoveJoinerWithDiscerner
          */
@@ -296,7 +304,8 @@ exit:
  *   * `joinerudpport`: UDP port of the %Joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
- * Sends a `MGMT_GET` message to the Leader.
+ * Sends a `MGMT_GET` (Management Get) message to the Leader.
+ * Variable values that have been set using the `commissioner set` command are returned.
  * @sa otCommissionerSendMgmtGet
  */
 template <> otError Commissioner::Process<Cmd("mgmtget")>(Arg aArgs[])
@@ -361,7 +370,8 @@ exit:
  *   * `joinerudpport`: UDP Port of the %Joiner.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
- * Sends a `MGMT_SET` message to the Leader.
+ * Sends a `MGMT_SET` (Management Set) message to the Leader, and sets the
+ * variables to the values specified.
  * @sa otCommissionerSendMgmtSet
  */
 template <> otError Commissioner::Process<Cmd("mgmtset")>(Arg aArgs[])
@@ -438,11 +448,12 @@ exit:
  *   * `mask`; Bitmask that identifies channels to perform IEEE 802.15.4
  *     Active Scans.
  *   * `destination`: IPv6 destination address for the message. The message may be multicast.
+ * Sends a PANID query to the %Commissioner.
+ * Command output is returned as it is received.
  * @par
- * Send a MGMT_PANID_QUERY message.
- * @par
- * The contents of `MGMT_PANID_CONFLICT` messages, such as PAN ID and Channel Mask,
- * are printed as they are received.
+ * @note Use this command only after successfully starting the %Commissioner role
+ * with the `commissioner start` command.
+ * @csa{commissioner start}
  * @sa otCommissionerPanIdQuery
  */
 template <> otError Commissioner::Process<Cmd("panid")>(Arg aArgs[])
