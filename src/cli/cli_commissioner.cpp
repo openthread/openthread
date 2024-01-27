@@ -552,7 +552,9 @@ template <> otError Commissioner::Process<Cmd("id")>(Arg aArgs[])
  * Commissioner: active
  * @endcode
  * @par
- * Enables the Thread %Commissioner role.
+ * Starts the Thread %Commissioner role.
+ * @note The `commissioner`commands are available only when
+ * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` and `OPENTHREAD_FTD` are set.
  * @sa otCommissionerStart
  */
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
