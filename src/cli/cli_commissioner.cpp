@@ -305,7 +305,7 @@ exit:
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_GET` (Management Get) message to the Leader.
- * Variable values that have been set using the `commissioner set` command are returned.
+ * Variable values that have been set using the `commissioner mgmtset` command are returned.
  * @sa otCommissionerSendMgmtGet
  */
 template <> otError Commissioner::Process<Cmd("mgmtget")>(Arg aArgs[])
@@ -448,9 +448,9 @@ exit:
  *   * `mask`; Bitmask that identifies channels to perform IEEE 802.15.4
  *     Active Scans.
  *   * `destination`: IPv6 destination address for the message. The message may be multicast.
+ * @par
  * Sends a PANID query to the %Commissioner.
  * Command output is returned as it is received.
- * @par
  * @note Use this command only after successfully starting the %Commissioner role
  * with the `commissioner start` command.
  * @csa{commissioner start}
