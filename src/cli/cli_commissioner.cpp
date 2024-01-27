@@ -449,8 +449,7 @@ exit:
  *     Active Scans.
  *   * `destination`: IPv6 destination address for the message. The message may be multicast.
  * @par
- * Sends a PANID query to the %Commissioner.
- * Command output is returned as it is received.
+ * Sends a PANID query. Command output is returned as it is received.
  * @note Use this command only after successfully starting the %Commissioner role
  * with the `commissioner start` command.
  * @csa{commissioner start}
