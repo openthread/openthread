@@ -388,7 +388,7 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 
     AddRtAttr(&req.nh, sizeof(req), IFA_LOCAL, aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
 
-    if (!aAddressInfo.mPreferred)
+    if (!aAddressInfo.mPreferred || aAddressInfo.mMeshLocal)
     {
         struct ifa_cacheinfo cacheinfo;
 
@@ -456,12 +456,13 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
         ifr6.ifra_prefixmask.sin6_family = AF_INET6;
         ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
         InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
-        ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
 
 #if defined(__APPLE__)
-        ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_preferred = (aAddressInfo.mPreferred ? ND6_INFINITE_LIFETIME : 0);
+        ifr6.ifra_lifetime.ia6t_expire = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_preferred =
+            (aAddressInfo.mPreferred && !aAddressInfo.mMeshLocal ? ND6_INFINITE_LIFETIME : 0);
 #endif
 
         rval = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
