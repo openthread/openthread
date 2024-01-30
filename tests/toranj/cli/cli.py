@@ -378,6 +378,12 @@ class Node(object):
     def set_vendor_sw_version(self, version):
         return self._cli_no_output('vendor swversion', version)
 
+    def get_vendor_app_url(self):
+        return self._cli_single_output('vendor appurl')
+
+    def set_vendor_app_url(self, url):
+        return self._cli_no_output('vendor appurl', url)
+
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 

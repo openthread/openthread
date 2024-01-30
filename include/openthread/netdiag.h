@@ -95,13 +95,14 @@ enum
     OT_NETWORK_DIAGNOSTIC_TLV_ANSWER              = 32, ///< Answer TLV
     OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID            = 33, ///< Query ID TLV
     OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS        = 34, ///< MLE Counters TLV
-
+    OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL      = 35, ///< Vendor App URL TLV
 };
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH 16    ///< Max length of Vendor SW Version TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH 64 ///< Max length of Thread Stack Version TLV.
+#define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH 96       ///< Max length of Vendor App URL TLV.
 
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
 
@@ -294,6 +295,7 @@ typedef struct otNetworkDiagTlv
         char                      mVendorModel[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH + 1];
         char                      mVendorSwVersion[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH + 1];
         char                      mThreadStackVersion[OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH + 1];
+        char                      mVendorAppUrl[OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH + 1];
         struct
         {
             uint8_t mCount;
@@ -429,6 +431,16 @@ const char *otThreadGetVendorModel(otInstance *aInstance);
 const char *otThreadGetVendorSwVersion(otInstance *aInstance);
 
 /**
+ * Get the vendor app URL string.
+ *
+ * @param[in]  aInstance      A pointer to an OpenThread instance.
+ *
+ * @returns The vendor app URL string.
+ *
+ */
+const char *otThreadGetVendorAppUrl(otInstance *aInstance);
+
+/**
  * Set the vendor name string.
  *
  * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
@@ -478,6 +490,23 @@ otError otThreadSetVendorModel(otInstance *aInstance, const char *aVendorModel);
  *
  */
 otError otThreadSetVendorSwVersion(otInstance *aInstance, const char *aVendorSwVersion);
+
+/**
+ * Set the vendor app URL string.
+ *
+ * Requires `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`.
+ *
+ * @p aVendorAppUrl should be UTF8 with max length of 64 chars (`MAX_VENDOR_APPL_URL_TLV_LENGTH`). Maximum length
+ * does not include the null `\0` character.
+ *
+ * @param[in] aInstance          A pointer to an OpenThread instance.
+ * @param[in] aVendorAppUrl      The vendor app URL string.
+ *
+ * @retval OT_ERROR_NONE          Successfully set the vendor app URL string.
+ * @retval OT_ERROR_INVALID_ARGS  @p aVendorAppUrl is not valid (too long or not UTF8).
+ *
+ */
+otError otThreadSetVendorAppUrl(otInstance *aInstance, const char *aVendorAppUrl);
 
 /**
  * @}

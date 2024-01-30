@@ -61,6 +61,7 @@ namespace NetworkDiagnostic {
 const char Server::kVendorName[]      = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME;
 const char Server::kVendorModel[]     = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL;
 const char Server::kVendorSwVersion[] = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION;
+const char Server::kVendorAppUrl[]    = OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL;
 
 //---------------------------------------------------------------------------------------------------------------------
 // Server
@@ -71,11 +72,13 @@ Server::Server(Instance &aInstance)
     static_assert(sizeof(kVendorName) <= sizeof(VendorNameTlv::StringType), "VENDOR_NAME is too long");
     static_assert(sizeof(kVendorModel) <= sizeof(VendorModelTlv::StringType), "VENDOR_MODEL is too long");
     static_assert(sizeof(kVendorSwVersion) <= sizeof(VendorSwVersionTlv::StringType), "VENDOR_SW_VERSION is too long");
+    static_assert(sizeof(kVendorAppUrl) <= sizeof(VendorAppUrlTlv::StringType), "VENDOR_APP_URL is too long");
 
 #if OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
     memcpy(mVendorName, kVendorName, sizeof(kVendorName));
     memcpy(mVendorModel, kVendorModel, sizeof(kVendorModel));
     memcpy(mVendorSwVersion, kVendorSwVersion, sizeof(kVendorSwVersion));
+    memcpy(mVendorAppUrl, kVendorAppUrl, sizeof(kVendorAppUrl));
 #endif
 }
 
@@ -94,6 +97,11 @@ Error Server::SetVendorModel(const char *aVendorModel)
 Error Server::SetVendorSwVersion(const char *aVendorSwVersion)
 {
     return StringCopy(mVendorSwVersion, aVendorSwVersion, kStringCheckUtf8Encoding);
+}
+
+Error Server::SetVendorAppUrl(const char *aVendorAppUrl)
+{
+    return StringCopy(mVendorAppUrl, aVendorAppUrl, kStringCheckUtf8Encoding);
 }
 
 #endif
@@ -327,6 +335,10 @@ Error Server::AppendDiagTlv(uint8_t aTlvType, Message &aMessage)
 
     case Tlv::kVendorSwVersion:
         error = Tlv::Append<VendorSwVersionTlv>(aMessage, GetVendorSwVersion());
+        break;
+
+    case Tlv::kVendorAppUrl:
+        error = Tlv::Append<VendorAppUrlTlv>(aMessage, GetVendorAppUrl());
         break;
 
     case Tlv::kThreadStackVersion:
@@ -1223,6 +1235,10 @@ Error Client::GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator,
 
         case Tlv::kVendorSwVersion:
             SuccessOrExit(error = Tlv::Read<VendorSwVersionTlv>(aMessage, offset, aTlvInfo.mData.mVendorSwVersion));
+            break;
+
+        case Tlv::kVendorAppUrl:
+            SuccessOrExit(error = Tlv::Read<VendorAppUrlTlv>(aMessage, offset, aTlvInfo.mData.mVendorAppUrl));
             break;
 
         case Tlv::kThreadStackVersion:

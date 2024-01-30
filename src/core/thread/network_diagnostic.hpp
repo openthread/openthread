@@ -141,10 +141,30 @@ public:
      */
     Error SetVendorSwVersion(const char *aVendorSwVersion);
 
+    /**
+     * Returns the vendor app URL string.
+     *
+     * @returns the vendor app URL string.
+     *
+     */
+    const char *GetVendorAppUrl(void) const { return mVendorAppUrl; }
+
+    /**
+     * Sets the vendor app URL string.
+     *
+     * @param[in] aVendorAppUrl     The vendor app URL string
+     *
+     * @retval kErrorNone         Successfully set the vendor app URL.
+     * @retval kErrorInvalidArgs  @p aVendorAppUrl is not valid (too long or not UTF8).
+     *
+     */
+    Error SetVendorAppUrl(const char *aVendorAppUrl);
+
 #else
     const char *GetVendorName(void) const { return kVendorName; }
     const char *GetVendorModel(void) const { return kVendorModel; }
     const char *GetVendorSwVersion(void) const { return kVendorSwVersion; }
+    const char *GetVendorAppUrl(void) const { return kVendorAppUrl; }
 #endif // OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
 
 private:
@@ -173,6 +193,7 @@ private:
     static const char kVendorName[];
     static const char kVendorModel[];
     static const char kVendorSwVersion[];
+    static const char kVendorAppUrl[];
 
     Error AppendDiagTlv(uint8_t aTlvType, Message &aMessage);
     Error AppendIp6AddressList(Message &aMessage);
@@ -211,6 +232,7 @@ private:
     VendorNameTlv::StringType      mVendorName;
     VendorModelTlv::StringType     mVendorModel;
     VendorSwVersionTlv::StringType mVendorSwVersion;
+    VendorAppUrlTlv::StringType    mVendorAppUrl;
 #endif
 
 #if OPENTHREAD_FTD
