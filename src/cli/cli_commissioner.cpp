@@ -85,11 +85,11 @@ exit:
  * Energy: 00050000 0 0 0 0
  * @endcode
  * @cparam commissioner energy @ca{mask} @ca{count} @ca{period} @ca{scanDuration} @ca{destination}
- *   * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 ED Scans.
- *   * `count`: Number of IEEE 802.15.4 ED Scans per channel.
- *   * `period`: Number of milliseconds between successive IEEE 802.15.4 ED Scans.
- *   * `scanDuration`: IEEE 802.15.4 ScanDuration in milliseconds to use when
- *     performing an IEEE 802.15.4 ED Scan.
+ *   * `mask`: Bitmask that identifies channels for performing IEEE 802.15.4 energy scans.
+ *   * `count`: Number of IEEE 802.15.4 energy scans per channel.
+ *   * `period`: Number of milliseconds between successive IEEE 802.15.4 energy scans.
+ *   * `scanDuration`: Scan duration in milliseconds to use when
+ *     performing an IEEE 802.15.4 energy scan.
  *   * `destination`: Destination IPv6 address for the message. The message may be multicast.
  * @par
  * Sends an Energy Scan Query message. Command output is printed as it is received.
@@ -367,7 +367,7 @@ exit:
  *   * `locator`: Border Router RLOC16.
  *   * `sessionid`: Session ID of the %Commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: UDP Port of the %Joiner.
+ *   * `joinerudpport`: %Joiner UDP port.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_SET` (Management Set) message to the Leader, and sets the
@@ -449,7 +449,7 @@ exit:
  *     Active Scans.
  *   * `destination`: IPv6 destination address for the message. The message may be multicast.
  * @par
- * Sends a PANID query. Command output is returned as it is received.
+ * Sends a PAN ID query. Command output is returned as it is received.
  * @note Use this command only after successfully starting the %Commissioner role
  * with the `commissioner start` command.
  * @csa{commissioner start}
