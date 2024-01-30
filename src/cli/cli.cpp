@@ -7778,9 +7778,9 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
     /**
      * @cli networkdiagnostic get
      * @code
-     * networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6e
+     * networkdiagnostic get fdde:ad00:beef:0:0:ff:fe00:fc00 0 1 6 23
      * DIAG_GET.rsp/ans: 00080e336e1c41494e1c01020c000608640b0f674074c503
-     * Ext Address: '0e336e1c41494e1c'
+     * Ext Address: 0e336e1c41494e1c
      * Rloc16: 0x0c00
      * Leader Data:
      *     PartitionId: 0x640b0f67
@@ -7788,6 +7788,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      *     DataVersion: 116
      *     StableDataVersion: 197
      *     LeaderRouterId: 0x03
+     * EUI64: 18b4300000000004
      * Done
      * @endcode
      * @code
@@ -7797,7 +7798,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * Rloc16: 0x0c00
      * Done
      * DIAG_GET.rsp/ans: 00083efcdb7e3f9eb0f201021800
-     * Ext Address: '3efcdb7e3f9eb0f2'
+     * Ext Address: 3efcdb7e3f9eb0f2
      * Rloc16: 0x1800
      * Done
      * @endcode
@@ -7820,10 +7821,12 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `16`: Child Table TLV
      * - `17`: Channel Pages TLV
      * - `19`: Max Child Timeout TLV
+     * - `23`: EUI64 TLV
+     * - `24`: Version TLV (version number for the protocols and features)
      * - `25`: Vendor Name TLV
      * - `26`: Vendor Model TLV
      * - `27`: Vendor SW Version TLV
-     * - `28`: Thread Stack Version TLV
+     * - `28`: Thread Stack Version TLV (version identifier as UTF-8 string for Thread stack codebase/commit/version)
      * - `29`: Child TLV
      * - `34`: MLE Counters TLV
      * @par
@@ -7848,8 +7851,9 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * @cparam networkdiagnostic reset @ca{addr} @ca{type(s)}
      * @par
      * Sends a network diagnostic request to reset the specified Type Length Values (TLVs)
-     * on the specified address(es). The only supported TLV value at this time for this
-     * command is `9` (MAC Counters TLV).
+     * on the specified address(es). This command only supports the
+     * following TLV values: `9` (MAC Counters TLV) or `34` (MLE
+     * Counters TLV)
      * @sa otThreadSendDiagnosticReset
      */
     else if (aArgs[0] == "reset")
@@ -7912,7 +7916,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
         switch (diagTlv.mType)
         {
         case OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS:
-            OutputFormat("Ext Address: '");
+            OutputFormat("Ext Address: ");
             OutputExtAddressLine(diagTlv.mData.mExtAddress);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS:
@@ -7938,7 +7942,7 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             OutputLeaderData(kIndentSize, diagTlv.mData.mLeaderData);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA:
-            OutputFormat("Network Data: '");
+            OutputFormat("Network Data: ");
             OutputBytesLine(diagTlv.mData.mNetworkData.m8, diagTlv.mData.mNetworkData.mCount);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST:
@@ -7978,6 +7982,10 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT:
             OutputLine("Max Child Timeout: %lu", ToUlong(diagTlv.mData.mMaxChildTimeout));
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_EUI64:
+            OutputFormat("EUI64: ");
+            OutputExtAddressLine(diagTlv.mData.mEui64);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME:
             OutputLine("Vendor Name: %s", diagTlv.mData.mVendorName);
