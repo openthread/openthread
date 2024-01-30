@@ -301,7 +301,7 @@ exit:
  *   * `locator`: Border Router RLOC16.
  *   * `sessionid`: Session ID of the %Commissioner.
  *   * `steeringdata`: Steering data.
- *   * `joinerudpport`: UDP port of the %Joiner.
+ *   * `joinerudpport`: %Joiner UDP port.
  *   * `TLVs`: The set of TLVs to be retrieved.
  * @par
  * Sends a `MGMT_GET` (Management Get) message to the Leader.
