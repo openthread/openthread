@@ -516,7 +516,7 @@ void KeyManager::HandleKeyRotationTimer(void)
 void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    if (Crypto::Storage::IsKeyRefValid(mNetworkKeyRef))
+    if (Crypto::Storage::HasKey(mNetworkKeyRef))
     {
         size_t keyLen;
 
@@ -535,7 +535,7 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 void KeyManager::GetPskc(Pskc &aPskc) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    if (Crypto::Storage::IsKeyRefValid(mPskcRef))
+    if (Crypto::Storage::HasKey(mPskcRef))
     {
         size_t keyLen;
 
