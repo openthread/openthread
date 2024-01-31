@@ -1084,6 +1084,24 @@ public:
      *
      */
     otError VendorHandleValueIs(spinel_prop_key_t aPropKey);
+
+    /**
+     *  A callback type for restoring vendor properties.
+     *
+     */
+    typedef void (*otRadioSpinelVendorRestorePropertiesCallback)(void *context);
+
+    /**
+     * Registers a callback to restore vendor properties.
+     *
+     * This function is used to register a callback for vendor properties recovery. When an event which needs to restore
+     * properties occurs (such as an unexpected RCP reset), the user can restore the vendor properties via the callback.
+     *
+     * @param[in] aCallback The callback.
+     * @param[in] aContext  The context.
+     *
+     */
+    void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif
 
 private:
@@ -1331,6 +1349,11 @@ private:
     MaxPowerTable mMaxPowerTable;
 
     otRadioSpinelMetrics mRadioSpinelMetrics;
+
+#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
+    otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
+    void                                        *mVendorRestorePropertiesContext;
+#endif
 };
 
 } // namespace Spinel
