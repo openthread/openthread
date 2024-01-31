@@ -71,7 +71,7 @@ void Router::Clear(void)
 {
     Instance &instance = GetInstance();
 
-    memset(reinterpret_cast<void *>(this), 0, sizeof(Router));
+    ClearAllBytes(*this);
     Init(instance);
 }
 
@@ -92,7 +92,7 @@ void Parent::Clear(void)
 {
     Instance &instance = GetInstance();
 
-    memset(reinterpret_cast<void *>(this), 0, sizeof(Parent));
+    ClearAllBytes(*this);
     Init(instance);
 }
 

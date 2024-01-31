@@ -42,6 +42,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include "common/clearable.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -131,10 +132,8 @@ private:
         Error (Diags::*mCommand)(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     };
 
-    struct Stats
+    struct Stats : public Clearable<Stats>
     {
-        void Clear(void) { memset(this, 0, sizeof(*this)); }
-
         uint32_t mReceivedPackets;
         uint32_t mSentPackets;
         int8_t   mFirstRssi;

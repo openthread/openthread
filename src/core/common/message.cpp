@@ -75,7 +75,7 @@ Message *MessagePool::Allocate(Message::Type aType, uint16_t aReserveHeader, con
 
     VerifyOrExit((message = static_cast<Message *>(NewBuffer(aSettings.GetPriority()))) != nullptr);
 
-    memset(message, 0, sizeof(*message));
+    ClearAllBytes(*message);
     message->SetMessagePool(this);
     message->SetType(aType);
     message->SetReserved(aReserveHeader);

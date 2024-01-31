@@ -56,7 +56,7 @@ Server::Server(Instance &aInstance)
     , mPrefixAgentsCount(0)
     , mPrefixAgentsMask(0)
 {
-    memset(mPrefixAgents, 0, sizeof(mPrefixAgents));
+    ClearAllBytes(mPrefixAgents);
 }
 
 Error Server::UpdateService(void)

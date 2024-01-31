@@ -417,7 +417,7 @@ public:
          */
         void Init(void)
         {
-            memset(this, 0, sizeof(*this));
+            ClearAllBytes(*this);
             SetVersion(kThreadVersion1p1);
         }
 
@@ -784,7 +784,7 @@ public:
          * Initializes the `BorderAgentId` object.
          *
          */
-        void Init(void) { memset(&mId, 0, sizeof(mId)); }
+        void Init(void) { ClearAllBytes(mId); }
 
         /**
          * Returns the Border Agent ID.

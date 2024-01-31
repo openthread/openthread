@@ -306,7 +306,7 @@ public:
      * Resets the IP level counters.
      *
      */
-    void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
+    void ResetCounters(void) { ClearAllBytes(mIpCounters); }
 
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
     /**

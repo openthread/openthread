@@ -57,7 +57,7 @@ Client::Client(Instance &aInstance)
     , mStartTime(0)
     , mIdentityAssociationCurrent(nullptr)
 {
-    memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
+    ClearAllBytes(mIdentityAssociations);
 }
 
 bool Client::MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress, const Ip6::Prefix &aIp6Prefix)

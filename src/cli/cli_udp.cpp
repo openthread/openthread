@@ -47,7 +47,7 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
     : Output(aInstance, aOutputImplementer)
     , mLinkSecurityEnabled(true)
 {
-    memset(&mSocket, 0, sizeof(mSocket));
+    ClearAllBytes(mSocket);
 }
 
 /**
@@ -258,7 +258,7 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
     otMessageInfo     messageInfo;
     otMessageSettings messageSettings = {mLinkSecurityEnabled, OT_MESSAGE_PRIORITY_NORMAL};
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
+    ClearAllBytes(messageInfo);
 
     // Possible argument formats:
     //

@@ -325,7 +325,7 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
     // Find MLE Discovery TLV
     SuccessOrExit(error = Tlv::FindTlvValueStartEndOffsets(aRxInfo.mMessage, Tlv::kDiscovery, offset, end));
 
-    memset(&result, 0, sizeof(result));
+    ClearAllBytes(result);
     result.mDiscover = true;
     result.mPanId    = linkInfo->mPanId;
     result.mChannel  = linkInfo->mChannel;

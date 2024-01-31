@@ -152,7 +152,7 @@ Error DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
     Dataset dataset;
     Error   error;
 
-    memset(&aDataset, 0, sizeof(aDataset));
+    ClearAllBytes(aDataset);
 
     SuccessOrExit(error = Read(dataset));
     dataset.ConvertTo(aDataset);

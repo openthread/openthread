@@ -45,6 +45,7 @@
 #include "common/binary_search.hpp"
 #include "common/num_utils.hpp"
 #include "common/string.hpp"
+#include "common/type_traits.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
@@ -525,6 +526,21 @@ public:
         {
             OutputLine("%s", entry.mName);
         }
+    }
+
+    /**
+     * Clears (sets to zero) all bytes of a given object.
+     *
+     * @tparam ObjectType    The object type.
+     *
+     * @param[in] aObject    A reference to the object of type `ObjectType` to clear all its bytes.
+     *
+     */
+    template <typename ObjectType> static void ClearAllBytes(ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        memset(reinterpret_cast<void *>(&aObject), 0, sizeof(ObjectType));
     }
 
 protected:

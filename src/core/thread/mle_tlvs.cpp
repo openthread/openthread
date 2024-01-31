@@ -33,6 +33,7 @@
 
 #include "mle_tlvs.hpp"
 
+#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/numeric_limits.hpp"
 #include "radio/radio.hpp"
@@ -47,7 +48,7 @@ void RouteTlv::Init(void)
     SetType(kRoute);
     SetLength(sizeof(*this) - sizeof(Tlv));
     mRouterIdMask.Clear();
-    memset(mRouteData, 0, sizeof(mRouteData));
+    ClearAllBytes(mRouteData);
 }
 
 bool RouteTlv::IsValid(void) const

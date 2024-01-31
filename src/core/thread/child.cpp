@@ -112,14 +112,14 @@ void Child::Clear(void)
 {
     Instance &instance = GetInstance();
 
-    memset(reinterpret_cast<void *>(this), 0, sizeof(Child));
+    ClearAllBytes(*this);
     Init(instance);
 }
 
 void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
-    memset(mIp6Address, 0, sizeof(mIp6Address));
+    ClearAllBytes(mIp6Address);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();

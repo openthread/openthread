@@ -350,7 +350,7 @@ public:
      * Resets the Border Routing counters.
      *
      */
-    void ResetBorderRoutingCounters(void) { memset(&mBorderRoutingCounters, 0, sizeof(mBorderRoutingCounters)); }
+    void ResetBorderRoutingCounters(void) { ClearAllBytes(mBorderRoutingCounters); }
 #endif
 
 private:

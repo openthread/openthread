@@ -78,7 +78,7 @@ template <> otError Joiner::Process<Cmd("discerner")>(Arg aArgs[])
     {
         otJoinerDiscerner discerner;
 
-        memset(&discerner, 0, sizeof(discerner));
+        ClearAllBytes(discerner);
 
         /**
          * @cli joiner discerner clear

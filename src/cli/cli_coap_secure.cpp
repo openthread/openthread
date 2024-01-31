@@ -56,10 +56,10 @@ CoapSecure::CoapSecure(otInstance *aInstance, OutputImplementer &aOutputImplemen
     , mBlockCount(1)
 #endif
 {
-    memset(&mResource, 0, sizeof(mResource));
-    memset(&mPsk, 0, sizeof(mPsk));
-    memset(&mPskId, 0, sizeof(mPskId));
-    memset(&mUriPath, 0, sizeof(mUriPath));
+    ClearAllBytes(mResource);
+    ClearAllBytes(mPsk);
+    ClearAllBytes(mPskId);
+    ClearAllBytes(mUriPath);
     strncpy(mResourceContent, "0", sizeof(mResourceContent));
     mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
@@ -398,7 +398,7 @@ template <> otError CoapSecure::Process<Cmd("connect")>(Arg aArgs[])
     otError    error;
     otSockAddr sockaddr;
 
-    memset(&sockaddr, 0, sizeof(sockaddr));
+    ClearAllBytes(sockaddr);
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
     sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 

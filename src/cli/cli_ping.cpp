@@ -78,7 +78,7 @@ otError PingSender::Process(Arg aArgs[])
         aArgs++;
     }
 
-    memset(&config, 0, sizeof(config));
+    ClearAllBytes(config);
 
     if (aArgs[0] == "-I")
     {

@@ -163,7 +163,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_CLI_REGISTER_IP6_RECV_CALLBACK
     otIp6SetReceiveCallback(GetInstancePtr(), &Interpreter::HandleIp6Receive, this);
 #endif
-    memset(&mUserCommands, 0, sizeof(mUserCommands));
+    ClearAllBytes(mUserCommands);
 
     OutputPrompt();
 }
@@ -2668,7 +2668,7 @@ template <> otError Interpreter::Process<Cmd("eidcache")>(Arg aArgs[])
     otCacheEntryIterator iterator;
     otCacheEntryInfo     entry;
 
-    memset(&iterator, 0, sizeof(iterator));
+    ClearAllBytes(iterator);
 
     while (true)
     {
@@ -4078,7 +4078,7 @@ template <> otError Interpreter::Process<Cmd("mode")>(Arg aArgs[])
     otError          error = OT_ERROR_NONE;
     otLinkModeConfig linkMode;
 
-    memset(&linkMode, 0, sizeof(otLinkModeConfig));
+    ClearAllBytes(linkMode);
 
     if (aArgs[0].IsEmpty())
     {
@@ -5662,7 +5662,7 @@ otError Interpreter::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
 {
     otError error = OT_ERROR_NONE;
 
-    memset(&aConfig, 0, sizeof(otBorderRouterConfig));
+    ClearAllBytes(aConfig);
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Prefix(aConfig.mPrefix));
     aArgs++;
@@ -6089,7 +6089,7 @@ otError Interpreter::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
 {
     otError error = OT_ERROR_NONE;
 
-    memset(&aConfig, 0, sizeof(otExternalRouteConfig));
+    ClearAllBytes(aConfig);
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Prefix(aConfig.mPrefix));
     aArgs++;

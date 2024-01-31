@@ -133,7 +133,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
 
     VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    memset(&discerner, 0, sizeof(discerner));
+    ClearAllBytes(discerner);
 
     if (aArgs[1] == "*")
     {
@@ -248,7 +248,7 @@ template <> otError Commissioner::Process<Cmd("mgmtset")>(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    memset(&dataset, 0, sizeof(dataset));
+    ClearAllBytes(dataset);
 
     for (; !aArgs->IsEmpty(); aArgs++)
     {

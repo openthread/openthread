@@ -38,7 +38,24 @@
 
 #include <string.h>
 
+#include "common/type_traits.hpp"
+
 namespace ot {
+
+/**
+ * Clears (sets to zero) all bytes of a given object.
+ *
+ * @tparam ObjectType    The object type.
+ *
+ * @param[in] aObject    A reference to the object of type `ObjectType` to clear all its bytes.
+ *
+ */
+template <typename ObjectType> void ClearAllBytes(ObjectType &aObject)
+{
+    static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+    memset(reinterpret_cast<void *>(&aObject), 0, sizeof(ObjectType));
+}
 
 /**
  * Defines a `Clearable` object which provides `Clear()` method.
@@ -52,7 +69,7 @@ namespace ot {
 template <typename Type> class Clearable
 {
 public:
-    void Clear(void) { memset(reinterpret_cast<void *>(static_cast<Type *>(this)), 0, sizeof(Type)); }
+    void Clear(void) { ClearAllBytes<Type>(*static_cast<Type *>(this)); }
 };
 
 } // namespace ot

@@ -212,7 +212,7 @@ Error Server::AppendMacCounters(Message &aMessage)
     MacCountersTlv       tlv;
     const otMacCounters &counters = Get<Mac::Mac>().GetCounters();
 
-    memset(&tlv, 0, sizeof(tlv));
+    ClearAllBytes(tlv);
 
     tlv.Init();
     tlv.SetIfInUnknownProtos(counters.mRxOther);
