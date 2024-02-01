@@ -173,7 +173,7 @@ template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
  * @endcode
  * @cparam coap resource [@ca{uri-path}]
  * @par
- * Gets or sets the URI path of the CoAP server test-resource.
+ * Gets or sets the URI path of the CoAP server resource.
  * @sa otCoapAddResource
  * @sa otCoapAddBlockWiseResource
  */
@@ -224,7 +224,7 @@ exit:
  * @endcode
  * @cparam coap set @ca{new-content}
  * @par
- * Sets the content sent by the test-resource on the CoAP server.
+ * Sets the content sent by the resource on the CoAP server.
  * If a CoAP client is observing the resource, a notification is sent to that client.
  * @csa{coap observe}
  * @sa otCoapMessageInit
@@ -360,7 +360,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *       * `ack_random_factor_numerator`: 3
  *       * `ack_random_factor_denominator`: 2
  *       * `max_retransmit`: 4
- *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
+ *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX) in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
        The `ACK_RANDOM_FACTOR`, with possible values for both the
@@ -445,7 +445,7 @@ exit:
  * coap get fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024
  * Done
  * @endcode
- * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}]
+ * @cparam coap get @ca{address} @ca{uri-path} [@ca{type}]
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
