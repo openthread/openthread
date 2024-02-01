@@ -1121,7 +1121,8 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessag
         }
 #endif
 
-        forwardHost = header.GetDestination().IsMulticastLargerThanRealmLocal();
+        // Always forward multicast packets to host network stack
+        forwardHost = true;
 
         if ((aMessagePtr->IsOriginThreadNetif() || aMessagePtr->GetMulticastLoop()) &&
             Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
