@@ -300,8 +300,8 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @cparam coap parameters @ca{type} [@ca{default} | <!--
- * --> @ca{ack_timeout} @ca {ack_random_factor_numerator}/ <!--
- * --> @ca {ack_random_factor_denominator} @ca{max_retransmit}]
+ * -->@ca{ack_timeout ack_random_factor_numerator/ <!--
+ * -->ack_random_factor_denominator max_retransmit}]
  *   * `type`: `request` for CoAP requests, or `response` for CoAP responses.
         If no more parameters are given, the command prints the current configuration.
  *   * `default`: Sets the transmission parameters to
@@ -310,13 +310,13 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *         * `ackRandomFactorNumerator`: 3
  *         * `ackRandomFactorDenominator`: 2
  *	   * `defaultMaxRetransmit`: 4
- *	   * `defaultMaxLatency: 100000 milliseconds.i
- *   *  `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
-        Refer to RFC7252.
- *   *  `ack_random_factor_numerator/ack_random_factor_denominator`:
-        The `ACK_RANDOM_FACTOR`, with possible values for both the
-        numerator and denominator of 0~255. Refer to RFC7252.
- *   *  `max_retransmit`: The `MAX_RETRANSMIT` (0~255). Refer to RFC7252.
+ *	   * `defaultMaxLatency: 100000 milliseconds
+ *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
+       Refer to RFC7252.
+ *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
+       The `ACK_RANDOM_FACTOR`, with possible values for both the
+       numerator and denominator of 0~255. Refer to RFC7252.
+ *   * `max_retransmit`: The `MAX_RETRANSMIT` (0~255). Refer to RFC7252.
  * @par
  * Gets current CoAP parameter values if the command is run with no optional
  * parameters.
