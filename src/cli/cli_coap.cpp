@@ -374,9 +374,9 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  * @endcode
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `address`: IPv6 address of the CoAP server.
-     * `uri-path`: URI path of the resource.
+ *   * `uri-path`: URI path of the resource.
      * `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
-     * `payload`: CoAP payload request.
+ *   * `payload`: CoAP payload request.
  *  @par
  *  Deletes the specified CoAP resource.
  */
