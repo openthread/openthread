@@ -418,7 +418,7 @@ otError Dns::GetDnsConfig(Arg aArgs[], otDnsQueryConfig *&aConfig)
     bool    recursionDesired;
     bool    nat64SynthesizedAddress;
 
-    memset(aConfig, 0, sizeof(otDnsQueryConfig));
+    ClearAllBytes(*aConfig);
 
     VerifyOrExit(!aArgs[0].IsEmpty(), aConfig = nullptr);
 

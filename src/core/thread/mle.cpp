@@ -265,7 +265,7 @@ exit:
 
 void Mle::ResetCounters(void)
 {
-    memset(&mCounters, 0, sizeof(mCounters));
+    ClearAllBytes(mCounters);
 #if OPENTHREAD_CONFIG_UPTIME_ENABLE
     mLastUpdatedTimestamp = Get<Uptime>().GetUptime();
 #endif
@@ -5097,7 +5097,7 @@ void Mle::ParentCandidate::Clear(void)
 {
     Instance &instance = GetInstance();
 
-    memset(reinterpret_cast<void *>(this), 0, sizeof(ParentCandidate));
+    ClearAllBytes(*this);
     Init(instance);
 }
 

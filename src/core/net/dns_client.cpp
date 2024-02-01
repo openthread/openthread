@@ -799,7 +799,7 @@ Error Client::InitTcpSocket(void)
     Error                       error;
     otTcpEndpointInitializeArgs endpointArgs;
 
-    memset(&endpointArgs, 0x00, sizeof(endpointArgs));
+    ClearAllBytes(endpointArgs);
     endpointArgs.mSendDoneCallback         = HandleTcpSendDoneCallback;
     endpointArgs.mEstablishedCallback      = HandleTcpEstablishedCallback;
     endpointArgs.mReceiveAvailableCallback = HandleTcpReceiveAvailableCallback;
@@ -1634,7 +1634,7 @@ void Client::ResolveHostAddressIfNeeded(Query &aQuery, const Message &aResponseM
 
     PopulateResponse(response, aQuery, aResponseMessage);
 
-    memset(&serviceInfo, 0, sizeof(serviceInfo));
+    ClearAllBytes(serviceInfo);
     serviceInfo.mHostNameBuffer     = hostName;
     serviceInfo.mHostNameBufferSize = sizeof(hostName);
     SuccessOrExit(response.ReadServiceInfo(Response::kAnswerSection, Name(aQuery, kNameOffsetInQuery), serviceInfo));

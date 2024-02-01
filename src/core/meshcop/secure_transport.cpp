@@ -41,6 +41,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/as_core_type.hpp"
+#include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -105,19 +106,19 @@ SecureTransport::SecureTransport(Instance &aInstance, bool aLayerTwoSecurity, bo
     mOwnCertLength    = 0;
     mPrivateKeySrc    = nullptr;
     mPrivateKeyLength = 0;
-    memset(&mCaChain, 0, sizeof(mCaChain));
-    memset(&mOwnCert, 0, sizeof(mOwnCert));
-    memset(&mPrivateKey, 0, sizeof(mPrivateKey));
+    ClearAllBytes(mCaChain);
+    ClearAllBytes(mOwnCert);
+    ClearAllBytes(mPrivateKey);
 #endif
 #endif
 
-    memset(mCipherSuites, 0, sizeof(mCipherSuites));
-    memset(mPsk, 0, sizeof(mPsk));
-    memset(&mSsl, 0, sizeof(mSsl));
-    memset(&mConf, 0, sizeof(mConf));
+    ClearAllBytes(mCipherSuites);
+    ClearAllBytes(mPsk);
+    ClearAllBytes(mSsl);
+    ClearAllBytes(mConf);
 
 #ifdef MBEDTLS_SSL_COOKIE_C
-    memset(&mCookieCtx, 0, sizeof(mCookieCtx));
+    ClearAllBytes(mCookieCtx);
 #endif
 }
 

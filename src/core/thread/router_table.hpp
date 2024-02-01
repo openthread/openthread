@@ -465,7 +465,7 @@ private:
     void HandleTableChanged(void);
     void LogRouteTable(void) const;
 
-    class RouterIdMap
+    class RouterIdMap : public Clearable<RouterIdMap>
     {
     public:
         // The `RouterIdMap` tracks which Router IDs are allocated.
@@ -474,7 +474,6 @@ private:
         // remaining reuse delay time (in seconds).
 
         RouterIdMap(void) { Clear(); }
-        void    Clear(void) { memset(mIndexes, 0, sizeof(mIndexes)); }
         bool    IsAllocated(uint8_t aRouterId) const { return (mIndexes[aRouterId] & kAllocatedFlag); }
         uint8_t GetIndex(uint8_t aRouterId) const { return (mIndexes[aRouterId] & kIndexMask); }
         void    SetIndex(uint8_t aRouterId, uint8_t aIndex) { mIndexes[aRouterId] = kAllocatedFlag | aIndex; }

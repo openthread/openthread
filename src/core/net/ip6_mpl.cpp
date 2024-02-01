@@ -52,7 +52,7 @@ Mpl::Mpl(Instance &aInstance)
     , mRetransmissionTimer(aInstance)
 #endif
 {
-    memset(mSeedSet, 0, sizeof(mSeedSet));
+    ClearAllBytes(mSeedSet);
 }
 
 void MplOption::Init(SeedIdLength aSeedIdLength)

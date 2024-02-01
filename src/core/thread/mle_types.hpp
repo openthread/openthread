@@ -434,15 +434,9 @@ public:
 };
 
 OT_TOOL_PACKED_BEGIN
-class RouterIdSet : public Equatable<RouterIdSet>
+class RouterIdSet : public Equatable<RouterIdSet>, public Clearable<RouterIdSet>
 {
 public:
-    /**
-     * Clears the Router Id Set.
-     *
-     */
-    void Clear(void) { memset(mRouterIdSet, 0, sizeof(mRouterIdSet)); }
-
     /**
      * Indicates whether or not a Router ID bit is set.
      *

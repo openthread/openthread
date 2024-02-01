@@ -526,7 +526,7 @@ otError Dataset::ProcessCommand(const ComponentMapper &aMapper, Arg aArgs[])
     }
     else
     {
-        memset(&dataset, 0, sizeof(dataset));
+        ClearAllBytes(dataset);
         SuccessOrExit(error = (this->*aMapper.mParse)(aArgs, dataset));
         dataset.mComponents.*aMapper.mIsPresentPtr = true;
         SuccessOrExit(error = otDatasetUpdateTlvs(&dataset, &sDatasetTlvs));
@@ -716,7 +716,7 @@ template <> otError Dataset::Process<Cmd("clear")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    memset(&sDatasetTlvs, 0, sizeof(sDatasetTlvs));
+    ClearAllBytes(sDatasetTlvs);
     return OT_ERROR_NONE;
 }
 
@@ -765,7 +765,7 @@ template <> otError Dataset::Process<Cmd("mgmtsetcommand")>(Arg aArgs[])
     uint8_t              tlvs[128];
     uint8_t              tlvsLength = 0;
 
-    memset(&dataset, 0, sizeof(dataset));
+    ClearAllBytes(dataset);
 
     for (Arg *arg = &aArgs[1]; !arg->IsEmpty();)
     {
@@ -853,7 +853,7 @@ template <> otError Dataset::Process<Cmd("mgmtgetcommand")>(Arg aArgs[])
     bool                           destAddrSpecified = false;
     otIp6Address                   address;
 
-    memset(&datasetComponents, 0, sizeof(datasetComponents));
+    ClearAllBytes(datasetComponents);
 
     for (Arg *arg = &aArgs[1]; !arg->IsEmpty(); arg++)
     {
@@ -1003,7 +1003,7 @@ otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aA
     otSecurityPolicy policy;
     uint8_t          versionThreshold;
 
-    memset(&policy, 0, sizeof(policy));
+    ClearAllBytes(policy);
 
     SuccessOrExit(error = aArgs->ParseAsUint16(policy.mRotationTime));
     aArgs++;

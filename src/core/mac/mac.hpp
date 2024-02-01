@@ -39,6 +39,7 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "common/clearable.hpp"
 #include "common/locator.hpp"
 #include "common/log.hpp"
 #include "common/non_copyable.hpp"
@@ -496,7 +497,7 @@ public:
      * Resets mac counters
      *
      */
-    void ResetCounters(void) { memset(&mCounters, 0, sizeof(mCounters)); }
+    void ResetCounters(void) { ClearAllBytes(mCounters); }
 
     /**
      * Returns the MAC counter.

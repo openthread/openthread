@@ -56,7 +56,7 @@ Slaac::Slaac(Instance &aInstance)
     , mEnabled(true)
     , mFilter(nullptr)
 {
-    memset(mAddresses, 0, sizeof(mAddresses));
+    ClearAllBytes(mAddresses);
 }
 
 void Slaac::Enable(void)

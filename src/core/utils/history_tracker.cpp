@@ -61,7 +61,7 @@ HistoryTracker::HistoryTracker(Instance &aInstance)
     mTimer.Start(kAgeCheckPeriod);
 
 #if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_HISTORY_TRACKER_ROUTER_LIST_SIZE > 0)
-    memset(mRouterEntries, 0, sizeof(mRouterEntries));
+    ClearAllBytes(mRouterEntries);
 #endif
 }
 

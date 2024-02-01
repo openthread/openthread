@@ -58,15 +58,15 @@ Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
     , mBlockCount(1)
 #endif
 {
-    memset(&mResource, 0, sizeof(mResource));
+    ClearAllBytes(mResource);
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    memset(&mRequestAddr, 0, sizeof(mRequestAddr));
-    memset(&mSubscriberSock, 0, sizeof(mSubscriberSock));
-    memset(&mRequestToken, 0, sizeof(mRequestToken));
-    memset(&mSubscriberToken, 0, sizeof(mSubscriberToken));
-    memset(&mRequestUri, 0, sizeof(mRequestUri));
+    ClearAllBytes(mRequestAddr);
+    ClearAllBytes(mSubscriberSock);
+    ClearAllBytes(mRequestToken);
+    ClearAllBytes(mSubscriberToken);
+    ClearAllBytes(mRequestUri);
 #endif
-    memset(&mUriPath, 0, sizeof(mUriPath));
+    ClearAllBytes(mUriPath);
     strncpy(mResourceContent, "0", sizeof(mResourceContent));
     mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
@@ -78,7 +78,7 @@ otError Coap::CancelResourceSubscription(void)
     otMessage    *message = nullptr;
     otMessageInfo messageInfo;
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
+    ClearAllBytes(messageInfo);
     messageInfo.mPeerAddr = mRequestAddr;
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 
@@ -94,8 +94,8 @@ otError Coap::CancelResourceSubscription(void)
     SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, mRequestUri));
     SuccessOrExit(error = otCoapSendRequest(GetInstancePtr(), message, &messageInfo, &Coap::HandleResponse, this));
 
-    memset(&mRequestAddr, 0, sizeof(mRequestAddr));
-    memset(&mRequestUri, 0, sizeof(mRequestUri));
+    ClearAllBytes(mRequestAddr);
+    ClearAllBytes(mRequestUri);
     mRequestTokenLength = 0;
 
 exit:
@@ -110,7 +110,7 @@ exit:
 
 void Coap::CancelSubscriber(void)
 {
-    memset(&mSubscriberSock, 0, sizeof(mSubscriberSock));
+    ClearAllBytes(mSubscriberSock);
     mSubscriberTokenLength = 0;
 }
 #endif // OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -207,7 +207,7 @@ template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
         if (mSubscriberTokenLength > 0)
         {
             // Notify the subscriber
-            memset(&messageInfo, 0, sizeof(messageInfo));
+            ClearAllBytes(messageInfo);
             messageInfo.mPeerAddr = mSubscriberSock.mAddress;
             messageInfo.mPeerPort = mSubscriberSock.mPort;
 
@@ -494,7 +494,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
         SuccessOrExit(error = otMessageAppend(message, aArgs[3].GetCString(), payloadLength));
     }
 
-    memset(&messageInfo, 0, sizeof(messageInfo));
+    ClearAllBytes(messageInfo);
     messageInfo.mPeerAddr = coapDestinationIp;
     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
 

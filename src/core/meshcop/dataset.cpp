@@ -159,7 +159,7 @@ Dataset::Dataset(void)
     : mUpdateTime(0)
     , mLength(0)
 {
-    memset(mTlvs, 0, sizeof(mTlvs));
+    ClearAllBytes(mTlvs);
 }
 
 void Dataset::Clear(void) { mLength = 0; }
