@@ -149,7 +149,8 @@ void Coap::PrintPayload(otMessage *aMessage)
  * Done
  * @endcode
  * @par
- * Requests the cancellation of an existing observation subscription to a remote resource.
+ * Cancels an existing observation subscription to a remote resource on the CoAP server.
+ * @csa{coap observe}
  */
 template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
 {
@@ -159,6 +160,23 @@ template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
 }
 #endif
 
+/**
+ * @cli coap resource(gets,sets)
+ * @code
+ * coap resource test-resource
+ * Done
+ * @endcode
+ * @code
+ * coap resource
+ * test-resource
+ * Done
+ * @endcode
+ * @cparam coap resource [@ca{uri-path}]
+ * @par
+ * Gets or sets the URI path of the CoAP server test-resource.
+ * @sa otCoapAddResource
+ * @sa otCoapAddBlockWiseResource
+ */
 template <> otError Coap::Process<Cmd("resource")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -198,6 +216,20 @@ exit:
     return error;
 }
 
+/**
+ * @cli coap set
+ * @code
+ * coap set Testing123
+ * Done
+ * @endcode
+ * @cparam coap set @ca{new-content}
+ * @par
+ * Sets the content sent by the test-resource on the CoAP server.
+ * If a CoAP client is observing the resource, a notification is sent to that client.
+ * @csa{coap observe}
+ * @sa otCoapMessageInit
+ * @sa otCoapNewMessage
+ */
 template <> otError Coap::Process<Cmd("set")>(Arg aArgs[])
 {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -259,6 +291,15 @@ exit:
     return error;
 }
 
+/**
+ * @cli coap start
+ * @code
+ * coap start
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otCoapStart
+ */
 template <> otError Coap::Process<Cmd("start")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -266,6 +307,15 @@ template <> otError Coap::Process<Cmd("start")>(Arg aArgs[])
     return otCoapStart(GetInstancePtr(), OT_DEFAULT_COAP_PORT);
 }
 
+/**
+ * @cli coap stop
+ * @code
+ * coap stop
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otCoapStop
+ */
 template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -306,16 +356,16 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
         If no more parameters are given, the command prints the current configuration.
  *   * `default`: Sets the transmission parameters to
         the following default values:
- *       * `ackTimeout`: 2000 milliseconds
- *       * `ackRandomFactorNumerator`: 3
- *       * `ackRandomFactorDenominator`: 2
+ *       * `ack_timeout`: 2000 milliseconds
+ *       * `ack_random_factor_numerator`: 3
+ *       * `ack_random_factor_denominator`: 2
  *       * `max_retransmit`: 4
  *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
        The `ACK_RANDOM_FACTOR`, with possible values for both the
-       numerator and denominator of 0~255. Refer to RFC7252.
- *   * `max_retransmit`: The `MAX_RETRANSMIT` (0~255). Refer to RFC7252.
+       numerator and denominator of 0-255. Refer to RFC7252.
+ *   * `max_retransmit`: The `MAX_RETRANSMIT` (0-255). Refer to RFC7252.
  * @par
  * Gets current CoAP parameter values if the command is run with no optional
  * parameters.
@@ -406,7 +456,7 @@ exit:
  *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-124`.
  * @par
- * Gets information about the specified CoAP resource.
+ * Gets information about the specified CoAP resource on the CoAP server.
  */
 template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
@@ -493,7 +543,8 @@ template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[]) { return ProcessRe
  *   * `type`: `con` for Confirmable or non-con for Non-confirmable (default).
  * @par
  * Triggers a subscription request which allows the CoAP client to
- * observe the specified resource for possible changes in its state.
+ * observe the specified resource on the CoAP server for possible changes
+ * in its state.
  */
 template <> otError Coap::Process<Cmd("observe")>(Arg aArgs[])
 {
