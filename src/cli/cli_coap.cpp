@@ -142,6 +142,15 @@ void Coap::PrintPayload(otMessage *aMessage)
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+/**
+ * @cli coap cancel
+ * @code
+ * coap cancel
+ * Done 
+ * @endcode
+ * @par
+ * Requests the cancellation of an existing observation subscription to a remote resource.
+ */
 template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -328,12 +337,49 @@ exit:
     return error;
 }
 
+/**
+ * @cli coap get
+ * @code
+ * coap get fdde:ad00:beef:0:2780:9423:166c:1aac test-resource
+ * Done
+ * @endcode
+ * @code
+ * coap get fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024
+ * Done
+ * @endcode
+ * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}]
+ *   * `address`: IPv6 address of the CoAP server.
+     *  `uri-path`: URI path of the resource.
+     *  `type`:
+          *`con` for Confirmable or `non-con` for Non-confirmable (default).
+     *    * `non-con`: Non-confirmable (default)
+     *    * `block-`: Use this option, followed by the block-wise value,
+     *      if the response should be transferred block-wise. Valid
+     *      values are: `block-16`, `block-32`, `block-64`, `block-128`,
+     *      `block-256`, `block-512`, or `block-124`.
+ * @par
+ * Gets information about the specified CoAP resource.
+ */
 template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
 template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
 template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
+/**
+ * @cli coap delete
+ * @code
+ * coap delete fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * Done
+ * @endcode
+ * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
+ *  * `address`: IPv6 address of the CoAP server.
+     *  `uri-path`: URI path of the resource.
+     *  `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
+     * `payload`: CoAP payload request.
+ *  @par
+ *  Deletes the specified CoAP resource.
+ */
 template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_DELETE); }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
