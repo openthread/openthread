@@ -46,6 +46,7 @@
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
 #include "instance/instance.hpp"
+#include "mac/data_poll_handler.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
 #include "thread/child.hpp"
@@ -1246,6 +1247,9 @@ exit:
 
 void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE)
+    Neighbor *neighbor = nullptr;
+#endif
     bool ackRequested = aFrame.GetAckRequest();
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -1283,7 +1287,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
         if (ackRequested && (aAckFrame != nullptr))
         {
-            Neighbor *neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
+            neighbor = Get<NeighborTable>().FindNeighbor(dstAddr);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
             if ((aError == kErrorNone) && (neighbor != nullptr) &&
@@ -1459,6 +1463,14 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
     default:
         OT_ASSERT(false);
     }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+    if (neighbor != nullptr && !neighbor->IsRxOnWhenIdle() && neighbor->IsEnhancedDataPollSupported() &&
+        Get<ChildTable>().Contains(*neighbor))
+    {
+        Get<DataPollHandler>().HandleEnhDataPoll(*static_cast<Child *>(neighbor));
+    }
+#endif
 
     ExitNow(); // Added to suppress "unused label exit" warning (in TREL radio only).
 
@@ -1945,6 +1957,16 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
                 LogDebg("Delay sleep for pending rx");
             }
 #endif
+
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+            if (!mRxOnWhenIdle && !mPromiscuous && aFrame->GetFramePending() &&
+                Get<Mle::Mle>().GetParent().IsEnhancedDataPollSupported())
+            {
+                LogDebg("Starting enhanced data poll");
+                StartOperation(kOperationWaitingForData);
+            }
+#endif
+
             FinishOperation();
             PerformNextOperation();
         }
@@ -1952,6 +1974,20 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
         SuccessOrExit(error);
 
         break;
+
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE && OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    case kOperationIdle:
+        if (!mRxOnWhenIdle && !mPromiscuous && aFrame->GetFramePending() &&
+            Get<Mle::Mle>().GetParent().IsEnhancedDataPollSupported())
+        {
+            LogDebg("Starting enhanced data poll");
+            StartOperation(kOperationWaitingForData);
+
+            // Get the radio into receive state immediately
+            PerformNextOperation();
+        }
+        break;
+#endif
 
     default:
         break;

@@ -230,6 +230,29 @@ exit:
     ProcessPendingPolls();
 }
 
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+void DataPollHandler::HandleEnhDataPoll(Child &aChild)
+{
+    if (aChild.GetIndirectMessageCount() == 0)
+    {
+        ExitNow();
+    }
+
+    if (mIndirectTxChild == nullptr)
+    {
+        mIndirectTxChild = &aChild;
+        Get<Mac::Mac>().RequestIndirectFrameTransmission();
+    }
+    else
+    {
+        aChild.SetDataPollPending(true);
+    }
+
+exit:
+    return;
+}
+#endif
+
 void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild)
 {
     if (aChild.IsFramePurgePending())

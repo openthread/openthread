@@ -273,6 +273,10 @@ private:
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
 
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+    void HandleEnhDataPoll(Child &aChild);
+#endif
+
     void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
     void ProcessPendingPolls(void);
     void ResetTxAttempts(Child &aChild);
