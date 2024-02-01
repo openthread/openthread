@@ -2269,6 +2269,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET>(void)
     // STREAM_NET requires layer 2 security.
     message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, nullptr);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    otMessageSetOrigin(message, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
 
     error = otIp6Send(mInstance, message);
 
@@ -3303,6 +3304,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_STREAM_NET_INSECURE>(
     // STREAM_NET_INSECURE packets are not secured at layer 2.
     message = otIp6NewMessageFromBuffer(mInstance, framePtr, frameLen, &msgSettings);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    otMessageSetOrigin(message, OT_MESSAGE_ORIGIN_HOST_UNTRUSTED);
 
     // Ensure the insecure message is forwarded using direct transmission.
     otMessageSetDirectTransmission(message, true);
