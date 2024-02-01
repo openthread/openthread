@@ -348,15 +348,15 @@ exit:
  * Done
  * @endcode
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}]
- *     * `address`: IPv6 address of the CoAP server.
-       *  `uri-path`: URI path of the resource.
-       *  `type`:
- *            *`con` for Confirmable or `non-con` for Non-confirmable (default).
- *            * `non-con`: Non-confirmable (default)
- *            * `block-`: Use this option, followed by the block-wise value,
- *            * if the response should be transferred block-wise. Valid
- *            * values are: `block-16`, `block-32`, `block-64`, `block-128`,
- *            * `block-256`, `block-512`, or `block-124`.
+ *   * `address`: IPv6 address of the CoAP server.
+     * `uri-path`: URI path of the resource.
+     * `type`:
+ *         *`con` for Confirmable or `non-con` for Non-confirmable (default).
+ *         * `non-con`: Non-confirmable (default)
+ *         * `block-`: Use this option, followed by the block-wise value,
+ *            if the response should be transferred block-wise. Valid
+ *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *            `block-256`, `block-512`, or `block-124`.
  * @par
  * Gets information about the specified CoAP resource.
  */
@@ -373,9 +373,9 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  * Done
  * @endcode
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
- *  * `address`: IPv6 address of the CoAP server.
-     *  `uri-path`: URI path of the resource.
-     *  `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
+ *   * `address`: IPv6 address of the CoAP server.
+     * `uri-path`: URI path of the resource.
+     * `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
      * `payload`: CoAP payload request.
  *  @par
  *  Deletes the specified CoAP resource.
