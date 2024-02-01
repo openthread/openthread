@@ -309,8 +309,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *       * `ackTimeout`: 2000 milliseconds
  *       * `ackRandomFactorNumerator`: 3
  *       * `ackRandomFactorDenominator`: 2
- *	 * `defaultMaxRetransmit`: 4
- *	 * `defaultMaxLatency: 100000 milliseconds
+ *       * `max_retransmit`: 4
  *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
