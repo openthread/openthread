@@ -1129,8 +1129,8 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
         }
 #endif
 
-        // Always forward multicast packets to host network stack
-        forwardHost = true;
+        // Forward multicast packets to host network stack unless they came from there.
+        forwardHost = !aMessagePtr->IsOriginHostUntrusted();
 
         if ((aMessagePtr->IsOriginThreadNetif() || aMessagePtr->GetMulticastLoop()) &&
             Get<ThreadNetif>().IsMulticastSubscribed(header.GetDestination()))
