@@ -300,17 +300,17 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @cparam coap parameters @ca{type} [@ca{default} | <!--
- * -->@ca{ack_timeout ack_random_factor_numerator/ <!--
+ * -->@ca{ack_timeout ack_random_factor_numerator/<!--
  * -->ack_random_factor_denominator max_retransmit}]
  *   * `type`: `request` for CoAP requests, or `response` for CoAP responses.
         If no more parameters are given, the command prints the current configuration.
  *   * `default`: Sets the transmission parameters to
         the following default values
- *         * `ackTimeout`: 2000 milliseconds
- *         * `ackRandomFactorNumerator`: 3
- *         * `ackRandomFactorDenominator`: 2
- *	   * `defaultMaxRetransmit`: 4
- *	   * `defaultMaxLatency: 100000 milliseconds
+ *          * `ackTimeout`: 2000 milliseconds
+ *          * `ackRandomFactorNumerator`: 3
+ *          * `ackRandomFactorDenominator`: 2
+ *	    * `defaultMaxRetransmit`: 4
+ *	    * `defaultMaxLatency: 100000 milliseconds
  *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
@@ -325,9 +325,9 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  * you specifiy, depending on the syntax chosen.
  * @sa otCoapSendRequestWithParameters
  * @sa otCoapSendResponseWithParameters
- * @sa  otCoapSendRequestBlockWiseWithParameters
- * @sa otCoapSendResponseBlockWiseWithParameters */
-
+ * @sa otCoapSendRequestBlockWiseWithParameters
+ * @sa otCoapSendResponseBlockWiseWithParameters
+ */
 template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
 {
     otError             error = OT_ERROR_NONE;
