@@ -146,7 +146,7 @@ void Coap::PrintPayload(otMessage *aMessage)
  * @cli coap cancel
  * @code
  * coap cancel
- * Done 
+ * Done
  * @endcode
  * @par
  * Requests the cancellation of an existing observation subscription to a remote resource.
@@ -305,12 +305,12 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *   * `type`: `request` for CoAP requests, or `response` for CoAP responses.
         If no more parameters are given, the command prints the current configuration.
  *   * `default`: Sets the transmission parameters to
-        the following default values
- *          * `ackTimeout`: 2000 milliseconds
- *          * `ackRandomFactorNumerator`: 3
- *          * `ackRandomFactorDenominator`: 2
- *	    * `defaultMaxRetransmit`: 4
- *	    * `defaultMaxLatency: 100000 milliseconds
+        the following default values:
+ *       * `ackTimeout`: 2000 milliseconds
+ *       * `ackRandomFactorNumerator`: 3
+ *       * `ackRandomFactorDenominator`: 2
+ *	 * `defaultMaxRetransmit`: 4
+ *	 * `defaultMaxLatency: 100000 milliseconds
  *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator/ack_random_factor_denominator`:
