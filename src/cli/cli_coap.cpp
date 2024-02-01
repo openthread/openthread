@@ -279,6 +279,55 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
     return otCoapStop(GetInstancePtr());
 }
 
+/**
+ * @cli coap parameters (get,set)
+ * @code
+ * coap parameters request
+ * Transmission parameters for request:
+ * ACK_TIMEOUT=1000 ms, ACK_RANDOM_FACTOR=255/254, MAX_RETRANSMIT=2
+ * Done
+ * @endcode
+ * @code
+ * coap parameters request default
+ * Transmission parameters for request:
+ * default
+ * Done
+ * @endcode
+ * @code
+ * coap parameters request 1000 255 254 2
+ * Transmission parameters for request:
+ * ACK_TIMEOUT=1000 ms, ACK_RANDOM_FACTOR=255/254, MAX_RETRANSMIT=2
+ * Done
+ * @endcode
+ * @cparam coap parameters @ca{type} [@ca{default} | <!--
+ * --> @ca{ack_timeout} @ca {ack_random_factor_numerator}/ <!--
+ * --> @ca {ack_random_factor_denominator} @ca{max_retransmit}]
+ *   * `type`: `request` for CoAP requests, or `response` for CoAP responses.
+        If no more parameters are given, the command prints the current configuration.
+ *   * `default`: Sets the transmission parameters to
+        the following default values
+ *         * `ackTimeout`: 2000 milliseconds
+ *         * `ackRandomFactorNumerator`: 3
+ *         * `ackRandomFactorDenominator`: 2
+ *	   * `defaultMaxRetransmit`: 4
+ *	   * `defaultMaxLatency: 100000 milliseconds.i
+ *   *  `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX), in milliseconds.
+        Refer to RFC7252.
+ *   *  `ack_random_factor_numerator/ack_random_factor_denominator`:
+        The `ACK_RANDOM_FACTOR`, with possible values for both the
+        numerator and denominator of 0~255. Refer to RFC7252.
+ *   *  `max_retransmit`: The `MAX_RETRANSMIT` (0~255). Refer to RFC7252.
+ * @par
+ * Gets current CoAP parameter values if the command is run with no optional
+ * parameters.
+ * @par
+ * Sets the CoAP parameters either to their default values or to the values
+ * you specifiy, depending on the syntax chosen.
+ * @sa otCoapSendRequestWithParameters
+ * @sa otCoapSendResponseWithParameters
+ * @sa  otCoapSendRequestBlockWiseWithParameters
+ * @sa otCoapSendResponseBlockWiseWithParameters */
+
 template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
 {
     otError             error = OT_ERROR_NONE;
@@ -349,9 +398,9 @@ exit:
  * @endcode
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}]
  *   * `address`: IPv6 address of the CoAP server.
-     * `uri-path`: URI path of the resource.
-     * `type`:
- *         *`con` for Confirmable or `non-con` for Non-confirmable (default).
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *         * `con` for Confirmable or `non-con` for Non-confirmable (default).
  *         * `non-con`: Non-confirmable (default)
  *         * `block-`: Use this option, followed by the block-wise value,
  *            if the response should be transferred block-wise. Valid
@@ -362,8 +411,58 @@ exit:
  */
 template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
+/**
+ * @cli coap post
+ * @code
+ * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * Done
+ * @endcode
+ * @code
+ * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
+ * Done
+ * @endcode
+ * @cparam coap post @ca{address} @ca{uri-path} [@ca{type}][@ca{payload}]
+ *   * `address`: IPv6 address of the CoAP server.
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *         * `con` for Confirmable or `non-con` for Non-confirmable (default).
+ *         * `non-con`: Non-confirmable (default)
+ *         * `block-`: Use this option, followed by the block-wise value,
+ *            to send blocks with random a payload. Valid
+ *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *            `block-256`, `block-512`, or `block-124`.
+ *   * `payload`: CoAP payload request. If `type` is "block-",
+ *     specify the amount of blocks to send using the `payload` option.
+ * @par
+ * Creates the specified CoAP resource.
+ */
 template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
+/**
+ * @cli coap put
+ * @code
+ * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * Done
+ * @endcode
+ * @code
+ * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
+ * Done
+ * @endcode
+ * @cparam coap put @ca{address} @ca{uri-path} [@ca{type}][@ca{payload}]
+ *   * `address`: IPv6 address of the CoAP server.
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *         * `con` for Confirmable or `non-con` for Non-confirmable (default).
+ *         * `non-con`: Non-confirmable (default)
+ *         * `block-`: Use this option, followed by the block-wise value,
+ *            to send blocks with random a payload. Valid
+ *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *            `block-256`, `block-512`, or `block-124`.
+ *   * `payload`: CoAP payload request. If `type` is "block-",
+ *     specify the amount of blocks to send using the `payload` option.
+ * @par
+ * Modifies the specified CoAP resource.
+ */
 template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
 /**
@@ -375,7 +474,7 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
-     * `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
+ *   * `type`: `con` for Confirmable or `non-con` for Non-confirmable (default)
  *   * `payload`: CoAP payload request.
  *  @par
  *  Deletes the specified CoAP resource.
@@ -383,6 +482,20 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
 template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_DELETE); }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+/**
+ * @cli coap observe
+ * @code
+ * coap observe fdde:ad00:beef:0:2780:9423:166c:1aac test-resource
+ * Done
+ * @endcode
+ * @cparam coap observe @ca{address} @ca{uri-path} [@ca{type}]
+ *   * `address`: IPv6 address of the CoAP server.
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`: `con` for Confirmable or non-con for Non-confirmable (default).
+ * @par
+ * Triggers a subscription request which allows the CoAP client to
+ * observe the specified resource for possible changes in its state.
+ */
 template <> otError Coap::Process<Cmd("observe")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_GET, /* aCoapObserve */ true);
