@@ -481,7 +481,7 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *         * `con`: Confirmable
  *         * `non-con`: Non-confirmable (default)
  *         * `block-`: Use this option, followed by the block-wise value,
- *            to send blocks with random a payload. Valid
+ *            to send blocks with a random payload. Valid
  *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
  *   * `payload`: CoAP payload request. If `type` is "block-",
@@ -508,7 +508,7 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *         * `con`: Confirmable
  *         * `non-con`: Non-confirmable (default)
  *         * `block-`: Use this option, followed by the block-wise value,
- *            to send blocks with random a payload. Valid
+ *            to send blocks with a random payload. Valid
  *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
  *   * `payload`: CoAP payload request. If `type` is "block-",
