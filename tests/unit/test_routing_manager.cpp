@@ -38,6 +38,7 @@
 #include "border_router/routing_manager.hpp"
 #include "common/arg_macros.hpp"
 #include "common/array.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "instance/instance.hpp"
 #include "net/icmp6.hpp"
@@ -57,6 +58,7 @@ static const char         kInfraIfAddress[] = "fe80::1";
 
 static constexpr uint32_t kValidLitime       = 2000;
 static constexpr uint32_t kPreferredLifetime = 1800;
+static constexpr uint32_t kInfiniteLifetime  = NumericLimits<uint32_t>::kMax;
 
 static constexpr uint32_t kRioValidLifetime       = 1800;
 static constexpr uint32_t kRioDeprecatingLifetime = 300;
@@ -1876,7 +1878,7 @@ void TestLocalOnLinkPrefixDeprecation(void)
     // Send an RA from router A with a new on-link (PIO) which is preferred over
     // the local on-link prefix.
 
-    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kValidLitime, kPreferredLifetime)});
+    SendRouterAdvert(routerAddressA, {Pio(onLinkPrefix, kInfiniteLifetime, kInfiniteLifetime)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Check that the local on-link prefix is now deprecating in the new RA.
