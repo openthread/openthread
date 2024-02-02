@@ -365,9 +365,9 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *   * `ack_random_factor_numerator`:
        The `ACK_RANDOM_FACTOR` numerator, with possible values
        of 0-255. Refer to RFC7252.
-     * `ack_random_factor_denominator`:
-     *  The `ACK_RANDOM_FACTOR` denominator, with possible values
-     *  of 0-255. Refer to RFC7252.
+ *   * `ack_random_factor_denominator`:
+ *   * The `ACK_RANDOM_FACTOR` denominator, with possible values
+ *   * of 0-255. Refer to RFC7252.
  *   * `max_retransmit`: The `MAX_RETRANSMIT` (0-255). Refer to RFC7252.
  * @par
  * Gets current CoAP parameter values if the command is run with no optional
