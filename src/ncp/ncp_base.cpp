@@ -1945,6 +1945,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER));
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_RCP_LOG_CRASH_DUMP));
+#endif
+
 #if OPENTHREAD_PLATFORM_POSIX
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_POSIX));
 #endif

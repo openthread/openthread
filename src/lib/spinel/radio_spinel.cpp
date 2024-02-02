@@ -163,6 +163,11 @@ void RadioSpinel::Init(SpinelInterface    &aSpinelInterface,
 
     VerifyOrDie(IsRcp(supportsRcpApiVersion, supportsRcpMinHostApiVersion), OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
 
+    if (sSupportsLogCrashDump)
+    {
+        SuccessOrDie(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+    }
+
     if (!aSkipRcpCompatibilityCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
