@@ -232,12 +232,49 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps get
+ * @code
+ * coaps get test-resource
+ * Done
+ * @endcode
+ * @code
+ * coaps get test-resource block-1024
+ * Done
+ * @endcode
+ * @cparam @ca{uri-path} [@ca{type}] 
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *       * `con`: Confirmable
+ *       * `non-con`: Non-confirmable (default)
+ *       * `block-`: Use this option, followed by the block-wise value,
+ *         if the response should be transferred block-wise.
+ *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *         `block-256`, `block-512`, or `block-1024`.
+ * @par
+ * Gets information about the specified CoAPs resource on the CoAPs server.
+ */
 template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
 template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
 template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
+/**
+ * @cli coaps delete
+ * @code
+ * coaps delete test-resource con payload
+ * Done
+ * @endcode
+ * @cparam coaps delete @ca{uri-path} [@ca{type}] [@ca{payload}]
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *       * `con`: Confirmable
+ *       * `non-con`: Non-confirmable (default)
+ *   * `payload`: CoAPs payload request.
+ * @par
+ * Deletes the specified CoAPs resource.
+ */
 template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {
     return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
@@ -393,6 +430,17 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps connect
+ * @code
+ * coaps connect fdde:ad00:beef:0:9903:14b:27e0:5744
+ * Done
+ * coaps connected
+ * @endcode
+ * @cparam coaps connect @ca{address}
+ * @par api_copy
+ * #otCoapSecureConnect
+ */
 template <> otError CoapSecure::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
@@ -413,6 +461,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps disconnect
+ * @code
+ * coaps disconnect
+ * coaps disconnected
+ * Done
+ * @endcode
+ * @par api_copy
+ * #otCoapSecureDisiConnect
+ */
 template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
