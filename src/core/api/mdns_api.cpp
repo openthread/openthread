@@ -115,4 +115,74 @@ otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey)
     return AsCoreType(aInstance).Get<Dns::Multicast::Core>().UnregisterKey(*aKey);
 }
 
+otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)
+{
+    AssertPointerIsNotNull(aBroswer);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartBrowser(*aBroswer);
+}
+
+otError otMdnsStopBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)
+{
+    AssertPointerIsNotNull(aBroswer);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopBrowser(*aBroswer);
+}
+
+otError otMdnsStartSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartSrvResolver(*aResolver);
+}
+
+otError otMdnsStopSrvResolver(otInstance *aInstance, const otMdnsSrvResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopSrvResolver(*aResolver);
+}
+
+otError otMdnsStartTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartTxtResolver(*aResolver);
+}
+
+otError otMdnsStopTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopTxtResolver(*aResolver);
+}
+
+otError otMdnsStartIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartIp6AddressResolver(*aResolver);
+}
+
+otError otMdnsStopIp6AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopIp6AddressResolver(*aResolver);
+}
+
+otError otMdnsStartIp4AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StartIp4AddressResolver(*aResolver);
+}
+
+otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver)
+{
+    AssertPointerIsNotNull(aResolver);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().StopIp4AddressResolver(*aResolver);
+}
+
 #endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE

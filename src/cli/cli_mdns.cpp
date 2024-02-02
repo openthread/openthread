@@ -35,6 +35,7 @@
 
 #include "cli_mdns.hpp"
 
+#include <openthread/nat64.h>
 #include "cli/cli.hpp"
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
@@ -50,7 +51,9 @@ template <> otError Mdns::Process<Cmd("enable")>(Arg aArgs[])
     SuccessOrExit(error = aArgs[0].ParseAsUint32(infraIfIndex));
     VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otMdnsSetEnabled(GetInstancePtr(), true, infraIfIndex);
+    SuccessOrExit(error = otMdnsSetEnabled(GetInstancePtr(), true, infraIfIndex));
+
+    mInfraIfIndex = infraIfIndex;
 
 exit:
     return error;
@@ -455,6 +458,283 @@ exit:
     return error;
 }
 
+otError Mdns::ParseStartOrStop(const Arg &aArg, bool &aIsStart)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "start")
+    {
+        aIsStart = true;
+    }
+    else if (aArg == "stop")
+    {
+        aIsStart = false;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+template <> otError Mdns::Process<Cmd("browser")>(Arg aArgs[])
+{
+    // mdns browser start|stop <service-type> [<sub-type>]
+
+    otError       error;
+    otMdnsBrowser browser;
+    bool          isStart;
+
+    ClearAllBytes(browser);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+    VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    browser.mServiceType = aArgs[1].GetCString();
+
+    if (!aArgs[2].IsEmpty())
+    {
+        browser.mSubTypeLabel = aArgs[2].GetCString();
+        VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    }
+
+    browser.mInfraIfIndex = mInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartBrowser(GetInstancePtr(), &browser);
+    }
+    else
+    {
+        error = otMdnsStopBrowser(GetInstancePtr(), &browser);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleBrowseResult(*aResult);
+}
+
+void Mdns::HandleBrowseResult(const otMdnsBrowseResult &aResult)
+{
+    OutputFormat("mDNS browse result for %s", aResult.mServiceType);
+
+    if (aResult.mSubTypeLabel)
+    {
+        OutputLine(" sub-type %s", aResult.mSubTypeLabel);
+    }
+    else
+    {
+        OutputNewLine();
+    }
+
+    OutputLine(kIndentSize, "instance: %s", aResult.mServiceInstance);
+    OutputLine(kIndentSize, "ttl: %lu", ToUlong(aResult.mTtl));
+    OutputLine(kIndentSize, "if-index: %lu", ToUlong(aResult.mInfraIfIndex));
+}
+
+template <> otError Mdns::Process<Cmd("srvresolver")>(Arg aArgs[])
+{
+    // mdns srvresolver start|stop <service-instance> <service-type>
+
+    otError           error;
+    otMdnsSrvResolver resolver;
+    bool              isStart;
+
+    ClearAllBytes(resolver);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+    VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    resolver.mServiceInstance = aArgs[1].GetCString();
+    resolver.mServiceType     = aArgs[2].GetCString();
+    resolver.mInfraIfIndex    = mInfraIfIndex;
+    resolver.mCallback        = HandleSrvResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartSrvResolver(GetInstancePtr(), &resolver);
+    }
+    else
+    {
+        error = otMdnsStopSrvResolver(GetInstancePtr(), &resolver);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleSrvResult(otInstance *aInstance, const otMdnsSrvResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleSrvResult(*aResult);
+}
+
+void Mdns::HandleSrvResult(const otMdnsSrvResult &aResult)
+{
+    OutputLine("mDNS SRV result for %s for %s", aResult.mServiceInstance, aResult.mServiceType);
+
+    if (aResult.mTtl != 0)
+    {
+        OutputLine(kIndentSize, "host: %s", aResult.mHostName);
+        OutputLine(kIndentSize, "port: %u", aResult.mPort);
+        OutputLine(kIndentSize, "priority: %u", aResult.mPriority);
+        OutputLine(kIndentSize, "weight: %u", aResult.mWeight);
+    }
+
+    OutputLine(kIndentSize, "ttl: %lu", ToUlong(aResult.mTtl));
+    OutputLine(kIndentSize, "if-index: %lu", ToUlong(aResult.mInfraIfIndex));
+}
+
+template <> otError Mdns::Process<Cmd("txtresolver")>(Arg aArgs[])
+{
+    // mdns txtresolver start|stop <service-instance> <service-type>
+
+    otError           error;
+    otMdnsTxtResolver resolver;
+    bool              isStart;
+
+    ClearAllBytes(resolver);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+    VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    resolver.mServiceInstance = aArgs[1].GetCString();
+    resolver.mServiceType     = aArgs[2].GetCString();
+    resolver.mInfraIfIndex    = mInfraIfIndex;
+    resolver.mCallback        = HandleTxtResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartTxtResolver(GetInstancePtr(), &resolver);
+    }
+    else
+    {
+        error = otMdnsStopTxtResolver(GetInstancePtr(), &resolver);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleTxtResult(otInstance *aInstance, const otMdnsTxtResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleTxtResult(*aResult);
+}
+
+void Mdns::HandleTxtResult(const otMdnsTxtResult &aResult)
+{
+    OutputLine("mDNS TXT result for %s for %s", aResult.mServiceInstance, aResult.mServiceType);
+
+    if (aResult.mTtl != 0)
+    {
+        OutputFormat(kIndentSize, "txt-data: ");
+        OutputBytesLine(aResult.mTxtData, aResult.mTxtDataLength);
+    }
+
+    OutputLine(kIndentSize, "ttl: %lu", ToUlong(aResult.mTtl));
+    OutputLine(kIndentSize, "if-index: %lu", ToUlong(aResult.mInfraIfIndex));
+}
+template <> otError Mdns::Process<Cmd("ip6resolver")>(Arg aArgs[])
+{
+    // mdns ip6resolver start|stop <host-name>
+
+    otError               error;
+    otMdnsAddressResolver resolver;
+    bool                  isStart;
+
+    ClearAllBytes(resolver);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+    VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    resolver.mHostName     = aArgs[1].GetCString();
+    resolver.mInfraIfIndex = mInfraIfIndex;
+    resolver.mCallback     = HandleIp6AddressResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartIp6AddressResolver(GetInstancePtr(), &resolver);
+    }
+    else
+    {
+        error = otMdnsStopIp6AddressResolver(GetInstancePtr(), &resolver);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleIp6AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleAddressResult(*aResult, kIp6Address);
+}
+
+void Mdns::HandleAddressResult(const otMdnsAddressResult &aResult, IpAddressType aType)
+{
+    OutputLine("mDNS %s address result for %s", aType == kIp6Address ? "IPv6" : "IPv4", aResult.mHostName);
+
+    OutputLine(kIndentSize, "%u address:", aResult.mAddressesLength);
+
+    for (uint16_t index = 0; index < aResult.mAddressesLength; index++)
+    {
+        OutputFormat(kIndentSize, "  ");
+        OutputIp6Address(aResult.mAddresses[index].mAddress);
+        OutputLine(" ttl:%lu", ToUlong(aResult.mAddresses[index].mTtl));
+    }
+
+    OutputLine(kIndentSize, "if-index: %lu", ToUlong(aResult.mInfraIfIndex));
+}
+
+template <> otError Mdns::Process<Cmd("ip4resolver")>(Arg aArgs[])
+{
+    // mdns ip4resolver start|stop <host-name>
+
+    otError               error;
+    otMdnsAddressResolver resolver;
+    bool                  isStart;
+
+    ClearAllBytes(resolver);
+
+    SuccessOrExit(error = ParseStartOrStop(aArgs[0], isStart));
+    VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    resolver.mHostName     = aArgs[1].GetCString();
+    resolver.mInfraIfIndex = mInfraIfIndex;
+    resolver.mCallback     = HandleIp4AddressResult;
+
+    if (isStart)
+    {
+        error = otMdnsStartIp4AddressResolver(GetInstancePtr(), &resolver);
+    }
+    else
+    {
+        error = otMdnsStopIp4AddressResolver(GetInstancePtr(), &resolver);
+    }
+
+exit:
+    return error;
+}
+
+void Mdns::HandleIp4AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    Interpreter::GetInterpreter().mMdns.HandleAddressResult(*aResult, kIp4Address);
+}
+
 otError Mdns::Process(Arg aArgs[])
 {
 #define CmdEntry(aCommandString)                            \
@@ -463,9 +743,9 @@ otError Mdns::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("disable"), CmdEntry("enable"),          CmdEntry("register"),
-        CmdEntry("state"),   CmdEntry("unicastquestion"), CmdEntry("unregister"),
-
+        CmdEntry("browser"),     CmdEntry("disable"),         CmdEntry("enable"),      CmdEntry("ip4resolver"),
+        CmdEntry("ip6resolver"), CmdEntry("register"),        CmdEntry("srvresolver"), CmdEntry("state"),
+        CmdEntry("txtresolver"), CmdEntry("unicastquestion"), CmdEntry("unregister"),
     };
 
 #undef CmdEntry

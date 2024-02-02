@@ -56,6 +56,7 @@
 /**
  * @file
  *   This file includes definitions for the Multicast DNS per RFC 6762.
+ *
  */
 
 namespace ot {
@@ -93,6 +94,19 @@ public:
     typedef otMdnsHost             Host;             ///< Host information.
     typedef otMdnsService          Service;          ///< Service information.
     typedef otMdnsKey              Key;              ///< Key information.
+    typedef otMdnsBrowser          Browser;          ///< Browser.
+    typedef otMdnsBrowseCallback   BrowseCallback;   ///< Browser callback.
+    typedef otMdnsBrowseResult     BrowseResult;     ///< Browser result.
+    typedef otMdnsSrvResolver      SrvResolver;      ///< SRV resolver.
+    typedef otMdnsSrvCallback      SrvCallback;      ///< SRV callback.
+    typedef otMdnsSrvResult        SrvResult;        ///< SRV result.
+    typedef otMdnsTxtResolver      TxtResolver;      ///< TXT resolver.
+    typedef otMdnsTxtCallback      TxtCallback;      ///< TXT callback.
+    typedef otMdnsTxtResult        TxtResult;        ///< TXT result.
+    typedef otMdnsAddressResolver  AddressResolver;  ///< Address resolver.
+    typedef otMdnsAddressCallback  AddressCallback;  ///< Address callback
+    typedef otMdnsAddressResult    AddressResult;    ///< Address result.
+    typedef otMdnsAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
 
     /**
      * Represents a socket address info.
@@ -121,7 +135,8 @@ public:
      *
      * mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will
      * immediately stop all operations and any communication (multicast or unicast tx) and remove any previously
-     * registered entries without sending any "goodbye" announcements or invoking their callback.
+     * registered entries without sending any "goodbye" announcements or invoking their callback. When disabled,
+     * all browsers and resolvers are stopped and all cached information is cleared.
      *
      * @param[in] aEnable       Whether to enable or disable.
      * @param[in] aInfraIfIndex The network interface index for mDNS operation. Value is ignored when disabling.
@@ -344,6 +359,190 @@ public:
     Error UnregisterKey(const Key &aKey);
 
     /**
+     * Starts a service browser.
+     *
+     * Initiates a continuous search for the specified `mServiceType` in @p aBrowser. For sub-type services, use
+     * `mSubTypeLabel` to define the sub-type, for base services, set `mSubTypeLabel` to NULL.
+     *
+     * Discovered services are reported through the `mCallback` function in @p aBrowser. Services that have been
+     * removed are reported with a TTL value of zero. The callback may be invoked immediately with cached information
+     * (if available) and potentially before this method returns. When cached results are used, the reported TTL value
+     * will reflect the original TTL from the last received response.
+     *
+     * Multiple browsers can be started for the same service, provided they use different callback functions.
+     *
+     * @param[in] aBrowser    The browser to be started.
+     *
+     * @retval kErrorNone           Browser started successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorAlready        An identical browser (same service and callback) is already active.
+     *
+     */
+    Error StartBrowser(const Browser &aBrowser);
+
+    /**
+     * Stops a service browser.
+     *
+     * No action is performed if no matching browser with the same service and callback is currently active.
+     *
+     * @param[in] aBrowser    The browser to stop.
+     *
+     * @retval kErrorNone           Browser stopped successfully.
+     * @retval kErrorInvalidSatet  mDNS module is not enabled.
+     *
+     */
+    Error StopBrowser(const Browser &aBrowser);
+
+    /**
+     * Starts an SRV record resolver.
+     *
+     * Initiates a continuous SRV record resolver for the specified service in @p aResolver.
+     *
+     * Discovered information is reported through the `mCallback` function in @p aResolver. When the service is removed
+     * it is reported with a TTL value of zero. In this case, `mHostName` may be NULL and other result fields (such as
+     * `mPort`) should be ignored.
+     *
+     * The callback may be invoked immediately with cached information (if available) and potentially before this
+     * method returns. When cached result is used, the reported TTL value will reflect the original TTL from the last
+     * received response.
+     *
+     * Multiple resolvers can be started for the same service, provided they use different callback functions.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     * @retval kErrorNone           Resolver started successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     *
+     */
+    Error StartSrvResolver(const SrvResolver &aResolver);
+
+    /**
+     * Stops an SRV record resolver.
+     *
+     * No action is performed if no matching resolver with the same service and callback is currently active.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     * @retval kErrorNone           Resolver stopped successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     *
+     */
+    Error StopSrvResolver(const SrvResolver &aResolver);
+
+    /**
+     * Starts a TXT record resolver.
+     *
+     * Initiates a continuous TXT record resolver for the specified service in @p aResolver.
+     *
+     * Discovered information is reported through the `mCallback` function in @p aResolver. When the TXT record is
+     * removed it is reported with a TTL value of zero. In this case, `mTxtData` may be NULL, and other result fields
+     * (such as `mTxtDataLength`) should be ignored.
+     *
+     * The callback may be invoked immediately with cached information (if available) and potentially before this
+     * method returns. When cached result is used, the reported TTL value will reflect the original TTL from the last
+     * received response.
+     *
+     * Multiple resolvers can be started for the same service, provided they use different callback functions.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     * @retval kErrorNone           Resolver started successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorAlready        An identical resolver (same service and callback) is already active.
+     *
+     */
+    Error StartTxtResolver(const TxtResolver &aResolver);
+
+    /**
+     * Stops a TXT record resolver.
+     *
+     * No action is performed if no matching resolver with the same service and callback is currently active.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     * @retval kErrorNone           Resolver stopped successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     *
+     */
+    Error StopTxtResolver(const TxtResolver &aResolver);
+
+    /**
+     * Starts an IPv6 address resolver.
+     *
+     * Initiates a continuous IPv6 address resolver for the specified host name in @p aResolver.
+     *
+     * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The callback is invoked
+     * whenever addresses are added or removed, providing an updated list. If all addresses are removed, the callback
+     * is invoked with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).
+     *
+     * The callback may be invoked immediately with cached information (if available) and potentially before this
+     * method returns. When cached result is used, the reported TTL values will reflect the original TTL from the last
+     * received response.
+     *
+     * Multiple resolvers can be started for the same host name, provided they use different callback functions.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     * @retval kErrorNone           Resolver started successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     *
+     */
+    Error StartIp6AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Stops an IPv6 address resolver.
+     *
+     * No action is performed if no matching resolver with the same host name and callback is currently active.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     * @retval kErrorNone           Resolver stopped successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     *
+     */
+    Error StopIp6AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Starts an IPv4 address resolver.
+     *
+     * Initiates a continuous IPv4 address resolver for the specified host name in @p aResolver.
+     *
+     * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The IPv4 addresses are
+     * represented using the IPv4-mapped IPv6 address format in `mAddresses` array.  The callback is invoked  whenever
+     * addresses are added or removed, providing an updated list. If all addresses are removed, the callback is invoked
+     * with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).
+     *
+     * The callback may be invoked immediately with cached information (if available) and potentially before this
+     * method returns. When cached result is used, the reported TTL values will reflect the original TTL from the last
+     * received response.
+     *
+     * Multiple resolvers can be started for the same host name, provided they use different callback functions.
+     *
+     * @param[in] aResolver    The resolver to be started.
+     *
+     * @retval kErrorNone           Resolver started successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     * @retval kErrorAlready        An identical resolver (same host and callback) is already active.
+     *
+     */
+    Error StartIp4AddressResolver(const AddressResolver &aResolver);
+
+    /**
+     * Stops an IPv4 address resolver.
+     *
+     * No action is performed if no matching resolver with the same host name and callback is currently active.
+     *
+     * @param[in] aResolver    The resolver to stop.
+     *
+     * @retval kErrorNone           Resolver stopped successfully.
+     * @retval kErrorInvalidState   mDNS module is not enabled.
+     *
+     */
+    Error StopIp4AddressResolver(const AddressResolver &aResolver);
+
+    /**
      * Sets the max size threshold for mDNS messages.
      *
      * This method is mainly intended for testing. The max size threshold is used to break larger messages.
@@ -368,6 +567,13 @@ private:
 
     static constexpr uint8_t  kNumberOfAnnounces = 3;
     static constexpr uint32_t kAnnounceInterval  = 1000; // In msec - time between first two announces
+
+    static constexpr uint8_t  kNumberOfInitalQueries = 3;
+    static constexpr uint32_t kInitialQueryInterval  = 1000; // In msec - time between first two queries
+
+    static constexpr uint32_t kMinInitialQueryDelay     = 20;  // msec
+    static constexpr uint32_t kMaxInitialQueryDelay     = 120; // msec
+    static constexpr uint32_t kRandomDelayReuseInterval = 2;   // msec
 
     static constexpr uint32_t kUnspecifiedTtl = 0;
     static constexpr uint32_t kDefaultTtl     = 120;
@@ -402,7 +608,7 @@ private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Forward declarations
 
-    class Context;
+    class EntryTimerContext;
     class TxMessage;
     class RxMessage;
     class ServiceEntry;
@@ -623,7 +829,7 @@ private:
         void AnswerNonProbe(const AnswerInfo &aInfo, RecordAndType *aRecords, uint16_t aRecordsLength);
         void ScheduleNsecAnswer(const AnswerInfo &aInfo);
 
-        template <typename EntryType> void HandleTimer(Context &aContext);
+        template <typename EntryType> void HandleTimer(EntryTimerContext &aContext);
 
         RecordInfo mKeyRecord;
 
@@ -668,7 +874,7 @@ private:
         void  Unregister(const Host &aHost);
         void  Unregister(const Key &aKey);
         void  AnswerQuestion(const AnswerInfo &aInfo);
-        void  HandleTimer(Context &aContext);
+        void  HandleTimer(EntryTimerContext &aContext);
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
@@ -723,7 +929,7 @@ private:
         void  AnswerServiceNameQuestion(const AnswerInfo &aInfo);
         void  AnswerServiceTypeQuestion(const AnswerInfo &aInfo, const char *aSubLabel);
         bool  ShouldSuppressKnownAnswer(uint32_t aTtl, const char *aSubLabel) const;
-        void  HandleTimer(Context &aContext);
+        void  HandleTimer(EntryTimerContext &aContext);
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
@@ -811,7 +1017,7 @@ private:
         void     ClearAppendState(void);
         void     AnswerQuestion(const AnswerInfo &aInfo);
         bool     ShouldSuppressKnownAnswer(uint32_t aTtl) const;
-        void     HandleTimer(Context &aContext);
+        void     HandleTimer(EntryTimerContext &aContext);
         void     PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
 
     private:
@@ -882,20 +1088,30 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    class Context : public InstanceLocator // Used by `HandleEntryTimer`.
+    class TimerContext : public InstanceLocator
     {
     public:
-        Context(Instance &aInstance);
+        TimerContext(Instance &aInstance);
 
-        TimeMilli  GetNow(void) const { return mNow; }
-        TimeMilli  GetNextTime(void) const { return mNextTime; }
-        void       UpdateNextTime(TimeMilli aTime);
-        TxMessage &GetProbeMessage(void) { return mProbeMessage; }
-        TxMessage &GetResponseMessage(void) { return mResponseMessage; }
+        TimeMilli GetNow(void) const { return mNow; }
+        TimeMilli GetNextTime(void) const { return mNextTime; }
+        void      UpdateNextTime(TimeMilli aTime);
 
     private:
         TimeMilli mNow;
         TimeMilli mNextTime;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class EntryTimerContext : public TimerContext // Used by `HandleEntryTimer`.
+    {
+    public:
+        EntryTimerContext(Instance &aInstance);
+        TxMessage &GetProbeMessage(void) { return mProbeMessage; }
+        TxMessage &GetResponseMessage(void) { return mResponseMessage; }
+
+    private:
         TxMessage mProbeMessage;
         TxMessage mResponseMessage;
     };
@@ -930,6 +1146,10 @@ private:
         void                ProcessResponse(void);
 
     private:
+        typedef void (RxMessage::*RecordProcessor)(const Name           &aName,
+                                                   const ResourceRecord &aRecord,
+                                                   uint16_t              aRecordOffset);
+
         struct Question : public Clearable<Question>
         {
             Question(void) { Clear(); }
@@ -963,6 +1183,13 @@ private:
         void AnswerAllServicesQuestion(const Question &aQuestion, const AnswerInfo &aInfo);
         bool ShouldSuppressKnownAnswer(const Question &aQuestion, const ServiceType &aServiceType) const;
         void SendUnicastResponse(const AddressInfo &aUnicastDest);
+        void IterateOnAllRecordsInResponse(RecordProcessor aRecordProcessor);
+        void ProcessRecordForConflict(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
+        void ProcessPtrRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
+        void ProcessSrvRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
+        void ProcessTxtRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
+        void ProcessAaaaRecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
+        void ProcessARecord(const Name &aName, const ResourceRecord &aRecord, uint16_t aRecordOffset);
 
         RxMessage            *mNext;
         OwnedPtr<Message>     mMessagePtr;
@@ -1058,16 +1285,443 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    template <typename EntryType> OwningList<EntryType> &GetList(void);
+    class CacheEntry;
+    class TxtCache;
+
+    class ResultCallback : public LinkedListEntry<ResultCallback>, public Heap::Allocatable<ResultCallback>
+    {
+        friend class Heap::Allocatable<ResultCallback>;
+        friend class LinkedListEntry<ResultCallback>;
+        friend class CacheEntry;
+
+    public:
+        ResultCallback(const ResultCallback &aResultCallback) = default;
+
+        template <typename CallbackType>
+        explicit ResultCallback(CallbackType aCallback)
+            : mNext(nullptr)
+            , mSharedCallback(aCallback)
+        {
+        }
+
+        bool Matches(BrowseCallback aCallback) const { return mSharedCallback.mBrowse == aCallback; }
+        bool Matches(SrvCallback aCallback) const { return mSharedCallback.mSrv == aCallback; }
+        bool Matches(TxtCallback aCallback) const { return mSharedCallback.mTxt == aCallback; }
+        bool Matches(AddressCallback aCallback) const { return mSharedCallback.mAddress == aCallback; }
+        bool Matches(EmptyChecker) const { return (mSharedCallback.mSrv == nullptr); }
+
+        void Invoke(Instance &aInstance, const BrowseResult &aResult) const;
+        void Invoke(Instance &aInstance, const SrvResult &aResult) const;
+        void Invoke(Instance &aInstance, const TxtResult &aResult) const;
+        void Invoke(Instance &aInstance, const AddressResult &aResult) const;
+
+        void ClearCallback(void) { mSharedCallback.Clear(); }
+
+    private:
+        union SharedCallback
+        {
+            explicit SharedCallback(BrowseCallback aCallback) { mBrowse = aCallback; }
+            explicit SharedCallback(SrvCallback aCallback) { mSrv = aCallback; }
+            explicit SharedCallback(TxtCallback aCallback) { mTxt = aCallback; }
+            explicit SharedCallback(AddressCallback aCallback) { mAddress = aCallback; }
+
+            void Clear(void) { mBrowse = nullptr; }
+
+            BrowseCallback  mBrowse;
+            SrvCallback     mSrv;
+            TxtCallback     mTxt;
+            AddressCallback mAddress;
+        };
+
+        ResultCallback *mNext;
+        SharedCallback  mSharedCallback;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class CacheTimerContext : public TimerContext
+    {
+    public:
+        CacheTimerContext(Instance &aInstance);
+        TxMessage &GetQueryMessage(void) { return mQueryMessage; }
+
+    private:
+        TxMessage mQueryMessage;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class CacheRecordInfo
+    {
+    public:
+        CacheRecordInfo(void);
+
+        bool     IsPresent(void) const { return (mTtl > 0); }
+        uint32_t GetTtl(void) const { return mTtl; }
+        bool     RefreshTtl(uint32_t aTtl);
+        bool     ShouldExpire(TimeMilli aNow) const;
+        void     UpdateStateAfterQuery(TimeMilli aNow);
+        void     UpdateQueryAndFireTimeOn(CacheEntry &aCacheEntry);
+        bool     LessThanHalfTtlRemains(TimeMilli aNow) const;
+        uint32_t GetRemainingTtl(TimeMilli aNow) const;
+
+    private:
+        static constexpr uint32_t kMaxTtl            = (24 * 3600); // One day
+        static constexpr uint8_t  kNumberOfQueries   = 4;
+        static constexpr uint32_t kQueryTtlVariation = 1000 * 2 / 100; // 2%
+
+        uint32_t  GetClampedTtl(void) const;
+        TimeMilli GetExpireTime(void) const;
+        TimeMilli GetQueryTime(uint8_t aAttemptIndex) const;
+
+        uint32_t  mTtl;
+        TimeMilli mLastRxTime;
+        uint8_t   mQueryCount;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class CacheEntry : public FireTime, public InstanceLocatorInit, private NonCopyable
+    {
+        // Base class for cache entries: `BrowseCache`, `mSrvCache`,
+        // `mTxtCache`, etc. Implements common behaviors: initial
+        // queries, query/timer scheduling, callback tracking, entry
+        // aging, and timer handling. Tracks entry type in `mType` and
+        // invokes sub-class method for type-specific behaviors
+        // (e.g., query message construction).
+
+    public:
+        void HandleTimer(CacheTimerContext &aContext);
+        void ClearEmptyCallbacks(void);
+        void ScheduleQuery(TimeMilli aQueryTime);
+
+    protected:
+        enum Type : uint8_t
+        {
+            kBrowseCache,
+            kSrvCache,
+            kTxtCache,
+            kIp6AddrCache,
+            kIp4AddrCache,
+        };
+
+        void  Init(Instance &aInstance, Type aType);
+        bool  IsActive(void) const { return mIsActive; }
+        bool  ShouldDelete(TimeMilli aNow) const;
+        void  StartInitialQueries(void);
+        void  StopInitialQueries(void) { mInitalQueries = kNumberOfInitalQueries; }
+        Error Add(const ResultCallback &aCallback);
+        void  Remove(const ResultCallback &aCallback);
+        void  DetermineNextFireTime(void);
+        void  ScheduleTimer(void);
+
+        template <typename ResultType> void InvokeCallbacks(const ResultType &aResult);
+
+    private:
+        static constexpr uint32_t kMinIntervalBetweenQueries = 1000; // In msec
+        static constexpr uint32_t kNonActiveDeleteTimeout    = 7 * Time::kOneMinuteInMsec;
+
+        typedef OwningList<ResultCallback> CallbackList;
+
+        void SetIsActive(bool aIsActive);
+        bool ShouldQuery(TimeMilli aNow);
+        void PrepareQuery(CacheTimerContext &aContext);
+        void ProcessExpiredRecords(TimeMilli aNow);
+        void DetermineNextInitialQueryTime(void);
+
+        ResultCallback *FindCallbackMatching(const ResultCallback &aCallback);
+
+        template <typename CacheType> CacheType       &As(void) { return *static_cast<CacheType *>(this); }
+        template <typename CacheType> const CacheType &As(void) const { return *static_cast<const CacheType *>(this); }
+
+        Type         mType;                   // Cache entry type.
+        uint8_t      mInitalQueries;          // Number initial queries sent already.
+        bool         mQueryPending : 1;       // Whether a query tx request is pending.
+        bool         mLastQueryTimeValid : 1; // Whether `mLastQueryTime` is valid.
+        bool         mIsActive : 1;           // Whether there is any active resolver/browser for this entry.
+        TimeMilli    mNextQueryTime;          // The next query tx time when `mQueryPending`.
+        TimeMilli    mLastQueryTime;          // The last query tx time or the upcoming tx time of first initial query.
+        TimeMilli    mDeleteTime;             // The time to delete the entry when not `mIsActive`.
+        CallbackList mCallbacks;              // Resolver/Browser callbacks.
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class BrowseCache : public CacheEntry, public LinkedListEntry<BrowseCache>, public Heap::Allocatable<BrowseCache>
+    {
+        friend class LinkedListEntry<BrowseCache>;
+        friend class Heap::Allocatable<BrowseCache>;
+        friend class CacheEntry;
+
+    public:
+        void  ClearCompressOffsets(void);
+        bool  Matches(const Name &aFullName) const;
+        bool  Matches(const char *aServiceType, const char *aSubTypeLabel) const;
+        bool  Matches(const Browser &aBrowser) const;
+        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        Error Add(const Browser &aBrowser);
+        void  Remove(const Browser &aBrowser);
+        void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+
+    private:
+        struct PtrEntry : public LinkedListEntry<PtrEntry>, public Heap::Allocatable<PtrEntry>
+        {
+            Error Init(const char *aServiceInstance);
+            bool  Matches(const char *aServiceInstance) const { return NameMatch(mServiceInstance, aServiceInstance); }
+            bool  Matches(const ExpireChecker &aExpireChecker) const;
+            void  ConvertTo(BrowseResult &aResult, const BrowseCache &aBrowseCache) const;
+
+            PtrEntry       *mNext;
+            Heap::String    mServiceInstance;
+            CacheRecordInfo mRecord;
+        };
+
+        // Called by base class `CacheEntry`
+        void PreparePtrQuestion(TxMessage &aQuery, TimeMilli aNow);
+        void UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void DetermineRecordFireTime(void);
+        void ProcessExpiredRecords(TimeMilli aNow);
+        void ReportResultsTo(ResultCallback &aCallback) const;
+
+        Error Init(Instance &aInstance, const char *aServiceType, const char *aSubTypeLabel);
+        Error Init(Instance &aInstance, const Browser &aBrowser);
+        void  AppendServiceTypeOrSubTypeTo(TxMessage &aTxMessage, Section aSection);
+        void  AppendKnownAnswer(TxMessage &aTxMessage, const PtrEntry &aPtrEntry, TimeMilli aNow);
+        void  DiscoverCompressOffsets(void);
+
+        BrowseCache         *mNext;
+        Heap::String         mServiceType;
+        Heap::String         mSubTypeLabel;
+        OwningList<PtrEntry> mPtrEntries;
+        uint16_t             mServiceTypeOffset;
+        uint16_t             mSubServiceTypeOffset;
+        uint16_t             mSubServiceNameOffset;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    struct ServiceName
+    {
+        ServiceName(const char *aServiceInstance, const char *aServiceType)
+            : mServiceInstance(aServiceInstance)
+            , mServiceType(aServiceType)
+        {
+        }
+
+        const char *mServiceInstance;
+        const char *mServiceType;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class ServiceCache : public CacheEntry
+    {
+        // Base class for `SrvCache` and `TxtCache`, tracking common info
+        // shared between the two, e.g. service instance/type strings,
+        // record info, and append state and compression offsets.
+
+        friend class CacheEntry;
+
+    public:
+        void ClearCompressOffsets(void);
+
+    protected:
+        ServiceCache(void) = default;
+
+        Error Init(Instance &aInstance, Type aType, const char *aServiceInstance, const char *aServiceType);
+        bool  Matches(const Name &aFullName) const;
+        bool  Matches(const char *aServiceInstance, const char *aServiceType) const;
+        void  PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType);
+        void  AppendServiceNameTo(TxMessage &aTxMessage, Section aSection);
+        void  UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void  DetermineRecordFireTime(void);
+        bool  ShouldStartInitialQueries(void) const;
+
+        CacheRecordInfo mRecord;
+        Heap::String    mServiceInstance;
+        Heap::String    mServiceType;
+        uint16_t        mServiceNameOffset;
+        uint16_t        mServiceTypeOffset;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class SrvCache : public ServiceCache, public LinkedListEntry<SrvCache>, public Heap::Allocatable<SrvCache>
+    {
+        friend class LinkedListEntry<SrvCache>;
+        friend class Heap::Allocatable<SrvCache>;
+        friend class CacheEntry;
+        friend class TxtCache;
+        friend class BrowseCache;
+
+    public:
+        bool  Matches(const Name &aFullName) const;
+        bool  Matches(const SrvResolver &aResolver) const;
+        bool  Matches(const ServiceName &aServiceName) const;
+        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        Error Add(const SrvResolver &aResolver);
+        void  Remove(const SrvResolver &aResolver);
+        void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+
+    private:
+        Error Init(Instance &aInstance, const char *aServiceInstance, const char *aServiceType);
+        Error Init(Instance &aInstance, const ServiceName &aServiceName);
+        Error Init(Instance &aInstance, const SrvResolver &aResolver);
+        void  PrepareSrvQuestion(TxMessage &aQuery);
+        void  DiscoverCompressOffsets(void);
+        void  ProcessExpiredRecords(TimeMilli aNow);
+        void  ReportResultTo(ResultCallback &aCallback) const;
+        void  ConvertTo(SrvResult &aResult) const;
+
+        SrvCache    *mNext;
+        Heap::String mHostName;
+        uint16_t     mPort;
+        uint16_t     mPriority;
+        uint16_t     mWeight;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class TxtCache : public ServiceCache, public LinkedListEntry<TxtCache>, public Heap::Allocatable<TxtCache>
+    {
+        friend class LinkedListEntry<TxtCache>;
+        friend class Heap::Allocatable<TxtCache>;
+        friend class CacheEntry;
+        friend class BrowseCache;
+
+    public:
+        bool  Matches(const Name &aFullName) const;
+        bool  Matches(const TxtResolver &aResolver) const;
+        bool  Matches(const ServiceName &aServiceName) const;
+        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        Error Add(const TxtResolver &aResolver);
+        void  Remove(const TxtResolver &aResolver);
+        void  ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+
+    private:
+        Error Init(Instance &aInstance, const char *aServiceInstance, const char *aServiceType);
+        Error Init(Instance &aInstance, const ServiceName &aServiceName);
+        Error Init(Instance &aInstance, const TxtResolver &aResolver);
+        void  PrepareTxtQuestion(TxMessage &aQuery);
+        void  DiscoverCompressOffsets(void);
+        void  ProcessExpiredRecords(TimeMilli aNow);
+        void  ReportResultTo(ResultCallback &aCallback) const;
+        void  ConvertTo(TxtResult &aResult) const;
+
+        TxtCache  *mNext;
+        Heap::Data mTxtData;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class AddrCache : public CacheEntry
+    {
+        // Base class for `Ip6AddrCache` and `Ip4AddrCache`, tracking common info
+        // shared between the two.
+
+        friend class CacheEntry;
+
+    public:
+        bool  Matches(const Name &aFullName) const;
+        bool  Matches(const char *aName) const;
+        bool  Matches(const AddressResolver &aBrowser) const;
+        bool  Matches(const ExpireChecker &aExpireChecker) const;
+        Error Add(const AddressResolver &aResolver);
+        void  Remove(const AddressResolver &aResolver);
+        void  CommitNewResponseEntries(void);
+
+    protected:
+        struct AddrEntry : public LinkedListEntry<AddrEntry>, public Heap::Allocatable<AddrEntry>
+        {
+            explicit AddrEntry(const Ip6::Address &aAddress);
+            bool     Matches(const Ip6::Address &aAddress) const { return (mAddress == aAddress); }
+            bool     Matches(const ExpireChecker &aExpireChecker) const;
+            bool     Matches(EmptyChecker aChecker) const;
+            uint32_t GetTtl(void) const { return mRecord.GetTtl(); }
+
+            AddrEntry      *mNext;
+            Ip6::Address    mAddress;
+            CacheRecordInfo mRecord;
+        };
+
+        // Called by base class `CacheEntry`
+        void PrepareQueryQuestion(TxMessage &aQuery, uint16_t aRrType);
+        void UpdateRecordStateAfterQuery(TimeMilli aNow);
+        void DetermineRecordFireTime(void);
+        void ProcessExpiredRecords(TimeMilli aNow);
+        void ReportResultsTo(ResultCallback &aCallback) const;
+        bool ShouldStartInitialQueries(void) const;
+
+        Error Init(Instance &aInstance, Type aType, const char *aHostName);
+        Error Init(Instance &aInstance, Type aType, const AddressResolver &aResolver);
+        void  AppendNameTo(TxMessage &aTxMessage, Section aSection);
+        void  ConstructResult(AddressResult &aResult, Heap::Array<AddressAndTtl> &aAddrArray) const;
+        void  AddNewResponseAddress(const Ip6::Address &aAddress, uint32_t aTtl, bool aCacheFlush);
+
+        AddrCache            *mNext;
+        Heap::String          mName;
+        OwningList<AddrEntry> mCommittedEntries;
+        OwningList<AddrEntry> mNewEntries;
+        bool                  mShouldFlush;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class Ip6AddrCache : public AddrCache, public LinkedListEntry<Ip6AddrCache>, public Heap::Allocatable<Ip6AddrCache>
+    {
+        friend class CacheEntry;
+        friend class LinkedListEntry<Ip6AddrCache>;
+        friend class Heap::Allocatable<Ip6AddrCache>;
+
+    public:
+        void ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+
+    private:
+        Error Init(Instance &aInstance, const char *aHostName);
+        Error Init(Instance &aInstance, const AddressResolver &aResolver);
+        void  PrepareAaaaQuestion(TxMessage &aQuery);
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class Ip4AddrCache : public AddrCache, public LinkedListEntry<Ip4AddrCache>, public Heap::Allocatable<Ip4AddrCache>
+    {
+        friend class CacheEntry;
+        friend class LinkedListEntry<Ip4AddrCache>;
+        friend class Heap::Allocatable<Ip4AddrCache>;
+
+    public:
+        void ProcessResponseRecord(const Message &aMessage, uint16_t aRecordOffset);
+
+    private:
+        Error Init(Instance &aInstance, const char *aHostName);
+        Error Init(Instance &aInstance, const AddressResolver &aResolver);
+        void  PrepareAQuestion(TxMessage &aQuery);
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    template <typename EntryType> OwningList<EntryType> &GetEntryList(void);
     template <typename EntryType, typename ItemInfo>
     Error Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback);
     template <typename EntryType, typename ItemInfo> Error Unregister(const ItemInfo &aItemInfo);
 
+    template <typename CacheType> OwningList<CacheType> &GetCacheList(void);
+    template <typename CacheType, typename BrowserResolverType>
+    Error Start(const BrowserResolverType &aBrowserOrResolver);
+    template <typename CacheType, typename BrowserResolverType>
+    Error Stop(const BrowserResolverType &aBrowserOrResolver);
+
     void InvokeConflictCallback(const char *aName, const char *aServiceType);
     void HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress);
+    void AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServcieType);
+    void AddPassiveIp6AddrCache(const char *aHostName);
+    void RandomizeInitialQueryTxTime(TimeMilli &aQueryTime);
     void RemoveEmptyEntries(void);
     void HandleEntryTimer(void);
     void HandleEntryTask(void);
+    void HandleCacheTimer(void);
+    void HandleCacheTask(void);
 
     static bool     IsKeyForService(const Key &aKey) { return aKey.mServiceType != nullptr; }
     static uint32_t DetermineTtl(uint32_t aTtl, uint32_t aDefaultTtl);
@@ -1077,9 +1731,12 @@ private:
     static void     UpdateRecordLengthInMessage(ResourceRecord &aRecord, Message &aMessage, uint16_t aOffset);
     static void     UpdateCompressOffset(uint16_t &aOffset, uint16_t aNewOffse);
     static bool     QuestionMatches(uint16_t aQuestionRrType, uint16_t aRrType);
+    static bool     RrClassIsInternetOrAny(uint16_t aRrClass);
 
     using EntryTimer = TimerMilliIn<Core, &Core::HandleEntryTimer>;
+    using CacheTimer = TimerMilliIn<Core, &Core::HandleCacheTimer>;
     using EntryTask  = TaskletIn<Core, &Core::HandleEntryTask>;
+    using CacheTask  = TaskletIn<Core, &Core::HandleCacheTask>;
 
     static const char kLocalDomain[];         // "local."
     static const char kUdpServiceLabel[];     // "_udp"
@@ -1099,12 +1756,47 @@ private:
     EntryTask                mEntryTask;
     TxMessageHistory         mTxMessageHistory;
     ConflictCallback         mConflictCallback;
+
+    OwningList<BrowseCache>  mBrowseCacheList;
+    OwningList<SrvCache>     mSrvCacheList;
+    OwningList<TxtCache>     mTxtCacheList;
+    OwningList<Ip6AddrCache> mIp6AddrCacheList;
+    OwningList<Ip4AddrCache> mIp4AddrCacheList;
+    CacheTimer               mCacheTimer;
+    CacheTask                mCacheTask;
+    TimeMilli                mRandomDelaySelectionTime;
+    TimeMilli                mRandomDelayQueryTime;
 };
 
-// Specializations of `Core::GetList()` for `HostEntry` and `ServcieEntry`:
+// Specializations of `Core::GetEntryList()` for `HostEntry` and `ServcieEntry`:
 
-template <> inline OwningList<Core::HostEntry>    &Core::GetList<Core::HostEntry>(void) { return mHostEntries; }
-template <> inline OwningList<Core::ServiceEntry> &Core::GetList<Core::ServiceEntry>(void) { return mServiceEntries; }
+template <> inline OwningList<Core::HostEntry> &Core::GetEntryList<Core::HostEntry>(void) { return mHostEntries; }
+
+template <> inline OwningList<Core::ServiceEntry> &Core::GetEntryList<Core::ServiceEntry>(void)
+{
+    return mServiceEntries;
+}
+
+// Specializations of `Core::GetCacheList()`:
+
+template <> inline OwningList<Core::BrowseCache> &Core::GetCacheList<Core::BrowseCache>(void)
+{
+    return mBrowseCacheList;
+}
+
+template <> inline OwningList<Core::SrvCache> &Core::GetCacheList<Core::SrvCache>(void) { return mSrvCacheList; }
+
+template <> inline OwningList<Core::TxtCache> &Core::GetCacheList<Core::TxtCache>(void) { return mTxtCacheList; }
+
+template <> inline OwningList<Core::Ip6AddrCache> &Core::GetCacheList<Core::Ip6AddrCache>(void)
+{
+    return mIp6AddrCacheList;
+}
+
+template <> inline OwningList<Core::Ip4AddrCache> &Core::GetCacheList<Core::Ip4AddrCache>(void)
+{
+    return mIp4AddrCacheList;
+}
 
 } // namespace Multicast
 } // namespace Dns

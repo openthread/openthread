@@ -64,6 +64,7 @@ public:
      */
     Mdns(otInstance *aInstance, OutputImplementer &aOutputImplementer)
         : Output(aInstance, aOutputImplementer)
+        , mInfraIfIndex(0)
         , mRequestId(0)
         , mWaitingForCallback(false)
     {
@@ -93,6 +94,12 @@ private:
     static constexpr uint16_t kMaxTxtDataSize = 200;
     static constexpr uint16_t kMaxKeyDataSize = 200;
 
+    enum IpAddressType : uint8_t
+    {
+        kIp6Address,
+        kIp4Address,
+    };
+
     struct Buffers // Used to populate `otMdnsService` field
     {
         char        mString[kStringSize];
@@ -109,10 +116,22 @@ private:
     otError ProcessRegisterService(Arg aArgs[]);
     otError ProcessRegisterKey(Arg aArgs[]);
     void    HandleRegisterationDone(otMdnsRequestId aRequestId, otError aError);
+    void    HandleBrowseResult(const otMdnsBrowseResult &aResult);
+    void    HandleSrvResult(const otMdnsSrvResult &aResult);
+    void    HandleTxtResult(const otMdnsTxtResult &aResult);
+    void    HandleAddressResult(const otMdnsAddressResult &aResult, IpAddressType aType);
 
+    static otError ParseStartOrStop(const Arg &aArg, bool &aIsStart);
     static void    HandleRegisterationDone(otInstance *aInstance, otMdnsRequestId aRequestId, otError aError);
+    static void    HandleBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult);
+    static void    HandleSrvResult(otInstance *aInstance, const otMdnsSrvResult *aResult);
+    static void    HandleTxtResult(otInstance *aInstance, const otMdnsTxtResult *aResult);
+    static void    HandleIp6AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult);
+    static void    HandleIp4AddressResult(otInstance *aInstance, const otMdnsAddressResult *aResult);
+
     static otError ParseServiceArgs(Arg aArgs[], otMdnsService &aService, Buffers &aBuffers);
 
+    uint32_t        mInfraIfIndex;
     otMdnsRequestId mRequestId;
     bool            mWaitingForCallback;
 };

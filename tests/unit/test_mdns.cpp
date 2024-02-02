@@ -68,6 +68,8 @@ static constexpr uint16_t kClassMask             = 0x7fff;
 static constexpr uint16_t kStringSize            = 300;
 static constexpr uint16_t kMaxDataSize           = 400;
 static constexpr uint16_t kNumAnnounces          = 3;
+static constexpr uint16_t kNumInitalQueries      = 3;
+static constexpr uint16_t kNumRefreshQueries     = 4;
 static constexpr bool     kCacheFlush            = true;
 static constexpr uint16_t kMdnsPort              = 5353;
 static constexpr uint32_t kInfraIfIndex          = 1;
@@ -123,11 +125,34 @@ struct DnsName
         SuccessOrQuit(Name::ReadName(aMessage, aOffset, mName));
     }
 
+    void CopyFrom(const char *aName)
+    {
+        if (aName == nullptr)
+        {
+            mName[0] = '\0';
+        }
+        else
+        {
+            uint16_t len = StringLength(aName, sizeof(mName));
+
+            VerifyOrQuit(len < sizeof(mName));
+            memcpy(mName, aName, len + 1);
+        }
+    }
+
     const char *AsCString(void) const { return mName; }
     bool        Matches(const char *aName) const { return StringMatch(mName, aName, kStringCaseInsensitiveMatch); }
 };
 
 typedef String<Name::kMaxNameSize> DnsNameString;
+
+struct AddrAndTtl
+{
+    bool operator==(const AddrAndTtl &aOther) const { return (mTtl == aOther.mTtl) && (mAddress == aOther.mAddress); }
+
+    Ip6::Address mAddress;
+    uint32_t     mTtl;
+};
 
 struct DnsQuestion : public Allocatable<DnsQuestion>, public LinkedListEntry<DnsQuestion>
 {
@@ -159,19 +184,24 @@ struct DnsQuestion : public Allocatable<DnsQuestion>, public LinkedListEntry<Dns
 
 struct DnsQuestions : public OwningList<DnsQuestion>
 {
-    bool Contains(const DnsNameString &aFullName, bool aUnicastResponse) const
+    bool Contains(uint16_t aRrType, const DnsNameString &aFullName, bool aUnicastResponse = false) const
     {
         bool               contains = false;
         const DnsQuestion *question = FindMatching(aFullName.AsCString());
 
         VerifyOrExit(question != nullptr);
-        VerifyOrExit(question->mType == ResourceRecord::kTypeAny);
+        VerifyOrExit(question->mType == aRrType);
         VerifyOrExit(question->mClass == ResourceRecord::kClassInternet);
         VerifyOrExit(question->mUnicastResponse == aUnicastResponse);
         contains = true;
 
     exit:
         return contains;
+    }
+
+    bool Contains(const DnsNameString &aFullName, bool aUnicastResponse) const
+    {
+        return Contains(ResourceRecord::kTypeAny, aFullName, aUnicastResponse);
     }
 };
 
@@ -807,6 +837,61 @@ struct DnsMessage : public Allocatable<DnsMessage>, public LinkedListEntry<DnsMe
         VerifyOrQuit(mAnswerRecords.ContainsPtr(subServiceType, serviceName, aIsGoodBye ? kZeroTtl : kNonZeroTtl,
                                                 aService.mTtl));
     }
+
+    void ValidateAsQueryFor(const Core::Browser &aBrowser) const
+    {
+        DnsNameString fullServiceType;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        if (aBrowser.mSubTypeLabel == nullptr)
+        {
+            fullServiceType.Append("%s.local.", aBrowser.mServiceType);
+        }
+        else
+        {
+            fullServiceType.Append("%s._sub.%s.local", aBrowser.mSubTypeLabel, aBrowser.mServiceType);
+        }
+
+        VerifyOrQuit(mQuestions.Contains(ResourceRecord::kTypePtr, fullServiceType));
+    }
+
+    void ValidateAsQueryFor(const Core::SrvResolver &aResolver) const
+    {
+        DnsNameString fullName;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        fullName.Append("%s.%s.local.", aResolver.mServiceInstance, aResolver.mServiceType);
+
+        VerifyOrQuit(mQuestions.Contains(ResourceRecord::kTypeSrv, fullName));
+    }
+
+    void ValidateAsQueryFor(const Core::TxtResolver &aResolver) const
+    {
+        DnsNameString fullName;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        fullName.Append("%s.%s.local.", aResolver.mServiceInstance, aResolver.mServiceType);
+
+        VerifyOrQuit(mQuestions.Contains(ResourceRecord::kTypeTxt, fullName));
+    }
+
+    void ValidateAsQueryFor(const Core::AddressResolver &aResolver) const
+    {
+        DnsNameString fullName;
+
+        VerifyOrQuit(mHeader.GetType() == Header::kTypeQuery);
+        VerifyOrQuit(!mHeader.IsTruncationFlagSet());
+
+        fullName.Append("%s.local.", aResolver.mHostName);
+
+        VerifyOrQuit(mQuestions.Contains(ResourceRecord::kTypeAaaa, fullName));
+    }
 };
 
 struct RegCallback
@@ -1019,6 +1104,198 @@ static void SendQueryForTwo(const char *aName1, uint16_t aRecordType1, const cha
 
     Log("Sending query for %s %s and %s %s", aName1, RecordTypeToString(aRecordType1), aName2,
         RecordTypeToString(aRecordType2));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
+static void SendPtrResponse(const char *aName, const char *aPtrName, uint32_t aTtl, Section aSection)
+{
+    Message          *message;
+    Header            header;
+    PtrRecord         ptr;
+    Core::AddressInfo senderAddrInfo;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+
+    switch (aSection)
+    {
+    case kInAnswerSection:
+        header.SetAnswerCount(1);
+        break;
+    case kInAdditionalSection:
+        header.SetAdditionalRecordCount(1);
+        break;
+    }
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(Name::AppendName(aName, *message));
+
+    ptr.Init();
+    ptr.SetTtl(aTtl);
+    ptr.SetLength(StringLength(aPtrName, Name::kMaxNameSize) + 1);
+    SuccessOrQuit(message->Append(ptr));
+    SuccessOrQuit(Name::AppendName(aPtrName, *message));
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending PTR response for %s with %s, ttl:%lu", aName, aPtrName, ToUlong(aTtl));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
+static void SendSrvResponse(const char *aServiceName,
+                            const char *aHostName,
+                            uint16_t    aPort,
+                            uint16_t    aPriority,
+                            uint16_t    aWeight,
+                            uint32_t    aTtl,
+                            Section     aSection)
+{
+    Message          *message;
+    Header            header;
+    SrvRecord         srv;
+    Core::AddressInfo senderAddrInfo;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+
+    switch (aSection)
+    {
+    case kInAnswerSection:
+        header.SetAnswerCount(1);
+        break;
+    case kInAdditionalSection:
+        header.SetAdditionalRecordCount(1);
+        break;
+    }
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(Name::AppendName(aServiceName, *message));
+
+    srv.Init();
+    srv.SetTtl(aTtl);
+    srv.SetPort(aPort);
+    srv.SetPriority(aPriority);
+    srv.SetWeight(aWeight);
+    srv.SetLength(sizeof(srv) - sizeof(ResourceRecord) + StringLength(aHostName, Name::kMaxNameSize) + 1);
+    SuccessOrQuit(message->Append(srv));
+    SuccessOrQuit(Name::AppendName(aHostName, *message));
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending SRV response for %s, host:%s, port:%u, ttl:%lu", aServiceName, aHostName, aPort, ToUlong(aTtl));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
+static void SendTxtResponse(const char    *aServiceName,
+                            const uint8_t *aTxtData,
+                            uint16_t       aTxtDataLength,
+                            uint32_t       aTtl,
+                            Section        aSection)
+{
+    Message          *message;
+    Header            header;
+    TxtRecord         txt;
+    Core::AddressInfo senderAddrInfo;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+
+    switch (aSection)
+    {
+    case kInAnswerSection:
+        header.SetAnswerCount(1);
+        break;
+    case kInAdditionalSection:
+        header.SetAdditionalRecordCount(1);
+        break;
+    }
+
+    SuccessOrQuit(message->Append(header));
+    SuccessOrQuit(Name::AppendName(aServiceName, *message));
+
+    txt.Init();
+    txt.SetTtl(aTtl);
+    txt.SetLength(aTxtDataLength);
+    SuccessOrQuit(message->Append(txt));
+    SuccessOrQuit(message->AppendBytes(aTxtData, aTxtDataLength));
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
+
+    Log("Sending TXT response for %s, len:%u, ttl:%lu", aServiceName, aTxtDataLength, ToUlong(aTtl));
+
+    otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
+}
+
+static void SendHostAddrResponse(const char *aHostName,
+                                 AddrAndTtl *aAddrAndTtls,
+                                 uint32_t    aNumAddrs,
+                                 bool        aCacheFlush,
+                                 Section     aSection)
+{
+    Message          *message;
+    Header            header;
+    AaaaRecord        record;
+    Core::AddressInfo senderAddrInfo;
+
+    message = sInstance->Get<MessagePool>().Allocate(Message::kTypeOther);
+    VerifyOrQuit(message != nullptr);
+
+    header.Clear();
+    header.SetType(Header::kTypeResponse);
+
+    switch (aSection)
+    {
+    case kInAnswerSection:
+        header.SetAnswerCount(aNumAddrs);
+        break;
+    case kInAdditionalSection:
+        header.SetAdditionalRecordCount(aNumAddrs);
+        break;
+    }
+
+    SuccessOrQuit(message->Append(header));
+
+    record.Init();
+
+    if (aCacheFlush)
+    {
+        record.SetClass(record.GetClass() | kClassCacheFlushFlag);
+    }
+
+    Log("Sending AAAA response for %s numAddrs:%u, cach-flush:%u", aHostName, aNumAddrs, aCacheFlush);
+
+    for (uint16_t index = 0; index < aNumAddrs; index++)
+    {
+        record.SetTtl(aAddrAndTtls[index].mTtl);
+        record.SetAddress(aAddrAndTtls[index].mAddress);
+
+        SuccessOrQuit(Name::AppendName(aHostName, *message));
+        SuccessOrQuit(message->Append(record));
+
+        Log(" - %s, ttl:%lu", aAddrAndTtls[index].mAddress.ToString().AsCString(), ToUlong(aAddrAndTtls[index].mTtl));
+    }
+
+    SuccessOrQuit(AsCoreType(&senderAddrInfo.mAddress).FromString(kDeviceIp6Address));
+    senderAddrInfo.mPort         = kMdnsPort;
+    senderAddrInfo.mInfraIfIndex = 0;
 
     otPlatMdnsHandleReceive(sInstance, message, /* aIsUnicast */ false, &senderAddrInfo);
 }
@@ -1340,10 +1617,11 @@ Core *InitTest(void)
 
 //----------------------------------------------------------------------------------------------------------------------
 
-static const uint8_t kKey1[]     = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
-static const uint8_t kKey2[]     = {0x12, 0x34, 0x56};
-static const uint8_t kTxtData1[] = {3, 'a', '=', '1', 0};
-static const uint8_t kTxtData2[] = {1, 'b', 0};
+static const uint8_t kKey1[]         = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77};
+static const uint8_t kKey2[]         = {0x12, 0x34, 0x56};
+static const uint8_t kTxtData1[]     = {3, 'a', '=', '1', 0};
+static const uint8_t kTxtData2[]     = {1, 'b', 0};
+static const uint8_t kEmptyTxtData[] = {0};
 
 //---------------------------------------------------------------------------------------------------------------------
 
@@ -4204,6 +4482,2328 @@ void TestServiceConflict(void)
     testFreeInstance(sInstance);
 }
 
+//=====================================================================================================================
+// Browser/Resolver tests
+
+struct BrowseCallback : public Allocatable<BrowseCallback>, public LinkedListEntry<BrowseCallback>
+{
+    BrowseCallback *mNext;
+    DnsName         mServiceType;
+    DnsName         mSubTypeLabel;
+    DnsName         mServiceInstance;
+    uint32_t        mTtl;
+    bool            mIsSubType;
+};
+
+struct SrvCallback : public Allocatable<SrvCallback>, public LinkedListEntry<SrvCallback>
+{
+    SrvCallback *mNext;
+    DnsName      mServiceInstance;
+    DnsName      mServiceType;
+    DnsName      mHostName;
+    uint16_t     mPort;
+    uint16_t     mPriority;
+    uint16_t     mWeight;
+    uint32_t     mTtl;
+};
+
+struct TxtCallback : public Allocatable<TxtCallback>, public LinkedListEntry<TxtCallback>
+{
+    static constexpr uint16_t kMaxTxtDataLength = 100;
+
+    template <uint16_t kSize> bool Matches(const uint8_t (&aData)[kSize]) const
+    {
+        return (mTxtDataLength == kSize) && (memcmp(mTxtData, aData, kSize) == 0);
+    }
+
+    TxtCallback *mNext;
+    DnsName      mServiceInstance;
+    DnsName      mServiceType;
+    uint8_t      mTxtData[kMaxTxtDataLength];
+    uint16_t     mTxtDataLength;
+    uint32_t     mTtl;
+};
+
+struct AddrCallback : public Allocatable<AddrCallback>, public LinkedListEntry<AddrCallback>
+{
+    static constexpr uint16_t kMaxNumAddrs = 16;
+
+    bool Contains(const AddrAndTtl &aAddrAndTtl) const
+    {
+        bool contains = false;
+
+        for (uint16_t index = 0; index < mNumAddrs; index++)
+        {
+            if (mAddrAndTtls[index] == aAddrAndTtl)
+            {
+                contains = true;
+                break;
+            }
+        }
+
+        return contains;
+    }
+
+    bool Matches(const AddrAndTtl *aAddrAndTtls, uint16_t aNumAddrs) const
+    {
+        bool matches = true;
+
+        VerifyOrExit(aNumAddrs == mNumAddrs, matches = false);
+
+        for (uint16_t index = 0; index < mNumAddrs; index++)
+        {
+            if (!Contains(aAddrAndTtls[index]))
+            {
+                ExitNow(matches = false);
+            }
+        }
+
+    exit:
+        return matches;
+    }
+
+    AddrCallback *mNext;
+    DnsName       mHostName;
+    AddrAndTtl    mAddrAndTtls[kMaxNumAddrs];
+    uint16_t      mNumAddrs;
+};
+
+OwningList<BrowseCallback> sBrowseCallbacks;
+OwningList<SrvCallback>    sSrvCallbacks;
+OwningList<TxtCallback>    sTxtCallbacks;
+OwningList<AddrCallback>   sAddrCallbacks;
+
+void HandleBrowseResult(otInstance *aInstance, const otMdnsBrowseResult *aResult)
+{
+    BrowseCallback *entry;
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResult != nullptr);
+    VerifyOrQuit(aResult->mServiceType != nullptr);
+    VerifyOrQuit(aResult->mServiceInstance != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    Log("Browse callback: %s (subtype:%s) -> %s ttl:%lu", aResult->mServiceType,
+        aResult->mSubTypeLabel == nullptr ? "(null)" : aResult->mSubTypeLabel, aResult->mServiceInstance,
+        ToUlong(aResult->mTtl));
+
+    entry = BrowseCallback::Allocate();
+    VerifyOrQuit(entry != nullptr);
+
+    entry->mServiceType.CopyFrom(aResult->mServiceType);
+    entry->mSubTypeLabel.CopyFrom(aResult->mSubTypeLabel);
+    entry->mServiceInstance.CopyFrom(aResult->mServiceInstance);
+    entry->mTtl       = aResult->mTtl;
+    entry->mIsSubType = (aResult->mSubTypeLabel != nullptr);
+
+    sBrowseCallbacks.PushAfterTail(*entry);
+}
+
+void HandleBrowseResultAlternate(otInstance *aInstance, const otMdnsBrowseResult *aResult)
+{
+    Log("Alternate browse callback is called");
+    HandleBrowseResult(aInstance, aResult);
+}
+
+void HandleSrvResult(otInstance *aInstance, const otMdnsSrvResult *aResult)
+{
+    SrvCallback *entry;
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResult != nullptr);
+    VerifyOrQuit(aResult->mServiceInstance != nullptr);
+    VerifyOrQuit(aResult->mServiceType != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    if (aResult->mTtl != 0)
+    {
+        VerifyOrQuit(aResult->mHostName != nullptr);
+
+        Log("SRV callback: %s %s, host:%s port:%u, prio:%u, weight:%u, ttl:%lu", aResult->mServiceInstance,
+            aResult->mServiceType, aResult->mHostName, aResult->mPort, aResult->mPriority, aResult->mWeight,
+            ToUlong(aResult->mTtl));
+    }
+    else
+    {
+        Log("SRV callback: %s %s, ttl:%lu", aResult->mServiceInstance, aResult->mServiceType, ToUlong(aResult->mTtl));
+    }
+
+    entry = SrvCallback::Allocate();
+    VerifyOrQuit(entry != nullptr);
+
+    entry->mServiceInstance.CopyFrom(aResult->mServiceInstance);
+    entry->mServiceType.CopyFrom(aResult->mServiceType);
+    entry->mHostName.CopyFrom(aResult->mHostName);
+    entry->mPort     = aResult->mPort;
+    entry->mPriority = aResult->mPriority;
+    entry->mWeight   = aResult->mWeight;
+    entry->mTtl      = aResult->mTtl;
+
+    sSrvCallbacks.PushAfterTail(*entry);
+}
+
+void HandleSrvResultAlternate(otInstance *aInstance, const otMdnsSrvResult *aResult)
+{
+    Log("Alternate SRV callback is called");
+    HandleSrvResult(aInstance, aResult);
+}
+
+void HandleTxtResult(otInstance *aInstance, const otMdnsTxtResult *aResult)
+{
+    TxtCallback *entry;
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResult != nullptr);
+    VerifyOrQuit(aResult->mServiceInstance != nullptr);
+    VerifyOrQuit(aResult->mServiceType != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    VerifyOrQuit(aResult->mTxtDataLength <= TxtCallback::kMaxTxtDataLength);
+
+    if (aResult->mTtl != 0)
+    {
+        VerifyOrQuit(aResult->mTxtData != nullptr);
+
+        Log("TXT callback: %s %s, len:%u, ttl:%lu", aResult->mServiceInstance, aResult->mServiceType,
+            aResult->mTxtDataLength, ToUlong(aResult->mTtl));
+    }
+    else
+    {
+        Log("TXT callback: %s %s, ttl:%lu", aResult->mServiceInstance, aResult->mServiceType, ToUlong(aResult->mTtl));
+    }
+
+    entry = TxtCallback::Allocate();
+    VerifyOrQuit(entry != nullptr);
+
+    entry->mServiceInstance.CopyFrom(aResult->mServiceInstance);
+    entry->mServiceType.CopyFrom(aResult->mServiceType);
+    entry->mTxtDataLength = aResult->mTxtDataLength;
+    memcpy(entry->mTxtData, aResult->mTxtData, aResult->mTxtDataLength);
+    entry->mTtl = aResult->mTtl;
+
+    sTxtCallbacks.PushAfterTail(*entry);
+}
+
+void HandleTxtResultAlternate(otInstance *aInstance, const otMdnsTxtResult *aResult)
+{
+    Log("Alternate TXT callback is called");
+    HandleTxtResult(aInstance, aResult);
+}
+
+void HandleAddrResult(otInstance *aInstance, const otMdnsAddressResult *aResult)
+{
+    AddrCallback *entry;
+
+    VerifyOrQuit(aInstance == sInstance);
+    VerifyOrQuit(aResult != nullptr);
+    VerifyOrQuit(aResult->mHostName != nullptr);
+    VerifyOrQuit(aResult->mInfraIfIndex == kInfraIfIndex);
+
+    VerifyOrQuit(aResult->mAddressesLength <= AddrCallback::kMaxNumAddrs);
+
+    entry = AddrCallback::Allocate();
+    VerifyOrQuit(entry != nullptr);
+
+    entry->mHostName.CopyFrom(aResult->mHostName);
+    entry->mNumAddrs = aResult->mAddressesLength;
+
+    Log("Addr callback: %s, num:%u", aResult->mHostName, aResult->mAddressesLength);
+
+    for (uint16_t index = 0; index < aResult->mAddressesLength; index++)
+    {
+        entry->mAddrAndTtls[index].mAddress = AsCoreType(&aResult->mAddresses[index].mAddress);
+        entry->mAddrAndTtls[index].mTtl     = aResult->mAddresses[index].mTtl;
+
+        Log(" - %s, ttl:%lu", entry->mAddrAndTtls[index].mAddress.ToString().AsCString(),
+            ToUlong(entry->mAddrAndTtls[index].mTtl));
+    }
+
+    sAddrCallbacks.PushAfterTail(*entry);
+}
+
+void HandleAddrResultAlternate(otInstance *aInstance, const otMdnsAddressResult *aResult)
+{
+    Log("Alternate addr callback is called");
+    HandleAddrResult(aInstance, aResult);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+
+void TestBrowser(void)
+{
+    Core                 *mdns = InitTest();
+    Core::Browser         browser;
+    Core::Browser         browser2;
+    const DnsMessage     *dnsMsg;
+    const BrowseCallback *browseCallback;
+    uint16_t              heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestBrowser");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a browser. Validate initial queries.");
+
+    ClearAllBytes(browser);
+
+    browser.mServiceType  = "_srv._udp";
+    browser.mSubTypeLabel = nullptr;
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(20000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response. Validate callback result.");
+
+    sBrowseCallbacks.Clear();
+
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sBrowseCallbacks.IsEmpty());
+    browseCallback = sBrowseCallbacks.GetHead();
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(!browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(browseCallback->mTtl == 120);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send another response. Validate callback result.");
+
+    AdvanceTime(10000);
+
+    sBrowseCallbacks.Clear();
+
+    SendPtrResponse("_srv._udp.local.", "awesome._srv._udp.local.", 500, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sBrowseCallbacks.IsEmpty());
+    browseCallback = sBrowseCallbacks.GetHead();
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(!browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("awesome"));
+    VerifyOrQuit(browseCallback->mTtl == 500);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start another browser for the same service and different callback. Validate results.");
+
+    AdvanceTime(5000);
+
+    browser2.mServiceType  = "_srv._udp";
+    browser2.mSubTypeLabel = nullptr;
+    browser2.mInfraIfIndex = kInfraIfIndex;
+    browser2.mCallback     = HandleBrowseResultAlternate;
+
+    sBrowseCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartBrowser(browser2));
+
+    browseCallback = sBrowseCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(browseCallback != nullptr);
+
+        VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+        VerifyOrQuit(!browseCallback->mIsSubType);
+
+        if (browseCallback->mServiceInstance.Matches("awesome"))
+        {
+            VerifyOrQuit(browseCallback->mTtl == 500);
+        }
+        else if (browseCallback->mServiceInstance.Matches("mysrv"))
+        {
+            VerifyOrQuit(browseCallback->mTtl == 120);
+        }
+        else
+        {
+            VerifyOrQuit(false);
+        }
+
+        browseCallback = browseCallback->GetNext();
+    }
+
+    VerifyOrQuit(browseCallback == nullptr);
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start same browser again and check the returned error.");
+
+    sBrowseCallbacks.Clear();
+
+    VerifyOrQuit(mdns->StartBrowser(browser2) == kErrorAlready);
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a goodbye response. Validate result callback for both browsers.");
+
+    SendPtrResponse("_srv._udp.local.", "awesome._srv._udp.local.", 0, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    browseCallback = sBrowseCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(browseCallback != nullptr);
+
+        VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+        VerifyOrQuit(!browseCallback->mIsSubType);
+        VerifyOrQuit(browseCallback->mServiceInstance.Matches("awesome"));
+        VerifyOrQuit(browseCallback->mTtl == 0);
+
+        browseCallback = browseCallback->GetNext();
+    }
+
+    VerifyOrQuit(browseCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response with no changes, validate that no callback is invoked.");
+
+    sBrowseCallbacks.Clear();
+
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the second browser.");
+
+    sBrowseCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopBrowser(browser2));
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check query is sent at 80 percentage of TTL and then respond to it.");
+
+    // First query should be sent at 80-82% of TTL of 120 second (96.0-98.4 sec).
+    // We wait for 100 second. Note that 5 seconds already passed in the
+    // previous step.
+
+    AdvanceTime(91 * 1000 - 1);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(4 * 1000 + 1);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(browser);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    sDnsMessages.Clear();
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    AdvanceTime(10);
+
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check queries are sent at 80, 85, 90, 95 percentages of TTL.");
+
+    for (uint8_t queryCount = 0; queryCount < kNumRefreshQueries; queryCount++)
+    {
+        if (queryCount == 0)
+        {
+            // First query is expected in 80-82% of TTL, so
+            // 80% of 120 = 96.0, 82% of 120 = 98.4
+
+            AdvanceTime(96 * 1000 - 1);
+        }
+        else
+        {
+            // Next query should happen within 3%-5% of TTL
+            // from previous query. We wait 3% of TTL here.
+            AdvanceTime(3600 - 1);
+        }
+
+        VerifyOrQuit(sDnsMessages.IsEmpty());
+
+        // Wait for 2% of TTL of 120 which is 2.4 sec.
+
+        AdvanceTime(2400 + 1);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        sDnsMessages.Clear();
+        VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout and callback result.");
+
+    AdvanceTime(6 * 1000);
+
+    VerifyOrQuit(!sBrowseCallbacks.IsEmpty());
+
+    browseCallback = sBrowseCallbacks.GetHead();
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(!browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(browseCallback->mTtl == 0);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sBrowseCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    AdvanceTime(200 * 1000);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a new response and make sure result callback is invoked");
+
+    SendPtrResponse("_srv._udp.local.", "great._srv._udp.local.", 200, kInAdditionalSection);
+
+    AdvanceTime(1);
+
+    browseCallback = sBrowseCallbacks.GetHead();
+
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(!browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("great"));
+    VerifyOrQuit(browseCallback->mTtl == 200);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    sBrowseCallbacks.Clear();
+
+    AdvanceTime(150 * 1000);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the browser. There is no active browser for this service. Ensure no queries are sent");
+
+    sBrowseCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopBrowser(browser));
+
+    AdvanceTime(100 * 1000);
+
+    VerifyOrQuit(sBrowseCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start browser again. Validate that initial queries are sent again");
+
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    AdvanceTime(125);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(browser);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response after the first initial query");
+
+    sDnsMessages.Clear();
+
+    SendPtrResponse("_srv._udp.local.", "mysrv._srv._udp.local.", 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    browseCallback = sBrowseCallbacks.GetHead();
+
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(!browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(browseCallback->mTtl == 120);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    sBrowseCallbacks.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Validate initial esquires are still sent and include known-answer");
+
+    for (uint8_t queryCount = 1; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(browser);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sDnsMessages.Clear();
+    AdvanceTime(50 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+void TestSrvResolver(void)
+{
+    Core              *mdns = InitTest();
+    Core::SrvResolver  resolver;
+    Core::SrvResolver  resolver2;
+    const DnsMessage  *dnsMsg;
+    const SrvCallback *srvCallback;
+    uint16_t           heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestSrvResolver");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a SRV resolver. Validate initial queries.");
+
+    ClearAllBytes(resolver);
+
+    resolver.mServiceInstance = "mysrv";
+    resolver.mServiceType     = "_srv._udp";
+    resolver.mInfraIfIndex    = kInfraIfIndex;
+    resolver.mCallback        = HandleSrvResult;
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->StartSrvResolver(resolver));
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response. Validate callback result.");
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 0, 1, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 0);
+    VerifyOrQuit(srvCallback->mWeight == 1);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing host name. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost2.local.", 1234, 0, 1, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost2"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 0);
+    VerifyOrQuit(srvCallback->mWeight == 1);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing port. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost2.local.", 4567, 0, 1, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost2"));
+    VerifyOrQuit(srvCallback->mPort == 4567);
+    VerifyOrQuit(srvCallback->mPriority == 0);
+    VerifyOrQuit(srvCallback->mWeight == 1);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing TTL. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost2.local.", 4567, 0, 1, 0, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches(""));
+    VerifyOrQuit(srvCallback->mPort == 4567);
+    VerifyOrQuit(srvCallback->mPriority == 0);
+    VerifyOrQuit(srvCallback->mWeight == 1);
+    VerifyOrQuit(srvCallback->mTtl == 0);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing a bunch of things. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response with no changes. Validate callback is not invoked.");
+
+    AdvanceTime(1000);
+
+    sSrvCallbacks.Clear();
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start another resolver for the same service and different callback. Validate results.");
+
+    ClearAllBytes(resolver2);
+
+    resolver2.mServiceInstance = "mysrv";
+    resolver2.mServiceType     = "_srv._udp";
+    resolver2.mInfraIfIndex    = kInfraIfIndex;
+    resolver2.mCallback        = HandleSrvResultAlternate;
+
+    sSrvCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartSrvResolver(resolver2));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start same resolver again and check the returned error.");
+
+    sSrvCallbacks.Clear();
+
+    VerifyOrQuit(mdns->StartSrvResolver(resolver2) == kErrorAlready);
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check query is sent at 80 percentage of TTL and then respond to it.");
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    // First query should be sent at 80-82% of TTL of 120 second (96.0-98.4 sec).
+    // We wait for 100 second. Note that 5 seconds already passed in the
+    // previous step.
+
+    AdvanceTime(96 * 1000 - 1);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(4 * 1000 + 1);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    sDnsMessages.Clear();
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+
+    AdvanceTime(10);
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check queries are sent at 80, 85, 90, 95 percentages of TTL.");
+
+    for (uint8_t queryCount = 0; queryCount < kNumRefreshQueries; queryCount++)
+    {
+        if (queryCount == 0)
+        {
+            // First query is expected in 80-82% of TTL, so
+            // 80% of 120 = 96.0, 82% of 120 = 98.4
+
+            AdvanceTime(96 * 1000 - 1);
+        }
+        else
+        {
+            // Next query should happen within 3%-5% of TTL
+            // from previous query. We wait 3% of TTL here.
+            AdvanceTime(3600 - 1);
+        }
+
+        VerifyOrQuit(sDnsMessages.IsEmpty());
+
+        // Wait for 2% of TTL of 120 which is 2.4 sec.
+
+        AdvanceTime(2400 + 1);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        sDnsMessages.Clear();
+        VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout and callback result.");
+
+    AdvanceTime(6 * 1000);
+
+    srvCallback = sSrvCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(srvCallback != nullptr);
+        VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+        VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+        VerifyOrQuit(srvCallback->mTtl == 0);
+        srvCallback = srvCallback->GetNext();
+    }
+
+    VerifyOrQuit(srvCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sSrvCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    AdvanceTime(200 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the second resolver");
+
+    sSrvCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopSrvResolver(resolver2));
+
+    AdvanceTime(100 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a new response and make sure result callback is invoked");
+
+    SendSrvResponse("mysrv._srv._udp.local.", "myhost.local.", 1234, 2, 3, 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the resolver. There is no active resolver. Ensure no queries are sent");
+
+    sSrvCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopSrvResolver(resolver));
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sSrvCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Restart the resolver with more than half of TTL remaining.");
+    Log("Ensure cached entry is reported in the result callback and no queries are sent.");
+
+    SuccessOrQuit(mdns->StartSrvResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop and start the resolver again after less than half TTL remaining.");
+    Log("Ensure cached entry is still reported in the result callback but queries should be sent");
+
+    sSrvCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopSrvResolver(resolver));
+
+    AdvanceTime(25 * 1000);
+
+    SuccessOrQuit(mdns->StartSrvResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(srvCallback->mPort == 1234);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 120);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    sSrvCallbacks.Clear();
+
+    AdvanceTime(15 * 1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        VerifyOrQuit(dnsMsg != nullptr);
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        dnsMsg = dnsMsg->GetNext();
+    }
+
+    VerifyOrQuit(dnsMsg == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+void TestTxtResolver(void)
+{
+    Core              *mdns = InitTest();
+    Core::TxtResolver  resolver;
+    Core::TxtResolver  resolver2;
+    const DnsMessage  *dnsMsg;
+    const TxtCallback *txtCallback;
+    uint16_t           heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestTxtResolver");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a TXT resolver. Validate initial queries.");
+
+    ClearAllBytes(resolver);
+
+    resolver.mServiceInstance = "mysrv";
+    resolver.mServiceType     = "_srv._udp";
+    resolver.mInfraIfIndex    = kInfraIfIndex;
+    resolver.mCallback        = HandleTxtResult;
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->StartTxtResolver(resolver));
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response. Validate callback result.");
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing TXT data. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData2, sizeof(kTxtData2), 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData2));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing TXT data to empty. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kEmptyTxtData, sizeof(kEmptyTxtData), 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kEmptyTxtData));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response changing TTL. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kEmptyTxtData, sizeof(kEmptyTxtData), 500, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kEmptyTxtData));
+    VerifyOrQuit(txtCallback->mTtl == 500);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response with zero TTL. Validate callback result.");
+
+    AdvanceTime(1000);
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kEmptyTxtData, sizeof(kEmptyTxtData), 0, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->mTtl == 0);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response. Validate callback result.");
+
+    sTxtCallbacks.Clear();
+    AdvanceTime(100 * 1000);
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response with no changes. Validate callback is not invoked.");
+
+    AdvanceTime(1000);
+
+    sTxtCallbacks.Clear();
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(100);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start another resolver for the same service and different callback. Validate results.");
+
+    resolver2.mServiceInstance = "mysrv";
+    resolver2.mServiceType     = "_srv._udp";
+    resolver2.mInfraIfIndex    = kInfraIfIndex;
+    resolver2.mCallback        = HandleTxtResultAlternate;
+
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartTxtResolver(resolver2));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start same resolver again and check the returned error.");
+
+    sTxtCallbacks.Clear();
+
+    VerifyOrQuit(mdns->StartTxtResolver(resolver2) == kErrorAlready);
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check query is sent at 80 percentage of TTL and then respond to it.");
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    // First query should be sent at 80-82% of TTL of 120 second (96.0-98.4 sec).
+    // We wait for 100 second. Note that 5 seconds already passed in the
+    // previous step.
+
+    AdvanceTime(96 * 1000 - 1);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(4 * 1000 + 1);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    sDnsMessages.Clear();
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+
+    AdvanceTime(10);
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check queries are sent at 80, 85, 90, 95 percentages of TTL.");
+
+    for (uint8_t queryCount = 0; queryCount < kNumRefreshQueries; queryCount++)
+    {
+        if (queryCount == 0)
+        {
+            // First query is expected in 80-82% of TTL, so
+            // 80% of 120 = 96.0, 82% of 120 = 98.4
+
+            AdvanceTime(96 * 1000 - 1);
+        }
+        else
+        {
+            // Next query should happen within 3%-5% of TTL
+            // from previous query. We wait 3% of TTL here.
+            AdvanceTime(3600 - 1);
+        }
+
+        VerifyOrQuit(sDnsMessages.IsEmpty());
+
+        // Wait for 2% of TTL of 120 which is 2.4 sec.
+
+        AdvanceTime(2400 + 1);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        sDnsMessages.Clear();
+        VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout and callback result.");
+
+    AdvanceTime(6 * 1000);
+
+    txtCallback = sTxtCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(txtCallback != nullptr);
+        VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+        VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+        VerifyOrQuit(txtCallback->mTtl == 0);
+        txtCallback = txtCallback->GetNext();
+    }
+
+    VerifyOrQuit(txtCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sTxtCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    AdvanceTime(200 * 1000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the second resolver");
+
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopTxtResolver(resolver2));
+
+    AdvanceTime(100 * 1000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a new response and make sure result callback is invoked");
+
+    SendTxtResponse("mysrv._srv._udp.local.", kTxtData1, sizeof(kTxtData1), 120, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the resolver. There is no active resolver. Ensure no queries are sent");
+
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopTxtResolver(resolver));
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sTxtCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Restart the resolver with more than half of TTL remaining.");
+    Log("Ensure cached entry is reported in the result callback and no queries are sent.");
+
+    SuccessOrQuit(mdns->StartTxtResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop and start the resolver again after less than half TTL remaining.");
+    Log("Ensure cached entry is still reported in the result callback but queries should be sent");
+
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopTxtResolver(resolver));
+
+    AdvanceTime(25 * 1000);
+
+    SuccessOrQuit(mdns->StartTxtResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("mysrv"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 120);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    sTxtCallbacks.Clear();
+
+    AdvanceTime(15 * 1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        VerifyOrQuit(dnsMsg != nullptr);
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        dnsMsg = dnsMsg->GetNext();
+    }
+
+    VerifyOrQuit(dnsMsg == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+void TestIp6AddrResolver(void)
+{
+    Core                 *mdns = InitTest();
+    Core::AddressResolver resolver;
+    Core::AddressResolver resolver2;
+    AddrAndTtl            addrs[5];
+    const DnsMessage     *dnsMsg;
+    const AddrCallback   *addrCallback;
+    uint16_t              heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestIp6AddrResolver");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start an IPv6 address resolver. Validate initial queries.");
+
+    ClearAllBytes(resolver);
+
+    resolver.mHostName     = "myhost";
+    resolver.mInfraIfIndex = kInfraIfIndex;
+    resolver.mCallback     = HandleAddrResult;
+
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        sDnsMessages.Clear();
+
+        AdvanceTime((queryCount == 0) ? 125 : (1U << (queryCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+    }
+
+    sDnsMessages.Clear();
+
+    AdvanceTime(20 * 1000);
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response. Validate callback result.");
+
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(addrs[0].mAddress.FromString("fd00::1"));
+    addrs[0].mTtl = 120;
+
+    SendHostAddrResponse("myhost.local.", addrs, 1, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 1));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response adding a new address. Validate callback result.");
+
+    SuccessOrQuit(addrs[1].mAddress.FromString("fd00::2"));
+    addrs[1].mTtl = 120;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 2, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 2));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send an updated response adding and removing addresses. Validate callback result.");
+
+    SuccessOrQuit(addrs[0].mAddress.FromString("fd00::2"));
+    SuccessOrQuit(addrs[1].mAddress.FromString("fd00::aa"));
+    SuccessOrQuit(addrs[2].mAddress.FromString("fe80::bb"));
+    addrs[0].mTtl = 120;
+    addrs[1].mTtl = 120;
+    addrs[2].mTtl = 120;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 3, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 3));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response without cache flush adding an address. Validate callback result.");
+
+    SuccessOrQuit(addrs[3].mAddress.FromString("fd00::3"));
+    addrs[3].mTtl = 500;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", &addrs[3], 1, /* aCachFlush */ false, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 4));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response without cache flush with existing addresses. Validate that callback is not called.");
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", &addrs[2], 2, /* aCachFlush */ false, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response without no changes to the list. Validate that callback is not called");
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 4, /* aCachFlush */ true, kInAdditionalSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response without cache flush updating TTL of existing address. Validate callback result.");
+
+    addrs[3].mTtl = 200;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", &addrs[3], 1, /* aCachFlush */ false, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 4));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response without cache flush removing an address (zero TTL). Validate callback result.");
+
+    addrs[3].mTtl = 0;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", &addrs[3], 1, /* aCachFlush */ false, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 3));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response with cache flush removing all addresses. Validate callback result.");
+
+    addrs[0].mTtl = 0;
+
+    AdvanceTime(1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 1, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 0));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a response with addresses with different TTL. Validate callback result");
+
+    SuccessOrQuit(addrs[0].mAddress.FromString("fd00::00"));
+    SuccessOrQuit(addrs[1].mAddress.FromString("fd00::11"));
+    SuccessOrQuit(addrs[2].mAddress.FromString("fe80::22"));
+    SuccessOrQuit(addrs[3].mAddress.FromString("fe80::33"));
+    addrs[0].mTtl = 120;
+    addrs[1].mTtl = 800;
+    addrs[2].mTtl = 2000;
+    addrs[3].mTtl = 8000;
+
+    AdvanceTime(5 * 1000);
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 4, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 4));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start another resolver for the same host and different callback. Validate results.");
+
+    resolver2.mHostName     = "myhost";
+    resolver2.mInfraIfIndex = kInfraIfIndex;
+    resolver2.mCallback     = HandleAddrResultAlternate;
+
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver2));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 4));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start same resolver again and check the returned error.");
+
+    sAddrCallbacks.Clear();
+
+    VerifyOrQuit(mdns->StartIp6AddressResolver(resolver2) == kErrorAlready);
+
+    AdvanceTime(5000);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    sDnsMessages.Clear();
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check query is sent at 80 percentage of TTL and then respond to it.");
+
+    SendHostAddrResponse("myhost.local.", addrs, 4, /* aCachFlush */ true, kInAnswerSection);
+
+    // First query should be sent at 80-82% of TTL of 120 second (96.0-98.4 sec).
+    // We wait for 100 second. Note that 5 seconds already passed in the
+    // previous step.
+
+    AdvanceTime(96 * 1000 - 1);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(4 * 1000 + 1);
+
+    VerifyOrQuit(!sDnsMessages.IsEmpty());
+    dnsMsg = sDnsMessages.GetHead();
+    dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateAsQueryFor(resolver);
+    VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+    sDnsMessages.Clear();
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+
+    AdvanceTime(10);
+
+    SendHostAddrResponse("myhost.local.", addrs, 4, /* aCachFlush */ true, kInAnswerSection);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check queries are sent at 80, 85, 90, 95 percentages of TTL.");
+
+    for (uint8_t queryCount = 0; queryCount < kNumRefreshQueries; queryCount++)
+    {
+        if (queryCount == 0)
+        {
+            // First query is expected in 80-82% of TTL, so
+            // 80% of 120 = 96.0, 82% of 120 = 98.4
+
+            AdvanceTime(96 * 1000 - 1);
+        }
+        else
+        {
+            // Next query should happen within 3%-5% of TTL
+            // from previous query. We wait 3% of TTL here.
+            AdvanceTime(3600 - 1);
+        }
+
+        VerifyOrQuit(sDnsMessages.IsEmpty());
+
+        // Wait for 2% of TTL of 120 which is 2.4 sec.
+
+        AdvanceTime(2400 + 1);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+
+        sDnsMessages.Clear();
+        VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout of first address (TTL 120) and callback result.");
+
+    AdvanceTime(6 * 1000);
+
+    addrCallback = sAddrCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(addrCallback != nullptr);
+        VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+        VerifyOrQuit(addrCallback->Matches(&addrs[1], 3));
+        addrCallback = addrCallback->GetNext();
+    }
+
+    VerifyOrQuit(addrCallback == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Check TTL timeout of next address (TTL 800) and callback result.");
+
+    sAddrCallbacks.Clear();
+
+    AdvanceTime((800 - 120) * 1000);
+
+    addrCallback = sAddrCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(addrCallback != nullptr);
+        VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+        VerifyOrQuit(addrCallback->Matches(&addrs[2], 2));
+        addrCallback = addrCallback->GetNext();
+    }
+
+    VerifyOrQuit(addrCallback == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    sAddrCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    AdvanceTime(200 * 1000);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the second resolver");
+
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver2));
+
+    AdvanceTime(100 * 1000);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Send a new response and make sure result callback is invoked");
+
+    sAddrCallbacks.Clear();
+
+    SendHostAddrResponse("myhost.local.", addrs, 1, /* aCachFlush */ true, kInAnswerSection);
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 1));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop the resolver. There is no active resolver. Ensure no queries are sent");
+
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sAddrCallbacks.IsEmpty());
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Restart the resolver with more than half of TTL remaining.");
+    Log("Ensure cached entry is reported in the result callback and no queries are sent.");
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 1));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    AdvanceTime(20 * 1000);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Stop and start the resolver again after less than half TTL remaining.");
+    Log("Ensure cached entry is still reported in the result callback but queries should be sent");
+
+    sAddrCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StopIp6AddressResolver(resolver));
+
+    AdvanceTime(25 * 1000);
+
+    SuccessOrQuit(mdns->StartIp6AddressResolver(resolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("myhost"));
+    VerifyOrQuit(addrCallback->Matches(addrs, 1));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    sAddrCallbacks.Clear();
+
+    AdvanceTime(15 * 1000);
+
+    dnsMsg = sDnsMessages.GetHead();
+
+    for (uint8_t queryCount = 0; queryCount < kNumInitalQueries; queryCount++)
+    {
+        VerifyOrQuit(dnsMsg != nullptr);
+        dnsMsg->ValidateHeader(kMulticastQuery, /* Q */ 1, /* Ans */ 0, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateAsQueryFor(resolver);
+        dnsMsg = dnsMsg->GetNext();
+    }
+
+    VerifyOrQuit(dnsMsg == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
+void TestPassiveCache(void)
+{
+    static const char *const kSubTypes[] = {"_sub1", "_xyzw"};
+
+    Core                 *mdns = InitTest();
+    Core::Browser         browser;
+    Core::SrvResolver     srvResolver;
+    Core::TxtResolver     txtResolver;
+    Core::AddressResolver addrResolver;
+    Core::Host            host1;
+    Core::Host            host2;
+    Core::Service         service1;
+    Core::Service         service2;
+    Core::Service         service3;
+    Ip6::Address          host1Addresses[3];
+    Ip6::Address          host2Addresses[2];
+    AddrAndTtl            host1AddrTtls[3];
+    AddrAndTtl            host2AddrTtls[2];
+    const DnsMessage     *dnsMsg;
+    BrowseCallback       *browseCallback;
+    SrvCallback          *srvCallback;
+    TxtCallback          *txtCallback;
+    AddrCallback         *addrCallback;
+    uint16_t              heapAllocations;
+
+    Log("-------------------------------------------------------------------------------------------");
+    Log("TestPassiveCache");
+
+    AdvanceTime(1);
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(mdns->SetEnabled(true, kInfraIfIndex));
+
+    SuccessOrQuit(host1Addresses[0].FromString("fd00::1:aaaa"));
+    SuccessOrQuit(host1Addresses[1].FromString("fd00::1:bbbb"));
+    SuccessOrQuit(host1Addresses[2].FromString("fd00::1:cccc"));
+    host1.mHostName        = "host1";
+    host1.mAddresses       = host1Addresses;
+    host1.mAddressesLength = 3;
+    host1.mTtl             = 1500;
+
+    host1AddrTtls[0].mAddress = host1Addresses[0];
+    host1AddrTtls[1].mAddress = host1Addresses[1];
+    host1AddrTtls[2].mAddress = host1Addresses[2];
+    host1AddrTtls[0].mTtl     = host1.mTtl;
+    host1AddrTtls[1].mTtl     = host1.mTtl;
+    host1AddrTtls[2].mTtl     = host1.mTtl;
+
+    SuccessOrQuit(host2Addresses[0].FromString("fd00::2:eeee"));
+    SuccessOrQuit(host2Addresses[1].FromString("fd00::2:ffff"));
+    host2.mHostName        = "host2";
+    host2.mAddresses       = host2Addresses;
+    host2.mAddressesLength = 2;
+    host2.mTtl             = 1500;
+
+    host2AddrTtls[0].mAddress = host2Addresses[0];
+    host2AddrTtls[1].mAddress = host2Addresses[1];
+    host2AddrTtls[0].mTtl     = host2.mTtl;
+    host2AddrTtls[1].mTtl     = host2.mTtl;
+
+    service1.mHostName            = host1.mHostName;
+    service1.mServiceInstance     = "srv1";
+    service1.mServiceType         = "_srv._udp";
+    service1.mSubTypeLabels       = kSubTypes;
+    service1.mSubTypeLabelsLength = 2;
+    service1.mTxtData             = kTxtData1;
+    service1.mTxtDataLength       = sizeof(kTxtData1);
+    service1.mPort                = 1111;
+    service1.mPriority            = 0;
+    service1.mWeight              = 0;
+    service1.mTtl                 = 1500;
+
+    service2.mHostName            = host1.mHostName;
+    service2.mServiceInstance     = "srv2";
+    service2.mServiceType         = "_tst._tcp";
+    service2.mSubTypeLabels       = nullptr;
+    service2.mSubTypeLabelsLength = 0;
+    service2.mTxtData             = nullptr;
+    service2.mTxtDataLength       = 0;
+    service2.mPort                = 2222;
+    service2.mPriority            = 2;
+    service2.mWeight              = 2;
+    service2.mTtl                 = 1500;
+
+    service3.mHostName            = host2.mHostName;
+    service3.mServiceInstance     = "srv3";
+    service3.mServiceType         = "_srv._udp";
+    service3.mSubTypeLabels       = kSubTypes;
+    service3.mSubTypeLabelsLength = 1;
+    service3.mTxtData             = kTxtData2;
+    service3.mTxtDataLength       = sizeof(kTxtData2);
+    service3.mPort                = 3333;
+    service3.mPriority            = 3;
+    service3.mWeight              = 3;
+    service3.mTtl                 = 1500;
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register 2 hosts and 3 services");
+
+    SuccessOrQuit(mdns->RegisterHost(host1, 0, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterHost(host2, 1, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service1, 2, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service2, 3, HandleSuccessCallback));
+    SuccessOrQuit(mdns->RegisterService(service3, 4, HandleSuccessCallback));
+
+    AdvanceTime(10 * 1000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a browser for `_srv._udp`, validate callback result");
+
+    browser.mServiceType  = "_srv._udp";
+    browser.mSubTypeLabel = nullptr;
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    sBrowseCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    AdvanceTime(350);
+
+    browseCallback = sBrowseCallbacks.GetHead();
+
+    for (uint8_t iter = 0; iter < 2; iter++)
+    {
+        VerifyOrQuit(browseCallback != nullptr);
+
+        VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+        VerifyOrQuit(!browseCallback->mIsSubType);
+        VerifyOrQuit(browseCallback->mServiceInstance.Matches("srv1") ||
+                     browseCallback->mServiceInstance.Matches("srv3"));
+        VerifyOrQuit(browseCallback->mTtl == 1500);
+
+        browseCallback = browseCallback->GetNext();
+    }
+
+    VerifyOrQuit(browseCallback == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start SRV and TXT resolvers for the srv1 and for its host name.");
+    Log("Ensure all results are immediately provided from cache.");
+
+    srvResolver.mServiceInstance = "srv1";
+    srvResolver.mServiceType     = "_srv._udp";
+    srvResolver.mInfraIfIndex    = kInfraIfIndex;
+    srvResolver.mCallback        = HandleSrvResult;
+
+    txtResolver.mServiceInstance = "srv1";
+    txtResolver.mServiceType     = "_srv._udp";
+    txtResolver.mInfraIfIndex    = kInfraIfIndex;
+    txtResolver.mCallback        = HandleTxtResult;
+
+    addrResolver.mHostName     = "host1";
+    addrResolver.mInfraIfIndex = kInfraIfIndex;
+    addrResolver.mCallback     = HandleAddrResult;
+
+    sSrvCallbacks.Clear();
+    sTxtCallbacks.Clear();
+    sAddrCallbacks.Clear();
+    sDnsMessages.Clear();
+
+    SuccessOrQuit(mdns->StartSrvResolver(srvResolver));
+    SuccessOrQuit(mdns->StartTxtResolver(txtResolver));
+    SuccessOrQuit(mdns->StartIp6AddressResolver(addrResolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("srv1"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("host1"));
+    VerifyOrQuit(srvCallback->mPort == 1111);
+    VerifyOrQuit(srvCallback->mPriority == 0);
+    VerifyOrQuit(srvCallback->mWeight == 0);
+    VerifyOrQuit(srvCallback->mTtl == 1500);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("srv1"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(txtCallback->Matches(kTxtData1));
+    VerifyOrQuit(txtCallback->mTtl == 1500);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("host1"));
+    VerifyOrQuit(addrCallback->Matches(host1AddrTtls, 3));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    AdvanceTime(400);
+
+    VerifyOrQuit(sDnsMessages.IsEmpty());
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start a browser for sub-type service, validate callback result");
+
+    browser.mServiceType  = "_srv._udp";
+    browser.mSubTypeLabel = "_xyzw";
+    browser.mInfraIfIndex = kInfraIfIndex;
+    browser.mCallback     = HandleBrowseResult;
+
+    sBrowseCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartBrowser(browser));
+
+    AdvanceTime(350);
+
+    browseCallback = sBrowseCallbacks.GetHead();
+    VerifyOrQuit(browseCallback != nullptr);
+
+    VerifyOrQuit(browseCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(browseCallback->mIsSubType);
+    VerifyOrQuit(browseCallback->mSubTypeLabel.Matches("_xyzw"));
+    VerifyOrQuit(browseCallback->mServiceInstance.Matches("srv1"));
+    VerifyOrQuit(browseCallback->mTtl == 1500);
+    VerifyOrQuit(browseCallback->GetNext() == nullptr);
+
+    AdvanceTime(5 * 1000);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start SRV and TXT resolvers for `srv2._tst._tcp` service and validate callback result");
+
+    srvResolver.mServiceInstance = "srv2";
+    srvResolver.mServiceType     = "_tst._tcp";
+    srvResolver.mInfraIfIndex    = kInfraIfIndex;
+    srvResolver.mCallback        = HandleSrvResult;
+
+    txtResolver.mServiceInstance = "srv2";
+    txtResolver.mServiceType     = "_tst._tcp";
+    txtResolver.mInfraIfIndex    = kInfraIfIndex;
+    txtResolver.mCallback        = HandleTxtResult;
+
+    sSrvCallbacks.Clear();
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartSrvResolver(srvResolver));
+    SuccessOrQuit(mdns->StartTxtResolver(txtResolver));
+
+    AdvanceTime(350);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("srv2"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_tst._tcp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("host1"));
+    VerifyOrQuit(srvCallback->mPort == 2222);
+    VerifyOrQuit(srvCallback->mPriority == 2);
+    VerifyOrQuit(srvCallback->mWeight == 2);
+    VerifyOrQuit(srvCallback->mTtl == 1500);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("srv2"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_tst._tcp"));
+    VerifyOrQuit(txtCallback->Matches(kEmptyTxtData));
+    VerifyOrQuit(txtCallback->mTtl == 1500);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Unregister `srv2._tst._tcp` and validate callback results");
+
+    sSrvCallbacks.Clear();
+    sTxtCallbacks.Clear();
+
+    SuccessOrQuit(mdns->UnregisterService(service2));
+
+    AdvanceTime(350);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("srv2"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_tst._tcp"));
+    VerifyOrQuit(srvCallback->mTtl == 0);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    VerifyOrQuit(!sTxtCallbacks.IsEmpty());
+    txtCallback = sTxtCallbacks.GetHead();
+    VerifyOrQuit(txtCallback->mServiceInstance.Matches("srv2"));
+    VerifyOrQuit(txtCallback->mServiceType.Matches("_tst._tcp"));
+    VerifyOrQuit(txtCallback->mTtl == 0);
+    VerifyOrQuit(txtCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start an SRV resolver for `srv3._srv._udp` service and validate callback result");
+
+    srvResolver.mServiceInstance = "srv3";
+    srvResolver.mServiceType     = "_srv._udp";
+    srvResolver.mInfraIfIndex    = kInfraIfIndex;
+    srvResolver.mCallback        = HandleSrvResult;
+
+    sSrvCallbacks.Clear();
+
+    SuccessOrQuit(mdns->StartSrvResolver(srvResolver));
+
+    AdvanceTime(350);
+
+    VerifyOrQuit(!sSrvCallbacks.IsEmpty());
+    srvCallback = sSrvCallbacks.GetHead();
+    VerifyOrQuit(srvCallback->mServiceInstance.Matches("srv3"));
+    VerifyOrQuit(srvCallback->mServiceType.Matches("_srv._udp"));
+    VerifyOrQuit(srvCallback->mHostName.Matches("host2"));
+    VerifyOrQuit(srvCallback->mPort == 3333);
+    VerifyOrQuit(srvCallback->mPriority == 3);
+    VerifyOrQuit(srvCallback->mWeight == 3);
+    VerifyOrQuit(srvCallback->mTtl == 1500);
+    VerifyOrQuit(srvCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Start an address resolver for host2 and validate result is immediately reported from cache");
+
+    addrResolver.mHostName     = "host2";
+    addrResolver.mInfraIfIndex = kInfraIfIndex;
+    addrResolver.mCallback     = HandleAddrResult;
+
+    sAddrCallbacks.Clear();
+    SuccessOrQuit(mdns->StartIp6AddressResolver(addrResolver));
+
+    AdvanceTime(1);
+
+    VerifyOrQuit(!sAddrCallbacks.IsEmpty());
+    addrCallback = sAddrCallbacks.GetHead();
+    VerifyOrQuit(addrCallback->mHostName.Matches("host2"));
+    VerifyOrQuit(addrCallback->Matches(host2AddrTtls, 2));
+    VerifyOrQuit(addrCallback->GetNext() == nullptr);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+    SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of test");
+
+    testFreeInstance(sInstance);
+}
+
 } // namespace Multicast
 } // namespace Dns
 } // namespace ot
@@ -4225,6 +6825,12 @@ int main(void)
     ot::Dns::Multicast::TestTxMessageSizeLimit();
     ot::Dns::Multicast::TestHostConflict();
     ot::Dns::Multicast::TestServiceConflict();
+
+    ot::Dns::Multicast::TestBrowser();
+    ot::Dns::Multicast::TestSrvResolver();
+    ot::Dns::Multicast::TestTxtResolver();
+    ot::Dns::Multicast::TestIp6AddrResolver();
+    ot::Dns::Multicast::TestPassiveCache();
 
     printf("All tests passed\n");
 #else
