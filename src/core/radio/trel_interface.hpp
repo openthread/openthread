@@ -257,8 +257,8 @@ public:
     void ResetCounters(void);
 
 private:
-#if OPENTHREAD_COFNIG_TREL_PEER_TABLE_SIZE != 0
-    static constexpr uint16_t kPeerTableSize = OPENTHREAD_COFNIG_TREL_PEER_TABLE_SIZE;
+#if OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE != 0
+    static constexpr uint16_t kPeerTableSize = OPENTHREAD_CONFIG_TREL_PEER_TABLE_SIZE;
 #else
     static constexpr uint16_t kPeerTableExtraEntries = 32;
     static constexpr uint16_t kPeerTableSize         = Mle::kMaxRouters + Mle::kMaxChildren + kPeerTableExtraEntries;
