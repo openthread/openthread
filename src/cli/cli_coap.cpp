@@ -553,6 +553,7 @@ template <> otError Coap::Process<Cmd("delete")>(Arg aArgs[]) { return ProcessRe
  * Triggers a subscription request which allows the CoAP client to
  * observe the specified resource on the CoAP server for possible changes
  * in its state.
+ * @note This command is available only when `OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE` is set.
  */
 template <> otError Coap::Process<Cmd("observe")>(Arg aArgs[])
 {
