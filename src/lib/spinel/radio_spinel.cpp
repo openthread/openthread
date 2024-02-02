@@ -61,6 +61,7 @@ bool RadioSpinel::sSupportsLogStream =
     false; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
 
 bool RadioSpinel::sSupportsResetToBootloader = false; ///< RCP supports resetting into bootloader mode.
+bool RadioSpinel::sSupportsLogCrashDump      = false; ///< RCP supports logging a crash dump.
 
 otRadioCaps RadioSpinel::sRadioCaps = OT_RADIO_CAPS_NONE;
 
@@ -300,6 +301,11 @@ bool RadioSpinel::IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostA
         if (capability == SPINEL_CAP_RCP_RESET_TO_BOOTLOADER)
         {
             sSupportsResetToBootloader = true;
+        }
+
+        if (capability == SPINEL_CAP_RCP_LOG_CRASH_DUMP)
+        {
+            sSupportsLogCrashDump = true;
         }
 
         if (capability == SPINEL_PROP_RCP_MIN_HOST_API_VERSION)
@@ -2682,6 +2688,15 @@ void RadioSpinel::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool a
         }
 
         start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s:%u", name, value);
+    }
+    break;
+
+    case SPINEL_PROP_RCP_LOG_CRASH_DUMP:
+    {
+        const char *name;
+        name = "log-crash-dump";
+
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s", name);
     }
     break;
 

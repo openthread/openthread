@@ -1294,6 +1294,7 @@ private:
     static bool sIsReady;           ///< NCP ready.
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.
+    static bool sSupportsLogCrashDump;      ///< RCP supports logging a crash dump.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 

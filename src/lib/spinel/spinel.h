@@ -1295,6 +1295,7 @@ enum
     SPINEL_CAP_RCP_API_VERSION          = (SPINEL_CAP_RCP__BEGIN + 0),
     SPINEL_CAP_RCP_MIN_HOST_API_VERSION = (SPINEL_CAP_RCP__BEGIN + 1),
     SPINEL_CAP_RCP_RESET_TO_BOOTLOADER  = (SPINEL_CAP_RCP__BEGIN + 2),
+    SPINEL_CAP_RCP_LOG_CRASH_DUMP       = (SPINEL_CAP_RCP__BEGIN + 3),
     SPINEL_CAP_RCP__END                 = 80,
 
     SPINEL_CAP_OPENTHREAD__BEGIN       = 512,
@@ -4396,6 +4397,18 @@ enum
      *
      */
     SPINEL_PROP_RCP_MIN_HOST_API_VERSION = SPINEL_PROP_RCP__BEGIN + 1,
+
+    /// Crash Dump
+    /** Format: `U` (read-only)
+     *
+     * Required capability: SPINEL_CAP_RADIO and SPINEL_CAP_RCP_LOG_CRASH_DUMP.
+     *
+     * This property gives the crash dump from the RCP.
+     *
+     * Please see "Spinel definition compatibility guideline" section.
+     *
+     */
+    SPINEL_PROP_RCP_LOG_CRASH_DUMP = SPINEL_PROP_RCP__BEGIN + 2,
 
     SPINEL_PROP_RCP__END = 0xFF,
 
