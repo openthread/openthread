@@ -39,6 +39,7 @@
 #include <openthread/diag.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/logging.h>
+#include <openthread/platform/misc.h>
 
 #include "openthread-system.h"
 #include "cli/cli_config.h"
@@ -138,6 +139,10 @@ pseudo_reset:
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     IgnoreError(otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance));
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+    otPlatLogCrashDump();
 #endif
 
     while (!otSysPseudoResetWasRequested())

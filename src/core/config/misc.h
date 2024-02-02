@@ -610,6 +610,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+ *
+ * Define to 1 to enable crash dump logging.
+ *
+ * On platforms that support crash dump logging, this feature will log a crash dump using the OT Debug Log service.
+ *
+ * Logging a crash dump requires the platform to implement the `otPlatLogCrashDump()` function.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE 0
+#endif
+
+/**
  * @}
  *
  */
