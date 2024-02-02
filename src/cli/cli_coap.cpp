@@ -150,6 +150,7 @@ void Coap::PrintPayload(otMessage *aMessage)
  * @endcode
  * @par
  * Cancels an existing observation subscription to a remote resource on the CoAP server.
+ * @note This command is available only when `OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE` is set.
  * @csa{coap observe}
  */
 template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
