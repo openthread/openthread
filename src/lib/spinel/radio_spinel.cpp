@@ -64,6 +64,8 @@ bool RadioSpinel::sSupportsLogStream =
 
 bool RadioSpinel::sSupportsResetToBootloader = false; ///< RCP supports resetting into bootloader mode.
 
+bool RadioSpinel::sSupportsLogCrashDump = false; ///< RCP supports logging a crash dump.
+
 otRadioCaps RadioSpinel::sRadioCaps = OT_RADIO_CAPS_NONE;
 
 RadioSpinel::RadioSpinel(void)
@@ -212,8 +214,9 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
 
     sSupportsLogStream            = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
     aSupportsRcpApiVersion        = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
-    sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
     aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_MIN_HOST_API_VERSION);
+    sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
+    sSupportsLogCrashDump         = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_LOG_CRASH_DUMP);
 }
 
 otError RadioSpinel::CheckRadioCapabilities(void)

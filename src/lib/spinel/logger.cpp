@@ -340,6 +340,15 @@ void Logger::LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx)
     }
     break;
 
+    case SPINEL_PROP_RCP_LOG_CRASH_DUMP:
+    {
+        const char *name;
+        name = "log-crash-dump";
+
+        start += Snprintf(start, static_cast<uint32_t>(end - start), ", %s", name);
+    }
+    break;
+
     case SPINEL_PROP_MAC_ENERGY_SCAN_RESULT:
     case SPINEL_PROP_PHY_CHAN_MAX_POWER:
     {
