@@ -208,6 +208,14 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
 otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance);
 
 /**
+ * Logs a crash dump using OpenThread logging APIs
+ *
+ * @retval OT_ERROR_NONE            Crash dump was logged successfully
+ * @retval OT_ERROR_NOT_CAPABLE     Platform is not capable of logging a crash dump
+ */
+otError otPlatLogCrashDump(void);
+
+/**
  * @}
  *
  */

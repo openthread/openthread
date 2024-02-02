@@ -815,4 +815,6 @@ OT_TOOL_WEAK void otPlatDnssdUnregisterKey(otInstance                 *aInstance
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
+OT_TOOL_WEAK otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
+
 } // extern "C"
