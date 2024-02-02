@@ -149,6 +149,12 @@ void RadioSpinel::Init(SpinelInterface    &aSpinelInterface,
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, sIeeeEui64.m8));
     InitializeCaps(supportsRcpApiVersion, supportsRcpMinHostApiVersion);
 
+    if (sSupportsLogCrashDump)
+    {
+        LogDebg("RCP supports crash dump logging. Requesting crash dump.");
+        SuccessOrExit(error = Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+    }
+
     if (!aSkipRcpCompatibilityCheck)
     {
         SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion, supportsRcpMinHostApiVersion));
@@ -2004,6 +2010,9 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     }
 
     --mRcpFailureCount;
+
+    SuccessOrDie(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+
     LogNote("RCP recovery is done");
 
 exit:
