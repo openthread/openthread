@@ -375,7 +375,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  * parameters.
  * @par
  * Sets the CoAP parameters either to their default values or to the values
- * you specifiy, depending on the syntax chosen.
+ * you specify, depending on the syntax chosen.
  * @sa otCoapSendRequestWithParameters
  * @sa otCoapSendResponseWithParameters
  * @sa otCoapSendRequestBlockWiseWithParameters
@@ -467,25 +467,30 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
 /**
  * @cli coap post
  * @code
- * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con hellothere
  * Done
  * @endcode
  * @code
  * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
  * Done
  * @endcode
- * @cparam coap post @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
+ * @cparam coap post @ca{address} @ca{uri-path} [@ca{type}] @ca{payload}
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *         * `con`: Confirmable
  *         * `non-con`: Non-confirmable (default)
  *         * `block-`: Use this option, followed by the block-wise value,
- *            to send blocks with a random payload. Valid
- *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *            to send blocks with a randomly generated number of bytes
+ *            for the payload. Valid values are:
+ *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *   * `payload`: CoAP payload request. If `type` is "block-",
- *     specify the amount of blocks to send using the `payload` option.
+ *   * `payload`: CoAP payload request, which is either a string or an
+ *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
+ *     then the value of the `payload` parameter must be a string, such as
+ *     `hellothere` in the example. If `the type` is "block-",
+ *     then the value of the`payload` parameter must be an integer that specifies
+ *     the number of blocks to send.
  * @par
  * Creates the specified CoAP resource.
  */
@@ -494,34 +499,39 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
 /**
  * @cli coap put
  * @code
- * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con hellothere
  * Done
  * @endcode
  * @code
  * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
  * Done
  * @endcode
- * @cparam coap put @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
+ * @cparam coap put @ca{address} @ca{uri-path} [@ca{type}] @ca{payload}
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *         * `con`: Confirmable
  *         * `non-con`: Non-confirmable (default)
  *         * `block-`: Use this option, followed by the block-wise value,
- *            to send blocks with a random payload. Valid
- *            values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *            to send blocks with a randomly generated number of bytes
+ *            for the payload. Valid values are:
+ *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *   * `payload`: CoAP payload request. If `type` is "block-",
- *     specify the amount of blocks to send using the `payload` option.
+ *   * `payload`: CoAP payload request, which is either a string or an
+ *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
+ *     then the value of the `payload` parameter must be a string, such as
+ *     `hellothere` in the example. If `the type` is "block-",
+ *     then the value of the`payload` parameter must be an integer that specifies
+ *     the number of blocks to send.
  * @par
- * Modifies the specified CoAP resource.
+ * Creates the specified CoAP resource.
  */
 template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
 /**
  * @cli coap delete
  * @code
- * coap delete fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con payload
+ * coap delete fdde:ad00:beef:0:2780:9423:166c:1aac test-resource con hellothere
  * Done
  * @endcode
  * @cparam coap delete @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
@@ -530,7 +540,7 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  *   * `type`:
  *       * `con`: Confirmable
  *       * `non-con`: Non-confirmable (default)
- *   * `payload`: CoAP payload request.
+ *   * `payload`: The CoAP payload string to delete.
  *  @par
  *  Deletes the specified CoAP resource.
  */
