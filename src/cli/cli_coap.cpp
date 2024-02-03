@@ -474,7 +474,7 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  * coap post fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
  * Done
  * @endcode
- * @cparam coap post @ca{address} @ca{uri-path} [@ca{type}] @ca{payload}
+ * @cparam coap post @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
@@ -485,10 +485,12 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *            for the payload. Valid values are:
  *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *   * `payload`: CoAP payload request, which is either a string or an
+ *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
- *     then the value of the `payload` parameter must be a string, such as
- *     `hellothere` in the example. If `the type` is "block-",
+ *     then the `payload` parameter is optional. If you leave out the
+ *     `payload` parameter, an empty payload is sent. However, If you use the
+ *     `payload` parameter, then its value must be a string, such as
+ *     `hellothere` in the example shown. If `the type` is "block-",
  *     then the value of the`payload` parameter must be an integer that specifies
  *     the number of blocks to send.
  * @par
@@ -506,7 +508,7 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  * coap put fdde:ad00:beef:0:2780:9423:166c:1aac test-resource block-1024 10
  * Done
  * @endcode
- * @cparam coap put @ca{address} @ca{uri-path} [@ca{type}] @ca{payload}
+ * @cparam coap put @ca{address} @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `address`: IPv6 address of the CoAP server.
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
@@ -517,10 +519,12 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *            for the payload. Valid values are:
  *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *   * `payload`: CoAP payload request, which is either a string or an
+ *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
- *     then the value of the `payload` parameter must be a string, such as
- *     `hellothere` in the example. If `the type` is "block-",
+ *     then the `payload` parameter is optional. If you leave out the
+ *     `payload` parameter, an empty payload is sent. However, If you use the
+ *     `payload` parameter, then its value must be a string, such as
+ *     `hellothere` in the example shown. If `the type` is "block-",
  *     then the value of the`payload` parameter must be an integer that specifies
  *     the number of blocks to send.
  * @par
@@ -540,7 +544,8 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  *   * `type`:
  *       * `con`: Confirmable
  *       * `non-con`: Non-confirmable (default)
- *   * `payload`: The CoAP payload string to delete.
+ *   * `payload`: The CoAP payload string to delete. In the example shown, the
+ *     string is `hellothere`.
  *  @par
  *  Deletes the specified CoAP resource.
  */
