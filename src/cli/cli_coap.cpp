@@ -487,12 +487,12 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *            `block-256`, `block-512`, or `block-1024`.
  *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
- *     then the `payload` parameter is optional. If you leave out the
+ *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
- *     `payload` parameter, then its value must be a string, such as
- *     `hellothere` in the example shown. If `the type` is "block-",
- *     then the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send.
+ *     `payload` parameter, its value must be a string, such as
+ *     `hellothere` in the example shown below. If `the type` is `block-`,
+ *     the value of the`payload` parameter must be an integer that specifies
+ *     the number of blocks to send. This integer is 10 in the example shown below.
  * @par
  * Creates the specified CoAP resource.
  */
@@ -521,14 +521,14 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *            `block-256`, `block-512`, or `block-1024`.
  *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
- *     then the `payload` parameter is optional. If you leave out the
+ *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
- *     `payload` parameter, then its value must be a string, such as
- *     `hellothere` in the example shown. If `the type` is "block-",
- *     then the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send.
+ *     `payload` parameter, its value must be a string, such as
+ *     `hellothere` in the example shown below. If `the type` is `block-`,
+ *     the value of the`payload` parameter must be an integer that specifies
+ *     the number of blocks to send. This integer is 10 in the example shown below.
  * @par
- * Creates the specified CoAP resource.
+ * Modifies the specified CoAP resource.
  */
 template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
