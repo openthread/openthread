@@ -64,7 +64,9 @@ BleSecure::BleSecure(Instance &aInstance)
 
 Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceiveHandler, bool aTlvMode, void *aContext)
 {
-    Error error = kErrorNone;
+    Error    error             = kErrorNone;
+    uint16_t advertisementLen  = 0;
+    uint8_t *advertisementData = nullptr;
 
     VerifyOrExit(mBleState == kStopped, error = kErrorAlready);
 
@@ -74,7 +76,12 @@ Error BleSecure::Start(ConnectCallback aConnectHandler, ReceiveCallback aReceive
     mMtuSize = kInitialMtuSize;
 
     SuccessOrExit(error = otPlatBleEnable(&GetInstance()));
+
+    advertisementData = mTcatAgent.GetAdvertisementData(advertisementLen);
+    VerifyOrExit(advertisementData != nullptr, error = kErrorFailed);
+    SuccessOrExit(error = otPlatBleGapAdvSetData(&GetInstance(), advertisementData, advertisementLen));
     SuccessOrExit(error = otPlatBleGapAdvStart(&GetInstance(), OT_BLE_ADV_INTERVAL_DEFAULT));
+
     SuccessOrExit(error = mTls.Open(&BleSecure::HandleTlsReceive, &BleSecure::HandleTlsConnected, this));
     SuccessOrExit(error = mTls.Bind(HandleTransport, this));
 
@@ -86,10 +93,9 @@ exit:
     return error;
 }
 
-Error BleSecure::TcatStart(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo,
-                           MeshCoP::TcatAgent::JoinCallback      aJoinHandler)
+Error BleSecure::TcatStart(MeshCoP::TcatAgent::JoinCallback aJoinHandler)
 {
-    return mTcatAgent.Start(aVendorInfo, mReceiveCallback.GetHandler(), aJoinHandler, mReceiveCallback.GetContext());
+    return mTcatAgent.Start(mReceiveCallback.GetHandler(), aJoinHandler, mReceiveCallback.GetContext());
 }
 
 void BleSecure::Stop(void)

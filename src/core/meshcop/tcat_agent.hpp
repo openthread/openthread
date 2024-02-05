@@ -154,10 +154,10 @@ public:
     };
 
     /**
-     * TCAT TLV Types.
+     * TCAT Command TLV Types.
      *
      */
-    enum TlvType : uint8_t
+    enum CommandTlvType : uint8_t
     {
         // Command Class General
         kTlvResponseWithStatus        = 1,  ///< TCAT response with status value TLV
@@ -257,6 +257,19 @@ public:
     };
 
     /**
+     * Represents Device ID type.
+     *
+     */
+    enum TcatDeviceIdType : uint8_t
+    {
+        kTcatDeviceIdEmpty         = OT_TCAT_DEVICE_ID_EMPTY,         ///< Vendor device ID type not set
+        kTcatDeviceIdOui24         = OT_TCAT_DEVICE_ID_OUI24,         ///< Vendor device ID type OUI24
+        kTcatDeviceIdOui36         = OT_TCAT_DEVICE_ID_OUI36,         ///< Vendor device ID type OUI36
+        kTcatDeviceIdDiscriminator = OT_TCAT_DEVICE_ID_DISCRIMINATOR, ///< Vendor device ID type Discriminator
+        kTcatDeviceIdIanaPen       = OT_TCAT_DEVICE_ID_IANAPEN,       ///< Vendor device ID type IANA PEN
+    };
+
+    /**
      * Initializes the Joiner object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -267,8 +280,6 @@ public:
     /**
      * Enables the TCAT protocol.
      *
-     * @param[in] aVendorInfo               A pointer to the Vendor Information (must remain valid after the method
-     * call, may be NULL).
      * @param[in] aAppDataReceiveCallback   A pointer to a function that is called when the user data is received.
      * @param[in] aHandler                  A pointer to a function that is called when the join operation completes.
      * @param[in] aContext                  A context pointer.
@@ -277,16 +288,21 @@ public:
      * @retval kErrorInvalidArgs    The aVendorInfo is invalid.
      *
      */
-    Error Start(const VendorInfo      &aVendorInfo,
-                AppDataReceiveCallback aAppDataReceiveCallback,
-                JoinCallback           aHandler,
-                void                  *aContext);
+    Error Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext);
 
     /**
      * Stops the TCAT protocol.
      *
      */
     void Stop(void);
+
+    /**
+     * Set the TCAT Vendor Info object
+     *
+     * @param[in] aVendorInfo A pointer to the Vendor Information (must remain valid after the method call).
+     *
+     */
+    Error SetTcatVendorInfo(const VendorInfo &aVendorInfo);
 
     /**
      * Indicates whether or not the TCAT agent is enabled.
@@ -316,6 +332,16 @@ public:
      *
      */
     bool IsCommandClassAuthorized(CommandClass aCommandClass) const;
+
+    /**
+     * Indicates whether or not a command class is authorized.
+     *
+     * @param[out] aLen Advertisement length.
+     *
+     * @retval Pointer to buffer containing formatted data nullptr on error.
+     *
+     */
+    uint8_t *GetAdvertisementData(uint16_t &aLen);
 
 private:
     Error Connected(MeshCoP::SecureTransport &aTlsContext);
@@ -351,7 +377,10 @@ private:
     ExtendedPanId                    mCommissionerExtendedPanId;
     char                             mCurrentServiceName[OT_TCAT_MAX_SERVICE_NAME_LENGTH + 1];
     State                            mState;
-    bool                             mAlreadyCommissioned : 1;
+    uint8_t                          mAdvertisement[OT_TCAT_ADVERTISEMENT_MAX_LEN];
+    char                             mVendorIdentifier[6];
+    uint8_t                          mVendorIdentifierType;
+    uint8_t                          mAdvertisementLength;
     bool                             mCommissionerHasNetworkName : 1;
     bool                             mCommissionerHasDomainName : 1;
     bool                             mCommissionerHasExtendedPanId : 1;
@@ -364,8 +393,206 @@ private:
 DefineCoreType(otTcatVendorInfo, MeshCoP::TcatAgent::VendorInfo);
 
 DefineMapEnum(otTcatApplicationProtocol, MeshCoP::TcatAgent::TcatApplicationProtocol);
+DefineMapEnum(otTcatDeviceIdType, MeshCoP::TcatAgent::TcatDeviceIdType);
 
-typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> ResponseWithStatusTlv;
+// Command class TLVs
+typedef UintTlvInfo<MeshCoP::TcatAgent::kTlvResponseWithStatus, uint8_t> ResponseWithStatusCommandTlv;
+
+/**
+ * Represent Device Type and Status
+ *
+ */
+struct DeviceTypeAndStatus
+{
+    uint8_t mRsv : 3;
+    bool    mIsCommisionned : 1;
+    bool    mThreadNetworkActive : 1;
+    bool    mIsBorderRouter : 1;
+    bool    mRxOnWhenIdle : 1;
+    bool    mDeviceType : 1;
+};
+
+// Advertisement TLVs
+
+OT_TOOL_PACKED_BEGIN
+class AdvertisementTlv : public ot::Tlv
+{
+public:
+    /**
+     * TCAT Advertisement TLV Types.
+     *
+     */
+    enum Type : uint8_t
+    {
+        kTlvVendorOui24         = 1, ///< TCAT vendor OUI 24
+        kTlvVendorOui36         = 2, ///< TCAT vendor OUI 36
+        kTlvDeviceDiscriminator = 3, ///< TCAT random vendor discriminator
+        kTlvDeviceTypeAndStatus = 4, ///< TCAT Thread device type and status
+        kTlvBleLinkCapabilities = 5, ///< TCAT BLE link capabilities of device
+        kTlvVendorIanaPen       = 6, ///< TCAT Vendor IANA PEN
+    };
+
+    /**
+     * Max length of Advertisement TLVs.
+     *
+     */
+    static constexpr uint8_t kTlvVendorOui24Length         = 3;
+    static constexpr uint8_t kTlvVendorOui36Length         = 5;
+    static constexpr uint8_t kTlvDeviceDiscriminatorLength = 5;
+    static constexpr uint8_t kTlvVendorIanaPenLength       = 4;
+
+    /**
+     * Returns the Type value.
+     *
+     * @returns The Type value.
+     *
+     */
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
+
+    /**
+     * Sets the Type value.
+     *
+     * @param[in]  aType  The Type value.
+     *
+     */
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
+
+    /**
+     * Returns a pointer to the next TLV.
+     *
+     * @returns A pointer to the next TLV.
+     *
+     */
+    Tlv *GetNext(void) { return As<AdvertisementTlv>(ot::Tlv::GetNext()); }
+
+    /**
+     * Returns a pointer to the next TLV.
+     *
+     * @returns A pointer to the next TLV.
+     *
+     */
+    const Tlv *GetNext(void) const { return As<AdvertisementTlv>(ot::Tlv::GetNext()); }
+
+    /**
+     * Indicates whether a TLV appears to be well-formed.
+     *
+     * @param[in]  aTlv  A reference to the TLV.
+     *
+     * @returns TRUE if the TLV appears to be well-formed, FALSE otherwise.
+     *
+     */
+    static bool IsValid(const AdvertisementTlv &aTlv);
+
+} OT_TOOL_PACKED_END;
+
+typedef StringTlvInfo<AdvertisementTlv::kTlvVendorOui24, AdvertisementTlv::kTlvVendorOui24Length> VendorOuiTlv24;
+typedef StringTlvInfo<AdvertisementTlv::kTlvVendorOui36, AdvertisementTlv::kTlvVendorOui36Length> VendorOuiTlv36;
+typedef StringTlvInfo<AdvertisementTlv::kTlvDeviceDiscriminator, AdvertisementTlv::kTlvDeviceDiscriminatorLength>
+    DeviceDiscriminatorTlv;
+
+/**
+ * Implements Device Type And Status TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class DeviceTypeAndStatusTlv : public AdvertisementTlv,
+                               public UintTlvInfo<AdvertisementTlv::kTlvDeviceTypeAndStatus, uint8_t>
+{
+public:
+    /**
+     * Initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kTlvDeviceTypeAndStatus);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * Indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * Returns the Device Type and Status.
+     *
+     * @returns  The Device Type and Status.
+     *
+     */
+    DeviceTypeAndStatus GetDeviceTypeAndStatus(void) const { return *(DeviceTypeAndStatus *)&mFlags; }
+
+    /**
+     * Sets the Device Type and Status.
+     *
+     * @param[in]  aDeviceTypeAndStatus  The Device type and status which will be set.
+     *
+     */
+    void SeyDeviceTypeAndStatus(const DeviceTypeAndStatus &aDeviceTypeAndStatus)
+    {
+        mFlags = *(uint8_t *)&aDeviceTypeAndStatus;
+    }
+
+private:
+    uint8_t mFlags;
+} OT_TOOL_PACKED_END;
+
+/**
+ * Implements BLE Link Capabilities TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class BleLinkCapabilitiesTlv : public AdvertisementTlv,
+                               public UintTlvInfo<AdvertisementTlv::kTlvBleLinkCapabilities, uint8_t>
+{
+public:
+    /**
+     * Initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kTlvBleLinkCapabilities);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * Indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * Returns the BLE Link Capabilities.
+     *
+     * @returns  The Device Type and Status.
+     *
+     */
+    otBleLinkCapabilities GetBleLinkCapabilities(void) const { return *(otBleLinkCapabilities *)&mFlags; }
+
+    /**
+     * Sets the Device Type and Status.
+     *
+     * @param[in]  aDeviceTypeAndStatus  The Security Policy which will be set.
+     *
+     */
+    void SetBleLinkCapabilities(const otBleLinkCapabilities &aBleLinkCapabilities)
+    {
+        mFlags = *(uint8_t *)&aBleLinkCapabilities;
+    }
+
+private:
+    uint8_t mFlags;
+} OT_TOOL_PACKED_END;
+
+typedef StringTlvInfo<AdvertisementTlv::kTlvVendorIanaPen, AdvertisementTlv::kTlvVendorIanaPenLength> VendorIanaPenTlv;
 
 } // namespace ot
 
