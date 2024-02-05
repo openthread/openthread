@@ -516,6 +516,7 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *            for the payload. Valid values are:
  *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
+ *            @note NOTE
  *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
  *     the `payload` parameter is optional. If you leave out the
