@@ -263,7 +263,7 @@ template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return Proces
 /**
  * @cli coaps delete
  * @code
- * coaps delete test-resource con payload
+ * coaps delete test-resource con hellothere
  * Done
  * @endcode
  * @cparam coaps delete @ca{uri-path} [@ca{type}] [@ca{payload}]
@@ -273,7 +273,7 @@ template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return Proces
  *       * `non-con`: Non-confirmable (default)
  *   * `payload`: CoAPs payload request.
  * @par
- * Deletes the specified CoAPs resource.
+ * The CoAP payload string to delete. 
  */
 template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {
