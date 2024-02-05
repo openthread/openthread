@@ -486,10 +486,10 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
  *     `payload` parameter, its value must be a string, such as
- *     `hellothere`.  If `the `type` is `block-`,
+ *     `hellothere`.  If the `type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send.
- * The `block-` type requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
+ *     the number of blocks to send. The `block-` type requires
+ *     `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Creates the specified CoAP resource.
  */
@@ -521,10 +521,10 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
  *     `payload` parameter, its value must be a string, such as
- *     `hellothere`. If `the `type` is `block-`,
+ *     `hellothere`. If the `type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send.
- * The `block-` type requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
+ *     the number of blocks to send. The `block-` type requires
+ *     `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Modifies the specified CoAP resource.
  */
