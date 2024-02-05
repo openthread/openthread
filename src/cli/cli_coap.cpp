@@ -376,10 +376,6 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  * @par
  * Sets the CoAP parameters either to their default values or to the values
  * you specify, depending on the syntax chosen.
- * @sa otCoapSendRequestWithParameters
- * @sa otCoapSendResponseWithParameters
- * @sa otCoapSendRequestBlockWiseWithParameters
- * @sa otCoapSendResponseBlockWiseWithParameters
  */
 template <> otError Coap::Process<Cmd("parameters")>(Arg aArgs[])
 {
@@ -490,9 +486,9 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
  *     `payload` parameter, its value must be a string, such as
- *     `hellothere` in the example shown below. If `the type` is `block-`,
+ *     `hellothere`.  If `the type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send. This integer is 10 in the example shown below.
+ *     the number of blocks to send.
  * @par
  * Creates the specified CoAP resource.
  */
@@ -524,9 +520,9 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *     the `payload` parameter is optional. If you leave out the
  *     `payload` parameter, an empty payload is sent. However, If you use the
  *     `payload` parameter, its value must be a string, such as
- *     `hellothere` in the example shown below. If `the type` is `block-`,
+ *     `hellothere`. If `the type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
- *     the number of blocks to send. This integer is 10 in the example shown below.
+ *     the number of blocks to send.
  * @par
  * Modifies the specified CoAP resource.
  */
@@ -544,7 +540,7 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  *   * `type`:
  *       * `con`: Confirmable
  *       * `non-con`: Non-confirmable (default)
- *   * `payload`: The CoAP payload string to delete. In the example shown, the
+ *   * `payload`: The CoAP payload string to delete. In the example, the
  *     string is `hellothere`.
  *  @par
  *  Deletes the specified CoAP resource.
