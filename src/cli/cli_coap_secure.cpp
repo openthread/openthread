@@ -256,8 +256,66 @@ exit:
  */
 template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
+/**
+ * @cli coaps post
+ * @code
+ * coaps post test-resource con hellothere
+ * Done
+ * @endcode
+ * @code
+ * coaps post test-resource block-1024 10
+ * Done
+ * @endcode
+ * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]] 
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *       * `con`: Confirmable
+ *       * `non-con`: Non-confirmable (default)
+ *       * `block-`: Use this option, followed by the block-wise value,
+ *         to send blocks with a randomly generated number of bytes for the payload.
+ *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *         `block-256`, `block-512`, or `block-1024`.
+ *	 * `payload`:  CoAPs payload request, which if used is either a string
+ *	   or an integer, depending on the type. If the type is `con` or `non-con`,
+ *	   the payload parameter is optional. If you leave out the payload
+ *	   parameter, an empty payload is sent. However, If you use the payload
+ *	   parameter, its value must be a string, such as `hellothere`. If the
+ *	   type is `block-`, the value of the payload parameter must be an
+ *	   integer that specifies the number of blocks to send.
+ * @par
+ * Creates the specified CoAPs resource.
+ */
 template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
+/**
+ * @cli coaps put
+ * @code
+ * coaps put test-resource con hellothere
+ * Done
+ * @endcode
+ * @code
+ * coaps put test-resource block-1024 10
+ * Done
+ * @endcode
+ * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]] 
+ *   * `uri-path`: URI path of the resource.
+ *   * `type`:
+ *       * `con`: Confirmable
+ *       * `non-con`: Non-confirmable (default)
+ *       * `block-`: Use this option, followed by the block-wise value,
+ *         to send blocks with a randomly generated number of bytes for the payload.
+ *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
+ *         `block-256`, `block-512`, or `block-1024`.
+ *	 * `payload`:  CoAPs payload request, which if used is either a string
+ *	   or an integer, depending on the type. If the type is `con` or `non-con`,
+ *	   the payload parameter is optional. If you leave out the payload
+ *	   parameter, an empty payload is sent. However, If you use the payload
+ *	   parameter, its value must be a string, such as `hellothere`. If the
+ *	   type is `block-`, the value of the payload parameter must be an
+ *	   integer that specifies the number of blocks to send.
+ * @par
+ * Modifies the specified CoAPs resource.
+ */
 template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
 /**
