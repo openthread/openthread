@@ -1309,6 +1309,7 @@ const Address *Ip6::SelectSourceAddress(const Address &aDestination) const
 
     for (const Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
+        bool    newAddrIsPreferred = false;
         uint8_t matchLen;
         uint8_t overrideScope;
 
@@ -1339,71 +1340,46 @@ const Address *Ip6::SelectSourceAddress(const Address &aDestination) const
 
         if (bestAddr == nullptr)
         {
-            bestAddr     = &addr;
-            bestMatchLen = matchLen;
+            newAddrIsPreferred = true;
         }
         else if (addr.GetScope() < bestAddr->GetScope())
         {
             // Rule 2: Prefer appropriate scope
-            if (addr.GetScope() >= overrideScope)
-            {
-                bestAddr     = &addr;
-                bestMatchLen = matchLen;
-            }
-            else
-            {
-                continue;
-            }
+            newAddrIsPreferred = (addr.GetScope() >= overrideScope);
         }
         else if (addr.GetScope() > bestAddr->GetScope())
         {
-            if (bestAddr->GetScope() < overrideScope)
-            {
-                bestAddr     = &addr;
-                bestMatchLen = matchLen;
-            }
-            else
-            {
-                continue;
-            }
+            newAddrIsPreferred = (bestAddr->GetScope() < overrideScope);
         }
         else if (addr.mPreferred != bestAddr->mPreferred)
         {
             // Rule 3: Avoid deprecated addresses
-
-            if (addr.mPreferred)
-            {
-                bestAddr     = &addr;
-                bestMatchLen = matchLen;
-            }
-            else
-            {
-                continue;
-            }
+            newAddrIsPreferred = addr.mPreferred;
         }
         else if (matchLen > bestMatchLen)
         {
             // Rule 6: Prefer matching label
             // Rule 7: Prefer public address
             // Rule 8: Use longest prefix matching
-            bestAddr     = &addr;
-            bestMatchLen = matchLen;
+
+            newAddrIsPreferred = true;
         }
         else if ((matchLen == bestMatchLen) && (destIsRloc == Get<Mle::Mle>().IsRoutingLocator(addr.GetAddress())))
         {
             // Additional rule: Prefer RLOC source for RLOC destination, EID source for anything else
-            bestAddr     = &addr;
-            bestMatchLen = matchLen;
-        }
-        else
-        {
-            continue;
+            newAddrIsPreferred = true;
         }
 
-        // infer destination scope based on prefix match
-        if (bestMatchLen >= bestAddr->mPrefixLength)
+        if (newAddrIsPreferred)
         {
-            destScope = bestAddr->GetScope();
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
+
+            // Infer destination scope based on prefix match
+            if (bestMatchLen >= bestAddr->mPrefixLength)
+            {
+                destScope = bestAddr->GetScope();
+            }
         }
     }
 
