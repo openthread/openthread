@@ -331,7 +331,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
 }
 
 /**
- * @cli coap parameters (get,set)
+ * @cli coap parameters(get,set)
  * @code
  * coap parameters request
  * Transmission parameters for request:
@@ -361,7 +361,7 @@ template <> otError Coap::Process<Cmd("stop")>(Arg aArgs[])
  *       * `ack_random_factor_numerator`: 3
  *       * `ack_random_factor_denominator`: 2
  *       * `max_retransmit`: 4
- *   * `ack_timeout`: The `ACK_TIMEOUT` (0~UINT32_MAX) in milliseconds.
+ *   * `ack_timeout`: The `ACK_TIMEOUT` (0-UINT32_MAX) in milliseconds.
        Refer to RFC7252.
  *   * `ack_random_factor_numerator`:
        The `ACK_RANDOM_FACTOR` numerator, with possible values
@@ -540,8 +540,7 @@ template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessReque
  *   * `type`:
  *       * `con`: Confirmable
  *       * `non-con`: Non-confirmable (default)
- *   * `payload`: The CoAP payload string to delete. In the example, the
- *     string is `hellothere`.
+ *   * `payload`: The CoAP payload string to delete. For example, `hellothere`.
  *  @par
  *  Deletes the specified CoAP resource.
  */
