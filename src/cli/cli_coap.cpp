@@ -481,7 +481,6 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *            for the payload. Valid values are:
  *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *            @note `block-` requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
  *     the `payload` parameter is optional. If you leave out the
@@ -490,6 +489,7 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *     `hellothere`.  If `the `type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
  *     the number of blocks to send.
+ *   @note `block-` requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Creates the specified CoAP resource.
  */
@@ -516,7 +516,6 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *            for the payload. Valid values are:
  *            `block-16`, `block-32`, `block-64`, `block-128`,
  *            `block-256`, `block-512`, or `block-1024`.
- *            @note `block-` requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  *   * `payload`: CoAP payload request, which if used is either a string or an
  *     integer, depending on the `type`. If the `type` is `con` or `non-con`,
  *     the `payload` parameter is optional. If you leave out the
@@ -525,6 +524,7 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *     `hellothere`. If `the `type` is `block-`,
  *     the value of the`payload` parameter must be an integer that specifies
  *     the number of blocks to send.
+ *   @note `block-` requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Modifies the specified CoAP resource.
  */
