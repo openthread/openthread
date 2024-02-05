@@ -1330,17 +1330,17 @@ const Address *Ip6::SelectSourceAddress(const Address &aDestination) const
             overrideScope = destScope;
         }
 
-        if (bestAddr == nullptr)
-        {
-            // Rule 0: Prefer any address
-            bestAddr     = &addr;
-            bestMatchLen = matchLen;
-        }
-        else if (addr.GetAddress() == aDestination)
+        if (addr.GetAddress() == aDestination)
         {
             // Rule 1: Prefer same address
             bestAddr = &addr;
             ExitNow();
+        }
+
+        if (bestAddr == nullptr)
+        {
+            bestAddr     = &addr;
+            bestMatchLen = matchLen;
         }
         else if (addr.GetScope() < bestAddr->GetScope())
         {
