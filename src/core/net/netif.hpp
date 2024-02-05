@@ -116,10 +116,8 @@ public:
          * Clears and initializes the unicast address as a preferred, valid, thread-origin address with
          * 64-bit prefix length.
          *
-         * @param[in]   aPreferred  Whether to initialize as a preferred address.
-         *
          */
-        void InitAsThreadOrigin(bool aPreferred = false);
+        void InitAsThreadOrigin(void);
 
         /**
          * Clears and initializes the unicast address as a valid (but not preferred), thread-origin,

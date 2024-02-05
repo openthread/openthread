@@ -123,7 +123,7 @@ Mle::Mle(Instance &aInstance)
     mParentCandidate.Clear();
     ResetCounters();
 
-    mLinkLocal64.InitAsThreadOrigin(/* aPreferred */ true);
+    mLinkLocal64.InitAsThreadOrigin();
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mMeshLocal64.InitAsThreadOriginMeshLocal();

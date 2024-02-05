@@ -253,6 +253,7 @@ void Netif::SignalMulticastAddressChange(AddressEvent aEvent, const MulticastAdd
         info.mPrefixLength = kMulticastPrefixLength;
         info.mScope        = aAddress.GetAddress().GetScope();
         info.mPreferred    = false;
+        info.mMeshLocal    = false;
 
         mAddressCallback.Invoke(&info, aEvent);
     }
@@ -427,6 +428,7 @@ void Netif::SignalUnicastAddressChange(AddressEvent aEvent, const UnicastAddress
         info.mPrefixLength = aAddress.mPrefixLength;
         info.mScope        = aAddress.GetScope();
         info.mPreferred    = aAddress.mPreferred;
+        info.mMeshLocal    = aAddress.mMeshLocal;
 
         mAddressCallback.Invoke(&info, aEvent);
     }
@@ -539,12 +541,12 @@ void Netif::ApplyNewMeshLocalPrefix(void)
 //---------------------------------------------------------------------------------------------------------------------
 // Netif::UnicastAddress
 
-void Netif::UnicastAddress::InitAsThreadOrigin(bool aPreferred)
+void Netif::UnicastAddress::InitAsThreadOrigin(void)
 {
     Clear();
     mPrefixLength  = NetworkPrefix::kLength;
     mAddressOrigin = kOriginThread;
-    mPreferred     = aPreferred;
+    mPreferred     = true;
     mValid         = true;
 }
 
