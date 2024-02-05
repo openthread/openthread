@@ -33,6 +33,7 @@
  */
 
 #include "meshcop.hpp"
+#include <openthread/platform/toolchain.h>
 
 #include "common/clearable.hpp"
 #include "common/crc16.hpp"

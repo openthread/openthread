@@ -67,6 +67,10 @@ extern "C" {
 #define OT_TCAT_MAX_SERVICE_NAME_LENGTH \
     15 ///< Maximum string length of a UDP or TCP service name (does not include null char).
 
+#define OT_TCAT_ADVERTISEMENT_MAX_LEN 29 ///< Maximum length of TCAT advertisement.
+#define OT_TCAT_OPCODE 0x2               ///< TCAT Advertisement Operation Code.
+#define OT_TCAT_MAX_VENDORID_SIZE 5      ///< TCAT max size of vendor ID including null as termination.
+
 /**
  * Represents TCAT status code.
  *
@@ -112,6 +116,27 @@ typedef enum otTcatCommandClass
 } otTcatCommandClass;
 
 /**
+ * Represents Device ID type.
+ *
+ */
+typedef enum otTcatDeviceIdType
+{
+    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Vendor device ID type not set
+    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Vendor device ID type IEEE OUI-24
+    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Vendor device ID type IEEE OUI-36
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Vendor device ID type Device Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Vendor device ID type IANA PEN
+    OT_TCAT_DEVICE_ID_MAX           = 5, ///< Vendor device ID type size
+} otTcatDeviceIdType;
+
+typedef struct otTcatDeviceId
+{
+    otTcatDeviceIdType mDeviceIdType;
+    uint16_t           mDeviceIdLen;
+    uint8_t            mDeviceId[OT_TCAT_MAX_VENDORID_SIZE];
+} otTcatDeviceId;
+
+/**
  * This structure represents a TCAT vendor information.
  *
  * The content of this structure MUST persist and remain unchanged while a TCAT session is running.
@@ -119,15 +144,16 @@ typedef enum otTcatCommandClass
  */
 typedef struct otTcatVendorInfo
 {
-    const char *mProvisioningUrl; ///< Provisioning URL path string
-    const char *mVendorName;      ///< Vendor name string
-    const char *mVendorModel;     ///< Vendor model string
-    const char *mVendorSwVersion; ///< Vendor software version string
-    const char *mVendorData;      ///< Vendor specific data string
-    const char *mPskdString;      ///< Vendor managed pre-shared key for device
-    const char *mInstallCode;     ///< Vendor managed install code string
-    const char *mDeviceId; ///< Vendor managed device ID string (if NULL: device ID is set to EUI-64 in binary format)
-
+    const char           *mProvisioningUrl; ///< Provisioning URL path string
+    const char           *mVendorName;      ///< Vendor name string
+    const char           *mVendorModel;     ///< Vendor model string
+    const char           *mVendorSwVersion; ///< Vendor software version string
+    const char           *mVendorData;      ///< Vendor specific data string
+    const char           *mPskdString;      ///< Vendor managed pre-shared key for device
+    const char           *mInstallCode;     ///< Vendor managed install code string
+    const otTcatDeviceId *mDeviceIds;       /** Vendor managed device ID array.
+                                               (if NULL: device ID is set to EUI-64 in binary format)
+                                               Array is terminated like C string with OT_TCAT_DEVICE_ID_EMPTY */
 } otTcatVendorInfo;
 
 /**

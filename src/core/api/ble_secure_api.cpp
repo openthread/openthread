@@ -55,9 +55,14 @@ otError otBleSecureStart(otInstance              *aInstance,
     return AsCoreType(aInstance).Get<Ble::BleSecure>().Start(aConnectHandler, aReceiveHandler, aTlvMode, aContext);
 }
 
-otError otBleSecureTcatStart(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo, otHandleTcatJoin aHandler)
+otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo)
 {
-    return AsCoreType(aInstance).Get<Ble::BleSecure>().TcatStart(AsCoreType(aVendorInfo), aHandler);
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().TcatSetVendorInfo(AsCoreType(aVendorInfo));
+}
+
+otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler)
+{
+    return AsCoreType(aInstance).Get<Ble::BleSecure>().TcatStart(aHandler);
 }
 
 void otBleSecureStop(otInstance *aInstance) { AsCoreType(aInstance).Get<Ble::BleSecure>().Stop(); }

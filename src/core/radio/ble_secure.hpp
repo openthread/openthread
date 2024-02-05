@@ -101,7 +101,6 @@ public:
     /**
      * Enables the TCAT protocol over BLE Secure.
      *
-     * @param[in]  aVendorInfo       A reference to the Vendor Information (must remain valid after the method call)
      * @param[in]  aHandler          Callback to a function that is called when the join operation completes.
      *
      * @retval kErrorNone           Successfully started the BLE Secure Joiner role.
@@ -109,7 +108,18 @@ public:
      * @retval kErrorInvaidState    The BLE function has not been started or line mode is not selected.
      *
      */
-    Error TcatStart(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo, MeshCoP::TcatAgent::JoinCallback aHandler);
+    Error TcatStart(MeshCoP::TcatAgent::JoinCallback aHandler);
+
+    /**
+     * Set the TCAT Vendor Info object
+     *
+     * @param[in] aVendorInfo A pointer to the Vendor Information (must remain valid after the method call).
+     *
+     */
+    Error TcatSetVendorInfo(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo)
+    {
+        return mTcatAgent.SetTcatVendorInfo(aVendorInfo);
+    }
 
     /**
      * Stops the secure BLE agent.

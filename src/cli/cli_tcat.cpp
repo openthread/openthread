@@ -31,10 +31,12 @@
 #include "cli/cli_utils.hpp"
 
 #include "cli/cli_tcat.hpp"
+#include "common/code_utils.hpp"
 
 #include <openthread/ble_secure.h>
 
 #include <mbedtls/oid.h>
+#include <openthread/error.h>
 #include <openthread/tcat.h>
 #include <openthread/platform/ble.h>
 
@@ -79,7 +81,9 @@ namespace ot {
 
 namespace Cli {
 
-const char kPskdVendor[] = "J01NM3";
+otTcatDeviceId sVendorDeviceIds[OT_TCAT_DEVICE_ID_MAX];
+
+const char kPskdVendor[] = "JJJJJJ";
 const char kUrl[]        = "dummy_url";
 
 static void HandleBleSecureReceive(otInstance               *aInstance,
@@ -99,7 +103,8 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
     uint16_t nLen;
     uint8_t  buf[kTextMaxLen];
 
-    nLen = otMessageRead(aMessage, (uint16_t)aOffset, buf + kBufPrefixLen, sizeof(buf) - kBufPrefixLen - 1);
+    nLen =
+        otMessageRead(aMessage, static_cast<uint16_t>(aOffset), buf + kBufPrefixLen, sizeof(buf) - kBufPrefixLen - 1);
 
     memcpy(buf, "RECV:", kBufPrefixLen);
 
@@ -107,6 +112,85 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
 
     IgnoreReturnValue(otBleSecureSendApplicationTlv(aInstance, buf, (uint16_t)strlen((char *)buf)));
     IgnoreReturnValue(otBleSecureFlush(aInstance));
+}
+
+template <> otError Tcat::Process<Cmd("vendorid")>(Arg aArgs[])
+{
+    otError                  error = OT_ERROR_NONE;
+    otTcatDeviceId           devId;
+    static const char *const kVendorIdTypes[] = {"empty", "oui24", "oui36", "discriminator", "ianapen"};
+
+    mVendorInfo.mDeviceIds = sVendorDeviceIds;
+
+    if (aArgs[0].IsEmpty())
+    {
+        if (mVendorInfo.mDeviceIds[0].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY)
+        {
+            OutputLine("Set vendorIds:");
+            for (size_t i = 0; mVendorInfo.mDeviceIds[i].mDeviceIdType != OT_TCAT_DEVICE_ID_EMPTY; i++)
+            {
+                OutputFormat("type %s, value: ", kVendorIdTypes[mVendorInfo.mDeviceIds[i].mDeviceIdType]);
+                OutputBytesLine(const_cast<uint8_t *>(mVendorInfo.mDeviceIds[i].mDeviceId),
+                                mVendorInfo.mDeviceIds[i].mDeviceIdLen);
+            }
+        }
+        else
+        {
+            OutputLine("%s", kVendorIdTypes[OT_TCAT_DEVICE_ID_EMPTY]);
+        }
+        ExitNow();
+    }
+
+    if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_OUI24])
+    {
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI24;
+    }
+    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_OUI36])
+    {
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_OUI36;
+    }
+    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_DISCRIMINATOR])
+    {
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_DISCRIMINATOR;
+    }
+    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_IANAPEN])
+    {
+        devId.mDeviceIdType = OT_TCAT_DEVICE_ID_IANAPEN;
+    }
+    else if (aArgs[0] == kVendorIdTypes[OT_TCAT_DEVICE_ID_EMPTY])
+    {
+        for (otTcatDeviceId &vendorDeviceId : sVendorDeviceIds)
+        {
+            vendorDeviceId.mDeviceIdType = OT_TCAT_DEVICE_ID_EMPTY;
+            vendorDeviceId.mDeviceIdLen  = 0;
+        }
+        ExitNow();
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+    if (!aArgs[1].IsEmpty() && aArgs[1].GetLength() < (OT_TCAT_MAX_VENDORID_SIZE * 2 + 1))
+    {
+        devId.mDeviceIdLen = OT_TCAT_MAX_VENDORID_SIZE;
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(devId.mDeviceIdLen, devId.mDeviceId));
+        for (otTcatDeviceId &vendorDeviceId : sVendorDeviceIds)
+        {
+            if (vendorDeviceId.mDeviceIdType == devId.mDeviceIdType ||
+                vendorDeviceId.mDeviceIdType == OT_TCAT_DEVICE_ID_EMPTY)
+            {
+                vendorDeviceId = devId;
+                break;
+            }
+        }
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+exit:
+    return error;
 }
 
 template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
@@ -129,8 +213,9 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 
     otBleSecureSetSslAuthMode(GetInstancePtr(), true);
 
+    SuccessOrExit(error = otBleSecureSetTcatVendorInfo(GetInstancePtr(), &mVendorInfo));
     SuccessOrExit(error = otBleSecureStart(GetInstancePtr(), nullptr, HandleBleSecureReceive, true, nullptr));
-    SuccessOrExit(error = otBleSecureTcatStart(GetInstancePtr(), &mVendorInfo, nullptr));
+    SuccessOrExit(error = otBleSecureTcatStart(GetInstancePtr(), nullptr));
 
 exit:
     return error;
@@ -152,7 +237,7 @@ otError Tcat::Process(Arg aArgs[])
         aCommandString, &Tcat::Process<Cmd(aCommandString)> \
     }
 
-    static constexpr Command kCommands[] = {CmdEntry("start"), CmdEntry("stop")};
+    static constexpr Command kCommands[] = {CmdEntry("start"), CmdEntry("stop"), CmdEntry("vendorid")};
 
     static_assert(BinarySearch::IsSorted(kCommands), "kCommands is not sorted");
 

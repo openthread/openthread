@@ -110,6 +110,17 @@ otError otBleSecureStart(otInstance              *aInstance,
                          void                    *aContext);
 
 /**
+ * Sets TCAT vendor info
+ *
+ * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aVendorInfo       A pointer to the Vendor Information (must remain valid after the method call.
+ *
+ * @retval OT_ERROR_NONE         Successfully set value.
+ * @retval OT_ERROR_INVALID_ARGS Value not set.
+ */
+otError otBleSecureSetTcatVendorInfo(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo);
+
+/**
  * Enables the TCAT protocol over BLE Secure.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
@@ -122,7 +133,7 @@ otError otBleSecureStart(otInstance              *aInstance,
  * @retval OT_ERROR_INVALID_STATE     The BLE function has not been started or line mode is not selected.
  *
  */
-otError otBleSecureTcatStart(otInstance *aInstance, const otTcatVendorInfo *aVendorInfo, otHandleTcatJoin aHandler);
+otError otBleSecureTcatStart(otInstance *aInstance, otHandleTcatJoin aHandler);
 
 /**
  * Stops the BLE Secure server.
