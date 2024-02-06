@@ -164,6 +164,8 @@ void platformBacktraceInit(void)
 {
     struct sigaction sigact;
 
+    memset(&sigact, 0, sizeof(struct sigaction));
+
     sigact.sa_sigaction = &signalCritical;
     sigact.sa_flags     = SA_RESTART | SA_SIGINFO | SA_NOCLDWAIT;
 
