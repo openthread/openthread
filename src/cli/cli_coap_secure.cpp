@@ -90,6 +90,23 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
     OutputNewLine();
 }
 
+/**
+ * @cli coaps resource(get,set)
+ * @code
+ * coaps resource test-resource
+ * Done
+ * @endcode
+ * @code
+ * coaps resource
+ * test-resource
+ * Done
+ * @endcode
+ * @cparam coaps resource [@ca{uri-path}]
+ * @par
+ * Gets or sets the URI path of the CoAPs server resource.
+ * @sa otCoapSecureAddBlockWiseResource 
+ * @sa otCoapSecureAddBlockWiseResource
+ */
 template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -539,6 +556,21 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+/**
+ * @cli coaps psk
+ * @code
+ * coaps psk 1234 key1
+ * Done
+ * @endcode
+ * @cparam coaps psk @ca{psk-value} @ca{psk-id}
+ *   * `psk-value`: The pre-shared key
+ *   * `psk-id`: The pre-shared key identifier.
+ * @par
+ * Sets the pre-shared key (PSK) and cipher suite DTLS_PSK_WITH_AES_128_CCM_8.
+ * @note This command  requires the build-time feature
+ * `MBEDTLS_KEY_EXCHANGE_PSK_ENABLED` to be enabled.
+ * @sa #otCoapSecureSetPsk
+ */
 template <> otError CoapSecure::Process<Cmd("psk")>(Arg aArgs[])
 {
     otError  error = OT_ERROR_NONE;
