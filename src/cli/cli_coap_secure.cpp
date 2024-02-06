@@ -104,7 +104,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
  * @cparam coaps resource [@ca{uri-path}]
  * @par
  * Gets or sets the URI path of the CoAPs server resource.
- * @sa otCoapSecureAddBlockWiseResource 
+ * @sa otCoapSecureAddBlockWiseResource
  * @sa otCoapSecureAddBlockWiseResource
  */
 template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
@@ -193,7 +193,7 @@ exit:
  *  * `max-conn-attempts`: Maximum number of allowed connection attempts
  * Possible value combinations:
  * @par
- * Starts the CoAP Secure service. 
+ * Starts the CoAP Secure service.
  * @sa otCoapSecureStart
  * @sa otCoapSecureSetSslAuthMode
  * @sa otCoapSecureSetClientConnectedCallback
@@ -293,7 +293,7 @@ exit:
  * coaps get test-resource block-1024
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type}] 
+ * @cparam @ca{uri-path} [@ca{type}]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
@@ -317,7 +317,7 @@ template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return Proces
  * coaps post test-resource block-1024 10
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]] 
+ * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
@@ -348,7 +348,7 @@ template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return Proce
  * coaps put test-resource block-1024 10
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]] 
+ * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
@@ -382,7 +382,7 @@ template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return Proces
  *       * `non-con`: Non-confirmable (default)
  *   * `payload`: CoAPs payload request.
  * @par
- * The CoAP payload string to delete. 
+ * The CoAP payload string to delete.
  */
 template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {
