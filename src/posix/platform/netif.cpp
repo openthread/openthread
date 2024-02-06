@@ -1751,19 +1751,23 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
         requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
     }
 
-    rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
-
-    for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
-         rta                = RTA_NEXT(rta, rtaLength))
+    // Only extract inner TLV error if flag is set
+    if (msg->nlmsg_flags & NLM_F_ACK_TLVS)
     {
-        if (rta->rta_type == NLMSGERR_ATTR_MSG)
+        rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
+
+        for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
+             rta                = RTA_NEXT(rta, rtaLength))
         {
-            errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
-            break;
-        }
-        else
-        {
-            LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+            if (rta->rta_type == NLMSGERR_ATTR_MSG)
+            {
+                errorMsg = reinterpret_cast<const char *>(RTA_DATA(rta));
+                break;
+            }
+            else
+            {
+                LogDebg("Ignoring netlink response attribute %d (request#%u)", rta->rta_type, requestSeq);
+            }
         }
     }
 
