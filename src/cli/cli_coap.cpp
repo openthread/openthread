@@ -162,7 +162,7 @@ template <> otError Coap::Process<Cmd("cancel")>(Arg aArgs[])
 #endif
 
 /**
- * @cli coap resource(get,set)
+ * @cli coap resource (get,set)
  * @code
  * coap resource test-resource
  * Done
