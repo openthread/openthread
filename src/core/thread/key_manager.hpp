@@ -68,7 +68,7 @@ namespace ot {
  * Represents Security Policy Rotation and Flags.
  *
  */
-class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
+class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>, public Clearable<SecurityPolicy>
 {
 public:
     /**
