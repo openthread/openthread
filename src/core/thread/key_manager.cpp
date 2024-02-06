@@ -64,6 +64,7 @@ void SecurityPolicy::SetToDefault(void)
 {
     mRotationTime = kDefaultKeyRotationTime;
     SetToDefaultFlags();
+    Clear();
 }
 
 void SecurityPolicy::SetToDefaultFlags(void)
