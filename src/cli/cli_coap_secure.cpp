@@ -145,6 +145,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps set
+ * @code
+ * coaps set Testing123
+ * Done
+ * @endcode
+ * @cparam coaps set @ca{new-content}
+ * @par
+ * Sets the content sent by the resource on the CoAPs server.
+ */
 template <> otError CoapSecure::Process<Cmd("set")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -164,6 +174,18 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps start
+ * @code
+ * coaps start
+ * Done
+ * @endcode
+ * @par
+ * Starts the Coap Secure service. 
+ * @sa otCoapSecureStart
+ * @sa otCoapSecureSetSslAuthMode
+ * @sa otCoapSecureSetClientConnectedCallback
+ */
 template <> otError CoapSecure::Process<Cmd("start")>(Arg aArgs[])
 {
     otError  error           = OT_ERROR_NONE;
