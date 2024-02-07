@@ -196,12 +196,12 @@ exit:
  *     `check-peer-cert` assumes the default of `true`, and `max-conn-attempts` uses
  *     default of 0, which means there is no limit to  connection attempts.
  *   * Setting `check-peer-cert` to `true`:
- *     Has the same effect as omitting the argument, which is that
- *     `check-peer-cert` value is `true`, and `max-conn-attempts` value is 0.
- *   * Setting `check-peer`cert` to `false`:
- *    `check-peer-cert` value is `false`, and `max-conn-attempts` value is 0.
+ *     Has the same effect as omitting the argument, which is that the
+ *     `check-peer-cert` value is `true`, and the `max-conn-attempts` value is 0.
+ *   * Setting `check-peer-cert` to `false`:
+ *    `check-peer-cert` value is `false`, and the `max-conn-attempts` value is 0.
  *   * Specifying a number:
- *     `check-peer-cert` is `true`, and the `max=conn-attempts` value is the
+ *     `check-peer-cert` is `true`, and the `max-conn-attempts` value is the
  *     number specified in the argument.
  * @par
  * Starts the %CoAP Secure service.
@@ -245,6 +245,16 @@ exit:
     return error;
 }
 
+/**
+ * @cli coaps stop
+ * @code
+ * coaps stop
+ * Done
+ * @endcode
+ * @par
+ * Stops the CoAP Secure service.
+ * @sa otCoapSecureStop
+ */
 template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -268,16 +278,49 @@ template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
+/**
+ * @cli coaps isclosed
+ * @code
+ * coaps isclosed
+ * no
+ * Done
+ * @endcode
+ * @par
+ * Indicates if the #CoAP Secure service is closed.
+ * @sa otCoapSecureIsClosed
+ */
 template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
 {
     return ProcessIsRequest(aArgs, otCoapSecureIsClosed);
 }
 
+/**
+ * @cli coaps isconnected
+ * @code
+ * yes
+ * Done
+ * @endcode
+ * @par
+ * Indicates if the #CoAP Secure service is connected.
+ * @sa otCoapSecureIsConnected
+ */
 template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
 {
     return ProcessIsRequest(aArgs, otCoapSecureIsConnected);
 }
 
+/**
+ * @cli coaps isconnactive
+ * @code
+ * coaps isconnactive
+ * yes
+ * Done
+ * @endcode
+ * @par
+ * Indicates if the #CoAP Secure service connection is active
+ * (either already connected or in the process of establishing a connection).
+ * @sa otCoapSecureIsConnectionActive
+ */
 template <> otError CoapSecure::Process<Cmd("isconnactive")>(Arg aArgs[])
 {
     return ProcessIsRequest(aArgs, otCoapSecureIsConnectionActive);
@@ -642,6 +685,21 @@ exit:
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
+/** <!--- Moving these tags to before the IF statement so that command renders --->
+ * @cli coaps x509
+ * @code
+ * coaps x509
+ * Done
+ * @endcode
+ * @par
+ * Sets the X509 certificate of the local device with the corresponding private key for
+ * the DTLS session with `DTLS_ECDHE_ECDSA_WITH_AES_128_CCM_8`.
+ * @note This command requires `MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED=1`
+ * to be enabled.
+ * The X.509 certificate is stored in the location: `src/cli/x509_cert_key.hpp`.
+ * @sa otCoapSecureSetCertificate
+ * @sa otCoapSecureSetCaCertificateChain
+ */
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 template <> otError CoapSecure::Process<Cmd("x509")>(Arg aArgs[])
 {
