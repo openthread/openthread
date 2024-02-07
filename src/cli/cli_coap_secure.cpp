@@ -186,11 +186,10 @@ exit:
  * @code
  * coaps start 8
  * Done
- * @endcoded
+ * @endcode
  * @cparam coaps start [@ca{check-peer-cert} | @ca{max-conn-attemps}]
  *  * `check-peer-cert`: Peer certificate check (`true` by default).
  *  * `max-conn-attempts`: Maximum number of allowed connection attempts
- * Possible value combinations:
  * @par
  * Starts the CoAP Secure service.
  * @sa otCoapSecureStart
