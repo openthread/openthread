@@ -105,7 +105,6 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
  * @par
  * Gets or sets the URI path of the CoAPs server resource.
  * @sa otCoapSecureAddBlockWiseResource
- * @sa otCoapSecureAddBlockWiseResource
  */
 template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
 {
@@ -317,7 +316,7 @@ template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return Proces
  * coaps post test-resource block-1024 10
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]]
+ * @cparam @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
