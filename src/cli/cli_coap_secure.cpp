@@ -601,8 +601,8 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 }
 
 /**
+ * <!--- Moving these tags to before the IF statement so that command renders --->
  * @cli coaps psk
- * <! -- Moving these tags to before the IF statement so that command renders -->
  * @code
  * coaps psk 1234 key1
  * Done
