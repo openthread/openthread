@@ -188,10 +188,21 @@ exit:
  * Done
  * @endcode
  * @cparam coaps start [@ca{check-peer-cert} | @ca{max-conn-attempts}]
- * Possible combos:
- *  * `check-peer-cert`: Peer certificate check (`true` by default).
- *  * `max-conn-attempts`: Maximum number of allowed connection attempts.
- * Possible value combinations:
+ * The `check-peer-cert` (peer certificate check) and `max-conn-attempts`
+ * (maxinum number of allowed connection attempts) parameters work
+ * together in the following combinations, even though you can only specify
+ * one argument:
+ *   * Argument omitted:
+ *     `check-peer-cert` assumes the default of `true`, and `max-conn-attempts` uses
+ *     default of 0, which means there is no limit to  connection attempts.
+ *   * Setting `check-peer-cert` to `true`:
+ *     Has the same effect as omitting the argument, which is that
+ *     `check-peer-cert` value is `true`, and `max-conn-attempts` value is 0.
+ *   * Setting `check-peer`cert` to `false`:
+ *    `check-peer-cert` value is `false`, and `max-conn-attempts` value is 0.
+ *   * Specifying a number:
+ *     `check-peer-cert` is `true`, and the `max=conn-attempts` value is the
+ *     number specified in the argument.
  * @par
  * Starts the %CoAP Secure service.
  * @sa otCoapSecureStart
@@ -589,7 +600,6 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 /**
  * @cli coaps psk
  * @code
@@ -605,6 +615,7 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
  * `MBEDTLS_KEY_EXCHANGE_PSK_ENABLED` to be enabled.
  * @sa #otCoapSecureSetPsk
  */
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 template <> otError CoapSecure::Process<Cmd("psk")>(Arg aArgs[])
 {
     otError  error = OT_ERROR_NONE;
