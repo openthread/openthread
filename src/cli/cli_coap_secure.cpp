@@ -191,7 +191,7 @@ exit:
  *  * `check-peer-cert`: Peer certificate check (`true` by default).
  *  * `max-conn-attempts`: Maximum number of allowed connection attempts
  * @par
- * Starts the CoAP Secure service.
+ * Starts the %CoAP Secure service.
  * @sa otCoapSecureStart
  * @sa otCoapSecureSetSslAuthMode
  * @sa otCoapSecureSetClientConnectedCallback
