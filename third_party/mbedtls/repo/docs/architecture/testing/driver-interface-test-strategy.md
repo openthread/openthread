@@ -1,6 +1,6 @@
-# Mbed Crypto driver interface test strategy
+# Mbed TLS driver interface test strategy
 
-This document describes the test strategy for the driver interfaces in Mbed Crypto. Mbed Crypto has interfaces for secure element drivers, accelerator drivers and entropy drivers. This document is about testing Mbed Crypto itself; testing drivers is out of scope.
+This document describes the test strategy for the driver interfaces in Mbed TLS. Mbed TLS has interfaces for secure element drivers, accelerator drivers and entropy drivers. This document is about testing Mbed TLS itself; testing drivers is out of scope.
 
 The driver interfaces are standardized through PSA Cryptography functional specifications.
 
@@ -16,9 +16,9 @@ Drivers exposing this interface need to be registered at compile time by declari
 
 #### Dynamic secure element driver interface
 
-The dynamic secure element driver interface (SE interface for short) is defined by [`psa/crypto_se_driver.h`](../../../include/psa/crypto_se_driver.h). This is an interface between Mbed Crypto and one or more third-party drivers.
+The dynamic secure element driver interface (SE interface for short) is defined by [`psa/crypto_se_driver.h`](../../../include/psa/crypto_se_driver.h). This is an interface between Mbed TLS and one or more third-party drivers.
 
-The SE interface consists of one function provided by Mbed Crypto (`psa_register_se_driver`) and many functions that drivers must implement. To make a driver usable by Mbed Crypto, the initialization code must call `psa_register_se_driver` with a structure that describes the driver. The structure mostly contains function pointers, pointing to the driver's methods. All calls to a driver function are triggered by a call to a PSA crypto API function.
+The SE interface consists of one function provided by Mbed TLS (`psa_register_se_driver`) and many functions that drivers must implement. To make a driver usable by Mbed TLS, the initialization code must call `psa_register_se_driver` with a structure that describes the driver. The structure mostly contains function pointers, pointing to the driver's methods. All calls to a driver function are triggered by a call to a PSA crypto API function.
 
 ### SE driver interface unit tests
 
@@ -57,7 +57,7 @@ For each API function that can lead to a driver call (more precisely, for each d
 
 #### SE driver outputs
 
-For each API function that leads to a driver call, call it with parameters that cause a driver to be invoked and check how Mbed Crypto handles the outputs.
+For each API function that leads to a driver call, call it with parameters that cause a driver to be invoked and check how Mbed TLS handles the outputs.
 
 * Correct outputs.
 * Incorrect outputs such as an invalid output length.
@@ -87,7 +87,7 @@ Creating or removing a key in a secure element involves multiple storage modific
 * This must be done for each possible flow, including error cases (e.g. a key creation that fails midway due to `OUT_OF_MEMORY`).
 * The recovery during `psa_crypto_init` can itself be interrupted. Test those interruptions too.
 * Two things need to be tested: the key that is being created or destroyed, and the driver's persistent storage.
-* Check both that the storage has the expected content (this can be done by e.g. using a key that is supposed to be present) and does not have any unexpected content (for keys, this can be done by checking that `psa_open_key` fails with `PSA_ERRROR_DOES_NOT_EXIST`).
+* Check both that the storage has the expected content (this can be done by e.g. using a key that is supposed to be present) and does not have any unexpected content (for keys, this can be done by checking that `psa_open_key` fails with `PSA_ERROR_DOES_NOT_EXIST`).
 
 This requires instrumenting the storage implementation, either to force it to fail at each point or to record successive storage states and replay each of them. Each `psa_its_xxx` function call is assumed to be atomic.
 

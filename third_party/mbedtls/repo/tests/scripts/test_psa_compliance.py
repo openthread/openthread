@@ -1,26 +1,14 @@
 #!/usr/bin/env python3
-"""Run the PSA Cryto API compliance test suite.
+"""Run the PSA Crypto API compliance test suite.
 Clone the repo and check out the commit specified by PSA_ARCH_TEST_REPO and PSA_ARCH_TEST_REF,
-then complie and run the test suite. The clone is stored at <Mbed TLS root>/psa-arch-tests.
+then compile and run the test suite. The clone is stored at <Mbed TLS root>/psa-arch-tests.
 Known defects in either the test suite or mbedtls - identified by their test number - are ignored,
 while unexpected failures AND successes are reported as errors,
 to help keep the list of known defects as up to date as possible.
 """
 
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 import os
 import re
@@ -50,7 +38,7 @@ EXPECTED_FAILURES = {
 #
 # Web URL: https://github.com/bensze01/psa-arch-tests/tree/fixes-for-mbedtls-2
 PSA_ARCH_TESTS_REPO = 'https://github.com/bensze01/psa-arch-tests.git'
-PSA_ARCH_TESTS_REF = 'fixes-for-mbedtls-2'
+PSA_ARCH_TESTS_REF = 'fix-5735-2.28'
 
 #pylint: disable=too-many-branches,too-many-statements
 def main():

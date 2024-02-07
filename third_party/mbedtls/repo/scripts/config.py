@@ -2,25 +2,17 @@
 
 """Mbed TLS configuration file manipulation library and tool
 
-Basic usage, to read the Mbed TLS or Mbed Crypto configuration:
+Basic usage, to read the Mbed TLS configuration:
     config = ConfigFile()
     if 'MBEDTLS_RSA_C' in config: print('RSA is enabled')
 """
 
+# Note that the version of this script in the mbedtls-2.28 branch must remain
+# compatible with Python 3.4.
+
 ## Copyright The Mbed TLS Contributors
-## SPDX-License-Identifier: Apache-2.0
+## SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 ##
-## Licensed under the Apache License, Version 2.0 (the "License"); you may
-## not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-##
-## http://www.apache.org/licenses/LICENSE-2.0
-##
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-## WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
 
 import os
 import re
@@ -152,8 +144,16 @@ def is_full_section(section):
     return section.endswith('support') or section.endswith('modules')
 
 def realfull_adapter(_name, active, section):
-    """Activate all symbols found in the system and feature sections."""
-    if not is_full_section(section):
+    """Activate all symbols found in the global and boolean feature sections.
+
+    This is intended for building the documentation, including the
+    documentation of settings that are activated by defining an optional
+    preprocessor macro.
+
+    Do not activate definitions in the section containing symbols that are
+    supposed to be defined and documented in their own module.
+    """
+    if section == 'Module configuration options':
         return active
     return True
 
@@ -189,7 +189,7 @@ EXCLUDE_FROM_FULL = frozenset([
     'MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG', # behavior change + build dependency
     'MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER', # incompatible with USE_PSA_CRYPTO
     'MBEDTLS_PSA_CRYPTO_SPM', # platform dependency (PSA SPM)
-    'MBEDTLS_PSA_INJECT_ENTROPY', # build dependency (hook functions)
+    'MBEDTLS_PSA_INJECT_ENTROPY', # conflicts with platform entropy sources
     'MBEDTLS_REMOVE_3DES_CIPHERSUITES', # removes a feature
     'MBEDTLS_REMOVE_ARC4_CIPHERSUITES', # removes a feature
     'MBEDTLS_RSA_NO_CRT', # influences the use of RSA in X.509 and TLS
@@ -214,7 +214,11 @@ def is_seamless_alt(name):
     Exclude alternative implementations of library functions since they require
     an implementation of the relevant functions and an xxx_alt.h header.
     """
-    if name == 'MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT':
+    if name in (
+            'MBEDTLS_PLATFORM_GMTIME_R_ALT',
+            'MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT',
+            'MBEDTLS_PLATFORM_ZEROIZE_ALT',
+    ):
         # Similar to non-platform xxx_ALT, requires platform_alt.h
         return False
     return name.startswith('MBEDTLS_PLATFORM_')
@@ -271,6 +275,24 @@ def baremetal_adapter(name, active, section):
         # No OS-provided entropy source
         return True
     return include_in_full(name) and keep_in_baremetal(name)
+
+# This set contains options that are mostly for debugging or test purposes,
+# and therefore should be excluded when doing code size measurements.
+# Options that are their own module (such as MBEDTLS_CERTS_C and
+# MBEDTLS_ERROR_C) are not listed and therefore will be included when doing
+# code size measurements.
+EXCLUDE_FOR_SIZE = frozenset([
+    'MBEDTLS_CHECK_PARAMS', # increases the size of many modules
+    'MBEDTLS_CHECK_PARAMS_ASSERT', # no effect without MBEDTLS_CHECK_PARAMS
+    'MBEDTLS_DEBUG_C', # large code size increase in TLS
+    'MBEDTLS_SELF_TEST', # increases the size of many modules
+    'MBEDTLS_TEST_HOOKS', # only useful with the hosted test framework, increases code size
+])
+
+def baremetal_size_adapter(name, active, section):
+    if name in EXCLUDE_FOR_SIZE:
+        return False
+    return baremetal_adapter(name, active, section)
 
 def include_in_crypto(name):
     """Rules for symbols in a crypto configuration."""
@@ -402,7 +424,7 @@ class ConfigFile(Config):
         value = setting.value
         if value is None:
             value = ''
-        # Normally the whitespace to separte the symbol name from the
+        # Normally the whitespace to separate the symbol name from the
         # value is part of middle, and there's no whitespace for a symbol
         # with no value. But if a symbol has been changed from having a
         # value to not having one, the whitespace is wrong, so fix it.
@@ -439,7 +461,7 @@ if __name__ == '__main__':
     def main():
         """Command line config.h manipulation tool."""
         parser = argparse.ArgumentParser(description="""
-        Mbed TLS and Mbed Crypto configuration file manipulation tool.
+        Mbed TLS configuration file manipulation tool.
         """)
         parser.add_argument('--file', '-f',
                             help="""File to read (and modify if requested).
@@ -483,6 +505,9 @@ if __name__ == '__main__':
         add_adapter('baremetal', baremetal_adapter,
                     """Like full, but exclude features that require platform
                     features such as file input-output.""")
+        add_adapter('baremetal_size', baremetal_size_adapter,
+                    """Like baremetal, but exclude debugging features.
+                    Useful for code size measurements.""")
         add_adapter('full', full_adapter,
                     """Uncomment most features.
                     Exclude alternative implementations and platform support

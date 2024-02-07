@@ -1,27 +1,21 @@
 """Knowledge about the PSA key store as implemented in Mbed TLS.
+
+Note that if you need to make a change that affects how keys are
+stored, this may indicate that the key store is changing in a
+backward-incompatible way! Think carefully about backward compatibility
+before changing how test data is constructed or validated.
 """
 
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import re
 import struct
 from typing import Dict, List, Optional, Set, Union
 import unittest
 
-from mbedtls_dev import c_build_helper
+from . import c_build_helper
 
 
 class Expr:
@@ -146,6 +140,11 @@ class Key:
         This is the content of the PSA storage file. When PSA storage is
         implemented over stdio files, this does not include any wrapping made
         by the PSA-storage-over-stdio-file implementation.
+
+        Note that if you need to make a change in this function,
+        this may indicate that the key store is changing in a
+        backward-incompatible way! Think carefully about backward
+        compatibility before making any change here.
         """
         header = self.MAGIC + self.pack('L', self.version)
         if self.version == 0:

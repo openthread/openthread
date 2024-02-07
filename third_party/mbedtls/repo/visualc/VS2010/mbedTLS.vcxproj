@@ -237,6 +237,7 @@
     <ClInclude Include="..\..\include\psa\crypto_struct.h" />
     <ClInclude Include="..\..\include\psa\crypto_types.h" />
     <ClInclude Include="..\..\include\psa\crypto_values.h" />
+    <ClInclude Include="..\..\tests\include\test\arguments.h" />
     <ClInclude Include="..\..\tests\include\test\asn1_helpers.h" />
     <ClInclude Include="..\..\tests\include\test\constant_flow.h" />
     <ClInclude Include="..\..\tests\include\test\fake_external_rng_for_test.h" />
@@ -246,6 +247,7 @@
     <ClInclude Include="..\..\tests\include\test\psa_exercise_key.h" />
     <ClInclude Include="..\..\tests\include\test\psa_helpers.h" />
     <ClInclude Include="..\..\tests\include\test\random.h" />
+    <ClInclude Include="..\..\tests\include\test\ssl_helpers.h" />
     <ClInclude Include="..\..\tests\include\test\drivers\aead.h" />
     <ClInclude Include="..\..\tests\include\test\drivers\cipher.h" />
     <ClInclude Include="..\..\tests\include\test\drivers\config_test_driver.h" />
@@ -256,6 +258,7 @@
     <ClInclude Include="..\..\tests\include\test\drivers\signature.h" />
     <ClInclude Include="..\..\tests\include\test\drivers\size.h" />
     <ClInclude Include="..\..\tests\include\test\drivers\test_driver.h" />
+    <ClInclude Include="..\..\library\bignum_internal.h" />
     <ClInclude Include="..\..\library\check_crypto_config.h" />
     <ClInclude Include="..\..\library\common.h" />
     <ClInclude Include="..\..\library\constant_time_internal.h" />

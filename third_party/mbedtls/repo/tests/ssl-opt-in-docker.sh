@@ -6,9 +6,13 @@
 # -------
 # This runs ssl-opt.sh in a Docker container.
 #
+# WARNING: the Dockerfile used by this script is no longer maintained! See
+# https://github.com/Mbed-TLS/mbedtls-test/blob/master/README.md#quick-start
+# for the set of Docker images we use on the CI.
+#
 # Notes for users
 # ---------------
-# If OPENSSL_CMD, GNUTLS_CLI, or GNUTLS_SERV are specified, the path must
+# If OPENSSL, GNUTLS_CLI, or GNUTLS_SERV are specified, the path must
 # correspond to an executable inside the Docker container. The special
 # values "next" and "legacy" are also allowed as shorthand for the
 # installations inside the container.
@@ -18,25 +22,13 @@
 # - ssl-opt.sh for notes about invocation of that script.
 
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 source tests/scripts/docker_env.sh
 
-case "${OPENSSL_CMD:-default}" in
-    "legacy")  export OPENSSL_CMD="/usr/local/openssl-1.0.1j/bin/openssl";;
-    "next")    export OPENSSL_CMD="/usr/local/openssl-1.1.1a/bin/openssl";;
+case "${OPENSSL:-default}" in
+    "legacy")  export OPENSSL="/usr/local/openssl-1.0.1j/bin/openssl";;
+    "next")    export OPENSSL="/usr/local/openssl-1.1.1a/bin/openssl";;
     *) ;;
 esac
 
@@ -58,6 +50,6 @@ run_in_docker \
     -e P_PXY \
     -e GNUTLS_CLI \
     -e GNUTLS_SERV \
-    -e OPENSSL_CMD \
+    -e OPENSSL \
     tests/ssl-opt.sh \
     $@

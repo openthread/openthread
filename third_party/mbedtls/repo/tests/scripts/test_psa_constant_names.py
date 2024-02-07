@@ -8,19 +8,7 @@ or 1 (with a Python backtrace) if there was an operational error.
 """
 
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 import argparse
 from collections import namedtuple
@@ -77,6 +65,22 @@ def normalize(expr: str) -> str:
     """
     return re.sub(NORMALIZE_STRIP_RE, '', expr)
 
+ALG_TRUNCATED_TO_SELF_RE = \
+    re.compile(r'PSA_ALG_AEAD_WITH_SHORTENED_TAG\('
+               r'PSA_ALG_(?:CCM|CHACHA20_POLY1305|GCM)'
+               r', *16\)\Z')
+
+def is_simplifiable(expr: str) -> bool:
+    """Determine whether an expression is simplifiable.
+
+    Simplifiable expressions can't be output in their input form, since
+    the output will be the simple form. Therefore they must be excluded
+    from testing.
+    """
+    if ALG_TRUNCATED_TO_SELF_RE.match(expr):
+        return True
+    return False
+
 def collect_values(inputs: InputsForTest,
                    type_word: str,
                    include_path: Optional[str] = None,
@@ -87,7 +91,9 @@ def collect_values(inputs: InputsForTest,
     value is a string representation of its integer value.
     """
     names = inputs.get_names(type_word)
-    expressions = sorted(inputs.generate_expressions(names))
+    expressions = sorted(expr
+                         for expr in inputs.generate_expressions(names)
+                         if not is_simplifiable(expr))
     values = run_c(type_word, expressions,
                    include_path=include_path, keep_c=keep_c)
     return expressions, values

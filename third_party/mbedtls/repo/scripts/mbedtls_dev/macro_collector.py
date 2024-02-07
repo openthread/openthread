@@ -2,23 +2,12 @@
 """
 
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import itertools
 import re
-from typing import Dict, Iterable, Iterator, List, Optional, Pattern, Set, Tuple, Union
+from typing import Dict, IO, Iterable, Iterator, List, Optional, Pattern, Set, Tuple, Union
 
 
 class ReadFileLineException(Exception):
@@ -50,12 +39,13 @@ class read_file_lines:
     """
     def __init__(self, filename: str, binary: bool = False) -> None:
         self.filename = filename
+        self.file = None #type: Optional[IO[str]]
         self.line_number = 'entry' #type: Union[int, str]
         self.generator = None #type: Optional[Iterable[Tuple[int, str]]]
         self.binary = binary
     def __enter__(self) -> 'read_file_lines':
-        self.generator = enumerate(open(self.filename,
-                                        'rb' if self.binary else 'r'))
+        self.file = open(self.filename, 'rb' if self.binary else 'r')
+        self.generator = enumerate(self.file)
         return self
     def __iter__(self) -> Iterator[str]:
         assert self.generator is not None
@@ -64,6 +54,8 @@ class read_file_lines:
             yield content
         self.line_number = 'exit'
     def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
+        if self.file is not None:
+            self.file.close()
         if exc_type is not None:
             raise ReadFileLineException(self.filename, self.line_number) \
                 from exc_value
@@ -182,7 +174,7 @@ class PSAMacroEnumerator:
                 for value in argument_lists[i][1:]:
                     arguments[i] = value
                     yield self._format_arguments(name, arguments)
-                arguments[i] = argument_lists[0][0]
+                arguments[i] = argument_lists[i][0]
         except BaseException as e:
             raise Exception('distribute_arguments({})'.format(name)) from e
 
@@ -395,10 +387,26 @@ enumerate
             'other_algorithm': [],
             'lifetime': [self.lifetimes],
         } #type: Dict[str, List[Set[str]]]
-        self.arguments_for['mac_length'] += ['1', '63']
-        self.arguments_for['min_mac_length'] += ['1', '63']
-        self.arguments_for['tag_length'] += ['1', '63']
-        self.arguments_for['min_tag_length'] += ['1', '63']
+        mac_lengths = [str(n) for n in [
+            1,  # minimum expressible
+            4,  # minimum allowed by policy
+            13, # an odd size in a plausible range
+            14, # an even non-power-of-two size in a plausible range
+            16, # same as full size for at least one algorithm
+            63, # maximum expressible
+        ]]
+        self.arguments_for['mac_length'] += mac_lengths
+        self.arguments_for['min_mac_length'] += mac_lengths
+        aead_lengths = [str(n) for n in [
+            1,  # minimum expressible
+            4,  # minimum allowed by policy
+            13, # an odd size in a plausible range
+            14, # an even non-power-of-two size in a plausible range
+            16, # same as full size for at least one algorithm
+            63, # maximum expressible
+        ]]
+        self.arguments_for['tag_length'] += aead_lengths
+        self.arguments_for['min_tag_length'] += aead_lengths
 
     def add_numerical_values(self) -> None:
         """Add numerical values that are not supported to the known identifiers."""

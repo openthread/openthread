@@ -1,18 +1,6 @@
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #include <errno.h>
@@ -26,29 +14,29 @@
 /* This block is present to support Visual Studio builds prior to 2015 */
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #include <stdarg.h>
-int snprintf( char *s, size_t n, const char *fmt, ... )
+int snprintf(char *s, size_t n, const char *fmt, ...)
 {
     int ret;
     va_list argp;
 
     /* Avoid calling the invalid parameter handler by checking ourselves */
-    if( s == NULL || n == 0 || fmt == NULL )
-        return( -1 );
+    if (s == NULL || n == 0 || fmt == NULL) {
+        return -1;
+    }
 
-    va_start( argp, fmt );
+    va_start(argp, fmt);
 #if defined(_TRUNCATE) && !defined(__MINGW32__)
-    ret = _vsnprintf_s( s, n, _TRUNCATE, fmt, argp );
+    ret = _vsnprintf_s(s, n, _TRUNCATE, fmt, argp);
 #else
-    ret = _vsnprintf( s, n, fmt, argp );
-    if( ret < 0 || (size_t) ret == n )
-    {
+    ret = _vsnprintf(s, n, fmt, argp);
+    if (ret < 0 || (size_t) ret == n) {
         s[n-1] = '\0';
         ret = -1;
     }
 #endif
-    va_end( argp );
+    va_end(argp);
 
-    return( ret );
+    return ret;
 }
 #endif
 
@@ -75,7 +63,9 @@ static void append_integer(char **buffer, size_t buffer_size,
                            unsigned long value)
 {
     size_t n = snprintf(*buffer, buffer_size - *required_size, format, value);
-    if (n < buffer_size - *required_size) *buffer += n;
+    if (n < buffer_size - *required_size) {
+        *buffer += n;
+    }
     *required_size += n;
 }
 
@@ -294,8 +284,7 @@ int main(int argc, char *argv[])
 {
     if (argc <= 1 ||
         !strcmp(argv[1], "help") ||
-        !strcmp(argv[1], "--help"))
-    {
+        !strcmp(argv[1], "--help")) {
         usage(argv[0]);
         return EXIT_FAILURE;
     }

@@ -1,24 +1,12 @@
 #!/usr/bin/env perl
 #
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 #
 # Purpose
 #
-# This script migrates application source code from the mbed TLS 1.3 API to the
-# mbed TLS 2.0 API.
+# This script migrates application source code from the Mbed TLS 1.3 API to the
+# Mbed TLS 2.0 API.
 #
 # The script processes the given source code and renames identifiers - functions
 # types, enums etc, as
@@ -88,7 +76,7 @@ while( my $filename = shift )
     if( dir($filename)->parent eq $lib_include_dir ||
          dir($filename)->parent eq $lib_source_dir )
     {
-        die "Script cannot be executed on the mbed TLS library itself.";
+        die "Script cannot be executed on the Mbed TLS library itself.";
     }
 
     if( -d $filename ) { print STDERR "skip (directory)\n"; next }

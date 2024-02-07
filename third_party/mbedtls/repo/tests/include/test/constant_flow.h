@@ -6,19 +6,7 @@
 
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef TEST_CONSTANT_FLOW_H
@@ -50,6 +38,12 @@
  * This file contains two implementations: one based on MemorySanitizer, the
  * other on valgrind's memcheck. If none of them is enabled, dummy macros that
  * do nothing are defined for convenience.
+ *
+ * \note #TEST_CF_SECRET must be called directly from within a .function file,
+ *       not indirectly via a macro defined under tests/include or a function
+ *       under tests/src. This is because we only run Valgrind for constant
+ *       flow on test suites that have greppable annotations inside them (see
+ *       `skip_suites_without_constant_flow` in `tests/scripts/all.sh`).
  */
 
 #if defined(MBEDTLS_TEST_CONSTANT_FLOW_MEMSAN)

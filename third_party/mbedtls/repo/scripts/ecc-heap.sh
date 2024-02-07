@@ -8,19 +8,7 @@
 # scripts/ecc-heap.sh | tee ecc-heap.log
 #
 # Copyright The Mbed TLS Contributors
-# SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
 set -eu
 
@@ -54,32 +42,45 @@ cat << EOF >$CONFIG_H
 
 #define MBEDTLS_BIGNUM_C
 #define MBEDTLS_ECP_C
+#define MBEDTLS_ECP_NO_INTERNAL_RNG
 #define MBEDTLS_ASN1_PARSE_C
 #define MBEDTLS_ASN1_WRITE_C
 #define MBEDTLS_ECDSA_C
+#define MBEDTLS_SHA256_C // ECDSA benchmark needs it
+#define MBEDTLS_SHA224_C // SHA256 requires this for now
 #define MBEDTLS_ECDH_C
 
-#define MBEDTLS_ECP_DP_SECP192R1_ENABLED
-#define MBEDTLS_ECP_DP_SECP224R1_ENABLED
+// NIST curves >= 256 bits
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP384R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP521R1_ENABLED
+// SECP "koblitz-like" curve >= 256 bits
+#define MBEDTLS_ECP_DP_SECP256K1_ENABLED
+// Brainpool curves (no specialised "mod p" routine)
+#define MBEDTLS_ECP_DP_BP256R1_ENABLED
+#define MBEDTLS_ECP_DP_BP384R1_ENABLED
+#define MBEDTLS_ECP_DP_BP512R1_ENABLED
+// Montgomery curves
 #define MBEDTLS_ECP_DP_CURVE25519_ENABLED
+#define MBEDTLS_ECP_DP_CURVE448_ENABLED
 
 #include "check_config.h"
 
-//#define MBEDTLS_ECP_WINDOW_SIZE            6
+#define MBEDTLS_HAVE_ASM // just make things a bit faster
+#define MBEDTLS_ECP_NIST_OPTIM // faster and less allocations
+
+//#define MBEDTLS_ECP_WINDOW_SIZE            4
 //#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1
 EOF
 
 for F in 0 1; do
-    for W in 2 3 4 5 6; do
+    for W in 2 3 4; do
         scripts/config.py set MBEDTLS_ECP_WINDOW_SIZE $W
         scripts/config.py set MBEDTLS_ECP_FIXED_POINT_OPTIM $F
         make benchmark >/dev/null 2>&1
         echo "fixed point optim = $F, max window size = $W"
         echo "--------------------------------------------"
-        programs/test/benchmark
+        programs/test/benchmark ecdh ecdsa
     done
 done
 

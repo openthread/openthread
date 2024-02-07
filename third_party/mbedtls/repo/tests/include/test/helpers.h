@@ -7,19 +7,7 @@
 
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef TEST_HELPERS_H
@@ -36,20 +24,7 @@
 #define MBEDTLS_TEST_MUTEX_USAGE
 #endif
 
-#if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-#else
-#include <stdio.h>
-#define mbedtls_fprintf    fprintf
-#define mbedtls_snprintf   snprintf
-#define mbedtls_calloc     calloc
-#define mbedtls_free       free
-#define mbedtls_exit       exit
-#define mbedtls_time       time
-#define mbedtls_time_t     time_t
-#define MBEDTLS_EXIT_SUCCESS EXIT_SUCCESS
-#define MBEDTLS_EXIT_FAILURE EXIT_FAILURE
-#endif
 
 #include <stddef.h>
 #include <stdint.h>
@@ -58,15 +33,19 @@
 #include "mbedtls/bignum.h"
 #endif
 
-typedef enum
-{
+/** The type of test case arguments that contain binary data. */
+typedef struct data_tag {
+    uint8_t *x;
+    uint32_t    len;
+} data_t;
+
+typedef enum {
     MBEDTLS_TEST_RESULT_SUCCESS = 0,
     MBEDTLS_TEST_RESULT_FAILED,
     MBEDTLS_TEST_RESULT_SKIPPED
 } mbedtls_test_result_t;
 
-typedef struct
-{
+typedef struct {
     mbedtls_test_result_t result;
     const char *test;
     const char *filename;
@@ -81,8 +60,8 @@ typedef struct
 mbedtls_test_info_t;
 extern mbedtls_test_info_t mbedtls_test_info;
 
-int mbedtls_test_platform_setup( void );
-void mbedtls_test_platform_teardown( void );
+int mbedtls_test_platform_setup(void);
+void mbedtls_test_platform_teardown(void);
 
 /**
  * \brief           Record the current test case as a failure.
@@ -100,7 +79,7 @@ void mbedtls_test_platform_teardown( void );
  * \param line_no   Line number where the failure originated.
  * \param filename  Filename where the failure originated.
  */
-void mbedtls_test_fail( const char *test, int line_no, const char* filename );
+void mbedtls_test_fail(const char *test, int line_no, const char *filename);
 
 /**
  * \brief           Record the current test case as skipped.
@@ -113,7 +92,7 @@ void mbedtls_test_fail( const char *test, int line_no, const char* filename );
  * \param line_no   Line number where the test case was skipped.
  * \param filename  Filename where the test case was skipped.
  */
-void mbedtls_test_skip( const char *test, int line_no, const char* filename );
+void mbedtls_test_skip(const char *test, int line_no, const char *filename);
 
 /**
  * \brief       Set the test step number for failure reports.
@@ -125,12 +104,12 @@ void mbedtls_test_skip( const char *test, int line_no, const char* filename );
  *
  * \param step  The step number to report.
  */
-void mbedtls_test_set_step( unsigned long step );
+void mbedtls_test_set_step(unsigned long step);
 
 /**
  * \brief       Reset mbedtls_test_info to a ready/starting state.
  */
-void mbedtls_test_info_reset( void );
+void mbedtls_test_info_reset(void);
 
 /**
  * \brief           Record the current test case as a failure if two integers
@@ -150,8 +129,50 @@ void mbedtls_test_info_reset( void );
  *
  * \return          \c 1 if the values are equal, otherwise \c 0.
  */
-int mbedtls_test_equal( const char *test, int line_no, const char* filename,
-                        unsigned long long value1, unsigned long long value2 );
+int mbedtls_test_equal(const char *test, int line_no, const char *filename,
+                       unsigned long long value1, unsigned long long value2);
+
+/**
+ * \brief           Record the current test case as a failure based
+ *                  on comparing two unsigned integers.
+ *
+ *                  This function is usually called via the macro
+ *                  #TEST_LE_U.
+ *
+ * \param test      Description of the failure or assertion that failed. This
+ *                  MUST be a string literal. This normally has the form
+ *                  "EXPR1 <= EXPR2" where EXPR1 has the value \p value1
+ *                  and EXPR2 has the value \p value2.
+ * \param line_no   Line number where the failure originated.
+ * \param filename  Filename where the failure originated.
+ * \param value1    The first value to compare.
+ * \param value2    The second value to compare.
+ *
+ * \return          \c 1 if \p value1 <= \p value2, otherwise \c 0.
+ */
+int mbedtls_test_le_u(const char *test, int line_no, const char *filename,
+                      unsigned long long value1, unsigned long long value2);
+
+/**
+ * \brief           Record the current test case as a failure based
+ *                  on comparing two signed integers.
+ *
+ *                  This function is usually called via the macro
+ *                  #TEST_LE_S.
+ *
+ * \param test      Description of the failure or assertion that failed. This
+ *                  MUST be a string literal. This normally has the form
+ *                  "EXPR1 <= EXPR2" where EXPR1 has the value \p value1
+ *                  and EXPR2 has the value \p value2.
+ * \param line_no   Line number where the failure originated.
+ * \param filename  Filename where the failure originated.
+ * \param value1    The first value to compare.
+ * \param value2    The second value to compare.
+ *
+ * \return          \c 1 if \p value1 <= \p value2, otherwise \c 0.
+ */
+int mbedtls_test_le_s(const char *test, int line_no, const char *filename,
+                      long long value1, long long value2);
 
 /**
  * \brief          This function decodes the hexadecimal representation of
@@ -171,12 +192,12 @@ int mbedtls_test_equal( const char *test, int line_no, const char* filename,
  * \return         \c -1 if the output buffer is too small or the input string
  *                 is not a valid hexadecimal representation.
  */
-int mbedtls_test_unhexify( unsigned char *obuf, size_t obufmax,
-                           const char *ibuf, size_t *len );
+int mbedtls_test_unhexify(unsigned char *obuf, size_t obufmax,
+                          const char *ibuf, size_t *len);
 
-void mbedtls_test_hexify( unsigned char *obuf,
-                          const unsigned char *ibuf,
-                          int len );
+void mbedtls_test_hexify(unsigned char *obuf,
+                         const unsigned char *ibuf,
+                         int len);
 
 /**
  * Allocate and zeroize a buffer.
@@ -185,7 +206,7 @@ void mbedtls_test_hexify( unsigned char *obuf,
  *
  * For convenience, dies if allocation fails.
  */
-unsigned char *mbedtls_test_zero_alloc( size_t len );
+unsigned char *mbedtls_test_zero_alloc(size_t len);
 
 /**
  * Allocate and fill a buffer from hex data.
@@ -197,15 +218,14 @@ unsigned char *mbedtls_test_zero_alloc( size_t len );
  *
  * For convenience, dies if allocation fails.
  */
-unsigned char *mbedtls_test_unhexify_alloc( const char *ibuf, size_t *olen );
+unsigned char *mbedtls_test_unhexify_alloc(const char *ibuf, size_t *olen);
 
-int mbedtls_test_hexcmp( uint8_t * a, uint8_t * b,
-                         uint32_t a_len, uint32_t b_len );
+int mbedtls_test_hexcmp(uint8_t *a, uint8_t *b,
+                        uint32_t a_len, uint32_t b_len);
 
 #if defined(MBEDTLS_CHECK_PARAMS)
 
-typedef struct
-{
+typedef struct {
     const char *failure_condition;
     const char *file;
     int line;
@@ -221,7 +241,7 @@ mbedtls_test_param_failed_location_record_t;
  *          mbedtls_param_failed() that cancels it.
  */
 void mbedtls_test_param_failed_get_location_record(
-         mbedtls_test_param_failed_location_record_t *location_record );
+    mbedtls_test_param_failed_location_record_t *location_record);
 
 /**
  * \brief   State that a call to mbedtls_param_failed() is expected.
@@ -230,7 +250,7 @@ void mbedtls_test_param_failed_get_location_record(
  *          mbedtls_test_param_failed_check_expected_call() or
  *          mbedtls_param_failed that cancel it.
  */
-void mbedtls_test_param_failed_expect_call( void );
+void mbedtls_test_param_failed_expect_call(void);
 
 /**
  * \brief   Check whether mbedtls_param_failed() has been called as expected.
@@ -243,7 +263,7 @@ void mbedtls_test_param_failed_expect_call( void );
  *               mbedtls_param_failed() has been called.
  *          \c -1 Otherwise.
  */
-int mbedtls_test_param_failed_check_expected_call( void );
+int mbedtls_test_param_failed_check_expected_call(void);
 
 /**
  * \brief   Get the address of the object of type jmp_buf holding the execution
@@ -272,7 +292,7 @@ int mbedtls_test_param_failed_check_expected_call( void );
  * \return  Address of the object of type jmp_buf holding the execution state
  *          information used by mbedtls_param_failed() to do a long jump.
  */
-void* mbedtls_test_param_failed_get_state_buf( void );
+void *mbedtls_test_param_failed_get_state_buf(void);
 
 /**
  * \brief   Reset the execution state used by mbedtls_param_failed() to do a
@@ -288,7 +308,7 @@ void* mbedtls_test_param_failed_get_state_buf( void );
  *          mbedtls_param_failed() will not trigger a long jump with
  *          undefined behavior but rather a long jump that will rather fault.
  */
-void mbedtls_test_param_failed_reset_state( void );
+void mbedtls_test_param_failed_reset_state(void);
 #endif /* MBEDTLS_CHECK_PARAMS */
 
 #if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
@@ -298,11 +318,11 @@ void mbedtls_test_param_failed_reset_state( void );
 #if defined(MBEDTLS_TEST_MUTEX_USAGE)
 /** Permanently activate the mutex usage verification framework. See
  * threading_helpers.c for information. */
-void mbedtls_test_mutex_usage_init( void );
+void mbedtls_test_mutex_usage_init(void);
 
 /** Call this function after executing a test case to check for mutex usage
  * errors. */
-void mbedtls_test_mutex_usage_check( void );
+void mbedtls_test_mutex_usage_check(void);
 #endif /* MBEDTLS_TEST_MUTEX_USAGE */
 
 #if defined(MBEDTLS_TEST_HOOKS)
@@ -317,29 +337,41 @@ void mbedtls_test_mutex_usage_check( void );
  *
  * \note    If the check fails, fail the test currently being run.
  */
-void mbedtls_test_err_add_check( int high, int low,
-                                 const char *file, int line);
+void mbedtls_test_err_add_check(int high, int low,
+                                const char *file, int line);
 #endif
 
 #if defined(MBEDTLS_BIGNUM_C)
-/** Read an MPI from a string.
+/** Read an MPI from a hexadecimal string.
  *
- * Like mbedtls_mpi_read_string(), but size the resulting bignum based
- * on the number of digits in the string. In particular, construct a
- * bignum with 0 limbs for an empty string, and a bignum with leading 0
- * limbs if the string has sufficiently many leading 0 digits.
+ * Like mbedtls_mpi_read_string(), but with tighter guarantees around
+ * edge cases.
  *
- * This is important so that the "0 (null)" and "0 (1 limb)" and
- * "leading zeros" test cases do what they claim.
+ * - This function guarantees that if \p s begins with '-' then the sign
+ *   bit of the result will be negative, even if the value is 0.
+ *   When this function encounters such a "negative 0", it
+ *   increments #mbedtls_test_case_uses_negative_0.
+ * - The size of the result is exactly the minimum number of limbs needed
+ *   to fit the digits in the input. In particular, this function constructs
+ *   a bignum with 0 limbs for an empty string, and a bignum with leading 0
+ *   limbs if the string has sufficiently many leading 0 digits.
+ *   This is important so that the "0 (null)" and "0 (1 limb)" and
+ *   "leading zeros" test cases do what they claim.
  *
  * \param[out] X        The MPI object to populate. It must be initialized.
- * \param radix         The radix (2 to 16).
- * \param[in] s         The null-terminated string to read from.
+ * \param[in] s         The null-terminated hexadecimal string to read from.
  *
  * \return \c 0 on success, an \c MBEDTLS_ERR_MPI_xxx error code otherwise.
  */
-/* Since the library has exactly the desired behavior, this is trivial. */
-int mbedtls_test_read_mpi( mbedtls_mpi *X, int radix, const char *s );
+int mbedtls_test_read_mpi(mbedtls_mpi *X, const char *s);
+
+/** Nonzero if the current test case had an input parsed with
+ * mbedtls_test_read_mpi() that is a negative 0 (`"-"`, `"-0"`, `"-00"`, etc.,
+ * constructing a result with the sign bit set to -1 and the value being
+ * all-limbs-0, which is not a valid representation in #mbedtls_mpi but is
+ * tested for robustness).
+ */
+extern unsigned mbedtls_test_case_uses_negative_0;
 #endif /* MBEDTLS_BIGNUM_C */
 
 #endif /* TEST_HELPERS_H */
