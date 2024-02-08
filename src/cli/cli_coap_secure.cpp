@@ -286,7 +286,7 @@ template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Indicates if the #CoAP Secure service is closed.
+ * Indicates if the CoAP Secure service is closed.
  * @sa otCoapSecureIsClosed
  */
 template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
@@ -297,11 +297,12 @@ template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
 /**
  * @cli coaps isconnected
  * @code
+ * coaps isconnected
  * yes
  * Done
  * @endcode
  * @par
- * Indicates if the #CoAP Secure service is connected.
+ * Indicates if the CoAP Secure service is connected.
  * @sa otCoapSecureIsConnected
  */
 template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
@@ -317,7 +318,7 @@ template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Indicates if the #CoAP Secure service connection is active
+ * Indicates if the CoAP Secure service connection is active
  * (either already connected or in the process of establishing a connection).
  * @sa otCoapSecureIsConnectionActive
  */
@@ -347,7 +348,7 @@ exit:
  * coaps get test-resource block-1024
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type}]
+ * @cparam coaps get @ca{uri-path} [@ca{type}]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
@@ -419,7 +420,7 @@ template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return Proce
  *	   parameter, its value must be a string, such as `hellothere`. If the
  *	   `type` is `block-`, the value of the payload parameter must be an
  *	   integer that specifies the number of blocks to send. The `block-` type
- *	   requires OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE to be set.
+ *	   requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Modifies the specified CoAPS resource.
  */
@@ -603,7 +604,7 @@ exit:
  * coaps connected
  * @endcode
  * @cparam coaps connect @ca{address}
- * The `address` parameter is the IP address of the peer.
+ * The `address` parameter is the IPv6 address of the peer.
  * @par
  * Initializes a Datagram Transport Layer Security (DTLS) session with a peer.
  * @sa otCoapSecureConnect
