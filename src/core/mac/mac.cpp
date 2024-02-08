@@ -1311,6 +1311,12 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
                 ProcessCsl(*aAckFrame, dstAddr);
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+                if (!GetRxOnWhenIdle() && aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr)
+                {
+                    Get<DataPollSender>().ResetKeepAliveTimer();
+                }
+#endif
             }
         }
     }
