@@ -91,7 +91,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
 }
 
 /**
- * @cli coaps resource(get,set)
+ * @cli coaps resource (get,set)
  * @code
  * coaps resource test-resource
  * Done
@@ -188,13 +188,18 @@ exit:
  * Done
  * @endcode
  * @cparam coaps start [@ca{check-peer-cert} | @ca{max-conn-attempts}]
- * The `check-peer-cert` (peer certificate check) and `max-conn-attempts`
- * (maxinum number of allowed connection attempts) parameters work
+ * The `check-peer-cert` parameter determines if the peer-certificate check is
+ * enabled (default) or disabled.
+ *
+ * The `max-conn-attempts` parameter sets the maxinum number of allowed
+ * attempts, successful or failed, to connect to the CoAP Secure server.
+ * The default value of this parameter is `0`, which means that there is
+ * no limit to the number of attempts.
+ *
+ * The `check-peer-cert` and `max-conn-attempts` parameters work
  * together in the following combinations, even though you can only specify
  * one argument:
- *   * Argument omitted:
- *     `check-peer-cert` assumes the default of `true`, and `max-conn-attempts` uses
- *     default of 0, which means there is no limit to  connection attempts.
+ *   * No argument specified: Defaults are used.
  *   * Setting `check-peer-cert` to `true`:
  *     Has the same effect as omitting the argument, which is that the
  *     `check-peer-cert` value is `true`, and the `max-conn-attempts` value is 0.
