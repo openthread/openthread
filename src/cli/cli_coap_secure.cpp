@@ -103,7 +103,7 @@ void CoapSecure::PrintPayload(otMessage *aMessage)
  * @endcode
  * @cparam coaps resource [@ca{uri-path}]
  * @par
- * Gets or sets the URI path of the CoAPs server resource.
+ * Gets or sets the URI path of the CoAPS server resource.
  * @sa otCoapSecureAddBlockWiseResource
  */
 template <> otError CoapSecure::Process<Cmd("resource")>(Arg aArgs[])
@@ -152,7 +152,7 @@ exit:
  * @endcode
  * @cparam coaps set @ca{new-content}
  * @par
- * Sets the content sent by the resource on the CoAPs server.
+ * Sets the content sent by the resource on the CoAPS server.
  */
 template <> otError CoapSecure::Process<Cmd("set")>(Arg aArgs[])
 {
@@ -357,7 +357,7 @@ exit:
  *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *         `block-256`, `block-512`, or `block-1024`.
  * @par
- * Gets information about the specified CoAPs resource on the CoAPs server.
+ * Gets information about the specified CoAPS resource on the CoAPS server.
  */
 template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
@@ -380,15 +380,16 @@ template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return Proces
  *         to send blocks with a randomly generated number of bytes for the payload.
  *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *         `block-256`, `block-512`, or `block-1024`.
- *	 * `payload`:  CoAPs payload request, which if used is either a string
- *	   or an integer, depending on the type. If the type is `con` or `non-con`,
+ *	 * `payload`:  CoAPS payload request, which if used is either a string
+ *	   or an integer, depending on the `type`. If the `type` is `con` or `non-con`,
  *	   the payload parameter is optional. If you leave out the payload
  *	   parameter, an empty payload is sent. However, If you use the payload
  *	   parameter, its value must be a string, such as `hellothere`. If the
- *	   type is `block-`, the value of the payload parameter must be an
- *	   integer that specifies the number of blocks to send.
+ *	   `type` is `block-`, the value of the payload parameter must be an
+ *	   integer that specifies the number of blocks to send. The `block-` type
+ *	   requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
- * Creates the specified CoAPs resource.
+ * Creates the specified CoAPS resource.
  */
 template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
@@ -402,7 +403,7 @@ template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return Proce
  * coaps put test-resource block-1024 10
  * Done
  * @endcode
- * @cparam @ca{uri-path} [@ca{type} [@ca{payload}]]
+ * @cparam @ca{uri-path} [@ca{type}] [@ca{payload}]
  *   * `uri-path`: URI path of the resource.
  *   * `type`:
  *       * `con`: Confirmable
@@ -411,15 +412,16 @@ template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return Proce
  *         to send blocks with a randomly generated number of bytes for the payload.
  *         Valid values are: `block-16`, `block-32`, `block-64`, `block-128`,
  *         `block-256`, `block-512`, or `block-1024`.
- *	 * `payload`:  CoAPs payload request, which if used is either a string
- *	   or an integer, depending on the type. If the type is `con` or `non-con`,
+ *	 * `payload`:  CoAPS payload request, which if used is either a string
+ *	   or an integer, depending on the `type`. If the `type` is `con` or `non-con`,
  *	   the payload parameter is optional. If you leave out the payload
  *	   parameter, an empty payload is sent. However, If you use the payload
  *	   parameter, its value must be a string, such as `hellothere`. If the
- *	   type is `block-`, the value of the payload parameter must be an
- *	   integer that specifies the number of blocks to send.
+ *	   `type` is `block-`, the value of the payload parameter must be an
+ *	   integer that specifies the number of blocks to send. The `block-` type
+ *	   requires OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE to be set.
  * @par
- * Modifies the specified CoAPs resource.
+ * Modifies the specified CoAPS resource.
  */
 template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
@@ -434,9 +436,9 @@ template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return Proces
  *   * `type`:
  *       * `con`: Confirmable
  *       * `non-con`: Non-confirmable (default)
- *   * `payload`: CoAPs payload request.
+ *   * `payload`: CoAPS payload request.
  * @par
- * The CoAP payload string to delete.
+ * The CoAPS payload string to delete.
  */
 template <> otError CoapSecure::Process<Cmd("delete")>(Arg aArgs[])
 {
@@ -601,8 +603,10 @@ exit:
  * coaps connected
  * @endcode
  * @cparam coaps connect @ca{address}
- * @par api_copy
- * #otCoapSecureConnect
+ * The `address` parameter is the IP address of the peer.
+ * @par
+ * Initializes a Datagram Transport Layer Security (DTLS) session with a peer.
+ * @sa otCoapSecureConnect
  */
 template <> otError CoapSecure::Process<Cmd("connect")>(Arg aArgs[])
 {
@@ -631,8 +635,9 @@ exit:
  * coaps disconnected
  * Done
  * @endcode
- * @par api_copy
- * #otCoapSecureDisiConnect
+ * @par
+ * Stops the DTLS session.
+ * @sa otCoapSecureDisconnect
  */
 template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 {
