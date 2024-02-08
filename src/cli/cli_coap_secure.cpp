@@ -653,7 +653,7 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
 }
 
 /**
- * <!--- Moving these tags to before the IF statement so that command renders --->
+ * <!--- This tag is before the IF statement so that Doxygen imports the command. --->
  * @cli coaps psk
  * @code
  * coaps psk 1234 key1
@@ -664,7 +664,7 @@ template <> otError CoapSecure::Process<Cmd("disconnect")>(Arg aArgs[])
  *   * `psk-id`: The pre-shared key identifier.
  * @par
  * Sets the pre-shared key (PSK) and cipher suite DTLS_PSK_WITH_AES_128_CCM_8.
- * @note This command  requires the build-time feature
+ * @note This command requires the build-time feature
  * `MBEDTLS_KEY_EXCHANGE_PSK_ENABLED` to be enabled.
  * @sa #otCoapSecureSetPsk
  */
@@ -694,7 +694,8 @@ exit:
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-/** <!--- Moving these tags to before the IF statement so that command renders --->
+/**
+ * <!--- This tag is before the IF statement so that Doxygen imports the command. --->
  * @cli coaps x509
  * @code
  * coaps x509
