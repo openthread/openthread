@@ -190,7 +190,7 @@ exit:
  * @cparam coaps start [@ca{check-peer-cert} | @ca{max-conn-attempts}]
  * The `check-peer-cert` parameter determines if the peer-certificate check is
  * enabled (default) or disabled.
- * The `max-conn-attempts` parameter sets the maxinum number of allowed
+ * The `max-conn-attempts` parameter sets the maximum number of allowed
  * attempts, successful or failed, to connect to the CoAP Secure server.
  * The default value of this parameter is `0`, which means that there is
  * no limit to the number of attempts.
