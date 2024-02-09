@@ -172,8 +172,10 @@
  * @defgroup plat-ble                 BLE
  * @defgroup plat-crypto              Crypto - Platform
  * @defgroup plat-dns                 DNS - Platform
+ * @defgroup plat-dns-sd              DNS-SD (mDNS)
  * @defgroup plat-entropy             Entropy
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
+ * @defgroup plat-infra-if            Infrastructure Interface
  * @defgroup plat-logging             Logging - Platform
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
@@ -186,7 +188,6 @@
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-trel                TREL - Platform
- * @defgroup plat-infra-if            Infrastructure Interface
  *
  * @}
  *
