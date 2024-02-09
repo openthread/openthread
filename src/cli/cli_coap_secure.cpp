@@ -207,7 +207,7 @@ exit:
  *     `check-peer-cert` is `true`, and the `max-conn-attempts` value is the
  *     number specified in the argument.
  * @par
- * Starts the %CoAP Secure service.
+ * Starts the CoAP Secure service.
  * @sa otCoapSecureStart
  * @sa otCoapSecureSetSslAuthMode
  * @sa otCoapSecureSetClientConnectedCallback
