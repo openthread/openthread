@@ -125,6 +125,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(*this)
 #endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    , mBackboneRouterLocal(*this)
+#endif
     , mActiveDataset(*this)
     , mPendingDataset(*this)
     , mExtendedPanIdManager(*this)
@@ -178,7 +181,6 @@ Instance::Instance(void)
     , mBackboneRouterLeader(*this)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    , mBackboneRouterLocal(*this)
     , mBackboneRouterManager(*this)
 #endif
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)

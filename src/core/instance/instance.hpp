@@ -510,6 +510,10 @@ private:
     Sntp::Client mSntpClient;
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    BackboneRouter::Local mBackboneRouterLocal;
+#endif
+
     MeshCoP::ActiveDatasetManager  mActiveDataset;
     MeshCoP::PendingDatasetManager mPendingDataset;
     MeshCoP::ExtendedPanIdManager  mExtendedPanIdManager;
@@ -578,7 +582,6 @@ private:
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    BackboneRouter::Local   mBackboneRouterLocal;
     BackboneRouter::Manager mBackboneRouterManager;
 #endif
 
