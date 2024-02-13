@@ -141,6 +141,20 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_IP6_SLAAC_DEPRECATION_INTERVAL
+ *
+ * Specifies the deprecating time of SLAAC addresses in seconds.
+ *
+ * Applicable only if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is enabled.
+ *
+ * Deprecating interval is used once an on-mesh prefix is removed from Network Data before removing the SLAAC address.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_SLAAC_DEPRECATION_INTERVAL
+#define OPENTHREAD_CONFIG_IP6_SLAAC_DEPRECATION_INTERVAL 300
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES
  *
  * The number of MPL Seed Set entries for duplicate detection.

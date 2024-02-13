@@ -301,8 +301,8 @@ class Node(object):
     def get_rloc16(self):
         return self._cli_single_output('rloc16')
 
-    def get_ip_addrs(self):
-        return self.cli('ipaddr')
+    def get_ip_addrs(self, verbose=None):
+        return self.cli('ipaddr', verbose)
 
     def add_ip_addr(self, address):
         self._cli_no_output('ipaddr add', address)

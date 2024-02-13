@@ -191,6 +191,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-024-mle-adv-imax-change.py
     run cli/test-025-mesh-local-prefix-change.py
     run cli/test-026-coaps-conn-limit.py
+    run cli/test-027-slaac-address.py
     run cli/test-400-srp-client-server.py
     run cli/test-601-channel-manager-channel-change.py
     # Skip the "channel-select" test on a TREL only radio link, since it
@@ -241,7 +242,7 @@ run ncp/test-026-slaac-address-wpantund.py
 run ncp/test-027-child-mode-change.py
 run ncp/test-028-router-leader-reset-recovery.py
 run ncp/test-029-data-poll-interval.py
-run ncp/test-030-slaac-address-ncp.py
+# run ncp/test-030-slaac-address-ncp.py
 run ncp/test-031-meshcop-joiner-commissioner.py
 run ncp/test-032-child-attach-with-multiple-ip-addresses.py
 run ncp/test-033-mesh-local-prefix-change.py

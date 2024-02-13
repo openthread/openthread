@@ -337,6 +337,18 @@ public:
     Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
 
     /**
+     * Finds and returns Domain ID associated with a given prefix in the Thread Network data.
+     *
+     * @param[in]  aPrefix     The prefix to search for.
+     * @param[out] aDomainId   A reference to return the Domain ID.
+     *
+     * @retval kErrorNone      Successfully found @p aPrefix in the Network Data and updated @p aDomainId.
+     * @retval kErrorNotFound  Could not find @p aPrefix in the Network Data.
+     *
+     */
+    Error FindDomainIdFor(const Ip6::Prefix &aPrefix, uint8_t &aDomainId) const;
+
+    /**
      * Finds and returns the list of RLOCs of border routers providing external IP connectivity.
      *
      * A border router is considered to provide external IP connectivity if it has added at least one external route

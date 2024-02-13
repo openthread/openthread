@@ -170,7 +170,7 @@ class MultiBorderRouters(thread_cert.TestCase):
 
         br1.disable_br()
 
-        self.simulator.go(15)
+        self.simulator.go(315)
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", br1.get_addrs())

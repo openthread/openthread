@@ -279,6 +279,22 @@ Error Leader::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDest
         }
     }
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+    {
+        // The `Slaac` module keeps track of the associated Domain IDs
+        // for deprecating SLAAC prefixes, even if the related
+        // Prefix TLV has already been removed from the Network
+        // Data.
+
+        uint8_t domainId;
+
+        if (Get<Utils::Slaac>().FindDomainIdFor(aSource, domainId) == kErrorNone)
+        {
+            error = ExternalRouteLookup(domainId, aDestination, aRloc16);
+        }
+    }
+#endif
+
 exit:
     return error;
 }
