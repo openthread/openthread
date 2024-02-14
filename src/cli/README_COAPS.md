@@ -240,22 +240,12 @@ Done
 
 Starts the application coaps service.
 
-The `check-peer-cert` parameter determines if the peer-certificate check
-is enabled (default) or disabled. The `max-conn-attempts` parameter sets
-the maximum number of allowed attempts, successful or failed, to connect
-to the CoAP Secure server. The default value of this parameter is 0,
-which means that there is no limit to the number of attempts. The
-`check-peer-cert` and `max-conn-attempts` parameters work together in the
-following combinations, even though you can only specify one argument:
+The `check-peer-cert` parameter determines if the peer-certificate check is enabled (default) or disabled. The `max-conn-attempts` parameter sets the maximum number of allowed attempts, successful or failed, to connect to the CoAP Secure server. The default value of this parameter is 0, which means that there is no limit to the number of attempts. The `check-peer-cert` and `max-conn-attempts` parameters work together in the following combinations, even though you can only specify one argument:
 
 - No argument specified: Defaults are used.
-- Setting `check-peer-cert` to `true`: Has the same effect as
-  as omitting the argument, which is that the `check-peer-cert` value is
-  `true`, and the `max-conn-attempts` value is 0.
-- Setting `check-peer-cert` to `false`: `check-peer-cert` value is `false`,
-   and the `max-conn-attempts` value is `0`.
-- Specifying a number: `check-peer-cert` is `true`, and the `max-conn-attempts`
-  value is the number specified in the argument.
+- Setting `check-peer-cert` to `true`: Has the same effect as as omitting the argument, which is that the `check-peer-cert` value is `true`, and the `max-conn-attempts` value is 0.
+- Setting `check-peer-cert` to `false`: `check-peer-cert` value is `false`, and the `max-conn-attempts` value is `0`.
+- Specifying a number: `check-peer-cert` is `true`, and the `max-conn-attempts` value is the number specified in the argument.
 
 ```bash
 > coaps start
