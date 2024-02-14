@@ -245,6 +245,7 @@ void ChildTable::Restore(void)
         child->SetTimeout(childInfo.GetTimeout());
         child->SetDeviceMode(Mle::DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
+        child->GenerateChallenge();
         child->SetLastHeard(TimerMilli::GetNow());
         child->SetVersion(childInfo.GetVersion());
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
