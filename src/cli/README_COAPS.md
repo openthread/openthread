@@ -236,7 +236,7 @@ Sets the content sent by the test resource.
 Done
 ```
 
-### coaps start \[check-peer-cert\|max-conn-attempts\]
+### start \[check-peer-cert\|max-conn-attempts\]
 
 Starts the application coaps service.
 
