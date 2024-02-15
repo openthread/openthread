@@ -300,6 +300,7 @@ exit:
  * @endcode
  * @par api_copy
  * #otCoapStart
+ * @sa @coap
  */
 template <> otError Coap::Process<Cmd("start")>(Arg aArgs[])
 {
@@ -492,6 +493,7 @@ template <> otError Coap::Process<Cmd("get")>(Arg aArgs[]) { return ProcessReque
  *     `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Creates the specified CoAP resource.
+ * @sa @coap
  */
 template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
@@ -527,6 +529,7 @@ template <> otError Coap::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequ
  *     `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
  * Modifies the specified CoAP resource.
+ * @sa @coap
  */
 template <> otError Coap::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
