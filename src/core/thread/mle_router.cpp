@@ -1727,7 +1727,6 @@ void MleRouter::SendParentResponse(Child *aChild, const RxChallenge &aChallenge,
         SuccessOrExit(error = message->AppendCslClockAccuracyTlv());
     }
 #endif
-
     aChild->GenerateChallenge();
     SuccessOrExit(error = message->AppendChallengeTlv(aChild->GetChallenge()));
     SuccessOrExit(error = message->AppendLinkMarginTlv(aChild->GetLinkInfo().GetLinkMargin()));
@@ -2962,7 +2961,24 @@ Error MleRouter::SendChildUpdateRequest(Child &aChild)
     if (!aChild.IsStateValid())
     {
         SuccessOrExit(error = message->AppendTlvRequestTlv(kTlvs));
-        aChild.GenerateChallenge();
+
+        if (!aChild.IsStateRestored())
+        {
+            // A random challenge is generated and saved when `aChild`
+            // is first initialized in `kStateRestored`. We will use
+            // the saved challenge here. This prevents overwriting
+            // the saved challenge when the child is also detached
+            // and happens to send a "Parent Request" in the window
+            // where the parent transitions to the router/leader role
+            // and before the parent sends the "Child Update Request".
+            // This ensures that the same random challenge is
+            // included in both "Parent Response" and "Child Update
+            // Response," guaranteeing proper acceptance of the
+            // child's "Child ID request".
+
+            aChild.GenerateChallenge();
+        }
+
         SuccessOrExit(error = message->AppendChallengeTlv(aChild.GetChallenge()));
     }
 
