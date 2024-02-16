@@ -287,7 +287,7 @@ template <> otError SrpClient::Process<Cmd("host")>(Arg aArgs[])
          * @par
          * Indicates whether auto address mode is enabled. If auto address mode is not
          * enabled, then the list of SRP client host addresses is returned.
-	 * @moreinfo{@srp}.
+         * @moreinfo{@srp}.
          * @sa otSrpClientGetHostInfo
          */
         if (aArgs[1].IsEmpty())
