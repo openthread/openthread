@@ -115,9 +115,9 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
  * to enable or disable the SRP server.
  * @par
  * This command requires that `OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE` be enabled.
+ * @moreinfo{@srp}.
  * @sa otSrpServerIsAutoEnableMode
  * @sa otSrpServerSetAutoEnableMode
- * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
@@ -174,8 +174,9 @@ template <> otError SrpServer::Process<Cmd("domain")>(Arg aArgs[])
  *               The SRP server may become active when the existing
  *               SRP servers are no longer active within the Thread network.
  *  * `running`: The SRP server is active and can handle service registrations.
+ * @par
+ * @moreinfo{@srp}.
  * @sa otSrpServerGetState
- * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("state")>(Arg aArgs[])
 {
@@ -213,9 +214,8 @@ template <> otError SrpServer::Process<Cmd("enable")>(Arg aArgs[])
  * @endcode
  * @cparam srp server [@ca{enable}|@ca{disable}]
  * @par
- * Enables or disables the SRP server.
+ * Enables or disables the SRP server. @moreinfo{@srp}.
  * @sa otSrpServerSetEnabled
- * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("disable")>(Arg aArgs[])
 {
@@ -311,11 +311,10 @@ exit:
  * Done
  * @endcode
  * @par
- * Returns information about all registered hosts.
+ * Returns information about all registered hosts. @moreinfo{@srp}.
  * @sa otSrpServerGetNextHost
  * @sa otSrpServerHostGetAddresses
  * @sa otSrpServerHostGetFullName
- * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("host")>(Arg aArgs[])
 {
@@ -415,10 +414,10 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
  * The `TXT` record is displayed
  * as an array of entries. If an entry contains a key, the key is printed in
  * ASCII format. The value portion is printed in hexadecimal bytes.
+ * @moreinfo{@srp}.
  * @sa otSrpServerServiceGetInstanceName
  * @sa otSrpServerServiceGetServiceName
  * @sa otSrpServerServiceGetSubTypeServiceNameAt
- * @sa @srp
  */
 template <> otError SrpServer::Process<Cmd("service")>(Arg aArgs[])
 {

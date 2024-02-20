@@ -76,9 +76,8 @@ UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
  * - `port`: UDP port number to bind to. Each of the examples is using port number 1234.
  * @par
  * Assigns an IPv6 address and a port to an open socket, which binds the socket for communication.
- * Assigning the IPv6 address and port is referred to as naming the socket.
+ * Assigning the IPv6 address and port is referred to as naming the socket. @moreinfo{@udp}.
  * @sa otUdpBind
- * @sa @udp
  */
 template <> otError UdpExample::Process<Cmd("bind")>(Arg aArgs[])
 {
@@ -127,7 +126,7 @@ exit:
  * `InvalidState` when the preferred NAT64 prefix is unavailable.
  * @par api_copy
  * #otUdpConnect
- * @sa @udp
+ * @moreinfo{@udp}.
  */
 template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
@@ -244,12 +243,11 @@ exit:
  *   - `-s`: Auto-generated payload with the specified length given in the `value` parameter.
  *   - `-x`: Binary data in hexadecimal representation given in the `value` parameter.
  * @par
- * Sends a UDP message using the socket.
+ * Sends a UDP message using the socket. @moreinfo{@udp}.
  * @csa{udp open}
  * @csa{udp bind}
  * @csa{udp connect}
  * @sa otUdpSend
- * @sa @udp
  */
 template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 {
