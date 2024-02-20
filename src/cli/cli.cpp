@@ -7682,7 +7682,7 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
         error = ProcessGet(aArgs, otThreadGetVendorName);
 #else
         /**
-         * @cli vendor name (name)
+         * @cli vendor name (set)
          * @code
          * vendor name nest
          * Done
@@ -7712,7 +7712,7 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
         error = ProcessGet(aArgs, otThreadGetVendorModel);
 #else
         /**
-         * @cli vendor model (name)
+         * @cli vendor model (set)
          * @code
          * vendor model Hub\ Max
          * Done
@@ -7742,7 +7742,7 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
         error = ProcessGet(aArgs, otThreadGetVendorSwVersion);
 #else
         /**
-         * @cli vendor swversion (version)
+         * @cli vendor swversion (set)
          * @code
          * vendor swversion Marble3.5.1
          * Done
@@ -7752,6 +7752,36 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
          * @cparam vendor swversion @ca{version}
          */
         error = ProcessGetSet(aArgs, otThreadGetVendorSwVersion, otThreadSetVendorSwVersion);
+#endif
+    }
+    /**
+     * @cli vendor appurl
+     * @code
+     * vendor appurl
+     * http://www.example.com
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otThreadGetVendorAppUrl
+     */
+    else if (aArgs[0] == "appurl")
+    {
+        aArgs++;
+
+#if !OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
+        error = ProcessGet(aArgs, otThreadGetVendorAppUrl);
+#else
+        /**
+         * @cli vendor appurl (set)
+         * @code
+         * vendor appurl http://www.example.com
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otThreadSetVendorAppUrl
+         * @cparam vendor appurl @ca{url}
+         */
+        error = ProcessGetSet(aArgs, otThreadGetVendorAppUrl, otThreadSetVendorAppUrl);
 #endif
     }
 
@@ -7829,6 +7859,7 @@ template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
      * - `28`: Thread Stack Version TLV (version identifier as UTF-8 string for Thread stack codebase/commit/version)
      * - `29`: Child TLV
      * - `34`: MLE Counters TLV
+     * - `35`: Vendor App URL TLV
      * @par
      * Sends a network diagnostic request to retrieve specified Type Length Values (TLVs)
      * for the specified addresses(es).
@@ -7995,6 +8026,9 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION:
             OutputLine("Vendor SW Version: %s", diagTlv.mData.mVendorSwVersion);
+            break;
+        case OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL:
+            OutputLine("Vendor App URL: %s", diagTlv.mData.mVendorAppUrl);
             break;
         case OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION:
             OutputLine("Thread Stack Version: %s", diagTlv.mData.mThreadStackVersion);

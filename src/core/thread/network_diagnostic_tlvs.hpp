@@ -96,6 +96,7 @@ public:
         kAnswer              = OT_NETWORK_DIAGNOSTIC_TLV_ANSWER,
         kQueryId             = OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID,
         kMleCounters         = OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS,
+        kVendorAppUrl        = OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL,
     };
 
     /**
@@ -121,6 +122,12 @@ public:
      *
      */
     static constexpr uint8_t kMaxThreadStackVersionLength = OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH;
+
+    /**
+     * Maximum length of Vendor SW Version TLV.
+     *
+     */
+    static constexpr uint8_t kMaxVendorAppUrlLength = OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH;
 
     /**
      * Returns the Type value.
@@ -235,6 +242,12 @@ typedef StringTlvInfo<Tlv::kVendorSwVersion, Tlv::kMaxVendorSwVersionLength> Ven
  *
  */
 typedef StringTlvInfo<Tlv::kThreadStackVersion, Tlv::kMaxThreadStackVersionLength> ThreadStackVersionTlv;
+
+/**
+ * Defines Vendor App URL TLV constants and types.
+ *
+ */
+typedef StringTlvInfo<Tlv::kVendorAppUrl, Tlv::kMaxVendorAppUrlLength> VendorAppUrlTlv;
 
 /**
  * Defines Child IPv6 Address List TLV constants and types.
