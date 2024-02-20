@@ -7792,9 +7792,11 @@ template <> otError Interpreter::Process<Cmd("vendor")>(Arg aArgs[])
 
 template <> otError Interpreter::Process<Cmd("networkdiagnostic")>(Arg aArgs[])
 {
+    static constexpr uint16_t kMaxTlvs = 35;
+
     otError      error = OT_ERROR_NONE;
     otIp6Address address;
-    uint8_t      tlvTypes[OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES];
+    uint8_t      tlvTypes[kMaxTlvs];
     uint8_t      count = 0;
 
     SuccessOrExit(error = aArgs[1].ParseAsIp6Address(address));
