@@ -73,3 +73,18 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
     OT_UNUSED_VARIABLE(aPacket);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
+
+otBleLinkCapabilities otPlatGetBleLinkCapabilities(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otBleLinkCapabilities dummy = {0};
+    return dummy;
+}
+
+otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aAdvertisementData);
+    OT_UNUSED_VARIABLE(aAdvertisementLen);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}

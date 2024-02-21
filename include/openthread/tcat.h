@@ -67,6 +67,11 @@ extern "C" {
 #define OT_TCAT_MAX_SERVICE_NAME_LENGTH \
     15 ///< Maximum string length of a UDP or TCP service name (does not include null char).
 
+#define OT_TCAT_ADVERTISEMENT_MAX_LEN 29 ///< Maximum length of TCAT advertisement.
+#define OT_TCAT_VERSION 0x5              ///< TCAT version number.
+#define OT_TCAT_OPCODE 0x2               ///< TCAT Operation Code.
+#define OT_TCAT_MAX_VENDORID_SIZE 6      ///< TCAT max size of vendor ID including null as termination.
+
 /**
  * Represents TCAT status code.
  *
@@ -112,6 +117,19 @@ typedef enum otTcatCommandClass
 } otTcatCommandClass;
 
 /**
+ * Represents Device ID type.
+ *
+ */
+typedef enum otTcatDeviceIdType
+{
+    OT_TCAT_DEVICE_ID_EMPTY         = 0, ///< Vendor device ID type not set
+    OT_TCAT_DEVICE_ID_OUI24         = 1, ///< Vendor device ID type OUI24
+    OT_TCAT_DEVICE_ID_OUI36         = 2, ///< Vendor device ID type OUI36
+    OT_TCAT_DEVICE_ID_DISCRIMINATOR = 3, ///< Vendor device ID type Discriminator
+    OT_TCAT_DEVICE_ID_IANAPEN       = 4, ///< Vendor device ID type IANA PEN
+} otTcatDeviceIdType;
+
+/**
  * This structure represents a TCAT vendor information.
  *
  * The content of this structure MUST persist and remain unchanged while a TCAT session is running.
@@ -127,6 +145,7 @@ typedef struct otTcatVendorInfo
     const char *mPskdString;      ///< Vendor managed pre-shared key for device
     const char *mInstallCode;     ///< Vendor managed install code string
     const char *mDeviceId; ///< Vendor managed device ID string (if NULL: device ID is set to EUI-64 in binary format)
+    otTcatDeviceIdType mDeviceIdType; ///< Vendor managed device id type
 
 } otTcatVendorInfo;
 
@@ -134,7 +153,7 @@ typedef struct otTcatVendorInfo
  * Pointer to call when application data was received over a TCAT TLS connection.
  *
  * @param[in]  aInstance                 A pointer to an OpenThread instance.
- * @param[in]  aMessage                  A pointer to the message.
+ * @param[in]  aMessagotTcatVendorIdTypee                  A pointer to the message.
  * @param[in]  aOffset                   The offset where the application data begins.
  * @param[in]  aTcatApplicationProtocol  The protocol type of the message received.
  * @param[in]  aServiceName              The name of the service the message is direced to.

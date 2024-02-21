@@ -105,6 +105,23 @@ extern "C" {
 #define OT_BLE_DEFAULT_POWER 0
 
 /**
+ * TOBLE service UUID
+ */
+
+#define OT_TOBLE_SERVICE_UUID 0xfffb
+
+/**
+ * Represent BLE link capabilities
+ *
+ */
+typedef struct otBleLinkCapabilities
+{
+    uint8_t mRsv : 6;
+    bool    mL2CapDirect : 1;
+    bool    mGattNotifications : 1;
+} otBleLinkCapabilities;
+
+/**
  * Represents a BLE packet.
  *
  */
@@ -151,6 +168,26 @@ otError otPlatBleDisable(otInstance *aInstance);
 /****************************************************************************
  * @section Bluetooth Low Energy GAP.
  ***************************************************************************/
+
+/**
+ * Starts BLE Advertising procedure.
+ *
+ * The BLE device shall use undirected advertising with no filter applied.
+ * A single BLE Advertising packet must be sent on all advertising
+ * channels (37, 38 and 39).
+ *
+ * @note This function shall be used only for BLE Peripheral role.
+ *
+ * @param[in] aInstance          The OpenThread instance structure.
+ * @param[in] aAdvertisementData The formatted TCAT advertisement frame.
+ * @param[in] aAdvertisementLen  The TCAT advertisement frame length.
+ *
+ * @retval OT_ERROR_NONE           Advertising procedure has been started.
+ * @retval OT_ERROR_INVALID_STATE  BLE Device is in invalid state.
+ * @retval OT_ERROR_INVALID_ARGS   Invalid interval value has been supplied.
+ *
+ */
+otError otPlatBleGapAdvSetData(otInstance *aInstance, uint8_t *aAdvertisementData, uint16_t aAdvertisementLen);
 
 /**
  * Starts BLE Advertising procedure.
@@ -280,6 +317,14 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
  *
  */
 extern void otPlatBleGattServerOnWriteRequest(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket);
+
+/**
+ * Function to retrieve from platform BLE link capabilities.
+ *
+ * @param[in] aInstance             The OpenThread instance structure.
+ *
+ */
+otBleLinkCapabilities otPlatGetBleLinkCapabilities(otInstance *aInstance);
 
 /**
  * @}

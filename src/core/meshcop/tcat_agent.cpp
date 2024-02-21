@@ -32,6 +32,10 @@
  */
 
 #include "tcat_agent.hpp"
+#include "common/as_core_type.hpp"
+#include "common/error.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 
@@ -64,7 +68,6 @@ TcatAgent::TcatAgent(Instance &aInstance)
     , mVendorInfo(nullptr)
     , mCurrentApplicationProtocol(kApplicationProtocolNone)
     , mState(kStateDisabled)
-    , mAlreadyCommissioned(false)
     , mCommissionerHasNetworkName(false)
     , mCommissionerHasDomainName(false)
     , mCommissionerHasExtendedPanId(false)
@@ -73,25 +76,17 @@ TcatAgent::TcatAgent(Instance &aInstance)
     mCurrentServiceName[0] = 0;
 }
 
-Error TcatAgent::Start(const TcatAgent::VendorInfo &aVendorInfo,
-                       AppDataReceiveCallback       aAppDataReceiveCallback,
-                       JoinCallback                 aHandler,
-                       void                        *aContext)
+Error TcatAgent::Start(AppDataReceiveCallback aAppDataReceiveCallback, JoinCallback aHandler, void *aContext)
 {
     Error error = kErrorNone;
 
     LogInfo("Starting");
-
-    VerifyOrExit(aVendorInfo.IsValid(), error = kErrorInvalidArgs);
-    SuccessOrExit(error = mJoinerPskd.SetFrom(aVendorInfo.mPskdString));
-
+    VerifyOrExit(mVendorInfo != nullptr, error = kErrorFailed);
     mAppDataReceiveCallback.Set(aAppDataReceiveCallback, aContext);
     mJoinCallback.Set(aHandler, aContext);
 
-    mVendorInfo                 = &aVendorInfo;
     mCurrentApplicationProtocol = kApplicationProtocolNone;
     mState                      = kStateEnabled;
-    mAlreadyCommissioned        = false;
 
 exit:
     LogError("start TCAT agent", error);
@@ -102,10 +97,20 @@ void TcatAgent::Stop(void)
 {
     mCurrentApplicationProtocol = kApplicationProtocolNone;
     mState                      = kStateDisabled;
-    mAlreadyCommissioned        = false;
     mAppDataReceiveCallback.Clear();
     mJoinCallback.Clear();
     LogInfo("TCAT agent stopped");
+}
+
+Error TcatAgent::SetTcatVendorInfo(const VendorInfo &aVendorInfo)
+{
+    Error error = kErrorNone;
+    VerifyOrExit(aVendorInfo.IsValid(), error = kErrorInvalidArgs);
+    SuccessOrExit(error = mJoinerPskd.SetFrom(aVendorInfo.mPskdString));
+    mVendorInfo = &aVendorInfo;
+
+exit:
+    return error;
 }
 
 Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
@@ -160,7 +165,6 @@ Error TcatAgent::Connected(MeshCoP::SecureTransport &aTlsContext)
     mCurrentApplicationProtocol = kApplicationProtocolNone;
     mCurrentServiceName[0]      = 0;
     mState                      = kStateConnected;
-    mAlreadyCommissioned        = Get<ActiveDatasetManager>().IsCommissioned();
     LogInfo("TCAT agent connected");
 
 exit:
@@ -170,7 +174,6 @@ exit:
 void TcatAgent::Disconnected(void)
 {
     mCurrentApplicationProtocol = kApplicationProtocolNone;
-    mAlreadyCommissioned        = false;
 
     if (mState != kStateDisabled)
     {
@@ -452,7 +455,7 @@ Error TcatAgent::HandleSingleTlv(const Message &aIncommingMessage, Message &aOut
             break;
         }
 
-        SuccessOrExit(error = ot::Tlv::Append<ResponseWithStatusTlv>(aOutgoingMessage, statusCode));
+        SuccessOrExit(error = ot::Tlv::Append<ResponseWithStatusCommandTlv>(aOutgoingMessage, statusCode));
     }
 
 exit:
@@ -498,6 +501,66 @@ Error TcatAgent::HandleStartThreadInterface(void)
 
 exit:
     return error;
+}
+
+uint8_t *TcatAgent::GetAdvertisementData(uint16_t &aLen)
+{
+    Message *buffer = Get<MessagePool>().Allocate(Message::kTypeBle, 0);
+
+    if (buffer == nullptr || mVendorInfo == nullptr)
+    {
+        aLen = 0;
+        return nullptr;
+    }
+
+    *reinterpret_cast<uint16_t *>(mAdvertisement) = LittleEndian::HostSwap16(OT_TOBLE_SERVICE_UUID);
+    mAdvertisement[2]                             = OT_TCAT_VERSION << 4 | OT_TCAT_OPCODE;
+
+    IgnoreError(buffer->AppendBytes(mAdvertisement, 3));
+
+    switch (MapEnum(mVendorInfo->mDeviceIdType))
+    {
+    case kTcatDeviceIdOui24:
+        IgnoreError(ot::Tlv::Append<VendorOuiTlv24>(*buffer, mVendorInfo->mDeviceId));
+        break;
+    case kTcatDeviceIdOui36:
+        IgnoreError(ot::Tlv::Append<VendorOuiTlv36>(*buffer, mVendorInfo->mDeviceId));
+        break;
+    case kTcatDeviceIdDiscriminator:
+        IgnoreError(ot::Tlv::Append<DeviceDiscriminatorTlv>(*buffer, mVendorInfo->mDeviceId));
+        break;
+    case kTcatDeviceIdIanaPen:
+        IgnoreError(ot::Tlv::Append<VendorIanaPenTlv>(*buffer, mVendorInfo->mDeviceId));
+        break;
+    default:
+        break;
+    }
+
+    otBleLinkCapabilities caps = otPlatGetBleLinkCapabilities(&GetInstance());
+
+    IgnoreError(ot::Tlv::Append<BleLinkCapabilitiesTlv>(*buffer, *reinterpret_cast<uint8_t *>(&caps)));
+
+    DeviceTypeAndStatus tas;
+    tas.mRsv                 = 0;
+    tas.mIsCommisionned      = Get<ActiveDatasetManager>().IsCommissioned();
+    tas.mThreadNetworkActive = Get<Mle::Mle>().IsAttached();
+    tas.mDeviceType          = Get<Mle::Mle>().GetDeviceMode().IsFullThreadDevice();
+    tas.mRxOnWhenIdle        = Get<Mle::Mle>().GetDeviceMode().IsRxOnWhenIdle();
+
+#if OPENTHREAD_FTD && (OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE || OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE)
+    tas.mIsBorderRouter = true;
+#else
+    tas.mIsBorderRouter = false;
+#endif
+
+    IgnoreError(ot::Tlv::Append<DeviceTypeAndStatusTlv>(*buffer, *reinterpret_cast<uint8_t *>(&tas)));
+
+    aLen = buffer->GetLength();
+    OT_ASSERT(mAdvertisementLength <= OT_TCAT_ADVERTISEMENT_MAX_LEN);
+
+    buffer->ReadBytes(0, mAdvertisement, aLen);
+    buffer->Free();
+    return mAdvertisement;
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
