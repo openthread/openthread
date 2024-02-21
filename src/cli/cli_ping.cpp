@@ -55,7 +55,7 @@ otError PingSender::Process(Arg aArgs[])
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
     bool               async = false;
-    bool               nat64SynthesizedAddress;
+    bool               nat64Synth;
 
     /**
      * @cli ping stop
@@ -96,9 +96,9 @@ otError PingSender::Process(Arg aArgs[])
         aArgs++;
     }
 
-    SuccessOrExit(error = Interpreter::GetInterpreter().ParseToIp6Address(
-                      GetInstancePtr(), aArgs[0], config.mDestination, nat64SynthesizedAddress));
-    if (nat64SynthesizedAddress)
+    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64Synth));
+
+    if (nat64Synth)
     {
         OutputFormat("Pinging synthesized IPv6 address: ");
         OutputIp6AddressLine(config.mDestination);
