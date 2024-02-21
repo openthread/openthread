@@ -49,60 +49,43 @@ extern "C" {
  *
  */
 
-/**
- * Maximum Number of Network Diagnostic TLV Types to Request or Reset.
- */
-#define OT_NETWORK_DIAGNOSTIC_TYPELIST_MAX_ENTRIES 19
-
-/**
- * Size of Network Diagnostic Child Table entry.
- */
-#define OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE 3
-
-/**
- * Initializer for otNetworkDiagIterator.
- */
-#define OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT 0
-
-enum
-{
-    OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS       = 0,  ///< MAC Extended Address TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS     = 1,  ///< Address16 TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_MODE              = 2,  ///< Mode TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT           = 3,  ///< Timeout TLV (the maximum polling time period for SEDs)
-    OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY      = 4,  ///< Connectivity TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_ROUTE             = 5,  ///< Route64 TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA       = 6,  ///< Leader Data TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA      = 7,  ///< Network Data TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST     = 8,  ///< IPv6 Address List TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS      = 9,  ///< MAC Counters TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL     = 14, ///< Battery Level TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE    = 15, ///< Supply Voltage TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE       = 16, ///< Child Table TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES     = 17, ///< Channel Pages TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST         = 18, ///< Type List TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT = 19, ///< Max Child Timeout TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_EUI64             = 23, ///< EUI64 TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_VERSION           = 24, ///< Version TLV （version number for the protocols and features)
-    OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME       = 25, ///< Vendor Name TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL      = 26, ///< Vendor Model TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION = 27, ///< Vendor SW Version TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION =
-        28, ///< Thread Stack Version TLV (version identifier as UTF-8 string for Thread stack codebase/commit/version)
-    OT_NETWORK_DIAGNOSTIC_TLV_CHILD               = 29, ///< Child TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST = 30, ///< Child IPv6 Address List TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR     = 31, ///< Router Neighbor TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_ANSWER              = 32, ///< Answer TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID            = 33, ///< Query ID TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS        = 34, ///< MLE Counters TLV
-    OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL      = 35, ///< Vendor App URL TLV
-};
+#define OT_NETWORK_DIAGNOSTIC_TLV_EXT_ADDRESS 0           ///< MAC Extended Address TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_SHORT_ADDRESS 1         ///< Address16 TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_MODE 2                  ///< Mode TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_TIMEOUT 3               ///< Timeout TLV (max polling time period for SEDs)
+#define OT_NETWORK_DIAGNOSTIC_TLV_CONNECTIVITY 4          ///< Connectivity TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_ROUTE 5                 ///< Route64 TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_LEADER_DATA 6           ///< Leader Data TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_NETWORK_DATA 7          ///< Network Data TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_IP6_ADDR_LIST 8         ///< IPv6 Address List TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_MAC_COUNTERS 9          ///< MAC Counters TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_BATTERY_LEVEL 14        ///< Battery Level TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_SUPPLY_VOLTAGE 15       ///< Supply Voltage TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_CHILD_TABLE 16          ///< Child Table TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_CHANNEL_PAGES 17        ///< Channel Pages TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_TYPE_LIST 18            ///< Type List TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_MAX_CHILD_TIMEOUT 19    ///< Max Child Timeout TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_EUI64 23                ///< EUI64 TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VERSION 24              ///< Thread Version TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_NAME 25          ///< Vendor Name TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_MODEL 26         ///< Vendor Model TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_SW_VERSION 27    ///< Vendor SW Version TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_THREAD_STACK_VERSION 28 ///< Thread Stack Version TLV (codebase/commit version)
+#define OT_NETWORK_DIAGNOSTIC_TLV_CHILD 29                ///< Child TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_CHILD_IP6_ADDR_LIST 30  ///< Child IPv6 Address List TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_ROUTER_NEIGHBOR 31      ///< Router Neighbor TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_ANSWER 32               ///< Answer TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_QUERY_ID 33             ///< Query ID TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_MLE_COUNTERS 34         ///< MLE Counters TLV
+#define OT_NETWORK_DIAGNOSTIC_TLV_VENDOR_APP_URL 35       ///< Vendor App URL TLV
 
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_NAME_TLV_LENGTH 32          ///< Max length of Vendor Name TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_MODEL_TLV_LENGTH 32         ///< Max length of Vendor Model TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_SW_VERSION_TLV_LENGTH 16    ///< Max length of Vendor SW Version TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_THREAD_STACK_VERSION_TLV_LENGTH 64 ///< Max length of Thread Stack Version TLV.
 #define OT_NETWORK_DIAGNOSTIC_MAX_VENDOR_APP_URL_TLV_LENGTH 96       ///< Max length of Vendor App URL TLV.
+
+#define OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT 0 ///<  Initializer for `otNetworkDiagIterator`.
 
 typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Diagnostic TLV.
 
@@ -112,50 +95,15 @@ typedef uint16_t otNetworkDiagIterator; ///< Used to iterate through Network Dia
  */
 typedef struct otNetworkDiagConnectivity
 {
-    /**
-     * The priority of the sender as a parent.
-     */
-    int8_t mParentPriority;
-
-    /**
-     * The number of neighboring devices with which the sender shares a link of quality 3.
-     */
-    uint8_t mLinkQuality3;
-
-    /**
-     * The number of neighboring devices with which the sender shares a link of quality 2.
-     */
-    uint8_t mLinkQuality2;
-
-    /**
-     * The number of neighboring devices with which the sender shares a link of quality 1.
-     */
-    uint8_t mLinkQuality1;
-
-    /**
-     * The sender's routing cost to the Leader.
-     */
-    uint8_t mLeaderCost;
-
-    /**
-     * The most recent ID sequence number received by the sender.
-     */
-    uint8_t mIdSequence;
-
-    /**
-     * The number of active Routers in the sender's Thread Network Partition.
-     */
-    uint8_t mActiveRouters;
-
-    /**
-     * The guaranteed buffer capacity in octets for all IPv6 datagrams destined to a given SED. Optional.
-     */
-    uint16_t mSedBufferSize;
-
-    /**
-     * The guaranteed queue capacity in number of IPv6 datagrams destined to a given SED. Optional.
-     */
-    uint8_t mSedDatagramCount;
+    int8_t   mParentPriority;   ///< The priority of the sender as a parent.
+    uint8_t  mLinkQuality3;     ///< Number of neighbors with link of quality 3.
+    uint8_t  mLinkQuality2;     ///< Number of neighbors with link of quality 2.
+    uint8_t  mLinkQuality1;     ///< Number of neighbors with link of quality 1.
+    uint8_t  mLeaderCost;       ///< Cost to the Leader.
+    uint8_t  mIdSequence;       ///< Most recent received ID seq number.
+    uint8_t  mActiveRouters;    ///< Number of active routers.
+    uint16_t mSedBufferSize;    ///< Buffer capacity in bytes for SEDs. Optional.
+    uint8_t  mSedDatagramCount; ///< Queue capacity (number of IPv6 datagrams) per SED. Optional.
 } otNetworkDiagConnectivity;
 
 /**
@@ -171,7 +119,7 @@ typedef struct otNetworkDiagRouteData
 } otNetworkDiagRouteData;
 
 /**
- * Represents a Network Diagnostic Route TLV value.
+ * Represents a Network Diagnostic Route64 TLV value.
  *
  */
 typedef struct otNetworkDiagRoute
@@ -179,17 +127,9 @@ typedef struct otNetworkDiagRoute
     /**
      * The sequence number associated with the set of Router ID assignments in #mRouteData.
      */
-    uint8_t mIdSequence;
-
-    /**
-     * Number of elements in #mRouteData.
-     */
-    uint8_t mRouteCount;
-
-    /**
-     * Link Quality and Routing Cost data.
-     */
-    otNetworkDiagRouteData mRouteData[OT_NETWORK_MAX_ROUTER_ID + 1];
+    uint8_t                mIdSequence;                              ///< Sequence number for Router ID assignments.
+    uint8_t                mRouteCount;                              ///< Number of routes.
+    otNetworkDiagRouteData mRouteData[OT_NETWORK_MAX_ROUTER_ID + 1]; ///< Link Quality and Routing Cost data.
 } otNetworkDiagRoute;
 
 /**
@@ -240,28 +180,10 @@ typedef struct otNetworkDiagMleCounters
  */
 typedef struct otNetworkDiagChildEntry
 {
-    /**
-     * Expected poll time expressed as 2^(Timeout-4) seconds.
-     */
-    uint16_t mTimeout : 5;
-
-    /**
-     * Link Quality In value in [0,3].
-     *
-     * Value 0 indicates that sender does not support the feature to provide link quality info.
-     *
-     */
-    uint8_t mLinkQuality : 2;
-
-    /**
-     * Child ID from which an RLOC can be generated.
-     */
-    uint16_t mChildId : 9;
-
-    /**
-     * Link mode bits.
-     */
-    otLinkModeConfig mMode;
+    uint16_t mTimeout : 5;     ///< Expected poll timeout expressed as 2^(Timeout-4) seconds.
+    uint8_t  mLinkQuality : 2; ///< Link Quality In value [0,3]. Zero indicate sender cannot provide link quality info.
+    uint16_t mChildId : 9;     ///< Child ID (derived from child RLOC)
+    otLinkModeConfig mMode;    ///< Link mode.
 } otNetworkDiagChildEntry;
 
 /**
@@ -270,10 +192,7 @@ typedef struct otNetworkDiagChildEntry
  */
 typedef struct otNetworkDiagTlv
 {
-    /**
-     * The Network Diagnostic TLV type.
-     */
-    uint8_t mType;
+    uint8_t mType; ///< The Network Diagnostic TLV type.
 
     union
     {
@@ -304,13 +223,12 @@ typedef struct otNetworkDiagTlv
         struct
         {
             uint8_t      mCount;
-            otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_IP6_ADDRESS_SIZE];
+            otIp6Address mList[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otIp6Address)];
         } mIp6AddrList;
         struct
         {
-            uint8_t mCount;
-            otNetworkDiagChildEntry
-                mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / OT_NETWORK_DIAGNOSTIC_CHILD_TABLE_ENTRY_SIZE];
+            uint8_t                 mCount;
+            otNetworkDiagChildEntry mTable[OT_NETWORK_BASE_TLV_MAX_LENGTH / sizeof(otNetworkDiagChildEntry)];
         } mChildTable;
         struct
         {
@@ -421,11 +339,11 @@ const char *otThreadGetVendorName(otInstance *aInstance);
 const char *otThreadGetVendorModel(otInstance *aInstance);
 
 /**
- * Get the vendor sw version string.
+ * Get the vendor software version string.
  *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  *
- * @returns The vendor sw version string.
+ * @returns The vendor software version string.
  *
  */
 const char *otThreadGetVendorSwVersion(otInstance *aInstance);
