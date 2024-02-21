@@ -207,7 +207,7 @@ exit:
  *     `check-peer-cert` is `true`, and the `max-conn-attempts` value is the
  *     number specified in the argument.
  * @par
- * Starts the CoAP Secure service.
+ * Starts the CoAP Secure service. @moreinfo{@coaps}
  * @sa otCoapSecureStart
  * @sa otCoapSecureSetSslAuthMode
  * @sa otCoapSecureSetClientConnectedCallback
@@ -393,7 +393,7 @@ template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return Proces
  *	   integer that specifies the number of blocks to send. The `block-` type
  *	   requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
- * Creates the specified CoAPS resource.
+ * Creates the specified CoAPS resource. @moreinfo{@coaps}
  */
 template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_POST); }
 
@@ -425,7 +425,7 @@ template <> otError CoapSecure::Process<Cmd("post")>(Arg aArgs[]) { return Proce
  *	   integer that specifies the number of blocks to send. The `block-` type
  *	   requires `OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE` to be set.
  * @par
- * Modifies the specified CoAPS resource.
+ * Modifies the specified CoAPS resource. @moreinfo{@coaps}
  */
 template <> otError CoapSecure::Process<Cmd("put")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_PUT); }
 
