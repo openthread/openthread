@@ -1037,6 +1037,19 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
     }
 #endif
 
+#if OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC
+    // Some platforms (e.g. Android) currently doesn't restrict link-local/mesh-local source
+    // addresses when forwarding multicast packets.
+    // For a multicast packet sent from link-local/mesh-local address to scope larger
+    // than realm-local, set the hop limit to 1 before sending to host, so this packet
+    // will not be forwarded by host.
+    if (aMessageInfo.GetSockAddr().IsMulticastLargerThanRealmLocal() &&
+        (aMessageInfo.GetPeerAddr().IsLinkLocal() || (Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetPeerAddr()))))
+    {
+        messagePtr->Write<uint8_t>(Header::kHopLimitFieldOffset, 1);
+    }
+#endif
+
     // Pass message to callback transferring its ownership.
     mReceiveIp6DatagramCallback.Invoke(messagePtr.Release());
 

@@ -228,6 +228,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC
+ *
+ * Define as 1 to restrict multicast forwarding to larger scope from local sources.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC
+#define OPENTHREAD_CONFIG_IP6_RESTRICT_FORWARDING_LARGER_SCOPE_MCAST_WITH_LOCAL_SRC 0
+#endif
+
+/**
  * @}
  *
  */
