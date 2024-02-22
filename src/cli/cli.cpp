@@ -504,12 +504,13 @@ otError Interpreter::ParseToIp6Address(otInstance   *aInstance,
                                        otIp6Address &aAddress,
                                        bool         &aSynthesized)
 {
-    Error error = kErrorNone;
+    Error error = OT_ERROR_NONE;
 
     VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     error        = aArg.ParseAsIp6Address(aAddress);
     aSynthesized = false;
-    if (error != kErrorNone)
+
+    if (error != OT_ERROR_NONE)
     {
         // It might be an IPv4 address, let's have a try.
         otIp4Address ip4Address;
@@ -758,9 +759,6 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
      */
     else if (aArgs[0] == "mappings")
     {
-        otNat64AddressMappingIterator iterator;
-        otNat64AddressMapping         mapping;
-
         static const char *const kNat64StatusLevel1Title[] = {"", "Address", "", "4 to 6", "6 to 4"};
 
         static const uint8_t kNat64StatusLevel1ColumnWidths[] = {
@@ -774,6 +772,9 @@ template <> otError Interpreter::Process<Cmd("nat64")>(Arg aArgs[])
         static const uint8_t kNat64StatusTableColumnWidths[] = {
             18, 42, 18, 8, 10, 14, 10, 14,
         };
+
+        otNat64AddressMappingIterator iterator;
+        otNat64AddressMapping         mapping;
 
         OutputTableHeader(kNat64StatusLevel1Title, kNat64StatusLevel1ColumnWidths);
         OutputTableHeader(kNat64StatusTableHeader, kNat64StatusTableColumnWidths);
@@ -7563,7 +7564,7 @@ template <> otError Interpreter::Process<Cmd("trel")>(Arg aArgs[])
         }
         else
         {
-            VerifyOrExit(aArgs[1].IsEmpty(), error = kErrorInvalidArgs);
+            VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
         }
 
         if (isTable)

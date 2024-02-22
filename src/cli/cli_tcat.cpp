@@ -93,10 +93,12 @@ static void HandleBleSecureReceive(otInstance               *aInstance,
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aTcatApplicationProtocol);
     OT_UNUSED_VARIABLE(aServiceName);
+
     static constexpr int     kTextMaxLen   = 100;
     static constexpr uint8_t kBufPrefixLen = 5;
-    uint16_t                 nLen;
-    uint8_t                  buf[kTextMaxLen];
+
+    uint16_t nLen;
+    uint8_t  buf[kTextMaxLen];
 
     nLen = otMessageRead(aMessage, (uint16_t)aOffset, buf + kBufPrefixLen, sizeof(buf) - kBufPrefixLen - 1);
 
@@ -137,11 +139,10 @@ exit:
 template <> otError Tcat::Process<Cmd("stop")>(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
-    otError error = OT_ERROR_NONE;
 
     otBleSecureStop(GetInstancePtr());
 
-    return error;
+    return OT_ERROR_NONE;
 }
 
 otError Tcat::Process(Arg aArgs[])

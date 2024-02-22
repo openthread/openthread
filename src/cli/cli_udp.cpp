@@ -132,11 +132,11 @@ template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-    bool       nat64SynthesizedAddress;
+    bool       nat64Synth;
 
-    SuccessOrExit(
-        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
-    if (nat64SynthesizedAddress)
+    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
+
+    if (nat64Synth)
     {
         OutputFormat("Connecting to synthesized IPv6 address: ");
         OutputIp6AddressLine(sockaddr.mAddress);
@@ -267,11 +267,12 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
 
     if (!aArgs[2].IsEmpty())
     {
-        bool nat64SynthesizedAddress;
+        bool nat64Synth;
 
-        SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], messageInfo.mPeerAddr,
-                                                             nat64SynthesizedAddress));
-        if (nat64SynthesizedAddress)
+        SuccessOrExit(
+            error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], messageInfo.mPeerAddr, nat64Synth));
+
+        if (nat64Synth)
         {
             OutputFormat("Sending to synthesized IPv6 address: ");
             OutputIp6AddressLine(messageInfo.mPeerAddr);

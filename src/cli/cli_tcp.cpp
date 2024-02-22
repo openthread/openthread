@@ -81,9 +81,10 @@ TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplemen
 void TcpExample::MbedTlsDebugOutput(void *ctx, int level, const char *file, int line, const char *str)
 {
     TcpExample &tcpExample = *static_cast<TcpExample *>(ctx);
+
     tcpExample.OutputLine("%s:%d:%d: %s", file, line, level, str);
 }
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
 
 /**
  * @cli tcp init
@@ -221,6 +222,7 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
 
         ClearAllBytes(endpointArgs);
         endpointArgs.mEstablishedCallback = HandleTcpEstablishedCallback;
+
         if (mUseCircularSendBuffer)
         {
             endpointArgs.mForwardProgressCallback = HandleTcpForwardProgressCallback;
@@ -229,6 +231,7 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
         {
             endpointArgs.mSendDoneCallback = HandleTcpSendDoneCallback;
         }
+
         endpointArgs.mReceiveAvailableCallback = HandleTcpReceiveAvailableCallback;
         endpointArgs.mDisconnectedCallback     = HandleTcpDisconnectedCallback;
         endpointArgs.mContext                  = this;
@@ -247,6 +250,7 @@ template <> otError TcpExample::Process<Cmd("init")>(Arg aArgs[])
         listenerArgs.mContext             = this;
 
         error = otTcpListenerInitialize(GetInstancePtr(), &mListener, &listenerArgs);
+
         if (error != OT_ERROR_NONE)
         {
             IgnoreReturnValue(otTcpEndpointDeinitialize(&mEndpoint));
@@ -289,7 +293,7 @@ template <> otError TcpExample::Process<Cmd("deinit")>(Arg aArgs[])
         mbedtls_pk_free(&mPKey);
         mbedtls_x509_crt_free(&mSrvCert);
     }
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
 
     endpointError = otTcpEndpointDeinitialize(&mEndpoint);
     mSendBusy     = false;
@@ -374,20 +378,21 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-    bool       nat64SynthesizedAddress;
+    bool       nat64Synth;
     uint32_t   flags;
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(
-        error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64SynthesizedAddress));
-    if (nat64SynthesizedAddress)
+    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
+
+    if (nat64Synth)
     {
         OutputFormat("Connecting to synthesized IPv6 address: ");
         OutputIp6AddressLine(sockaddr.mAddress);
     }
 
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
+
     if (aArgs[2].IsEmpty())
     {
         flags = OT_TCP_CONNECT_NO_FAST_OPEN;
@@ -406,6 +411,7 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
         {
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
+
         VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     }
 
@@ -419,7 +425,7 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
             OutputLine("mbedtls_ssl_config_defaults returned %d", rv);
         }
     }
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
 
     SuccessOrExit(error = otTcpConnect(&mEndpoint, &sockaddr, flags));
     mEndpointConnected         = true;
@@ -466,16 +472,19 @@ template <> otError TcpExample::Process<Cmd("send")>(Arg aArgs[])
         {
             int rv = mbedtls_ssl_write(&mSslContext, reinterpret_cast<unsigned char *>(aArgs[0].GetCString()),
                                        aArgs[0].GetLength());
+
             if (rv < 0 && rv != MBEDTLS_ERR_SSL_WANT_WRITE && rv != MBEDTLS_ERR_SSL_WANT_READ)
             {
-                ExitNow(error = kErrorFailed);
+                ExitNow(error = OT_ERROR_FAILED);
             }
-            error = kErrorNone;
+
+            error = OT_ERROR_NONE;
         }
         else
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
         {
             size_t written;
+
             SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, aArgs[0].GetCString(),
                                                                aArgs[0].GetLength(), &written, 0));
         }
@@ -526,6 +535,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
     if (aArgs[0] == "result")
     {
         OutputFormat("TCP Benchmark Status: ");
+
         if (mBenchmarkBytesTotal != 0)
         {
             OutputLine("Ongoing");
@@ -571,6 +581,7 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
             SuccessOrExit(error = aArgs[1].ParseAsUint32(mBenchmarkBytesTotal));
             VerifyOrExit(mBenchmarkBytesTotal != 0, error = OT_ERROR_INVALID_ARGS);
         }
+
         VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
         mBenchmarkStart       = TimerMilli::GetNow();
@@ -594,10 +605,12 @@ template <> otError TcpExample::Process<Cmd("benchmark")>(Arg aArgs[])
                 mBenchmarkLinks[i].mNext   = nullptr;
                 mBenchmarkLinks[i].mData   = mSendBufferBytes;
                 mBenchmarkLinks[i].mLength = sizeof(mSendBufferBytes);
+
                 if (i == 0 && mBenchmarkBytesTotal % sizeof(mSendBufferBytes) != 0)
                 {
                     mBenchmarkLinks[i].mLength = mBenchmarkBytesTotal % sizeof(mSendBufferBytes);
                 }
+
                 error = otTcpSendByReference(&mEndpoint, &mBenchmarkLinks[i],
                                              i == toSendOut - 1 ? 0 : OT_TCP_SEND_MORE_TO_COME);
                 VerifyOrExit(error == OT_ERROR_NONE, mBenchmarkBytesTotal = 0);
@@ -812,7 +825,7 @@ void TcpExample::HandleTcpEstablished(otTcpEndpoint *aEndpoint)
         PrepareTlsHandshake();
         ContinueTlsHandshake();
     }
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
 }
 
 void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aData)
@@ -834,10 +847,13 @@ void TcpExample::HandleTcpSendDone(otTcpEndpoint *aEndpoint, otLinkedBuffer *aDa
     {
         OT_ASSERT(aData != &mSendLink);
         OT_ASSERT(mBenchmarkBytesUnsent >= aData->mLength);
+
         mBenchmarkBytesUnsent -= aData->mLength; // could be less than sizeof(mSendBufferBytes) for the first link
+
         if (mBenchmarkBytesUnsent >= OT_ARRAY_LENGTH(mBenchmarkLinks) * sizeof(mSendBufferBytes))
         {
             aData->mLength = sizeof(mSendBufferBytes);
+
             if (otTcpSendByReference(&mEndpoint, aData, 0) != OT_ERROR_NONE)
             {
                 OutputLine("TCP Benchmark Failed");
@@ -907,7 +923,7 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
 #if OPENTHREAD_CONFIG_TLS_ENABLE
     if (mUseTls && ContinueTlsHandshake())
     {
-        return;
+        ExitNow();
     }
 #endif
 
@@ -917,15 +933,18 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         if (mUseTls)
         {
             uint8_t buffer[500];
+
             for (;;)
             {
                 int rv = mbedtls_ssl_read(&mSslContext, buffer, sizeof(buffer));
+
                 if (rv < 0)
                 {
                     if (rv == MBEDTLS_ERR_SSL_WANT_READ)
                     {
                         break;
                     }
+
                     OutputLine("TLS receive failure: %d", rv);
                 }
                 else
@@ -941,13 +960,16 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
         {
             const otLinkedBuffer *data;
             size_t                totalReceived = 0;
+
             IgnoreError(otTcpReceiveByReference(aEndpoint, &data));
+
             for (; data != nullptr; data = data->mNext)
             {
                 OutputLine("TCP: Received %u bytes: %.*s", static_cast<unsigned>(data->mLength),
                            static_cast<unsigned>(data->mLength), reinterpret_cast<const char *>(data->mData));
                 totalReceived += data->mLength;
             }
+
             OT_ASSERT(aBytesAvailable == totalReceived);
             IgnoreReturnValue(otTcpCommitReceive(aEndpoint, totalReceived, 0));
         }
@@ -957,6 +979,11 @@ void TcpExample::HandleTcpReceiveAvailable(otTcpEndpoint *aEndpoint,
     {
         OutputLine("TCP: Reached end of stream");
     }
+
+    ExitNow();
+
+exit:
+    return;
 }
 
 void TcpExample::HandleTcpDisconnected(otTcpEndpoint *aEndpoint, otTcpDisconnectedReason aReason)
@@ -1035,8 +1062,10 @@ otTcpIncomingConnectionAction TcpExample::HandleTcpAcceptReady(otTcpListener    
         {
             OutputLine("mbedtls_ssl_config_defaults returned %d", rv);
         }
+
         mbedtls_ssl_conf_ca_chain(&mSslConfig, mSrvCert.next, nullptr);
         rv = mbedtls_ssl_conf_own_cert(&mSslConfig, &mSrvCert, &mPKey);
+
         if (rv != 0)
         {
             OutputLine("mbedtls_ssl_conf_own_cert returned %d", rv);
@@ -1076,6 +1105,7 @@ otError TcpExample::ContinueBenchmarkCircularSend(void)
         {
             int rv = mbedtls_ssl_write(&mSslContext, reinterpret_cast<const unsigned char *>(sBenchmarkData),
                                        toSendThisIteration);
+
             if (rv > 0)
             {
                 written = static_cast<size_t>(rv);
@@ -1083,12 +1113,13 @@ otError TcpExample::ContinueBenchmarkCircularSend(void)
             }
             else if (rv != MBEDTLS_ERR_SSL_WANT_WRITE && rv != MBEDTLS_ERR_SSL_WANT_READ)
             {
-                ExitNow(error = kErrorFailed);
+                ExitNow(error = OT_ERROR_FAILED);
             }
-            error = kErrorNone;
+
+            error = OT_ERROR_NONE;
         }
         else
-#endif // OPENTHREAD_CONFIG_TLS_ENABLE
+#endif
         {
             SuccessOrExit(error = otTcpCircularSendBufferWrite(&mEndpoint, &mSendBuffer, sBenchmarkData,
                                                                toSendThisIteration, &written, flag));
@@ -1132,17 +1163,21 @@ void TcpExample::CompleteBenchmark(void)
 void TcpExample::PrepareTlsHandshake(void)
 {
     int rv;
+
     rv = mbedtls_ssl_set_hostname(&mSslContext, "localhost");
+
     if (rv != 0)
     {
         OutputLine("mbedtls_ssl_set_hostname returned %d", rv);
     }
+
     rv = mbedtls_ssl_set_hs_ecjpake_password(&mSslContext, reinterpret_cast<const unsigned char *>(sEcjpakePassword),
                                              sEcjpakePasswordLength);
     if (rv != 0)
     {
         OutputLine("mbedtls_ssl_set_hs_ecjpake_password returned %d", rv);
     }
+
     mbedtls_ssl_set_bio(&mSslContext, &mEndpointAndCircularSendBuffer, otTcpMbedTlsSslSendCallback,
                         otTcpMbedTlsSslRecvCallback, nullptr);
     mTlsHandshakeComplete = false;
@@ -1156,6 +1191,7 @@ bool TcpExample::ContinueTlsHandshake(void)
     if (!mTlsHandshakeComplete)
     {
         rv = mbedtls_ssl_handshake(&mSslContext);
+
         if (rv == 0)
         {
             OutputLine("TLS Handshake Complete");
@@ -1165,6 +1201,7 @@ bool TcpExample::ContinueTlsHandshake(void)
         {
             OutputLine("TLS Handshake Failed: %d", rv);
         }
+
         wasNotAlreadyDone = true;
     }
 
