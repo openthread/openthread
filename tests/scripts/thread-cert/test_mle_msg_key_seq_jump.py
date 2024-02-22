@@ -221,20 +221,20 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
         self.assertEqual(reed.get_key_sequence_counter(), 20)
 
         #-------------------------------------------------------------------
-        # Move forward the key seq counter by one on router. Wait for max
+        # Move forward the key seq counter by two on router. Wait for max
         # time between advertisements. Validate that leader adopts the higher
         # counter value.
 
-        router.set_key_sequence_counter(21)
-        self.assertEqual(router.get_key_sequence_counter(), 21)
+        router.set_key_sequence_counter(22)
+        self.assertEqual(router.get_key_sequence_counter(), 22)
 
         self.simulator.go(52)
-        self.assertEqual(leader.get_key_sequence_counter(), 21)
-        self.assertEqual(reed.get_key_sequence_counter(), 21)
+        self.assertEqual(leader.get_key_sequence_counter(), 22)
+        self.assertEqual(reed.get_key_sequence_counter(), 22)
 
         child.set_mode('r')
         self.simulator.go(2)
-        self.assertEqual(child.get_key_sequence_counter(), 21)
+        self.assertEqual(child.get_key_sequence_counter(), 22)
 
         #-------------------------------------------------------------------
         # Force a reattachment from the child with a higher key seq counter,

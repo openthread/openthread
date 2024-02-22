@@ -690,7 +690,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_KEY_SWITCH_GUARDT
 
     SuccessOrExit(error = mDecoder.ReadUint32(keyGuardTime));
 
-    otThreadSetKeySwitchGuardTime(mInstance, keyGuardTime);
+    otThreadSetKeySwitchGuardTime(mInstance, static_cast<uint16_t>(keyGuardTime));
 
 exit:
     return error;

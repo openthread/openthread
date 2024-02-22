@@ -709,7 +709,7 @@ void otThreadSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceC
  * @sa otThreadSetKeySwitchGuardTime
  *
  */
-uint32_t otThreadGetKeySwitchGuardTime(otInstance *aInstance);
+uint16_t otThreadGetKeySwitchGuardTime(otInstance *aInstance);
 
 /**
  * Sets the thrKeySwitchGuardTime (in hours).
@@ -723,7 +723,7 @@ uint32_t otThreadGetKeySwitchGuardTime(otInstance *aInstance);
  * @sa otThreadGetKeySwitchGuardTime
  *
  */
-void otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime);
+void otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint16_t aKeySwitchGuardTime);
 
 /**
  * Detach from the Thread network.

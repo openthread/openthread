@@ -275,15 +275,15 @@ uint32_t otThreadGetKeySequenceCounter(otInstance *aInstance)
 
 void otThreadSetKeySequenceCounter(otInstance *aInstance, uint32_t aKeySequenceCounter)
 {
-    AsCoreType(aInstance).Get<KeyManager>().SetCurrentKeySequence(aKeySequenceCounter);
+    AsCoreType(aInstance).Get<KeyManager>().SetCurrentKeySequence(aKeySequenceCounter, KeyManager::kForceUpdate);
 }
 
-uint32_t otThreadGetKeySwitchGuardTime(otInstance *aInstance)
+uint16_t otThreadGetKeySwitchGuardTime(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<KeyManager>().GetKeySwitchGuardTime();
 }
 
-void otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint32_t aKeySwitchGuardTime)
+void otThreadSetKeySwitchGuardTime(otInstance *aInstance, uint16_t aKeySwitchGuardTime)
 {
     AsCoreType(aInstance).Get<KeyManager>().SetKeySwitchGuardTime(aKeySwitchGuardTime);
 }
