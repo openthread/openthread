@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/tcat.h>
+
 #include "cli/cli_output.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
@@ -78,6 +80,8 @@ private:
     using Command = CommandEntry<Tcat>;
 
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
+
+    otTcatVendorInfo mVendorInfo;
 };
 
 } // namespace Cli

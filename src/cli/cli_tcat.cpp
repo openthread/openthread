@@ -79,9 +79,8 @@ namespace ot {
 
 namespace Cli {
 
-otTcatVendorInfo sVendorInfo;
-const char       kPskdVendor[] = "J01NM3";
-const char       kUrl[]        = "dummy_url";
+const char kPskdVendor[] = "J01NM3";
+const char kUrl[]        = "dummy_url";
 
 static void HandleBleSecureReceive(otInstance               *aInstance,
                                    const otMessage          *aMessage,
@@ -116,8 +115,9 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
 
     otError error = OT_ERROR_NONE;
 
-    sVendorInfo.mPskdString      = kPskdVendor;
-    sVendorInfo.mProvisioningUrl = kUrl;
+    ClearAllBytes(mVendorInfo);
+    mVendorInfo.mPskdString      = kPskdVendor;
+    mVendorInfo.mProvisioningUrl = kUrl;
 
     otBleSecureSetCertificate(GetInstancePtr(), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_X509_CERT),
                               sizeof(OT_CLI_TCAT_X509_CERT), reinterpret_cast<const uint8_t *>(OT_CLI_TCAT_PRIV_KEY),
@@ -130,7 +130,7 @@ template <> otError Tcat::Process<Cmd("start")>(Arg aArgs[])
     otBleSecureSetSslAuthMode(GetInstancePtr(), true);
 
     SuccessOrExit(error = otBleSecureStart(GetInstancePtr(), nullptr, HandleBleSecureReceive, true, nullptr));
-    SuccessOrExit(error = otBleSecureTcatStart(GetInstancePtr(), &sVendorInfo, nullptr));
+    SuccessOrExit(error = otBleSecureTcatStart(GetInstancePtr(), &mVendorInfo, nullptr));
 
 exit:
     return error;
