@@ -152,7 +152,7 @@ exit:
  * @endcode
  * @cparam coaps set @ca{new-content}
  * @par
- * Sets the content sent by the resource on the CoAPS server. @moreinfo{coaps}.
+ * Sets the content sent by the resource on the CoAPS server. @moreinfo{@coaps}.
  */
 template <> otError CoapSecure::Process<Cmd("set")>(Arg aArgs[])
 {
@@ -255,7 +255,7 @@ exit:
  * Done
  * @endcode
  * @par
- * Stops the CoAP Secure service. @moreinfo{coaps}.
+ * Stops the CoAP Secure service. @moreinfo{@coaps}.
  * @sa otCoapSecureStop
  */
 template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
@@ -289,7 +289,7 @@ template <> otError CoapSecure::Process<Cmd("stop")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Indicates if the CoAP Secure service is closed. @moreinfo{coaps}.
+ * Indicates if the CoAP Secure service is closed. @moreinfo{@coaps}.
  * @sa otCoapSecureIsClosed
  */
 template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
@@ -305,7 +305,7 @@ template <> otError CoapSecure::Process<Cmd("isclosed")>(Arg aArgs[])
  * Done
  * @endcode
  * @par
- * Indicates if the CoAP Secure service is connected. @moreinfo{coaps}.
+ * Indicates if the CoAP Secure service is connected. @moreinfo{@coaps}.
  * @sa otCoapSecureIsConnected
  */
 template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
@@ -323,7 +323,7 @@ template <> otError CoapSecure::Process<Cmd("isconnected")>(Arg aArgs[])
  * @par
  * Indicates if the CoAP Secure service connection is active
  * (either already connected or in the process of establishing a connection).
- * @moreinfo{coaps}.
+ * @moreinfo{@coaps}.
  * @sa otCoapSecureIsConnectionActive
  */
 template <> otError CoapSecure::Process<Cmd("isconnactive")>(Arg aArgs[])
@@ -363,7 +363,7 @@ exit:
  *         `block-256`, `block-512`, or `block-1024`.
  * @par
  * Gets information about the specified CoAPS resource on the CoAPS server.
- * @moreinfo{coaps}.
+ * @moreinfo{@coaps}.
  */
 template <> otError CoapSecure::Process<Cmd("get")>(Arg aArgs[]) { return ProcessRequest(aArgs, OT_COAP_CODE_GET); }
 
@@ -612,7 +612,7 @@ exit:
  * The `address` parameter is the IPv6 address of the peer.
  * @par
  * Initializes a Datagram Transport Layer Security (DTLS) session with a peer.
- * @moreinfo{coaps}.
+ * @moreinfo{@coaps}.
  * @sa otCoapSecureConnect
  */
 template <> otError CoapSecure::Process<Cmd("connect")>(Arg aArgs[])
