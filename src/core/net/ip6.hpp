@@ -207,7 +207,6 @@ public:
      * Processes a received IPv6 datagram.
      *
      * @param[in]  aMessage          An owned pointer to a message.
-     * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
      *
      * @retval kErrorNone     Successfully processed the message.
      * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
@@ -216,9 +215,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(OwnedPtr<Message> aMessagePtr,
-                         const void       *aLinkMessageInfo = nullptr,
-                         bool              aIsReassembled   = false);
+    Error HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled = false);
 
     /**
      * Registers a callback to provide received raw IPv6 datagrams.
@@ -378,7 +375,7 @@ private:
                                  uint8_t           &aNextHeader,
                                  bool              &aReceive);
     Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    Error HandleFragment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleFragment(Message &aMessage);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);

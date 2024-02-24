@@ -748,16 +748,16 @@ void MleRouter::HandleLinkRequest(RxInfo &aRxInfo)
     aRxInfo.mClass = RxInfo::kPeerMessage;
     ProcessKeySequence(aRxInfo);
 
-    SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, neighbor, requestedTlvList, challenge));
+    SuccessOrExit(error = SendLinkAccept(aRxInfo, neighbor, requestedTlvList, challenge));
 
 exit:
     LogProcessError(kTypeLinkRequest, error);
 }
 
-Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
-                                Neighbor               *aNeighbor,
-                                const TlvList          &aRequestedTlvList,
-                                const RxChallenge      &aChallenge)
+Error MleRouter::SendLinkAccept(const RxInfo      &aRxInfo,
+                                Neighbor          *aNeighbor,
+                                const TlvList     &aRequestedTlvList,
+                                const RxChallenge &aChallenge)
 {
     static const uint8_t kRouterTlvs[] = {Tlv::kLinkMargin};
 
@@ -776,7 +776,7 @@ Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     SuccessOrExit(error = message->AppendMleFrameCounterTlv());
 
     // always append a link margin, regardless of whether or not it was requested
-    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aMessageInfo.GetThreadLinkInfo()->GetRss());
+    linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
 
     SuccessOrExit(error = message->AppendLinkMarginTlv(linkMargin));
 
@@ -823,20 +823,20 @@ Error MleRouter::SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
     }
 #endif
 
-    if (aMessageInfo.GetSockAddr().IsMulticast())
+    if (aRxInfo.mMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(error = message->SendAfterDelay(aMessageInfo.GetPeerAddr(),
+        SuccessOrExit(error = message->SendAfterDelay(aRxInfo.mMessageInfo.GetPeerAddr(),
                                                       1 + Random::NonCrypto::GetUint16InRange(0, kMaxLinkAcceptDelay)));
 
         Log(kMessageDelay, (command == kCommandLinkAccept) ? kTypeLinkAccept : kTypeLinkAcceptAndRequest,
-            aMessageInfo.GetPeerAddr());
+            aRxInfo.mMessageInfo.GetPeerAddr());
     }
     else
     {
-        SuccessOrExit(error = message->SendTo(aMessageInfo.GetPeerAddr()));
+        SuccessOrExit(error = message->SendTo(aRxInfo.mMessageInfo.GetPeerAddr()));
 
         Log(kMessageSend, (command == kCommandLinkAccept) ? kTypeLinkAccept : kTypeLinkAcceptAndRequest,
-            aMessageInfo.GetPeerAddr());
+            aRxInfo.mMessageInfo.GetPeerAddr());
     }
 
 exit:
@@ -1062,7 +1062,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
             ExitNow(error = kErrorParse);
         }
 
-        SuccessOrExit(error = SendLinkAccept(aRxInfo.mMessageInfo, router, requestedTlvList, challenge));
+        SuccessOrExit(error = SendLinkAccept(aRxInfo, router, requestedTlvList, challenge));
     }
 
 exit:
@@ -1178,7 +1178,7 @@ Error MleRouter::HandleAdvertisement(RxInfo &aRxInfo, uint16_t aSourceAddress, c
     // - `aLeaderData` is the read value from `LeaderDataTlv`.
 
     Error    error      = kErrorNone;
-    uint8_t  linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    uint8_t  linkMargin = Get<Mac::Mac>().ComputeLinkMargin(aRxInfo.mMessage.GetAverageRss());
     RouteTlv routeTlv;
     Router  *router;
     uint8_t  routerId;
@@ -2118,7 +2118,7 @@ void MleRouter::HandleChildIdRequest(RxInfo &aRxInfo)
     child->SetKeySequence(aRxInfo.mKeySequence);
     child->SetDeviceMode(mode);
     child->SetVersion(version);
-    child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    child->GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
     child->SetTimeout(timeout);
     child->SetSupervisionInterval(supervisionInterval);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -2533,7 +2533,7 @@ void MleRouter::HandleChildUpdateResponse(RxInfo &aRxInfo)
     SetChildStateToValid(*child);
     child->SetLastHeard(TimerMilli::GetNow());
     child->SetKeySequence(aRxInfo.mKeySequence);
-    child->GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    child->GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
 
     aRxInfo.mClass = response.IsEmpty() ? RxInfo::kPeerMessage : RxInfo::kAuthoritativeMessage;
 

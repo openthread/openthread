@@ -181,30 +181,6 @@ public:
     void SetMulticastLoop(bool aMulticastLoop) { mMulticastLoop = aMulticastLoop; }
 
     /**
-     * Returns a pointer to the link-specific information object.
-     *
-     * @returns A pointer to the link-specific information object.
-     *
-     */
-    const void *GetLinkInfo(void) const { return mLinkInfo; }
-
-    /**
-     * Sets the pointer to the link-specific information object.
-     *
-     * @param[in]  aLinkInfo  A pointer to the link-specific information object.
-     *
-     */
-    void SetLinkInfo(const void *aLinkInfo) { mLinkInfo = aLinkInfo; }
-
-    /**
-     * Returns a pointer to the link-specific information as a `ThreadLinkInfo`.
-     *
-     * @returns A pointer to to the link-specific information object as `ThreadLinkInfo`.
-     *
-     */
-    const ThreadLinkInfo *GetThreadLinkInfo(void) const { return reinterpret_cast<const ThreadLinkInfo *>(mLinkInfo); }
-
-    /**
      * Gets the ECN status.
      *
      * @returns The ECN status, as represented in the IP header.

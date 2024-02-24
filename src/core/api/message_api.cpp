@@ -90,6 +90,11 @@ void otMessageSetDirectTransmission(otMessage *aMessage, bool aEnabled)
 
 int8_t otMessageGetRss(const otMessage *aMessage) { return AsCoreType(aMessage).GetAverageRss(); }
 
+otError otMessageGetThreadLinkInfo(const otMessage *aMessage, otThreadLinkInfo *aLinkInfo)
+{
+    return AsCoreType(aMessage).GetLinkInfo(AsCoreType(aLinkInfo));
+}
+
 otError otMessageAppend(otMessage *aMessage, const void *aBuf, uint16_t aLength)
 {
     AssertPointerIsNotNull(aBuf);

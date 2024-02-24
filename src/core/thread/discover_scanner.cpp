@@ -308,8 +308,7 @@ exit:
 
 void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 {
-    Error                         error    = kErrorNone;
-    const ThreadLinkInfo         *linkInfo = aRxInfo.mMessageInfo.GetThreadLinkInfo();
+    Error                         error = kErrorNone;
     MeshCoP::Tlv                  meshcopTlv;
     MeshCoP::DiscoveryResponseTlv discoveryResponse;
     MeshCoP::NetworkNameTlv       networkName;
@@ -327,10 +326,10 @@ void DiscoverScanner::HandleDiscoveryResponse(Mle::RxInfo &aRxInfo) const
 
     ClearAllBytes(result);
     result.mDiscover = true;
-    result.mPanId    = linkInfo->mPanId;
-    result.mChannel  = linkInfo->mChannel;
-    result.mRssi     = linkInfo->mRss;
-    result.mLqi      = linkInfo->mLqi;
+    result.mPanId    = aRxInfo.mMessage.GetPanId();
+    result.mChannel  = aRxInfo.mMessage.GetChannel();
+    result.mRssi     = aRxInfo.mMessage.GetAverageRss();
+    result.mLqi      = aRxInfo.mMessage.GetAverageLqi();
 
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&result.mExtAddress));
 

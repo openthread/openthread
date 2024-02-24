@@ -1477,7 +1477,7 @@ void MeshForwarder::HandleFragment(FrameData            &aFrameData,
 
         message->SetDatagramTag(fragmentHeader.GetDatagramTag());
         message->SetTimestampToNow();
-        message->SetLinkInfo(aLinkInfo);
+        message->UpdateLinkInfoFrom(aLinkInfo);
 
         VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = kErrorDrop);
 
@@ -1530,9 +1530,7 @@ void MeshForwarder::HandleFragment(FrameData            &aFrameData,
         message->WriteData(message->GetOffset(), aFrameData);
         message->MoveOffset(aFrameData.GetLength());
         message->AddRss(aLinkInfo.GetRss());
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         message->AddLqi(aLinkInfo.GetLqi());
-#endif
         message->SetTimestampToNow();
     }
 
@@ -1543,7 +1541,7 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            IgnoreError(HandleDatagram(*message, aLinkInfo, aMacAddrs.mSource));
+            IgnoreError(HandleDatagram(*message, aMacAddrs.mSource));
         }
     }
     else
@@ -1643,7 +1641,7 @@ void MeshForwarder::HandleLowpanHC(const FrameData      &aFrameData,
 
     SuccessOrExit(error = FrameToMessage(aFrameData, 0, aMacAddrs, message));
 
-    message->SetLinkInfo(aLinkInfo);
+    message->UpdateLinkInfoFrom(aLinkInfo);
 
     VerifyOrExit(Get<Ip6::Filter>().Accept(*message), error = kErrorDrop);
 
@@ -1655,7 +1653,7 @@ exit:
 
     if (error == kErrorNone)
     {
-        IgnoreError(HandleDatagram(*message, aLinkInfo, aMacAddrs.mSource));
+        IgnoreError(HandleDatagram(*message, aMacAddrs.mSource));
     }
     else
     {
@@ -1664,7 +1662,7 @@ exit:
     }
 }
 
-Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
+Error MeshForwarder::HandleDatagram(Message &aMessage, const Mac::Address &aMacSource)
 {
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
@@ -1680,7 +1678,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
     aMessage.SetLoopbackToHostAllowed(true);
     aMessage.SetOrigin(Message::kOriginThreadNetif);
 
-    return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage), &aLinkInfo);
+    return Get<Ip6::Ip6>().HandleDatagram(OwnedPtr<Message>(&aMessage));
 }
 
 Error MeshForwarder::GetFramePriority(const FrameData      &aFrameData,
