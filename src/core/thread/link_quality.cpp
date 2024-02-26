@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
+#include "common/numeric_limits.hpp"
 #include "instance/instance.hpp"
 
 namespace ot {
@@ -118,7 +119,7 @@ void LqiAverager::Add(uint8_t aLqi)
 {
     uint8_t count;
 
-    if (mCount < UINT8_MAX)
+    if (mCount < NumericLimits<uint8_t>::kMax)
     {
         mCount++;
     }

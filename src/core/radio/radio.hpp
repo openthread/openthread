@@ -37,11 +37,12 @@
 #include "openthread-core-config.h"
 
 #include <openthread/radio_stats.h>
+#include <openthread/platform/crypto.h>
 #include <openthread/platform/radio.h>
 
-#include <openthread/platform/crypto.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -1082,9 +1083,9 @@ inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-inline uint8_t Radio::GetCslAccuracy(void) { return UINT8_MAX; }
+inline uint8_t Radio::GetCslAccuracy(void) { return NumericLimits<uint8_t>::kMax; }
 
-inline uint8_t Radio::GetCslUncertainty(void) { return UINT8_MAX; }
+inline uint8_t Radio::GetCslUncertainty(void) { return NumericLimits<uint8_t>::kMax; }
 #endif
 
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
