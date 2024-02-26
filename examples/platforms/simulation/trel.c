@@ -31,6 +31,7 @@
 #include <openthread/random_noncrypto.h>
 #include <openthread/platform/trel.h>
 
+#include "simul_utils.h"
 #include "utils/code_utils.h"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -38,8 +39,6 @@
 // Change DEBUG_LOG to all extra logging
 #define DEBUG_LOG 0
 
-// The IPv4 group for receiving
-#define TREL_SIM_GROUP "224.0.0.116"
 #define TREL_SIM_PORT 9200
 
 #define TREL_MAX_PACKET_SIZE 1800
@@ -67,11 +66,9 @@ typedef struct Message
 static uint8_t sNumPendingTx = 0;
 static Message sPendingTx[TREL_MAX_PENDING_TX];
 
-static int      sTxFd       = -1;
-static int      sRxFd       = -1;
-static uint16_t sPortOffset = 0;
-static bool     sEnabled    = false;
-static uint16_t sUdpPort;
+static utilsSocket sSocket;
+static uint16_t    sPortOffset = 0;
+static bool        sEnabled    = false;
 
 static bool               sServiceRegistered = false;
 static uint16_t           sServicePort;
@@ -117,80 +114,6 @@ static const char *messageTypeToString(MessageType aType)
 }
 #endif
 
-static void initFds(void)
-{
-    int                fd;
-    int                one = 1;
-    struct sockaddr_in sockaddr;
-    struct ip_mreqn    mreq;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
-
-    sUdpPort                 = (uint16_t)(TREL_SIM_PORT + sPortOffset + gNodeId);
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons(sUdpPort);
-    sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &sockaddr.sin_addr, sizeof(sockaddr.sin_addr)) != -1,
-                    perror("setsockopt(sTxFd, IP_MULTICAST_IF)"));
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sTxFd, IP_MULTICAST_LOOP)"));
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sTxFd)"));
-
-    // Tx fd is successfully initialized.
-    sTxFd = fd;
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sRxFd)"));
-
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEADDR)"));
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEPORT)"));
-
-    memset(&mreq, 0, sizeof(mreq));
-    inet_pton(AF_INET, TREL_SIM_GROUP, &mreq.imr_multiaddr);
-
-    // Always use loopback device to send simulation packets.
-    mreq.imr_address.s_addr = inet_addr("127.0.0.1");
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &mreq.imr_address, sizeof(mreq.imr_address)) != -1,
-                    perror("setsockopt(sRxFd, IP_MULTICAST_IF)"));
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != -1,
-                    perror("setsockopt(sRxFd, IP_ADD_MEMBERSHIP)"));
-
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(TREL_SIM_PORT + sPortOffset));
-    sockaddr.sin_addr.s_addr = inet_addr(TREL_SIM_GROUP);
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
-
-    // Rx fd is successfully initialized.
-    sRxFd = fd;
-
-exit:
-    if (sRxFd == -1 || sTxFd == -1)
-    {
-        exit(EXIT_FAILURE);
-    }
-}
-
-static void deinitFds(void)
-{
-    if (sRxFd != -1)
-    {
-        close(sRxFd);
-    }
-
-    if (sTxFd != -1)
-    {
-        close(sTxFd);
-    }
-}
-
 static uint16_t getMessageSize(const Message *aMessage)
 {
     return (uint16_t)(&aMessage->mData[aMessage->mDataLength] - (const uint8_t *)aMessage);
@@ -198,31 +121,13 @@ static uint16_t getMessageSize(const Message *aMessage)
 
 static void sendPendingTxMessages(void)
 {
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, TREL_SIM_GROUP, &sockaddr.sin_addr);
-
-    sockaddr.sin_port = htons((uint16_t)(TREL_SIM_PORT + sPortOffset));
-
     for (uint8_t i = 0; i < sNumPendingTx; i++)
     {
-        uint16_t size = getMessageSize(&sPendingTx[i]);
-
 #if DEBUG_LOG
         fprintf(stderr, "\r\n[trel-sim] Sending message (num:%d, type:%s, port:%u)\r\n", i,
                 messageTypeToString(sPendingTx[i].mType), sPendingTx[i].mSockAddr.mPort);
 #endif
-
-        rval = sendto(sTxFd, &sPendingTx[i], size, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-
-        if (rval < 0)
-        {
-            perror("sendto(sTxFd)");
-            exit(EXIT_FAILURE);
-        }
+        utilsSendOverSocket(&sSocket, &sPendingTx[i], getMessageSize(&sPendingTx[i]));
     }
 
     sNumPendingTx = 0;
@@ -279,7 +184,7 @@ static void processMessage(otInstance *aInstance, Message *aMessage, uint16_t aL
     switch (aMessage->mType)
     {
     case TREL_DATA_MESSAGE:
-        otEXPECT(aMessage->mSockAddr.mPort == sUdpPort);
+        otEXPECT(aMessage->mSockAddr.mPort == sSocket.mPort);
         otPlatTrelHandleReceived(aInstance, aMessage->mData, aMessage->mDataLength);
         break;
 
@@ -309,7 +214,7 @@ void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    *aUdpPort = sUdpPort;
+    *aUdpPort = sSocket.mPort;
 
 #if DEBUG_LOG
     fprintf(stderr, "\r\n[trel-sim] otPlatTrelEnable() *aUdpPort=%u\r\n", *aUdpPort);
@@ -417,62 +322,46 @@ void platformTrelInit(uint32_t aSpeedUpFactor)
         sPortOffset *= (MAX_NETWORK_SIZE + 1);
     }
 
-    initFds();
+    utilsInitSocket(&sSocket, TREL_SIM_PORT + sPortOffset);
 
     OT_UNUSED_VARIABLE(aSpeedUpFactor);
 }
 
-void platformTrelDeinit(void) { deinitFds(); }
+void platformTrelDeinit(void) { utilsDeinitSocket(&sSocket); }
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
     OT_UNUSED_VARIABLE(aTimeout);
 
     // Always ready to receive
-    if (aReadFdSet != NULL)
+    utilsAddSocketRxFd(&sSocket, aReadFdSet, aMaxFd);
+
+    if (sNumPendingTx > 0)
     {
-        FD_SET(sRxFd, aReadFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sRxFd)
-        {
-            *aMaxFd = sRxFd;
-        }
-    }
-
-    if ((aWriteFdSet != NULL) && (sNumPendingTx > 0))
-    {
-        FD_SET(sTxFd, aWriteFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sTxFd)
-        {
-            *aMaxFd = sTxFd;
-        }
+        utilsAddSocketTxFd(&sSocket, aWriteFdSet, aMaxFd);
     }
 }
 
 void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
 {
-    if (FD_ISSET(sTxFd, aWriteFdSet) && (sNumPendingTx > 0))
+    if ((sNumPendingTx > 0) && utilsCanSocketSend(&sSocket, aWriteFdSet))
     {
         sendPendingTxMessages();
     }
 
-    if (FD_ISSET(sRxFd, aReadFdSet))
+    if (utilsCanSocketReceive(&sSocket, aReadFdSet))
     {
-        Message message;
-        ssize_t rval;
+        Message  message;
+        uint16_t len;
 
         message.mDataLength = 0;
 
-        rval = recvfrom(sRxFd, (char *)&message, sizeof(message), 0, NULL, NULL);
+        len = utilsReceiveFromSocket(&sSocket, &message, sizeof(message), NULL);
 
-        if (rval < 0)
+        if (len > 0)
         {
-            perror("recvfrom(sRxFd)");
-            exit(EXIT_FAILURE);
+            processMessage(aInstance, &message, len);
         }
-
-        processMessage(aInstance, &message, (uint16_t)(rval));
     }
 }
 

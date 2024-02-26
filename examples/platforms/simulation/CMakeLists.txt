@@ -72,6 +72,7 @@ add_library(openthread-simulation
     misc.c
     multipan.c
     radio.c
+    simul_utils.c
     spi-stubs.c
     system.c
     trel.c
