@@ -261,14 +261,14 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return UINT8_MAX;
+    return NumericLimits<uint8_t>::kMax;
 }
 
 OT_TOOL_WEAK uint8_t otPlatRadioGetCslUncertainty(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return UINT8_MAX;
+    return NumericLimits<uint8_t>::kMax;
 }
 
 OT_TOOL_WEAK otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
