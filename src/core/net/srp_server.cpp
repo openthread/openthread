@@ -811,6 +811,13 @@ void Server::ProcessDnsUpdate(Message &aMessage, MessageMetadata &aMetadata)
     // Parse lease time and validate signature.
     SuccessOrExit(error = ProcessAdditionalSection(host, aMessage, aMetadata));
 
+#if OPENTHREAD_FTD
+    if (aMetadata.IsDirectRxFromClient())
+    {
+        UpdateAddrResolverCacheTable(*aMetadata.mMessageInfo, *host);
+    }
+#endif
+
     HandleUpdate(*host, aMetadata);
 
 exit:
@@ -1788,6 +1795,41 @@ void Server::UpdateResponseCounters(Dns::UpdateHeader::Response aResponseCode)
         break;
     }
 }
+
+#if OPENTHREAD_FTD
+void Server::UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, const Host &aHost)
+{
+    // If message is from a client on mesh, we add all registered
+    // addresses as snooped entries in the address resolver cache
+    // table. We associate the registered addresses with the same
+    // RLOC16 (if any) as the received message's peer IPv6 address.
+
+    uint16_t rloc16;
+
+    VerifyOrExit(aHost.GetLease() != 0);
+    VerifyOrExit(aHost.GetTtl() > 0);
+
+    // If the `LookUp()` call succeeds, the cache entry will be marked
+    // as "cached and in-use". We can mark it as "in-use" early since
+    // the entry will be needed and used soon when sending the SRP
+    // response. This also prevents a snooped cache entry (added for
+    // `GetPeerAddr()` due to rx of the SRP update message) from
+    // being overwritten by `UpdateSnoopedCacheEntry()` calls when
+    // there are limited snoop entries available.
+
+    rloc16 = Get<AddressResolver>().LookUp(aMessageInfo.GetPeerAddr());
+
+    VerifyOrExit(rloc16 != Mac::kShortAddrInvalid);
+
+    for (const Ip6::Address &address : aHost.mAddresses)
+    {
+        Get<AddressResolver>().UpdateSnoopedCacheEntry(address, rloc16, Get<Mle::Mle>().GetRloc16());
+    }
+
+exit:
+    return;
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // Server::Service
