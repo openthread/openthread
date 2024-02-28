@@ -1285,6 +1285,8 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 
         ResetCounters();
 
+        mEncoder.ClearNcpBuffer();
+
         SuccessOrAssert(error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID,
                                                      SPINEL_STATUS_RESET_POWER_ON));
     }
