@@ -41,13 +41,11 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
+#include "simul_utils.h"
 #include "utils/code_utils.h"
 #include "utils/link_metrics.h"
 #include "utils/mac_frame.h"
 #include "utils/soft_source_match_table.h"
-
-// The IPv4 group for receiving packets of radio simulation
-#define OT_RADIO_GROUP "224.0.0.116"
 
 #define MS_PER_S 1000
 #define US_PER_MS 1000
@@ -75,11 +73,9 @@ extern int      sSockFd;
 extern uint16_t sPortBase;
 extern uint16_t sPortOffset;
 #else
-static int      sTxFd       = -1;
-static int      sRxFd       = -1;
-static uint16_t sPortBase   = 9000;
-static uint16_t sPortOffset = 0;
-static uint16_t sPort       = 0;
+static utilsSocket sSocket;
+static uint16_t    sPortBase   = 9000;
+static uint16_t    sPortOffset = 0;
 #endif
 
 static int8_t   sEnergyScanResult  = OT_RADIO_RSSI_INVALID;
@@ -190,6 +186,8 @@ static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
 {
     bool isConnectable = true;
 
+    otEXPECT_ACTION(aNodeId != gNodeId, isConnectable = false);
+
     switch (sFilterMode)
     {
     case kFilterOff:
@@ -202,6 +200,7 @@ static bool NodeIdFilterIsConnectable(uint16_t aNodeId)
         break;
     }
 
+exit:
     return isConnectable;
 }
 
@@ -407,82 +406,15 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
     sPromiscuous = aEnable;
 }
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-static void initFds(void)
-{
-    int                fd;
-    int                one = 1;
-    struct sockaddr_in sockaddr;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sTxFd)"));
-
-    sPort                    = (uint16_t)(sPortBase + sPortOffset + gNodeId);
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons(sPort);
-    sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &sockaddr.sin_addr, sizeof(sockaddr.sin_addr)) != -1,
-                    perror("setsockopt(sTxFd, IP_MULTICAST_IF)"));
-
-    otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, IP_MULTICAST_LOOP)"));
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sTxFd)"));
-
-    // Tx fd is successfully initialized.
-    sTxFd = fd;
-
-    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sRxFd)"));
-
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEADDR)"));
-    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) != -1,
-                    perror("setsockopt(sRxFd, SO_REUSEPORT)"));
-
-    {
-        struct ip_mreqn mreq;
-
-        memset(&mreq, 0, sizeof(mreq));
-        inet_pton(AF_INET, OT_RADIO_GROUP, &mreq.imr_multiaddr);
-
-        // Always use loopback device to send simulation packets.
-        mreq.imr_address.s_addr = inet_addr("127.0.0.1");
-
-        otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &mreq.imr_address, sizeof(mreq.imr_address)) != -1,
-                        perror("setsockopt(sRxFd, IP_MULTICAST_IF)"));
-        otEXPECT_ACTION(setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != -1,
-                        perror("setsockopt(sRxFd, IP_ADD_MEMBERSHIP)"));
-    }
-
-    sockaddr.sin_family      = AF_INET;
-    sockaddr.sin_port        = htons((uint16_t)(sPortBase + sPortOffset));
-    sockaddr.sin_addr.s_addr = inet_addr(OT_RADIO_GROUP);
-
-    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sRxFd)"));
-
-    // Rx fd is successfully initialized.
-    sRxFd = fd;
-
-exit:
-    if (sRxFd == -1 || sTxFd == -1)
-    {
-        exit(EXIT_FAILURE);
-    }
-}
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-
 void platformRadioInit(void)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
     parseFromEnvAsUint16("PORT_BASE", &sPortBase);
-
     parseFromEnvAsUint16("PORT_OFFSET", &sPortOffset);
     sPortOffset *= (MAX_NETWORK_SIZE + 1);
 
-    initFds();
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+    utilsInitSocket(&sSocket, sPortBase + sPortOffset);
+#endif
 
     sReceiveFrame.mPsdu  = sReceiveMessage.mPsdu;
     sTransmitFrame.mPsdu = sTransmitMessage.mPsdu;
@@ -859,24 +791,14 @@ void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLen
 #else
 void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
 {
-    if (aReadFdSet != NULL && (sState != OT_RADIO_STATE_TRANSMIT || sTxWait))
+    if (sState != OT_RADIO_STATE_TRANSMIT || sTxWait)
     {
-        FD_SET(sRxFd, aReadFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sRxFd)
-        {
-            *aMaxFd = sRxFd;
-        }
+        utilsAddSocketRxFd(&sSocket, aReadFdSet, aMaxFd);
     }
 
-    if (aWriteFdSet != NULL && platformRadioIsTransmitPending())
+    if (platformRadioIsTransmitPending())
     {
-        FD_SET(sTxFd, aWriteFdSet);
-
-        if (aMaxFd != NULL && *aMaxFd < sTxFd)
-        {
-            *aMaxFd = sTxFd;
-        }
+        utilsAddSocketTxFd(&sSocket, aWriteFdSet, aMaxFd);
     }
 
     if (sEnergyScanning)
@@ -900,18 +822,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct ti
 }
 
 // no need to close in virtual time mode.
-void platformRadioDeinit(void)
-{
-    if (sRxFd != -1)
-    {
-        close(sRxFd);
-    }
-
-    if (sTxFd != -1)
-    {
-        close(sTxFd);
-    }
-}
+void platformRadioDeinit(void) { utilsDeinitSocket(&sSocket); }
 #endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME
 
 void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
@@ -919,41 +830,22 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
     OT_UNUSED_VARIABLE(aReadFdSet);
     OT_UNUSED_VARIABLE(aWriteFdSet);
 
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    if (FD_ISSET(sRxFd, aReadFdSet))
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    if (utilsCanSocketReceive(&sSocket, aReadFdSet))
     {
-        struct sockaddr_in sockaddr;
-        socklen_t          len = sizeof(sockaddr);
-        ssize_t            rval;
+        uint16_t senderNodeId;
+        uint16_t len;
 
-        memset(&sockaddr, 0, sizeof(sockaddr));
-        rval =
-            recvfrom(sRxFd, (char *)&sReceiveMessage, sizeof(sReceiveMessage), 0, (struct sockaddr *)&sockaddr, &len);
+        len = utilsReceiveFromSocket(&sSocket, &sReceiveMessage, sizeof(sReceiveMessage), &senderNodeId);
 
-        if (rval > 0)
+        if (NodeIdFilterIsConnectable(senderNodeId))
         {
-            uint16_t srcPort   = ntohs(sockaddr.sin_port);
-            uint16_t srcNodeId = srcPort - sPortOffset - sPortBase;
-
-            if (NodeIdFilterIsConnectable(srcNodeId) && srcPort != sPort)
-            {
-                sReceiveFrame.mLength = (uint16_t)(rval - 1);
-
-                radioReceive(aInstance);
-            }
-        }
-        else if (rval == 0)
-        {
-            // socket is closed, which should not happen
-            assert(false);
-        }
-        else if (errno != EINTR && errno != EAGAIN)
-        {
-            perror("recvfrom(sRxFd)");
-            exit(EXIT_FAILURE);
+            sReceiveFrame.mLength = len - 1;
+            radioReceive(aInstance);
         }
     }
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#endif
+
     if (platformRadioIsTransmitPending())
     {
         radioSendMessage(aInstance);
@@ -968,33 +860,17 @@ void platformRadioProcess(otInstance *aInstance, const fd_set *aReadFdSet, const
 
 void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFrame)
 {
-#if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
-    ssize_t            rval;
-    struct sockaddr_in sockaddr;
-
-    memset(&sockaddr, 0, sizeof(sockaddr));
-    sockaddr.sin_family = AF_INET;
-    inet_pton(AF_INET, OT_RADIO_GROUP, &sockaddr.sin_addr);
-
-    sockaddr.sin_port = htons((uint16_t)(sPortBase + sPortOffset));
-    rval =
-        sendto(sTxFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
-
-    if (rval < 0)
-    {
-        perror("sendto(sTxFd)");
-        exit(EXIT_FAILURE);
-    }
-#else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#if !OPENTHREAD_SIMULATION_VIRTUAL_TIME
+    utilsSendOverSocket(&sSocket, aMessage, aFrame->mLength + 1); // + 1 is for `mChannel`
+#else
     struct Event event;
 
     event.mDelay      = 1; // 1us for now
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
     event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);
-
     otSimSendEvent(&event);
-#endif // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
+#endif
 }
 
 void radioSendAck(void)
