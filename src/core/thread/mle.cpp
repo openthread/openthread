@@ -1093,7 +1093,7 @@ void Mle::InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo)
 {
     aRxInfo.mMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(aNeighbor.GetExtAddress());
     aNeighbor.GetLinkInfo().Clear();
-    aNeighbor.GetLinkInfo().AddRss(aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss());
+    aNeighbor.GetLinkInfo().AddRss(aRxInfo.mMessage.GetAverageRss());
     aNeighbor.ResetLinkFailures();
     aNeighbor.SetLastHeard(TimerMilli::GetNow());
 }
@@ -2431,7 +2431,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 
     LogDebg("Receive MLE message");
 
-    VerifyOrExit(aMessageInfo.GetLinkInfo() != nullptr);
+    VerifyOrExit(aMessage.GetOrigin() == Message::kOriginThreadNetif);
     VerifyOrExit(aMessageInfo.GetHopLimit() == kMleHopLimit, error = kErrorParse);
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), securitySuite));
@@ -2699,7 +2699,7 @@ exit:
     // We skip logging failures for broadcast MLE messages since it
     // can be common to receive such messages from adjacent Thread
     // networks.
-    if (!aMessageInfo.GetSockAddr().IsMulticast() || !aMessageInfo.GetThreadLinkInfo()->IsDstPanIdBroadcast())
+    if (!aMessageInfo.GetSockAddr().IsMulticast() || !aMessage.IsDstPanIdBroadcast())
     {
         LogProcessError(kTypeGenericUdp, error);
     }
@@ -3132,7 +3132,7 @@ exit:
 void Mle::HandleParentResponse(RxInfo &aRxInfo)
 {
     Error            error = kErrorNone;
-    int8_t           rss   = aRxInfo.mMessageInfo.GetThreadLinkInfo()->GetRss();
+    int8_t           rss   = aRxInfo.mMessage.GetAverageRss();
     RxChallenge      response;
     uint16_t         version;
     uint16_t         sourceAddress;

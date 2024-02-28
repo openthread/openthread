@@ -55,27 +55,6 @@ extern "C" {
 #define OT_US_PER_TEN_SYMBOLS OT_RADIO_TEN_SYMBOLS_TIME ///< Time for 10 symbols in units of microseconds
 
 /**
- * Represents link-specific information for messages received from the Thread radio.
- *
- */
-typedef struct otThreadLinkInfo
-{
-    uint16_t mPanId;                   ///< Source PAN ID
-    uint8_t  mChannel;                 ///< 802.15.4 Channel
-    int8_t   mRss;                     ///< Received Signal Strength in dBm.
-    uint8_t  mLqi;                     ///< Link Quality Indicator for a received message.
-    bool     mLinkSecurity : 1;        ///< Indicates whether or not link security is enabled.
-    bool     mIsDstPanIdBroadcast : 1; ///< Indicates whether or not destination PAN ID is broadcast.
-
-    // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
-    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
-    int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
-
-    // Applicable only when OPENTHREAD_CONFIG_MULTI_RADIO feature is enabled.
-    uint8_t mRadioType; ///< Radio link type.
-} otThreadLinkInfo;
-
-/**
  * Used to indicate no fixed received signal strength was set
  *
  */

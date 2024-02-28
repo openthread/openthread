@@ -236,7 +236,6 @@ typedef struct otMessageInfo
     otIp6Address mPeerAddr; ///< The peer IPv6 address.
     uint16_t     mSockPort; ///< The local transport-layer port.
     uint16_t     mPeerPort; ///< The peer transport-layer port.
-    const void  *mLinkInfo; ///< A pointer to link-specific information.
     uint8_t      mHopLimit; ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
                             ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
                             ///< Otherwise, specifies the IPv6 Hop Limit.

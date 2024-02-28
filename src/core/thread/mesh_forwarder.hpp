@@ -550,7 +550,7 @@ private:
                                  uint16_t                aFragmentLength,
                                  uint16_t                aSrcRloc16,
                                  Message::Priority       aPriority);
-    Error HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
+    Error HandleDatagram(Message &aMessage, const Mac::Address &aMacSource);
     void  ClearReassemblyList(void);
     void  EvictMessage(Message &aMessage);
     void  HandleDiscoverComplete(void);

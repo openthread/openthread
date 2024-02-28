@@ -616,7 +616,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, MessageInfo &aMessageInfo)
+Error Ip6::HandleFragment(Message &aMessage)
 {
     Error          error = kErrorNone;
     Header         header, headerBuffer;
@@ -703,8 +703,7 @@ Error Ip6::HandleFragment(Message &aMessage, MessageInfo &aMessageInfo)
 
         mReassemblyList.Dequeue(*message);
 
-        IgnoreError(HandleDatagram(OwnedPtr<Message>(message), aMessageInfo.mLinkInfo,
-                                   /* aIsReassembled */ true));
+        IgnoreError(HandleDatagram(OwnedPtr<Message>(message), /* aIsReassembled */ true));
     }
 
 exit:
@@ -766,7 +765,6 @@ void Ip6::SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::H
     messageInfo.SetPeerAddr(header.GetSource());
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
-    messageInfo.SetLinkInfo(nullptr);
 
     error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, aMessage);
 
@@ -788,10 +786,8 @@ Error Ip6::FragmentDatagram(Message &aMessage, uint8_t aIpProto)
     return kErrorNone;
 }
 
-Error Ip6::HandleFragment(Message &aMessage, MessageInfo &aMessageInfo)
+Error Ip6::HandleFragment(Message &aMessage)
 {
-    OT_UNUSED_VARIABLE(aMessageInfo);
-
     Error          error = kErrorNone;
     FragmentHeader fragmentHeader;
 
@@ -829,7 +825,7 @@ Error Ip6::HandleExtensionHeaders(OwnedPtr<Message> &aMessagePtr,
         case kProtoFragment:
             IgnoreError(PassToHost(aMessagePtr, aMessageInfo, aNextHeader,
                                    /* aApplyFilter */ false, aReceive, Message::kCopyToUse));
-            SuccessOrExit(error = HandleFragment(*aMessagePtr, aMessageInfo));
+            SuccessOrExit(error = HandleFragment(*aMessagePtr));
             break;
 
         case kProtoDstOpts:
@@ -1094,7 +1090,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessageInfo, bool aIsReassembled)
+Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
 {
     Error       error;
     MessageInfo messageInfo;
@@ -1115,7 +1111,6 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessag
     messageInfo.SetSockAddr(header.GetDestination());
     messageInfo.SetHopLimit(header.GetHopLimit());
     messageInfo.SetEcn(header.GetEcn());
-    messageInfo.SetLinkInfo(aLinkMessageInfo);
 
     // Determine `forwardThread`, `forwardHost` and `receive`
     // based on the destination address.
@@ -1203,7 +1198,7 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, const void *aLinkMessag
 
         Get<MeshForwarder>().LogMessage(MeshForwarder::kMessageReceive, *messagePtr);
 
-        IgnoreError(HandleDatagram(messagePtr.PassOwnership(), aLinkMessageInfo, aIsReassembled));
+        IgnoreError(HandleDatagram(messagePtr.PassOwnership(), aIsReassembled));
 
         receive     = false;
         forwardHost = false;

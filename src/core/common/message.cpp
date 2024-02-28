@@ -770,12 +770,19 @@ Message *Message::Clone(uint16_t aLength) const
     SuccessOrExit(error = messageCopy->AppendBytesFromMessage(*this, 0, aLength));
 
     // Copy selected message information.
+
     offset = Min(GetOffset(), aLength);
     messageCopy->SetOffset(offset);
 
     messageCopy->SetSubType(GetSubType());
     messageCopy->SetLoopbackToHostAllowed(IsLoopbackToHostAllowed());
     messageCopy->SetOrigin(GetOrigin());
+    messageCopy->SetTimestamp(GetTimestamp());
+    messageCopy->SetMeshDest(GetMeshDest());
+    messageCopy->SetPanId(GetPanId());
+    messageCopy->SetChannel(GetChannel());
+    messageCopy->SetRssAverager(GetRssAverager());
+    messageCopy->SetLqiAverager(GetLqiAverager());
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     messageCopy->SetTimeSync(IsTimeSync());
 #endif
@@ -795,18 +802,48 @@ void Message::SetChildMask(uint16_t aChildIndex) { GetMetadata().mChildMask.Set(
 bool Message::IsChildPending(void) const { return GetMetadata().mChildMask.HasAny(); }
 #endif
 
-void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
+Error Message::GetLinkInfo(ThreadLinkInfo &aLinkInfo) const
 {
-    SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
-    SetPanId(aLinkInfo.mPanId);
-    AddRss(aLinkInfo.mRss);
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    AddLqi(aLinkInfo.mLqi);
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsOriginThreadNetif(), error = kErrorNotFound);
+
+    aLinkInfo.Clear();
+
+    aLinkInfo.mPanId               = GetPanId();
+    aLinkInfo.mChannel             = GetChannel();
+    aLinkInfo.mRss                 = GetAverageRss();
+    aLinkInfo.mLqi                 = GetAverageLqi();
+    aLinkInfo.mLinkSecurity        = IsLinkSecurityEnabled();
+    aLinkInfo.mIsDstPanIdBroadcast = IsDstPanIdBroadcast();
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    aLinkInfo.mTimeSyncSeq       = GetTimeSyncSeq();
+    aLinkInfo.mNetworkTimeOffset = GetNetworkTimeOffset();
 #endif
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    aLinkInfo.mRadioType = GetRadioType();
+#endif
+
+exit:
+    return error;
+}
+
+void Message::UpdateLinkInfoFrom(const ThreadLinkInfo &aLinkInfo)
+{
+    SetPanId(aLinkInfo.mPanId);
+    SetChannel(aLinkInfo.mChannel);
+    AddRss(aLinkInfo.mRss);
+    AddLqi(aLinkInfo.mLqi);
+    SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
+    GetMetadata().mIsDstPanIdBroadcast = aLinkInfo.IsDstPanIdBroadcast();
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     SetTimeSyncSeq(aLinkInfo.mTimeSyncSeq);
     SetNetworkTimeOffset(aLinkInfo.mNetworkTimeOffset);
 #endif
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     SetRadioType(static_cast<Mac::RadioType>(aLinkInfo.mRadioType));
 #endif

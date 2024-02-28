@@ -666,10 +666,10 @@ private:
                                      const Ip6::MessageInfo &aMessageInfo);
     void  SendAddressRelease(void);
     void  SendAdvertisement(void);
-    Error SendLinkAccept(const Ip6::MessageInfo &aMessageInfo,
-                         Neighbor               *aNeighbor,
-                         const TlvList          &aRequestedTlvList,
-                         const RxChallenge      &aChallenge);
+    Error SendLinkAccept(const RxInfo      &aRxInfo,
+                         Neighbor          *aNeighbor,
+                         const TlvList     &aRequestedTlvList,
+                         const RxChallenge &aChallenge);
     void  SendParentResponse(Child *aChild, const RxChallenge &aChallenge, bool aRoutersOnlyRequest);
     Error SendChildIdResponse(Child &aChild);
     Error SendChildUpdateRequest(Child &aChild);
