@@ -86,6 +86,7 @@ Done
 - [networkkey](#networkkey)
 - [networkname](#networkname)
 - [networktime](#networktime)
+- [nexthop](#nexthop)
 - [panid](#panid)
 - [parent](#parent)
 - [parentpriority](#parentpriority)
@@ -1023,30 +1024,6 @@ Set the CSL timeout in seconds.
 
 ```bash
 > csl timeout 10
-Done
-```
-
-### networktime
-
-Get the Thread network time and the time sync parameters.
-
-```bash
-> networktime
-Network Time:     21084154us (synchronized)
-Time Sync Period: 100s
-XTAL Threshold:   300ppm
-Done
-```
-
-### networktime \<timesyncperiod\> \<xtalthreshold\>
-
-Set time sync parameters
-
-- timesyncperiod: The time synchronization period, in seconds.
-- xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
-
-```bash
-> networktime 100 300
 Done
 ```
 
@@ -2693,6 +2670,61 @@ Set the Thread Network Name.
 
 ```bash
 > networkname OpenThread
+Done
+```
+
+### networktime
+
+Get the Thread network time and the time sync parameters.
+
+```bash
+> networktime
+Network Time:     21084154us (synchronized)
+Time Sync Period: 100s
+XTAL Threshold:   300ppm
+Done
+```
+
+### networktime \<timesyncperiod\> \<xtalthreshold\>
+
+Set time sync parameters
+
+- timesyncperiod: The time synchronization period, in seconds.
+- xtalthreshold: The XTAL accuracy threshold for a device to become Router-Capable device, in PPM.
+
+```bash
+> networktime 100 300
+Done
+```
+
+### nexthop
+
+Output the table of allocated Router IDs and the current next hop (as Router ID) and path cost for each ID.
+
+```bash
+> nexthop
+| ID   |NxtHop| Cost |
++------+------+------+
+|    9 |    9 |    1 |
+|   25 |   25 |    0 |
+|   30 |   30 |    1 |
+|   46 |    - |    - |
+|   50 |   30 |    3 |
+|   60 |   30 |    2 |
+Done
+```
+
+### nexthop \<rloc16\>
+
+Get the next hop (as RLOC16) and path cost towards a given RLOC16 destination.
+
+```bash
+> nexthop 0xc000
+0xc000 cost:0
+Done
+
+nexthop 0x8001
+0x2000 cost:3
 Done
 ```
 
