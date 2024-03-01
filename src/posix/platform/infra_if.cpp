@@ -174,7 +174,7 @@ int InfraNetif::CreateIcmp6Socket(const char *aInfraIfName)
 #ifdef __linux__
     rval = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, aInfraIfName, strlen(aInfraIfName));
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-    rval = setsockopt(mInfraIfIcmp6Socket, IPPROTO_IPV6, IPV6_BOUND_IF, &mInfraIfIndex, sizeof(mInfraIfIndex));
+    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_BOUND_IF, aInfraIfName, strlen(aInfraIfName));
 #endif // __linux__
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
