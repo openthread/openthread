@@ -159,6 +159,28 @@ jobs:
         git clean -dfx
         ./tests/toranj/build.sh --enable-plat-key-ref all
 
+  toranj-macos:
+    name: toranj-macos
+    runs-on: macos-14
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        submodules: true
+    - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        brew update
+        brew install ninja
+    - name: Build & Run
+      run: |
+        ./tests/toranj/build.sh posix-15.4
+
   upload-coverage:
     needs:
     - toranj-cli

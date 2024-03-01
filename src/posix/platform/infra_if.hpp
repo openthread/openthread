@@ -220,8 +220,12 @@ private:
     static const uint8_t      kValidNat64PrefixLength[];
 
     char     mInfraIfName[IFNAMSIZ];
-    uint32_t mInfraIfIndex  = 0;
-    int      mNetLinkSocket = -1;
+    uint32_t mInfraIfIndex = 0;
+
+#ifdef __linux__
+    int mNetLinkSocket = -1;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     int mInfraIfIcmp6Socket = -1;
 #endif
@@ -229,7 +233,10 @@ private:
     MulticastRoutingManager mMulticastRoutingManager;
 #endif
 
-    void        ReceiveNetLinkMessage(void);
+#ifdef __linux__
+    void ReceiveNetLinkMessage(void);
+#endif
+
     bool        HasLinkLocalAddress(void) const;
     static void DiscoverNat64PrefixDone(union sigval sv);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

@@ -190,6 +190,7 @@ bool IsAddressUniqueLocal(const in6_addr &aAddress) { return (aAddress.s6_addr[0
 
 bool IsAddressGlobalUnicast(const in6_addr &aAddress) { return (aAddress.s6_addr[0] & 0xe0) == 0x20; }
 
+#ifdef __linux__
 // Create a net-link socket that subscribes to link & addresses events.
 int CreateNetLinkSocket(void)
 {
@@ -209,6 +210,7 @@ int CreateNetLinkSocket(void)
 
     return sock;
 }
+#endif // #ifdef __linux__
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
@@ -405,7 +407,12 @@ bool InfraNetif::HasLinkLocalAddress(void) const
     return hasLla;
 }
 
-void InfraNetif::Init(void) { mNetLinkSocket = CreateNetLinkSocket(); }
+void InfraNetif::Init(void)
+{
+#ifdef __linux__
+    mNetLinkSocket = CreateNetLinkSocket();
+#endif
+}
 
 void InfraNetif::SetInfraNetif(const char *aIfName, int aIcmp6Socket)
 {
@@ -414,7 +421,9 @@ void InfraNetif::SetInfraNetif(const char *aIfName, int aIcmp6Socket)
     OT_UNUSED_VARIABLE(aIcmp6Socket);
 
     OT_ASSERT(gInstance != nullptr);
+#ifdef __linux__
     VerifyOrDie(mNetLinkSocket != -1, OT_EXIT_INVALID_STATE);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     SetInfraNetifIcmp6SocketForBorderRouting(aIcmp6Socket);
@@ -449,7 +458,9 @@ exit:
 void InfraNetif::SetUp(void)
 {
     OT_ASSERT(gInstance != nullptr);
+#ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, otSysInfraIfIsRunning()));
@@ -461,6 +472,9 @@ void InfraNetif::SetUp(void)
 #endif
 
     Mainloop::Manager::Get().Add(*this);
+
+    ExitNow(); // To silence unused `exit` label warning.
+
 exit:
     return;
 }
@@ -488,11 +502,13 @@ void InfraNetif::Deinit(void)
     }
 #endif
 
+#ifdef __linux__
     if (mNetLinkSocket != -1)
     {
         close(mNetLinkSocket);
         mNetLinkSocket = -1;
     }
+#endif
 
     mInfraIfName[0] = '\0';
     mInfraIfIndex   = 0;
@@ -500,7 +516,9 @@ void InfraNetif::Deinit(void)
 
 void InfraNetif::Update(otSysMainloopContext &aContext)
 {
+#ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
@@ -509,12 +527,16 @@ void InfraNetif::Update(otSysMainloopContext &aContext)
     aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mInfraIfIcmp6Socket);
 #endif
 
+#ifdef __linux__
     FD_SET(mNetLinkSocket, &aContext.mReadFdSet);
     aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mNetLinkSocket);
+#endif
 
 exit:
     return;
 }
+
+#ifdef __linux__
 
 void InfraNetif::ReceiveNetLinkMessage(void)
 {
@@ -565,6 +587,8 @@ void InfraNetif::ReceiveNetLinkMessage(void)
 exit:
     return;
 }
+
+#endif // #ifdef __linux__
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 void InfraNetif::ReceiveIcmp6Message(void)
@@ -792,7 +816,10 @@ void InfraNetif::Process(const otSysMainloopContext &aContext)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     VerifyOrExit(mInfraIfIcmp6Socket != -1);
 #endif
+
+#ifdef __linux__
     VerifyOrExit(mNetLinkSocket != -1);
+#endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     if (FD_ISSET(mInfraIfIcmp6Socket, &aContext.mReadFdSet))
@@ -801,10 +828,12 @@ void InfraNetif::Process(const otSysMainloopContext &aContext)
     }
 #endif
 
+#ifdef __linux__
     if (FD_ISSET(mNetLinkSocket, &aContext.mReadFdSet))
     {
         ReceiveNetLinkMessage();
     }
+#endif
 
 exit:
     return;
