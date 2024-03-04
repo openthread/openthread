@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RESOLVER_HPP_
-#define POSIX_PLATFORM_RESOLVER_HPP_
+#ifndef OT_POSIX_PLATFORM_RESOLVER_HPP_
+#define OT_POSIX_PLATFORM_RESOLVER_HPP_
 
 #include <openthread/openthread-system.h>
 #include <openthread/platform/dns.h>
@@ -73,10 +73,7 @@ public:
     /**
      * Updates the file descriptor sets with file descriptors used by the radio driver.
      *
-     * @param[in,out]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in,out]  aErrorFdSet  A reference to the error file descriptors.
-     * @param[in,out]  aMaxFd       A reference to the max file descriptor.
-     * @param[in,out]  aTimeout     A reference to the timeout.
+     * @param[in,out]  aContext  The mainloop context.
      *
      */
     void UpdateFdSet(otSysMainloopContext &aContext);
@@ -84,8 +81,7 @@ public:
     /**
      * Handles the result of select.
      *
-     * @param[in]  aReadFdSet   A reference to the read file descriptors.
-     * @param[in]  aErrorFdSet  A reference to the error file descriptors.
+     * @param[in]  aContext  The mainloop context.
      *
      */
     void Process(const otSysMainloopContext &aContext);
@@ -122,4 +118,4 @@ private:
 
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
-#endif // POSIX_PLATFORM_RESOLVER_HPP_
+#endif // OT_POSIX_PLATFORM_RESOLVER_HPP_

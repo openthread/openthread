@@ -31,8 +31,8 @@
  *   This file includes definitions for the HDLC interface to radio (RCP).
  */
 
-#ifndef POSIX_PLATFORM_HDLC_INTERFACE_HPP_
-#define POSIX_PLATFORM_HDLC_INTERFACE_HPP_
+#ifndef OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
+#define OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
 
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
@@ -272,4 +272,5 @@ private:
 
 } // namespace Posix
 } // namespace ot
-#endif // POSIX_PLATFORM_HDLC_INTERFACE_HPP_
+
+#endif // OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_

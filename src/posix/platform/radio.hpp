@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RADIO_HPP_
-#define POSIX_PLATFORM_RADIO_HPP_
+#ifndef OT_POSIX_PLATFORM_RADIO_HPP_
+#define OT_POSIX_PLATFORM_RADIO_HPP_
 
 #include "common/code_utils.hpp"
 #include "lib/spinel/radio_spinel.hpp"
@@ -123,4 +123,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_RADIO_HPP_
+#endif // OT_POSIX_PLATFORM_RADIO_HPP_
