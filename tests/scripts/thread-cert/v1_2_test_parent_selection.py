@@ -207,8 +207,8 @@ class TestParentSelection(thread_cert.TestCase):
         assert (parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin == parent_cmp.get_mle_message_tlv(
             mle.LinkMargin).link_margin)
 
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp > parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).pp)
+        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp
+                > parent_cmp.get_mle_message_tlv(mle.Connectivity).pp)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(REED_1_1)
@@ -243,8 +243,8 @@ class TestParentSelection(thread_cert.TestCase):
             mle.LinkMargin).link_margin)
         assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp == parent_cmp.get_mle_message_tlv(
             mle.Connectivity).pp)
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3 > parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).link_quality_3)
+        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3
+                > parent_cmp.get_mle_message_tlv(mle.Connectivity).link_quality_3)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(MED_1_1)
@@ -278,8 +278,8 @@ class TestParentSelection(thread_cert.TestCase):
             mle.Connectivity).pp)
         assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3 == parent_cmp.get_mle_message_tlv(
             mle.Connectivity).link_quality_3)
-        assert (parent_prefer.get_mle_message_tlv(mle.Version).version > parent_cmp.get_mle_message_tlv(
-            mle.Version).version)
+        assert (parent_prefer.get_mle_message_tlv(mle.Version).version
+                > parent_cmp.get_mle_message_tlv(mle.Version).version)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(MED_1_2)
