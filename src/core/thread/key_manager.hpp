@@ -85,11 +85,7 @@ public:
      * and Security Policy Flags.
      *
      */
-    SecurityPolicy(void)
-        : otSecurityPolicy()
-    {
-        SetToDefault();
-    }
+    SecurityPolicy(void) { SetToDefault(); }
 
     /**
      * Sets the Security Policy to default values.

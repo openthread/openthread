@@ -62,9 +62,10 @@ const uint8_t KeyManager::kTrelInfoString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'O'
 
 void SecurityPolicy::SetToDefault(void)
 {
+    Clear();
     mRotationTime = kDefaultKeyRotationTime;
     SetToDefaultFlags();
-    Clear();
+
 }
 
 void SecurityPolicy::SetToDefaultFlags(void)
