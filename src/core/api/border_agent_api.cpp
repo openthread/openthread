@@ -64,4 +64,35 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
     return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().GetUdpPort();
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+
+otError otBorderAgentSetEphemeralKey(otInstance *aInstance,
+                                     const char *aKeyString,
+                                     uint32_t    aTimeout,
+                                     uint16_t    aUdpPort)
+{
+    AssertPointerIsNotNull(aKeyString);
+
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetEphemeralKey(aKeyString, aTimeout, aUdpPort);
+}
+
+void otBorderAgentClearEphemeralKey(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().ClearEphemeralKey();
+}
+
+bool otBorderAgentIsEphemeralKeyActive(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().IsEphemeralKeyActive();
+}
+
+void otBorderAgentSetEphemeralKeyCallback(otInstance                       *aInstance,
+                                          otBorderAgentEphemeralKeyCallback aCallback,
+                                          void                             *aContext)
+{
+    AsCoreType(aInstance).Get<MeshCoP::BorderAgent>().SetEphemeralKeyCallback(aCallback, aContext);
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
