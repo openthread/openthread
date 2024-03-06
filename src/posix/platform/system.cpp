@@ -40,6 +40,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread/border_router.h>
+#include <openthread/cli.h>
 #include <openthread/heap.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
