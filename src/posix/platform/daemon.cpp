@@ -285,12 +285,7 @@ void Daemon::SetUp(void)
     }
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-    otCliInit(
-        gInstance,
-        [](void *aContext, const char *aFormat, va_list aArguments) -> int {
-            return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
-        },
-        this);
+    otSysCliInitUsingDaemon(gInstance);
 #endif
 
     Mainloop::Manager::Get().Add(*this);
