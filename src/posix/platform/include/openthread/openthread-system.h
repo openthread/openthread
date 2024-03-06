@@ -254,6 +254,11 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
  */
 bool otSysInfraIfIsRunning(void);
 
+/**
+ * 
+ */
+void otSysCliInitUsingDaemon(otInstance *aInstance);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

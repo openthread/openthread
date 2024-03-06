@@ -401,3 +401,14 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 }
 
 bool IsSystemDryRun(void) { return gDryRun; }
+
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+void otSysCliInitUsingDaemon(otInstance *aInstance) {
+    otCliInit(
+        aInstance,
+        [](void *aContext, const char *aFormat, va_list aArguments) -> int {
+            return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
+        },
+        ot::Posix::Daemon::Get());
+}
+#endif
