@@ -403,7 +403,7 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 
 bool IsSystemDryRun(void) { return gDryRun; }
 
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE && OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
 void otSysCliInitUsingDaemon(otInstance *aInstance)
 {
     otCliInit(
