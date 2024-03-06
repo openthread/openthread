@@ -478,7 +478,10 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     mNat64PrefixManager.Evaluate();
 #endif
 
-    SendRouterAdvertisement(kAdvPrefixesFromNetData);
+    if (IsInitalPolicyEvaluationDone())
+    {
+        SendRouterAdvertisement(kAdvPrefixesFromNetData);
+    }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     if (Get<Srp::Server>().IsAutoEnableMode() && IsInitalPolicyEvaluationDone())
