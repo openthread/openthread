@@ -255,7 +255,7 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
 bool otSysInfraIfIsRunning(void);
 
 /**
- * Initialize CLI module for Daemon on the system.
+ * Initializes the CLI module using the daemon.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  */
