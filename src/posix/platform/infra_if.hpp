@@ -31,6 +31,9 @@
  *   This file implements the infrastructure interface for posix.
  */
 
+#ifndef OT_POSIX_PLATFORM_INFRA_IF_HPP_
+#define OT_POSIX_PLATFORM_INFRA_IF_HPP_
+
 #include "openthread-posix-config.h"
 
 #include <net/if.h>
@@ -248,3 +251,5 @@ private:
 } // namespace Posix
 } // namespace ot
 #endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+
+#endif // OT_POSIX_PLATFORM_INFRA_IF_HPP_

@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for the SPI interface to radio (RCP).
+ *   This file includes definitions for the mainloop events and manager.
  */
 
 #ifndef OT_POSIX_PLATFORM_MAINLOOP_HPP_

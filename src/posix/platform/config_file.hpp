@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_CONFIG_FILE_HPP_
-#define POSIX_PLATFORM_CONFIG_FILE_HPP_
+#ifndef OT_POSIX_PLATFORM_CONFIG_FILE_HPP_
+#define OT_POSIX_PLATFORM_CONFIG_FILE_HPP_
 
 #include <assert.h>
 #include <stdint.h>
@@ -125,4 +125,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_CONFIG_FILE_HPP_
+#endif // OT_POSIX_PLATFORM_CONFIG_FILE_HPP_
