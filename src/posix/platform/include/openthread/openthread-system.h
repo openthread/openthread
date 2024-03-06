@@ -261,6 +261,7 @@ bool otSysInfraIfIsRunning(void);
  * the CLI output.
  *
  * @param[in] aInstance  The OpenThread instance structure.
+ *
  */
 void otSysCliInitUsingDaemon(otInstance *aInstance);
 
