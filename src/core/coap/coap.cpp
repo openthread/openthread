@@ -621,8 +621,6 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
     bool             isOptionSet = false;
     uint16_t         blockOption = 0;
     Option::Iterator iterator;
-    // Option uri should be supported to copy
-    uint8_t optionBuf[Message::kMaxReceivedUriPath];
 
     blockOption = (aType == Message::kBlockType1) ? kOptionBlock1 : kOptionBlock2;
 
@@ -656,9 +654,9 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         }
 
         // Copy option
-        VerifyOrExit(optionBuf + iterator.GetOption()->GetLength() <= GetArrayEnd(optionBuf), error = kErrorNoBufs);
-        SuccessOrExit(error = iterator.ReadOptionValue(optionBuf));
-        SuccessOrExit(error = aRequest.AppendOption(optionNumber, iterator.GetOption()->GetLength(), optionBuf));
+        SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
+                                                               iterator.GetMessage(),
+                                                               iterator.GetOptionValueMessageOffset()));
     }
 
     if (!isOptionSet)

@@ -177,6 +177,37 @@ exit:
     return error;
 }
 
+Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const Message &aMessage, uint16_t aOffset)
+{
+    Error    error = kErrorNone;
+    uint16_t delta;
+    uint8_t  header[kMaxOptionHeaderSize];
+    uint16_t headerLength;
+    uint8_t *cur;
+
+    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
+    delta = aNumber - GetHelpData().mOptionLast;
+
+    cur = &header[1];
+
+    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(delta, cur) << kOptionDeltaOffset);
+    header[0] |= static_cast<uint8_t>(WriteExtendedOptionField(aLength, cur) << kOptionLengthOffset);
+
+    headerLength = static_cast<uint16_t>(cur - header);
+
+    VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
+
+    SuccessOrExit(error = AppendBytes(header, headerLength));
+    SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
+
+    GetHelpData().mOptionLast = aNumber;
+
+    GetHelpData().mHeaderLength = GetLength();
+
+exit:
+    return error;
+}
+
 Error Message::AppendUintOption(uint16_t aNumber, uint32_t aValue)
 {
     uint8_t        buffer[sizeof(uint32_t)];

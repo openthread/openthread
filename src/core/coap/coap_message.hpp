@@ -402,6 +402,23 @@ public:
     Error AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue);
 
     /**
+     * Appends a CoAP option reading Option value from another or potentially the same message.
+     *
+     * @param[in] aNumber   The CoAP Option number.
+     * @param[in] aLength   The CoAP Option length.
+     * @param[in] aMessage  The message to read the CoAP Option value from (it can be the same as the current message).
+     * @param[in] aOffset   The offset in @p aMessage to start reading the CoAP Option value from (@p aLength bytes are
+     *                      used as Option value).
+     *
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
+     * @retval kErrorParse        Not enough bytes in @p aMessage to read @p aLength bytes from @p aOffset.
+     *
+     */
+    Error AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const Message &aMessage, uint16_t aOffset);
+
+    /**
      * Appends an unsigned integer CoAP option as specified in RFC-7252 section-3.2
      *
      * @param[in]  aNumber  The CoAP Option number.
@@ -1186,6 +1203,16 @@ public:
          *
          */
         uint16_t GetPayloadMessageOffset(void) const { return mNextOptionOffset; }
+
+        /**
+         * Gets the offset of beginning of the CoAP Option Value.
+         *
+         * MUST be used during the iterator is in progress.
+         *
+         * @returns The offset of beginning of the CoAP Option Value
+         *
+         */
+        uint16_t GetOptionValueMessageOffset(void) const { return mNextOptionOffset - mOption.mLength; }
 
     private:
         // `mOption.mLength` value to indicate iterator is done.
