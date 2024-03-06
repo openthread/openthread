@@ -45,10 +45,10 @@ public:
     void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
+    int  OutputFormatV(const char *aFormat, va_list aArguments);
 
 private:
     int  OutputFormat(const char *aFormat, ...);
-    int  OutputFormatV(const char *aFormat, va_list aArguments);
     void createListenSocketOrDie(void);
     void InitializeSessionSocket(void);
 
