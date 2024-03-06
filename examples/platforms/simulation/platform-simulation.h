@@ -305,4 +305,40 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+/**
+ * Initializes the platform infra-if module.
+ *
+ */
+void platformInfraIfInit(void);
+
+/**
+ * Shuts down the platform infra-if module.
+ *
+ */
+void platformInfraIfDeinit(void);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the infra-if module
+ *
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformInfraIfUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * Performs infra-if module processing.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in]  aWriteFdSet  A pointer to the write file descriptors.
+ *
+ */
+void platformInfraIfProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
 #endif // PLATFORM_SIMULATION_H_

@@ -189,6 +189,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelInit(speedUpFactor);
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfInit();
+#endif
     platformRandomInit();
 }
 
@@ -199,6 +202,9 @@ void otSysDeinit(void)
     platformRadioDeinit();
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelDeinit();
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    //    platformInfrIfDeinit();
 #endif
     platformLoggingDeinit();
 }
@@ -221,6 +227,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformRadioUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfUpdateFdSet(&read_fds, &write_fds, &max_fd);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -245,6 +254,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, &read_fds, &write_fds);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfProcess(aInstance, &read_fds, &write_fds);
 #endif
 
     if (gTerminate)

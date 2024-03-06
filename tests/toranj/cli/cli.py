@@ -760,6 +760,18 @@ class Node(object):
     def br_get_state(self):
         return self._cli_single_output('br state')
 
+    def br_get_favored_omrprefix(self):
+        return self._cli_single_output('br omrprefix favored')
+
+    def br_get_local_omrprefix(self):
+        return self._cli_single_output('br omrprefix local')
+
+    def br_get_favored_onlinkprefix(self):
+        return self._cli_single_output('br onlinkprefix favored')
+
+    def br_get_local_onlinkprefix(self):
+        return self._cli_single_output('br onlinkprefix local')
+
     def br_get_routeprf(self):
         return self._cli_single_output('br routeprf')
 
@@ -768,6 +780,9 @@ class Node(object):
 
     def br_clear_routeprf(self):
         self._cli_no_output('br routeprf clear')
+
+    def br_get_routers(self):
+        return self.cli('br routers')
 
     # ------------------------------------------------------------------------------------------------------------------
     # Helper methods
