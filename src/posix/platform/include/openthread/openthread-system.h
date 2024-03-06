@@ -257,6 +257,9 @@ bool otSysInfraIfIsRunning(void);
 /**
  * Initializes the CLI module using the daemon.
  *
+ * This function initializes the CLI module, and assigns the daemon to handle
+ * the CLI output.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  */
 void otSysCliInitUsingDaemon(otInstance *aInstance);
