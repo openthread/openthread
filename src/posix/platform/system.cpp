@@ -411,6 +411,6 @@ void otSysCliInitUsingDaemon(otInstance *aInstance)
         [](void *aContext, const char *aFormat, va_list aArguments) -> int {
             return static_cast<ot::Posix::Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
         },
-        ot::Posix::Daemon::Get());
+        &ot::Posix::Daemon::Get());
 }
 #endif
