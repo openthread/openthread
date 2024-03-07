@@ -1154,10 +1154,46 @@ template <> otError Dataset::Process<Cmd("updater")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
+    /**
+     * @cli dataset updater
+     * @code
+     * dataset updater
+     * Enabled
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otDatasetUpdaterIsUpdateOngoing
+     */
     if (aArgs[0].IsEmpty())
     {
         OutputEnabledDisabledStatus(otDatasetUpdaterIsUpdateOngoing(GetInstancePtr()));
     }
+    /**
+     * @cli dataset updater start
+     * @code
+     * channel
+     * 19
+     * Done
+     * dataset clear
+     * Done
+     * dataset channel 15
+     * Done
+     * dataset
+     * Channel: 15
+     * Done
+     * dataset updater start
+     * Done
+     * dataset updater
+     * Enabled
+     * Done
+     * Dataset update complete: OK
+     * channel
+     * 15
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otDatasetUpdaterRequestUpdate
+     */
     else if (aArgs[0] == "start")
     {
         otOperationalDataset dataset;
@@ -1166,6 +1202,15 @@ template <> otError Dataset::Process<Cmd("updater")>(Arg aArgs[])
         SuccessOrExit(
             error = otDatasetUpdaterRequestUpdate(GetInstancePtr(), &dataset, &Dataset::HandleDatasetUpdater, this));
     }
+    /**
+     * @cli dataset updater cancel
+     * @code
+     * @dataset updater cancel
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otDatasetUpdaterCancelUpdate
+     */
     else if (aArgs[0] == "cancel")
     {
         otDatasetUpdaterCancelUpdate(GetInstancePtr());
