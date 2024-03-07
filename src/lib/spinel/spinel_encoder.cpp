@@ -293,5 +293,7 @@ exit:
 
 void Encoder::ClearNcpBuffer(void) { mNcpBuffer.Clear(); }
 
+void Encoder::InFrameLenAvailable(uint16_t *length) { *length = mNcpBuffer.InFrameLenAvailable(); }
+
 } // namespace Spinel
 } // namespace ot

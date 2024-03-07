@@ -245,6 +245,16 @@ otError Buffer::InFrameAppend(uint8_t aByte)
     return error;
 }
 
+// This method gives the space available in SPINEL buffer.
+uint16_t Buffer::InFrameLenAvailable(void)
+{
+    uint16_t size = 0;
+
+    size = GetDistance(mWriteFrameStart[kForward], mWriteFrameStart[kBackward], kForward);
+
+    return size;
+}
+
 // This method begins a new segment (if one is not already open).
 otError Buffer::InFrameBeginSegment(void)
 {
