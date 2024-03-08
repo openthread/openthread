@@ -1043,6 +1043,7 @@ private:
     static const char    *AddressModeToString(AddressMode aMode);
 
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
+    void UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, const Host &aHost);
 
     using LeaseTimer           = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
     using UpdateTimer          = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;

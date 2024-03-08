@@ -121,6 +121,22 @@ verify(service['weight'] == '1')
 verify(service['host'] == 'host')
 verify(service['addresses'] == ['fd00:0:0:0:0:0:0:cafe'])
 
+# Check the client address is added in EID cache table (snoop).
+
+cache_table = server.get_eidcache()
+client_rloc = int(client.get_rloc16(), 16)
+found_entry = False
+
+for entry in cache_table:
+    fields = entry.strip().split(' ')
+    if (fields[0] == 'fd00:0:0:0:0:0:0:cafe'):
+        verify(int(fields[1], 16) == client_rloc)
+        verify(fields[2] == 'snoop')
+        found_entry = True
+        break
+
+verify(found_entry)
+
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
 
