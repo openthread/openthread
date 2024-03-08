@@ -610,6 +610,98 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
         }
     }
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ID_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    else if (aArgs[0] == "ephemeralkey")
+    {
+        /**
+         * @cli ba ephemeralkey
+         * @code
+         * ba ephemeralkey
+         * active
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderAgentIsEphemeralKeyActive
+         */
+        if (aArgs[1].IsEmpty())
+        {
+            OutputLine("%sactive", otBorderAgentIsEphemeralKeyActive(GetInstancePtr()) ? "" : "in");
+        }
+        /**
+         * @cli ba ephemeralkey set <keystring> [timeout-in-msec] [port]
+         * @code
+         * ba ephemeralkey set Z10X20g3J15w1000P60m16 5000 1234
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderAgentSetEphemeralKey
+         */
+        else if (aArgs[1] == "set")
+        {
+            uint32_t timeout = 0;
+            uint16_t port    = 0;
+
+            VerifyOrExit(!aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+            if (!aArgs[3].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[3].ParseAsUint32(timeout));
+            }
+
+            if (!aArgs[4].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[4].ParseAsUint16(port));
+            }
+
+            error = otBorderAgentSetEphemeralKey(GetInstancePtr(), aArgs[2].GetCString(), timeout, port);
+        }
+        /**
+         * @cli ba ephemeralkey clear
+         * @code
+         * ba ephemeralkey clear
+         * Done
+         * @endcode
+         * @par api_copy
+         * #otBorderAgentClearEphemeralKey
+         */
+        else if (aArgs[1] == "clear")
+        {
+            otBorderAgentClearEphemeralKey(GetInstancePtr());
+        }
+        /**
+         * @cli ba ephemeralkey callback (enable, disable)
+         * @code
+         * ba ephemeralkey callback enable
+         * Done
+         * ba ephemeralkey set W10X1 5000 49155
+         * Done
+         * BorderAgent callback: Ephemeral key active, port:49155
+         * BorderAgent callback: Ephemeral key inactive
+         * @endcode
+         * @par api_copy
+         * #otBorderAgentSetEphemeralKeyCallback
+         */
+        else if (aArgs[1] == "callback")
+        {
+            bool enable;
+
+            SuccessOrExit(error = ParseEnableOrDisable(aArgs[2], enable));
+
+            if (enable)
+            {
+                otBorderAgentSetEphemeralKeyCallback(GetInstancePtr(), HandleBorderAgentEphemeralKeyStateChange, this);
+            }
+            else
+            {
+                otBorderAgentSetEphemeralKeyCallback(GetInstancePtr(), nullptr, nullptr);
+            }
+        }
+        else
+        {
+            error = OT_ERROR_INVALID_ARGS;
+        }
+    }
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -618,6 +710,28 @@ template <> otError Interpreter::Process<Cmd("ba")>(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void *aContext)
+{
+    reinterpret_cast<Interpreter *>(aContext)->HandleBorderAgentEphemeralKeyStateChange();
+}
+
+void Interpreter::HandleBorderAgentEphemeralKeyStateChange(void)
+{
+    bool active = otBorderAgentIsEphemeralKeyActive(GetInstancePtr());
+
+    OutputFormat("BorderAgent callback: Ephemeral key %sactive", active ? "" : "in");
+
+    if (active)
+    {
+        OutputFormat(", port:%u", otBorderAgentGetUdpPort(GetInstancePtr()));
+    }
+
+    OutputNewLine();
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

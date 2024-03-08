@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_SETTINGS_HPP_
-#define POSIX_PLATFORM_SETTINGS_HPP_
+#ifndef OT_POSIX_PLATFORM_SETTINGS_HPP_
+#define OT_POSIX_PLATFORM_SETTINGS_HPP_
 
 namespace ot {
 namespace Posix {
@@ -100,4 +100,4 @@ void PlatformSettingsGetSensitiveKeys(otInstance *aInstance, const uint16_t **aK
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_SETTINGS_HPP_
+#endif // OT_POSIX_PLATFORM_SETTINGS_HPP_

@@ -254,6 +254,19 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket);
  */
 bool otSysInfraIfIsRunning(void);
 
+/**
+ * Initializes the CLI module using the daemon.
+ *
+ * This function initializes the CLI module, and assigns the daemon to handle
+ * the CLI output. This function can be invoked multiple times. The typical use case
+ * is that, after OTBR/vendor_server's CLI output redirection, it uses this API to
+ * restore the original daemon's CLI output.
+ *
+ * @param[in] aInstance  The OpenThread instance structure.
+ *
+ */
+void otSysCliInitUsingDaemon(otInstance *aInstance);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

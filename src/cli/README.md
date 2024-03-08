@@ -358,9 +358,96 @@ Done
 
 Print border agent state.
 
+Possible states are
+
+- `Stopped` : Border Agent is stopped.
+- `Started` : Border Agent is running with no active connection with external commissioner.
+- `Active` : Border Agent is running and is connected with an external commissioner.
+
 ```bash
 > ba state
 Started
+Done
+```
+
+### ba ephemeralkey
+
+Indicates if an ephemeral key is active.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
+
+```bash
+> ba ephemeralkey
+inactive
+Done
+
+> ba ephemeralkey set Z10X20g3J15w1000P60m16 1000
+Done
+
+> ba ephemeralkey
+active
+Done
+```
+
+### ba ephemeralkey set \<keystring\> \[timeout\] \[port\]
+
+Sets the ephemeral key for a given timeout duration.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
+
+The ephemeral key can be set when Border Agent is already running and is not currently connected to any external commissioner (i.e., `ba state` gives `Started`).
+
+The `keystring` string is directly used as the ephemeral PSK (excluding the trailing null `\0` character). Its length MUST be between 6 and 32, inclusive.
+
+The `timeout` is in milliseconds. If not provided or set to zero, the default value of 2 minutes will be used. If the timeout value is larger than 10 minutes, the 10 minutes timeout value will be used instead.
+
+The `port` specifies the UDP port to use with the ephemeral key. If UDP port is zero or is not provided, an ephemeral port will be used. `ba port` will give the current UDP port in use by the Border Agent.
+
+Setting the ephemeral key again before a previously set one is timed out, will replace the previous one.
+
+While the timeout interval is in effect, the ephemeral key can be used only once by an external commissioner to connect. Once the commissioner disconnects, the ephemeral key is cleared, and Border Agent reverts to using PSKc.
+
+```bash
+> ba ephemeralkey set Z10X20g3J15w1000P60m16 5000 1234
+Done
+```
+
+### ba ephemeralkey clear
+
+Cancels the ephemeral key in use if any.
+
+Requires `OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE`.
+
+Can be used to cancel a previously set ephemeral key before it is used or times out. If the Border Agent is not running or there is no ephemeral key in use, calling this function has no effect.
+
+If a commissioner is connected using the ephemeral key and is currently active, calling this method does not change its state. In this case the `ba ephemeralkey` will continue to return `active` until the commissioner disconnects.
+
+```bash
+> ba ephemeralkey clear
+Done
+```
+
+### ba ephemeralkey callback enable
+
+Enables callback from Border Agent for ephemeral key state changes.
+
+```bash
+> ba ephemeralkey callback enable
+Done
+
+> ba ephemeralkey set W10X12 5000 49155
+Done
+
+BorderAgent callback: Ephemeral key active, port:49155
+BorderAgent callback: Ephemeral key inactive
+```
+
+### ba ephemeralkey callback disable
+
+Disables callback from Border Agent for ephemeral key state changes.
+
+```bash
+> ba ephemeralkey callback disable
 Done
 ```
 
@@ -1739,6 +1826,8 @@ Done
 
 Set the Thread Key Sequence Counter.
 
+This command is reserved for testing and demo purposes only. Changing Key Sequence Counter will render a production application non-compliant with the Thread Specification.
+
 ```bash
 > keysequence counter 10
 Done
@@ -1756,7 +1845,9 @@ Done
 
 ### keysequence guardtime \<guardtime\>
 
-Set Thread Key Switch Guard Time (in hours) 0 means Thread Key Switch immediately if key index match
+Set Thread Key Switch Guard Time (in hours).
+
+This command is reserved for testing and demo purposes only. Changing Key Switch Guard Time will render a production application non-compliant with the Thread Specification.
 
 ```bash
 > keysequence guardtime 0

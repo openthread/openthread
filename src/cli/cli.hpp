@@ -495,6 +495,11 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+    static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
+    void        HandleBorderAgentEphemeralKeyStateChange(void);
+#endif
+
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
 

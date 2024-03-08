@@ -26,6 +26,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OT_POSIX_PLATFORM_IP6_UTILS_HPP_
+#define OT_POSIX_PLATFORM_IP6_UTILS_HPP_
+
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 
@@ -68,3 +71,5 @@ private:
 } // namespace Ip6Utils
 } // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_IP6_UTILS_HPP_

@@ -76,6 +76,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+ *
+ * Define to 1 to enable ephemeral key mechanism and its APIs in Border Agent.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE \
+    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_3_1)
+#endif
+
+/**
  * @}
  *
  */
