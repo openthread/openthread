@@ -45,8 +45,6 @@
 
 namespace ot {
 
-class TaskletScheduler;
-
 /**
  * @addtogroup core-tasklet
  *
