@@ -146,20 +146,16 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
     return rval;
 }
 
-Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+Error Message::AppendOptionHeader(uint16_t aDelta, uint16_t aLength)
 {
     Error    error = kErrorNone;
-    uint16_t delta;
     uint8_t  header[kMaxOptionHeaderSize];
     uint16_t headerLength;
     uint8_t *cur;
 
-    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
-    delta = aNumber - GetHelpData().mOptionLast;
-
     cur = &header[1];
 
-    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(delta, cur) << kOptionDeltaOffset);
+    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(aDelta, cur) << kOptionDeltaOffset);
     header[0] |= static_cast<uint8_t>(WriteExtendedOptionField(aLength, cur) << kOptionLengthOffset);
 
     headerLength = static_cast<uint16_t>(cur - header);
@@ -167,6 +163,20 @@ Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aVal
     VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
 
     SuccessOrExit(error = AppendBytes(header, headerLength));
+
+exit:
+    return error;
+}
+
+Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+{
+    Error    error = kErrorNone;
+    uint16_t delta;
+
+    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
+    delta = aNumber - GetHelpData().mOptionLast;
+
+    SuccessOrExit(error = AppendOptionHeader(delta, aLength));
     SuccessOrExit(error = AppendBytes(aValue, aLength));
 
     GetHelpData().mOptionLast = aNumber;
@@ -181,23 +191,11 @@ Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const
 {
     Error    error = kErrorNone;
     uint16_t delta;
-    uint8_t  header[kMaxOptionHeaderSize];
-    uint16_t headerLength;
-    uint8_t *cur;
 
     VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
     delta = aNumber - GetHelpData().mOptionLast;
 
-    cur = &header[1];
-
-    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(delta, cur) << kOptionDeltaOffset);
-    header[0] |= static_cast<uint8_t>(WriteExtendedOptionField(aLength, cur) << kOptionLengthOffset);
-
-    headerLength = static_cast<uint16_t>(cur - header);
-
-    VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
-
-    SuccessOrExit(error = AppendBytes(header, headerLength));
+    SuccessOrExit(error = AppendOptionHeader(delta, aLength));
     SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
 
     GetHelpData().mOptionLast = aNumber;
