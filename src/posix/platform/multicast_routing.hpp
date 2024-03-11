@@ -39,18 +39,21 @@
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/openthread-system.h>
 
+#include "logger.hpp"
+#include "mainloop.hpp"
 #include "platform-posix.h"
 #include "core/common/non_copyable.hpp"
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
-#include "posix/platform/mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
+class MulticastRoutingManager : public Mainloop::Source, public Logger<MulticastRoutingManager>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     explicit MulticastRoutingManager()
 
         : mLastExpireTime(0)
