@@ -1659,6 +1659,12 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
         requestPayloadLength = NLMSG_PAYLOAD(&err->msg, 0);
     }
 
+    if (!(msg->nlmsg_flags & NLM_F_ACK_TLVS))
+    {
+        // there's no tlv attributes, so just dump the error we got
+        goto dowarn;
+    }
+
     rtaLength = NLMSG_PAYLOAD(msg, sizeof(struct nlmsgerr)) - requestPayloadLength;
 
     for (struct rtattr *rta = ERR_RTA(err, requestPayloadLength); RTA_OK(rta, rtaLength);
@@ -1675,6 +1681,7 @@ static void HandleNetlinkResponse(struct nlmsghdr *msg)
         }
     }
 
+dowarn:
     otLogWarnPlat("[netif] Failed to process request#%u: %s", requestSeq, errorMsg);
 
 exit:
