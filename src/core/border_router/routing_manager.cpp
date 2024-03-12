@@ -571,35 +571,24 @@ exit:
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 {
-    // RA message max length is derived to accommodate:
-    //
-    // - The RA header.
-    // - One RA Flags Extensions Option (with stub router flag).
-    // - One PIO for current local on-link prefix.
-    // - At most `kMaxOldPrefixes` for old deprecating on-link prefixes.
-    // - At most 3 times `kMaxOnMeshPrefixes` RIO for on-mesh prefixes.
-    //   Factor three is used for RIOs to account for any new prefix
-    //   with older prefixes entries being deprecated and prefixes
-    //   being invalidated.
-
-    static constexpr uint16_t kMaxRaLength =
-        sizeof(Ip6::Nd::RouterAdvertMessage::Header) + sizeof(Ip6::Nd::RaFlagsExtOption) +
-        sizeof(Ip6::Nd::PrefixInfoOption) + sizeof(Ip6::Nd::PrefixInfoOption) * OnLinkPrefixManager::kMaxOldPrefixes +
-        3 * kMaxOnMeshPrefixes * (sizeof(Ip6::Nd::RouteInfoOption) + sizeof(Ip6::Prefix));
-
-    uint8_t                      buffer[kMaxRaLength];
-    Ip6::Nd::RouterAdvertMessage raMsg(mRaInfo.mHeader, buffer);
+    Error                            error = kErrorNone;
+    Ip6::Nd::RouterAdvert::TxMessage raMsg;
+    Ip6::Nd::RouterAdvert::Header    header;
+    Ip6::Address                     destAddress;
+    InfraIf::Icmp6Packet             packet;
 
     LogInfo("Preparing RA");
 
-    mDiscoveredPrefixTable.DetermineAndSetFlags(raMsg);
+    header = mRaInfo.mHeader;
+    mDiscoveredPrefixTable.DetermineAndSetFlags(header);
 
-    LogInfo("- RA Header - flags - M:%u O:%u", raMsg.GetHeader().IsManagedAddressConfigFlagSet(),
-            raMsg.GetHeader().IsOtherConfigFlagSet());
-    LogInfo("- RA Header - default route - lifetime:%u", raMsg.GetHeader().GetRouterLifetime());
+    SuccessOrExit(error = raMsg.AppendHeader(header));
+
+    LogInfo("- RA Header - flags - M:%u O:%u", header.IsManagedAddressConfigFlagSet(), header.IsOtherConfigFlagSet());
+    LogInfo("- RA Header - default route - lifetime:%u", header.GetRouterLifetime());
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_STUB_ROUTER_FLAG_IN_EMITTED_RA_ENABLE
-    SuccessOrAssert(raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
+    SuccessOrExit(error = raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
     LogInfo("- FlagsExt - StubRouter:1");
 #endif
 
@@ -607,45 +596,40 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     // advertised or deprecated and for old prefix if is being
     // deprecated.
 
-    mOnLinkPrefixManager.AppendAsPiosTo(raMsg);
+    SuccessOrExit(error = mOnLinkPrefixManager.AppendAsPiosTo(raMsg));
 
     if (aRaTxMode == kInvalidateAllPrevPrefixes)
     {
-        mRioAdvertiser.InvalidatPrevRios(raMsg);
+        SuccessOrExit(error = mRioAdvertiser.InvalidatPrevRios(raMsg));
     }
     else
     {
-        mRioAdvertiser.AppendRios(raMsg);
+        SuccessOrExit(error = mRioAdvertiser.AppendRios(raMsg));
     }
 
-    if (raMsg.ContainsAnyOptions())
+    VerifyOrExit(raMsg.ContainsAnyOptions());
+
+    ++mRaInfo.mTxCount;
+
+    destAddress.SetToLinkLocalAllNodesMulticast();
+    raMsg.GetAsPacket(packet);
+
+    SuccessOrExit(error = mInfraIf.Send(packet, destAddress));
+
+    mRaInfo.mLastTxTime = TimerMilli::GetNow();
+    Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
+    LogInfo("Sent RA on %s", mInfraIf.ToString().AsCString());
+    DumpDebg("[BR-CERT] direction=send | type=RA |", packet.GetBytes(), packet.GetLength());
+
+exit:
+    if (error != kErrorNone)
     {
-        Error        error;
-        Ip6::Address destAddress;
-
-        ++mRaInfo.mTxCount;
-
-        destAddress.SetToLinkLocalAllNodesMulticast();
-
-        error = mInfraIf.Send(raMsg.GetAsPacket(), destAddress);
-
-        if (error == kErrorNone)
-        {
-            mRaInfo.mLastTxTime = TimerMilli::GetNow();
-            Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxSuccess++;
-            LogInfo("Sent RA on %s", mInfraIf.ToString().AsCString());
-            DumpDebg("[BR-CERT] direction=send | type=RA |", raMsg.GetAsPacket().GetBytes(),
-                     raMsg.GetAsPacket().GetLength());
-        }
-        else
-        {
-            Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
-            LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
-        }
+        Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
+        LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
     }
 }
 
-bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const
 {
     // Determines whether or not a received RA message was prepared by
     // by `RoutingManager` itself.
@@ -797,7 +781,7 @@ exit:
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    Ip6::Nd::RouterAdvertMessage routerAdvMessage(aPacket);
+    Ip6::Nd::RouterAdvert::RxMessage routerAdvMessage(aPacket);
 
     OT_ASSERT(mIsRunning);
 
@@ -946,11 +930,11 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
-void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage)
+void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvert::RxMessage *aRouterAdvertMessage)
 {
     // Updates the `mRaInfo` from the given RA message.
 
-    Ip6::Nd::RouterAdvertMessage::Header oldHeader;
+    Ip6::Nd::RouterAdvert::Header oldHeader;
 
     if (aRouterAdvertMessage != nullptr)
     {
@@ -1060,8 +1044,9 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
 {
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
-                                                                       const Ip6::Address                 &aSrcAddress)
+void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(
+    const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage,
+    const Ip6::Address                     &aSrcAddress)
 {
     // Process a received RA message and update the prefix table.
 
@@ -1120,8 +1105,8 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader,
-                                                            Router                                     &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const Ip6::Nd::RouterAdvert::Header &aRaHeader,
+                                                            Router                              &aRouter)
 {
     Entry      *entry;
     Ip6::Prefix prefix;
@@ -1660,10 +1645,10 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(Ip6::Nd::RouterAdvertMessage &aRaMessage) const
+void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(Ip6::Nd::RouterAdvert::Header &aHeader) const
 {
     // Determine the `M` and `O` flags to include in the RA message
-    // header `aRaMessage` to be emitted.
+    // header to be emitted.
     //
     // If any discovered router on infrastructure which is not itself a
     // stub router (e.g., another Thread BR) includes the `M` or `O`
@@ -1686,12 +1671,12 @@ void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(Ip6::Nd::Router
 
         if (router.mManagedAddressConfigFlag)
         {
-            aRaMessage.GetHeader().SetManagedAddressConfigFlag();
+            aHeader.SetManagedAddressConfigFlag();
         }
 
         if (router.mOtherConfigFlag)
         {
-            aRaMessage.GetHeader().SetOtherConfigFlag();
+            aHeader.SetOtherConfigFlag();
         }
     }
 }
@@ -1778,7 +1763,7 @@ void RoutingManager::DiscoveredPrefixTable::Iterator::Advance(AdvanceMode aMode)
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
 
-void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouterAdvert::Header &aRaHeader)
 {
     mPrefix.Clear();
     mType                    = kTypeRoute;
@@ -2528,13 +2513,18 @@ bool RoutingManager::OnLinkPrefixManager::IsPublishingOrAdvertising(void) const
     return (GetState() == kPublishing) || (GetState() == kAdvertising);
 }
 
-void RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
-    AppendCurPrefix(aRaMessage);
-    AppendOldPrefixes(aRaMessage);
+    Error error;
+
+    SuccessOrExit(error = AppendCurPrefix(aRaMessage));
+    error = AppendOldPrefixes(aRaMessage);
+
+exit:
+    return error;
 }
 
-void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
     // Append the local on-link prefix to the `aRaMessage` as a PIO
     // only if it is being advertised or deprecated.
@@ -2543,6 +2533,7 @@ void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertM
     // If in `kDeprecating` state, we include it as PIO with zero
     // preferred lifetime and the remaining valid lifetime.
 
+    Error     error             = kErrorNone;
     uint32_t  validLifetime     = kDefaultOnLinkPrefixLifetime;
     uint32_t  preferredLifetime = kDefaultOnLinkPrefixLifetime;
     TimeMilli now               = TimerMilli::GetNow();
@@ -2564,17 +2555,18 @@ void RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvertM
         ExitNow();
     }
 
-    SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
+    SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime));
 
     LogPrefixInfoOption(mLocalPrefix, validLifetime, preferredLifetime);
 
 exit:
-    return;
+    return error;
 }
 
-void RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
-    TimeMilli now = TimerMilli::GetNow();
+    Error     error = kErrorNone;
+    TimeMilli now   = TimerMilli::GetNow();
     uint32_t  validLifetime;
 
     for (const OldPrefix &oldPrefix : mOldLocalPrefixes)
@@ -2585,10 +2577,13 @@ void RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdver
         }
 
         validLifetime = TimeMilli::MsecToSec(oldPrefix.mExpireTime - now);
-        SuccessOrAssert(aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0));
+        SuccessOrExit(error = aRaMessage.AppendPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0));
 
         LogPrefixInfoOption(oldPrefix.mPrefix, validLifetime, 0);
     }
+
+exit:
+    return error;
 }
 
 void RoutingManager::OnLinkPrefixManager::HandleNetDataChange(void)
@@ -2824,11 +2819,13 @@ exit:
     return;
 }
 
-void RoutingManager::RioAdvertiser::InvalidatPrevRios(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::InvalidatPrevRios(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
+    Error error = kErrorNone;
+
     for (const RioPrefix &prefix : mPrefixes)
     {
-        AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+        SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
     }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -2837,10 +2834,14 @@ void RoutingManager::RioAdvertiser::InvalidatPrevRios(Ip6::Nd::RouterAdvertMessa
 
     mPrefixes.Clear();
     mTimer.Stop();
+
+exit:
+    return error;
 }
 
-void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
+    Error                           error    = kErrorNone;
     TimeMilli                       now      = TimerMilli::GetNow();
     TimeMilli                       nextTime = now.GetDistantFuture();
     RioPrefixArray                  oldPrefixes;
@@ -2928,7 +2929,7 @@ void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRa
         {
             if (now >= prefix.mExpirationTime)
             {
-                AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+                SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
                 continue;
             }
         }
@@ -2941,7 +2942,7 @@ void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRa
         if (mPrefixes.PushBack(prefix) != kErrorNone)
         {
             LogWarn("Too many deprecating on-mesh prefixes, removing %s", prefix.mPrefix.ToString().AsCString());
-            AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage);
+            SuccessOrExit(error = AppendRio(prefix.mPrefix, /* aRouteLifetime */ 0, aRaMessage));
         }
 
         nextTime = Min(nextTime, prefix.mExpirationTime);
@@ -2958,21 +2959,29 @@ void RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvertMessage &aRa
             lifetime = TimeMilli::MsecToSec(prefix.mExpirationTime - now);
         }
 
-        AppendRio(prefix.mPrefix, lifetime, aRaMessage);
+        SuccessOrExit(error = AppendRio(prefix.mPrefix, lifetime, aRaMessage));
     }
 
     if (nextTime != now.GetDistantFuture())
     {
         mTimer.FireAtIfEarlier(nextTime);
     }
+
+exit:
+    return error;
 }
 
-void RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix            &aPrefix,
-                                              uint32_t                      aRouteLifetime,
-                                              Ip6::Nd::RouterAdvertMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix                &aPrefix,
+                                               uint32_t                          aRouteLifetime,
+                                               Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
 {
-    SuccessOrAssert(aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, mPreference));
+    Error error;
+
+    SuccessOrExit(error = aRaMessage.AppendRouteInfoOption(aPrefix, aRouteLifetime, mPreference));
     LogRouteInfoOption(aPrefix, aRouteLifetime, mPreference);
+
+exit:
+    return error;
 }
 
 void RoutingManager::RioAdvertiser::HandleTimer(void)
@@ -3655,12 +3664,12 @@ exit:
 
 void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, const uint16_t aLength)
 {
-    Error                                     error = kErrorNone;
-    Ip6::Nd::RouterAdvertMessage::Icmp6Packet packet;
+    Error                              error = kErrorNone;
+    Ip6::Nd::RouterAdvert::Icmp6Packet packet;
 
     VerifyOrExit(IsRunning(), LogWarn("Ignore platform generated RA since PD is disabled or not running."));
     packet.Init(aRouterAdvert, aLength);
-    error = Process(Ip6::Nd::RouterAdvertMessage(packet));
+    error = Process(Ip6::Nd::RouterAdvert::RxMessage(packet));
     mNumPlatformRaReceived++;
     mLastPlatformRaTime = TimerMilli::GetNow();
 
@@ -3671,7 +3680,7 @@ exit:
     }
 }
 
-Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvertMessage &aMessage)
+Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvert::RxMessage &aMessage)
 {
     Error                        error = kErrorNone;
     DiscoveredPrefixTable::Entry favoredEntry;
