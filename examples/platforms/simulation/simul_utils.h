@@ -46,6 +46,8 @@ typedef struct utilsSocket
     uint16_t mPort;        ///< The port number used by this node
 } utilsSocket;
 
+extern const char *gLocalHost;
+
 /**
  * Adds a file descriptor (FD) to a given FD set.
  *
