@@ -184,6 +184,7 @@ void Daemon::createListenSocketOrDie(void)
     // This returns the init-managed stream socket which is already bind to
     // /dev/socket/ot-daemon/<interface-name>.sock
     mListenSocket = android_get_control_socket(socketFile);
+
     if (mListenSocket == -1)
     {
         DieNowWithMessage("android_get_control_socket", OT_EXIT_ERROR_ERRNO);
@@ -284,13 +285,13 @@ void Daemon::SetUp(void)
         DieNowWithMessage("listen", OT_EXIT_ERROR_ERRNO);
     }
 
+exit:
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
     otSysCliInitUsingDaemon(gInstance);
 #endif
 
     Mainloop::Manager::Get().Add(*this);
 
-exit:
     return;
 }
 
