@@ -148,6 +148,14 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
 
 Error Message::AppendOptionHeader(uint16_t aDelta, uint16_t aLength)
 {
+    /*
+     * Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
+     *
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     *
+     */
+
     Error    error = kErrorNone;
     uint8_t  header[kMaxOptionHeaderSize];
     uint16_t headerLength;
