@@ -33,10 +33,74 @@
 #include "platform-posix.h"
 
 #include <arpa/inet.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <openthread/ip6.h>
 
 namespace ot {
 namespace Posix {
 namespace Ip6Utils {
+
+/**
+ * Indicates whether or not the IPv6 address scope is Link-Local.
+ *
+ * @param[in] aAddress   The IPv6 address to check.
+ *
+ * @retval TRUE   If the IPv6 address scope is Link-Local.
+ * @retval FALSE  If the IPv6 address scope is not Link-Local.
+ *
+ */
+inline bool IsIp6AddressLinkLocal(const otIp6Address &aAddress)
+{
+    return (aAddress.mFields.m8[0] == 0xfe) && ((aAddress.mFields.m8[1] & 0xc0) == 0x80);
+}
+
+/**
+ * Indicates whether or not the IPv6 address is multicast.
+ *
+ * @param[in] aAddress   The IPv6 address to check.
+ *
+ * @retval TRUE   If the IPv6 address scope is multicast.
+ * @retval FALSE  If the IPv6 address scope is not multicast.
+ *
+ */
+inline bool IsIp6AddressMulticast(const otIp6Address &aAddress) { return (aAddress.mFields.m8[0] == 0xff); }
+
+/**
+ * Indicates whether or not the IPv6 address is unspecified.
+ *
+ * @param[in] aAddress   The IPv6 address to check.
+ *
+ * @retval TRUE   If the IPv6 address scope is unspecified.
+ * @retval FALSE  If the IPv6 address scope is not unspecified.
+ *
+ */
+inline bool IsIp6AddressUnspecified(const otIp6Address &aAddress) { return otIp6IsAddressUnspecified(&aAddress); }
+
+/**
+ * Copies the IPv6 address bytes into a given buffer.
+ *
+ * @param[in] aAddress  The IPv6 address to copy.
+ * @param[in] aBuffer   A pointer to buffer to copy the address to.
+ *
+ */
+inline void CopyIp6AddressTo(const otIp6Address &aAddress, void *aBuffer)
+{
+    memcpy(aBuffer, &aAddress, sizeof(otIp6Address));
+}
+
+/**
+ * Reads and set the the IPv6 address bytes from a given buffer.
+ *
+ * @param[in] aBuffer    A pointer to buffer to read from.
+ * @param[out] aAddress  A reference to populate with the read IPv6 address.
+ *
+ */
+inline void ReadIp6AddressFrom(const void *aBuffer, otIp6Address &aAddress)
+{
+    memcpy(&aAddress, aBuffer, sizeof(otIp6Address));
+}
 
 /**
  * This utility class converts binary IPv6 address to text format.
