@@ -247,6 +247,7 @@ class MleMsgKeySeqJump(thread_cert.TestCase):
 
         child.factory_reset()
         self.assertEqual(child.get_state(), 'disabled')
+        child.set_mode('r')
 
         child.set_active_dataset(channel=leader.get_channel(),
                                  network_key=leader.get_networkkey(),
