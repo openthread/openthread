@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "posix/platform/radio.hpp"
+#include "posix/platform/spinel.hpp"
 #include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
@@ -48,7 +49,7 @@
 static ot::Posix::Configuration sConfig;
 #endif
 
-static ot::Posix::Radio sRadio;
+static ot::Posix::Radio sRadio(ot::Posix::GetSpinelBase());
 
 namespace ot {
 namespace Posix {
@@ -57,18 +58,15 @@ namespace {
 extern "C" void platformRadioInit(const char *aUrl) { sRadio.Init(aUrl); }
 } // namespace
 
-Radio::Radio(void)
+Radio::Radio(ot::Spinel::SpinelBase &aSpinelBase)
     : mRadioUrl(nullptr)
-    , mRadioSpinel()
-    , mSpinelInterface(nullptr)
+    , mRadioSpinel(aSpinelBase)
 {
 }
 
 void Radio::Init(const char *aUrl)
 {
-    bool                                    resetRadio;
     bool                                    skipCompatibilityCheck;
-    spinel_iid_t                            iidList[Spinel::kSpinelHeaderMaxNumIid];
     struct ot::Spinel::RadioSpinelCallbacks callbacks;
 
     mRadioUrl.Init(aUrl);
@@ -84,72 +82,13 @@ void Radio::Init(const char *aUrl)
     callbacks.mTransmitDone   = otPlatRadioTxDone;
     callbacks.mTxStarted      = otPlatRadioTxStarted;
 
-    GetIidListFromRadioUrl(iidList);
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    VirtualTimeInit();
-#endif
-
-    mSpinelInterface = CreateSpinelInterface(mRadioUrl.GetProtocol());
-    VerifyOrDie(mSpinelInterface != nullptr, OT_EXIT_FAILURE);
-
-    resetRadio             = !mRadioUrl.HasParam("no-reset");
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(*mSpinelInterface, resetRadio, skipCompatibilityCheck, iidList, OT_ARRAY_LENGTH(iidList));
-    otLogDebgPlat("instance init:%p - iid = %d", (void *)&mRadioSpinel, iidList[0]);
+    mRadioSpinel.Init(skipCompatibilityCheck);
+    otLogDebgPlat("instance init:%p", (void *)&mRadioSpinel);
 
     ProcessRadioUrl(mRadioUrl);
-}
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-void Radio::VirtualTimeInit(void)
-{
-    // The last argument must be the node id
-    const char *nodeId = nullptr;
-
-    for (const char *arg = nullptr; (arg = mRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
-    {
-    }
-
-    virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
-}
-#endif
-
-Spinel::SpinelInterface *Radio::CreateSpinelInterface(const char *aInterfaceName)
-{
-    Spinel::SpinelInterface *interface;
-
-    if (aInterfaceName == nullptr)
-    {
-        DieNow(OT_ERROR_FAILED);
-    }
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
-    else if (HdlcInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) HdlcInterface(mRadioUrl);
-    }
-#endif
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
-    else if (Posix::SpiInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) SpiInterface(mRadioUrl);
-    }
-#endif
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
-    else if (VendorInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) VendorInterface(mRadioUrl);
-    }
-#endif
-    else
-    {
-        otLogCritPlat("The Spinel interface name \"%s\" is not supported!", aInterfaceName);
-        DieNow(OT_ERROR_FAILED);
-    }
-
-    return interface;
 }
 
 void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
@@ -246,7 +185,7 @@ exit:
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 }
 
-void Radio::GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid])
+void Radio::GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[ot::Spinel::kSpinelHeaderMaxNumIid])
 {
     const char *iidString;
     const char *iidListString;
@@ -396,7 +335,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 const char *otPlatRadioGetVersionString(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return GetRadioSpinel().GetVersion();
+    return ot::Posix::GetSpinelBase().GetVersion();
 }
 
 bool otPlatRadioGetPromiscuous(otInstance *aInstance)
@@ -437,29 +376,21 @@ void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
         aContext->mTimeout.tv_usec = 0;
     }
 
-    sRadio.GetSpinelInterface().UpdateFdSet(aContext);
+    ot::Posix::GetSpinelInterface().UpdateFdSet(aContext);
 
-    if (GetRadioSpinel().HasPendingFrame() || GetRadioSpinel().IsTransmitDone())
+    if (ot::Posix::GetSpinelBase().HasPendingFrame() || GetRadioSpinel().IsTransmitDone())
     {
         aContext->mTimeout.tv_sec  = 0;
         aContext->mTimeout.tv_usec = 0;
     }
 }
 
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    GetRadioSpinel().Process(aEvent);
-}
-#else
 void platformRadioProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
     GetRadioSpinel().Process(aContext);
 }
-#endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
 void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
 {
@@ -929,7 +860,7 @@ uint64_t otPlatRadioGetNow(otInstance *aInstance)
 uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return GetRadioSpinel().GetBusSpeed();
+    return ot::Posix::GetSpinelInterface().GetBusSpeed();
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -1047,7 +978,7 @@ otError otPlatResetToBootloader(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    return GetRadioSpinel().SendReset(SPINEL_RESET_BOOTLOADER);
+    return ot::Posix::GetSpinelBase().SendReset(SPINEL_RESET_BOOTLOADER);
 }
 #endif
 
@@ -1055,5 +986,5 @@ const otRadioSpinelMetrics *otSysGetRadioSpinelMetrics(void) { return GetRadioSp
 
 const otRcpInterfaceMetrics *otSysGetRcpInterfaceMetrics(void)
 {
-    return sRadio.GetSpinelInterface().GetRcpInterfaceMetrics();
+    return ot::Posix::GetSpinelInterface().GetRcpInterfaceMetrics();
 }

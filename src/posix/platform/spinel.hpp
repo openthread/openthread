@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,60 +26,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_POSIX_PLATFORM_RADIO_HPP_
-#define OT_POSIX_PLATFORM_RADIO_HPP_
+#ifndef POSIX_PLATFORM_SPINEL_HPP_
+#define POSIX_PLATFORM_SPINEL_HPP_
 
 #include "common/code_utils.hpp"
-#include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel_base.hpp"
 #include "posix/platform/hdlc_interface.hpp"
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/spi_interface.hpp"
 #include "posix/platform/vendor_interface.hpp"
-#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
-#ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
-#include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
-#endif
-#endif
 
 namespace ot {
 namespace Posix {
 
-/**
- * Manages Thread radio.
- *
- */
-class Radio
+class Spinel
 {
 public:
-    /**
-     * Creates the radio manager.
-     *
-     */
-    Radio(Spinel::SpinelBase &aSpinelBase);
+    Spinel(void);
 
-    /**
-     * Initialize the Thread radio.
-     *
-     * @param[in]   aUrl    A pointer to the null-terminated URL.
-     *
-     */
-    void Init(const char *aUrl);
+    PosixSpinelMode Init(const char *aUrl);
 
-    /**
-     * Acts as an accessor to the radio spinel instance used by the radio.
-     *
-     * @returns A reference to the radio spinel instance.
-     *
-     */
-    Spinel::RadioSpinel &GetRadioSpinel(void) { return mRadioSpinel; }
+    ot::Spinel::SpinelInterface &GetSpinelInterface(void)
+    {
+        OT_ASSERT(mSpinelInterface != nullptr);
+        return *mSpinelInterface;
+    }
+
+    ot::Spinel::SpinelBase &GetSpinelBase(void) { return mSpinelBase; }
 
 private:
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    void VirtualTimeInit(void);
+#endif
+    void GetIidListFromUrl(spinel_iid_t (&aIidList)[ot::Spinel::kSpinelHeaderMaxNumIid]);
     void ProcessRadioUrl(const RadioUrl &aRadioUrl);
-    void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
 
-    Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
-    void                     GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid]);
+    ot::Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
     static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)
@@ -95,17 +77,17 @@ private:
 #error "No Spinel interface is specified!"
 #endif
 
-    RadioUrl mRadioUrl;
-#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
-    Spinel::VendorRadioSpinel mRadioSpinel;
-#else
-    Spinel::RadioSpinel     mRadioSpinel;
-#endif
+    RadioUrl                     mUrl;
+    ot::Spinel::SpinelBase       mSpinelBase;
+    ot::Spinel::SpinelInterface *mSpinelInterface;
 
     OT_DEFINE_ALIGNED_VAR(mSpinelInterfaceRaw, kSpinelInterfaceRawSize, uint64_t);
 };
 
+ot::Spinel::SpinelInterface &GetSpinelInterface(void);
+ot::Spinel::SpinelBase      &GetSpinelBase(void);
+
 } // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_RADIO_HPP_
+#endif // POSIX_PLATFORM_SPINEL_HPP_

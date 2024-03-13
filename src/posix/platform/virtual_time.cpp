@@ -181,7 +181,7 @@ void virtualTimeProcess(otInstance *aInstance, const otSysMainloopContext *aCont
         virtualTimeReceiveEvent(&event);
     }
 
-    virtualTimeRadioSpinelProcess(aInstance, &event);
+    virtualTimeSpinelProcess(aInstance, &event);
 }
 
 uint64_t otPlatTimeGet(void) { return sNow; }

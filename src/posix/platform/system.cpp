@@ -133,6 +133,7 @@ void platformInit(otPlatformConfig *aPlatformConfig)
 #endif
 
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
+    platformSpinelInit(get802154RadioUrl(aPlatformConfig));
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 
     // For Dry-Run option, only init the radio.
@@ -253,6 +254,7 @@ void platformDeinit(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
+    platformSpinelDeinit();
     platformRadioDeinit();
 
     // For Dry-Run option, only the radio is initialized.
@@ -390,8 +392,10 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeProcess(aInstance, aMainloop);
 #else
-    platformRadioProcess(aInstance, aMainloop);
+    platformSpinelProcess(aInstance, aMainloop);
 #endif
+    platformRadioProcess(aInstance, aMainloop);
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, aMainloop);
 #endif

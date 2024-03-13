@@ -40,21 +40,12 @@
 #include "core/radio/max_power_table.hpp"
 #include "lib/spinel/radio_spinel_metrics.h"
 #include "lib/spinel/spinel.h"
+#include "lib/spinel/spinel_base.hpp"
 #include "lib/spinel/spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 
 namespace ot {
 namespace Spinel {
-
-/**
- * Maximum number of Spinel Interface IDs.
- *
- */
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
-#else
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
-#endif
 
 struct RadioSpinelCallbacks
 {
@@ -148,14 +139,14 @@ struct RadioSpinelCallbacks
  * co-processor(RCP).
  *
  */
-class RadioSpinel
+class RadioSpinel : public SpinelCallbacks
 {
 public:
     /**
      * Initializes the spinel based OpenThread transceiver.
      *
      */
-    RadioSpinel(void);
+    RadioSpinel(SpinelBase &aSpinelBase);
 
     /**
      * Deinitializes the spinel based OpenThread transceiver.
@@ -166,19 +157,8 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aSpinelInterface            A reference to the Spinel interface.
-     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
-     * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
-     * @param[in]  aIidList                    A Pointer to the list of IIDs to receive spinel frame from.
-     *                                         First entry must be the IID of the Host Application.
-     * @param[in]  aIidListLength              The Length of the @p aIidList.
-     *
      */
-    void Init(SpinelInterface    &aSpinelInterface,
-              bool                aResetRadio,
-              bool                aSkipRcpCompatibilityCheck,
-              const spinel_iid_t *aIidList,
-              uint8_t             aIidListLength);
+    void Init(bool aSkipRcpCompatibilityCheck);
 
     /**
      * This method sets the notification callbacks.
@@ -349,14 +329,6 @@ public:
     otError SetFemLnaGain(int8_t aGain);
 
     /**
-     * Returns the radio sw version string.
-     *
-     * @returns A pointer to the radio version string.
-     *
-     */
-    const char *GetVersion(void) const { return sVersion; }
-
-    /**
      * Returns the radio capabilities.
      *
      * @returns The radio capability bit vector.
@@ -433,44 +405,6 @@ public:
      */
     otError GetCoexMetrics(otRadioCoexMetrics &aCoexMetrics);
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
-
-    /**
-     * Get currently active interface.
-     *
-     * @param[out] aIid IID of the interface that owns the radio.
-     *
-     * @retval  OT_ERROR_NONE               Successfully got the property.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     * @retval  OT_ERROR_NOT_IMPLEMENTED    Failed due to lack of the support in radio
-     * @retval  OT_ERROR_INVALID_COMMAND    Platform supports all interfaces simultaneously.
-     *                                      (i.e. no active/inactive interface concept in the platform level)
-     *
-     */
-    otError GetMultipanActiveInterface(spinel_iid_t *aIid);
-
-    /**
-     * Sets specified radio interface active
-     *
-     * This function allows selecting currently active radio interface on platforms that do not support parallel
-     * communication on multiple interfaces. I.e. if more than one interface is in receive state calling
-     * SetMultipanActiveInterface guarantees that specified interface will not be losing frames. This function
-     * returns if the request was received properly. After interface switching is complete SwitchoverDone callback is
-     * Invoked. Switching interfaces may take longer if aCompletePending is set true.
-     *
-     * @param[in] aIid              IID of the interface to set active.
-     * @param[in] aCompletePending  Set true if pending radio operation should complete first(Soft switch) or false if
-     * ongoing operations should be interrupted (Force switch).
-     *
-     * @retval  OT_ERROR_NONE               Successfully requested interface switch.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     * @retval  OT_ERROR_NOT_IMPLEMENTED    Failed due to lack of support in radio for the given interface id or
-     * @retval  OT_ERROR_INVALID_COMMAND    Platform supports all interfaces simultaneously
-     *                                      (i.e. no active/inactive interface concept in the platform level)
-     * @retval  OT_ERROR_ALREADY            Given interface is already active.
-     *
-     */
-    otError SetMultipanActiveInterface(spinel_iid_t aIid, bool aCompletePending);
 
     /**
      * Returns a reference to the transmit buffer.
@@ -724,14 +658,6 @@ public:
     uint32_t GetRadioChannelMask(bool aPreferred);
 
     /**
-     * Processes a received Spinel frame.
-     *
-     * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
-     *
-     */
-    void HandleReceivedFrame(void);
-
-    /**
      * Sets MAC key and key index to RCP.
      *
      * @param[in] aKeyIdMode  The key ID mode.
@@ -834,28 +760,6 @@ public:
 #endif
 
     /**
-     * Checks whether the spinel interface is radio-only.
-     *
-     * @param[out] aSupportsRcpApiVersion          A reference to a boolean variable to update whether the list of
-     *                                             spinel capabilities includes `SPINEL_CAP_RCP_API_VERSION`.
-     * @param[out] aSupportsRcpMinHostApiVersion   A reference to a boolean variable to update whether the list of
-     *                                             spinel capabilities includes `SPINEL_CAP_RCP_MIN_HOST_API_VERSION`.
-     *
-     * @retval  TRUE    The radio chip is in radio-only mode.
-     * @retval  FALSE   Otherwise.
-     *
-     */
-    bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
-
-    /**
-     * Checks whether there is pending frame in the buffer.
-     *
-     * @returns Whether there is pending frame in the buffer.
-     *
-     */
-    bool HasPendingFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
-
-    /**
      * Returns the next timepoint to recalculate RCP time offset.
      *
      * @returns The timepoint to start the recalculation of RCP time offset.
@@ -890,94 +794,6 @@ public:
      *
      */
     otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower);
-
-    /**
-     * Tries to retrieve a spinel property from OpenThread transceiver.
-     *
-     * @param[in]   aKey        Spinel property key.
-     * @param[in]   aFormat     Spinel formatter to unpack property value.
-     * @param[out]  ...         Variable arguments list.
-     *
-     * @retval  OT_ERROR_NONE               Successfully got the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     */
-    otError Get(spinel_prop_key_t aKey, const char *aFormat, ...);
-
-    /**
-     * Tries to retrieve a spinel property from OpenThread transceiver with parameter appended.
-     *
-     * @param[in]   aKey        Spinel property key.
-     * @param[in]   aParam      Parameter appended to spinel command.
-     * @param[in]   aParamSize  Size of parameter appended to spinel command
-     * @param[in]   aFormat     Spinel formatter to unpack property value.
-     * @param[out]  ...         Variable arguments list.
-     *
-     * @retval  OT_ERROR_NONE               Successfully got the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     */
-    otError GetWithParam(spinel_prop_key_t aKey,
-                         const uint8_t    *aParam,
-                         spinel_size_t     aParamSize,
-                         const char       *aFormat,
-                         ...);
-
-    /**
-     * Tries to update a spinel property of OpenThread transceiver.
-     *
-     * @param[in]   aKey        Spinel property key.
-     * @param[in]   aFormat     Spinel formatter to pack property value.
-     * @param[in]   ...         Variable arguments list.
-     *
-     * @retval  OT_ERROR_NONE               Successfully set the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     */
-    otError Set(spinel_prop_key_t aKey, const char *aFormat, ...);
-
-    /**
-     * Tries to insert a item into a spinel list property of OpenThread transceiver.
-     *
-     * @param[in]   aKey        Spinel property key.
-     * @param[in]   aFormat     Spinel formatter to pack the item.
-     * @param[in]   ...         Variable arguments list.
-     *
-     * @retval  OT_ERROR_NONE               Successfully insert item into the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     */
-    otError Insert(spinel_prop_key_t aKey, const char *aFormat, ...);
-
-    /**
-     * Tries to remove a item from a spinel list property of OpenThread transceiver.
-     *
-     * @param[in]   aKey        Spinel property key.
-     * @param[in]   aFormat     Spinel formatter to pack the item.
-     * @param[in]   ...         Variable arguments list.
-     *
-     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
-     *
-     */
-    otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
-
-    /**
-     * Tries to reset the co-processor.
-     *
-     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM, SPINEL_RESET_STACK, or SPINEL_RESET_BOOTLOADER.
-     *
-     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
-     *
-     */
-    otError SendReset(uint8_t aResetType);
 
     /**
      * Returns the radio Spinel metrics.
@@ -1036,27 +852,108 @@ public:
     otError SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower);
 #endif
 
+private:
+    enum
+    {
+        kCapsBufferSize = 100, ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
+    };
+
+    enum State
+    {
+        kStateDisabled,     ///< Radio is disabled.
+        kStateSleep,        ///< Radio is sleep.
+        kStateReceive,      ///< Radio is in receive mode.
+        kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
+        kStateTransmitDone, ///< Radio indicated frame transmission is done.
+    };
+
+    static constexpr uint32_t kUsPerMs  = 1000;                 ///< Microseconds per millisecond.
+    static constexpr uint32_t kMsPerSec = 1000;                 ///< Milliseconds per second.
+    static constexpr uint32_t kUsPerSec = kUsPerMs * kMsPerSec; ///< Microseconds per second.
+    static constexpr uint64_t kTxWaitUs =
+        OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS *
+        kUsPerSec; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
+
     /**
-     * Convert the Spinel status code to OpenThread error code.
+     * Checks whether the spinel interface is radio-only.
      *
-     * @param[in]  aStatus  The Spinel status code.
+     * @param[out] aSupportsRcpApiVersion          A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_API_VERSION`.
+     * @param[out] aSupportsRcpMinHostApiVersion   A reference to a boolean variable to update whether the list of
+     *                                             spinel capabilities includes `SPINEL_CAP_RCP_MIN_HOST_API_VERSION`.
      *
-     * @retval  OT_ERROR_NONE                    The operation has completed successfully.
-     * @retval  OT_ERROR_DROP                    The packet was dropped.
-     * @retval  OT_ERROR_NO_BUFS                 The operation has been prevented due to memory pressure.
-     * @retval  OT_ERROR_BUSY                    The device is currently performing a mutuallyexclusive operation.
-     * @retval  OT_ERROR_PARSE                   An error has occurred while parsing the command.
-     * @retval  OT_ERROR_INVALID_ARGS            An argument to the given operation is invalid.
-     * @retval  OT_ERROR_NOT_IMPLEMENTED         The given operation has not been implemented.
-     * @retval  OT_ERROR_INVALID_STATE           The given operation is invalid for the current state of the device.
-     * @retval  OT_ERROR_NO_ACK                  The packet was not acknowledged.
-     * @retval  OT_ERROR_NOT_FOUND               The given property is not recognized.
-     * @retval  OT_ERROR_FAILED                  The given operation has failed for some undefined reason.
-     * @retval  OT_ERROR_CHANNEL_ACCESS_FAILURE  The packet was not sent due to a CCA failure.
-     * @retval  OT_ERROR_ALREADY                 The operation is already in progress or the property was already set
-     *                                           to the given value.
+     * @retval  TRUE    The radio chip is in radio-only mode.
+     * @retval  FALSE   Otherwise.
+     *
      */
-    static otError SpinelStatusToOtError(spinel_status_t aStatus);
+    bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
+
+    otError CheckRadioCapabilities(void);
+    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
+
+    /**
+     * Triggers a state transfer of the state machine.
+     *
+     */
+    void ProcessRadioStateMachine(void);
+
+    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
+
+    /**
+     * Returns if the property changed event is safe to be handled now.
+     *
+     * If a property handler will go up to core stack, it may cause reentrant issue of `Hdlc::Decode()` and
+     * `WaitResponse()`.
+     *
+     * @param[in] aKey The identifier of the property.
+     *
+     * @returns Whether this property is safe to be handled now.
+     *
+     */
+    bool IsSafeToHandleNow(spinel_prop_key_t aKey) const
+    {
+        return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
+    }
+
+    otError HandleCmdFromNotification(uint32_t          aCmd,
+                                      spinel_prop_key_t aKey,
+                                      const uint8_t    *aData,
+                                      spinel_size_t     aLength,
+                                      bool             &aShouldSaveFrame);
+    otError HandleCmdFromSavedNotification(uint32_t          aCmd,
+                                           spinel_prop_key_t aKey,
+                                           const uint8_t    *aData,
+                                           spinel_size_t     aLength);
+    void HandleStreamRawResponse(uint32_t aCmd, spinel_prop_key_t aKey, const uint8_t *aBuffer, spinel_size_t aLength);
+    otError HandleStreamMfgResponse(const uint8_t *aBuffer, spinel_size_t aLength);
+    void    HandleCpTimeout(void);
+    void    RecoverFromCpFailure(void);
+
+    void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
+
+    void HandleTransmitDone(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
+
+    void RadioReceive(void);
+
+    void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
+
+    void CalcRcpTimeOffset(void);
+
+    void HandleRcpUnexpectedReset(spinel_status_t aStatus);
+
+    void UpdateParseErrorCount(otError aError)
+    {
+        mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
+    }
+
+    otError SetMacKey(uint8_t         aKeyIdMode,
+                      uint8_t         aKeyId,
+                      const otMacKey &aPrevKey,
+                      const otMacKey &aCurrKey,
+                      const otMacKey &NextKey);
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
+#endif
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     /**
@@ -1065,6 +962,7 @@ public:
      */
     void RestoreProperties(void);
 #endif
+
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
     /**
      * Defines a vendor "set property handler" hook to process vendor spinel properties.
@@ -1102,171 +1000,13 @@ public:
      *
      */
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
-#endif
-
-private:
-    enum
-    {
-        kMaxSpinelFrame        = SPINEL_FRAME_MAX_SIZE,
-        kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
-        kVersionStringSize     = 128,  ///< Max size of version string.
-        kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
-        kChannelMaskBufferSize = 32,   ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
-    };
-
-    enum State
-    {
-        kStateDisabled,     ///< Radio is disabled.
-        kStateSleep,        ///< Radio is sleep.
-        kStateReceive,      ///< Radio is in receive mode.
-        kStateTransmitting, ///< Frame passed to radio for transmission, waiting for done event from radio.
-        kStateTransmitDone, ///< Radio indicated frame transmission is done.
-    };
-
-    static constexpr uint32_t kUsPerMs  = 1000;                 ///< Microseconds per millisecond.
-    static constexpr uint32_t kMsPerSec = 1000;                 ///< Milliseconds per second.
-    static constexpr uint32_t kUsPerSec = kUsPerMs * kMsPerSec; ///< Microseconds per second.
-    static constexpr uint64_t kTxWaitUs =
-        OPENTHREAD_SPINEL_CONFIG_RCP_TX_WAIT_TIME_SECS *
-        kUsPerSec; ///< Maximum time of waiting for `TransmitDone` event, in microseconds.
-
-    typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
-
-    static void HandleReceivedFrame(void *aContext);
-
-    void    ResetRcp(bool aResetRadio);
-    otError CheckSpinelVersion(void);
-    otError CheckRadioCapabilities(void);
-    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
-
-    /**
-     * Triggers a state transfer of the state machine.
-     *
-     */
-    void ProcessRadioStateMachine(void);
-
-    /**
-     * Processes the frame queue.
-     *
-     */
-    void ProcessFrameQueue(void);
-
-    spinel_tid_t GetNextTid(void);
-    void         FreeTid(spinel_tid_t tid) { mCmdTidsInUse &= ~(1 << tid); }
-
-    otError RequestV(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, va_list aArgs);
-    otError Request(uint32_t aCommand, spinel_prop_key_t aKey, const char *aFormat, ...);
-    otError RequestWithPropertyFormat(const char       *aPropertyFormat,
-                                      uint32_t          aCommand,
-                                      spinel_prop_key_t aKey,
-                                      const char       *aFormat,
-                                      ...);
-    otError RequestWithPropertyFormatV(const char       *aPropertyFormat,
-                                       uint32_t          aCommand,
-                                       spinel_prop_key_t aKey,
-                                       const char       *aFormat,
-                                       va_list           aArgs);
-    otError RequestWithExpectedCommandV(uint32_t          aExpectedCommand,
-                                        uint32_t          aCommand,
-                                        spinel_prop_key_t aKey,
-                                        const char       *aFormat,
-                                        va_list           aArgs);
-    otError WaitResponse(bool aHandleRcpTimeout = true);
-    otError SendCommand(uint32_t          aCommand,
-                        spinel_prop_key_t aKey,
-                        spinel_tid_t      aTid,
-                        const char       *aFormat,
-                        va_list           aArgs);
-    otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
-
-    /**
-     * Returns if the property changed event is safe to be handled now.
-     *
-     * If a property handler will go up to core stack, it may cause reentrant issue of `Hdlc::Decode()` and
-     * `WaitResponse()`.
-     *
-     * @param[in] aKey The identifier of the property.
-     *
-     * @returns Whether this property is safe to be handled now.
-     *
-     */
-    bool IsSafeToHandleNow(spinel_prop_key_t aKey) const
-    {
-        return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
-    }
-
-    /**
-     * Checks whether given interface ID is part of list of IIDs to be allowed.
-     *
-     * @param[in] aIid    Spinel Interface ID.
-     *
-     * @retval  TRUE    Given IID present in allow list.
-     * @retval  FALSE   Otherwise.
-     *
-     */
-    inline bool IsFrameForUs(spinel_iid_t aIid);
-
-    void HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer);
-    void HandleNotification(const uint8_t *aFrame, uint16_t aLength);
-    void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
-
-    void HandleResponse(const uint8_t *aBuffer, uint16_t aLength);
-    void HandleTransmitDone(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
-    void HandleWaitingResponse(uint32_t aCommand, spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
-
-    void RadioReceive(void);
-
-    void TransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError);
-
-    void CalcRcpTimeOffset(void);
-
-    void HandleRcpUnexpectedReset(spinel_status_t aStatus);
-    void HandleRcpTimeout(void);
-    void RecoverFromRcpFailure(void);
-
-    void UpdateParseErrorCount(otError aError)
-    {
-        mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
-    }
-
-    otError SetMacKey(uint8_t         aKeyIdMode,
-                      uint8_t         aKeyId,
-                      const otMacKey &aPrevKey,
-                      const otMacKey &aCurrKey,
-                      const otMacKey &NextKey);
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
-#endif
-
-    static void LogIfFail(const char *aText, otError aError);
-
-    static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-
-    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
-    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
+#endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
     otInstance *mInstance;
 
-    SpinelInterface::RxFrameBuffer mRxFrameBuffer;
-    SpinelInterface               *mSpinelInterface;
+    SpinelBase &mSpinelBase;
 
     RadioSpinelCallbacks mCallbacks; ///< Callbacks for notifications of higher layer.
-
-    uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
-    spinel_tid_t      mCmdNextTid;      ///< Next available transaction id.
-    spinel_tid_t      mTxRadioTid;      ///< The transaction id used to send a radio frame.
-    spinel_tid_t      mWaitingTid;      ///< The transaction id of current transaction.
-    spinel_prop_key_t mWaitingKey;      ///< The property key of current transaction.
-    const char       *mPropertyFormat;  ///< The spinel property format of current transaction.
-    va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
-    uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
-    otError           mError;           ///< The result of current transaction.
-    spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
-    spinel_iid_t mIidList[kSpinelHeaderMaxNumIid]; ///< Array of interface ids to accept the incoming spinel frames.
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
@@ -1281,22 +1021,19 @@ private:
     uint16_t            mPanId;
     uint8_t             mChannel;
     int8_t              mRxSensitivity;
+    State               mState;
     otError             mTxError;
-    static char         sVersion[kVersionStringSize];
     static otExtAddress sIeeeEui64;
     static otRadioCaps  sRadioCaps;
 
-    State mState;
-    bool  mIsPromiscuous : 1; ///< Promiscuous mode.
-    bool  mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
-    bool  mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
+    bool mIsPromiscuous : 1; ///< Promiscuous mode.
+    bool mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
+    bool mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
 
-    static bool sIsReady;           ///< NCP ready.
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-
     enum
     {
         kRcpFailureNone,
