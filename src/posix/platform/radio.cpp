@@ -57,6 +57,8 @@ namespace {
 extern "C" void platformRadioInit(const char *aUrl) { sRadio.Init(aUrl); }
 } // namespace
 
+const char Radio::kLogModuleName[] = "Radio";
+
 Radio::Radio(void)
     : mRadioUrl(nullptr)
     , mRadioSpinel()
@@ -98,7 +100,7 @@ void Radio::Init(const char *aUrl)
 
     mRadioSpinel.SetCallbacks(callbacks);
     mRadioSpinel.Init(*mSpinelInterface, resetRadio, skipCompatibilityCheck, iidList, OT_ARRAY_LENGTH(iidList));
-    otLogDebgPlat("instance init:%p - iid = %d", (void *)&mRadioSpinel, iidList[0]);
+    LogDebg("instance init:%p - iid = %d", (void *)&mRadioSpinel, iidList[0]);
 
     ProcessRadioUrl(mRadioUrl);
 }
@@ -145,7 +147,7 @@ Spinel::SpinelInterface *Radio::CreateSpinelInterface(const char *aInterfaceName
 #endif
     else
     {
-        otLogCritPlat("The Spinel interface name \"%s\" is not supported!", aInterfaceName);
+        LogCrit("The Spinel interface name \"%s\" is not supported!", aInterfaceName);
         DieNow(OT_ERROR_FAILED);
     }
 
@@ -159,7 +161,7 @@ void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
 
     if (aRadioUrl.HasParam("ncp-dataset"))
     {
-        otLogCritPlat("The argument \"ncp-dataset\" is no longer supported");
+        LogCrit("The argument \"ncp-dataset\" is no longer supported");
         DieNow(OT_ERROR_FAILED);
     }
 
@@ -220,7 +222,7 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_EXIT_FAILURE);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
-            otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+            LogWarn("The RCP doesn't support setting the max transmit power");
         }
 
         ++channel;
@@ -233,7 +235,7 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
         VerifyOrDie((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_IMPLEMENTED), OT_ERROR_FAILED);
         if (error == OT_ERROR_NOT_IMPLEMENTED)
         {
-            otLogWarnPlat("The RCP doesn't support setting the max transmit power");
+            LogWarn("The RCP doesn't support setting the max transmit power");
         }
 
         ++channel;

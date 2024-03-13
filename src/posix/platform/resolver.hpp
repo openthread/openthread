@@ -35,14 +35,18 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 
+#include "logger.hpp"
+
 #if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
 namespace ot {
 namespace Posix {
 
-class Resolver
+class Resolver : public Logger<Resolver>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     constexpr static ssize_t kMaxDnsMessageSize           = 512;
     constexpr static ssize_t kMaxUpstreamTransactionCount = 16;
     constexpr static ssize_t kMaxUpstreamServerCount      = 3;

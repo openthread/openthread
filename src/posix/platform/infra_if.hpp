@@ -40,9 +40,11 @@
 #include <openthread/nat64.h>
 #include <openthread/openthread-system.h>
 
-#include "multicast_routing.hpp"
 #include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+
+#include "logger.hpp"
+#include "mainloop.hpp"
+#include "multicast_routing.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
@@ -53,9 +55,11 @@ namespace Posix {
  * Manages infrastructure network interface.
  *
  */
-class InfraNetif : public Mainloop::Source, private NonCopyable
+class InfraNetif : public Mainloop::Source, public Logger<InfraNetif>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Updates the fd_set and timeout for mainloop.
      *

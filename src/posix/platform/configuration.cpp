@@ -43,6 +43,8 @@
 namespace ot {
 namespace Posix {
 
+const char Configuration::kLogModuleName[] = "Config";
+
 #if OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 const char Configuration::kKeyCalibratedPower[] = "calibrated_power";
 #endif
@@ -74,12 +76,12 @@ otError Configuration::SetRegion(uint16_t aRegionCode)
 exit:
     if (error == OT_ERROR_NONE)
     {
-        otLogInfoPlat("Successfully set region \"%c%c\"", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff));
+        LogInfo("Successfully set region \"%c%c\"", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff));
     }
     else
     {
-        otLogCritPlat("Failed to set region \"%c%c\": %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
-                      otThreadErrorToString(error));
+        LogCrit("Failed to set region \"%c%c\": %s", (aRegionCode >> 8) & 0xff, (aRegionCode & 0xff),
+                otThreadErrorToString(error));
     }
 
     return error;
@@ -112,7 +114,7 @@ otError Configuration::GetDomain(uint16_t aRegionCode, Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to get power domain: %s", otThreadErrorToString(error));
+        LogCrit("Failed to get power domain: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -165,7 +167,7 @@ otError Configuration::UpdateChannelMasks(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update channel mask: %s", otThreadErrorToString(error));
+        LogCrit("Failed to update channel mask: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -182,7 +184,7 @@ otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 
     while (GetNextTargetPower(aDomain, iterator, targetPower) == OT_ERROR_NONE)
     {
-        otLogInfoPlat("Update target power: %s\r\n", targetPower.ToString().AsCString());
+        LogInfo("Update target power: %s\r\n", targetPower.ToString().AsCString());
 
         for (uint8_t ch = targetPower.GetChannelStart(); ch <= targetPower.GetChannelEnd(); ch++)
         {
@@ -193,7 +195,7 @@ otError Configuration::UpdateTargetPower(const Power::Domain &aDomain)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update target power: %s", otThreadErrorToString(error));
+        LogCrit("Failed to update target power: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -222,7 +224,7 @@ otError Configuration::UpdateCalibratedPower(void)
     while (calibrationFile->Get(kKeyCalibratedPower, iterator, value, sizeof(value)) == OT_ERROR_NONE)
     {
         SuccessOrExit(error = calibratedPower.FromString(value));
-        otLogInfoPlat("Update calibrated power: %s\r\n", calibratedPower.ToString().AsCString());
+        LogInfo("Update calibrated power: %s\r\n", calibratedPower.ToString().AsCString());
 
         for (uint8_t ch = calibratedPower.GetChannelStart(); ch <= calibratedPower.GetChannelEnd(); ch++)
         {
@@ -235,7 +237,7 @@ otError Configuration::UpdateCalibratedPower(void)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to update calibrated power table: %s", otThreadErrorToString(error));
+        LogCrit("Failed to update calibrated power table: %s", otThreadErrorToString(error));
     }
 
     return error;
@@ -259,7 +261,7 @@ otError Configuration::GetNextTargetPower(const Power::Domain &aDomain,
 
         if ((error = aTargetPower.FromString(psave)) != OT_ERROR_NONE)
         {
-            otLogCritPlat("Failed to read target power: %s", otThreadErrorToString(error));
+            LogCrit("Failed to read target power: %s", otThreadErrorToString(error));
         }
         break;
     }

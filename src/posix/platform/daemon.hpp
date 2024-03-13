@@ -31,14 +31,18 @@
 #include "openthread-posix-config.h"
 
 #include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+
+#include "logger.hpp"
+#include "mainloop.hpp"
 
 namespace ot {
 namespace Posix {
 
-class Daemon : public Mainloop::Source, private NonCopyable
+class Daemon : public Mainloop::Source, public Logger<Daemon>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[];
+
     static Daemon &Get(void);
 
     void SetUp(void);
