@@ -134,6 +134,7 @@ static const char *GetLocalHostAddress(const char *aLocalHost)
         if (strcmp(ifa->ifa_name, aLocalHost) == 0)
         {
             struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
+            
             if (inet_ntop(AF_INET, &addr->sin_addr, ipstr, sizeof(ipstr)))
             {
                 break;
