@@ -3693,11 +3693,12 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvert::RxMe
     {
         DiscoveredPrefixTable::Entry entry;
 
-        if (option.GetType() != Ip6::Nd::Option::Type::kTypePrefixInfo ||
+        if (option.GetType() != Ip6::Nd::Option::kTypePrefixInfo ||
             !static_cast<const Ip6::Nd::PrefixInfoOption &>(option).IsValid())
         {
             continue;
         }
+
         mNumPlatformPioProcessed++;
         entry.SetFrom(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
 
