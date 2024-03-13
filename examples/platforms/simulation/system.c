@@ -36,18 +36,26 @@
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
+#include <ifaddrs.h>
 #include <libgen.h>
+#include <netinet/in.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
 
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+
+#include "simul_utils.h"
+#include "utils/code_utils.h"
 
 uint32_t gNodeId = 1;
 
@@ -71,6 +79,7 @@ enum
 {
     OT_SIM_OPT_HELP               = 'h',
     OT_SIM_OPT_ENABLE_ENERGY_SCAN = 'E',
+    OT_SIM_OPT_LOCAL_HOST         = 'L',
     OT_SIM_OPT_SLEEP_TO_TX        = 't',
     OT_SIM_OPT_TIME_SPEED         = 's',
     OT_SIM_OPT_LOG_FILE           = 'l',
@@ -96,6 +105,56 @@ static void PrintUsage(const char *aProgramName, int aExitCode)
     exit(aExitCode);
 }
 
+static const char *GetLocalHostAddress(const char *aLocalHost)
+{
+    struct ifaddrs *ifaddr;
+    static char     ipstr[INET_ADDRSTRLEN] = {0};
+    const char     *rval                   = NULL;
+
+    {
+        struct in_addr addr;
+
+        otEXPECT_ACTION(inet_aton(aLocalHost, &addr) == 0, rval = aLocalHost);
+    }
+
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        perror("getifaddrs");
+        exit(EXIT_FAILURE);
+    }
+
+    for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+    {
+        if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET)
+        {
+            continue;
+        }
+
+        if (strcmp(ifa->ifa_name, aLocalHost) == 0)
+        {
+            struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
+
+            if (inet_ntop(AF_INET, &addr->sin_addr, ipstr, sizeof(ipstr)))
+            {
+                break;
+            }
+        }
+    }
+
+    freeifaddrs(ifaddr);
+
+    if (ipstr[0] == '\0')
+    {
+        fprintf(stderr, "Local host address not found!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    rval = ipstr;
+
+exit:
+    return rval;
+}
+
 void otSysInit(int aArgCount, char *aArgVector[])
 {
     char    *endptr;
@@ -106,6 +165,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         {"enable-energy-scan", no_argument, 0, OT_SIM_OPT_ENABLE_ENERGY_SCAN},
         {"sleep-to-tx", no_argument, 0, OT_SIM_OPT_SLEEP_TO_TX},
         {"time-speed", required_argument, 0, OT_SIM_OPT_TIME_SPEED},
+        {"local-host", required_argument, 0, OT_SIM_OPT_LOCAL_HOST},
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
         {"log-file", required_argument, 0, OT_SIM_OPT_LOG_FILE},
 #endif
@@ -113,9 +173,9 @@ void otSysInit(int aArgCount, char *aArgVector[])
     };
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
-    static const char options[] = "Ehts:l:";
+    static const char options[] = "Ehts:L:l:";
 #else
-    static const char options[] = "Ehts:";
+    static const char options[] = "Ehts:L:";
 #endif
 
     if (gPlatformPseudoResetWasRequested)
@@ -148,6 +208,10 @@ void otSysInit(int aArgCount, char *aArgVector[])
             break;
         case OT_SIM_OPT_SLEEP_TO_TX:
             gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+            break;
+        case OT_SIM_OPT_LOCAL_HOST:
+            gLocalHost = GetLocalHostAddress(optarg);
+            fprintf(stderr, "Simulate on %s\n", gLocalHost);
             break;
         case OT_SIM_OPT_TIME_SPEED:
             speedUpFactor = (uint32_t)strtol(optarg, &endptr, 10);
