@@ -55,6 +55,7 @@
 #include <openthread/platform/radio.h>
 
 #include "simul_utils.h"
+#include "utils/code_utils.h"
 
 uint32_t gNodeId = 1;
 
@@ -108,14 +109,12 @@ static const char *GetLocalHostAddress(const char *aLocalHost)
 {
     struct ifaddrs *ifaddr;
     static char     ipstr[INET_ADDRSTRLEN] = {0};
+    const char     *rval                   = NULL;
 
     {
         struct in_addr addr;
 
-        if (inet_aton(aLocalHost, &addr))
-        {
-            return aLocalHost;
-        }
+        otEXPECT_ACTION(inet_aton(aLocalHost, &addr) == 0, rval = aLocalHost);
     }
 
     if (getifaddrs(&ifaddr) == -1)
@@ -134,7 +133,7 @@ static const char *GetLocalHostAddress(const char *aLocalHost)
         if (strcmp(ifa->ifa_name, aLocalHost) == 0)
         {
             struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
-            
+
             if (inet_ntop(AF_INET, &addr->sin_addr, ipstr, sizeof(ipstr)))
             {
                 break;
@@ -150,7 +149,10 @@ static const char *GetLocalHostAddress(const char *aLocalHost)
         exit(EXIT_FAILURE);
     }
 
-    return ipstr;
+    rval = ipstr;
+
+exit:
+    return rval;
 }
 
 void otSysInit(int aArgCount, char *aArgVector[])
