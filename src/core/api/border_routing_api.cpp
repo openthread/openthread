@@ -200,6 +200,14 @@ otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance
     return static_cast<otBorderRoutingDhcp6PdState>(
         AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().GetDhcp6PdState());
 }
+
+void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                           *aInstance,
+                                              otBorderRoutingRequestDhcp6PdCallback aCallback,
+                                              void                                 *aContext)
+{
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetRequestDhcp6PdCallback(aCallback, aContext);
+}
+
 #endif
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

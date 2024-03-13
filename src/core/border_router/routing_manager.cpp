@@ -3605,6 +3605,8 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
         break;
     }
 
+    mExternalCallback.InvokeIfSet(newState == kDhcp6PdStateRunning);
+
 exit:
     return;
 }

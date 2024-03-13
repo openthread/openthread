@@ -47,11 +47,13 @@
 #error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
 #endif
 
+#include <openthread/border_routing.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
 
 #include "border_router/infra_if.hpp"
 #include "common/array.hpp"
+#include "common/callback.hpp"
 #include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
 #include "common/heap_array.hpp"
@@ -84,11 +86,12 @@ class RoutingManager : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    typedef NetworkData::RoutePreference       RoutePreference;     ///< Route preference (high, medium, low).
-    typedef otBorderRoutingPrefixTableIterator PrefixTableIterator; ///< Prefix Table Iterator.
-    typedef otBorderRoutingPrefixTableEntry    PrefixTableEntry;    ///< Prefix Table Entry.
-    typedef otBorderRoutingRouterEntry         RouterEntry;         ///< Router Entry.
-    typedef otPdProcessedRaInfo                PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
+    typedef NetworkData::RoutePreference          RoutePreference;     ///< Route preference (high, medium, low).
+    typedef otBorderRoutingPrefixTableIterator    PrefixTableIterator; ///< Prefix Table Iterator.
+    typedef otBorderRoutingPrefixTableEntry       PrefixTableEntry;    ///< Prefix Table Entry.
+    typedef otBorderRoutingRouterEntry            RouterEntry;         ///< Router Entry.
+    typedef otPdProcessedRaInfo                   PdProcessedRaInfo;   ///< Data of PdProcessedRaInfo.
+    typedef otBorderRoutingRequestDhcp6PdCallback PdCallback;          ///< DHCPv6 PD callback.
 
     /**
      * This constant specifies the maximum number of route prefixes that may be published by `RoutingManager`
@@ -538,6 +541,20 @@ public:
      *
      */
     Dhcp6PdState GetDhcp6PdState(void) const { return mPdPrefixManager.GetState(); }
+
+    /**
+     * Sets the callback to notify when the state of request/release a prefix via DHCPv6 Prefix Delegation (PD) is
+     * changed.
+     *
+     * @param[in] aCallback  A pointer to a function that is called when request/release PD state changes.
+     * @param[in] aContext   A pointer to arbitrary context information.
+     *
+     */
+    void SetRequestDhcp6PdCallback(PdCallback aCallback, void *aContext)
+    {
+        mPdPrefixManager.SetRequestDhcp6PdCallback(aCallback, aContext);
+    }
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 private:
@@ -1235,6 +1252,10 @@ private:
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
         Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
+        void  SetRequestDhcp6PdCallback(PdCallback aCallback, void *aContext)
+        {
+            mExternalCallback.Set(aCallback, aContext);
+        }
 
         static const char *StateToString(Dhcp6PdState aState);
 
@@ -1252,15 +1273,18 @@ private:
         void  StartStop(bool aStart);
 
         using PlatformOmrPrefixTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandlePdPrefixManagerTimer>;
+        using ExternalCallback       = Callback<PdCallback>;
 
         bool                         mEnabled;
         bool                         mIsRunning;
         uint32_t                     mNumPlatformPioProcessed;
         uint32_t                     mNumPlatformRaReceived;
         TimeMilli                    mLastPlatformRaTime;
+        ExternalCallback             mExternalCallback;
         PlatformOmrPrefixTimer       mTimer;
         DiscoveredPrefixTable::Entry mPrefix;
     };
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
     void  EvaluateState(void);
