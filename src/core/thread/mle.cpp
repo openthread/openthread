@@ -2052,8 +2052,13 @@ Error Mle::SendChildUpdateRequest(ChildUpdateRequestMode aMode)
         ExitNow();
     }
 
-    mChildUpdateRequestState = kChildUpdateRequestActive;
-    ScheduleMessageTransmissionTimer();
+    if (aMode != kAppendZeroTimeout)
+    {
+        // Enable MLE retransmissions on all Child Update Request
+        // messages, except when actively detaching.
+        mChildUpdateRequestState = kChildUpdateRequestActive;
+        ScheduleMessageTransmissionTimer();
+    }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
