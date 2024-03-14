@@ -147,14 +147,14 @@ extern int
 #include <openthread/message.h>
 #include <openthread/nat64.h>
 #include <openthread/netdata.h>
+#include <openthread/thread.h>
 #include <openthread/platform/border_routing.h>
 #include <openthread/platform/misc.h>
 
+#include "ip6_utils.hpp"
 #include "logger.hpp"
 #include "resolver.hpp"
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "net/ip6_address.hpp"
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
@@ -171,7 +171,6 @@ unsigned int otSysGetThreadNetifIndex(void) { return gNetifIndex; }
 #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
 #include "firewall.hpp"
 #endif
-#include "posix/platform/ip6_utils.hpp"
 
 using namespace ot::Posix::Ip6Utils;
 
@@ -340,31 +339,55 @@ static void LogDebg(const char *aFormat, ...)
 }
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+static const uint8_t kAllOnes[] = {
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+};
 
 #define BITS_PER_BYTE 8
 #define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * BITS_PER_BYTE)
 
+static void CopyBits(uint8_t *aDst, const uint8_t *aSrc, uint8_t aNumBits)
+{
+    // Copies `aNumBits` from `aSrc` into `aDst` handling
+    // the case where `aNumBits` may not be a multiple of 8.
+    // Leaves the remaining bits beyond `aNumBits` in `aDst`
+    // unchanged.
+
+    uint8_t numBytes  = aNumBits / BITS_PER_BYTE;
+    uint8_t extraBits = aNumBits % BITS_PER_BYTE;
+
+    memcpy(aDst, aSrc, numBytes);
+
+    if (extraBits > 0)
+    {
+        uint8_t mask = ((0x80 >> (extraBits - 1)) - 1);
+
+        aDst[numBytes] &= mask;
+        aDst[numBytes] |= (aSrc[numBytes] & ~mask);
+    }
+}
+
 static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixLen)
 {
-    ot::Ip6::Address addr;
+    otIp6Address addr;
 
     if (prefixLen > MAX_PREFIX_LENGTH)
     {
         prefixLen = MAX_PREFIX_LENGTH;
     }
 
-    addr.Clear();
-    addr.SetPrefix(allOnes, prefixLen);
-    memcpy(address, addr.mFields.m8, sizeof(addr.mFields.m8));
+    memset(&addr, 0, sizeof(otIp6Address));
+    CopyBits(addr.mFields.m8, kAllOnes, prefixLen);
+    CopyIp6AddressTo(addr, address);
 }
 
 static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
 {
     return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(netmask->sin6_addr.s6_addr),
-                            reinterpret_cast<const otIp6Address *>(allOnes));
+                            reinterpret_cast<const otIp6Address *>(kAllOnes));
 }
+
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 
 #ifdef __linux__
@@ -460,7 +483,9 @@ static void UpdateUnicastLinux(otInstance *aInstance, const otIp6AddressInfo &aA
 #endif
     {
 #if OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC > 0
-        if (aAddressInfo.mScope > ot::Ip6::Address::kLinkLocalScope)
+        static constexpr kLinkLocalScope = 2;
+
+        if (aAddressInfo.mScope > kLinkLocalScope)
         {
             AddRtAttrUint32(&req.nh, sizeof(req), IFA_RT_PRIORITY, OPENTHREAD_POSIX_CONFIG_NETIF_PREFIX_ROUTE_METRIC);
         }
@@ -1243,15 +1268,15 @@ exit:
     }
 }
 
-static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError error)
+static void logAddrEvent(bool isAdd, const otIp6Address &aAddress, otError error)
 {
     OT_UNUSED_VARIABLE(aAddress);
 
     if ((error == OT_ERROR_NONE) || ((isAdd) && (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)) ||
         ((!isAdd) && (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)))
     {
-        LogInfo("%s [%s] %s%s", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
-                aAddress.ToString().AsCString(),
+        LogInfo("%s [%s] %s%s", isAdd ? "ADD" : "DEL", IsIp6AddressMulticast(aAddress) ? "M" : "U",
+                Ip6AddressString(&aAddress).AsCString(),
                 error == OT_ERROR_ALREADY     ? " (already subscribed, ignored)"
                 : error == OT_ERROR_REJECTED  ? " (rejected)"
                 : error == OT_ERROR_NOT_FOUND ? " (not found, ignored)"
@@ -1259,8 +1284,8 @@ static void logAddrEvent(bool isAdd, const ot::Ip6::Address &aAddress, otError e
     }
     else
     {
-        LogWarn("%s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", aAddress.IsMulticast() ? "M" : "U",
-                aAddress.ToString().AsCString(), otThreadErrorToString(error));
+        LogWarn("%s [%s] %s failed (%s)", isAdd ? "ADD" : "DEL", IsIp6AddressMulticast(aAddress) ? "M" : "U",
+                Ip6AddressString(&aAddress).AsCString(), otThreadErrorToString(error));
     }
 }
 
@@ -1288,8 +1313,9 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
         case IFA_ANYCAST:
         case IFA_MULTICAST:
         {
-            ot::Ip6::Address addr;
-            memcpy(&addr, RTA_DATA(rta), sizeof(addr));
+            otIp6Address addr;
+
+            ReadIp6AddressFrom(RTA_DATA(rta), addr);
 
             memset(&addr6, 0, sizeof(addr6));
             addr6.sin6_family = AF_INET6;
@@ -1299,14 +1325,14 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
             // which blocks openthread deriving an address by SLAAC and will cause routing issues.
             // Ignore the required anycast addresses here to allow OpenThread stack generate one when necessary,
             // and Linux will prefer the non-required anycast address on the interface.
-            if (isRequiredAnycast(addr.GetBytes(), ifaddr->ifa_prefixlen))
+            if (isRequiredAnycast(addr.mFields.m8, ifaddr->ifa_prefixlen))
             {
                 continue;
             }
 
             if (aNetlinkMessage->nlmsg_type == RTM_NEWADDR)
             {
-                if (!addr.IsMulticast())
+                if (!IsIp6AddressMulticast(addr))
                 {
                     otNetifAddress netAddr;
 
@@ -1325,6 +1351,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ true, addr, error);
+
                 if (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
@@ -1334,7 +1361,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
             }
             else if (aNetlinkMessage->nlmsg_type == RTM_DELADDR)
             {
-                if (!addr.IsMulticast())
+                if (!IsIp6AddressMulticast(addr))
                 {
                     error = otIp6RemoveUnicastAddress(aInstance, &addr);
                 }
@@ -1344,6 +1371,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                 }
 
                 logAddrEvent(/* isAdd */ false, addr, error);
+
                 if (error == OT_ERROR_NOT_FOUND || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
@@ -1497,7 +1525,10 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
     if (addr6.sin6_family == AF_INET6)
     {
+        otIp6Address addr;
+
         is_link_local = false;
+
         if (IN6_IS_ADDR_LINKLOCAL(&addr6.sin6_addr))
         {
             is_link_local = true;
@@ -1509,8 +1540,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             addr6.sin6_addr.s6_addr[3] = 0;
         }
 
-        ot::Ip6::Address addr;
-        memcpy(&addr, &addr6.sin6_addr, sizeof(addr));
+        ReadIp6AddressFrom(&addr6.sin6_addr, addr);
 
         if (rtm->rtm_type == RTM_NEWADDR
 #ifdef RTM_NEWMADDR
@@ -1518,7 +1548,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 #endif
         )
         {
-            if (!addr.IsMulticast())
+            if (!IsIp6AddressMulticast(addr))
             {
                 otNetifAddress netAddr;
 
@@ -1576,6 +1606,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                     {
                         error = otIp6AddUnicastAddress(aInstance, &netAddr);
                         logAddrEvent(/* isAdd */ true, addr, error);
+
                         if (error == OT_ERROR_ALREADY)
                         {
                             error = OT_ERROR_NONE;
@@ -1591,6 +1622,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 logAddrEvent(/* isAdd */ true, addr, error);
+
                 if (error == OT_ERROR_ALREADY || error == OT_ERROR_REJECTED)
                 {
                     error = OT_ERROR_NONE;
@@ -1604,10 +1636,11 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 #endif
         )
         {
-            if (!addr.IsMulticast())
+            if (!IsIp6AddressMulticast(addr))
             {
                 error = otIp6RemoveUnicastAddress(aInstance, &addr);
                 logAddrEvent(/* isAdd */ false, addr, error);
+
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -1617,11 +1650,13 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             {
                 error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
                 logAddrEvent(/* isAdd */ false, addr, error);
+
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
                 }
             }
+
             SuccessOrExit(error);
         }
     }
@@ -1888,11 +1923,13 @@ static void processMLDEvent(otInstance *aInstance)
         {
             MLDv2Record *record = reinterpret_cast<MLDv2Record *>(&buffer[offset]);
 
-            otError          err;
-            ot::Ip6::Address address;
+            otError      err;
+            otIp6Address address;
 
-            memcpy(&address.mFields.m8, &record->mMulticastAddress, sizeof(address.mFields.m8));
+            ReadIp6AddressFrom(&record->mMulticastAddress, address);
+
             inet_ntop(AF_INET6, &record->mMulticastAddress, addressString, sizeof(addressString));
+
             if (record->mRecordType == kICMPv6MLDv2RecordChangeToIncludeType)
             {
                 err = otIp6SubscribeMulticastAddress(aInstance, &address);
@@ -2207,7 +2244,7 @@ void nat64Init(void)
 
 void platformNetifSetUp(void)
 {
-    OT_ASSERT(gInstance != nullptr);
+    assert(gInstance != nullptr);
 
     otIp6SetReceiveFilterEnabled(gInstance, true);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
