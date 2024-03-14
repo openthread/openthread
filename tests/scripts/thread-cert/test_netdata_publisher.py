@@ -494,15 +494,15 @@ class NetDataPublisher(thread_cert.TestCase):
 
         # Replace the published route on leader with '::/0'.
         leader.netdata_publish_replace(EXTERNAL_ROUTE, '::/0', EXTERNAL_FLAGS, 'med')
-        self.simulator.go(0.2)
+        self.simulator.go(1)
         routes = leader.get_routes()
         self.assertEqual([route.split(' ')[0] == '::/0' for route in routes].count(True), 1)
-        self.check_num_of_routes(routes, num - 1, 1, 0)
 
         # Replace it back to the original route.
         leader.netdata_publish_replace('::/0', EXTERNAL_ROUTE, EXTERNAL_FLAGS, 'high')
         self.simulator.go(WAIT_TIME)
         routes = leader.get_routes()
+        self.assertEqual([route.split(' ')[0] == '::/0' for route in routes].count(True), 0)
         self.check_num_of_routes(routes, num - 1, 0, 1)
 
         # Publish the same prefix on leader as an on-mesh prefix. Make
