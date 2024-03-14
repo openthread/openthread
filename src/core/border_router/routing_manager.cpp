@@ -571,11 +571,11 @@ exit:
 
 void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 {
-    Error                            error = kErrorNone;
-    Ip6::Nd::RouterAdvert::TxMessage raMsg;
-    Ip6::Nd::RouterAdvert::Header    header;
-    Ip6::Address                     destAddress;
-    InfraIf::Icmp6Packet             packet;
+    Error                   error = kErrorNone;
+    RouterAdvert::TxMessage raMsg;
+    RouterAdvert::Header    header;
+    Ip6::Address            destAddress;
+    InfraIf::Icmp6Packet    packet;
 
     LogInfo("Preparing RA");
 
@@ -629,7 +629,7 @@ exit:
     }
 }
 
-bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const
+bool RoutingManager::IsReceivedRouterAdvertFromManager(const RouterAdvert::RxMessage &aRaMessage) const
 {
     // Determines whether or not a received RA message was prepared by
     // by `RoutingManager` itself.
@@ -640,13 +640,13 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
 
     VerifyOrExit(aRaMessage.ContainsAnyOptions());
 
-    for (const Ip6::Nd::Option &option : aRaMessage)
+    for (const Option &option : aRaMessage)
     {
         switch (option.GetType())
         {
-        case Ip6::Nd::Option::kTypePrefixInfo:
+        case Option::kTypePrefixInfo:
         {
-            const Ip6::Nd::PrefixInfoOption &pio = static_cast<const Ip6::Nd::PrefixInfoOption &>(option);
+            const PrefixInfoOption &pio = static_cast<const PrefixInfoOption &>(option);
 
             VerifyOrExit(pio.IsValid());
             pio.GetPrefix(prefix);
@@ -662,14 +662,14 @@ bool RoutingManager::IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdve
             break;
         }
 
-        case Ip6::Nd::Option::kTypeRouteInfo:
+        case Option::kTypeRouteInfo:
         {
             // RIO (with non-zero lifetime) should match entries from
             // `mRioAdvertiser`. We keep track of the number of matched
             // RIOs and check after the loop ends that all entries were
             // seen.
 
-            const Ip6::Nd::RouteInfoOption &rio = static_cast<const Ip6::Nd::RouteInfoOption &>(option);
+            const RouteInfoOption &rio = static_cast<const RouteInfoOption &>(option);
 
             VerifyOrExit(rio.IsValid());
             rio.GetPrefix(prefix);
@@ -713,7 +713,7 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aPrefix)
     return (aPrefix.GetLength() == kOmrPrefixLength) && !aPrefix.IsLinkLocal() && !aPrefix.IsMulticast();
 }
 
-bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio)
+bool RoutingManager::IsValidOnLinkPrefix(const PrefixInfoOption &aPio)
 {
     Ip6::Prefix prefix;
 
@@ -768,10 +768,10 @@ void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, co
 
 void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket)
 {
-    const Ip6::Nd::NeighborAdvertMessage *naMsg;
+    const NeighborAdvertMessage *naMsg;
 
     VerifyOrExit(aPacket.GetLength() >= sizeof(naMsg));
-    naMsg = reinterpret_cast<const Ip6::Nd::NeighborAdvertMessage *>(aPacket.GetBytes());
+    naMsg = reinterpret_cast<const NeighborAdvertMessage *>(aPacket.GetBytes());
 
     mDiscoveredPrefixTable.ProcessNeighborAdvertMessage(*naMsg);
 
@@ -781,7 +781,7 @@ exit:
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    Ip6::Nd::RouterAdvert::RxMessage routerAdvMessage(aPacket);
+    RouterAdvert::RxMessage routerAdvMessage(aPacket);
 
     OT_ASSERT(mIsRunning);
 
@@ -805,7 +805,7 @@ exit:
     return;
 }
 
-bool RoutingManager::ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix)
+bool RoutingManager::ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix)
 {
     // Indicate whether to process or skip a given prefix
     // from a PIO (from received RA message).
@@ -831,7 +831,7 @@ exit:
     return shouldProcess;
 }
 
-bool RoutingManager::ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix)
+bool RoutingManager::ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix)
 {
     // Indicate whether to process or skip a given prefix
     // from a RIO (from received RA message).
@@ -930,11 +930,11 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
-void RoutingManager::UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvert::RxMessage *aRouterAdvertMessage)
+void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRouterAdvertMessage)
 {
     // Updates the `mRaInfo` from the given RA message.
 
-    Ip6::Nd::RouterAdvert::Header oldHeader;
+    RouterAdvert::Header oldHeader;
 
     if (aRouterAdvertMessage != nullptr)
     {
@@ -1044,9 +1044,8 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
 {
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(
-    const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage,
-    const Ip6::Address                     &aSrcAddress)
+void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
+                                                                       const Ip6::Address            &aSrcAddress)
 {
     // Process a received RA message and update the prefix table.
 
@@ -1076,20 +1075,20 @@ void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(
 
     ProcessRaHeader(aRaMessage.GetHeader(), *router);
 
-    for (const Ip6::Nd::Option &option : aRaMessage)
+    for (const Option &option : aRaMessage)
     {
         switch (option.GetType())
         {
-        case Ip6::Nd::Option::kTypePrefixInfo:
-            ProcessPrefixInfoOption(static_cast<const Ip6::Nd::PrefixInfoOption &>(option), *router);
+        case Option::kTypePrefixInfo:
+            ProcessPrefixInfoOption(static_cast<const PrefixInfoOption &>(option), *router);
             break;
 
-        case Ip6::Nd::Option::kTypeRouteInfo:
-            ProcessRouteInfoOption(static_cast<const Ip6::Nd::RouteInfoOption &>(option), *router);
+        case Option::kTypeRouteInfo:
+            ProcessRouteInfoOption(static_cast<const RouteInfoOption &>(option), *router);
             break;
 
-        case Ip6::Nd::Option::kTypeRaFlagsExtension:
-            ProcessRaFlagsExtOption(static_cast<const Ip6::Nd::RaFlagsExtOption &>(option), *router);
+        case Option::kTypeRaFlagsExtension:
+            ProcessRaFlagsExtOption(static_cast<const RaFlagsExtOption &>(option), *router);
             break;
 
         default:
@@ -1105,8 +1104,7 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const Ip6::Nd::RouterAdvert::Header &aRaHeader,
-                                                            Router                              &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter)
 {
     Entry      *entry;
     Ip6::Prefix prefix;
@@ -1148,8 +1146,7 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio,
-                                                                    Router                          &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter)
 {
     Ip6::Prefix prefix;
     Entry      *entry;
@@ -1194,8 +1191,7 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio,
-                                                                   Router                         &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter)
 {
     Ip6::Prefix prefix;
     Entry      *entry;
@@ -1237,8 +1233,8 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessRaFlagsExtOption(const Ip6::Nd::RaFlagsExtOption &aRaFlagsOption,
-                                                                    Router                          &aRouter)
+void RoutingManager::DiscoveredPrefixTable::ProcessRaFlagsExtOption(const RaFlagsExtOption &aRaFlagsOption,
+                                                                    Router                 &aRouter)
 {
     VerifyOrExit(aRaFlagsOption.IsValid());
     aRouter.mStubRouterFlag = aRaFlagsOption.IsStubRouterFlagSet();
@@ -1548,8 +1544,7 @@ void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 
 void RoutingManager::DiscoveredPrefixTable::SignalTableChanged(void) { mSignalTask.Post(); }
 
-void RoutingManager::DiscoveredPrefixTable::ProcessNeighborAdvertMessage(
-    const Ip6::Nd::NeighborAdvertMessage &aNaMessage)
+void RoutingManager::DiscoveredPrefixTable::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
 {
     Router *router;
 
@@ -1628,8 +1623,8 @@ void RoutingManager::DiscoveredPrefixTable::HandleRouterTimer(void)
 
 void RoutingManager::DiscoveredPrefixTable::SendNeighborSolicitToRouter(const Router &aRouter)
 {
-    InfraIf::Icmp6Packet            packet;
-    Ip6::Nd::NeighborSolicitMessage neighborSolicitMsg;
+    InfraIf::Icmp6Packet   packet;
+    NeighborSolicitMessage neighborSolicitMsg;
 
     VerifyOrExit(!Get<RoutingManager>().mRsSender.IsInProgress());
 
@@ -1645,7 +1640,7 @@ exit:
     return;
 }
 
-void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(Ip6::Nd::RouterAdvert::Header &aHeader) const
+void RoutingManager::DiscoveredPrefixTable::DetermineAndSetFlags(RouterAdvert::Header &aHeader) const
 {
     // Determine the `M` and `O` flags to include in the RA message
     // header to be emitted.
@@ -1763,7 +1758,7 @@ void RoutingManager::DiscoveredPrefixTable::Iterator::Advance(AdvanceMode aMode)
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Entry
 
-void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouterAdvert::Header &aRaHeader)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const RouterAdvert::Header &aRaHeader)
 {
     mPrefix.Clear();
     mType                    = kTypeRoute;
@@ -1772,7 +1767,7 @@ void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::Router
     mLastUpdateTime          = TimerMilli::GetNow();
 }
 
-void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::PrefixInfoOption &aPio)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const PrefixInfoOption &aPio)
 {
     aPio.GetPrefix(mPrefix);
     mType                      = kTypeOnLink;
@@ -1781,7 +1776,7 @@ void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::Prefix
     mLastUpdateTime            = TimerMilli::GetNow();
 }
 
-void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const Ip6::Nd::RouteInfoOption &aRio)
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const RouteInfoOption &aRio)
 {
     aRio.GetPrefix(mPrefix);
     mType                    = kTypeRoute;
@@ -2513,7 +2508,7 @@ bool RoutingManager::OnLinkPrefixManager::IsPublishingOrAdvertising(void) const
     return (GetState() == kPublishing) || (GetState() == kAdvertising);
 }
 
-Error RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage)
 {
     Error error;
 
@@ -2524,7 +2519,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendCurPrefix(RouterAdvert::TxMessage &aRaMessage)
 {
     // Append the local on-link prefix to the `aRaMessage` as a PIO
     // only if it is being advertised or deprecated.
@@ -2563,7 +2558,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::OnLinkPrefixManager::AppendOldPrefixes(RouterAdvert::TxMessage &aRaMessage)
 {
     Error     error = kErrorNone;
     TimeMilli now   = TimerMilli::GetNow();
@@ -2819,7 +2814,7 @@ exit:
     return;
 }
 
-Error RoutingManager::RioAdvertiser::InvalidatPrevRios(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::InvalidatPrevRios(RouterAdvert::TxMessage &aRaMessage)
 {
     Error error = kErrorNone;
 
@@ -2839,7 +2834,7 @@ exit:
     return error;
 }
 
-Error RoutingManager::RioAdvertiser::AppendRios(Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMessage)
 {
     Error                           error    = kErrorNone;
     TimeMilli                       now      = TimerMilli::GetNow();
@@ -2971,9 +2966,9 @@ exit:
     return error;
 }
 
-Error RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix                &aPrefix,
-                                               uint32_t                          aRouteLifetime,
-                                               Ip6::Nd::RouterAdvert::TxMessage &aRaMessage)
+Error RoutingManager::RioAdvertiser::AppendRio(const Ip6::Prefix       &aPrefix,
+                                               uint32_t                 aRouteLifetime,
+                                               RouterAdvert::TxMessage &aRaMessage)
 {
     Error error;
 
@@ -3488,10 +3483,10 @@ void RoutingManager::RsSender::Stop(void) { mTimer.Stop(); }
 
 Error RoutingManager::RsSender::SendRs(void)
 {
-    Ip6::Address                  destAddress;
-    Ip6::Nd::RouterSolicitMessage routerSolicit;
-    InfraIf::Icmp6Packet          packet;
-    Error                         error;
+    Ip6::Address         destAddress;
+    RouterSolicitMessage routerSolicit;
+    InfraIf::Icmp6Packet packet;
+    Error                error;
 
     packet.InitFrom(routerSolicit);
     destAddress.SetToLinkLocalAllRoutersMulticast();
@@ -3664,12 +3659,12 @@ exit:
 
 void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, const uint16_t aLength)
 {
-    Error                              error = kErrorNone;
-    Ip6::Nd::RouterAdvert::Icmp6Packet packet;
+    Error                     error = kErrorNone;
+    RouterAdvert::Icmp6Packet packet;
 
     VerifyOrExit(IsRunning(), LogWarn("Ignore platform generated RA since PD is disabled or not running."));
     packet.Init(aRouterAdvert, aLength);
-    error = Process(Ip6::Nd::RouterAdvert::RxMessage(packet));
+    error = Process(RouterAdvert::RxMessage(packet));
     mNumPlatformRaReceived++;
     mLastPlatformRaTime = TimerMilli::GetNow();
 
@@ -3680,7 +3675,7 @@ exit:
     }
 }
 
-Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvert::RxMessage &aMessage)
+Error RoutingManager::PdPrefixManager::Process(const RouterAdvert::RxMessage &aMessage)
 {
     Error                        error = kErrorNone;
     DiscoveredPrefixTable::Entry favoredEntry;
@@ -3689,18 +3684,17 @@ Error RoutingManager::PdPrefixManager::Process(const Ip6::Nd::RouterAdvert::RxMe
     VerifyOrExit(aMessage.IsValid(), error = kErrorParse);
     favoredEntry.Clear();
 
-    for (const Ip6::Nd::Option &option : aMessage)
+    for (const Option &option : aMessage)
     {
         DiscoveredPrefixTable::Entry entry;
 
-        if (option.GetType() != Ip6::Nd::Option::kTypePrefixInfo ||
-            !static_cast<const Ip6::Nd::PrefixInfoOption &>(option).IsValid())
+        if (option.GetType() != Option::kTypePrefixInfo || !static_cast<const PrefixInfoOption &>(option).IsValid())
         {
             continue;
         }
 
         mNumPlatformPioProcessed++;
-        entry.SetFrom(static_cast<const Ip6::Nd::PrefixInfoOption &>(option));
+        entry.SetFrom(static_cast<const PrefixInfoOption &>(option));
 
         if (!IsValidPdPrefix(entry.GetPrefix()))
         {
