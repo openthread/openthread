@@ -609,10 +609,10 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     VerifyOrExit(raMsg.ContainsAnyOptions());
 
-    ++mRaInfo.mTxCount;
-
     destAddress.SetToLinkLocalAllNodesMulticast();
     raMsg.GetAsPacket(packet);
+
+    mRaInfo.IncrementTxCountAndSaveHash(packet);
 
     SuccessOrExit(error = mInfraIf.Send(packet, destAddress));
 
@@ -627,73 +627,6 @@ exit:
         Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaTxFailure++;
         LogWarn("Failed to send RA on %s: %s", mInfraIf.ToString().AsCString(), ErrorToString(error));
     }
-}
-
-bool RoutingManager::IsReceivedRouterAdvertFromManager(const RouterAdvert::RxMessage &aRaMessage) const
-{
-    // Determines whether or not a received RA message was prepared by
-    // by `RoutingManager` itself.
-
-    bool        isFromManager = false;
-    uint16_t    rioCount      = 0;
-    Ip6::Prefix prefix;
-
-    VerifyOrExit(aRaMessage.ContainsAnyOptions());
-
-    for (const Option &option : aRaMessage)
-    {
-        switch (option.GetType())
-        {
-        case Option::kTypePrefixInfo:
-        {
-            const PrefixInfoOption &pio = static_cast<const PrefixInfoOption &>(option);
-
-            VerifyOrExit(pio.IsValid());
-            pio.GetPrefix(prefix);
-
-            // If it is a non-deprecated PIO, it should match the
-            // local on-link prefix.
-
-            if (pio.GetPreferredLifetime() > 0)
-            {
-                VerifyOrExit(prefix == mOnLinkPrefixManager.GetLocalPrefix());
-            }
-
-            break;
-        }
-
-        case Option::kTypeRouteInfo:
-        {
-            // RIO (with non-zero lifetime) should match entries from
-            // `mRioAdvertiser`. We keep track of the number of matched
-            // RIOs and check after the loop ends that all entries were
-            // seen.
-
-            const RouteInfoOption &rio = static_cast<const RouteInfoOption &>(option);
-
-            VerifyOrExit(rio.IsValid());
-            rio.GetPrefix(prefix);
-
-            if (rio.GetRouteLifetime() != 0)
-            {
-                VerifyOrExit(mRioAdvertiser.HasAdvertised(prefix));
-                rioCount++;
-            }
-
-            break;
-        }
-
-        default:
-            ExitNow();
-        }
-    }
-
-    VerifyOrExit(rioCount == mRioAdvertiser.GetAdvertisedRioCount());
-
-    isFromManager = true;
-
-exit:
-    return isFromManager;
 }
 
 bool RoutingManager::IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix)
@@ -941,7 +874,7 @@ void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRo
         // We skip and do not update RA header if the received RA message
         // was not prepared and sent by `RoutingManager` itself.
 
-        VerifyOrExit(!IsReceivedRouterAdvertFromManager(*aRouterAdvertMessage));
+        VerifyOrExit(!mRaInfo.IsRaFromManager(*aRouterAdvertMessage));
     }
 
     oldHeader                 = mRaInfo.mHeader;
@@ -3450,6 +3383,66 @@ exit:
 }
 
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+//---------------------------------------------------------------------------------------------------------------------
+// RaInfo
+
+void RoutingManager::RaInfo::IncrementTxCountAndSaveHash(const InfraIf::Icmp6Packet &aRaMessage)
+{
+    mTxCount++;
+    mLastHashIndex++;
+
+    if (mLastHashIndex == kNumHashEntries)
+    {
+        mLastHashIndex = 0;
+    }
+
+    CalculateHash(aRaMessage, mHashes[mLastHashIndex]);
+}
+
+bool RoutingManager::RaInfo::IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const
+{
+    // Determines whether or not a received RA message was prepared by
+    // by `RoutingManager` itself (is present in the saved `mHashes`).
+
+    bool     isFromManager = false;
+    uint16_t hashIndex     = mLastHashIndex;
+    uint32_t count         = Min<uint32_t>(mTxCount, kNumHashEntries);
+    Hash     hash;
+
+    CalculateHash(aRaMessage.GetAsPacket(), hash);
+
+    for (; count > 0; count--)
+    {
+        if (mHashes[hashIndex] == hash)
+        {
+            isFromManager = true;
+            break;
+        }
+
+        // Go to the previous index (ring buffer)
+
+        if (hashIndex == 0)
+        {
+            hashIndex = kNumHashEntries - 1;
+        }
+        else
+        {
+            hashIndex--;
+        }
+    }
+
+    return isFromManager;
+}
+
+void RoutingManager::RaInfo::CalculateHash(const InfraIf::Icmp6Packet &aRaMessage, Hash &aHash)
+{
+    Crypto::Sha256 sha256;
+
+    sha256.Start();
+    sha256.Update(aRaMessage.GetBytes(), aRaMessage.GetLength());
+    sha256.Finish(aHash);
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 // RsSender
