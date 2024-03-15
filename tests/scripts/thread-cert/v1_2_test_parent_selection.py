@@ -139,8 +139,8 @@ class TestParentSelection(thread_cert.TestCase):
         assert (parent_cmp), "Error: Expected parent response not found"
 
         # Known that link margin for link quality 3 is 80 and link quality 2 is 15
-        assert ((parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin -
-                 parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin) > 20)
+        self.assertGreater((parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin -
+                            parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin), 20)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(REED_1_2)
@@ -174,8 +174,9 @@ class TestParentSelection(thread_cert.TestCase):
         parent_cmp = messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         assert (parent_cmp), "Error: Expected parent response not found"
 
-        assert (parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin == parent_cmp.get_mle_message_tlv(
-            mle.LinkMargin).link_margin)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin,
+            parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(ROUTER_1_2)
@@ -204,11 +205,13 @@ class TestParentSelection(thread_cert.TestCase):
         parent_cmp = messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         assert (parent_cmp), "Error: Expected parent response not found"
 
-        assert (parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin == parent_cmp.get_mle_message_tlv(
-            mle.LinkMargin).link_margin)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin,
+            parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin)
 
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp > parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).pp)
+        self.assertGreater(
+            parent_prefer.get_mle_message_tlv(mle.Connectivity).pp,
+            parent_cmp.get_mle_message_tlv(mle.Connectivity).pp)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(REED_1_1)
@@ -239,12 +242,15 @@ class TestParentSelection(thread_cert.TestCase):
         parent_cmp = messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         assert (parent_cmp), "Error: Expected parent response not found"
 
-        assert (parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin == parent_cmp.get_mle_message_tlv(
-            mle.LinkMargin).link_margin)
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp == parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).pp)
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3 > parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).link_quality_3)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin,
+            parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.Connectivity).pp,
+            parent_cmp.get_mle_message_tlv(mle.Connectivity).pp)
+        self.assertGreater(
+            parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3,
+            parent_cmp.get_mle_message_tlv(mle.Connectivity).link_quality_3)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(MED_1_1)
@@ -272,14 +278,18 @@ class TestParentSelection(thread_cert.TestCase):
         parent_cmp = messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
         assert (parent_cmp), "Error: Expected parent response not found"
 
-        assert (parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin == parent_cmp.get_mle_message_tlv(
-            mle.LinkMargin).link_margin)
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).pp == parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).pp)
-        assert (parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3 == parent_cmp.get_mle_message_tlv(
-            mle.Connectivity).link_quality_3)
-        assert (parent_prefer.get_mle_message_tlv(mle.Version).version > parent_cmp.get_mle_message_tlv(
-            mle.Version).version)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.LinkMargin).link_margin,
+            parent_cmp.get_mle_message_tlv(mle.LinkMargin).link_margin)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.Connectivity).pp,
+            parent_cmp.get_mle_message_tlv(mle.Connectivity).pp)
+        self.assertEqual(
+            parent_prefer.get_mle_message_tlv(mle.Connectivity).link_quality_3,
+            parent_cmp.get_mle_message_tlv(mle.Connectivity).link_quality_3)
+        self.assertGreater(
+            parent_prefer.get_mle_message_tlv(mle.Version).version,
+            parent_cmp.get_mle_message_tlv(mle.Version).version)
 
         # Check Child Id Request
         messages = self.simulator.get_messages_sent_by(MED_1_2)
