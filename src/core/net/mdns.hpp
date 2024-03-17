@@ -53,6 +53,10 @@
 #include "crypto/sha256.hpp"
 #include "net/dns_types.hpp"
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF && !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#error "OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF requires OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
+
 /**
  * @file
  *   This file includes definitions for the Multicast DNS per RFC 6762.
@@ -156,6 +160,14 @@ public:
      *
      */
     bool IsEnabled(void) const { return mIsEnabled; }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+    /**
+     * Notifies `AdvertisingProxy` that `InfraIf` state changed.
+     *
+     */
+    void HandleInfraIfStateChanged(void);
+#endif
 
     /**
      * Sets whether mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
