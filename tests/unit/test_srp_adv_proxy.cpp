@@ -44,7 +44,7 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE &&                   \
     OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE && !OPENTHREAD_CONFIG_TIME_SYNC_ENABLE && \
-    !OPENTHREAD_PLATFORM_POSIX
+    !OPENTHREAD_PLATFORM_POSIX && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
 #define ENABLE_ADV_PROXY_TEST 1
 #else
 #define ENABLE_ADV_PROXY_TEST 0
@@ -542,6 +542,10 @@ void InitTest(void)
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+    // Configure the `Dnssd` module to use `otPlatDnssd` APIs.
+
+    sInstance->Get<Dnssd>().SetUseNativeMdns(false);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Ensure device starts as leader.

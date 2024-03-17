@@ -53,6 +53,10 @@
 #include "crypto/sha256.hpp"
 #include "net/dns_types.hpp"
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF && !OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#error "OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF requires OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE"
+#endif
+
 /**
  * @file
  *   This file includes definitions for the Multicast DNS per RFC 6762.
@@ -156,6 +160,14 @@ public:
      *
      */
     bool IsEnabled(void) const { return mIsEnabled; }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+    /**
+     * Notifies `AdvertisingProxy` that `InfraIf` state changed.
+     *
+     */
+    void HandleInfraIfStateChanged(void);
+#endif
 
     /**
      * Sets whether mDNS module is allowed to send questions requesting unicast responses referred to as "QU" questions.
@@ -916,7 +928,7 @@ private:
         Error Init(Instance &aInstance, const Service &aService);
         Error Init(Instance &aInstance, const Key &aKey);
         bool  IsEmpty(void) const;
-        bool  Matches(const Name &aName) const;
+        bool  Matches(const Name &aFullName) const;
         bool  Matches(const Service &aService) const;
         bool  Matches(const Key &aKey) const;
         bool  Matches(State aState) const { return GetState() == aState; }
@@ -1625,7 +1637,7 @@ private:
     public:
         bool  Matches(const Name &aFullName) const;
         bool  Matches(const char *aName) const;
-        bool  Matches(const AddressResolver &aBrowser) const;
+        bool  Matches(const AddressResolver &aResolver) const;
         bool  Matches(const ExpireChecker &aExpireChecker) const;
         Error Add(const AddressResolver &aResolver);
         void  Remove(const AddressResolver &aResolver);
@@ -1715,7 +1727,7 @@ private:
 
     void      InvokeConflictCallback(const char *aName, const char *aServiceType);
     void      HandleMessage(Message &aMessage, bool aIsUnicast, const AddressInfo &aSenderAddress);
-    void      AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServcieType);
+    void      AddPassiveSrvTxtCache(const char *aServiceInstance, const char *aServiceType);
     void      AddPassiveIp6AddrCache(const char *aHostName);
     TimeMilli RandomizeFirstProbeTxTime(void);
     TimeMilli RandomizeInitialQueryTxTime(void);
