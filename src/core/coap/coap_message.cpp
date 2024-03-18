@@ -146,24 +146,24 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
     return rval;
 }
 
-Error Message::AppendOptionHeader(uint16_t aDelta, uint16_t aLength)
+Error Message::AppendOptionHeader(uint16_t aNumber, uint16_t aLength)
 {
     /*
      * Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
-     *
-     * @retval kErrorNone    Successfully appended the bytes.
-     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
-     *
      */
 
     Error    error = kErrorNone;
+    uint16_t delta;
     uint8_t  header[kMaxOptionHeaderSize];
     uint16_t headerLength;
     uint8_t *cur;
 
+    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
+    delta = aNumber - GetHelpData().mOptionLast;
+
     cur = &header[1];
 
-    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(aDelta, cur) << kOptionDeltaOffset);
+    header[0] = static_cast<uint8_t>(WriteExtendedOptionField(delta, cur) << kOptionDeltaOffset);
     header[0] |= static_cast<uint8_t>(WriteExtendedOptionField(aLength, cur) << kOptionLengthOffset);
 
     headerLength = static_cast<uint16_t>(cur - header);
@@ -172,22 +172,18 @@ Error Message::AppendOptionHeader(uint16_t aDelta, uint16_t aLength)
 
     SuccessOrExit(error = AppendBytes(header, headerLength));
 
+    GetHelpData().mOptionLast = aNumber;
+
 exit:
     return error;
 }
 
 Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
 {
-    Error    error = kErrorNone;
-    uint16_t delta;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
-    delta = aNumber - GetHelpData().mOptionLast;
-
-    SuccessOrExit(error = AppendOptionHeader(delta, aLength));
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
     SuccessOrExit(error = AppendBytes(aValue, aLength));
-
-    GetHelpData().mOptionLast = aNumber;
 
     GetHelpData().mHeaderLength = GetLength();
 
@@ -197,16 +193,10 @@ exit:
 
 Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const Message &aMessage, uint16_t aOffset)
 {
-    Error    error = kErrorNone;
-    uint16_t delta;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aNumber >= GetHelpData().mOptionLast, error = kErrorInvalidArgs);
-    delta = aNumber - GetHelpData().mOptionLast;
-
-    SuccessOrExit(error = AppendOptionHeader(delta, aLength));
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
     SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
-
-    GetHelpData().mOptionLast = aNumber;
 
     GetHelpData().mHeaderLength = GetLength();
 

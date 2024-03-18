@@ -984,7 +984,7 @@ private:
 
     uint8_t WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer);
 
-    Error AppendOptionHeader(uint16_t aDelta, uint16_t aLength);
+    Error AppendOptionHeader(uint16_t aNumber, uint16_t aLength);
 };
 
 /**
