@@ -363,6 +363,22 @@ exit:
     return;
 }
 
+Error RoutingManager::SetExtraRouterAdvertOptions(const uint8_t *aOptions, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    if (aOptions == nullptr)
+    {
+        mExtraRaOptions.Free();
+    }
+    else
+    {
+        error = mExtraRaOptions.SetFrom(aOptions, aLength);
+    }
+
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 void RoutingManager::HandleSrpServerAutoEnableMode(void)
 {
@@ -605,6 +621,11 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
     else
     {
         SuccessOrExit(error = mRioAdvertiser.AppendRios(raMsg));
+    }
+
+    if (mExtraRaOptions.GetLength() > 0)
+    {
+        SuccessOrExit(error = raMsg.AppendBytes(mExtraRaOptions.GetBytes(), mExtraRaOptions.GetLength()));
     }
 
     VerifyOrExit(raMsg.ContainsAnyOptions());
