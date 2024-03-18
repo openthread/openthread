@@ -115,6 +115,48 @@ otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey)
     return AsCoreType(aInstance).Get<Dns::Multicast::Core>().UnregisterKey(*aKey);
 }
 
+otMdnsIterator *otMdnsAllocateIterator(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().AllocateIterator();
+}
+
+void otMdnsFreeIterator(otInstance *aInstance, otMdnsIterator *aIterator)
+{
+    AssertPointerIsNotNull(aIterator);
+
+    AsCoreType(aInstance).Get<Dns::Multicast::Core>().FreeIterator(*aIterator);
+}
+
+otError otMdnsGetNextHost(otInstance *aInstance, otMdnsIterator *aIterator, otMdnsHost *aHost, otMdnsEntryState *aState)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aHost);
+    AssertPointerIsNotNull(aState);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextHost(*aIterator, *aHost, *aState);
+}
+
+otError otMdnsGetNextService(otInstance       *aInstance,
+                             otMdnsIterator   *aIterator,
+                             otMdnsService    *aService,
+                             otMdnsEntryState *aState)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aService);
+    AssertPointerIsNotNull(aState);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextService(*aIterator, *aService, *aState);
+}
+
+otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdnsKey *aKey, otMdnsEntryState *aState)
+{
+    AssertPointerIsNotNull(aIterator);
+    AssertPointerIsNotNull(aKey);
+    AssertPointerIsNotNull(aState);
+
+    return AsCoreType(aInstance).Get<Dns::Multicast::Core>().GetNextKey(*aIterator, *aKey, *aState);
+}
+
 otError otMdnsStartBrowser(otInstance *aInstance, const otMdnsBrowser *aBroswer)
 {
     AssertPointerIsNotNull(aBroswer);

@@ -46,6 +46,7 @@
 #include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
+#include "common/locator.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/owning_list.hpp"
 #include "common/retain_ptr.hpp"
@@ -58,6 +59,14 @@
  *   This file includes definitions for the Multicast DNS per RFC 6762.
  *
  */
+
+/**
+ * Represents an opaque (and empty) type for an mDNS iterator.
+ *
+ */
+struct otMdnsIterator
+{
+};
 
 namespace ot {
 namespace Dns {
@@ -91,6 +100,7 @@ public:
     typedef otMdnsRequestId        RequestId;        ///< A request Identifier.
     typedef otMdnsRegisterCallback RegisterCallback; ///< Registration callback.
     typedef otMdnsConflictCallback ConflictCallback; ///< Conflict callback.
+    typedef otMdnsEntryState       EntryState;       ///< Host/Service/Key entry state.
     typedef otMdnsHost             Host;             ///< Host information.
     typedef otMdnsService          Service;          ///< Service information.
     typedef otMdnsKey              Key;              ///< Key information.
@@ -107,6 +117,7 @@ public:
     typedef otMdnsAddressCallback  AddressCallback;  ///< Address callback
     typedef otMdnsAddressResult    AddressResult;    ///< Address result.
     typedef otMdnsAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
+    typedef otMdnsIterator         Iterator;         ///< An entry iterator.
 
     /**
      * Represents a socket address info.
@@ -552,6 +563,71 @@ public:
      */
     void SetMaxMessageSize(uint16_t aMaxSize) { mMaxMessageSize = aMaxSize; }
 
+    /**
+     * Allocates a new iterator.
+     *
+     * @returns A pointer to the newly allocated iterator or `nullptr` if fails to allocate.
+     *
+     */
+    Iterator *AllocateIterator(void);
+
+    /**
+     * Frees a previously allocated iterator.
+     *
+     * @param[in] aIterator  The iterator to free.
+     *
+     */
+    void FreeIterator(Iterator &aIterator);
+
+    /**
+     * Iterates over registered host entries.
+     *
+     * On success, @p aHost is populated with the next host information. Pointers within the `Host` structure
+     * (like `mName`) remain valid until the next call to any OpenThread stack public or platform API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aHost       A `Host` to return the information about next host entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aHost, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   Iterator is not valid.
+     *
+     */
+    Error GetNextHost(Iterator &aIterator, Host &aHost, EntryState &aState) const;
+
+    /**
+     * Iterates over registered service entries.
+     *
+     * On success, @p aService is populated with the next service information. Pointers within the `Service` structure
+     * (like `mServiceType`) remain valid until the next call to any OpenThread stack public or platform API/callback.
+     *
+     * @param[out] aService    A `Service` to return the information about next service entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aService, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   Iterator is not valid.
+     *
+     */
+    Error GetNextService(Iterator &aIterator, Service &aService, EntryState &aState) const;
+
+    /**
+     * Iterates over registered key entries.
+     *
+     * On success, @p aKey is populated with the next service information. Pointers within the `Key` structure
+     * (like `mName`) remain valid until the next call to any OpenThread stack public or platform API/callback.
+     *
+     * @param[out] aKey        A `Key` to return the information about next service entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aKey, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   Iterator is not valid.
+     *
+     */
+    Error GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const;
+
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -614,6 +690,7 @@ private:
     class RxMessage;
     class ServiceEntry;
     class ServiceType;
+    class EntryIterator;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -780,17 +857,19 @@ private:
     public:
         enum State : uint8_t
         {
-            kProbing,
-            kRegistered,
-            kConflict,
-            kRemoving,
+            kProbing    = OT_MDNS_ENTRY_STATE_PROBING,
+            kRegistered = OT_MDNS_ENTRY_STATE_REGISTERED,
+            kConflict   = OT_MDNS_ENTRY_STATE_CONFLICT,
+            kRemoving   = OT_MDNS_ENTRY_STATE_REMOVING,
         };
 
         State GetState(void) const { return mState; }
+        bool  HasKeyRecord(void) const { return mKeyRecord.IsPresent(); }
         void  Register(const Key &aKey, const Callback &aCallback);
         void  Unregister(const Key &aKey);
         void  InvokeCallbacks(void);
         void  ClearAppendState(void);
+        Error CopyKeyInfoTo(Key &aKey, EntryState &aState) const;
 
     protected:
         static constexpr uint32_t kMinIntervalProbeResponse = 250; // msec
@@ -879,6 +958,8 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+        Error CopyInfoTo(Host &aHost, EntryState &aState) const;
+        Error CopyInfoTo(Key &aKey, EntryState &aState) const;
 
     private:
         Error Init(Instance &aInstance, const char *aName);
@@ -934,6 +1015,8 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+        Error CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const;
+        Error CopyInfoTo(Key &aKey, EntryState &aState) const;
 
     private:
         class SubType : public LinkedListEntry<SubType>, public Heap::Allocatable<SubType>, private ot::NonCopyable
@@ -1698,6 +1781,43 @@ private:
         Error Init(Instance &aInstance, const char *aHostName);
         Error Init(Instance &aInstance, const AddressResolver &aResolver);
         void  PrepareAQuestion(TxMessage &aQuery);
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    class EntryIterator : public Iterator, public InstanceLocator, public Heap::Allocatable<EntryIterator>
+    {
+        friend class Heap::Allocatable<EntryIterator>;
+        friend class ServiceEntry;
+
+    public:
+        Error GetNextHost(Host &aHost, EntryState &aState);
+        Error GetNextService(Service &aService, EntryState &aState);
+        Error GetNextKey(Key &aKey, EntryState &aState);
+
+    private:
+        static constexpr uint16_t kArrayCapacityIncrement = 32;
+
+        enum Type : uint8_t
+        {
+            kUnspecified,
+            kHost,
+            kService,
+            kHostKey,
+            kServiceKey,
+        };
+
+        explicit EntryIterator(Instance &aInstance);
+
+        Type mType;
+
+        union
+        {
+            const HostEntry    *mHostEntry;
+            const ServiceEntry *mServiceEntry;
+        };
+
+        Heap::Array<const char *, kArrayCapacityIncrement> mSubTypeArray;
     };
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

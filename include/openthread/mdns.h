@@ -134,6 +134,24 @@ typedef otPlatDnssdService otMdnsService;
 typedef otPlatDnssdKey otMdnsKey;
 
 /**
+ * Represents an mDNS entry iterator.
+ *
+ */
+typedef struct otMdnsIterator otMdnsIterator;
+
+/**
+ * Represents a host/service/key entry state.
+ *
+ */
+typedef enum otMdnsEntryState
+{
+    OT_MDNS_ENTRY_STATE_PROBING,    ///< Probing to claim the name.
+    OT_MDNS_ENTRY_STATE_REGISTERED, ///< Entry is successfully registered.
+    OT_MDNS_ENTRY_STATE_CONFLICT,   ///< Name conflict was detected.
+    OT_MDNS_ENTRY_STATE_REMOVING,   ///< Entry is being removed (sending "goodbye" announcements).
+} otMdnsEntryState;
+
+/**
  * Enables or disables mDNS module.
  *
  * mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will immediately
@@ -387,6 +405,88 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  *
  */
 otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey);
+
+/**
+ * Allocates a new iterator.
+ *
+ * An allocated iterator must be freed by the caller using `otMdnsFreeIterator()`.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ *
+ * @returns A pointer to the allocated iterator, or `NULL` if fails to allocate.
+ *
+ */
+otMdnsIterator *otMdnsAllocateIterator(otInstance *aInstance);
+
+/**
+ * Frees a previously allocated iterator.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aIterator    The iterator to free.
+ *
+ */
+void otMdnsFreeIterator(otInstance *aInstance, otMdnsIterator *aIterator);
+
+/**
+ * Iterates over registered host entries.
+ *
+ * On success, @p aHost is populated with the next host information. Pointers within the `otMdnsHost` structure
+ * (like `mName`) remain valid until the next call to any OpenThread stack public or platform API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator to use.
+ * @param[out] aHost       Pointer to an `otMdnsHost` to return the information about next host entry.
+ * @param[out] aState      Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aHost, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  Iterator is not valid.
+ *
+ */
+otError otMdnsGetNextHost(otInstance       *aInstance,
+                          otMdnsIterator   *aIterator,
+                          otMdnsHost       *aHost,
+                          otMdnsEntryState *aState);
+
+/**
+ * Iterates over registered service entries.
+ *
+ * On success, @p aService is populated with the next service information. Pointers within the `otMdnsService` structure
+ * (like `mServiceType`, `mSubTypeLabels`) remain valid until the next call to any OpenThread stack public or platform
+ * API/callback.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aIterator    Pointer to the iterator to use.
+ * @param[out] aService     Pointer to an `otMdnsService` to return the information about next service entry.
+ * @param[out] aState       Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aService, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  Iterator is not valid.
+ *
+ */
+otError otMdnsGetNextService(otInstance       *aInstance,
+                             otMdnsIterator   *aIterator,
+                             otMdnsService    *aService,
+                             otMdnsEntryState *aState);
+
+/**
+ * Iterates over registered service entries.
+ *
+ * On success, @p aKey is populated with the next key information. Pointers within the `otMdnsKey` structure
+ * (like `mName` remain valid until the next call to any OpenThread stack public or platform API/callback.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aIterator    Pointer to the iterator to use.
+ * @param[out] aKey         Pointer to an `otMdnsKey` to return the information about next service entry.
+ * @param[out] aState       Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aKey, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  Iterator is not valid.
+ *
+ */
+otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdnsKey *aKey, otMdnsEntryState *aState);
 
 typedef struct otMdnsBrowseResult  otMdnsBrowseResult;
 typedef struct otMdnsSrvResult     otMdnsSrvResult;
