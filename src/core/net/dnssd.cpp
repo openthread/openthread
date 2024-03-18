@@ -28,12 +28,12 @@
 
 /**
  * @file
- *   This file implements infrastructure DNS-SD (mDNS) platform APIs.
+ *   This file implements infrastructure DNS-SD module.
  */
 
 #include "dnssd.hpp"
 
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/locator_getters.hpp"
@@ -88,58 +88,184 @@ bool Dnssd::RequestIdRange::Contains(RequestId aId) const
 
 Dnssd::Dnssd(Instance &aInstance)
     : InstanceLocator(aInstance)
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    , mUseNativeMdns(true)
+#endif
 {
 }
 
-Dnssd::State Dnssd::GetState(void) const { return MapEnum(otPlatDnssdGetState(&GetInstance())); }
+Dnssd::State Dnssd::GetState(void) const
+{
+    State state;
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    {
+        state = Get<Dns::Multicast::Core>().IsEnabled() ? kReady : kStopped;
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    state = MapEnum(otPlatDnssdGetState(&GetInstance()));
+    ExitNow();
+#endif
+
+exit:
+    return state;
+}
 
 void Dnssd::RegisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdRegisterService(&GetInstance(), &aService, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().RegisterService(aService, aRequestId, aCallback));
+        ExitNow();
     }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdRegisterService(&GetInstance(), &aService, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
 }
 
 void Dnssd::UnregisterService(const Service &aService, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdUnregisterService(&GetInstance(), &aService, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().UnregisterService(aService));
+        VerifyOrExit(aCallback != nullptr);
+        aCallback(&GetInstance(), aRequestId, kErrorNone);
+        ExitNow();
     }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdUnregisterService(&GetInstance(), &aService, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
 }
 
 void Dnssd::RegisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdRegisterHost(&GetInstance(), &aHost, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().RegisterHost(aHost, aRequestId, aCallback));
+        ExitNow();
     }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdRegisterHost(&GetInstance(), &aHost, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
 }
 
 void Dnssd::UnregisterHost(const Host &aHost, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdUnregisterHost(&GetInstance(), &aHost, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().UnregisterHost(aHost));
+        VerifyOrExit(aCallback != nullptr);
+        aCallback(&GetInstance(), aRequestId, kErrorNone);
+        ExitNow();
     }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdUnregisterHost(&GetInstance(), &aHost, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
 }
 
 void Dnssd::RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdRegisterKey(&GetInstance(), &aKey, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().RegisterKey(aKey, aRequestId, aCallback));
+        ExitNow();
     }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdRegisterKey(&GetInstance(), &aKey, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
 }
 
 void Dnssd::UnregisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback aCallback)
 {
-    if (IsReady())
+    VerifyOrExit(IsReady());
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     {
-        otPlatDnssdUnregisterKey(&GetInstance(), &aKey, aRequestId, aCallback);
+        IgnoreError(Get<Dns::Multicast::Core>().UnregisterKey(aKey));
+        VerifyOrExit(aCallback != nullptr);
+        aCallback(&GetInstance(), aRequestId, kErrorNone);
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+    otPlatDnssdUnregisterKey(&GetInstance(), &aKey, aRequestId, aCallback);
+#endif
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+void Dnssd::HandleMdnsCoreStateChange(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    if (mUseNativeMdns)
+#endif
+    {
+        HandleStateChange();
     }
 }
+#endif
 
 void Dnssd::HandleStateChange(void)
 {
@@ -155,4 +281,4 @@ extern "C" void otPlatDnssdStateHandleStateChange(otInstance *aInstance)
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE

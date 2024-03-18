@@ -44,6 +44,7 @@ set(COMMON_SOURCES
     cli_joiner.cpp
     cli_link_metrics.cpp
     cli_mac_filter.cpp
+    cli_mdns.cpp
     cli_network_data.cpp
     cli_output.cpp
     cli_ping.cpp

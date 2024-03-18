@@ -58,6 +58,7 @@
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
+ * @defgroup api-mdns                 Multicast DNS
  * @defgroup api-nat64                NAT64
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
@@ -177,6 +178,7 @@
  * @defgroup plat-factory-diagnostics Factory Diagnostics - Platform
  * @defgroup plat-infra-if            Infrastructure Interface
  * @defgroup plat-logging             Logging - Platform
+ * @defgroup plat-mdns                Multicast DNS
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous

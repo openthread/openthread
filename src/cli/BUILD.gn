@@ -53,6 +53,8 @@ openthread_cli_sources = [
   "cli_link_metrics.hpp",
   "cli_mac_filter.cpp",
   "cli_mac_filter.hpp",
+  "cli_mdns.cpp",
+  "cli_mdns.hpp",
   "cli_network_data.cpp",
   "cli_network_data.hpp",
   "cli_output.cpp",

@@ -87,7 +87,7 @@ Instance::Instance(void)
     , mSettings(*this)
     , mSettingsDriver(*this)
     , mMessagePool(*this)
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
     , mDnssd(*this)
@@ -121,6 +121,9 @@ Instance::Instance(void)
 #endif
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     , mDnsDso(*this)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    , mMdnsCore(*this)
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(*this)
