@@ -202,6 +202,26 @@ public:
      *
      */
     static Instance *InitMultiple(uint8_t aIdx);
+
+    /**
+     * Returns a reference to the OpenThread instance.
+     *
+     * @param[in] aIdx The index of the OpenThread instance to get.
+     *
+     * @returns A reference to the OpenThread instance.
+     *
+     */
+    static Instance &Get(uint8_t aIdx);
+
+    /**
+     * Returns the index of the OpenThread instance.
+     *
+     * @param[in] aInstance The reference of the OpenThread instance to get index.
+     *
+     * @returns The index of the OpenThread instance.
+     *
+     */
+    static uint8_t GetIdx(Instance *aInstance);
 #endif
 
 #else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
