@@ -483,6 +483,32 @@ void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance);
 
 /**
+ * Function pointer callback which is invoked when state of request/release a prefix via DHCPv6 Prefix Delegation (PD)
+ * for Thread interface changed.
+ *
+ * @param[in] aRequest  Whether to request RA.
+ * @param[in] aContext  A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otBorderRoutingRequestDhcp6PdCallback)(bool aRequest, void *aContext);
+
+/**
+ * Set the callback when state of request/release a prefix via DHCPv6 Prefix Delegation (PD)
+ * for Thread interface changed.
+ *
+ * Subsequent calls to this function will replace the previously set callback
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to a function that is called when request/release PD state changes.
+ * @param[in] aContext   A pointer to arbitrary context information.
+ *
+ *
+ */
+void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                           *aInstance,
+                                              otBorderRoutingRequestDhcp6PdCallback aCallback,
+                                              void                                 *aContext);
+
+/**
  * @}
  *
  */
