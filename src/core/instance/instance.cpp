@@ -329,6 +329,19 @@ exit:
     return instance;
 }
 
+Instance &Instance::Get(uint8_t aIdx)
+{
+    void *instance = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    return *static_cast<Instance *>(instance);
+}
+
+uint8_t Instance::GetIdx(Instance *aInstance)
+{
+    uint8_t idx = (reinterpret_cast<uint8_t *>(aInstance) - reinterpret_cast<uint8_t *>(gMultiInstanceRaw)) /
+                  INSTANCE_SIZE_ALIGNED;
+    return idx;
+}
+
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
 
 Instance *Instance::Init(void *aBuffer, size_t *aBufferSize)
