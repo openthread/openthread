@@ -38,7 +38,7 @@
 
 #include <openthread/joiner.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -49,11 +49,9 @@ namespace Cli {
  * Implements the Joiner CLI interpreter.
  *
  */
-class Joiner : private Output
+class Joiner : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
@@ -62,7 +60,7 @@ public:
      *
      */
     Joiner(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

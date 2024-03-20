@@ -42,7 +42,7 @@
 #include <openthread/backbone_router_ftd.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -51,11 +51,9 @@ namespace Cli {
  * Implements the BBR CLI interpreter.
  *
  */
-class Bbr : private Output
+class Bbr : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor.
      *
@@ -64,7 +62,7 @@ public:
      *
      */
     Bbr(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

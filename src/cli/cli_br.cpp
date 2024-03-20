@@ -455,7 +455,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      * #otBorderRoutingDhcp6PdSetEnabled
      *
      */
-    if (Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
     {
     }
     /**

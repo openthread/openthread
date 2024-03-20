@@ -42,7 +42,7 @@
 
 #include <openthread/coap_secure.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
@@ -55,11 +55,9 @@ namespace Cli {
  * Implements the CLI CoAP Secure server and client.
  *
  */
-class CoapSecure : private Output
+class CoapSecure : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *

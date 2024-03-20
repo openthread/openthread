@@ -41,7 +41,7 @@
 #include <openthread/link.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -50,11 +50,9 @@ namespace Cli {
  * Implements the MAC Filter CLI interpreter.
  *
  */
-class MacFilter : private Output
+class MacFilter : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor.
      *
@@ -63,7 +61,7 @@ public:
      *
      */
     MacFilter(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

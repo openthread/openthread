@@ -28,7 +28,7 @@
 
 #include "openthread-core-config.h"
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #include "cli/cli_tcat.hpp"
 

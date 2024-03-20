@@ -70,7 +70,7 @@ constexpr static CommandId Cmd(const char *aString)
     return (aString[0] == '\0') ? 0 : (static_cast<uint8_t>(aString[0]) + Cmd(aString + 1) * 255u);
 }
 
-class Output;
+class Utils;
 
 /**
  * Implements the basic output functions.
@@ -78,7 +78,7 @@ class Output;
  */
 class OutputImplementer
 {
-    friend class Output;
+    friend class Utils;
 
 public:
     /**
@@ -111,13 +111,13 @@ private:
 };
 
 /**
- * Provides CLI output helper methods.
+ * Provides CLI helper methods.
  *
  */
-class Output
+class Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg; ///< An argument
+    typedef ot::Utils::CmdLineParser::Arg Arg; ///< An argument
 
     /**
      * Represent a CLI command table entry, mapping a command with `aName` to a handler method.
@@ -190,7 +190,7 @@ public:
      * @param[in] aImplementer        An `OutputImplementer`.
      *
      */
-    Output(otInstance *aInstance, OutputImplementer &aImplementer)
+    Utils(otInstance *aInstance, OutputImplementer &aImplementer)
         : mInstance(aInstance)
         , mImplementer(aImplementer)
     {
@@ -543,6 +543,108 @@ public:
         memset(reinterpret_cast<void *>(&aObject), 0, sizeof(ObjectType));
     }
 
+    // Definitions of handlers to process Get/Set/Enable/Disable.
+    template <typename ValueType> using GetHandler         = ValueType (&)(otInstance *);
+    template <typename ValueType> using SetHandler         = void (&)(otInstance *, ValueType);
+    template <typename ValueType> using SetHandlerFailable = otError (&)(otInstance *, ValueType);
+    using IsEnabledHandler                                 = bool (&)(otInstance *);
+    using SetEnabledHandler                                = void (&)(otInstance *, bool);
+    using SetEnabledHandlerFailable                        = otError (&)(otInstance *, bool);
+
+    // Returns format string to output a `ValueType` (e.g., "%u" for `uint16_t`).
+    template <typename ValueType> static constexpr const char *FormatStringFor(void);
+
+    /**
+     * Checks a given argument string against "enable" or "disable" commands.
+     *
+     * @param[in]  aArg     The argument string to parse.
+     * @param[out] aEnable  Boolean variable to return outcome on success.
+     *                      Set to TRUE for "enable" command, and FALSE for "disable" command.
+     *
+     * @retval OT_ERROR_NONE             Successfully parsed the @p aString and updated @p aEnable.
+     * @retval OT_ERROR_INVALID_COMMAND  The @p aString is not "enable" or "disable" command.
+     *
+     */
+    static otError ParseEnableOrDisable(const Arg &aArg, bool &aEnable);
+
+    // General template implementation.
+    // Specializations for `uint32_t` and `int32_t` are added at the end.
+    template <typename ValueType> otError ProcessGet(Arg aArgs[], GetHandler<ValueType> aGetHandler)
+    {
+        static_assert(
+            TypeTraits::IsSame<ValueType, uint8_t>::kValue || TypeTraits::IsSame<ValueType, uint16_t>::kValue ||
+                TypeTraits::IsSame<ValueType, int8_t>::kValue || TypeTraits::IsSame<ValueType, int16_t>::kValue ||
+                TypeTraits::IsSame<ValueType, const char *>::kValue,
+            "ValueType must be an  8, 16 `int` or `uint` type, or a `const char *`");
+
+        otError error = OT_ERROR_NONE;
+
+        VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        OutputLine(FormatStringFor<ValueType>(), aGetHandler(GetInstancePtr()));
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType> otError ProcessSet(Arg aArgs[], SetHandler<ValueType> aSetHandler)
+    {
+        otError   error;
+        ValueType value;
+
+        SuccessOrExit(error = aArgs[0].ParseAs<ValueType>(value));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        aSetHandler(GetInstancePtr(), value);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType> otError ProcessSet(Arg aArgs[], SetHandlerFailable<ValueType> aSetHandler)
+    {
+        otError   error;
+        ValueType value;
+
+        SuccessOrExit(error = aArgs[0].ParseAs<ValueType>(value));
+        VerifyOrExit(aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+        error = aSetHandler(GetInstancePtr(), value);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessGetSet(Arg aArgs[], GetHandler<ValueType> aGetHandler, SetHandler<ValueType> aSetHandler)
+    {
+        otError error = ProcessGet(aArgs, aGetHandler);
+
+        VerifyOrExit(error != OT_ERROR_NONE);
+        error = ProcessSet(aArgs, aSetHandler);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessGetSet(Arg aArgs[], GetHandler<ValueType> aGetHandler, SetHandlerFailable<ValueType> aSetHandler)
+    {
+        otError error = ProcessGet(aArgs, aGetHandler);
+
+        VerifyOrExit(error != OT_ERROR_NONE);
+        error = ProcessSet(aArgs, aSetHandler);
+
+    exit:
+        return error;
+    }
+
+    otError ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg aArgs[], IsEnabledHandler aIsEnabledHandler, SetEnabledHandler aSetEnabledHandler);
+    otError ProcessEnableDisable(Arg                       aArgs[],
+                                 IsEnabledHandler          aIsEnabledHandler,
+                                 SetEnabledHandlerFailable aSetEnabledHandler);
+
 protected:
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
@@ -561,6 +663,46 @@ private:
     otInstance        *mInstance;
     OutputImplementer &mImplementer;
 };
+
+// Specializations of `FormatStringFor<ValueType>()`
+
+template <> inline constexpr const char *Utils::FormatStringFor<uint8_t>(void) { return "%u"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<uint16_t>(void) { return "%u"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<uint32_t>(void) { return "%lu"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<int8_t>(void) { return "%d"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<int16_t>(void) { return "%d"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<int32_t>(void) { return "%ld"; }
+
+template <> inline constexpr const char *Utils::FormatStringFor<const char *>(void) { return "%s"; }
+
+// Specialization of ProcessGet<> for `uint32_t` and `int32_t`
+
+template <> inline otError Utils::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<uint32_t> aGetHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+
+exit:
+    return error;
+}
+
+template <> inline otError Utils::ProcessGet<int32_t>(Arg aArgs[], GetHandler<int32_t> aGetHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+
+exit:
+    return error;
+}
 
 } // namespace Cli
 } // namespace ot
