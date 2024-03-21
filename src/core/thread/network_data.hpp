@@ -325,18 +325,6 @@ public:
     bool ContainsEntriesFrom(const NetworkData &aCompare, uint16_t aRloc16) const;
 
     /**
-     * Provides the next server RLOC16 in the Thread Network Data.
-     *
-     * @param[in,out]  aIterator  A reference to the Network Data iterator.
-     * @param[out]     aRloc16    The RLOC16 value.
-     *
-     * @retval kErrorNone       Successfully found the next server.
-     * @retval kErrorNotFound   No subsequent server exists in the Thread Network Data.
-     *
-     */
-    Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
-
-    /**
      * Finds and returns Domain ID associated with a given prefix in the Thread Network data.
      *
      * @param[in]  aPrefix     The prefix to search for.
@@ -349,30 +337,30 @@ public:
     Error FindDomainIdFor(const Ip6::Prefix &aPrefix, uint8_t &aDomainId) const;
 
     /**
-     * Finds and returns the list of RLOCs of border routers providing external IP connectivity.
+     * Finds border routers and servers in the Network Data matching specified filters, returning their RLOC16s.
      *
-     * A border router is considered to provide external IP connectivity if it has added at least one external route
-     * entry, or an on-mesh prefix with default-route and on-mesh flags set.
+     * @p aBrFilter can be used to filter the type of BRs. It can be set to `kAnyBrOrServer` to include all BRs and
+     * servers. `kBrProvidingExternalIpConn` restricts it to BRs providing external IP connectivity where at least one
+     * the below conditions hold:
+     *
+     * - It has added at least one external route entry.
+     * - It has added at least one prefix entry with default-route and on-mesh flags set.
+     * - It has added at least one domain prefix (domain and on-mesh flags set).
      *
      * Should be used when the RLOC16s are present in the Network Data (when the Network Data contains the
      * full set and not the stable subset).
      *
-     * @param[in]      aRoleFilter   Indicates which devices to include (any role, router role only, or child only).
-     * @param[out]     aRlocs        Array to output the list of RLOCs.
-     * @param[in,out]  aRlocsLength  On entry, @p aRlocs array length (max number of elements).
-     *                               On exit, number RLOC16 entries added in @p aRlocs.
-     *
-     * @retval kErrorNone     Successfully found all RLOC16s and updated @p aRlocs and @p aRlocsLength.
-     * @retval kErrorNoBufs   Ran out of space in @p aRlocs array. @p aRlocs and @p aRlocsLength are still updated up
-     *                        to the maximum array length.
+     * @param[in]  aBrFilter    Indicates BR filter.
+     * @param[in]  aRoleFilter  Indicates role filter (any role, router role only, or child only).
+     * @param[out] aRlocs       Array to output the list of RLOC16s.
      *
      */
-    Error FindBorderRouters(RoleFilter aRoleFilter, uint16_t aRlocs[], uint8_t &aRlocsLength) const;
+    void FindRlocs(BorderRouterFilter aBrFilter, RoleFilter aRoleFilter, Rlocs &aRlocs) const;
 
     /**
      * Counts the number of border routers providing external IP connectivity.
      *
-     * A border router is considered to provide external IP connectivity if at least one of the below conditions hold
+     * A border router is considered to provide external IP connectivity if at least one of the below conditions hold:
      *
      * - It has added at least one external route entry.
      * - It has added at least one prefix entry with default-route and on-mesh flags set.
@@ -590,6 +578,8 @@ private:
                              uint32_t           aEnterpriseNumber,
                              const ServiceData &aServiceData,
                              ServiceMatchMode   aServiceMatchMode);
+
+    static void AddRloc16ToRlocs(uint16_t aRloc16, Rlocs &aRlocs, RoleFilter aRoleFilter);
 
     const uint8_t *mTlvs;
     uint8_t        mLength;

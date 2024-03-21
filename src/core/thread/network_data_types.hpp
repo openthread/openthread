@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/array.hpp"
 #include "common/as_core_type.hpp"
 #include "common/clearable.hpp"
 #include "common/data.hpp"
@@ -106,6 +107,38 @@ enum RoleFilter : uint8_t
     kRouterRoleOnly, ///< Include devices that act as Thread router.
     kChildRoleOnly,  ///< Include devices that act as Thread child (end-device).
 };
+
+/**
+ * Represents the entry filter used when searching for RLOC16 of border routers or servers in the Network Data.
+ *
+ * Regarding `kBrProvidingExternalIpConn`, a border router is considered to provide external IP connectivity if at
+ * least one of the below conditions hold:
+ *
+ * - It has added at least one external route entry.
+ * - It has added at least one prefix entry with default-route and on-mesh flags set.
+ * - It has added at least one domain prefix (domain and on-mesh flags set).
+ *
+ */
+enum BorderRouterFilter : uint8_t
+{
+    kAnyBrOrServer,             ///< Include any border router or server entry.
+    kBrProvidingExternalIpConn, ///< Include border routers providing external IP connectivity.
+};
+
+/**
+ * Maximum length of `Rlocs` array containing RLOC16 of all border routers and servers in the Network Data.
+ *
+ * This limit is derived from the maximum Network Data size (254 bytes) and the minimum size of an external route entry
+ * (3 bytes including the RLOC16 and flags) as `ceil(254/3) = 85`.
+ *
+ */
+static constexpr uint8_t kMaxRlocs = 85;
+
+/**
+ * An array containing RLOC16 of all border routers and server in the Network Data.
+ *
+ */
+typedef Array<uint16_t, kMaxRlocs> Rlocs;
 
 /**
  * Indicates whether a given `int8_t` preference value is a valid route preference (i.e., one of the
