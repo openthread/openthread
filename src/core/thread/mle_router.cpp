@@ -1635,53 +1635,35 @@ void MleRouter::HandleTimeTick(void)
 
         age = TimerMilli::GetNow() - router.GetLastHeard();
 
-        if (router.IsStateValid())
+        if (router.IsStateValid() && (age >= kMaxNeighborAge))
         {
-#if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT == 0
-
-            if (age >= kMaxNeighborAge)
+#if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
+            if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
             {
-                LogInfo("Router timeout expired");
-                RemoveNeighbor(router);
-                continue;
+                LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
+                IgnoreError(SendLinkRequest(&router));
             }
-
-#else
-
-            if (age >= kMaxNeighborAge)
-            {
-                if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
-                {
-                    LogInfo("Router timeout expired");
-                    IgnoreError(SendLinkRequest(&router));
-                }
-                else
-                {
-                    RemoveNeighbor(router);
-                    continue;
-                }
-            }
-
+            else
 #endif
-        }
-        else if (router.IsStateLinkRequest())
-        {
-            if (age >= kLinkRequestTimeout)
             {
-                LogInfo("Link Request timeout expired");
+                LogInfo("Router 0x%04x timeout expired", router.GetRloc16());
                 RemoveNeighbor(router);
                 continue;
             }
         }
 
-        if (IsLeader())
+        if (router.IsStateLinkRequest() && (age >= kLinkRequestTimeout))
         {
-            if (mRouterTable.FindNextHopOf(router) == nullptr && mRouterTable.GetLinkCost(router) >= kMaxRouteCost &&
-                age >= kMaxLeaderToRouterTimeout)
-            {
-                LogInfo("Router ID timeout expired (no route)");
-                IgnoreError(mRouterTable.Release(router.GetRouterId()));
-            }
+            LogInfo("Router 0x%04x - Link Request timeout expired", router.GetRloc16());
+            RemoveNeighbor(router);
+            continue;
+        }
+
+        if (IsLeader() && (mRouterTable.FindNextHopOf(router) == nullptr) &&
+            (mRouterTable.GetLinkCost(router) >= kMaxRouteCost) && (age >= kMaxLeaderToRouterTimeout))
+        {
+            LogInfo("Router 0x%04x ID timeout expired (no route)", router.GetRloc16());
+            IgnoreError(mRouterTable.Release(router.GetRouterId()));
         }
     }
 
