@@ -89,7 +89,14 @@ exit:
 Error BleSecure::TcatStart(const MeshCoP::TcatAgent::VendorInfo &aVendorInfo,
                            MeshCoP::TcatAgent::JoinCallback      aJoinHandler)
 {
-    return mTcatAgent.Start(aVendorInfo, mReceiveCallback.GetHandler(), aJoinHandler, mReceiveCallback.GetContext());
+    Error error;
+
+    VerifyOrExit(mBleState != kStopped, error = kErrorInvalidState);
+
+    error = mTcatAgent.Start(aVendorInfo, mReceiveCallback.GetHandler(), aJoinHandler, mReceiveCallback.GetContext());
+
+exit:
+    return error;
 }
 
 void BleSecure::Stop(void)
@@ -124,8 +131,14 @@ exit:
 Error BleSecure::Connect(void)
 {
     Ip6::SockAddr sockaddr;
+    Error         error;
 
-    return mTls.Connect(sockaddr);
+    VerifyOrExit(mBleState == kConnected, error = kErrorInvalidState);
+
+    error = mTls.Connect(sockaddr);
+
+exit:
+    return error;
 }
 
 void BleSecure::Disconnect(void)
@@ -137,8 +150,11 @@ void BleSecure::Disconnect(void)
 
     if (mBleState == kConnected)
     {
+        mBleState = kAdvertising;
         IgnoreReturnValue(otPlatBleGapDisconnect(&GetInstance()));
     }
+
+    mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
 }
 
 void BleSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
@@ -278,12 +294,7 @@ void BleSecure::HandleBleDisconnected(uint16_t aConnectionId)
     mBleState = kAdvertising;
     mMtuSize  = kInitialMtuSize;
 
-    if (IsConnected())
-    {
-        Disconnect(); // Stop TLS connection
-    }
-
-    mConnectCallback.InvokeIfSet(&GetInstance(), false, false);
+    Disconnect(); // Stop TLS connection
 }
 
 Error BleSecure::HandleBleMtuUpdate(uint16_t aMtu)
