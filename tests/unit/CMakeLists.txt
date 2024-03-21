@@ -1180,6 +1180,27 @@ target_link_libraries(ot-test-string
 
 add_test(NAME ot-test-string COMMAND ot-test-string)
 
+add_executable(ot-test-tcat
+    test_tcat.cpp
+)
+
+target_include_directories(ot-test-tcat
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-tcat
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-tcat
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-tcat COMMAND ot-test-tcat)
+
 add_executable(ot-test-timer
     test_timer.cpp
 )
