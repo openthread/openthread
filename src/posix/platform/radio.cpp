@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "posix/platform/radio.hpp"
+#include "posix/platform/spinel_manager.hpp"
 #include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
@@ -62,7 +63,6 @@ const char Radio::kLogModuleName[] = "Radio";
 Radio::Radio(void)
     : mRadioUrl(nullptr)
     , mRadioSpinel()
-    , mSpinelInterface(nullptr)
 {
 }
 
@@ -70,7 +70,6 @@ void Radio::Init(const char *aUrl)
 {
     bool                                    resetRadio;
     bool                                    skipCompatibilityCheck;
-    spinel_iid_t                            iidList[Spinel::kSpinelHeaderMaxNumIid];
     struct ot::Spinel::RadioSpinelCallbacks callbacks;
 
     mRadioUrl.Init(aUrl);
@@ -86,72 +85,13 @@ void Radio::Init(const char *aUrl)
     callbacks.mTransmitDone   = otPlatRadioTxDone;
     callbacks.mTxStarted      = otPlatRadioTxStarted;
 
-    GetIidListFromRadioUrl(iidList);
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    VirtualTimeInit();
-#endif
-
-    mSpinelInterface = CreateSpinelInterface(mRadioUrl.GetProtocol());
-    VerifyOrDie(mSpinelInterface != nullptr, OT_EXIT_FAILURE);
-
     resetRadio             = !mRadioUrl.HasParam("no-reset");
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(*mSpinelInterface, resetRadio, skipCompatibilityCheck, iidList, OT_ARRAY_LENGTH(iidList));
-    LogDebg("instance init:%p - iid = %d", (void *)&mRadioSpinel, iidList[0]);
+    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver());
 
     ProcessRadioUrl(mRadioUrl);
-}
-
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-void Radio::VirtualTimeInit(void)
-{
-    // The last argument must be the node id
-    const char *nodeId = nullptr;
-
-    for (const char *arg = nullptr; (arg = mRadioUrl.GetValue("forkpty-arg", arg)) != nullptr; nodeId = arg)
-    {
-    }
-
-    virtualTimeInit(static_cast<uint16_t>(atoi(nodeId)));
-}
-#endif
-
-Spinel::SpinelInterface *Radio::CreateSpinelInterface(const char *aInterfaceName)
-{
-    Spinel::SpinelInterface *interface;
-
-    if (aInterfaceName == nullptr)
-    {
-        DieNow(OT_ERROR_FAILED);
-    }
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
-    else if (HdlcInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) HdlcInterface(mRadioUrl);
-    }
-#endif
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
-    else if (Posix::SpiInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) SpiInterface(mRadioUrl);
-    }
-#endif
-#if OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
-    else if (VendorInterface::IsInterfaceNameMatch(aInterfaceName))
-    {
-        interface = new (&mSpinelInterfaceRaw) VendorInterface(mRadioUrl);
-    }
-#endif
-    else
-    {
-        LogCrit("The Spinel interface name \"%s\" is not supported!", aInterfaceName);
-        DieNow(OT_ERROR_FAILED);
-    }
-
-    return interface;
 }
 
 void Radio::ProcessRadioUrl(const RadioUrl &aRadioUrl)
@@ -246,53 +186,6 @@ void Radio::ProcessMaxPowerTable(const RadioUrl &aRadioUrl)
 exit:
     return;
 #endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
-}
-
-void Radio::GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid])
-{
-    const char *iidString;
-    const char *iidListString;
-
-    memset(aIidList, SPINEL_HEADER_INVALID_IID, sizeof(aIidList));
-
-    iidString     = (mRadioUrl.GetValue("iid"));
-    iidListString = (mRadioUrl.GetValue("iid-list"));
-
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    // First entry to the aIidList must be the IID of the host application.
-    VerifyOrDie(iidString != nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    aIidList[0] = static_cast<spinel_iid_t>(atoi(iidString));
-
-    if (iidListString != nullptr)
-    {
-        // Convert string to an array of integers.
-        // Integer i is for traverse the iidListString.
-        // Integer j is for aIidList array offset location.
-        // First entry of aIidList is for host application iid hence j start from 1.
-        for (uint8_t i = 0, j = 1; iidListString[i] != '\0' && j < Spinel::kSpinelHeaderMaxNumIid; i++)
-        {
-            if (iidListString[i] == ',')
-            {
-                j++;
-                continue;
-            }
-
-            if (iidListString[i] < '0' || iidListString[i] > '9')
-            {
-                DieNow(OT_EXIT_INVALID_ARGUMENTS);
-            }
-            else
-            {
-                aIidList[j] = iidListString[i] - '0';
-                VerifyOrDie(aIidList[j] < Spinel::kSpinelHeaderMaxNumIid, OT_EXIT_INVALID_ARGUMENTS);
-            }
-        }
-    }
-#else  // !OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    VerifyOrDie(iidString == nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    VerifyOrDie(iidListString == nullptr, OT_EXIT_INVALID_ARGUMENTS);
-    aIidList[0] = 0;
-#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 }
 
 } // namespace Posix
@@ -439,9 +332,7 @@ void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
         aContext->mTimeout.tv_usec = 0;
     }
 
-    sRadio.GetSpinelInterface().UpdateFdSet(aContext);
-
-    if (GetRadioSpinel().HasPendingFrame() || GetRadioSpinel().IsTransmitDone())
+    if (GetRadioSpinel().IsTransmitDone())
     {
         aContext->mTimeout.tv_sec  = 0;
         aContext->mTimeout.tv_usec = 0;
@@ -449,7 +340,7 @@ void platformRadioUpdateFdSet(otSysMainloopContext *aContext)
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
+void virtualTimeRadioProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
 {
     OT_UNUSED_VARIABLE(aInstance);
     GetRadioSpinel().Process(aEvent);

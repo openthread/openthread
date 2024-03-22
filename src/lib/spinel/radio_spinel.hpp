@@ -41,21 +41,12 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/radio_spinel_metrics.h"
 #include "lib/spinel/spinel.h"
+#include "lib/spinel/spinel_driver.hpp"
 #include "lib/spinel/spinel_interface.hpp"
 #include "ncp/ncp_config.h"
 
 namespace ot {
 namespace Spinel {
-
-/**
- * Maximum number of Spinel Interface IDs.
- *
- */
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
-#else
-static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
-#endif
 
 struct RadioSpinelCallbacks
 {
@@ -167,19 +158,10 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aSpinelInterface            A reference to the Spinel interface.
-     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
-     * @param[in]  aIidList                    A Pointer to the list of IIDs to receive spinel frame from.
-     *                                         First entry must be the IID of the Host Application.
-     * @param[in]  aIidListLength              The Length of the @p aIidList.
      *
      */
-    void Init(SpinelInterface    &aSpinelInterface,
-              bool                aResetRadio,
-              bool                aSkipRcpCompatibilityCheck,
-              const spinel_iid_t *aIidList,
-              uint8_t             aIidListLength);
+    void Init(bool aSkipRcpCompatibilityCheck, bool aSwReset, SpinelDriver *aSpinelDriver);
 
     /**
      * This method sets the notification callbacks.
@@ -348,14 +330,6 @@ public:
      *
      */
     otError SetFemLnaGain(int8_t aGain);
-
-    /**
-     * Returns the radio sw version string.
-     *
-     * @returns A pointer to the radio version string.
-     *
-     */
-    const char *GetVersion(void) const { return sVersion; }
 
     /**
      * Returns the radio capabilities.
@@ -725,14 +699,6 @@ public:
     uint32_t GetRadioChannelMask(bool aPreferred);
 
     /**
-     * Processes a received Spinel frame.
-     *
-     * The newly received frame is available in `RxFrameBuffer` from `SpinelInterface::GetRxFrameBuffer()`.
-     *
-     */
-    void HandleReceivedFrame(void);
-
-    /**
      * Sets MAC key and key index to RCP.
      *
      * @param[in] aKeyIdMode  The key ID mode.
@@ -849,14 +815,6 @@ public:
     bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
     /**
-     * Checks whether there is pending frame in the buffer.
-     *
-     * @returns Whether there is pending frame in the buffer.
-     *
-     */
-    bool HasPendingFrame(void) const { return mRxFrameBuffer.HasSavedFrame(); }
-
-    /**
      * Returns the next timepoint to recalculate RCP time offset.
      *
      * @returns The timepoint to start the recalculation of RCP time offset.
@@ -879,6 +837,14 @@ public:
      *
      */
     uint32_t GetBusSpeed(void) const;
+
+    /**
+     * Returns the co-processor sw version string.
+     *
+     * @returns A pointer to the co-processor version string.
+     *
+     */
+    const char *GetVersion(void) const { return mSpinelDriver->GetVersion(); }
 
     /**
      * Sets the max transmit power.
@@ -967,18 +933,6 @@ public:
      *
      */
     otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
-
-    /**
-     * Tries to reset the co-processor.
-     *
-     * @prarm[in] aResetType    The reset type, SPINEL_RESET_PLATFORM, SPINEL_RESET_STACK, or SPINEL_RESET_BOOTLOADER.
-     *
-     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
-     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
-     *
-     */
-    otError SendReset(uint8_t aResetType);
 
     /**
      * Returns the radio Spinel metrics.
@@ -1105,10 +1059,13 @@ public:
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif
 
+    bool HasPendingFrame(void) { return mSpinelDriver->HasPendingFrame(); }
+
+    otError SendReset(uint8_t aResetType) { return mSpinelDriver->SendReset(aResetType); }
+
 private:
     enum
     {
-        kMaxSpinelFrame        = SPINEL_FRAME_MAX_SIZE,
         kMaxWaitTime           = 2000, ///< Max time to wait for response in milliseconds.
         kVersionStringSize     = 128,  ///< Max size of version string.
         kCapsBufferSize        = 100,  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
@@ -1133,9 +1090,6 @@ private:
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
-    static void HandleReceivedFrame(void *aContext);
-
-    void    ResetRcp(bool aResetRadio);
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
@@ -1173,11 +1127,6 @@ private:
                                         const char       *aFormat,
                                         va_list           aArgs);
     otError WaitResponse(bool aHandleRcpTimeout = true);
-    otError SendCommand(uint32_t          aCommand,
-                        spinel_prop_key_t aKey,
-                        spinel_tid_t      aTid,
-                        const char       *aFormat,
-                        va_list           aArgs);
     otError ParseRadioFrame(otRadioFrame &aFrame, const uint8_t *aBuffer, uint16_t aLength, spinel_ssize_t &aUnpacked);
 
     /**
@@ -1196,18 +1145,7 @@ private:
         return !(aKey == SPINEL_PROP_STREAM_RAW || aKey == SPINEL_PROP_MAC_ENERGY_SCAN_RESULT);
     }
 
-    /**
-     * Checks whether given interface ID is part of list of IIDs to be allowed.
-     *
-     * @param[in] aIid    Spinel Interface ID.
-     *
-     * @retval  TRUE    Given IID present in allow list.
-     * @retval  FALSE   Otherwise.
-     *
-     */
-    inline bool IsFrameForUs(spinel_iid_t aIid);
-
-    void HandleNotification(SpinelInterface::RxFrameBuffer &aFrameBuffer);
+    void HandleNotification(const uint8_t *aFrame, uint16_t aLength, bool &aShouldSaveFrame);
     void HandleNotification(const uint8_t *aFrame, uint16_t aLength);
     void HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, uint16_t aLength);
 
@@ -1225,6 +1163,15 @@ private:
     void HandleRcpTimeout(void);
     void RecoverFromRcpFailure(void);
 
+    static void HandleReceivedFrame(const uint8_t *aFrame,
+                                    uint16_t       aLength,
+                                    uint8_t        aHeader,
+                                    bool          &aSave,
+                                    void          *aContext);
+    void        HandleReceivedFrame(const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aShouldSaveFrame);
+    static void HandleSavedFrame(const uint8_t *aFrame, uint16_t aLength, void *aContext);
+    void        HandleSavedFrame(const uint8_t *aFrame, uint16_t aLength);
+
     void UpdateParseErrorCount(otError aError)
     {
         mRadioSpinelMetrics.mSpinelParseErrorCount += (aError == OT_ERROR_PARSE) ? 1 : 0;
@@ -1241,9 +1188,6 @@ private:
 
     otInstance *mInstance;
 
-    SpinelInterface::RxFrameBuffer mRxFrameBuffer;
-    SpinelInterface               *mSpinelInterface;
-
     RadioSpinelCallbacks mCallbacks; ///< Callbacks for notifications of higher layer.
 
     uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
@@ -1255,16 +1199,13 @@ private:
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
-    spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
-    spinel_iid_t mIidList[kSpinelHeaderMaxNumIid]; ///< Array of interface ids to accept the incoming spinel frames.
-
-    uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    uint8_t       mAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    otRadioFrame  mRxRadioFrame;
-    otRadioFrame  mTxRadioFrame;
-    otRadioFrame  mAckRadioFrame;
-    otRadioFrame *mTransmitFrame; ///< Points to the frame to send
+    uint8_t           mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t           mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t           mAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    otRadioFrame      mRxRadioFrame;
+    otRadioFrame      mTxRadioFrame;
+    otRadioFrame      mAckRadioFrame;
+    otRadioFrame     *mTransmitFrame; ///< Points to the frame to send
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otRadioIeInfo mTxIeInfo;
@@ -1276,7 +1217,6 @@ private:
     uint8_t             mChannel;
     int8_t              mRxSensitivity;
     otError             mTxError;
-    static char         sVersion[kVersionStringSize];
     static otExtAddress sIeeeEui64;
     static otRadioCaps  sRadioCaps;
 
@@ -1285,13 +1225,13 @@ private:
     bool  mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
     bool  mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
 
-    static bool sIsReady;           ///< NCP ready.
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
-    enum {
+    enum
+    {
         kRcpFailureNone,
         kRcpFailureTimeout,
         kRcpFailureUnexpectedReset,
@@ -1347,6 +1287,8 @@ private:
     otRadioSpinelVendorRestorePropertiesCallback mVendorRestorePropertiesCallback;
     void                                        *mVendorRestorePropertiesContext;
 #endif
+
+    SpinelDriver *mSpinelDriver;
 };
 
 } // namespace Spinel

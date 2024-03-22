@@ -84,6 +84,17 @@ enum
     OT_EVENT_DATA_MAX_SIZE          = 1024,
 };
 
+/**
+ * Represents the mode of the co-processor.
+ * A co-processor could be either a RCP or NCP.
+ */
+enum CoprocessorMode
+{
+    OT_COPROCESSOR_UNKNOWN = 0,
+    OT_COPROCESSOR_RCP     = 1,
+    OT_COPROCESSOR_NCP     = 2,
+};
+
 OT_TOOL_PACKED_BEGIN
 struct VirtualTimeEvent
 {
@@ -338,13 +349,22 @@ void virtualTimeReceiveEvent(struct VirtualTimeEvent *aEvent);
 void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
 
 /**
- * Performs radio spinel processing of virtual time simulation.
+ * Performs radio  processing of virtual time simulation.
  *
  * @param[in]   aInstance   A pointer to the OpenThread instance.
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
+void virtualTimeRadioProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
+
+/**
+ * Performs radio  processing of virtual time simulation.
+ *
+ * @param[in]   aInstance   A pointer to the OpenThread instance.
+ * @param[in]   aEvent      A pointer to the current event.
+ *
+ */
+void virtualTimeSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
 
 enum SocketBlockOption
 {
@@ -420,6 +440,43 @@ extern otInstance *gInstance;
  *
  */
 void platformBacktraceInit(void);
+
+/**
+ * Initializes the spinel service used by OpenThread.
+ *
+ * @note Even when @p aPlatformConfig->mResetRadio is false, a reset event (i.e. a PROP_LAST_STATUS between
+ * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
+ *
+ * @param[in]   aUrl  A pointer to the null-terminated spinel URL.
+ *
+ * @retval  UNKNOWN  The initialization fails.
+ * @retval  RCP      The Co-processor is a RCP.
+ * @retval  NCP      The Co-processor is a NCP.
+ */
+CoprocessorMode platformSpinelInit(const char *aUrl);
+
+/**
+ * Shuts down the spinel service used by OpenThread.
+ *
+ */
+void platformSpinelDeinit(void);
+
+/**
+ * Performs spinel driver processing.
+ *
+ * @param[in]   aInstance   A pointer to the OT instance.
+ * @param[in]   aContext    A pointer to the mainloop context.
+ *
+ */
+void platformSpinelProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the spinel driver.
+ *
+ * @param[in]   aContext    A pointer to the mainloop context.
+ *
+ */
+void platformSpinelUpdateFdSet(otSysMainloopContext *aContext);
 
 #ifdef __cplusplus
 }
