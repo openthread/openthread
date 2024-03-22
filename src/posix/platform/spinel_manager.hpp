@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021, The OpenThread Authors.
+ *  Copyright (c) 2024, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,69 +26,79 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_POSIX_PLATFORM_RADIO_HPP_
-#define OT_POSIX_PLATFORM_RADIO_HPP_
+#ifndef POSIX_PLATFORM_SPINEL_MANAGER_HPP_
+#define POSIX_PLATFORM_SPINEL_MANAGER_HPP_
 
-#include "hdlc_interface.hpp"
-#include "logger.hpp"
-#include "radio_url.hpp"
-#include "spi_interface.hpp"
-#include "spinel_manager.hpp"
-#include "vendor_interface.hpp"
 #include "common/code_utils.hpp"
-#include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel_driver.hpp"
-#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
-#ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
-#include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
-#endif
-#endif
+#include "posix/platform/hdlc_interface.hpp"
+#include "posix/platform/radio_url.hpp"
+#include "posix/platform/spi_interface.hpp"
+#include "posix/platform/vendor_interface.hpp"
 
 namespace ot {
 namespace Posix {
 
-/**
- * Manages Thread radio.
- *
- */
-class Radio : public Logger<Radio>
+class SpinelManager
 {
 public:
-    static const char kLogModuleName[]; ///< Module name used for logging.
-
     /**
-     * Creates the radio manager.
+     * Constructor of the SpinelManager
      *
      */
-    Radio(void);
+    SpinelManager(void);
 
     /**
-     * Initialize the Thread radio.
-     *
-     * @param[in]   aUrl    A pointer to the null-terminated URL.
+     * Destructor of the SpinelManager
      *
      */
-    void Init(const char *aUrl);
+    ~SpinelManager(void);
 
     /**
-     * Acts as an accessor to the spinel interface instance used by the radio.
+     * Initializes the SpinelManager.
      *
-     * @returns A reference to the radio's spinel interface instance.
+     * @param[in]   aUrl  A pointer to the null-terminated spinel URL.
+     *
+     * @retval  OT_COPROCESSOR_UNKNOWN  The initialization fails.
+     * @retval  OT_COPROCESSOR_RCP      The Co-processor is a RCP.
+     * @retval  OT_COPROCESSOR_NCP      The Co-processor is a NCP.
      *
      */
-    Spinel::SpinelInterface &GetSpinelInterface(void) { return GetSpinelManager().GetSpinelInterface(); }
+    CoprocessorType Init(const char *aUrl);
 
     /**
-     * Acts as an accessor to the radio spinel instance used by the radio.
-     *
-     * @returns A reference to the radio spinel instance.
+     * Deinitializes the SpinelManager.
      *
      */
-    Spinel::RadioSpinel &GetRadioSpinel(void) { return mRadioSpinel; }
+    void Deinit(void);
+
+    /**
+     * Returns the spinel interface.
+     *
+     * @returns The spinel interface.
+     *
+     */
+    ot::Spinel::SpinelInterface &GetSpinelInterface(void)
+    {
+        OT_ASSERT(mSpinelInterface != nullptr);
+        return *mSpinelInterface;
+    }
+
+    /**
+     * Returns the spinel driver.
+     *
+     * @returns The spinel driver.
+     *
+     */
+    ot::Spinel::SpinelDriver &GetSpinelDriver(void) { return mSpinelDriver; }
 
 private:
-    void ProcessRadioUrl(const RadioUrl &aRadioUrl);
-    void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
+#if OPENTHREAD_POSIX_VIRTUAL_TIME
+    void VirtualTimeInit(void);
+#endif
+    void GetIidListFromUrl(spinel_iid_t (&aIidList)[ot::Spinel::kSpinelHeaderMaxNumIid]);
+
+    ot::Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
     static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)
@@ -104,15 +114,17 @@ private:
 #error "No Spinel interface is specified!"
 #endif
 
-    RadioUrl mRadioUrl;
-#if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
-    Spinel::VendorRadioSpinel mRadioSpinel;
-#else
-    Spinel::RadioSpinel     mRadioSpinel;
-#endif
+    RadioUrl                     mUrl;
+    ot::Spinel::SpinelDriver     mSpinelDriver;
+    ot::Spinel::SpinelInterface *mSpinelInterface;
+
+    OT_DEFINE_ALIGNED_VAR(mSpinelInterfaceRaw, kSpinelInterfaceRawSize, uint64_t);
 };
+
+ot::Spinel::SpinelDriver &GetSpinelDriver(void);
+SpinelManager            &GetSpinelManager(void);
 
 } // namespace Posix
 } // namespace ot
 
-#endif // OT_POSIX_PLATFORM_RADIO_HPP_
+#endif // POSIX_PLATFORM_SPINEL_MANAGER_HPP_

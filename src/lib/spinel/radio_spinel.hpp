@@ -158,19 +158,10 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aSpinelInterface            A reference to the Spinel interface.
-     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
-     * @param[in]  aIidList                    A Pointer to the list of IIDs to receive spinel frame from.
-     *                                         First entry must be the IID of the Host Application.
-     * @param[in]  aIidListLength              The Length of the @p aIidList.
      *
      */
-    void Init(SpinelInterface    &aSpinelInterface,
-              bool                aResetRadio,
-              bool                aSkipRcpCompatibilityCheck,
-              const spinel_iid_t *aIidList,
-              uint8_t             aIidListLength);
+    void Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver);
 
     /**
      * This method sets the notification callbacks.
@@ -815,7 +806,7 @@ public:
      * @returns Whether there is pending frame in the buffer.
      *
      */
-    bool HasPendingFrame(void) const { return mSpinelDriver.HasPendingFrame(); }
+    bool HasPendingFrame(void) const { return mSpinelDriver->HasPendingFrame(); }
 
     /**
      * Returns the next timepoint to recalculate RCP time offset.
@@ -847,7 +838,7 @@ public:
      * @returns A pointer to the co-processor version string.
      *
      */
-    const char *GetVersion(void) const { return mSpinelDriver.GetVersion(); }
+    const char *GetVersion(void) const { return mSpinelDriver->GetVersion(); }
 
     /**
      * Sets the max transmit power.
@@ -1101,6 +1092,8 @@ private:
 
     typedef otError (RadioSpinel::*ResponseHandler)(const uint8_t *aBuffer, uint16_t aLength);
 
+    SpinelDriver &GetSpinelDriver(void) const;
+
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
@@ -1200,9 +1193,6 @@ private:
 
     otInstance *mInstance;
 
-    SpinelInterface::RxFrameBuffer mRxFrameBuffer;
-    SpinelInterface               *mSpinelInterface;
-
     RadioSpinelCallbacks mCallbacks; ///< Callbacks for notifications of higher layer.
 
     uint16_t          mCmdTidsInUse;    ///< Used transaction ids.
@@ -1214,16 +1204,13 @@ private:
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
-    spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
-    spinel_iid_t mIidList[kSpinelHeaderMaxNumIid]; ///< Array of interface ids to accept the incoming spinel frames.
-
-    uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    uint8_t       mAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
-    otRadioFrame  mRxRadioFrame;
-    otRadioFrame  mTxRadioFrame;
-    otRadioFrame  mAckRadioFrame;
-    otRadioFrame *mTransmitFrame; ///< Points to the frame to send
+    uint8_t           mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t           mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    uint8_t           mAckPsdu[OT_RADIO_FRAME_MAX_SIZE];
+    otRadioFrame      mRxRadioFrame;
+    otRadioFrame      mTxRadioFrame;
+    otRadioFrame      mAckRadioFrame;
+    otRadioFrame     *mTransmitFrame; ///< Points to the frame to send
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otRadioIeInfo mTxIeInfo;
@@ -1235,7 +1222,6 @@ private:
     uint8_t             mChannel;
     int8_t              mRxSensitivity;
     otError             mTxError;
-    static char         sVersion[kVersionStringSize];
     static otExtAddress sIeeeEui64;
     static otRadioCaps  sRadioCaps;
 
@@ -1244,7 +1230,6 @@ private:
     bool  mRxOnWhenIdle : 1;  ///< RxOnWhenIdle mode.
     bool  mIsTimeSynced : 1;  ///< Host has calculated the time difference between host and RCP.
 
-    static bool sIsReady;           ///< NCP ready.
     static bool sSupportsLogStream; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
     static bool sSupportsResetToBootloader; ///< RCP supports resetting into bootloader mode.
     static bool sSupportsLogCrashDump;      ///< RCP supports logging a crash dump.
@@ -1311,7 +1296,7 @@ private:
     void                                        *mVendorRestorePropertiesContext;
 #endif
 
-    SpinelDriver mSpinelDriver;
+    SpinelDriver *mSpinelDriver;
 };
 
 } // namespace Spinel

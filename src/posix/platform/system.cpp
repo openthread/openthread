@@ -129,11 +129,21 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
+    CoprocessorType type;
+
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();
 #endif
 
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
+
+    type = platformSpinelManagerInit(get802154RadioUrl(aPlatformConfig));
+    if (type != OT_COPROCESSOR_RCP)
+    {
+        printf("Only RCP is supported!\n");
+        exit(OT_EXIT_FAILURE);
+    }
+
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 
     // For Dry-Run option, only init the radio.
@@ -266,6 +276,7 @@ void platformDeinit(void)
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+    platformSpinelManagerDeinit();
 
     // For Dry-Run option, only the radio is initialized.
     VerifyOrExit(!gDryRun);
@@ -343,6 +354,7 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(aMainloop);
 #else
+    platformSpinelManagerUpdateFdSet(aMainloop);
     platformRadioUpdateFdSet(aMainloop);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -406,6 +418,7 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeProcess(aInstance, aMainloop);
 #else
+    platformSpinelManagerProcess(aInstance, aMainloop);
     platformRadioProcess(aInstance, aMainloop);
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
