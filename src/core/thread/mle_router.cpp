@@ -3674,7 +3674,10 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
 
     // If assigning a new RLOC16 (e.g., on promotion of a child to
     // router role) we clear any address cache entries associated
-    // with the old RLOC16.
+    // with the old RLOC16 unless the sender is a direct child. For
+    // direct children, we retain the cache entries to allow
+    // association with the promoted router's new RLOC16 upon
+    // receiving its Link Advertisement.
 
     if ((aResponseStatus == ThreadStatusTlv::kSuccess) && (aRouter != nullptr))
     {
@@ -3684,6 +3687,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
         oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
         VerifyOrExit(oldRloc16 != aRouter->GetRloc16());
+        VerifyOrExit(!RouterIdMatch(oldRloc16, GetRloc16()));
         Get<AddressResolver>().RemoveEntriesForRloc16(oldRloc16);
     }
 
