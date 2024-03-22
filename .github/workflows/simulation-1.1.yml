@@ -247,6 +247,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        pip install bleak
     - name: Run
       run: |
         ulimit -c unlimited

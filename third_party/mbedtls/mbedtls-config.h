@@ -94,6 +94,7 @@
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 #define MBEDTLS_SSL_KEEP_PEER_CERTIFICATE
+#define MBEDTLS_GCM_C
 #endif
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -132,7 +133,9 @@
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 #endif
 
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+#define MBEDTLS_SSL_MAX_CONTENT_LEN      2000 /**< Maxium fragment length in bytes */
+#elif OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #define MBEDTLS_SSL_MAX_CONTENT_LEN      900 /**< Maxium fragment length in bytes */
 #else
 #define MBEDTLS_SSL_MAX_CONTENT_LEN      768 /**< Maxium fragment length in bytes */

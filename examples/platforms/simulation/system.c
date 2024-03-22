@@ -296,6 +296,10 @@ void otSysProcessDrivers(otInstance *aInstance)
     platformInfraIfUpdateFdSet(&read_fds, &write_fds, &max_fd);
 #endif
 
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+    platformBleUpdateFdSet(&read_fds, &write_fds, &timeout, &max_fd);
+#endif
+
     if (otTaskletsArePending(aInstance))
     {
         timeout.tv_sec  = 0;
@@ -308,6 +312,9 @@ void otSysProcessDrivers(otInstance *aInstance)
     {
         platformUartProcess();
         platformRadioProcess(aInstance, &read_fds, &write_fds);
+#if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
+        platformBleProcess(aInstance, &read_fds, &write_fds);
+#endif
     }
     else if (errno != EINTR)
     {
