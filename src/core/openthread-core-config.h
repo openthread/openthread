@@ -96,6 +96,7 @@
 #include "config/link_raw.h"
 #include "config/logging.h"
 #include "config/mac.h"
+#include "config/mdns.h"
 #include "config/mesh_diag.h"
 #include "config/mesh_forwarder.h"
 #include "config/misc.h"

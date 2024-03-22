@@ -723,6 +723,27 @@ target_link_libraries(ot-test-macros
 
 add_test(NAME ot-test-macros COMMAND ot-test-macros)
 
+add_executable(ot-test-mdns
+    test_mdns.cpp
+)
+
+target_include_directories(ot-test-mdns
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-mdns
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-mdns
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-mdns COMMAND ot-test-mdns)
+
 add_executable(ot-test-message
     test_message.cpp
 )

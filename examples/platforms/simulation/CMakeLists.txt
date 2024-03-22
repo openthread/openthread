@@ -69,6 +69,7 @@ add_library(openthread-simulation
     flash.c
     infra_if.c
     logging.c
+    mdns_socket.c
     misc.c
     multipan.c
     radio.c
