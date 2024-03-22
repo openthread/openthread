@@ -40,7 +40,7 @@
 #include <openthread/srp_client_buffers.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
@@ -51,11 +51,9 @@ namespace Cli {
  * Implements the SRP Client CLI interpreter.
  *
  */
-class SrpClient : private Output
+class SrpClient : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *

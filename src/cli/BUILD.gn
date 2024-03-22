@@ -55,8 +55,6 @@ openthread_cli_sources = [
   "cli_mac_filter.hpp",
   "cli_network_data.cpp",
   "cli_network_data.hpp",
-  "cli_output.cpp",
-  "cli_output.hpp",
   "cli_ping.cpp",
   "cli_ping.hpp",
   "cli_srp_client.cpp",
@@ -67,6 +65,8 @@ openthread_cli_sources = [
   "cli_tcp.hpp",
   "cli_udp.cpp",
   "cli_udp.hpp",
+  "cli_utils.cpp",
+  "cli_utils.hpp",
   "x509_cert_key.hpp",
 ]
 

@@ -99,7 +99,7 @@ static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
 Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : OutputImplementer(aCallback, aContext)
-    , Output(aInstance, *this)
+    , Utils(aInstance, *this)
     , mCommandIsPending(false)
     , mInternalDebugCommand(false)
     , mTimer(*aInstance, HandleTimer, this)
@@ -337,7 +337,7 @@ void Interpreter::ProcessLine(char *aBuf)
         VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
     }
 
-    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
+    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
     VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
 
     if (!mInternalDebugCommand)
@@ -408,26 +408,6 @@ otError Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLen
     return error;
 }
 
-otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArg == "enable")
-    {
-        aEnable = true;
-    }
-    else if (aArg == "disable")
-    {
-        aEnable = false;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-    return error;
-}
-
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
 otError Interpreter::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner)
@@ -441,7 +421,7 @@ otError Interpreter::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscern
 
     VerifyOrExit(separator != nullptr, error = OT_ERROR_NOT_FOUND);
 
-    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint8(separator + 1, aDiscerner.mLength));
+    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsUint8(separator + 1, aDiscerner.mLength));
     VerifyOrExit(aDiscerner.mLength > 0 && aDiscerner.mLength <= 64, error = OT_ERROR_INVALID_ARGS);
     *separator = '\0';
     error      = aArg.ParseAsUint64(aDiscerner.mValue);
@@ -8323,76 +8303,6 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
     Instance *instance = static_cast<Instance *>(aInstance);
 
     Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
-}
-
-otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler)
-{
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        aSetEnabledHandler(GetInstancePtr(), enable);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-    return error;
-}
-
-otError Interpreter::ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler)
-{
-    otError error = OT_ERROR_NONE;
-    bool    enable;
-
-    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
-    {
-        error = aSetEnabledHandler(GetInstancePtr(), enable);
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_COMMAND;
-    }
-
-    return error;
-}
-
-otError Interpreter::ProcessEnableDisable(Arg               aArgs[],
-                                          IsEnabledHandler  aIsEnabledHandler,
-                                          SetEnabledHandler aSetEnabledHandler)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
-    }
-    else
-    {
-        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
-    }
-
-    return error;
-}
-
-otError Interpreter::ProcessEnableDisable(Arg                       aArgs[],
-                                          IsEnabledHandler          aIsEnabledHandler,
-                                          SetEnabledHandlerFailable aSetEnabledHandler)
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgs[0].IsEmpty())
-    {
-        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
-    }
-    else
-    {
-        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
-    }
-
-    return error;
 }
 
 void Interpreter::OutputPrompt(void)

@@ -290,8 +290,7 @@ template <> otError Bbr::Process<Cmd("disable")>(Arg aArgs[])
  */
 template <> otError Bbr::Process<Cmd("jitter")>(Arg aArgs[])
 {
-    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otBackboneRouterGetRegistrationJitter,
-                                                       otBackboneRouterSetRegistrationJitter);
+    return ProcessGetSet(aArgs, otBackboneRouterGetRegistrationJitter, otBackboneRouterSetRegistrationJitter);
 }
 
 /**

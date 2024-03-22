@@ -38,7 +38,7 @@
 
 #include <openthread/netdata.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -47,11 +47,9 @@ namespace Cli {
  * Implements the Network Data CLI.
  *
  */
-class NetworkData : private Output
+class NetworkData : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * This constant specifies the string size for representing Network Data prefix/route entry flags.
      *

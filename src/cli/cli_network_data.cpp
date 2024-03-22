@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 NetworkData::NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     mFullCallbackWasCalled = false;

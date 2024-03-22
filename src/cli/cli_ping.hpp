@@ -38,7 +38,7 @@
 
 #include <openthread/ping_sender.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
@@ -50,11 +50,9 @@ namespace Cli {
  *
  */
 
-class PingSender : private Output
+class PingSender : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
