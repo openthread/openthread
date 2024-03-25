@@ -223,6 +223,17 @@ class Node(object):
     def set_channel(self, channel):
         self._cli_no_output('channel', channel)
 
+    def get_csl_config(self):
+        outputs = self.cli('csl')
+        result = {}
+        for line in outputs:
+            fields = line.split(':')
+            result[fields[0].strip()] = fields[1].strip()
+        return result
+
+    def set_csl_period(self, period):
+        self._cli_no_output('csl period', period)
+
     def get_ext_addr(self):
         return self._cli_single_output('extaddr')
 
@@ -965,7 +976,8 @@ def verify_within(condition_checker_func, wait_time, arg=None, delay_time=0.1):
         except VerifyError as e:
             if time.time() - start_time > wait_time:
                 print('Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time))
-                print(e.message)
+                if hasattr(e, 'message'):
+                    print(e.message)
                 raise e
         except BaseException:
             raise
