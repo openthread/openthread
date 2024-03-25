@@ -154,6 +154,7 @@
  * @}
  *
  * @defgroup api-sntp                 SNTP
+ * @defgroup api-verhoeff-checksum    Verhoeff Checksum
  *
  * @}
  *

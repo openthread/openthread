@@ -360,6 +360,7 @@ openthread_core_files = [
   "api/thread_ftd_api.cpp",
   "api/trel_api.cpp",
   "api/udp_api.cpp",
+  "api/verhoeff_checksum_api.cpp",
   "backbone_router/backbone_tmf.cpp",
   "backbone_router/backbone_tmf.hpp",
   "backbone_router/bbr_leader.cpp",
@@ -736,6 +737,8 @@ openthread_core_files = [
   "utils/slaac_address.hpp",
   "utils/srp_client_buffers.cpp",
   "utils/srp_client_buffers.hpp",
+  "utils/verhoeff_checksum.cpp",
+  "utils/verhoeff_checksum.hpp",
 ]
 
 openthread_radio_sources = [
