@@ -32,8 +32,8 @@
  *   This file includes the platform-specific initializers.
  */
 
-#ifndef PLATFORM_POSIX_H_
-#define PLATFORM_POSIX_H_
+#ifndef OT_PLATFORM_POSIX_H_
+#define OT_PLATFORM_POSIX_H_
 
 #include "openthread-posix-config.h"
 
@@ -424,4 +424,4 @@ void platformBacktraceInit(void);
 #ifdef __cplusplus
 }
 #endif
-#endif // PLATFORM_POSIX_H_
+#endif // OT_PLATFORM_POSIX_H_

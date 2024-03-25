@@ -581,6 +581,15 @@ private:
     static_assert(kPolicyEvaluationMaxDelay > kPolicyEvaluationMinDelay,
                   "kPolicyEvaluationMaxDelay must be larger than kPolicyEvaluationMinDelay");
 
+    using Option                 = Ip6::Nd::Option;
+    using PrefixInfoOption       = Ip6::Nd::PrefixInfoOption;
+    using RouteInfoOption        = Ip6::Nd::RouteInfoOption;
+    using RaFlagsExtOption       = Ip6::Nd::RaFlagsExtOption;
+    using RouterAdvert           = Ip6::Nd::RouterAdvert;
+    using NeighborAdvertMessage  = Ip6::Nd::NeighborAdvertMessage;
+    using NeighborSolicitMessage = Ip6::Nd::NeighborSolicitMessage;
+    using RouterSolicitMessage   = Ip6::Nd::RouterSolicitMessage;
+
     enum RouterAdvTxMode : uint8_t // Used in `SendRouterAdvertisement()`
     {
         kInvalidateAllPrevPrefixes,
@@ -630,9 +639,8 @@ private:
     public:
         explicit DiscoveredPrefixTable(Instance &aInstance);
 
-        void ProcessRouterAdvertMessage(const Ip6::Nd::RouterAdvertMessage &aRaMessage,
-                                        const Ip6::Address                 &aSrcAddress);
-        void ProcessNeighborAdvertMessage(const Ip6::Nd::NeighborAdvertMessage &aNaMessage);
+        void ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage, const Ip6::Address &aSrcAddress);
+        void ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage);
 
         bool ContainsDefaultOrNonUlaRoutePrefix(void) const;
         bool ContainsNonUlaOnLinkPrefix(void) const;
@@ -648,7 +656,7 @@ private:
 
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
-        void DetermineAndSetFlags(Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
+        void DetermineAndSetFlags(RouterAdvert::Header &aHeader) const;
 
         void  InitIterator(PrefixTableIterator &aIterator) const;
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
@@ -724,9 +732,9 @@ private:
                 TimeMilli mNow;
             };
 
-            void               SetFrom(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader);
-            void               SetFrom(const Ip6::Nd::PrefixInfoOption &aPio);
-            void               SetFrom(const Ip6::Nd::RouteInfoOption &aRio);
+            void               SetFrom(const RouterAdvert::Header &aRaHeader);
+            void               SetFrom(const PrefixInfoOption &aPio);
+            void               SetFrom(const RouteInfoOption &aRio);
             Type               GetType(void) const { return mType; }
             bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
             bool               IsRoutePrefix(void) const { return (mType == kTypeRoute); }
@@ -824,10 +832,10 @@ private:
             void SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
-        void         ProcessRaHeader(const Ip6::Nd::RouterAdvertMessage::Header &aRaHeader, Router &aRouter);
-        void         ProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, Router &aRouter);
-        void         ProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, Router &aRouter);
-        void         ProcessRaFlagsExtOption(const Ip6::Nd::RaFlagsExtOption &aFlagsOption, Router &aRouter);
+        void         ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
+        void         ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
+        void         ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+        void         ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
         bool         Contains(const Entry::Checker &aChecker) const;
         void         RemovePrefix(const Entry::Matcher &aMatcher);
         void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
@@ -951,7 +959,7 @@ private:
         bool               IsInitalEvaluationDone(void) const;
         void               HandleDiscoveredPrefixTableChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
-        void               AppendAsPiosTo(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
         bool               IsPublishingOrAdvertising(void) const;
         void               HandleNetDataChange(void);
         void               HandleExtPanIdChange(void);
@@ -980,8 +988,8 @@ private:
         void  PublishAndAdvertise(void);
         void  Deprecate(void);
         void  ResetExpireTime(TimeMilli aNow);
-        void  AppendCurPrefix(Ip6::Nd::RouterAdvertMessage &aRaMessage);
-        void  AppendOldPrefixes(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        Error AppendCurPrefix(RouterAdvert::TxMessage &aRaMessage);
+        Error AppendOldPrefixes(RouterAdvert::TxMessage &aRaMessage);
         void  DeprecateOldPrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
         void  SavePrefix(const Ip6::Prefix &aPrefix, TimeMilli aExpireTime);
 
@@ -1013,8 +1021,8 @@ private:
         void            SetPreference(RoutePreference aPreference);
         void            ClearPreference(void);
         void            HandleRoleChanged(void);
-        void            AppendRios(Ip6::Nd::RouterAdvertMessage &aRaMessage);
-        void            InvalidatPrevRios(Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        Error           AppendRios(RouterAdvert::TxMessage &aRaMessage);
+        Error           InvalidatPrevRios(RouterAdvert::TxMessage &aRaMessage);
         bool            HasAdvertised(const Ip6::Prefix &aPrefix) const { return mPrefixes.ContainsMatching(aPrefix); }
         uint16_t        GetAdvertisedRioCount(void) const { return mPrefixes.GetLength(); }
         void            HandleTimer(void);
@@ -1041,9 +1049,9 @@ private:
             void Add(const Ip6::Prefix &aPrefix);
         };
 
-        void SetPreferenceBasedOnRole(void);
-        void UpdatePreference(RoutePreference aPreference);
-        void AppendRio(const Ip6::Prefix &aPrefix, uint32_t aRouteLifetime, Ip6::Nd::RouterAdvertMessage &aRaMessage);
+        void  SetPreferenceBasedOnRole(void);
+        void  UpdatePreference(RoutePreference aPreference);
+        Error AppendRio(const Ip6::Prefix &aPrefix, uint32_t aRouteLifetime, RouterAdvert::TxMessage &aRaMessage);
 
         using RioTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRioAdvertiserimer>;
 
@@ -1167,11 +1175,11 @@ private:
         {
         }
 
-        Ip6::Nd::RouterAdvertMessage::Header mHeader;
-        TimeMilli                            mHeaderUpdateTime;
-        bool                                 mIsHeaderFromHost;
-        uint32_t                             mTxCount;
-        TimeMilli                            mLastTxTime;
+        RouterAdvert::Header mHeader;
+        TimeMilli            mHeaderUpdateTime;
+        bool                 mIsHeaderFromHost;
+        uint32_t             mTxCount;
+        TimeMilli            mLastTxTime;
     };
 
     void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
@@ -1246,7 +1254,7 @@ private:
         }
 
     private:
-        Error Process(const Ip6::Nd::RouterAdvertMessage &aMessage);
+        Error Process(const RouterAdvert::RxMessage &aMessage);
         void  EvaluateStateChange(Dhcp6PdState aOldState);
         void  WithdrawPrefix(void);
         void  StartStop(bool aStart);
@@ -1282,17 +1290,17 @@ private:
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
-    bool ShouldProcessPrefixInfoOption(const Ip6::Nd::PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
-    bool ShouldProcessRouteInfoOption(const Ip6::Nd::RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
+    bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
+    bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool NetworkDataContainsUlaRoute(void) const;
-    void UpdateRouterAdvertHeader(const Ip6::Nd::RouterAdvertMessage *aRouterAdvertMessage);
-    bool IsReceivedRouterAdvertFromManager(const Ip6::Nd::RouterAdvertMessage &aRaMessage) const;
+    void UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRouterAdvertMessage);
+    bool IsReceivedRouterAdvertFromManager(const RouterAdvert::RxMessage &aRaMessage) const;
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
-    static bool IsValidOnLinkPrefix(const Ip6::Nd::PrefixInfoOption &aPio);
+    static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
     static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);

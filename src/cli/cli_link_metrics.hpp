@@ -38,7 +38,7 @@
 
 #include <openthread/link_metrics.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
@@ -50,11 +50,9 @@ namespace Cli {
  *
  */
 
-class LinkMetrics : private Output
+class LinkMetrics : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *

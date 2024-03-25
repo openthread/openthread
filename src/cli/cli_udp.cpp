@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 UdpExample::UdpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mLinkSecurityEnabled(true)
 {
     ClearAllBytes(mSocket);
@@ -408,7 +408,7 @@ otError UdpExample::PrepareHexStringPayload(otMessage &aMessage, const char *aHe
     while (!done)
     {
         length = sizeof(buf);
-        error  = Utils::CmdLineParser::ParseAsHexStringSegment(aHexString, length, buf);
+        error  = ot::Utils::CmdLineParser::ParseAsHexStringSegment(aHexString, length, buf);
 
         VerifyOrExit((error == OT_ERROR_NONE) || (error == OT_ERROR_PENDING));
         done = (error == OT_ERROR_NONE);

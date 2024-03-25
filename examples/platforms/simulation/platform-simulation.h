@@ -159,7 +159,7 @@ void platformRadioDeinit(void);
 void platformRadioReceive(otInstance *aInstance, uint8_t *aBuf, uint16_t aBufLength);
 
 /**
- * Updates the file descriptor sets with file descriptors used by the radio driver.
+ * Updates the file descriptor sets with file descriptors used by the BLE radio driver.
  *
  * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
  * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
@@ -304,5 +304,68 @@ void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct tim
 void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+/**
+ * Initializes the platform infra-if module.
+ *
+ */
+void platformInfraIfInit(void);
+
+/**
+ * Shuts down the platform infra-if module.
+ *
+ */
+void platformInfraIfDeinit(void);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the infra-if module
+ *
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformInfraIfUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd);
+
+/**
+ * Performs infra-if module processing.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in]  aWriteFdSet  A pointer to the write file descriptors.
+ *
+ */
+void platformInfraIfProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+/**
+ * Shuts down the BLE service used by OpenThread.
+ *
+ */
+void platformBleDeinit(void);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the radio driver.
+ *
+ * @param[in,out]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in,out]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[in,out]  aTimeout     A pointer to the timeout.
+ * @param[in,out]  aMaxFd       A pointer to the max file descriptor.
+ *
+ */
+void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd);
+
+/**
+ * Performs BLE driver processing.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[in]  aWriteFdSet  A pointer to the write file descriptors.
+ *
+ */
+void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
 
 #endif // PLATFORM_SIMULATION_H_

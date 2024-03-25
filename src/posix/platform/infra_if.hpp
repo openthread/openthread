@@ -31,15 +31,20 @@
  *   This file implements the infrastructure interface for posix.
  */
 
+#ifndef OT_POSIX_PLATFORM_INFRA_IF_HPP_
+#define OT_POSIX_PLATFORM_INFRA_IF_HPP_
+
 #include "openthread-posix-config.h"
 
 #include <net/if.h>
 #include <openthread/nat64.h>
 #include <openthread/openthread-system.h>
 
-#include "multicast_routing.hpp"
 #include "core/common/non_copyable.hpp"
-#include "posix/platform/mainloop.hpp"
+
+#include "logger.hpp"
+#include "mainloop.hpp"
+#include "multicast_routing.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 
@@ -50,9 +55,11 @@ namespace Posix {
  * Manages infrastructure network interface.
  *
  */
-class InfraNetif : public Mainloop::Source, private NonCopyable
+class InfraNetif : public Mainloop::Source, public Logger<InfraNetif>, private NonCopyable
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Updates the fd_set and timeout for mainloop.
      *
@@ -220,8 +227,12 @@ private:
     static const uint8_t      kValidNat64PrefixLength[];
 
     char     mInfraIfName[IFNAMSIZ];
-    uint32_t mInfraIfIndex  = 0;
-    int      mNetLinkSocket = -1;
+    uint32_t mInfraIfIndex = 0;
+
+#ifdef __linux__
+    int mNetLinkSocket = -1;
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     int mInfraIfIcmp6Socket = -1;
 #endif
@@ -229,7 +240,10 @@ private:
     MulticastRoutingManager mMulticastRoutingManager;
 #endif
 
-    void        ReceiveNetLinkMessage(void);
+#ifdef __linux__
+    void ReceiveNetLinkMessage(void);
+#endif
+
     bool        HasLinkLocalAddress(void) const;
     static void DiscoverNat64PrefixDone(union sigval sv);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
@@ -241,3 +255,5 @@ private:
 } // namespace Posix
 } // namespace ot
 #endif // OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+
+#endif // OT_POSIX_PLATFORM_INFRA_IF_HPP_

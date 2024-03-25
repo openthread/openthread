@@ -85,8 +85,8 @@ static constexpr char kNullChar = '\0'; ///< null character.
  * @param[in] aString      A pointer to the string.
  * @param[in] aMaxLength   The maximum length in bytes.
  *
- * @returns The number of characters that precede the terminating null character or @p aMaxLength, whichever is
- *          smaller.
+ * @returns The number of characters that precede the terminating null character or @p aMaxLength,
+ *          whichever is smaller. `0` if @p aString is `nullptr`.
  *
  */
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);

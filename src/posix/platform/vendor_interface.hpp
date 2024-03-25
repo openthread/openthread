@@ -31,8 +31,8 @@
  *   This file includes definitions for the vendor interface to radio (RCP).
  */
 
-#ifndef POSIX_APP_VENDOR_INTERFACE_HPP_
-#define POSIX_APP_VENDOR_INTERFACE_HPP_
+#ifndef OT_POSIX_APP_VENDOR_INTERFACE_HPP_
+#define OT_POSIX_APP_VENDOR_INTERFACE_HPP_
 
 #include "openthread-posix-config.h"
 
@@ -171,4 +171,4 @@ public:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_APP_VENDOR_INTERFACE_HPP_
+#endif // OT_POSIX_APP_VENDOR_INTERFACE_HPP_

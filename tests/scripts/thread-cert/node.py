@@ -1712,6 +1712,10 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_key_switch_guardtime(self):
+        self.send_command('keysequence guardtime')
+        return int(self._expect_result(r'\d+'))
+
     def set_key_switch_guardtime(self, key_switch_guardtime):
         cmd = 'keysequence guardtime %d' % key_switch_guardtime
         self.send_command(cmd)
@@ -2695,7 +2699,7 @@ class NodeImpl:
         self.send_command('dataset commit pending')
         self._expect_done()
 
-    def start_dataset_updater(self, panid=None, channel=None):
+    def start_dataset_updater(self, panid=None, channel=None, security_policy=None, delay=None):
         self.send_command('dataset clear')
         self._expect_done()
 
@@ -2706,6 +2710,18 @@ class NodeImpl:
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect_done()
+
+        if security_policy is not None:
+            cmd = 'dataset securitypolicy %d %s ' % (security_policy[0], security_policy[1])
+            if (len(security_policy) >= 3):
+                cmd += '%d ' % (security_policy[2])
+            self.send_command(cmd)
+            self._expect_done()
+
+        if delay is not None:
+            cmd = 'dataset delay %d ' % delay
             self.send_command(cmd)
             self._expect_done()
 

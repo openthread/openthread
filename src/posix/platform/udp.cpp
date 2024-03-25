@@ -69,10 +69,6 @@ void *FdToHandle(int aFd) { return reinterpret_cast<void *>(aFd); }
 
 int FdFromHandle(void *aHandle) { return static_cast<int>(reinterpret_cast<long>(aHandle)); }
 
-bool IsLinkLocal(const struct in6_addr &aAddress) { return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80; }
-
-bool IsMulticast(const otIp6Address &aAddress) { return aAddress.mFields.m8[0] == 0xff; }
-
 otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
 #ifdef __APPLE__
@@ -93,9 +89,9 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);
     peerAddr.sin6_family = AF_INET6;
-    memcpy(&peerAddr.sin6_addr, &aMessageInfo.mPeerAddr, sizeof(peerAddr.sin6_addr));
+    CopyIp6AddressTo(aMessageInfo.mPeerAddr, &peerAddr.sin6_addr);
 
-    if (IsLinkLocal(peerAddr.sin6_addr) && !aMessageInfo.mIsHostInterface)
+    if (IsIp6AddressLinkLocal(aMessageInfo.mPeerAddr) && !aMessageInfo.mIsHostInterface)
     {
         // sin6_scope_id only works for link local destinations
         peerAddr.sin6_scope_id = gNetifIndex;
@@ -127,8 +123,7 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
         controlLength += CMSG_SPACE(sizeof(int));
     }
 
-    if (!IsMulticast(aMessageInfo.mSockAddr) &&
-        memcmp(&aMessageInfo.mSockAddr, &in6addr_any, sizeof(aMessageInfo.mSockAddr)))
+    if (!IsIp6AddressMulticast(aMessageInfo.mSockAddr) && !IsIp6AddressUnspecified(aMessageInfo.mSockAddr))
     {
         struct in6_pktinfo pktinfo;
 
@@ -139,7 +134,7 @@ otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMes
 
         pktinfo.ipi6_ifindex = aMessageInfo.mIsHostInterface ? 0 : gNetifIndex;
 
-        memcpy(&pktinfo.ipi6_addr, &aMessageInfo.mSockAddr, sizeof(pktinfo.ipi6_addr));
+        CopyIp6AddressTo(aMessageInfo.mSockAddr, &pktinfo.ipi6_addr);
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
 
         controlLength += CMSG_SPACE(sizeof(pktinfo));
@@ -206,13 +201,13 @@ otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageIn
                 memcpy(&pktinfo, CMSG_DATA(cmsg), sizeof(pktinfo));
 
                 aMessageInfo.mIsHostInterface = (pktinfo.ipi6_ifindex != gNetifIndex);
-                memcpy(&aMessageInfo.mSockAddr, &pktinfo.ipi6_addr, sizeof(aMessageInfo.mSockAddr));
+                ReadIp6AddressFrom(&pktinfo.ipi6_addr, aMessageInfo.mSockAddr);
             }
         }
     }
 
     aMessageInfo.mPeerPort = ntohs(peerAddr.sin6_port);
-    memcpy(&aMessageInfo.mPeerAddr, &peerAddr.sin6_addr, sizeof(aMessageInfo.mPeerAddr));
+    ReadIp6AddressFrom(&peerAddr.sin6_addr, aMessageInfo.mPeerAddr);
 
 exit:
     return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
@@ -270,7 +265,8 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
         memset(&sin6, 0, sizeof(struct sockaddr_in6));
         sin6.sin6_port   = htons(aUdpSocket->mSockName.mPort);
         sin6.sin6_family = AF_INET6;
-        memcpy(&sin6.sin6_addr, &aUdpSocket->mSockName.mAddress, sizeof(sin6.sin6_addr));
+        CopyIp6AddressTo(aUdpSocket->mSockName.mAddress, &sin6.sin6_addr);
+
         VerifyOrExit(0 == bind(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)), error = OT_ERROR_FAILED);
     }
 
@@ -283,7 +279,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 exit:
     if (error == OT_ERROR_FAILED)
     {
-        otLogCritPlat("Failed to bind UDP socket: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("Failed to bind UDP socket: %s", strerror(errno));
     }
 
     return error;
@@ -325,7 +321,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         if (otSysGetInfraNetifName() == nullptr || otSysGetInfraNetifName()[0] == '\0')
         {
-            otLogWarnPlat("No backbone interface given, %s fails.", __func__);
+            ot::Posix::Udp::LogWarn("No backbone interface given, %s fails.", __func__);
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 #ifdef __linux__
@@ -358,8 +354,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
     otError             error = OT_ERROR_NONE;
     struct sockaddr_in6 sin6;
     int                 fd;
-    bool isDisconnect = memcmp(&aUdpSocket->mPeerName.mAddress, &in6addr_any, sizeof(in6addr_any)) == 0 &&
-                        aUdpSocket->mPeerName.mPort == 0;
+    bool isDisconnect = IsIp6AddressUnspecified(aUdpSocket->mPeerName.mAddress) && (aUdpSocket->mPeerName.mPort == 0);
 
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
 
@@ -367,10 +362,11 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
     memset(&sin6, 0, sizeof(struct sockaddr_in6));
     sin6.sin6_port = htons(aUdpSocket->mPeerName.mPort);
+
     if (!isDisconnect)
     {
         sin6.sin6_family = AF_INET6;
-        memcpy(&sin6.sin6_addr, &aUdpSocket->mPeerName.mAddress, sizeof(sin6.sin6_addr));
+        CopyIp6AddressTo(aUdpSocket->mPeerName.mAddress, &sin6.sin6_addr);
     }
     else
     {
@@ -382,7 +378,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
         if (getsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, &len) != 0)
         {
-                      otLogWarnPlat("Failed to read socket bound device: %s", strerror(errno));
+                      ot::Posix::Udp::LogWarn("Failed to read socket bound device: %s", strerror(errno));
                       len = 0;
         }
 
@@ -396,7 +392,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
         {
                       fd = FdFromHandle(aUdpSocket->mHandle);
                       VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
-                          otLogWarnPlat("Failed to bind to device: %s", strerror(errno));
+                          ot::Posix::Udp::LogWarn("Failed to bind to device: %s", strerror(errno));
                           error = OT_ERROR_FAILED;
                       });
         }
@@ -410,8 +406,9 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 #ifdef __APPLE__
         VerifyOrExit(errno == EAFNOSUPPORT && isDisconnect);
 #endif
-        otLogWarnPlat("Failed to connect to [%s]:%u: %s", Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
-                      aUdpSocket->mPeerName.mPort, strerror(errno));
+        ot::Posix::Udp::LogWarn("Failed to connect to [%s]:%u: %s",
+                                Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
+                                aUdpSocket->mPeerName.mPort, strerror(errno));
         error = OT_ERROR_FAILED;
     }
 
@@ -468,7 +465,7 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
-    memcpy(&mreq.ipv6mr_multiaddr, aAddress->mFields.m8, sizeof(mreq.ipv6mr_multiaddr));
+    CopyIp6AddressTo(*aAddress, &mreq.ipv6mr_multiaddr);
 
     switch (aNetifIdentifier)
     {
@@ -492,8 +489,9 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("IPV6_JOIN_GROUP failed: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("IPV6_JOIN_GROUP failed: %s", strerror(errno));
     }
+
     return error;
 }
 
@@ -508,7 +506,7 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
     VerifyOrExit(aUdpSocket->mHandle != nullptr, error = OT_ERROR_INVALID_ARGS);
     fd = FdFromHandle(aUdpSocket->mHandle);
 
-    memcpy(&mreq.ipv6mr_multiaddr, aAddress->mFields.m8, sizeof(mreq.ipv6mr_multiaddr));
+    CopyIp6AddressTo(*aAddress, &mreq.ipv6mr_multiaddr);
 
     switch (aNetifIdentifier)
     {
@@ -532,13 +530,16 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("IPV6_LEAVE_GROUP failed: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("IPV6_LEAVE_GROUP failed: %s", strerror(errno));
     }
+
     return error;
 }
 
 namespace ot {
 namespace Posix {
+
+const char Udp::kLogModuleName[] = "Udp";
 
 void Udp::Update(otSysMainloopContext &aContext)
 {

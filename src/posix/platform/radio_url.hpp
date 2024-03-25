@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_RADIO_URL_HPP_
-#define POSIX_PLATFORM_RADIO_URL_HPP_
+#ifndef OT_POSIX_PLATFORM_RADIO_URL_HPP_
+#define OT_POSIX_PLATFORM_RADIO_URL_HPP_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,4 +78,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_RADIO_URL_HPP_
+#endif // OT_POSIX_PLATFORM_RADIO_URL_HPP_

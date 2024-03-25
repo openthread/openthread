@@ -199,7 +199,10 @@ public:
     /**
      * Looks up the RLOC16 for a given EID in the address cache.
      *
-     * @param[in]   aEid                A reference to the EID.
+     * When a cache entry is successfully looked up using this method, it will be marked as "cached and in-use".
+     * Specifically, a snooped entry (`kStateSnooped`) will be marked as cached (`kStateCached`).
+     *
+     * @param[in]   aEid   A reference to the EID to lookup.
      *
      * @returns The RLOC16 mapping to @p aEid or `Mac::kShortAddrInvalid` if it is not found in the address cache.
      *

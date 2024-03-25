@@ -61,7 +61,7 @@ const int TcpExample::sCipherSuites[] = {MBEDTLS_TLS_ECJPAKE_WITH_AES_128_CCM_8,
 #endif
 
 TcpExample::TcpExample(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mInitialized(false)
     , mEndpointConnected(false)
     , mEndpointConnectedFastOpen(false)

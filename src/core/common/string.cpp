@@ -89,13 +89,16 @@ exit:
 
 uint16_t StringLength(const char *aString, uint16_t aMaxLength)
 {
-    uint16_t ret;
+    uint16_t ret = 0;
 
-    for (ret = 0; (ret < aMaxLength) && (aString[ret] != kNullChar); ret++)
+    VerifyOrExit(aString != nullptr);
+
+    for (; (ret < aMaxLength) && (aString[ret] != kNullChar); ret++)
     {
         // Empty loop.
     }
 
+exit:
     return ret;
 }
 

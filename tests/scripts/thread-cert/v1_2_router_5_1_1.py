@@ -79,7 +79,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Challenge)
         msg.assertMleMessageContainsTlv(mle.ScanMask)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
+        self.assertGreaterEqual(msg.get_mle_message_tlv(mle.Version).version, config.THREAD_VERSION_1_2)
 
         scan_mask_tlv = msg.get_mle_message_tlv(mle.ScanMask)
         self.assertEqual(1, scan_mask_tlv.router)
@@ -97,7 +97,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.LinkMargin)
         msg.assertMleMessageContainsTlv(mle.Connectivity)
         msg.assertMleMessageContainsTlv(mle.Version)
-        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
+        self.assertGreaterEqual(msg.get_mle_message_tlv(mle.Version).version, config.THREAD_VERSION_1_2)
 
         # 4 - Router_1 receives the MLE Parent Response and sends a Child ID Request
         msg = router_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
@@ -110,7 +110,7 @@ class Router_5_1_01(thread_cert.TestCase):
         msg.assertMleMessageContainsTlv(mle.Version)
         msg.assertMleMessageContainsTlv(mle.TlvRequest)
         msg.assertMleMessageDoesNotContainTlv(mle.AddressRegistration)
-        assert msg.get_mle_message_tlv(mle.Version).version >= config.THREAD_VERSION_1_2
+        self.assertGreaterEqual(msg.get_mle_message_tlv(mle.Version).version, config.THREAD_VERSION_1_2)
 
         # 5 - Leader responds with a Child ID Response
         msg = leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)

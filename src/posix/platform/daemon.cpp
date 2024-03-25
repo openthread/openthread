@@ -75,6 +75,8 @@ void GetFilename(Filename &aFilename, const char *aPattern)
 
 } // namespace
 
+const char Daemon::kLogModuleName[] = "Daemon";
+
 int Daemon::OutputFormat(const char *aFormat, ...)
 {
     int     ret;
@@ -97,7 +99,7 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
                   "OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH is too short!");
 
     rval = vsnprintf(buf, sizeof(buf), aFormat, aArguments);
-    VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
+    VerifyOrExit(rval >= 0, LogWarn("Failed to format CLI output: %s", strerror(errno)));
 
     if (rval >= static_cast<int>(sizeof(buf)))
     {
@@ -116,7 +118,7 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 
     if (rval < 0)
     {
-        otLogWarnPlat("Failed to write CLI output: %s", strerror(errno));
+        LogWarn("Failed to write CLI output: %s", strerror(errno));
         close(mSessionSocket);
         mSessionSocket = -1;
     }
@@ -160,7 +162,7 @@ void Daemon::InitializeSessionSocket(void)
 exit:
     if (rval == -1)
     {
-        otLogWarnPlat("Failed to initialize session socket: %s", strerror(errno));
+        LogWarn("Failed to initialize session socket: %s", strerror(errno));
         if (newSessionSocket != -1)
         {
             close(newSessionSocket);
@@ -168,7 +170,7 @@ exit:
     }
     else
     {
-        otLogInfoPlat("Session socket is ready");
+        LogInfo("Session socket is ready");
     }
 }
 
@@ -184,6 +186,7 @@ void Daemon::createListenSocketOrDie(void)
     // This returns the init-managed stream socket which is already bind to
     // /dev/socket/ot-daemon/<interface-name>.sock
     mListenSocket = android_get_control_socket(socketFile);
+
     if (mListenSocket == -1)
     {
         DieNowWithMessage("android_get_control_socket", OT_EXIT_ERROR_ERRNO);
@@ -284,18 +287,13 @@ void Daemon::SetUp(void)
         DieNowWithMessage("listen", OT_EXIT_ERROR_ERRNO);
     }
 
+exit:
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_CLI_ENABLE
-    otCliInit(
-        gInstance,
-        [](void *aContext, const char *aFormat, va_list aArguments) -> int {
-            return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
-        },
-        this);
+    otSysCliInitUsingDaemon(gInstance);
 #endif
 
     Mainloop::Manager::Get().Add(*this);
 
-exit:
     return;
 }
 
@@ -322,7 +320,7 @@ void Daemon::TearDown(void)
         Filename sockfile;
 
         GetFilename(sockfile, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-        otLogDebgPlat("Removing daemon socket: %s", sockfile);
+        LogDebg("Removing daemon socket: %s", sockfile);
         (void)unlink(sockfile);
     }
 
@@ -404,7 +402,7 @@ void Daemon::Process(const otSysMainloopContext &aContext)
         {
             if (rval < 0)
             {
-                otLogWarnPlat("Daemon read: %s", strerror(errno));
+                LogWarn("Daemon read: %s", strerror(errno));
             }
             close(mSessionSocket);
             mSessionSocket = -1;

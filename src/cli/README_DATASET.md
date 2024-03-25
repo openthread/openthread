@@ -107,6 +107,58 @@ After the device successfully attaches to a Thread network, the device will retr
    Done
    ```
 
+### Using the Dataset Updater to update Operational Dataset
+
+Dataset Updater can be used for a delayed update of network parameters on all devices of a Thread Network.
+
+1. Clear the dataset buffer and add the Dataset fields to update.
+
+   ```bash
+   > dataset clear
+   Done
+
+   > dataset channel 12
+   Done
+   ```
+
+2. Set the delay timer parameter (example uses 5 minutes or 300000 ms). Check the resulting dataset. There is no need to specify active or pending timestamps because the Dataset Updater will handle this. If specified the `dataset updater start` will issue an error.
+
+   ```bash
+   > dataset delay 300000
+
+   > dataset
+   Channel: 12
+   Delay: 30000
+   Done
+   ```
+
+3. Start the Dataset Updater, which will prepare a Pending Operation Dataset and inform the Leader to distribute it to other devices.
+
+   ```bash
+   > dataset updater start
+   Done
+
+   > dataset updater
+   Enabled
+   ```
+
+4. After about 5 minutes, the changes are applied to the Active Operational Dataset on the Leader. This can also be checked at other devices on the network: these should have applied the new Dataset too, at approximately the same time as the Leader has done this.
+
+   ```bash
+   > dataset active
+   Active Timestamp: 10
+   Channel: 12
+   Channel Mask: 0x07fff800
+   Ext PAN ID: 324a71d90cdc8345
+   Mesh Local Prefix: fd7d:da74:df5e:80c::/64
+   Network Key: be768535bac1b8d228960038311d6ca2
+   Network Name: OpenThread-bcaf
+   PAN ID: 0xbcaf
+   PSKc: e79b274ab22414a814ed5cce6a30be67
+   Security Policy: 672 onrc 0
+   Done
+   ```
+
 ### Using the Pending Operational Dataset for Delayed Dataset Updates
 
 The Pending Operational Dataset can be used for a delayed update of network parameters on all devices of a Thread Network. If certain Active Operational Dataset parameters need to be changed, but the change would impact the connectivity of the network, delaying the update helps to let all devices receive the new parameters before the update is applied. Examples of such parameters are the channel, PAN ID, certain Security Policy bits, or Network Key.
@@ -241,6 +293,7 @@ Normally, an active Commissioner will set a new Pending Operational Dataset. For
 - [pskc](#pskc)
 - [securitypolicy](#securitypolicy)
 - [tlvs](#tlvs)
+- [updater](#updater)
 
 ## Command Details
 
@@ -693,5 +746,76 @@ Done
 
 > dataset tlvs
 0e080000000000010000000300001635060004001fffe00208d196fa2040e973b60708fdbbc310c48f3a3905109929154dbc363218bcd22f907caf5c15030f4f70656e5468726561642d646532620102de2b041015b2c16f7ba92ed4bc7b1ee054f1553f0c0402a0f7f8
+Done
+```
+
+### updater
+
+Usage: `dataset updater`
+
+Requires `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE`.
+
+Indicate whether there is an ongoing Operation Dataset update request.
+
+```bash
+> dataset updater
+Enabled
+```
+
+### updater start
+
+Usage: `dataset updater start`
+
+Requires `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE`.
+
+Request network to update its Operation Dataset to the current operational dataset buffer.
+
+The current operational dataset buffer should contain the fields to be updated with their new values. It must not contain Active or Pending Timestamp fields. The Delay field is optional. If not provided, a default value (1000 ms) is used.
+
+```bash
+> channel
+19
+Done
+
+> dataset clear
+Done
+> dataset channel 15
+Done
+> dataset
+Channel: 15
+Done
+
+> dataset updater start
+Done
+> dataset updater
+Enabled
+Done
+
+Dataset update complete: OK
+
+> channel
+15
+Done
+```
+
+### updater cancel
+
+Usage: `dataset updater cancel`
+
+Requires `OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE`.
+
+Cancels an ongoing (if any) Operational Dataset update request.
+
+```bash
+> dataset updater start
+Done
+> dataset updater
+Enabled
+Done
+>
+> dataset updater cancel
+Done
+> dataset updater
+Disabled
 Done
 ```

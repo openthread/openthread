@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_CONFIGURATION_HPP_
-#define POSIX_PLATFORM_CONFIGURATION_HPP_
+#ifndef OT_POSIX_PLATFORM_CONFIGURATION_HPP_
+#define OT_POSIX_PLATFORM_CONFIGURATION_HPP_
 
 #include "openthread-posix-config.h"
 
@@ -41,7 +41,9 @@
 #include <openthread/platform/radio.h>
 
 #include "config_file.hpp"
+#include "logger.hpp"
 #include "power.hpp"
+
 #include "common/code_utils.hpp"
 
 namespace ot {
@@ -51,9 +53,11 @@ namespace Posix {
  * Updates the target power table and calibrated power table to the RCP.
  *
  */
-class Configuration
+class Configuration : public Logger<Configuration>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     Configuration(void)
         : mFactoryConfigFile(OPENTHREAD_POSIX_CONFIG_FACTORY_CONFIG_FILE)
         , mProductConfigFile(OPENTHREAD_POSIX_CONFIG_PRODUCT_CONFIG_FILE)
@@ -150,4 +154,4 @@ private:
 } // namespace ot
 
 #endif // OPENTHREAD_POSIX_CONFIG_CONFIGURATION_FILE_ENABLE
-#endif // POSIX_PLATFORM_CONFIGURATION_HPP_
+#endif // OT_POSIX_PLATFORM_CONFIGURATION_HPP_

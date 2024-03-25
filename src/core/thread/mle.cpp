@@ -378,7 +378,7 @@ void Mle::Restore(void)
 
     SuccessOrExit(Get<Settings>().Read(networkInfo));
 
-    Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
+    Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence(), KeyManager::kForceUpdate);
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetAllMacFrameCounters(networkInfo.GetMacFrameCounter(), /* aSetIfLarger */ false);
 
@@ -2052,8 +2052,13 @@ Error Mle::SendChildUpdateRequest(ChildUpdateRequestMode aMode)
         ExitNow();
     }
 
-    mChildUpdateRequestState = kChildUpdateRequestActive;
-    ScheduleMessageTransmissionTimer();
+    if (aMode != kAppendZeroTimeout)
+    {
+        // Enable MLE retransmissions on all Child Update Request
+        // messages, except when actively detaching.
+        mChildUpdateRequestState = kChildUpdateRequestActive;
+        ScheduleMessageTransmissionTimer();
+    }
 
     VerifyOrExit((message = NewMleMessage(kCommandChildUpdateRequest)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->AppendModeTlv(mDeviceMode));
@@ -2726,7 +2731,7 @@ void Mle::ProcessKeySequence(RxInfo &aRxInfo)
     switch (aRxInfo.mClass)
     {
     case RxInfo::kAuthoritativeMessage:
-        Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence);
+        Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence, KeyManager::kForceUpdate);
         break;
 
     case RxInfo::kPeerMessage:
@@ -2734,7 +2739,7 @@ void Mle::ProcessKeySequence(RxInfo &aRxInfo)
         {
             if (aRxInfo.mKeySequence - Get<KeyManager>().GetCurrentKeySequence() == 1)
             {
-                Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence);
+                Get<KeyManager>().SetCurrentKeySequence(aRxInfo.mKeySequence, KeyManager::kApplyKeySwitchGuard);
             }
             else
             {

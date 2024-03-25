@@ -1635,53 +1635,35 @@ void MleRouter::HandleTimeTick(void)
 
         age = TimerMilli::GetNow() - router.GetLastHeard();
 
-        if (router.IsStateValid())
+        if (router.IsStateValid() && (age >= kMaxNeighborAge))
         {
-#if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT == 0
-
-            if (age >= kMaxNeighborAge)
+#if OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
+            if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
             {
-                LogInfo("Router timeout expired");
-                RemoveNeighbor(router);
-                continue;
+                LogInfo("No Adv from router 0x%04x - sending Link Request", router.GetRloc16());
+                IgnoreError(SendLinkRequest(&router));
             }
-
-#else
-
-            if (age >= kMaxNeighborAge)
-            {
-                if (age < kMaxNeighborAge + kMaxTxCount * kUnicastRetxDelay)
-                {
-                    LogInfo("Router timeout expired");
-                    IgnoreError(SendLinkRequest(&router));
-                }
-                else
-                {
-                    RemoveNeighbor(router);
-                    continue;
-                }
-            }
-
+            else
 #endif
-        }
-        else if (router.IsStateLinkRequest())
-        {
-            if (age >= kLinkRequestTimeout)
             {
-                LogInfo("Link Request timeout expired");
+                LogInfo("Router 0x%04x timeout expired", router.GetRloc16());
                 RemoveNeighbor(router);
                 continue;
             }
         }
 
-        if (IsLeader())
+        if (router.IsStateLinkRequest() && (age >= kLinkRequestTimeout))
         {
-            if (mRouterTable.FindNextHopOf(router) == nullptr && mRouterTable.GetLinkCost(router) >= kMaxRouteCost &&
-                age >= kMaxLeaderToRouterTimeout)
-            {
-                LogInfo("Router ID timeout expired (no route)");
-                IgnoreError(mRouterTable.Release(router.GetRouterId()));
-            }
+            LogInfo("Router 0x%04x - Link Request timeout expired", router.GetRloc16());
+            RemoveNeighbor(router);
+            continue;
+        }
+
+        if (IsLeader() && (mRouterTable.FindNextHopOf(router) == nullptr) &&
+            (mRouterTable.GetLinkCost(router) >= kMaxRouteCost) && (age >= kMaxLeaderToRouterTimeout))
+        {
+            LogInfo("Router 0x%04x ID timeout expired (no route)", router.GetRloc16());
+            IgnoreError(mRouterTable.Release(router.GetRouterId()));
         }
     }
 
@@ -3674,7 +3656,10 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
 
     // If assigning a new RLOC16 (e.g., on promotion of a child to
     // router role) we clear any address cache entries associated
-    // with the old RLOC16.
+    // with the old RLOC16 unless the sender is a direct child. For
+    // direct children, we retain the cache entries to allow
+    // association with the promoted router's new RLOC16 upon
+    // receiving its Link Advertisement.
 
     if ((aResponseStatus == ThreadStatusTlv::kSuccess) && (aRouter != nullptr))
     {
@@ -3684,6 +3669,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message    &aRequest,
         oldRloc16 = aMessageInfo.GetPeerAddr().GetIid().GetLocator();
 
         VerifyOrExit(oldRloc16 != aRouter->GetRloc16());
+        VerifyOrExit(!RouterIdMatch(oldRloc16, GetRloc16()));
         Get<AddressResolver>().RemoveEntriesForRloc16(oldRloc16);
     }
 

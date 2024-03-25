@@ -128,6 +128,8 @@
 namespace ot {
 namespace Posix {
 
+const char HdlcInterface::kLogModuleName[] = "HdlcIntface";
+
 HdlcInterface::HdlcInterface(const Url::Url &aRadioUrl)
     : mReceiveFrameCallback(nullptr)
     , mReceiveFrameContext(nullptr)
@@ -164,7 +166,7 @@ otError HdlcInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackConte
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     else
     {
-        otLogCritPlat("Radio file '%s' not supported", mRadioUrl.GetPath());
+        LogCrit("Radio file '%s' not supported", mRadioUrl.GetPath());
         ExitNow(error = OT_ERROR_FAILED);
     }
 
@@ -714,7 +716,7 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     {
         mInterfaceMetrics.mTransferredGarbageFrameCount++;
         mReceiveFrameBuffer->DiscardFrame();
-        otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
+        LogWarn("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
 
 exit:
@@ -742,7 +744,7 @@ otError HdlcInterface::ResetConnection(void)
             usleep(static_cast<useconds_t>(kOpenFileDelay) * US_PER_MS);
         } while (end > otPlatTimeGet());
 
-        otLogCritPlat("Failed to reopen UART connection after resetting the RCP device.");
+        LogCrit("Failed to reopen UART connection after resetting the RCP device.");
         error = OT_ERROR_FAILED;
     }
 

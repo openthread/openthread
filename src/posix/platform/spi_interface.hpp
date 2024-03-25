@@ -31,11 +31,12 @@
  *   This file includes definitions for the SPI interface to radio (RCP).
  */
 
-#ifndef POSIX_PLATFORM_SPI_INTERFACE_HPP_
-#define POSIX_PLATFORM_SPI_INTERFACE_HPP_
+#ifndef OT_POSIX_PLATFORM_SPI_INTERFACE_HPP_
+#define OT_POSIX_PLATFORM_SPI_INTERFACE_HPP_
 
 #include "openthread-posix-config.h"
 
+#include "logger.hpp"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/multi_frame_buffer.hpp"
@@ -51,9 +52,11 @@ namespace Posix {
  * Defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
-class SpiInterface : public ot::Spinel::SpinelInterface
+class SpiInterface : public ot::Spinel::SpinelInterface, public Logger<SpiInterface>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Initializes the object.
      *
@@ -258,4 +261,4 @@ private:
 } // namespace Posix
 } // namespace ot
 
-#endif // POSIX_PLATFORM_SPI_INTERFACE_HPP_
+#endif // OT_POSIX_PLATFORM_SPI_INTERFACE_HPP_

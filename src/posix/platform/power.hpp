@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef POSIX_PLATFORM_POWER_H
-#define POSIX_PLATFORM_POWER_H
+#ifndef OT_POSIX_PLATFORM_POWER_HPP_
+#define OT_POSIX_PLATFORM_POWER_HPP_
 
 #include <assert.h>
 #include <stdio.h>
@@ -286,4 +286,4 @@ private:
 };
 } // namespace Power
 } // namespace ot
-#endif // POSIX_PLATFORM_POWER_H
+#endif // OT_POSIX_PLATFORM_POWER_HPP_

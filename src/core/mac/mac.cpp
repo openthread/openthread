@@ -1641,7 +1641,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
         if (keySequence > keyManager.GetCurrentKeySequence())
         {
-            keyManager.SetCurrentKeySequence(keySequence);
+            keyManager.SetCurrentKeySequence(keySequence, KeyManager::kApplyKeySwitchGuard);
         }
     }
 
