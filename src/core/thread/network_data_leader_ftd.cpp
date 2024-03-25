@@ -1218,10 +1218,10 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
 {
     const PrefixTlv *prefix;
     TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
-    Iterator         iterator = kIteratorInit;
     ChangedFlags     flags;
     uint16_t         rloc16;
     uint16_t         sessionId;
+    Rlocs            rlocs;
 
     mWaitingForNetDataSync = false;
 
@@ -1232,16 +1232,13 @@ void Leader::HandleNetworkDataRestoredAfterReset(void)
     // got the chance to send the updated Network Data to other
     // routers.
 
-    while (GetNextServer(iterator, rloc16) == kErrorNone)
-    {
-        if (!Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(rloc16)))
-        {
-            // After we `RemoveRloc()` the Network Data gets changed
-            // and the `iterator` will not be valid anymore. So we set
-            // it to `kIteratorInit` to restart the loop.
+    FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
 
-            RemoveRloc(rloc16, kMatchModeRouterId, flags);
-            iterator = kIteratorInit;
+    for (uint16_t rloc : rlocs)
+    {
+        if (!Get<RouterTable>().IsAllocated(Mle::RouterIdFromRloc16(rloc)))
+        {
+            RemoveRloc(rloc, kMatchModeRouterId, flags);
         }
     }
 
