@@ -125,6 +125,7 @@ source_set("openthread") {
     "thread_ftd.h",
     "trel.h",
     "udp.h",
+    "verhoeff_checksum.h",
   ]
 
   public_deps = [ ":openthread_config" ]
