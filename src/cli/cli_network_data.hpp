@@ -137,11 +137,7 @@ private:
     otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
     otError OutputBinary(bool aLocal);
-    void    OutputPrefixes(bool aLocal);
-    void    OutputRoutes(bool aLocal);
-    void    OutputServices(bool aLocal);
-    void    OutputLowpanContexts(bool aLocal);
-    void    OutputCommissioningDataset(bool aLocal);
+    void    OutputNetworkData(bool aLocal);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }
