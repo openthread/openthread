@@ -38,6 +38,7 @@
 
 #include "openthread-spinel-config.h"
 #include "core/radio/max_power_table.hpp"
+#include "lib/spinel/logger.hpp"
 #include "lib/spinel/radio_spinel_metrics.h"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
@@ -148,7 +149,7 @@ struct RadioSpinelCallbacks
  * co-processor(RCP).
  *
  */
-class RadioSpinel
+class RadioSpinel : private Logger
 {
 public:
     /**
@@ -1238,17 +1239,6 @@ private:
     static otError ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &aKey);
 #endif
 
-    static void LogIfFail(const char *aText, otError aError);
-
-    static void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-    static void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 2);
-
-    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
-    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
-
     otInstance *mInstance;
 
     SpinelInterface::RxFrameBuffer mRxFrameBuffer;
@@ -1297,8 +1287,7 @@ private:
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
-    enum
-    {
+    enum {
         kRcpFailureNone,
         kRcpFailureTimeout,
         kRcpFailureUnexpectedReset,

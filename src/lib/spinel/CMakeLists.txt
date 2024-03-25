@@ -89,7 +89,11 @@ target_include_directories(openthread-radio-spinel PUBLIC ${OT_PUBLIC_INCLUDES} 
 target_include_directories(openthread-spinel-ncp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-radio-spinel PRIVATE radio_spinel.cpp)
+target_sources(openthread-radio-spinel
+    PRIVATE
+        logger.cpp
+        radio_spinel.cpp
+)
 target_sources(openthread-spinel-ncp PRIVATE ${COMMON_SOURCES})
 target_sources(openthread-spinel-rcp PRIVATE ${COMMON_SOURCES})
 
