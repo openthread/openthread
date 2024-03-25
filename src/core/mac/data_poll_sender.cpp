@@ -327,7 +327,12 @@ void DataPollSender::ProcessRxFrame(const Mac::RxFrame &aFrame)
 
     if (aFrame.GetFramePending())
     {
-        IgnoreError(SendDataPoll());
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+        if (!Get<Mle::Mle>().GetParent().IsEnhancedDataPollSupported())
+#endif
+        {
+            IgnoreError(SendDataPoll());
+        }
     }
 
 exit:
@@ -357,7 +362,12 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
 
         if (aAckFrame->GetFramePending())
         {
-            sendDataPoll = true;
+#if OPENTHREAD_CONFIG_ENH_DATA_POLL_ENABLE
+            if (!Get<Mle::Mle>().GetParent().IsEnhancedDataPollSupported())
+#endif
+            {
+                sendDataPoll = true;
+            }
         }
         else
         {
