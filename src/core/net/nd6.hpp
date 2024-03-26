@@ -809,6 +809,18 @@ public:
         Error AppendFlagsExtensionOption(bool aStubRouterFlag);
 
         /**
+         * Appends bytes from a given buffer to the RA message.
+         *
+         * @param[in] aBytes     A pointer to the buffer containing the bytes to append.
+         * @param[in] aLength    The buffer length.
+         *
+         * @retval kErrorNone    Bytes are appended successfully.
+         * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+         *
+         */
+        Error AppendBytes(const uint8_t *aBytes, uint16_t aLength);
+
+        /**
          * Indicates whether or not the received RA message contains any options.
          *
          * @retval TRUE   If the RA message contains at least one option.
@@ -820,7 +832,6 @@ public:
     private:
         static constexpr uint16_t kCapacityIncrement = 256;
 
-        Error   AppendBytes(const uint8_t *aBytes, uint16_t aLength);
         Option *AppendOption(uint16_t aOptionSize);
 
         Heap::Array<uint8_t, kCapacityIncrement> mArray;

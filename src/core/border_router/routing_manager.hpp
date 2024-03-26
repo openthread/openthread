@@ -55,6 +55,7 @@
 #include "common/error.hpp"
 #include "common/heap_allocatable.hpp"
 #include "common/heap_array.hpp"
+#include "common/heap_data.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -232,6 +233,22 @@ public:
      *
      */
     void ClearRouteInfoOptionPreference(void) { mRioAdvertiser.ClearPreference(); }
+
+    /**
+     * Sets additional options to append at the end of emitted Router Advertisement (RA) messages.
+     *
+     * The content of @p aOptions is copied internally, so can be a temporary stack variable.
+     *
+     * Subsequent calls to this method will overwrite the previously set value.
+     *
+     * @param[in] aOptions   A pointer to the encoded options. Can be `nullptr` to clear.
+     * @param[in] aLength    Number of bytes in @p aOptions.
+     *
+     * @retval kErrorNone     Successfully set the extra option bytes.
+     * @retval kErrorNoBufs   Could not allocate buffer to save the buffer.
+     *
+     */
+    Error SetExtraRouterAdvertOptions(const uint8_t *aOptions, uint16_t aLength);
 
     /**
      * Gets the current preference used for published routes in Network Data.
@@ -1360,8 +1377,9 @@ private:
     PdPrefixManager mPdPrefixManager;
 #endif
 
-    RaInfo   mRaInfo;
-    RsSender mRsSender;
+    RaInfo     mRaInfo;
+    RsSender   mRsSender;
+    Heap::Data mExtraRaOptions;
 
     DiscoveredPrefixStaleTimer mDiscoveredPrefixStaleTimer;
     RoutingPolicyTimer         mRoutingPolicyTimer;
