@@ -62,6 +62,7 @@
 #include "common/pool.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
+#include "crypto/sha256.hpp"
 #include "net/ip6.hpp"
 #include "net/nat64_translator.hpp"
 #include "net/nd6.hpp"
@@ -1160,26 +1161,44 @@ private:
 
     struct RaInfo
     {
-        // Tracks info about emitted RA messages: Number of RAs sent,
-        // last tx time, header to use and whether the header is
-        // discovered from receiving RAs from the host itself. This
-        // ensures that if an entity on host is advertising certain
+        // Tracks info about emitted RA messages:
+        //
+        // - Number of RAs sent
+        // - Last RA TX time
+        // - Hashes of last TX RAs (to tell if a received RA is from
+        //   `RoutingManager` itself)
+        // - RA header to use, and
+        // - Whether the RA header is discovered from receiving RAs
+        //   from the host itself.
+        //
+        // This ensures that if an entity on host is advertising certain
         // info in its RA header (e.g., a default route), the RAs we
         // emit from `RoutingManager` also include the same header.
+
+        typedef Crypto::Sha256::Hash Hash;
+
+        static constexpr uint16_t kNumHashEntries = 5;
 
         RaInfo(void)
             : mHeaderUpdateTime(TimerMilli::GetNow())
             , mIsHeaderFromHost(false)
             , mTxCount(0)
             , mLastTxTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
+            , mLastHashIndex(0)
         {
         }
+
+        void        IncrementTxCountAndSaveHash(const InfraIf::Icmp6Packet &aRaMessage);
+        bool        IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const;
+        static void CalculateHash(const InfraIf::Icmp6Packet &aRaMessage, Hash &aHash);
 
         RouterAdvert::Header mHeader;
         TimeMilli            mHeaderUpdateTime;
         bool                 mIsHeaderFromHost;
         uint32_t             mTxCount;
         TimeMilli            mLastTxTime;
+        Hash                 mHashes[kNumHashEntries];
+        uint16_t             mLastHashIndex;
     };
 
     void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
@@ -1296,7 +1315,6 @@ private:
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool NetworkDataContainsUlaRoute(void) const;
     void UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRouterAdvertMessage);
-    bool IsReceivedRouterAdvertFromManager(const RouterAdvert::RxMessage &aRaMessage) const;
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
