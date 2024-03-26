@@ -564,17 +564,68 @@ otError NetworkData::GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRou
     return error;
 }
 
-void NetworkData::OutputPrefixes(bool aLocal)
+void NetworkData::OutputNetworkData(bool aLocal)
 {
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otBorderRouterConfig  config;
+    otNetworkDataIterator  iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig   prefix;
+    otExternalRouteConfig  route;
+    otServiceConfig        service;
+    otLowpanContextInfo    context;
+    otCommissioningDataset dataset;
 
     OutputLine("Prefixes:");
 
-    while (GetNextPrefix(&iterator, &config, aLocal) == OT_ERROR_NONE)
+    while (GetNextPrefix(&iterator, &prefix, aLocal) == OT_ERROR_NONE)
     {
-        OutputPrefix(config);
+        OutputPrefix(prefix);
     }
+
+    OutputLine("Routes:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (GetNextRoute(&iterator, &route, aLocal) == OT_ERROR_NONE)
+    {
+        OutputRoute(route);
+    }
+
+    OutputLine("Services:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (GetNextService(&iterator, &service, aLocal) == OT_ERROR_NONE)
+    {
+        OutputService(service);
+    }
+
+    VerifyOrExit(!aLocal);
+
+    OutputLine("Contexts:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &context) == OT_ERROR_NONE)
+    {
+        OutputIp6Prefix(context.mPrefix);
+        OutputLine(" %u %c", context.mContextId, context.mCompressFlag ? 'c' : '-');
+    }
+
+    otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
+
+    OutputLine("Commissioning:");
+
+    dataset.mIsSessionIdSet ? OutputFormat("%u ", dataset.mSessionId) : OutputFormat("- ");
+    dataset.mIsLocatorSet ? OutputFormat("%04x ", dataset.mLocator) : OutputFormat("- ");
+    dataset.mIsJoinerUdpPortSet ? OutputFormat("%u ", dataset.mJoinerUdpPort) : OutputFormat("- ");
+    dataset.mIsSteeringDataSet ? OutputBytes(dataset.mSteeringData.m8, dataset.mSteeringData.mLength)
+                               : OutputFormat("-");
+
+    if (dataset.mHasExtraTlv)
+    {
+        OutputFormat(" e");
+    }
+
+    OutputNewLine();
+
+exit:
+    return;
 }
 
 otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal)
@@ -597,19 +648,6 @@ otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRo
     return error;
 }
 
-void NetworkData::OutputRoutes(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otExternalRouteConfig config;
-
-    OutputLine("Routes:");
-
-    while (GetNextRoute(&iterator, &config, aLocal) == OT_ERROR_NONE)
-    {
-        OutputRoute(config);
-    }
-}
-
 otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal)
 {
     otError error;
@@ -628,65 +666,6 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceC
     }
 
     return error;
-}
-
-void NetworkData::OutputServices(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otServiceConfig       config;
-
-    OutputLine("Services:");
-
-    while (GetNextService(&iterator, &config, aLocal) == OT_ERROR_NONE)
-    {
-        OutputService(config);
-    }
-}
-
-void NetworkData::OutputLowpanContexts(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otLowpanContextInfo   info;
-
-    VerifyOrExit(!aLocal);
-
-    OutputLine("Contexts:");
-
-    while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &info) == OT_ERROR_NONE)
-    {
-        OutputIp6Prefix(info.mPrefix);
-        OutputLine(" %u %c", info.mContextId, info.mCompressFlag ? 'c' : '-');
-    }
-
-exit:
-    return;
-}
-
-void NetworkData::OutputCommissioningDataset(bool aLocal)
-{
-    otCommissioningDataset dataset;
-
-    VerifyOrExit(!aLocal);
-
-    otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
-
-    OutputLine("Commissioning:");
-
-    dataset.mIsSessionIdSet ? OutputFormat("%u ", dataset.mSessionId) : OutputFormat("- ");
-    dataset.mIsLocatorSet ? OutputFormat("%04x ", dataset.mLocator) : OutputFormat("- ");
-    dataset.mIsJoinerUdpPortSet ? OutputFormat("%u ", dataset.mJoinerUdpPort) : OutputFormat("- ");
-    dataset.mIsSteeringDataSet ? OutputBytes(dataset.mSteeringData.m8, dataset.mSteeringData.mLength)
-                               : OutputFormat("-");
-
-    if (dataset.mHasExtraTlv)
-    {
-        OutputFormat(" e");
-    }
-
-    OutputNewLine();
-
-exit:
-    return;
 }
 
 otError NetworkData::OutputBinary(bool aLocal)
@@ -842,11 +821,7 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
     }
     else
     {
-        OutputPrefixes(local);
-        OutputRoutes(local);
-        OutputServices(local);
-        OutputLowpanContexts(local);
-        OutputCommissioningDataset(local);
+        OutputNetworkData(local);
         error = OT_ERROR_NONE;
     }
 
