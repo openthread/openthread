@@ -130,6 +130,8 @@ public:
 private:
     using Command = CommandEntry<NetworkData>;
 
+    static constexpr uint16_t kAnyRloc16 = 0xffff;
+
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
@@ -137,7 +139,7 @@ private:
     otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
     otError OutputBinary(bool aLocal);
-    void    OutputNetworkData(bool aLocal);
+    void    OutputNetworkData(bool aLocal, uint16_t aRloc16);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }

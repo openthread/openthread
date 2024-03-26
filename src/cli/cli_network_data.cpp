@@ -564,7 +564,7 @@ otError NetworkData::GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRou
     return error;
 }
 
-void NetworkData::OutputNetworkData(bool aLocal)
+void NetworkData::OutputNetworkData(bool aLocal, uint16_t aRloc16)
 {
     otNetworkDataIterator  iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig   prefix;
@@ -577,7 +577,10 @@ void NetworkData::OutputNetworkData(bool aLocal)
 
     while (GetNextPrefix(&iterator, &prefix, aLocal) == OT_ERROR_NONE)
     {
-        OutputPrefix(prefix);
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == prefix.mRloc16))
+        {
+            OutputPrefix(prefix);
+        }
     }
 
     OutputLine("Routes:");
@@ -585,7 +588,10 @@ void NetworkData::OutputNetworkData(bool aLocal)
 
     while (GetNextRoute(&iterator, &route, aLocal) == OT_ERROR_NONE)
     {
-        OutputRoute(route);
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == route.mRloc16))
+        {
+            OutputRoute(route);
+        }
     }
 
     OutputLine("Services:");
@@ -593,10 +599,14 @@ void NetworkData::OutputNetworkData(bool aLocal)
 
     while (GetNextService(&iterator, &service, aLocal) == OT_ERROR_NONE)
     {
-        OutputService(service);
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == service.mServerConfig.mRloc16))
+        {
+            OutputService(service);
+        }
     }
 
     VerifyOrExit(!aLocal);
+    VerifyOrExit(aRloc16 == kAnyRloc16);
 
     OutputLine("Contexts:");
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
@@ -716,8 +726,16 @@ exit:
  * 08040b02174703140040fd00deadbeefcafe0504dc00330007021140
  * Done
  * @endcode
- * @cparam netdata show [@ca{-x}]
+ * @code
+ * netdata show 0xdc00
+ * Prefixes:
+ * fd00:dead:beef:cafe::/64 paros med dc00
+ * Routes:
+ * Services:
+ * Done
+ * @cparam netdata show [@ca{-x}|@ca{rloc16}]
  * *   The optional `-x` argument gets Network Data as hex-encoded TLVs.
+ * *   The optional `rloc16` argument gets all prefix/route/service entries associated with a given RLOC16.
  * @par
  * `netdata show` from OT CLI gets full Network Data received from the Leader. This command uses several
  * API functions to combine prefixes, routes, and services, including #otNetDataGetNextOnMeshPrefix,
@@ -774,9 +792,10 @@ exit:
  */
 template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
 {
-    otError error  = OT_ERROR_INVALID_ARGS;
-    bool    local  = false;
-    bool    binary = false;
+    otError  error  = OT_ERROR_INVALID_ARGS;
+    uint16_t rloc16 = kAnyRloc16;
+    bool     local  = false;
+    bool     binary = false;
 
     for (uint8_t i = 0; !aArgs[i].IsEmpty(); i++)
     {
@@ -811,8 +830,13 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[i].ParseAsUint16(rloc16));
         }
+    }
+
+    if (local || binary)
+    {
+        VerifyOrExit(rloc16 == kAnyRloc16, error = OT_ERROR_INVALID_ARGS);
     }
 
     if (binary)
@@ -821,7 +845,7 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
     }
     else
     {
-        OutputNetworkData(local);
+        OutputNetworkData(local, rloc16);
         error = OT_ERROR_NONE;
     }
 

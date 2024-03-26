@@ -398,19 +398,23 @@ class Node(object):
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 
-    def get_netdata(self):
-        outputs = self.cli('netdata show')
+    def get_netdata(self, rloc16=None):
+        outputs = self.cli('netdata show', rloc16)
         outputs = [line.strip() for line in outputs]
         routes_index = outputs.index('Routes:')
         services_index = outputs.index('Services:')
-        contexts_index = outputs.index('Contexts:')
-        commissioning_index = outputs.index('Commissioning:')
+        if rloc16 is None:
+            contexts_index = outputs.index('Contexts:')
+            commissioning_index = outputs.index('Commissioning:')
         result = {}
         result['prefixes'] = outputs[1:routes_index]
         result['routes'] = outputs[routes_index + 1:services_index]
-        result['services'] = outputs[services_index + 1:contexts_index]
-        result['contexts'] = outputs[contexts_index + 1:commissioning_index]
-        result['commissioning'] = outputs[commissioning_index + 1:]
+        if rloc16 is None:
+            result['services'] = outputs[services_index + 1:contexts_index]
+            result['contexts'] = outputs[contexts_index + 1:commissioning_index]
+            result['commissioning'] = outputs[commissioning_index + 1:]
+        else:
+            result['services'] = outputs[services_index + 1:]
 
         return result
 

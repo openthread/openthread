@@ -89,11 +89,6 @@ nodes = [r1, r2, c2]
 # -----------------------------------------------------------------------------------------------------------------------
 # Test Implementation
 
-common_prefix = 'fd00:cafe::'
-prefix1 = 'fd00:1::'
-prefix2 = 'fd00:2::'
-prefix3 = 'fd00:3::'
-
 # Each node adds its own prefix.
 r1.add_prefix('fd00:1::/64', 'paros', 'med')
 r2.add_prefix('fd00:2::/64', 'paros', 'med')
@@ -104,6 +99,9 @@ r1.add_prefix('fd00:abba::/64', 'paros', 'high')
 r2.add_prefix('fd00:abba::/64', 'paros', 'med')
 c2.add_prefix('fd00:abba::/64', 'paros', 'low')
 
+r1.add_route('fd00:cafe::/64', 's', 'med')
+r2.add_route('fd00:cafe::/64', 's', 'med')
+
 r1.register_netdata()
 r2.register_netdata()
 c2.register_netdata()
@@ -112,11 +110,18 @@ c2.register_netdata()
 def check_netdata_on_all_nodes():
     for node in nodes:
         netdata = node.get_netdata()
-        prefixes = netdata['prefixes']
-        verify(len(prefixes) == 6)
+        verify(len(netdata['prefixes']) == 6)
+        verify(len(netdata['routes']) == 2)
 
 
 verify_within(check_netdata_on_all_nodes, 10)
+
+# Check netdata filtering for r1 entries only.
+
+r1_rloc = int(r1.get_rloc16(), 16)
+netdata = r1.get_netdata(r1_rloc)
+verify(len(netdata['prefixes']) == 2)
+verify(len(netdata['routes']) == 1)
 
 # Remove `r2`. This should trigger all the prefixes added by it or its
 # child to timeout and be removed.
@@ -127,8 +132,11 @@ r2.interface_down()
 
 def check_netdata_on_r1():
     netdata = r1.get_netdata()
-    prefixes = netdata['prefixes']
-    verify(len(prefixes) == 2)
+    verify(len(netdata['prefixes']) == 2)
+    verify(len(netdata['routes']) == 1)
+    netdata = r1.get_netdata(r1_rloc)
+    verify(len(netdata['prefixes']) == 2)
+    verify(len(netdata['routes']) == 1)
 
 
 verify_within(check_netdata_on_r1, 120)
