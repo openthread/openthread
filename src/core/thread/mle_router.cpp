@@ -1549,11 +1549,11 @@ void MleRouter::HandleTimeTick(void)
         OT_FALL_THROUGH;
 
     case kRoleRouter:
-        LogDebg("network id timeout = %lu", ToUlong(mRouterTable.GetLeaderAge()));
+        LogDebg("Leader age %lu", ToUlong(mRouterTable.GetLeaderAge()));
 
         if ((mRouterTable.GetActiveRouterCount() > 0) && (mRouterTable.GetLeaderAge() >= mNetworkIdTimeout))
         {
-            LogInfo("Router ID Sequence timeout");
+            LogInfo("Leader age timeout");
             Attach(kSamePartition);
         }
 
@@ -1605,7 +1605,7 @@ void MleRouter::HandleTimeTick(void)
         if (child.IsCslSynchronized() &&
             TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
         {
-            LogInfo("Child CSL synchronization expired");
+            LogInfo("Child 0x%04x CSL synchronization expired", child.GetRloc16());
             child.SetCslSynchronized(false);
             Get<CslTxScheduler>().Update();
         }
@@ -1613,7 +1613,7 @@ void MleRouter::HandleTimeTick(void)
 
         if (TimerMilli::GetNow() - child.GetLastHeard() >= timeout)
         {
-            LogInfo("Child timeout expired");
+            LogInfo("Child 0x%04x timeout expired", child.GetRloc16());
             RemoveNeighbor(child);
         }
         else if (IsRouterOrLeader() && child.IsStateRestored())
