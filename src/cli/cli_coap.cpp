@@ -949,7 +949,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         }
         else
         {
-            responseCode = OT_COAP_CODE_VALID;
+            responseCode = OT_COAP_CODE_CHANGED;
         }
 
         responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);
