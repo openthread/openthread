@@ -337,6 +337,7 @@ do_build_otbr_docker()
         "-DOT_COVERAGE=ON"
         "-DOT_DNS_CLIENT=ON"
         "-DOT_DUA=ON"
+        "-DOT_LOCAL_HOST_MULTICAST_FILTER=ON"
         "-DOT_MLR=ON"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_SLAAC=ON"
