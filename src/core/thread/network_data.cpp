@@ -615,54 +615,34 @@ void MutableNetworkData::RemoveTemporaryData(void)
 
     while (cur < GetTlvsEnd())
     {
+        bool shouldRemove = false;
+
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
-        {
-            PrefixTlv *prefix = As<PrefixTlv>(cur);
-
-            RemoveTemporaryDataIn(*prefix);
-
-            if (prefix->GetSubTlvsLength() == 0)
-            {
-                RemoveTlv(cur);
-                continue;
-            }
-
+            shouldRemove = RemoveTemporaryDataIn(*As<PrefixTlv>(cur));
             break;
-        }
 
         case NetworkDataTlv::kTypeService:
-        {
-            ServiceTlv *service = As<ServiceTlv>(cur);
+            shouldRemove = RemoveTemporaryDataIn(*As<ServiceTlv>(cur));
+            break;
 
-            RemoveTemporaryDataIn(*service);
-
-            if (service->GetSubTlvsLength() == 0)
-            {
-                RemoveTlv(cur);
-                continue;
-            }
-
+        default:
+            shouldRemove = !cur->IsStable();
             break;
         }
 
-        default:
-            // remove temporary tlv
-            if (!cur->IsStable())
-            {
-                RemoveTlv(cur);
-                continue;
-            }
-
-            break;
+        if (shouldRemove)
+        {
+            RemoveTlv(cur);
+            continue;
         }
 
         cur = cur->GetNext();
     }
 }
 
-void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
+bool MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
 
@@ -723,9 +703,11 @@ void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
     }
+
+    return (aPrefix.GetSubTlvsLength() == 0);
 }
 
-void MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
+bool MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
 {
     NetworkDataTlv *cur = aService.GetSubTlvs();
 
@@ -754,6 +736,8 @@ void MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
             aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
         }
     }
+
+    return (aService.GetSubTlvsLength() == 0);
 }
 
 NetworkDataTlv *MutableNetworkData::AppendTlv(uint16_t aTlvSize)
