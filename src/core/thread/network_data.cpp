@@ -50,6 +50,9 @@ namespace NetworkData {
 
 RegisterLogModule("NetworkData");
 
+//---------------------------------------------------------------------------------------------------------------------
+// NetworkData
+
 Error NetworkData::CopyNetworkData(Type aType, uint8_t *aData, uint8_t &aDataLength) const
 {
     Error              error;
@@ -402,6 +405,210 @@ exit:
     return contains;
 }
 
+const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
+{
+    TlvIterator      tlvIterator(mTlvs, mLength);
+    const PrefixTlv *prefixTlv;
+
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
+    {
+        if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
+        {
+            break;
+        }
+    }
+
+    return prefixTlv;
+}
+
+const ServiceTlv *NetworkData::FindService(uint32_t           aEnterpriseNumber,
+                                           const ServiceData &aServiceData,
+                                           ServiceMatchMode   aServiceMatchMode) const
+{
+    TlvIterator       tlvIterator(mTlvs, mLength);
+    const ServiceTlv *serviceTlv;
+
+    while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
+    {
+        if (MatchService(*serviceTlv, aEnterpriseNumber, aServiceData, aServiceMatchMode))
+        {
+            break;
+        }
+    }
+
+    return serviceTlv;
+}
+
+const ServiceTlv *NetworkData::FindNextService(const ServiceTlv  *aPrevServiceTlv,
+                                               uint32_t           aEnterpriseNumber,
+                                               const ServiceData &aServiceData,
+                                               ServiceMatchMode   aServiceMatchMode) const
+{
+    const uint8_t *tlvs;
+    uint8_t        length;
+
+    if (aPrevServiceTlv == nullptr)
+    {
+        tlvs   = mTlvs;
+        length = mLength;
+    }
+    else
+    {
+        tlvs   = reinterpret_cast<const uint8_t *>(aPrevServiceTlv->GetNext());
+        length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
+    }
+
+    return NetworkData(GetInstance(), tlvs, length).FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode);
+}
+
+const ServiceTlv *NetworkData::FindNextThreadService(const ServiceTlv  *aPrevServiceTlv,
+                                                     const ServiceData &aServiceData,
+                                                     ServiceMatchMode   aServiceMatchMode) const
+{
+    return FindNextService(aPrevServiceTlv, ServiceTlv::kThreadEnterpriseNumber, aServiceData, aServiceMatchMode);
+}
+
+bool NetworkData::MatchService(const ServiceTlv  &aServiceTlv,
+                               uint32_t           aEnterpriseNumber,
+                               const ServiceData &aServiceData,
+                               ServiceMatchMode   aServiceMatchMode)
+{
+    bool        match = false;
+    ServiceData serviceData;
+
+    VerifyOrExit(aServiceTlv.GetEnterpriseNumber() == aEnterpriseNumber);
+
+    aServiceTlv.GetServiceData(serviceData);
+
+    switch (aServiceMatchMode)
+    {
+    case kServiceExactMatch:
+        match = (serviceData == aServiceData);
+        break;
+
+    case kServicePrefixMatch:
+        match = serviceData.StartsWith(aServiceData);
+        break;
+    }
+
+exit:
+    return match;
+}
+
+void NetworkData::FindRlocs(BorderRouterFilter aBrFilter, RoleFilter aRoleFilter, Rlocs &aRlocs) const
+{
+    Iterator            iterator = kIteratorInit;
+    OnMeshPrefixConfig  prefix;
+    ExternalRouteConfig route;
+    ServiceConfig       service;
+    Config              config;
+
+    aRlocs.Clear();
+
+    while (true)
+    {
+        config.mOnMeshPrefix  = &prefix;
+        config.mExternalRoute = &route;
+        config.mService       = &service;
+        config.mLowpanContext = nullptr;
+
+        SuccessOrExit(Iterate(iterator, Mac::kShortAddrBroadcast, config));
+
+        if (config.mOnMeshPrefix != nullptr)
+        {
+            bool matches = true;
+
+            switch (aBrFilter)
+            {
+            case kAnyBrOrServer:
+                break;
+            case kBrProvidingExternalIpConn:
+                matches = prefix.mOnMesh && (prefix.mDefaultRoute || prefix.mDp);
+                break;
+            }
+
+            if (matches)
+            {
+                AddRloc16ToRlocs(prefix.mRloc16, aRlocs, aRoleFilter);
+            }
+        }
+        else if (config.mExternalRoute != nullptr)
+        {
+            AddRloc16ToRlocs(route.mRloc16, aRlocs, aRoleFilter);
+        }
+        else if (config.mService != nullptr)
+        {
+            switch (aBrFilter)
+            {
+            case kAnyBrOrServer:
+                AddRloc16ToRlocs(service.mServerConfig.mRloc16, aRlocs, aRoleFilter);
+                break;
+            case kBrProvidingExternalIpConn:
+                break;
+            }
+        }
+    }
+
+exit:
+    return;
+}
+
+uint8_t NetworkData::CountBorderRouters(RoleFilter aRoleFilter) const
+{
+    Rlocs rlocs;
+
+    FindRlocs(kBrProvidingExternalIpConn, aRoleFilter, rlocs);
+
+    return rlocs.GetLength();
+}
+
+bool NetworkData::ContainsBorderRouterWithRloc(uint16_t aRloc16) const
+{
+    Rlocs rlocs;
+
+    FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+
+    return rlocs.Contains(aRloc16);
+}
+
+void NetworkData::AddRloc16ToRlocs(uint16_t aRloc16, Rlocs &aRlocs, RoleFilter aRoleFilter)
+{
+    switch (aRoleFilter)
+    {
+    case kAnyRole:
+        break;
+
+    case kRouterRoleOnly:
+        VerifyOrExit(Mle::IsActiveRouter(aRloc16));
+        break;
+
+    case kChildRoleOnly:
+        VerifyOrExit(!Mle::IsActiveRouter(aRloc16));
+        break;
+    }
+
+    VerifyOrExit(!aRlocs.Contains(aRloc16));
+    IgnoreError(aRlocs.PushBack(aRloc16));
+
+exit:
+    return;
+}
+
+Error NetworkData::FindDomainIdFor(const Ip6::Prefix &aPrefix, uint8_t &aDomainId) const
+{
+    Error            error     = kErrorNone;
+    const PrefixTlv *prefixTlv = FindPrefix(aPrefix);
+
+    VerifyOrExit(prefixTlv != nullptr, error = kErrorNotFound);
+    aDomainId = prefixTlv->GetDomainId();
+
+exit:
+    return error;
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// MutableNetworkData
+
 void MutableNetworkData::RemoveTemporaryData(void)
 {
     NetworkDataTlv *cur = GetTlvsStart();
@@ -549,96 +756,6 @@ void MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
     }
 }
 
-const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
-{
-    TlvIterator      tlvIterator(mTlvs, mLength);
-    const PrefixTlv *prefixTlv;
-
-    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
-    {
-        if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
-        {
-            break;
-        }
-    }
-
-    return prefixTlv;
-}
-
-const ServiceTlv *NetworkData::FindService(uint32_t           aEnterpriseNumber,
-                                           const ServiceData &aServiceData,
-                                           ServiceMatchMode   aServiceMatchMode) const
-{
-    TlvIterator       tlvIterator(mTlvs, mLength);
-    const ServiceTlv *serviceTlv;
-
-    while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
-    {
-        if (MatchService(*serviceTlv, aEnterpriseNumber, aServiceData, aServiceMatchMode))
-        {
-            break;
-        }
-    }
-
-    return serviceTlv;
-}
-
-const ServiceTlv *NetworkData::FindNextService(const ServiceTlv  *aPrevServiceTlv,
-                                               uint32_t           aEnterpriseNumber,
-                                               const ServiceData &aServiceData,
-                                               ServiceMatchMode   aServiceMatchMode) const
-{
-    const uint8_t *tlvs;
-    uint8_t        length;
-
-    if (aPrevServiceTlv == nullptr)
-    {
-        tlvs   = mTlvs;
-        length = mLength;
-    }
-    else
-    {
-        tlvs   = reinterpret_cast<const uint8_t *>(aPrevServiceTlv->GetNext());
-        length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
-    }
-
-    return NetworkData(GetInstance(), tlvs, length).FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode);
-}
-
-const ServiceTlv *NetworkData::FindNextThreadService(const ServiceTlv  *aPrevServiceTlv,
-                                                     const ServiceData &aServiceData,
-                                                     ServiceMatchMode   aServiceMatchMode) const
-{
-    return FindNextService(aPrevServiceTlv, ServiceTlv::kThreadEnterpriseNumber, aServiceData, aServiceMatchMode);
-}
-
-bool NetworkData::MatchService(const ServiceTlv  &aServiceTlv,
-                               uint32_t           aEnterpriseNumber,
-                               const ServiceData &aServiceData,
-                               ServiceMatchMode   aServiceMatchMode)
-{
-    bool        match = false;
-    ServiceData serviceData;
-
-    VerifyOrExit(aServiceTlv.GetEnterpriseNumber() == aEnterpriseNumber);
-
-    aServiceTlv.GetServiceData(serviceData);
-
-    switch (aServiceMatchMode)
-    {
-    case kServiceExactMatch:
-        match = (serviceData == aServiceData);
-        break;
-
-    case kServicePrefixMatch:
-        match = serviceData.StartsWith(aServiceData);
-        break;
-    }
-
-exit:
-    return match;
-}
-
 NetworkDataTlv *MutableNetworkData::AppendTlv(uint16_t aTlvSize)
 {
     NetworkDataTlv *tlv;
@@ -674,117 +791,6 @@ void MutableNetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
 }
 
 void MutableNetworkData::RemoveTlv(NetworkDataTlv *aTlv) { Remove(aTlv, aTlv->GetSize()); }
-
-void NetworkData::FindRlocs(BorderRouterFilter aBrFilter, RoleFilter aRoleFilter, Rlocs &aRlocs) const
-{
-    Iterator            iterator = kIteratorInit;
-    OnMeshPrefixConfig  prefix;
-    ExternalRouteConfig route;
-    ServiceConfig       service;
-    Config              config;
-
-    aRlocs.Clear();
-
-    while (true)
-    {
-        config.mOnMeshPrefix  = &prefix;
-        config.mExternalRoute = &route;
-        config.mService       = &service;
-        config.mLowpanContext = nullptr;
-
-        SuccessOrExit(Iterate(iterator, Mac::kShortAddrBroadcast, config));
-
-        if (config.mOnMeshPrefix != nullptr)
-        {
-            bool matches = true;
-
-            switch (aBrFilter)
-            {
-            case kAnyBrOrServer:
-                break;
-            case kBrProvidingExternalIpConn:
-                matches = prefix.mOnMesh && (prefix.mDefaultRoute || prefix.mDp);
-                break;
-            }
-
-            if (matches)
-            {
-                AddRloc16ToRlocs(prefix.mRloc16, aRlocs, aRoleFilter);
-            }
-        }
-        else if (config.mExternalRoute != nullptr)
-        {
-            AddRloc16ToRlocs(route.mRloc16, aRlocs, aRoleFilter);
-        }
-        else if (config.mService != nullptr)
-        {
-            switch (aBrFilter)
-            {
-            case kAnyBrOrServer:
-                AddRloc16ToRlocs(service.mServerConfig.mRloc16, aRlocs, aRoleFilter);
-                break;
-            case kBrProvidingExternalIpConn:
-                break;
-            }
-        }
-    }
-
-exit:
-    return;
-}
-
-uint8_t NetworkData::CountBorderRouters(RoleFilter aRoleFilter) const
-{
-    Rlocs rlocs;
-
-    FindRlocs(kBrProvidingExternalIpConn, aRoleFilter, rlocs);
-
-    return rlocs.GetLength();
-}
-
-bool NetworkData::ContainsBorderRouterWithRloc(uint16_t aRloc16) const
-{
-    Rlocs rlocs;
-
-    FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
-
-    return rlocs.Contains(aRloc16);
-}
-
-void NetworkData::AddRloc16ToRlocs(uint16_t aRloc16, Rlocs &aRlocs, RoleFilter aRoleFilter)
-{
-    switch (aRoleFilter)
-    {
-    case kAnyRole:
-        break;
-
-    case kRouterRoleOnly:
-        VerifyOrExit(Mle::IsActiveRouter(aRloc16));
-        break;
-
-    case kChildRoleOnly:
-        VerifyOrExit(!Mle::IsActiveRouter(aRloc16));
-        break;
-    }
-
-    VerifyOrExit(!aRlocs.Contains(aRloc16));
-    IgnoreError(aRlocs.PushBack(aRloc16));
-
-exit:
-    return;
-}
-
-Error NetworkData::FindDomainIdFor(const Ip6::Prefix &aPrefix, uint8_t &aDomainId) const
-{
-    Error            error     = kErrorNone;
-    const PrefixTlv *prefixTlv = FindPrefix(aPrefix);
-
-    VerifyOrExit(prefixTlv != nullptr, error = kErrorNotFound);
-    aDomainId = prefixTlv->GetDomainId();
-
-exit:
-    return error;
-}
 
 } // namespace NetworkData
 } // namespace ot
