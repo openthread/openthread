@@ -973,14 +973,14 @@ private:
         kTypeLinkReject,
         kTypeLinkRequest,
         kTypeParentRequest,
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        kTypeTimeSync,
-#endif
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         kTypeLinkMetricsManagementRequest,
         kTypeLinkMetricsManagementResponse,
         kTypeLinkProbe,
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        kTypeTimeSync,
 #endif
     };
 
@@ -1311,6 +1311,10 @@ private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
     void         UpdateServiceAlocs(void);
+#endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

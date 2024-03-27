@@ -649,9 +649,6 @@ private:
     void  HandleDataRequest(RxInfo &aRxInfo);
     void  HandleNetworkDataUpdateRouter(void);
     void  HandleDiscoveryRequest(RxInfo &aRxInfo);
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    void HandleTimeSync(RxInfo &aRxInfo);
-#endif
 
     Error ProcessRouteTlv(const RouteTlv &aRouteTlv, RxInfo &aRxInfo);
     Error ReadAndProcessRouteTlvOnFed(RxInfo &aRxInfo, uint8_t aParentId);
