@@ -86,6 +86,7 @@ set(COMMON_SOURCES
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
+    api/verhoeff_checksum_api.cpp
     backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
     backbone_router/bbr_local.cpp
@@ -257,6 +258,7 @@ set(COMMON_SOURCES
     utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
+    utils/verhoeff_checksum.cpp
 )
 
 set(RADIO_COMMON_SOURCES
