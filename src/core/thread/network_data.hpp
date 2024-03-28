@@ -769,8 +769,8 @@ protected:
     void RemoveTemporaryData(void);
 
 private:
-    void RemoveTemporaryDataIn(PrefixTlv &aPrefix);
-    void RemoveTemporaryDataIn(ServiceTlv &aService);
+    bool RemoveTemporaryDataIn(PrefixTlv &aPrefix);
+    bool RemoveTemporaryDataIn(ServiceTlv &aService);
 
     uint8_t mSize;
 };
