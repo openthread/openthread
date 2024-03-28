@@ -103,3 +103,16 @@
 #ifndef OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE
 #define OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE 33
 #endif
+
+/**
+ * @def OPENTHREAD_SIMULATION_MDNS_SCOKET_IMPLEMENT_POSIX
+ *
+ * Define as 1 for the simulation platform to provide a simplified implementation of `otPlatMdns` APIs using posix
+ * socket.
+ *
+ * This is intended for testing of the OpenThread Multicast DNS (mDNS) module.
+ *
+ */
+#ifndef OPENTHREAD_SIMULATION_MDNS_SCOKET_IMPLEMENT_POSIX
+#define OPENTHREAD_SIMULATION_MDNS_SCOKET_IMPLEMENT_POSIX 0
+#endif
