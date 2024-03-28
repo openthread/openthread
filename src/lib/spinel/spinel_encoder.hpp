@@ -682,6 +682,16 @@ public:
      */
     void ClearNcpBuffer(void);
 
+    /**
+     * This method returns the length available in storage buffer.
+     *
+     * @param[out]  length Space available in SPINEL buffer.
+     *
+     * @retval OT_ERROR_NONE
+     *
+     */
+    void InFrameLenAvailable(uint16_t *length);
+
 private:
     enum
     {

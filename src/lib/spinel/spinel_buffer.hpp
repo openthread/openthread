@@ -443,6 +443,9 @@ public:
      */
     FrameTag OutFrameGetTag(void);
 
+protected:
+    virtual uint16_t InFrameLenAvailable(void);
+
 private:
     /*
      * `Buffer` Implementation
