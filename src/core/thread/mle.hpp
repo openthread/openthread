@@ -1240,7 +1240,6 @@ private:
     void       SetAttachState(AttachState aState);
     void       InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
     void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
-    Error      CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
     void       SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);
