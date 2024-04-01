@@ -94,14 +94,14 @@ class SrpServerRebootPort(thread_cert.TestCase):
 
         #
         # 2. Reboot the server without any service registered. The server should
-        # listen to the same port after the reboot.
+        # switch to a new port after re-enabling.
         #
         old_port = server.get_srp_server_port()
         server.srp_server_set_enabled(False)
         self.simulator.go(5)
         server.srp_server_set_enabled(True)
         self.simulator.go(5)
-        self.assertEqual(old_port, server.get_srp_server_port())
+        self.assertNotEqual(old_port, server.get_srp_server_port())
 
         #
         # 3. Register a service

@@ -197,6 +197,9 @@ class OtbrDocker:
         self.pexpect.wait()
         self.pexpect.proc.kill()
 
+    def reserve_udp_port(self, port):
+        self.bash(f'socat -u UDP6-LISTEN:{port},bindtodevice=wpan0 - &')
+
     def destroy(self):
         logging.info("Destroying %s", self)
         self._shutdown_docker()

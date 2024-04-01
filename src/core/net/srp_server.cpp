@@ -91,7 +91,7 @@ Server::Server(Instance &aInstance)
     , mOutstandingUpdatesTimer(aInstance)
     , mCompletedUpdateTask(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
-    , mPort(kUdpPortMin)
+    , mPort(kUninitializedPort)
     , mState(kStateDisabled)
     , mAddressMode(kDefaultAddressMode)
     , mAnycastSequenceNumber(0)
@@ -595,7 +595,7 @@ exit:
     }
 }
 
-void Server::SelectPort(void)
+void Server::InitPort(void)
 {
     mPort = kUdpPortMin;
 
@@ -605,24 +605,35 @@ void Server::SelectPort(void)
 
         if (Get<Settings>().Read(info) == kErrorNone)
         {
-            mPort = info.GetPort() + 1;
-            if (mPort < kUdpPortMin || mPort > kUdpPortMax)
-            {
-                mPort = kUdpPortMin;
-            }
+            mPort = info.GetPort();
         }
     }
 #endif
+}
+
+void Server::SelectPort(void)
+{
+    if (mPort == kUninitializedPort)
+    {
+        InitPort();
+    }
+    ++mPort;
+    if (mPort < kUdpPortMin || mPort > kUdpPortMax)
+    {
+        mPort = kUdpPortMin;
+    }
 
     LogInfo("Selected port %u", mPort);
 }
 
 void Server::Start(void)
 {
+    Error error = kErrorNone;
+
     VerifyOrExit(mState == kStateStopped);
 
     mState = kStateRunning;
-    PrepareSocket();
+    SuccessOrExit(error = PrepareSocket());
     LogInfo("Start listening on port %u", mPort);
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
@@ -630,10 +641,15 @@ void Server::Start(void)
 #endif
 
 exit:
-    return;
+    // Re-enable server to select a new port.
+    if (error != kErrorNone)
+    {
+        Disable();
+        Enable();
+    }
 }
 
-void Server::PrepareSocket(void)
+Error Server::PrepareSocket(void)
 {
     Error error = kErrorNone;
 
@@ -659,8 +675,11 @@ exit:
     if (error != kErrorNone)
     {
         LogCrit("Failed to prepare socket: %s", ErrorToString(error));
+        IgnoreError(mSocket.Close());
         Stop();
     }
+
+    return error;
 }
 
 Ip6::Udp::Socket &Server::GetSocket(void)
@@ -689,7 +708,7 @@ void Server::HandleDnssdServerStateChange(void)
 
     if (mState == kStateRunning)
     {
-        PrepareSocket();
+        IgnoreError(PrepareSocket());
     }
 }
 

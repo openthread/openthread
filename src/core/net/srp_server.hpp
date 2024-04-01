@@ -912,6 +912,7 @@ private:
     static constexpr AddressMode kDefaultAddressMode =
         static_cast<AddressMode>(OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDRESS_MODE);
 
+    static constexpr uint16_t kUninitializedPort      = 0;
     static constexpr uint16_t kAnycastAddressModePort = 53;
 
     // Metadata for a received SRP Update message.
@@ -971,8 +972,9 @@ private:
     void              Disable(void);
     void              Start(void);
     void              Stop(void);
+    void              InitPort(void);
     void              SelectPort(void);
-    void              PrepareSocket(void);
+    Error             PrepareSocket(void);
     Ip6::Udp::Socket &GetSocket(void);
     LinkedList<Host> &GetHosts(void) { return mHosts; }
 
