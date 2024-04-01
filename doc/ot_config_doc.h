@@ -47,15 +47,15 @@
  * @defgroup config-channel-manager          Channel Manager
  * @defgroup config-channel-monitor          Channel Monitor
  * @defgroup config-child-supervision        Child Supervision
- * @defgroup config-coap         	     CoAP
- * @defgroup config-commissioner	     Commissioner
+ * @defgroup config-coap                     CoAP
+ * @defgroup config-commissioner             Commissioner
  * @defgroup config-crypto                   Crypto Backend Library
  * @defgroup config-dataset-updater          Dataset Updater
  * @defgroup config-dhcpv6-client            DHCPv6 Client
  * @defgroup config-dhcpv6-server            DHCPv6 Server
  * @defgroup config-diag                     DIAG Service
- * @defgroup config-dns-client		     DNS Client
- * @defgroup config-dns-dso	             DNS Stateful Operations
+ * @defgroup config-dns-client               DNS Client
+ * @defgroup config-dns-dso                  DNS Stateful Operations
  * @defgroup config-dnssd-server             DNS-SD Server
  * @defgroup config-history-tracker          History Tracker
  * @defgroup config-ip6                      IP6 Service
@@ -83,7 +83,7 @@
  * @defgroup config-srp-server               SRP Server
  * @defgroup config-time-sync                Time Sync Service
  * @defgroup config-tmf                      Thread Management Framework Service
- * @defgroup config-trel		     TREL
+ * @defgroup config-trel                     TREL
  *
  * @}
  *
