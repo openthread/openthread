@@ -558,6 +558,20 @@ exit:
     return messageCopy;
 }
 
+Error CoapBase::EvictMessage(void)
+{
+    Error    error = kErrorNone;
+    Message *message;
+
+    message = mPendingRequests.GetHead();
+
+    VerifyOrExit(message != nullptr, error = kErrorNotFound);
+    LogInfo("Evicting message from head of CoAP pending requests queue");
+    DequeueMessage(*message);
+exit:
+    return error;
+}
+
 void CoapBase::DequeueMessage(Message &aMessage)
 {
     mPendingRequests.Dequeue(aMessage);

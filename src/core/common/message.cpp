@@ -149,7 +149,15 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-Error MessagePool::ReclaimBuffers(Message::Priority aPriority) { return Get<MeshForwarder>().EvictMessage(aPriority); }
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
+{
+    Error error = kErrorNotFound;
+    error       = Get<MeshForwarder>().EvictMessage(aPriority);
+    VerifyOrExit(error == kErrorNotFound);
+    error = Get<Tmf::Agent>().EvictMessage();
+exit:
+    return error;
+}
 
 uint16_t MessagePool::GetFreeBufferCount(void) const
 {
