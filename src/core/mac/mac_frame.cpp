@@ -1220,9 +1220,11 @@ void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 {
     uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
 
-    OT_ASSERT(cur != nullptr);
-
+    VerifyOrExit(cur != nullptr);
     memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
+
+exit:
+    return;
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
