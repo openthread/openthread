@@ -955,17 +955,6 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
     if (mIsReceiveIp6FilterEnabled && aApplyFilter)
     {
-#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-        // Do not pass messages sent to an RLOC/ALOC, except
-        // Service Locator
-
-        bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
-                         aMessageInfo.GetSockAddr().GetIid().IsLocator();
-
-        VerifyOrExit(!isLocator || aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
-                     error = kErrorNoRoute);
-#endif
-
         switch (aIpProto)
         {
         case kProtoIcmp6:
