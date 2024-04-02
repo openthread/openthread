@@ -286,6 +286,8 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
                                                                           AsCoreType(aIterator));
 }
 
+void otThreadClearEidCache(otInstance *aInstance) { AsCoreType(aInstance).Get<AddressResolver>().Clear(); }
+
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
