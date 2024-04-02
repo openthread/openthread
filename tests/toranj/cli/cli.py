@@ -657,6 +657,12 @@ class Node(object):
     def srp_server_disable(self):
         self._cli_no_output('srp server disable')
 
+    def srp_server_auto_enable(self):
+        self._cli_no_output('srp server auto enable')
+
+    def srp_server_auto_disable(self):
+        self._cli_no_output('srp server auto disable')
+
     def srp_server_set_lease(self, min_lease, max_lease, min_key_lease, max_key_lease):
         self._cli_no_output('srp server lease', min_lease, max_lease, min_key_lease, max_key_lease)
 
