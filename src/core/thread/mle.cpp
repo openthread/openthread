@@ -3889,22 +3889,6 @@ bool Mle::IsAnycastLocator(const Ip6::Address &aAddress) const
 
 bool Mle::IsMeshLocalAddress(const Ip6::Address &aAddress) const { return (aAddress.GetPrefix() == mMeshLocalPrefix); }
 
-Error Mle::CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header)
-{
-    Error error;
-
-    if ((aMeshDest != GetRloc16()) || Get<ThreadNetif>().HasUnicastAddress(aIp6Header.GetDestination()))
-    {
-        error = kErrorNone;
-    }
-    else
-    {
-        error = kErrorNoRoute;
-    }
-
-    return error;
-}
-
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 void Mle::InformPreviousParent(void)
 {
