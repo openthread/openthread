@@ -461,9 +461,9 @@ exit:
 
 Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Dataset                  dataset;
-    otOperationalDatasetTlvs datasetTlvs;
-    Error                    error;
+    Dataset       dataset;
+    Dataset::Tlvs datasetTlvs;
+    Error         error;
 
     SuccessOrExit(error = dataset.ReadFromMessage(aIncommingMessage, aOffset, aLength));
 

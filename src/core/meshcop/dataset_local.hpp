@@ -134,13 +134,13 @@ public:
     /**
      * Retrieves the dataset from non-volatile memory.
      *
-     * @param[out]  aDataset  Where to place the dataset.
+     * @param[out]  aDatasetTlvs  Where to place the dataset.
      *
      * @retval kErrorNone      Successfully retrieved the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Error Read(otOperationalDatasetTlvs &aDataset) const;
+    Error Read(Dataset::Tlvs &aDatasetTlvs) const;
 
     /**
      * Returns the local time this dataset was last updated or restored.
@@ -164,13 +164,13 @@ public:
     /**
      * Stores the dataset into non-volatile memory.
      *
-     * @param[in]  aDataset  The Dataset to save as `otOperationalDatasetTlvs`.
+     * @param[in]  aDatasetTlvs  The Dataset to save as `Dataset::Tlvs`.
      *
      * @retval kErrorNone             Successfully saved the dataset.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error Save(const otOperationalDatasetTlvs &aDataset);
+    Error Save(const Dataset::Tlvs &aDatasetTlvs);
 
     /**
      * Stores the dataset into non-volatile memory.

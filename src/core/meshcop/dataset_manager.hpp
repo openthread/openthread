@@ -96,13 +96,13 @@ public:
     /**
      * Retrieves the dataset from non-volatile memory.
      *
-     * @param[out]  aDataset  Where to place the dataset.
+     * @param[out]  aDatasetTlvs  Where to place the dataset.
      *
      * @retval kErrorNone      Successfully retrieved the dataset.
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Error Read(otOperationalDatasetTlvs &aDataset) const { return mLocal.Read(aDataset); }
+    Error Read(Dataset::Tlvs &aDatasetTlvs) const { return mLocal.Read(aDatasetTlvs); }
 
     /**
      * Retrieves the channel mask from local dataset.
@@ -261,13 +261,13 @@ protected:
     /**
      * Saves the Operational Dataset in non-volatile memory.
      *
-     * @param[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDatasetTlvs  The Operational Dataset as `Dataset::Tlvs`.
      *
      * @retval kErrorNone             Successfully saved the dataset.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error Save(const otOperationalDatasetTlvs &aDataset);
+    Error Save(const Dataset::Tlvs &aDatasetTlvs);
 
     /**
      * Sets the Operational Dataset for the partition.
@@ -459,13 +459,13 @@ public:
     /**
      * Sets the Operational Dataset in non-volatile memory.
      *
-     * @param[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDatasetTlvs  The Operational Dataset as `Dataset::Tlvs`.
      *
      * @retval kErrorNone            Successfully saved the dataset.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error Save(const otOperationalDatasetTlvs &aDataset) { return DatasetManager::Save(aDataset); }
+    Error Save(const Dataset::Tlvs &aDatasetTlvs) { return DatasetManager::Save(aDatasetTlvs); }
 
 #if OPENTHREAD_FTD
 
@@ -558,13 +558,13 @@ public:
      *
      * Also starts the Delay Timer.
      *
-     * @param[in]  aDataset  The Operational Dataset.
+     * @param[in]  aDatasetTlvs  The Operational Dataset as a sequence of TLVs.
      *
      * @retval kErrorNone            Successfully saved the dataset.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error Save(const otOperationalDatasetTlvs &aDataset);
+    Error Save(const Dataset::Tlvs &aDatasetTlvs);
 
     /**
      * Sets the Operational Dataset for the partition.

@@ -160,11 +160,11 @@ exit:
     return error;
 }
 
-Error DatasetManager::Save(const otOperationalDatasetTlvs &aDataset)
+Error DatasetManager::Save(const Dataset::Tlvs &aDatasetTlvs)
 {
     Error error;
 
-    SuccessOrExit(error = mLocal.Save(aDataset));
+    SuccessOrExit(error = mLocal.Save(aDatasetTlvs));
     HandleDatasetUpdated();
 
 exit:
@@ -697,11 +697,11 @@ exit:
     return error;
 }
 
-Error PendingDatasetManager::Save(const otOperationalDatasetTlvs &aDataset)
+Error PendingDatasetManager::Save(const Dataset::Tlvs &aDatasetTlvs)
 {
     Error error;
 
-    SuccessOrExit(error = DatasetManager::Save(aDataset));
+    SuccessOrExit(error = DatasetManager::Save(aDatasetTlvs));
     StartDelayTimer();
 
 exit:
