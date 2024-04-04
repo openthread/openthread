@@ -53,6 +53,11 @@ otError otLinkRawSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
     return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetShortAddress(aShortAddress);
 }
 
+otError otLinkRawSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    return AsCoreType(aInstance).Get<Mac::LinkRaw>().SetAlternateShortAddress(aShortAddress);
+}
+
 bool otLinkRawGetPromiscuous(otInstance *aInstance) { return AsCoreType(aInstance).Get<Radio>().GetPromiscuous(); }
 
 otError otLinkRawSetPromiscuous(otInstance *aInstance, bool aEnable)
