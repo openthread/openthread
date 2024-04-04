@@ -76,6 +76,12 @@ public:
     };
 
     /**
+     * Represents a Dataset as a sequence of TLVs.
+     *
+     */
+    typedef otOperationalDatasetTlvs Tlvs;
+
+    /**
      * Represents presence of different components in Active or Pending Operational Dataset.
      *
      */
@@ -770,10 +776,10 @@ public:
     /**
      * Converts the TLV representation to structure representation.
      *
-     * @param[out] aDataset  A reference to `otOperationalDatasetTlvs` to output the Dataset.
+     * @param[out] aTlvs  A reference to output the Dataset as a sequence of TLVs.
      *
      */
-    void ConvertTo(otOperationalDatasetTlvs &aDataset) const;
+    void ConvertTo(Tlvs &aTlvs) const;
 
     /**
      * Returns the Dataset size in bytes.
@@ -859,10 +865,10 @@ public:
     /**
      * Sets the Dataset using @p aDataset.
      *
-     * @param[in]  aDataset  The input Dataset as otOperationalDatasetTlvs.
+     * @param[in]  aDataset  The input Dataset as `Tlvs`.
      *
      */
-    void SetFrom(const otOperationalDatasetTlvs &aDataset);
+    void SetFrom(const Tlvs &aTlvs);
 
     /**
      * Appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.

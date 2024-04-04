@@ -251,10 +251,10 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
     }
 }
 
-void Dataset::ConvertTo(otOperationalDatasetTlvs &aDataset) const
+void Dataset::ConvertTo(Tlvs &aTlvs) const
 {
-    memcpy(aDataset.mTlvs, mTlvs, mLength);
-    aDataset.mLength = static_cast<uint8_t>(mLength);
+    memcpy(aTlvs.mTlvs, mTlvs, mLength);
+    aTlvs.mLength = static_cast<uint8_t>(mLength);
 }
 
 void Dataset::Set(Type aType, const Dataset &aDataset)
@@ -271,10 +271,10 @@ void Dataset::Set(Type aType, const Dataset &aDataset)
     mUpdateTime = aDataset.GetUpdateTime();
 }
 
-void Dataset::SetFrom(const otOperationalDatasetTlvs &aDataset)
+void Dataset::SetFrom(const Tlvs &aTlvs)
 {
-    mLength = aDataset.mLength;
-    memcpy(mTlvs, aDataset.mTlvs, mLength);
+    mLength = aTlvs.mLength;
+    memcpy(mTlvs, aTlvs.mTlvs, mLength);
 }
 
 Error Dataset::SetFrom(const Info &aDatasetInfo)
