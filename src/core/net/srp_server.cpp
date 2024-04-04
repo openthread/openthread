@@ -674,7 +674,7 @@ Error Server::PrepareSocket(void)
 exit:
     if (error != kErrorNone)
     {
-        LogCrit("Failed to prepare socket: %s", ErrorToString(error));
+        LogError("prepare socket", error);
         IgnoreError(mSocket.Close());
         Stop();
     }
@@ -872,11 +872,7 @@ Error Server::ProcessZoneSection(const Message &aMessage, MessageMetadata &aMeta
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Zone section: %s", ErrorToString(error));
-    }
-
+    LogError("process DNS Zone section", error);
     return error;
 }
 
@@ -902,11 +898,7 @@ Error Server::ProcessUpdateSection(Host &aHost, const Message &aMessage, Message
     VerifyOrExit(!HasNameConflictsWith(aHost), error = kErrorDuplicated);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Update section: %s", ErrorToString(error));
-    }
-
+    LogError("Process DNS Update section", error);
     return error;
 }
 
@@ -995,11 +987,7 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
     // the host is being removed or registered.
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Host Description instructions: %s", ErrorToString(error));
-    }
-
+    LogError("process Host Description instructions", error);
     return error;
 }
 
@@ -1118,11 +1106,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Service Discovery instructions: %s", ErrorToString(error));
-    }
-
+    LogError("process Service Discovery instructions", error);
     return error;
 }
 
@@ -1221,11 +1205,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Service Description instructions: %s", ErrorToString(error));
-    }
-
+    LogError("process Service Description instructions", error);
     return error;
 }
 
@@ -1314,11 +1294,7 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Additional section: %s", ErrorToString(error));
-    }
-
+    LogError("process DNS Additional section", error);
     return error;
 }
 
@@ -1365,11 +1341,7 @@ Error Server::VerifySignature(const Host::Key  &aKey,
     error = aKey.Verify(hash, signature);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to verify message signature: %s", ErrorToString(error));
-    }
-
+    LogError("verify message signature", error);
     FreeMessage(signerNameMessage);
     return error;
 }
@@ -1529,11 +1501,8 @@ void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
     UpdateResponseCounters(aResponseCode);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to send response: %s", ErrorToString(error));
-        FreeMessage(response);
-    }
+    LogError("send response", error);
+    FreeMessageOnError(response, error);
 }
 
 void Server::SendResponse(const Dns::UpdateHeader &aHeader,
@@ -1588,11 +1557,8 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to send response: %s", ErrorToString(error));
-        FreeMessage(response);
-    }
+    LogError("send response", error);
+    FreeMessageOnError(response, error);
 }
 
 void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -1604,10 +1570,7 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 {
     Error error = ProcessMessage(aMessage, aMessageInfo);
 
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to handle DNS message: %s", ErrorToString(error));
-    }
+    LogError("handle DNS message", error);
 }
 
 Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1847,6 +1810,16 @@ void Server::UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, 
 
 exit:
     return;
+}
+#endif
+
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+void Server::LogError(const char *aActionText, Error aError)
+{
+    if (aError != kErrorNone)
+    {
+        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
+    }
 }
 #endif
 
