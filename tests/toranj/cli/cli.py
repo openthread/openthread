@@ -312,6 +312,9 @@ class Node(object):
     def get_rloc16(self):
         return self._cli_single_output('rloc16')
 
+    def get_mac_alt_short_addr(self):
+        return self._cli_single_output('mac altshortaddr')
+
     def get_ip_addrs(self, verbose=None):
         return self.cli('ipaddr', verbose)
 

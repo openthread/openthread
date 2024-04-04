@@ -56,6 +56,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mPreviousPartitionRouterIdSequence(0)
     , mPreviousPartitionIdTimeout(0)
     , mChildRouterLinks(kChildRouterLinks)
+    , mAlternateRloc16Timeout(0)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mMaxChildIpAddresses(0)
 #endif
@@ -86,6 +87,30 @@ MleRouter::MleRouter(Instance &aInstance)
 #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
     mSteeringData.Clear();
 #endif
+}
+
+void MleRouter::SetAlternateRloc16(uint16_t aRloc16)
+{
+    VerifyOrExit(aRloc16 != Mac::kShortAddrInvalid);
+
+    LogInfo("Setting alternate RLOC16 0x%04x", aRloc16);
+
+    Get<Mac::Mac>().SetAlternateShortAddress(aRloc16);
+    mAlternateRloc16Timeout = kAlternateRloc16Timeout;
+
+exit:
+    return;
+}
+
+void MleRouter::ClearAlternateRloc16(void)
+{
+    VerifyOrExit(Get<Mac::Mac>().GetAlternateShortAddress() != Mac::kShortAddrInvalid);
+
+    LogInfo("Clearing alternate RLOC16");
+    Get<Mac::Mac>().SetAlternateShortAddress(Mac::kShortAddrInvalid);
+
+exit:
+    mAlternateRloc16Timeout = 0;
 }
 
 void MleRouter::HandlePartitionChange(void)
@@ -1472,6 +1497,16 @@ void MleRouter::HandleTimeTick(void)
     if (mPreviousPartitionIdTimeout > 0)
     {
         mPreviousPartitionIdTimeout--;
+    }
+
+    if (mAlternateRloc16Timeout > 0)
+    {
+        mAlternateRloc16Timeout--;
+
+        if (mAlternateRloc16Timeout == 0)
+        {
+            ClearAlternateRloc16();
+        }
     }
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3277,6 +3312,8 @@ void MleRouter::HandleAddressSolicitResponse(Coap::Message          *aMessage,
 
     SuccessOrExit(Tlv::FindTlv(*aMessage, routerMaskTlv));
     VerifyOrExit(routerMaskTlv.IsValid());
+
+    SetAlternateRloc16(GetRloc16());
 
     SetRouterId(routerId);
 

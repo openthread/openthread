@@ -70,8 +70,8 @@ constexpr PanId kPanIdBroadcast = 0xffff; ///< Broadcast PAN ID.
  */
 typedef otShortAddress ShortAddress;
 
-constexpr ShortAddress kShortAddrBroadcast = 0xffff; ///< Broadcast Short Address.
-constexpr ShortAddress kShortAddrInvalid   = 0xfffe; ///< Invalid Short Address.
+constexpr ShortAddress kShortAddrBroadcast = OT_RADIO_BROADCAST_SHORT_ADDR; ///< Broadcast Short Address.
+constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///< Invalid Short Address.
 
 /**
  * Generates a random IEEE 802.15.4 PAN ID.

@@ -515,6 +515,7 @@ private:
     static constexpr uint16_t kUnsolicitedDataResponseJitter = 500; // Max delay for unsol Data Response (in msec).
     static constexpr uint8_t  kLeaderDowngradeExtraDelay     = 10;  // Extra delay to downgrade leader (in sec).
     static constexpr uint8_t  kDefaultLeaderWeight           = 64;
+    static constexpr uint8_t  kAlternateRloc16Timeout        = 8; // Time to use alternate RLOC16 (in sec).
 
     // Threshold to accept a router upgrade request with reason
     // `kBorderRouterRequest` (number of BRs acting as router in
@@ -587,6 +588,8 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Methods
 
+    void     SetAlternateRloc16(uint16_t aRloc16);
+    void     ClearAlternateRloc16(void);
     void     HandleDetachStart(void);
     void     HandleChildStart(AttachMode aMode);
     void     HandleSecurityPolicyChanged(void);
@@ -680,6 +683,7 @@ private:
     uint8_t mPreviousPartitionRouterIdSequence;
     uint8_t mPreviousPartitionIdTimeout;
     uint8_t mChildRouterLinks;
+    uint8_t mAlternateRloc16Timeout;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint8_t mMaxChildIpAddresses;
 #endif

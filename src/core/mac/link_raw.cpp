@@ -161,6 +161,17 @@ exit:
     return error;
 }
 
+Error LinkRaw::SetAlternateShortAddress(ShortAddress aShortAddress)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    mSubMac.SetAlternateShortAddress(aShortAddress);
+
+exit:
+    return error;
+}
+
 Error LinkRaw::Receive(void)
 {
     Error error = kErrorNone;

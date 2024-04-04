@@ -382,6 +382,15 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
     sRadioContext.mShortAddress = aShortAddress;
 }
 
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    sRadioContext.mAlternateShortAddress = aShortAddress;
+}
+
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 {
     OT_UNUSED_VARIABLE(aInstance);
@@ -849,9 +858,9 @@ void radioProcessFrame(otInstance *aInstance)
 
     otEXPECT(sPromiscuous == false);
 
-    otEXPECT_ACTION(
-        otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sRadioContext.mShortAddress, &sRadioContext.mExtAddress),
-        error = OT_ERROR_ABORT);
+    otEXPECT_ACTION(otMacFrameDoesAddrMatchAny(&sReceiveFrame, sPanid, sRadioContext.mShortAddress,
+                                               sRadioContext.mAlternateShortAddress, &sRadioContext.mExtAddress),
+                    error = OT_ERROR_ABORT);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     otEXPECT_ACTION(otMacFrameGetSrcAddr(&sReceiveFrame, &macAddress) == OT_ERROR_NONE, error = OT_ERROR_PARSE);

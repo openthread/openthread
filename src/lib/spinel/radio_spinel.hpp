@@ -224,6 +224,17 @@ public:
     otError SetShortAddress(uint16_t aAddress);
 
     /**
+     * Sets the alternate short address.
+     *
+     * @param[in] aShortAddress   The alternate short address.
+     *
+     * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
+     */
+    otError SetAlternateShortAddress(uint16_t aAddress);
+
+    /**
      * Gets the factory-assigned IEEE EUI-64 for this transceiver.
      *
      * @param[in]  aInstance   The OpenThread instance structure.

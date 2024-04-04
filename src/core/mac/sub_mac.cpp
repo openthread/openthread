@@ -68,10 +68,11 @@ SubMac::SubMac(Instance &aInstance)
 
 void SubMac::Init(void)
 {
-    mState           = kStateDisabled;
-    mCsmaBackoffs    = 0;
-    mTransmitRetries = 0;
-    mShortAddress    = kShortAddrInvalid;
+    mState                 = kStateDisabled;
+    mCsmaBackoffs          = 0;
+    mTransmitRetries       = 0;
+    mShortAddress          = kShortAddrInvalid;
+    mAlternateShortAddress = kShortAddrInvalid;
     mExtAddress.Clear();
     mRxOnWhenIdle      = true;
     mEnergyScanMaxRssi = Radio::kInvalidRssi;
@@ -163,6 +164,18 @@ void SubMac::SetShortAddress(ShortAddress aShortAddress)
     mShortAddress = aShortAddress;
     Get<Radio>().SetShortAddress(mShortAddress);
     LogDebg("RadioShortAddress: 0x%04x", mShortAddress);
+}
+
+void SubMac::SetAlternateShortAddress(ShortAddress aShortAddress)
+{
+    VerifyOrExit(mAlternateShortAddress != aShortAddress);
+
+    mAlternateShortAddress = aShortAddress;
+    Get<Radio>().SetAlternateShortAddress(mAlternateShortAddress);
+    LogDebg("RadioAlternateShortAddress: 0x%04x", mAlternateShortAddress);
+
+exit:
+    return;
 }
 
 void SubMac::SetExtAddress(const ExtAddress &aExtAddress)
