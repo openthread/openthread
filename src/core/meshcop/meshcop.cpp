@@ -343,15 +343,5 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void LogError(const char *aActionText, Error aError)
-{
-    if (aError != kErrorNone && aError != kErrorAlready)
-    {
-        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
-    }
-}
-#endif
-
 } // namespace MeshCoP
 } // namespace ot

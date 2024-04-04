@@ -680,10 +680,7 @@ exit:
     if (!mIsClone)
 #endif
     {
-        if (error != kErrorNone)
-        {
-            LogNote("Failed to register network data: %s", ErrorToString(error));
-        }
+        LogWarnOnError(error, "register network data");
     }
 }
 

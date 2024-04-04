@@ -325,12 +325,6 @@ private:
     Error HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength);
     Error HandleStartThreadInterface(void);
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    void LogError(const char *aActionText, Error aError);
-#else
-    void LogError(const char *, Error) {}
-#endif
-
     bool         CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissionerCommandClassFlags,
                                                      CommandClassFlags aDeviceCommandClassFlags,
                                                      Dataset          *aDataset) const;

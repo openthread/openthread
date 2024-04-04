@@ -302,9 +302,9 @@ exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
     {
         Get<Tmf::SecureAgent>().Stop();
+        LogWarnOnError(error, "start commissioner");
     }
 
-    LogError("start commissioner", error);
     return error;
 }
 
@@ -343,7 +343,11 @@ Error Commissioner::Stop(ResignMode aResignMode)
 #endif
 
 exit:
-    LogError("stop commissioner", error);
+    if (error != kErrorAlready)
+    {
+        LogWarnOnError(error, "stop commissioner");
+    }
+
     return error;
 }
 
@@ -405,7 +409,8 @@ void Commissioner::SendCommissionerSet(void)
     error = SendMgmtCommissionerSetRequest(dataset, nullptr, 0);
 
 exit:
-    LogError("send MGMT_COMMISSIONER_SET.req", error);
+    LogWarnOnError(error, "send MGMT_COMMISSIONER_SET.req");
+    OT_UNUSED_VARIABLE(error);
 }
 
 void Commissioner::ClearJoiners(void)
@@ -857,7 +862,7 @@ void Commissioner::SendKeepAlive(uint16_t aSessionId)
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("send keep alive", error);
+    LogWarnOnError(error, "send keep alive");
 }
 
 void Commissioner::HandleLeaderKeepAliveResponse(void                *aContext,

@@ -674,7 +674,7 @@ Error Server::PrepareSocket(void)
 exit:
     if (error != kErrorNone)
     {
-        LogError("prepare socket", error);
+        LogWarnOnError(error, "prepare socket");
         IgnoreError(mSocket.Close());
         Stop();
     }
@@ -872,7 +872,7 @@ Error Server::ProcessZoneSection(const Message &aMessage, MessageMetadata &aMeta
     aMetadata.mOffset = offset;
 
 exit:
-    LogError("process DNS Zone section", error);
+    LogWarnOnError(error, "process DNS Zone section");
     return error;
 }
 
@@ -898,7 +898,7 @@ Error Server::ProcessUpdateSection(Host &aHost, const Message &aMessage, Message
     VerifyOrExit(!HasNameConflictsWith(aHost), error = kErrorDuplicated);
 
 exit:
-    LogError("Process DNS Update section", error);
+    LogWarnOnError(error, "Process DNS Update section");
     return error;
 }
 
@@ -987,7 +987,7 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
     // the host is being removed or registered.
 
 exit:
-    LogError("process Host Description instructions", error);
+    LogWarnOnError(error, "process Host Description instructions");
     return error;
 }
 
@@ -1106,7 +1106,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
     }
 
 exit:
-    LogError("process Service Discovery instructions", error);
+    LogWarnOnError(error, "process Service Discovery instructions");
     return error;
 }
 
@@ -1205,7 +1205,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
     aMetadata.mOffset = offset;
 
 exit:
-    LogError("process Service Description instructions", error);
+    LogWarnOnError(error, "process Service Description instructions");
     return error;
 }
 
@@ -1294,7 +1294,7 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     aMetadata.mOffset = offset;
 
 exit:
-    LogError("process DNS Additional section", error);
+    LogWarnOnError(error, "process DNS Additional section");
     return error;
 }
 
@@ -1341,7 +1341,7 @@ Error Server::VerifySignature(const Host::Key  &aKey,
     error = aKey.Verify(hash, signature);
 
 exit:
-    LogError("verify message signature", error);
+    LogWarnOnError(error, "verify message signature");
     FreeMessage(signerNameMessage);
     return error;
 }
@@ -1501,7 +1501,7 @@ void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
     UpdateResponseCounters(aResponseCode);
 
 exit:
-    LogError("send response", error);
+    LogWarnOnError(error, "send response");
     FreeMessageOnError(response, error);
 }
 
@@ -1557,7 +1557,7 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
 exit:
-    LogError("send response", error);
+    LogWarnOnError(error, "send response");
     FreeMessageOnError(response, error);
 }
 
@@ -1570,7 +1570,8 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 {
     Error error = ProcessMessage(aMessage, aMessageInfo);
 
-    LogError("handle DNS message", error);
+    LogWarnOnError(error, "handle DNS message");
+    OT_UNUSED_VARIABLE(error);
 }
 
 Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -1810,16 +1811,6 @@ void Server::UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, 
 
 exit:
     return;
-}
-#endif
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void Server::LogError(const char *aActionText, Error aError)
-{
-    if (aError != kErrorNone)
-    {
-        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
-    }
 }
 #endif
 

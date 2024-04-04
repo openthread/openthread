@@ -308,12 +308,6 @@ private:
     static bool HandleUdpReceive(void *aContext, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     bool        HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-    void LogError(const char *aActionText, Error aError);
-#else
-    void LogError(const char *, Error) {}
-#endif
-
     using TimeoutTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleTimeout>;
 #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
     using EphemeralKeyTimer = TimerMilliIn<BorderAgent, &BorderAgent::HandleEphemeralKeyTimeout>;

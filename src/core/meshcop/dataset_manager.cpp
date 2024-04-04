@@ -292,7 +292,11 @@ exit:
         OT_FALL_THROUGH;
 
     default:
-        LogError("send Dataset set to leader", error);
+        if (error != kErrorAlready)
+        {
+            LogWarnOnError(error, "send Dataset set to leader");
+        }
+
         FreeMessage(message);
         break;
     }
