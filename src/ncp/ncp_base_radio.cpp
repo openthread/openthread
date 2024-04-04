@@ -407,6 +407,19 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_15_4_ALT_SADDR>(void)
+{
+    uint16_t shortAddress;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(shortAddress));
+
+    error = otLinkRawSetAlternateShortAddress(mInstance, shortAddress);
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MULTIPAN_ACTIVE_INTERFACE>(void)
 {

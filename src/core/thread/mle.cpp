@@ -692,6 +692,7 @@ void Mle::SetStateDetached(void)
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
     Get<Mac::Mac>().SetBeaconEnabled(false);
 #if OPENTHREAD_FTD
+    Get<MleRouter>().ClearAlternateRloc16();
     Get<MleRouter>().HandleDetachStart();
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -814,6 +815,13 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     LogNote("Mode 0x%02x -> 0x%02x [%s]", oldMode.Get(), mDeviceMode.Get(), mDeviceMode.ToString().AsCString());
 
     IgnoreError(Store());
+
+#if OPENTHREAD_FTD
+    if (!aDeviceMode.IsFullThreadDevice())
+    {
+        Get<MleRouter>().ClearAlternateRloc16();
+    }
+#endif
 
     if (IsAttached())
     {
@@ -952,6 +960,12 @@ void Mle::SetRloc16(uint16_t aRloc16)
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocalRloc);
 #if OPENTHREAD_FTD
         Get<AddressResolver>().RestartAddressQueries();
+#endif
+    }
+    else
+    {
+#if OPENTHREAD_FTD
+        Get<MleRouter>().ClearAlternateRloc16();
 #endif
     }
 }

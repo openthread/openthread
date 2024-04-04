@@ -42,6 +42,15 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
                              otShortAddress      aShortAddress,
                              const otExtAddress *aExtAddress)
 {
+    return otMacFrameDoesAddrMatchAny(aFrame, aPanId, aShortAddress, Mac::kShortAddrInvalid, aExtAddress);
+}
+
+bool otMacFrameDoesAddrMatchAny(const otRadioFrame *aFrame,
+                                otPanId             aPanId,
+                                otShortAddress      aShortAddress,
+                                otShortAddress      aAltShortAddress,
+                                const otExtAddress *aExtAddress)
+{
     const Mac::Frame &frame = *static_cast<const Mac::Frame *>(aFrame);
     bool              rval  = true;
     Mac::Address      dst;
@@ -52,7 +61,9 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
     switch (dst.GetType())
     {
     case Mac::Address::kTypeShort:
-        VerifyOrExit(dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress, rval = false);
+        VerifyOrExit(dst.GetShort() == Mac::kShortAddrBroadcast || dst.GetShort() == aShortAddress ||
+                         (aAltShortAddress != Mac::kShortAddrInvalid && dst.GetShort() == aAltShortAddress),
+                     rval = false);
         break;
 
     case Mac::Address::kTypeExtended:

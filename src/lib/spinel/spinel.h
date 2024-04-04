@@ -419,7 +419,7 @@
  *
  * Please see section "Spinel definition compatibility guideline" for more details.
  */
-#define SPINEL_RCP_API_VERSION 10
+#define SPINEL_RCP_API_VERSION 11
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -2092,6 +2092,14 @@ enum
      * state during idle periods.
      */
     SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE = SPINEL_PROP_MAC__BEGIN + 11,
+
+    /// MAC Alternate Short Address
+    /** Format: `S`
+     *
+     * The 802.15.4 alternate short address.
+     *
+     */
+    SPINEL_PROP_MAC_15_4_ALT_SADDR = SPINEL_PROP_MAC__BEGIN + 12,
 
     SPINEL_PROP_MAC__END = 0x40,
 

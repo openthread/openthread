@@ -7306,7 +7306,21 @@ template <> otError Interpreter::Process<Cmd("mac")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgs[0] == "retries")
+    /**
+     * @cli mac altshortaddr
+     * @code
+     * mac altshortaddr
+     * 0x4802
+     * Done
+     * @endcode
+     * @par api_copy
+     * otLinkGetAlternateShortAddress
+     */
+    if (aArgs[0] == "altshortaddr")
+    {
+        OutputLine("0x%04x", otLinkGetAlternateShortAddress(GetInstancePtr()));
+    }
+    else if (aArgs[0] == "retries")
     {
         /**
          * @cli mac retries direct (get,set)
