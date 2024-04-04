@@ -1047,6 +1047,12 @@ private:
     void UpdateResponseCounters(Dns::Header::Response aResponseCode);
     void UpdateAddrResolverCacheTable(const Ip6::MessageInfo &aMessageInfo, const Host &aHost);
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+    static void LogError(const char *aActionText, Error aError);
+#else
+    static void LogError(const char *, Error) {}
+#endif
+
     using LeaseTimer           = TimerMilliIn<Server, &Server::HandleLeaseTimer>;
     using UpdateTimer          = TimerMilliIn<Server, &Server::HandleOutstandingUpdatesTimer>;
     using CompletedUpdatesTask = TaskletIn<Server, &Server::ProcessCompletedUpdates>;
