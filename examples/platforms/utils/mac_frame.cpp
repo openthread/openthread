@@ -43,7 +43,7 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
     Mac::Address      dst;
     Mac::PanId        panid;
 
-    SuccessOrExit(frame.GetDstAddr(dst));
+    VerifyOrExit(frame.GetDstAddr(dst) == kErrorNone, rval = false);
 
     switch (dst.GetType())
     {
