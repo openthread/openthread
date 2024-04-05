@@ -334,6 +334,28 @@ uint8_t Mpl::DetermineMaxRetransmissions(void) const
     return maxRetx;
 }
 
+bool Mpl::RemoveMatchedMessage(Message &aMessage)
+{
+    bool     match = false;
+    uint16_t len   = aMessage.GetLength();
+    
+    VerifyOrExit(len > 0);
+    for (Message &message : mBufferedMessageSet)
+    {
+        if (message.GetLength() - sizeof(Metadata) >= len)
+        {
+            if (aMessage.CompareBytes(0, message, message.GetLength() - sizeof(Metadata) - len, len))
+            {
+                mBufferedMessageSet.DequeueAndFree(message);
+                match = true;
+                break;
+            }
+        }
+    }
+exit:
+    return match;
+}
+
 void Mpl::AddBufferedMessage(Message &aMessage, uint16_t aSeedId, uint8_t aSequence)
 {
     Error    error       = kErrorNone;

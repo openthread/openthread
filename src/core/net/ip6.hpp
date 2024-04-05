@@ -349,6 +349,11 @@ public:
      */
     void ResetBorderRoutingCounters(void) { ClearAllBytes(mBorderRoutingCounters); }
 #endif
+    /**
+     * Removes matching MPL entry.
+     *
+     */
+    void RemoveMplEntry(Message &aMessage) { mMpl.RemoveMatchedMessage(aMessage); }
 
 private:
     static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;

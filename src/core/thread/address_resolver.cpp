@@ -858,6 +858,7 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
     {
         SendAddressQueryResponse(target, Get<Mle::MleRouter>().GetMeshLocal64().GetIid(), nullptr,
                                  aMessageInfo.GetPeerAddr());
+        Get<Ip6::Ip6>().RemoveMplEntry(aMessage);
         ExitNow();
     }
 
@@ -872,6 +873,7 @@ void AddressResolver::HandleTmf<kUriAddressQuery>(Coap::Message &aMessage, const
         {
             lastTransactionTime = Time::MsecToSec(TimerMilli::GetNow() - child.GetLastHeard());
             SendAddressQueryResponse(target, child.GetMeshLocalIid(), &lastTransactionTime, aMessageInfo.GetPeerAddr());
+            Get<Ip6::Ip6>().RemoveMplEntry(aMessage);
             ExitNow();
         }
     }

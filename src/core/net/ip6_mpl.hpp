@@ -212,6 +212,13 @@ public:
      */
     const MessageQueue &GetBufferedMessageSet(void) const { return mBufferedMessageSet; }
 #endif
+    /**
+     * Compare with the MPL messages in the buffered set and remove the first matched entry
+     *
+     * @retval true  Successfully found and removed
+     * @retval false Failed to find
+     */
+    bool RemoveMatchedMessage(Message &aMessage);
 
 private:
     static constexpr uint16_t kNumSeedEntries      = OPENTHREAD_CONFIG_MPL_SEED_SET_ENTRIES;
