@@ -308,6 +308,20 @@ case ${build_config} in
         ninja || die
         ;;
 
+    nexus)
+        echo "===================================================================================================="
+        echo "Building OpenThread Nexus test platform"
+        echo "===================================================================================================="
+        cd "${top_builddir}" || die "cd failed"
+        cmake -GNinja -DOT_PLATFORM=nexus -DOT_COMPILE_WARNING_AS_ERROR=ON -DOT_COVERAGE=${ot_coverage} \
+            -DOT_MULTIPLE_INSTANCE=ON \
+            -DOT_THREAD_VERSION=1.4 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF \
+            -DOT_PLATFORM_KEY_REF=${ot_plat_key_ref} \
+            -DOT_PROJECT_CONFIG=../tests/toranj/openthread-core-toranj-config-simulation.h \
+            "${top_srcdir}" || die
+        ninja || die
+        ;;
+
     *)
         echo "Error: Unknown configuration \"$1\""
         display_usage
