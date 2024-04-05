@@ -437,7 +437,10 @@ private:
         void Notify(Event aEvent) const;
         void Process(void);
         void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
-        void CountUnicastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
+        void CountServiceDataUnicastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
+        void CountServerDataUnicastEntries(uint8_t &aNumEntries,
+                                           uint8_t &aNumPreferredEntries,
+                                           bool    &aHasServiceDataEntry) const;
 
         Info                            mInfo;
         Callback<DnsSrpServiceCallback> mCallback;
