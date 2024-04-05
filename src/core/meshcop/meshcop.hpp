@@ -561,22 +561,6 @@ Error GeneratePskc(const char          *aPassPhrase,
  */
 void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
 
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-/**
- * Emits a log message indicating an error during a MeshCoP action.
- *
- * Note that log message is emitted only if there is an error, i.e. @p aError is not `kErrorNone`. The log
- * message will have the format "Failed to {aActionText} : {ErrorString}".
- *
- * @param[in] aActionText   A string representing the failed action.
- * @param[in] aError        The error in sending the message.
- *
- */
-void LogError(const char *aActionText, Error aError);
-#else
-inline void LogError(const char *, Error) {}
-#endif
-
 } // namespace MeshCoP
 
 DefineCoreType(otJoinerPskd, MeshCoP::JoinerPskd);

@@ -3908,13 +3908,8 @@ void Mle::InformPreviousParent(void)
     LogNote("Sending message to inform previous parent 0x%04x", mPreviousParentRloc);
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to inform previous parent: %s", ErrorToString(error));
-
-        FreeMessage(message);
-    }
+    LogWarnOnError(error, "inform previous parent");
+    FreeMessageOnError(message, error);
 }
 #endif // OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
 

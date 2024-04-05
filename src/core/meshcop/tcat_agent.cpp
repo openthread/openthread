@@ -94,7 +94,7 @@ Error TcatAgent::Start(const TcatAgent::VendorInfo &aVendorInfo,
     mAlreadyCommissioned        = false;
 
 exit:
-    LogError("start TCAT agent", error);
+    LogWarnOnError(error, "start TCAT agent");
     return error;
 }
 
@@ -499,16 +499,6 @@ Error TcatAgent::HandleStartThreadInterface(void)
 exit:
     return error;
 }
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void TcatAgent::LogError(const char *aActionText, Error aError)
-{
-    if (aError != kErrorNone)
-    {
-        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
-    }
-}
-#endif
 
 } // namespace MeshCoP
 } // namespace ot

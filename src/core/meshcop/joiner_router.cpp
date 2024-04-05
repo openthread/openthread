@@ -232,7 +232,7 @@ void JoinerRouter::DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInf
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("schedule joiner entrust", error);
+    LogWarnOnError(error, "schedule joiner entrust");
 }
 
 void JoinerRouter::HandleTimer(void) { SendDelayedJoinerEntrust(); }

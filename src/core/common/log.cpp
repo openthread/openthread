@@ -136,6 +136,16 @@ exit:
     return;
 }
 
+#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
+void Logger::LogOnError(const char *aModuleName, Error aError, const char *aText)
+{
+    if (aError != kErrorNone)
+    {
+        LogAtLevel<kLogLevelWarn>(aModuleName, "Failed to %s: %s", aText, ErrorToString(aError));
+    }
+}
+#endif
+
 #if OPENTHREAD_CONFIG_LOG_PKT_DUMP
 
 template <LogLevel kLogLevel>

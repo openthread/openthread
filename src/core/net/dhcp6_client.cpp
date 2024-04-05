@@ -288,7 +288,7 @@ exit:
     if (error != kErrorNone)
     {
         FreeMessage(message);
-        LogWarn("Failed to send DHCPv6 Solicit: %s", ErrorToString(error));
+        LogWarnOnError(error, "send DHCPv6 Solicit");
     }
 }
 
