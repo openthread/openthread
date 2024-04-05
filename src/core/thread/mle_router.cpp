@@ -3891,20 +3891,6 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-void MleRouter::HandleTimeSync(RxInfo &aRxInfo)
-{
-    Log(kMessageReceive, kTypeTimeSync, aRxInfo.mMessageInfo.GetPeerAddr());
-
-    VerifyOrExit(aRxInfo.IsNeighborStateValid());
-
-    aRxInfo.mClass = RxInfo::kPeerMessage;
-
-    Get<TimeSync>().HandleTimeSyncMessage(aRxInfo.mMessage);
-
-exit:
-    return;
-}
-
 Error MleRouter::SendTimeSync(void)
 {
     Error        error = kErrorNone;
