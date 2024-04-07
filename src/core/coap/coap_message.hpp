@@ -480,6 +480,18 @@ public:
     Error ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
 
     /**
+     * Appends a Uri-Query option.
+     *
+     * @param[in]  aUriQuery          A pointer to a null-terminated string.
+     *
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
+     *
+     */
+    Error AppendUriQueryOptions(const char *aUriQuery);
+	
+    /**
      * Appends a Block option
      *
      * @param[in]  aType              Type of block option, 1 or 2.
