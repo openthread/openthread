@@ -38,7 +38,7 @@
 #include <openthread/random_noncrypto.h>
 
 #include <ctype.h>
-#include <cstddef.h>
+#include <cstddef>
 
 #include "cli/cli.hpp"
 
