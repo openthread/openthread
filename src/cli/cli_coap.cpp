@@ -37,8 +37,8 @@
 
 #include <openthread/random_noncrypto.h>
 
-#include <ctype.h>
 #include <cstddef>
+#include <ctype.h>
 
 #include "cli/cli.hpp"
 
@@ -695,8 +695,10 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     else
     {
         // "?" presents in URI --> contains URI path AND URI query parts
-        strncpy(coapUriQuery, uriQueryStartPtr + 1, strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr + 1 - coapUri));
-        memset(const_cast<char *>(uriQueryStartPtr), '\0', strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr - coapUri));
+        strncpy(coapUriQuery, uriQueryStartPtr + 1,
+                strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr + 1 - coapUri));
+        memset(const_cast<char *>(uriQueryStartPtr), '\0',
+               strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr - coapUri));
 
         SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
         SuccessOrExit(error = otCoapMessageAppendUriQueryOptions(message, coapUriQuery));
