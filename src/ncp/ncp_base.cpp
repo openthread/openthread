@@ -2710,6 +2710,14 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CALIBRATED_POWER>
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_POWER_CALIBRATION_ENABLE
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_CAPS>(void)
+{
+    otRadioCaps caps = OT_CAPS_NCP;
+    return mEncoder.WriteUintPacked(caps);
+}
+#endif
+
 } // namespace Ncp
 } // namespace ot
 

@@ -127,16 +127,17 @@ typedef uint16_t otRadioCaps;
  */
 enum
 {
-    OT_RADIO_CAPS_NONE             = 0,      ///< Radio supports no capability.
-    OT_RADIO_CAPS_ACK_TIMEOUT      = 1 << 0, ///< Radio supports AckTime event.
-    OT_RADIO_CAPS_ENERGY_SCAN      = 1 << 1, ///< Radio supports Energy Scans.
-    OT_RADIO_CAPS_TRANSMIT_RETRIES = 1 << 2, ///< Radio supports tx retry logic with collision avoidance (CSMA).
-    OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3, ///< Radio supports CSMA backoff for frame transmission (but no retry).
-    OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
-    OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
-    OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
-    OT_RADIO_CAPS_RECEIVE_TIMING   = 1 << 7, ///< Radio supports rx at specific time.
-    OT_RADIO_CAPS_RX_ON_WHEN_IDLE  = 1 << 8, ///< Radio supports RxOnWhenIdle handling.
+    OT_RADIO_CAPS_NONE             = 0,       ///< Radio supports no capability.
+    OT_RADIO_CAPS_ACK_TIMEOUT      = 1 << 0,  ///< Radio supports AckTime event.
+    OT_RADIO_CAPS_ENERGY_SCAN      = 1 << 1,  ///< Radio supports Energy Scans.
+    OT_RADIO_CAPS_TRANSMIT_RETRIES = 1 << 2,  ///< Radio supports tx retry logic with collision avoidance (CSMA).
+    OT_RADIO_CAPS_CSMA_BACKOFF     = 1 << 3,  ///< Radio supports CSMA backoff for frame transmission (but no retry).
+    OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4,  ///< Radio supports direct transition from sleep to TX with CSMA.
+    OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5,  ///< Radio supports tx security.
+    OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6,  ///< Radio supports tx at specific time.
+    OT_RADIO_CAPS_RECEIVE_TIMING   = 1 << 7,  ///< Radio supports rx at specific time.
+    OT_RADIO_CAPS_RX_ON_WHEN_IDLE  = 1 << 8,  ///< Radio supports RxOnWhenIdle handling.
+    OT_CAPS_NCP                    = 1 << 15, ///< Special capability: The co-processor is an NCP.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
