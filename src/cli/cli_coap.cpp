@@ -687,7 +687,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 
     uriQueryStartPtr = StringFind(coapUri, '?');
 
-    if (uriQueryStartPtr == NULL)
+    if (uriQueryStartPtr == nullptr)
     {
         // "?" doesn't present in URI --> contains only URI path parts
         SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
