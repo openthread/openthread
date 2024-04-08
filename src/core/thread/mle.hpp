@@ -973,14 +973,14 @@ private:
         kTypeLinkReject,
         kTypeLinkRequest,
         kTypeParentRequest,
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        kTypeTimeSync,
-#endif
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         kTypeLinkMetricsManagementRequest,
         kTypeLinkMetricsManagementResponse,
         kTypeLinkProbe,
+#endif
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+        kTypeTimeSync,
 #endif
     };
 
@@ -1240,7 +1240,6 @@ private:
     void       SetAttachState(AttachState aState);
     void       InitNeighbor(Neighbor &aNeighbor, const RxInfo &aRxInfo);
     void       ClearParentCandidate(void) { mParentCandidate.Clear(); }
-    Error      CheckReachability(uint16_t aMeshDest, const Ip6::Header &aIp6Header);
     Error      SendDataRequest(const Ip6::Address &aDestination);
     void       HandleNotifierEvents(Events aEvents);
     void       SendDelayedResponse(TxMessage &aMessage, const DelayedResponseMetadata &aMetadata);
@@ -1312,6 +1311,10 @@ private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ServiceAloc *FindInServiceAlocs(uint16_t aAloc16);
     void         UpdateServiceAlocs(void);
+#endif
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    void HandleTimeSync(RxInfo &aRxInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

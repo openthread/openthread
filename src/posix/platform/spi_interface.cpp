@@ -62,6 +62,8 @@
 namespace ot {
 namespace Posix {
 
+const char SpiInterface::kLogModuleName[] = "SpiIntface";
+
 SpiInterface::SpiInterface(const Url::Url &aRadioUrl)
     : mReceiveFrameCallback(nullptr)
     , mReceiveFrameContext(nullptr)
@@ -153,7 +155,7 @@ otError SpiInterface::Init(ReceiveFrameCallback aCallback, void *aCallbackContex
     }
     else
     {
-        otLogNotePlat("SPI interface enters polling mode.");
+        LogNote("SPI interface enters polling mode.");
     }
 
     InitResetPin(spiGpioResetDevice, spiGpioResetLine);
@@ -254,7 +256,7 @@ void SpiInterface::InitResetPin(const char *aCharDev, uint8_t aLine)
     char label[] = "SOC_THREAD_RESET";
     int  fd;
 
-    otLogDebgPlat("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
+    LogDebg("InitResetPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
     VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -268,7 +270,7 @@ void SpiInterface::InitIntPin(const char *aCharDev, uint8_t aLine)
     char label[] = "THREAD_SOC_INT";
     int  fd;
 
-    otLogDebgPlat("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
+    LogDebg("InitIntPin: charDev=%s, line=%" PRIu8, aCharDev, aLine);
 
     VerifyOrDie(aCharDev != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aCharDev, O_RDWR)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -283,7 +285,7 @@ void SpiInterface::InitSpiDev(const char *aPath, uint8_t aMode, uint32_t aSpeed)
     const uint8_t wordBits = kSpiBitsPerWord;
     int           fd;
 
-    otLogDebgPlat("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
+    LogDebg("InitSpiDev: path=%s, mode=%" PRIu8 ", speed=%" PRIu32, aPath, aMode, aSpeed);
 
     VerifyOrDie((aPath != nullptr) && (aMode <= kSpiModeMax), OT_EXIT_INVALID_ARGUMENTS);
     VerifyOrDie((fd = open(aPath, O_RDWR | O_CLOEXEC)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -314,7 +316,7 @@ void SpiInterface::TriggerReset(void)
     // Set Reset pin to high level.
     SetGpioValue(mResetGpioValueFd, 1);
 
-    otLogNotePlat("Triggered hardware reset");
+    LogNote("Triggered hardware reset");
 }
 
 uint8_t *SpiInterface::GetRealRxFrameStart(uint8_t *aSpiRxFrameBuffer, uint8_t aAlignAllowance, uint16_t &aSkipLength)
@@ -453,12 +455,12 @@ otError SpiInterface::PushPullSpi(void)
 
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("PushPullSpi:DoSpiTransfer: errno=%s", strerror(errno));
+        LogCrit("PushPullSpi:DoSpiTransfer: errno=%s", strerror(errno));
 
         // Print out a helpful error message for a common error.
         if ((mSpiCsDelayUs != 0) && (errno == EINVAL))
         {
-            otLogWarnPlat("SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
+            LogWarn("SPI ioctl failed with EINVAL. Try adding `--spi-cs-delay=0` to command line arguments.");
         }
 
         LogStats();
@@ -471,10 +473,10 @@ otError SpiInterface::PushPullSpi(void)
     {
         Spinel::SpiFrame rxFrame(spiRxFrame);
 
-        otLogDebgPlat("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
-                      txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
-        otLogDebgPlat("spi_transfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
-                      rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
+        LogDebg("spi_transfer TX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, txFrame.GetHeaderFlagByte(),
+                txFrame.GetHeaderAcceptLen(), txFrame.GetHeaderDataLen());
+        LogDebg("spi_transfer RX: H:%02X ACCEPT:%" PRIu16 " DATA:%" PRIu16, rxFrame.GetHeaderFlagByte(),
+                rxFrame.GetHeaderAcceptLen(), rxFrame.GetHeaderDataLen());
 
         slaveHeader = rxFrame.GetHeaderFlagByte();
         if ((slaveHeader == 0xFF) || (slaveHeader == 0x00))
@@ -485,11 +487,11 @@ otError SpiInterface::PushPullSpi(void)
                 // Device is off or in a bad state. In some cases may be induced by flow control.
                 if (mSpiSlaveDataLen == 0)
                 {
-                    otLogDebgPlat("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
+                    LogDebg("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
                 }
                 else
                 {
-                    otLogWarnPlat("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
+                    LogWarn("Slave did not respond to frame. (Header was all 0x%02X)", slaveHeader);
                 }
 
                 mSpiUnresponsiveFrameCount++;
@@ -499,8 +501,8 @@ otError SpiInterface::PushPullSpi(void)
                 // Header is full of garbage
                 mInterfaceMetrics.mTransferredGarbageFrameCount++;
 
-                otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1],
-                              spiRxFrame[2], spiRxFrame[3], spiRxFrame[4]);
+                LogWarn("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
+                        spiRxFrame[3], spiRxFrame[4]);
                 otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
                 otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
             }
@@ -518,8 +520,8 @@ otError SpiInterface::PushPullSpi(void)
             mSpiTxRefusedCount++;
             mSpiSlaveDataLen = 0;
 
-            otLogWarnPlat("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
-                          spiRxFrame[3], spiRxFrame[4]);
+            LogWarn("Garbage in header : %02X %02X %02X %02X %02X", spiRxFrame[0], spiRxFrame[1], spiRxFrame[2],
+                    spiRxFrame[3], spiRxFrame[4]);
             otDumpDebgPlat("SPI-TX", mSpiTxFrameBuffer, spiTransferBytes);
             otDumpDebgPlat("SPI-RX", spiRxFrameBuffer, spiTransferBytes);
 
@@ -532,7 +534,7 @@ otError SpiInterface::PushPullSpi(void)
         {
             mSlaveResetCount++;
 
-            otLogNotePlat("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
+            LogNote("Slave did reset (%" PRIu64 " resets so far)", mSlaveResetCount);
             LogStats();
         }
 
@@ -634,7 +636,7 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
             // Interrupt pin is asserted, set the timeout to be 0.
             timeout.tv_sec  = 0;
             timeout.tv_usec = 0;
-            otLogDebgPlat("UpdateFdSet(): Interrupt.");
+            LogDebg("UpdateFdSet(): Interrupt.");
         }
         else
         {
@@ -677,7 +679,7 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         {
             // To avoid printing out this message over and over, we only print it out once the refused count is at two
             // or higher when we actually have something to send the slave. And then, we only print it once.
-            otLogInfoPlat("Slave is rate limiting transactions");
+            LogInfo("Slave is rate limiting transactions");
 
             mDidPrintRateLimitLog = true;
         }
@@ -686,7 +688,7 @@ void SpiInterface::UpdateFdSet(void *aMainloopContext)
         {
             // Ua-oh. The slave hasn't given us a chance to send it anything for over thirty frames. If this ever
             // happens, print out a warning to the logs.
-            otLogWarnPlat("Slave seems stuck.");
+            LogWarn("Slave seems stuck.");
         }
         else if (mSpiTxRefusedCount == kSpiTxRefuseExitCount)
         {
@@ -716,7 +718,7 @@ void SpiInterface::Process(const void *aMainloopContext)
     {
         struct gpioevent_data event;
 
-        otLogDebgPlat("Process(): Interrupt.");
+        LogDebg("Process(): Interrupt.");
 
         // Read event data to clear interrupt.
         VerifyOrDie(read(mIntGpioValueFd, &event, sizeof(event)) != -1, OT_EXIT_ERROR_ERRNO);
@@ -804,21 +806,21 @@ exit:
 void SpiInterface::LogError(const char *aString)
 {
     OT_UNUSED_VARIABLE(aString);
-    otLogWarnPlat("%s: %s", aString, strerror(errno));
+    LogWarn("%s: %s", aString, strerror(errno));
 }
 
 void SpiInterface::LogStats(void)
 {
-    otLogInfoPlat("INFO: SlaveResetCount=%" PRIu64, mSlaveResetCount);
-    otLogInfoPlat("INFO: SpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
-    otLogInfoPlat("INFO: SpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
-    otLogInfoPlat("INFO: TransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
-    otLogInfoPlat("INFO: TransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
-    otLogInfoPlat("INFO: TransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
-    otLogInfoPlat("INFO: RxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
-    otLogInfoPlat("INFO: RxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
-    otLogInfoPlat("INFO: TxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
-    otLogInfoPlat("INFO: TxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
+    LogInfo("INFO: SlaveResetCount=%" PRIu64, mSlaveResetCount);
+    LogInfo("INFO: SpiDuplexFrameCount=%" PRIu64, mSpiDuplexFrameCount);
+    LogInfo("INFO: SpiUnresponsiveFrameCount=%" PRIu64, mSpiUnresponsiveFrameCount);
+    LogInfo("INFO: TransferredFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredFrameCount);
+    LogInfo("INFO: TransferredValidFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredValidFrameCount);
+    LogInfo("INFO: TransferredGarbageFrameCount=%" PRIu64, mInterfaceMetrics.mTransferredGarbageFrameCount);
+    LogInfo("INFO: RxFrameCount=%" PRIu64, mInterfaceMetrics.mRxFrameCount);
+    LogInfo("INFO: RxFrameByteCount=%" PRIu64, mInterfaceMetrics.mRxFrameByteCount);
+    LogInfo("INFO: TxFrameCount=%" PRIu64, mInterfaceMetrics.mTxFrameCount);
+    LogInfo("INFO: TxFrameByteCount=%" PRIu64, mInterfaceMetrics.mTxFrameByteCount);
 }
 } // namespace Posix
 } // namespace ot

@@ -34,6 +34,7 @@ import logging
 from ble.ble_connection_constants import BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, \
     BBTC_RX_CHAR_UUID, SERVER_COMMON_NAME
 from ble.ble_stream import BleStream
+from ble.udp_stream import UdpStream
 from ble.ble_stream_secure import BleStreamSecure
 from ble import ble_scanner
 from cli.cli import CLI
@@ -47,10 +48,12 @@ async def main():
 
     parser = argparse.ArgumentParser(description='Device parameters')
     parser.add_argument('--debug', help='Enable debug logs', action='store_true')
+    parser.add_argument('--cert_path', help='Path to certificate chain and key', action='store', default='auth')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--mac', type=str, help='Device MAC address', action='store')
     group.add_argument('--name', type=str, help='Device name', action='store')
     group.add_argument('--scan', help='Scan all available devices', action='store_true')
+    group.add_argument('--simulation', help='Connect to simulation node id', action='store')
     args = parser.parse_args()
 
     if args.debug:
@@ -63,12 +66,11 @@ async def main():
 
     if not (device is None):
         print(f'Connecting to {device}')
-        ble_stream = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
-        ble_sstream = BleStreamSecure(ble_stream)
+        ble_sstream = BleStreamSecure(device)
         ble_sstream.load_cert(
-            certfile=path.join('auth', 'commissioner_cert.pem'),
-            keyfile=path.join('auth', 'commissioner_key.pem'),
-            cafile=path.join('auth', 'ca_cert.pem'),
+            certfile=path.join(args.cert_path, 'commissioner_cert.pem'),
+            keyfile=path.join(args.cert_path, 'commissioner_key.pem'),
+            cafile=path.join(args.cert_path, 'ca_cert.pem'),
         )
 
         print('Setting up secure channel...')
@@ -96,11 +98,16 @@ async def get_device_by_args(args):
     device = None
     if args.mac:
         device = await ble_scanner.find_first_by_mac(args.mac)
+        device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
     elif args.name:
         device = await ble_scanner.find_first_by_name(args.name)
+        device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
     elif args.scan:
         tcat_devices = await ble_scanner.scan_tcat_devices()
         device = select_device_by_user_input(tcat_devices)
+        device = await BleStream.create(device.address, BBTC_SERVICE_UUID, BBTC_TX_CHAR_UUID, BBTC_RX_CHAR_UUID)
+    elif args.simulation:
+        device = UdpStream("127.0.0.1", int(args.simulation))
 
     return device
 

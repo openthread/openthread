@@ -455,7 +455,7 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
      * #otBorderRoutingDhcp6PdSetEnabled
      *
      */
-    if (Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otBorderRoutingDhcp6PdSetEnabled) == OT_ERROR_NONE)
     {
     }
     /**
@@ -536,6 +536,46 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry)
     OutputIp6Address(aEntry.mAddress);
     OutputLine(" (M:%u O:%u Stub:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
                aEntry.mStubRouterFlag);
+}
+
+template <> otError Br::Process<Cmd("raoptions")>(Arg aArgs[])
+{
+    static constexpr uint16_t kMaxExtraOptions = 800;
+
+    otError  error = OT_ERROR_NONE;
+    uint8_t  options[kMaxExtraOptions];
+    uint16_t length;
+
+    /**
+     * @cli br raoptions (set,clear)
+     * @code
+     * br raoptions 0400ff00020001
+     * Done
+     * @endcode
+     * @code
+     * br raoptions clear
+     * Done
+     * @endcode
+     * @cparam br raoptions @ca{options|clear}
+     * `br raoptions clear` passes a `nullptr` to #otBorderRoutingSetExtraRouterAdvertOptions.
+     * Otherwise, you can pass the `options` byte as hex data.
+     * @par api_copy
+     * #otBorderRoutingSetExtraRouterAdvertOptions
+     */
+    if (aArgs[0] == "clear")
+    {
+        length = 0;
+    }
+    else
+    {
+        length = sizeof(options);
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(length, options));
+    }
+
+    error = otBorderRoutingSetExtraRouterAdvertOptions(GetInstancePtr(), length > 0 ? options : nullptr, length);
+
+exit:
+    return error;
 }
 
 template <> otError Br::Process<Cmd("rioprf")>(Arg aArgs[])
@@ -702,6 +742,7 @@ otError Br::Process(Arg aArgs[])
         CmdEntry("pd"),
 #endif
         CmdEntry("prefixtable"),
+        CmdEntry("raoptions"),
         CmdEntry("rioprf"),
         CmdEntry("routeprf"),
         CmdEntry("routers"),

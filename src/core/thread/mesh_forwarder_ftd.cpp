@@ -627,10 +627,16 @@ Error MeshForwarder::CheckReachability(const FrameData &aFrameData, const Mac::A
 
     error = ip6Headers.DecompressFrom(aFrameData, aMeshAddrs, GetInstance());
 
-    if (error == kErrorNotFound)
+    switch (error)
     {
+    case kErrorNone:
+        break;
+    case kErrorNotFound:
         // Frame may not contain an IPv6 header.
-        ExitNow(error = kErrorNone);
+        error = kErrorNone;
+        OT_FALL_THROUGH;
+    default:
+        ExitNow();
     }
 
     error = Get<Mle::MleRouter>().CheckReachability(aMeshAddrs.mDestination.GetShort(), ip6Headers.GetIp6Header());

@@ -91,7 +91,7 @@ Server::Server(Instance &aInstance)
     , mOutstandingUpdatesTimer(aInstance)
     , mCompletedUpdateTask(aInstance)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
-    , mPort(kUdpPortMin)
+    , mPort(kUninitializedPort)
     , mState(kStateDisabled)
     , mAddressMode(kDefaultAddressMode)
     , mAnycastSequenceNumber(0)
@@ -595,7 +595,7 @@ exit:
     }
 }
 
-void Server::SelectPort(void)
+void Server::InitPort(void)
 {
     mPort = kUdpPortMin;
 
@@ -605,24 +605,35 @@ void Server::SelectPort(void)
 
         if (Get<Settings>().Read(info) == kErrorNone)
         {
-            mPort = info.GetPort() + 1;
-            if (mPort < kUdpPortMin || mPort > kUdpPortMax)
-            {
-                mPort = kUdpPortMin;
-            }
+            mPort = info.GetPort();
         }
     }
 #endif
+}
+
+void Server::SelectPort(void)
+{
+    if (mPort == kUninitializedPort)
+    {
+        InitPort();
+    }
+    ++mPort;
+    if (mPort < kUdpPortMin || mPort > kUdpPortMax)
+    {
+        mPort = kUdpPortMin;
+    }
 
     LogInfo("Selected port %u", mPort);
 }
 
 void Server::Start(void)
 {
+    Error error = kErrorNone;
+
     VerifyOrExit(mState == kStateStopped);
 
     mState = kStateRunning;
-    PrepareSocket();
+    SuccessOrExit(error = PrepareSocket());
     LogInfo("Start listening on port %u", mPort);
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
@@ -630,10 +641,15 @@ void Server::Start(void)
 #endif
 
 exit:
-    return;
+    // Re-enable server to select a new port.
+    if (error != kErrorNone)
+    {
+        Disable();
+        Enable();
+    }
 }
 
-void Server::PrepareSocket(void)
+Error Server::PrepareSocket(void)
 {
     Error error = kErrorNone;
 
@@ -658,9 +674,12 @@ void Server::PrepareSocket(void)
 exit:
     if (error != kErrorNone)
     {
-        LogCrit("Failed to prepare socket: %s", ErrorToString(error));
+        LogWarnOnError(error, "prepare socket");
+        IgnoreError(mSocket.Close());
         Stop();
     }
+
+    return error;
 }
 
 Ip6::Udp::Socket &Server::GetSocket(void)
@@ -689,7 +708,7 @@ void Server::HandleDnssdServerStateChange(void)
 
     if (mState == kStateRunning)
     {
-        PrepareSocket();
+        IgnoreError(PrepareSocket());
     }
 }
 
@@ -853,11 +872,7 @@ Error Server::ProcessZoneSection(const Message &aMessage, MessageMetadata &aMeta
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Zone section: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "process DNS Zone section");
     return error;
 }
 
@@ -883,11 +898,7 @@ Error Server::ProcessUpdateSection(Host &aHost, const Message &aMessage, Message
     VerifyOrExit(!HasNameConflictsWith(aHost), error = kErrorDuplicated);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Update section: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "Process DNS Update section");
     return error;
 }
 
@@ -976,11 +987,7 @@ Error Server::ProcessHostDescriptionInstruction(Host                  &aHost,
     // the host is being removed or registered.
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Host Description instructions: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "process Host Description instructions");
     return error;
 }
 
@@ -1099,11 +1106,7 @@ Error Server::ProcessServiceDiscoveryInstructions(Host                  &aHost,
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Service Discovery instructions: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "process Service Discovery instructions");
     return error;
 }
 
@@ -1202,11 +1205,7 @@ Error Server::ProcessServiceDescriptionInstructions(Host            &aHost,
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process Service Description instructions: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "process Service Description instructions");
     return error;
 }
 
@@ -1295,11 +1294,7 @@ Error Server::ProcessAdditionalSection(Host *aHost, const Message &aMessage, Mes
     aMetadata.mOffset = offset;
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to process DNS Additional section: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "process DNS Additional section");
     return error;
 }
 
@@ -1346,11 +1341,7 @@ Error Server::VerifySignature(const Host::Key  &aKey,
     error = aKey.Verify(hash, signature);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to verify message signature: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "verify message signature");
     FreeMessage(signerNameMessage);
     return error;
 }
@@ -1510,11 +1501,8 @@ void Server::SendResponse(const Dns::UpdateHeader    &aHeader,
     UpdateResponseCounters(aResponseCode);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to send response: %s", ErrorToString(error));
-        FreeMessage(response);
-    }
+    LogWarnOnError(error, "send response");
+    FreeMessageOnError(response, error);
 }
 
 void Server::SendResponse(const Dns::UpdateHeader &aHeader,
@@ -1569,11 +1557,8 @@ void Server::SendResponse(const Dns::UpdateHeader &aHeader,
     UpdateResponseCounters(Dns::UpdateHeader::kResponseSuccess);
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to send response: %s", ErrorToString(error));
-        FreeMessage(response);
-    }
+    LogWarnOnError(error, "send response");
+    FreeMessageOnError(response, error);
 }
 
 void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -1585,10 +1570,8 @@ void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
 {
     Error error = ProcessMessage(aMessage, aMessageInfo);
 
-    if (error != kErrorNone)
-    {
-        LogInfo("Failed to handle DNS message: %s", ErrorToString(error));
-    }
+    LogWarnOnError(error, "handle DNS message");
+    OT_UNUSED_VARIABLE(error);
 }
 
 Error Server::ProcessMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

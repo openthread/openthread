@@ -36,6 +36,7 @@
 
 #include "openthread-posix-config.h"
 
+#include "logger.hpp"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/multi_frame_buffer.hpp"
@@ -51,9 +52,11 @@ namespace Posix {
  * Defines an SPI interface to the Radio Co-processor (RCP).
  *
  */
-class SpiInterface : public ot::Spinel::SpinelInterface
+class SpiInterface : public ot::Spinel::SpinelInterface, public Logger<SpiInterface>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Initializes the object.
      *

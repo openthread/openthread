@@ -44,7 +44,7 @@ namespace ot {
 namespace Cli {
 
 NetworkData::NetworkData(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
 {
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     mFullCallbackWasCalled = false;
@@ -564,17 +564,78 @@ otError NetworkData::GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRou
     return error;
 }
 
-void NetworkData::OutputPrefixes(bool aLocal)
+void NetworkData::OutputNetworkData(bool aLocal, uint16_t aRloc16)
 {
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otBorderRouterConfig  config;
+    otNetworkDataIterator  iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otBorderRouterConfig   prefix;
+    otExternalRouteConfig  route;
+    otServiceConfig        service;
+    otLowpanContextInfo    context;
+    otCommissioningDataset dataset;
 
     OutputLine("Prefixes:");
 
-    while (GetNextPrefix(&iterator, &config, aLocal) == OT_ERROR_NONE)
+    while (GetNextPrefix(&iterator, &prefix, aLocal) == OT_ERROR_NONE)
     {
-        OutputPrefix(config);
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == prefix.mRloc16))
+        {
+            OutputPrefix(prefix);
+        }
     }
+
+    OutputLine("Routes:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (GetNextRoute(&iterator, &route, aLocal) == OT_ERROR_NONE)
+    {
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == route.mRloc16))
+        {
+            OutputRoute(route);
+        }
+    }
+
+    OutputLine("Services:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (GetNextService(&iterator, &service, aLocal) == OT_ERROR_NONE)
+    {
+        if ((aRloc16 == kAnyRloc16) || (aRloc16 == service.mServerConfig.mRloc16))
+        {
+            OutputService(service);
+        }
+    }
+
+    VerifyOrExit(!aLocal);
+    VerifyOrExit(aRloc16 == kAnyRloc16);
+
+    OutputLine("Contexts:");
+    iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+
+    while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &context) == OT_ERROR_NONE)
+    {
+        OutputIp6Prefix(context.mPrefix);
+        OutputLine(" %u %c", context.mContextId, context.mCompressFlag ? 'c' : '-');
+    }
+
+    otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
+
+    OutputLine("Commissioning:");
+
+    dataset.mIsSessionIdSet ? OutputFormat("%u ", dataset.mSessionId) : OutputFormat("- ");
+    dataset.mIsLocatorSet ? OutputFormat("%04x ", dataset.mLocator) : OutputFormat("- ");
+    dataset.mIsJoinerUdpPortSet ? OutputFormat("%u ", dataset.mJoinerUdpPort) : OutputFormat("- ");
+    dataset.mIsSteeringDataSet ? OutputBytes(dataset.mSteeringData.m8, dataset.mSteeringData.mLength)
+                               : OutputFormat("-");
+
+    if (dataset.mHasExtraTlv)
+    {
+        OutputFormat(" e");
+    }
+
+    OutputNewLine();
+
+exit:
+    return;
 }
 
 otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig, bool aLocal)
@@ -597,19 +658,6 @@ otError NetworkData::GetNextRoute(otNetworkDataIterator *aIterator, otExternalRo
     return error;
 }
 
-void NetworkData::OutputRoutes(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otExternalRouteConfig config;
-
-    OutputLine("Routes:");
-
-    while (GetNextRoute(&iterator, &config, aLocal) == OT_ERROR_NONE)
-    {
-        OutputRoute(config);
-    }
-}
-
 otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal)
 {
     otError error;
@@ -628,65 +676,6 @@ otError NetworkData::GetNextService(otNetworkDataIterator *aIterator, otServiceC
     }
 
     return error;
-}
-
-void NetworkData::OutputServices(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otServiceConfig       config;
-
-    OutputLine("Services:");
-
-    while (GetNextService(&iterator, &config, aLocal) == OT_ERROR_NONE)
-    {
-        OutputService(config);
-    }
-}
-
-void NetworkData::OutputLowpanContexts(bool aLocal)
-{
-    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otLowpanContextInfo   info;
-
-    VerifyOrExit(!aLocal);
-
-    OutputLine("Contexts:");
-
-    while (otNetDataGetNextLowpanContextInfo(GetInstancePtr(), &iterator, &info) == OT_ERROR_NONE)
-    {
-        OutputIp6Prefix(info.mPrefix);
-        OutputLine(" %u %c", info.mContextId, info.mCompressFlag ? 'c' : '-');
-    }
-
-exit:
-    return;
-}
-
-void NetworkData::OutputCommissioningDataset(bool aLocal)
-{
-    otCommissioningDataset dataset;
-
-    VerifyOrExit(!aLocal);
-
-    otNetDataGetCommissioningDataset(GetInstancePtr(), &dataset);
-
-    OutputLine("Commissioning:");
-
-    dataset.mIsSessionIdSet ? OutputFormat("%u ", dataset.mSessionId) : OutputFormat("- ");
-    dataset.mIsLocatorSet ? OutputFormat("%04x ", dataset.mLocator) : OutputFormat("- ");
-    dataset.mIsJoinerUdpPortSet ? OutputFormat("%u ", dataset.mJoinerUdpPort) : OutputFormat("- ");
-    dataset.mIsSteeringDataSet ? OutputBytes(dataset.mSteeringData.m8, dataset.mSteeringData.mLength)
-                               : OutputFormat("-");
-
-    if (dataset.mHasExtraTlv)
-    {
-        OutputFormat(" e");
-    }
-
-    OutputNewLine();
-
-exit:
-    return;
 }
 
 otError NetworkData::OutputBinary(bool aLocal)
@@ -737,8 +726,16 @@ exit:
  * 08040b02174703140040fd00deadbeefcafe0504dc00330007021140
  * Done
  * @endcode
- * @cparam netdata show [@ca{-x}]
+ * @code
+ * netdata show 0xdc00
+ * Prefixes:
+ * fd00:dead:beef:cafe::/64 paros med dc00
+ * Routes:
+ * Services:
+ * Done
+ * @cparam netdata show [@ca{-x}|@ca{rloc16}]
  * *   The optional `-x` argument gets Network Data as hex-encoded TLVs.
+ * *   The optional `rloc16` argument gets all prefix/route/service entries associated with a given RLOC16.
  * @par
  * `netdata show` from OT CLI gets full Network Data received from the Leader. This command uses several
  * API functions to combine prefixes, routes, and services, including #otNetDataGetNextOnMeshPrefix,
@@ -795,9 +792,10 @@ exit:
  */
 template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
 {
-    otError error  = OT_ERROR_INVALID_ARGS;
-    bool    local  = false;
-    bool    binary = false;
+    otError  error  = OT_ERROR_INVALID_ARGS;
+    uint16_t rloc16 = kAnyRloc16;
+    bool     local  = false;
+    bool     binary = false;
 
     for (uint8_t i = 0; !aArgs[i].IsEmpty(); i++)
     {
@@ -832,8 +830,13 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
         }
         else
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = aArgs[i].ParseAsUint16(rloc16));
         }
+    }
+
+    if (local || binary)
+    {
+        VerifyOrExit(rloc16 == kAnyRloc16, error = OT_ERROR_INVALID_ARGS);
     }
 
     if (binary)
@@ -842,11 +845,7 @@ template <> otError NetworkData::Process<Cmd("show")>(Arg aArgs[])
     }
     else
     {
-        OutputPrefixes(local);
-        OutputRoutes(local);
-        OutputServices(local);
-        OutputLowpanContexts(local);
-        OutputCommissioningDataset(local);
+        OutputNetworkData(local, rloc16);
         error = OT_ERROR_NONE;
     }
 

@@ -40,7 +40,7 @@
 
 #include <openthread/coap.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -49,11 +49,9 @@ namespace Cli {
  * Implements the CLI CoAP server and client.
  *
  */
-class Coap : private Output
+class Coap : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *

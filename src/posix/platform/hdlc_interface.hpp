@@ -34,6 +34,7 @@
 #ifndef OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
 #define OT_POSIX_PLATFORM_HDLC_INTERFACE_HPP_
 
+#include "logger.hpp"
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
@@ -48,9 +49,11 @@ namespace Posix {
  * Defines an HDLC interface to the Radio Co-processor (RCP)
  *
  */
-class HdlcInterface : public ot::Spinel::SpinelInterface
+class HdlcInterface : public ot::Spinel::SpinelInterface, public Logger<HdlcInterface>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Initializes the object.
      *

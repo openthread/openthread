@@ -198,7 +198,7 @@ void EnergyScanServer::SendReport(void)
 
 exit:
     FreeMessageOnError(mReportMessage, error);
-    MeshCoP::LogError("send scan results", error);
+    LogWarnOnError(error, "send scan results");
     mReportMessage = nullptr;
 }
 

@@ -645,7 +645,9 @@ private:
     Utils::ChannelMonitor mChannelMonitor;
 #endif
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
+    (OPENTHREAD_FTD ||                          \
+     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
     Utils::ChannelManager mChannelManager;
 #endif
 
@@ -946,7 +948,9 @@ template <> inline Utils::PingSender &Instance::Get(void) { return mPingSender; 
 template <> inline Utils::ChannelMonitor &Instance::Get(void) { return mChannelMonitor; }
 #endif
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
+    (OPENTHREAD_FTD ||                          \
+     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
 template <> inline Utils::ChannelManager &Instance::Get(void) { return mChannelManager; }
 #endif
 

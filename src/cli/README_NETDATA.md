@@ -334,9 +334,11 @@ Done
 
 ### show
 
-Usage: `netdata show [local] [-x]`
+Usage: `netdata show [local] [-x] [\<rloc16\>]`
 
 Print entries in Network Data, on-mesh prefixes, external routes, services, and 6LoWPAN context information.
+
+If the optional `rloc16` input is specified, prints the entries associated with the given RLOC16 only. The RLOC16 filtering can be used when `-x` or `local` are not used.
 
 On-mesh prefixes are listed under `Prefixes` header:
 
@@ -403,6 +405,19 @@ Contexts:
 fd00:dead:beef:cafe::/64 1 c
 Commissioning:
 1248 dc00 9988 00000000000120000000000000000000 e
+Done
+```
+
+Print Network Data entries from the Leader associated with `0xa00` RLOC16.
+
+```bash
+> netdata show 0xa00
+Prefixes:
+fd00:dead:beef:cafe::/64 paros med a000
+Routes:
+fd00:1234:0:0::/64 s med a000
+Services:
+44970 5d fddead00beef00007bad0069ce45948504d2 s a000
 Done
 ```
 

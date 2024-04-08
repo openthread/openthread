@@ -39,7 +39,7 @@
 #include <openthread/history_tracker.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
@@ -50,11 +50,9 @@ namespace Cli {
  * Implements the History Tracker CLI interpreter.
  *
  */
-class History : private Output
+class History : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
@@ -63,7 +61,7 @@ public:
      *
      */
     History(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

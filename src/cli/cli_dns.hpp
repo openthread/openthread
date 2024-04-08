@@ -54,7 +54,7 @@
 #include <openthread/dnssd_server.h>
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -63,11 +63,9 @@ namespace Cli {
  * Implements the DNS CLI interpreter.
  *
  */
-class Dns : private Output
+class Dns : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor.
      *
@@ -76,7 +74,7 @@ public:
      *
      */
     Dns(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

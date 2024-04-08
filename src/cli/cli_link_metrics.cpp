@@ -36,7 +36,7 @@
 #include <openthread/link_metrics.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
@@ -45,7 +45,7 @@ namespace ot {
 namespace Cli {
 
 LinkMetrics::LinkMetrics(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mLinkMetricsQueryInProgress(false)
 {
 }

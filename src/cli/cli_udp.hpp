@@ -38,7 +38,7 @@
 
 #include <openthread/udp.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -47,11 +47,9 @@ namespace Cli {
  * Implements a CLI-based UDP example.
  *
  */
-class UdpExample : private Output
+class UdpExample : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *

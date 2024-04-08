@@ -45,7 +45,7 @@ target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRI
 target_sources(openthread-cli-radio
     PRIVATE
         cli.cpp
-        cli_output.cpp
+        cli_utils.cpp
 )
 
 if(NOT DEFINED OT_MBEDTLS_RCP)

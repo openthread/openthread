@@ -36,7 +36,7 @@
 #include <openthread/ping_sender.h>
 
 #include "cli/cli.hpp"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/code_utils.hpp"
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
@@ -45,7 +45,7 @@ namespace ot {
 namespace Cli {
 
 PingSender::PingSender(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mPingIsAsync(false)
 {
 }

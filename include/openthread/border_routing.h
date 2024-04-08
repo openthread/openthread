@@ -240,6 +240,22 @@ void otBorderRoutingSetRouteInfoOptionPreference(otInstance *aInstance, otRouteP
 void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance);
 
 /**
+ * Sets additional options to append at the end of emitted Router Advertisement (RA) messages.
+ *
+ * The content of @p aOptions is copied internally, so it can be a temporary buffer (e.g., a stack allocated array).
+ *
+ * Subsequent calls to this function overwrite the previously set value.
+ *
+ * @param[in] aOptions   A pointer to the encoded options. Can be `NULL` to clear.
+ * @param[in] aLength    Number of bytes in @p aOptions.
+ *
+ * @retval OT_ERROR_NONE     Successfully set the extra option bytes.
+ * @retval OT_ERROR_NO_BUFS  Could not allocate buffer to save the buffer.
+ *
+ */
+otError otBorderRoutingSetExtraRouterAdvertOptions(otInstance *aInstance, const uint8_t *aOptions, uint16_t aLength);
+
+/**
  * Gets the current preference used for published routes in Network Data.
  *
  * The preference is determined as follows:

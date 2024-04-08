@@ -61,6 +61,8 @@ extern ot::Posix::Resolver gResolver;
 namespace ot {
 namespace Posix {
 
+const char Resolver::kLogModuleName[] = "Resolver";
+
 void Resolver::Init(void)
 {
     memset(mUpstreamTransaction, 0, sizeof(mUpstreamTransaction));
@@ -95,8 +97,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 
             if (inet_pton(AF_INET, &line.c_str()[sizeof(kNameserverItem)], &addr) == 1)
             {
-                otLogInfoPlat("Got nameserver #%d: %s", mUpstreamDnsServerCount,
-                              &line.c_str()[sizeof(kNameserverItem)]);
+                LogInfo("Got nameserver #%d: %s", mUpstreamDnsServerCount, &line.c_str()[sizeof(kNameserverItem)]);
                 mUpstreamDnsServerList[mUpstreamDnsServerCount] = addr;
                 mUpstreamDnsServerCount++;
             }
@@ -105,7 +106,7 @@ void Resolver::LoadDnsServerListFromConf(void)
 
     if (mUpstreamDnsServerCount == 0)
     {
-        otLogCritPlat("No domain name servers found in %s, default to 127.0.0.1", kResolvConfFullPath);
+        LogCrit("No domain name servers found in %s, default to 127.0.0.1", kResolvConfFullPath);
     }
 
     mUpstreamDnsServerListFreshness = otPlatTimeGet();
@@ -137,12 +138,12 @@ void Resolver::Query(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
             sendto(txn->mUdpFd, packet, length, MSG_DONTWAIT, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) > 0,
             error = OT_ERROR_NO_ROUTE);
     }
-    otLogInfoPlat("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
+    LogInfo("Forwarded DNS query %p to %d server(s).", static_cast<void *>(aTxn), mUpstreamDnsServerCount);
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("Failed to forward DNS query %p to server: %d", static_cast<void *>(aTxn), error);
+        LogCrit("Failed to forward DNS query %p to server: %d", static_cast<void *>(aTxn), error);
     }
     return;
 }
@@ -171,7 +172,7 @@ Resolver::Transaction *Resolver::AllocateTransaction(otPlatDnsUpstreamQuery *aTh
             fdOrError = socket(AF_INET, SOCK_DGRAM, 0);
             if (fdOrError < 0)
             {
-                otLogInfoPlat("Failed to create socket for upstream resolver: %d", fdOrError);
+                LogInfo("Failed to create socket for upstream resolver: %d", fdOrError);
                 break;
             }
             ret             = &txn;
@@ -203,11 +204,11 @@ void Resolver::ForwardResponse(Transaction *aTxn)
 exit:
     if (readSize < 0)
     {
-        otLogInfoPlat("Failed to read response from upstream resolver socket: %d", errno);
+        LogInfo("Failed to read response from upstream resolver socket: %d", errno);
     }
     if (error != OT_ERROR_NONE)
     {
-        otLogInfoPlat("Failed to forward upstream DNS response: %s", otThreadErrorToString(error));
+        LogInfo("Failed to forward upstream DNS response: %s", otThreadErrorToString(error));
     }
     if (message != nullptr)
     {

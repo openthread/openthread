@@ -147,15 +147,15 @@ exit:
     return error;
 }
 
-Error DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
+Error DatasetLocal::Read(Dataset::Tlvs &aDatasetTlvs) const
 {
     Dataset dataset;
     Error   error;
 
-    ClearAllBytes(aDataset);
+    ClearAllBytes(aDatasetTlvs);
 
     SuccessOrExit(error = Read(dataset));
-    dataset.ConvertTo(aDataset);
+    dataset.ConvertTo(aDatasetTlvs);
 
 exit:
     return error;
@@ -173,11 +173,11 @@ exit:
     return error;
 }
 
-Error DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
+Error DatasetLocal::Save(const Dataset::Tlvs &aDatasetTlvs)
 {
     Dataset dataset;
 
-    dataset.SetFrom(aDataset);
+    dataset.SetFrom(aDatasetTlvs);
 
     return Save(dataset);
 }

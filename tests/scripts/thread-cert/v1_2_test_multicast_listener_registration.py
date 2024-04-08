@@ -704,7 +704,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
 
     def __check_renewing(self, id, parent_id, addr, expect_mlr_req=True, expect_mlr_req_proxied=False):
         """Check if MLR works that a node can renew it's registered MAs"""
-        assert self.pbbr_id == BBR_1
+        self.assertEqual(self.pbbr_id, BBR_1)
         self.flush_all()
         self.simulator.go(MLR_TIMEOUT + WAIT_REDUNDANCE)
 
@@ -748,7 +748,7 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
     def __check_rereg_pbbr_change(self, id, parent_id, addr, expect_mlr_req=True, expect_mlr_req_proxied=False):
         """Check if MLR works that a node can do MLR reregistration when PBBR changes"""
         # Make BBR_2 to be Primary and expect MLR.req within REREG_DELAY
-        assert self.pbbr_id == BBR_1
+        self.assertEqual(self.pbbr_id, BBR_1)
 
         self.flush_all()
         self.nodes[BBR_1].disable_backbone_router()

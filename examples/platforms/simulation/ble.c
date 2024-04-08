@@ -26,50 +26,191 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "platform-simulation.h"
+
+#include <errno.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <openthread/platform/ble.h>
+
+#include "openthread/error.h"
+#include "utils/code_utils.h"
+
+#define PLAT_BLE_MSG_DATA_MAX 2048
+static uint8_t sBleBuffer[PLAT_BLE_MSG_DATA_MAX];
+
+static int sFd = -1;
+
+static const uint16_t kPortBase = 10000;
+static uint16_t       sPort     = 0;
+struct sockaddr_in    sSockaddr;
+
+static void initFds(void)
+{
+    int                fd;
+    int                one = 1;
+    struct sockaddr_in sockaddr;
+
+    memset(&sockaddr, 0, sizeof(sockaddr));
+
+    sPort                    = (uint16_t)(kPortBase + gNodeId);
+    sockaddr.sin_family      = AF_INET;
+    sockaddr.sin_port        = htons(sPort);
+    sockaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    otEXPECT_ACTION((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) != -1, perror("socket(sFd)"));
+
+    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) != -1,
+                    perror("setsockopt(sFd, SO_REUSEADDR)"));
+    otEXPECT_ACTION(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)) != -1,
+                    perror("setsockopt(sFd, SO_REUSEPORT)"));
+
+    otEXPECT_ACTION(bind(fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) != -1, perror("bind(sFd)"));
+
+    // Fd is successfully initialized.
+    sFd = fd;
+
+exit:
+    if (sFd == -1)
+    {
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void deinitFds(void)
+{
+    if (sFd != -1)
+    {
+        close(sFd);
+        sFd = -1;
+    }
+}
 
 otError otPlatBleEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    initFds();
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleDisable(otInstance *aInstance)
 {
+    deinitFds();
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInterval);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aMtu);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    *aMtu = PLAT_BLE_MSG_DATA_MAX - 1;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
+
+    ssize_t rval;
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(sFd != -1, error = OT_ERROR_INVALID_STATE);
+    rval = sendto(sFd, (const char *)aPacket->mValue, aPacket->mLength, 0, (struct sockaddr *)&sSockaddr,
+                  sizeof(sSockaddr));
+    if (rval == -1)
+    {
+        perror("BLE simulation sendto failed.");
+    }
+
+exit:
+    return error;
+}
+
+void platformBleDeinit(void) { deinitFds(); }
+
+void platformBleUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, struct timeval *aTimeout, int *aMaxFd)
+{
+    OT_UNUSED_VARIABLE(aTimeout);
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
+    if (aReadFdSet != NULL && sFd != -1)
+    {
+        FD_SET(sFd, aReadFdSet);
+
+        if (aMaxFd != NULL && *aMaxFd < sFd)
+        {
+            *aMaxFd = sFd;
+        }
+    }
+}
+
+void platformBleProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet)
+{
+    OT_UNUSED_VARIABLE(aWriteFdSet);
+
+    otEXPECT(sFd != -1);
+
+    if (FD_ISSET(sFd, aReadFdSet))
+    {
+        socklen_t len = sizeof(sSockaddr);
+        ssize_t   rval;
+        memset(&sSockaddr, 0, sizeof(sSockaddr));
+        rval = recvfrom(sFd, sBleBuffer, sizeof(sBleBuffer), 0, (struct sockaddr *)&sSockaddr, &len);
+        if (rval > 0)
+        {
+            otBleRadioPacket myPacket;
+            myPacket.mValue  = sBleBuffer;
+            myPacket.mLength = (uint16_t)rval;
+            myPacket.mPower  = 0;
+            otPlatBleGattServerOnWriteRequest(
+                aInstance, 0,
+                &myPacket); // TODO consider passing otPlatBleGattServerOnWriteRequest as a callback function
+        }
+        else if (rval == 0)
+        {
+            // socket is closed, which should not happen
+            assert(false);
+        }
+        else if (errno != EINTR && errno != EAGAIN)
+        {
+            perror("recvfrom BLE simulation failed");
+            exit(EXIT_FAILURE);
+        }
+    }
+exit:
+    return;
+}
+
+OT_TOOL_WEAK void otPlatBleGattServerOnWriteRequest(otInstance             *aInstance,
+                                                    uint16_t                aHandle,
+                                                    const otBleRadioPacket *aPacket)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    assert(false);
+    /* In case of rcp there is a problem with linking to otPlatBleGattServerOnWriteRequest
+     * which is available in FTD/MTD library.
+     */
 }

@@ -36,6 +36,8 @@
 #define UTILS_SOCKET_LOCAL_HOST_ADDR "127.0.0.1"
 #define UTILS_SOCKET_GROUP_ADDR "224.0.0.116"
 
+const char *gLocalHost = UTILS_SOCKET_LOCAL_HOST_ADDR;
+
 void utilsAddFdToFdSet(int aFd, fd_set *aFdSet, int *aMaxFd)
 {
     otEXPECT(aFd >= 0);
@@ -75,7 +77,7 @@ void utilsInitSocket(utilsSocket *aSocket, uint16_t aPortBase)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family      = AF_INET;
     sockaddr.sin_port        = htons(aSocket->mPort);
-    sockaddr.sin_addr.s_addr = inet_addr(UTILS_SOCKET_LOCAL_HOST_ADDR);
+    sockaddr.sin_addr.s_addr = inet_addr(gLocalHost);
 
     rval = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &sockaddr.sin_addr, sizeof(sockaddr.sin_addr));
     otEXPECT_ACTION(rval != -1, perror("setsockopt(TxFd, IP_MULTICAST_IF)"));
@@ -103,7 +105,7 @@ void utilsInitSocket(utilsSocket *aSocket, uint16_t aPortBase)
     memset(&mreq, 0, sizeof(mreq));
     inet_pton(AF_INET, UTILS_SOCKET_GROUP_ADDR, &mreq.imr_multiaddr);
 
-    mreq.imr_address.s_addr = inet_addr(UTILS_SOCKET_LOCAL_HOST_ADDR);
+    mreq.imr_address.s_addr = inet_addr(gLocalHost);
 
     rval = setsockopt(fd, IPPROTO_IP, IP_MULTICAST_IF, &mreq.imr_address, sizeof(mreq.imr_address));
     otEXPECT_ACTION(rval != -1, perror("setsockopt(RxFd, IP_MULTICAST_IF)"));

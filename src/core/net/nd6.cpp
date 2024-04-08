@@ -36,6 +36,7 @@
 
 #include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
+#include "instance/instance.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -181,9 +182,9 @@ void RaFlagsExtOption::Init(void)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterAdverMessage::Header
+// RouterAdver::Header
 
-void RouterAdvertMessage::Header::SetToDefault(void)
+void RouterAdvert::Header::SetToDefault(void)
 {
     OT_UNUSED_VARIABLE(mCode);
     OT_UNUSED_VARIABLE(mCurHopLimit);
@@ -194,21 +195,21 @@ void RouterAdvertMessage::Header::SetToDefault(void)
     mType = Icmp::Header::kTypeRouterAdvert;
 }
 
-RoutePreference RouterAdvertMessage::Header::GetDefaultRouterPreference(void) const
+RoutePreference RouterAdvert::Header::GetDefaultRouterPreference(void) const
 {
     return NetworkData::RoutePreferenceFromValue((mFlags & kPreferenceMask) >> kPreferenceOffset);
 }
 
-void RouterAdvertMessage::Header::SetDefaultRouterPreference(RoutePreference aPreference)
+void RouterAdvert::Header::SetDefaultRouterPreference(RoutePreference aPreference)
 {
     mFlags &= ~kPreferenceMask;
     mFlags |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-// RouterAdverMessage
+// RouterAdver::TxMessage
 
-Option *RouterAdvertMessage::AppendOption(uint16_t aOptionSize)
+Option *RouterAdvert::TxMessage::AppendOption(uint16_t aOptionSize)
 {
     // This method appends an option with a given size to the RA
     // message by reserving space in the data buffer if there is
@@ -217,21 +218,39 @@ Option *RouterAdvertMessage::AppendOption(uint16_t aOptionSize)
     // initialized and populated by the caller.
 
     Option  *option    = nullptr;
-    uint32_t newLength = mData.GetLength();
+    uint16_t oldLength = mArray.GetLength();
 
-    newLength += aOptionSize;
-    VerifyOrExit(newLength <= mMaxLength);
-
-    option = reinterpret_cast<Option *>(AsNonConst(GetDataEnd()));
-    mData.SetLength(static_cast<uint16_t>(newLength));
+    SuccessOrExit(AppendBytes(nullptr, aOptionSize));
+    option = reinterpret_cast<Option *>(&mArray[oldLength]);
 
 exit:
     return option;
 }
 
-Error RouterAdvertMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
-                                                  uint32_t      aValidLifetime,
-                                                  uint32_t      aPreferredLifetime)
+Error RouterAdvert::TxMessage::AppendBytes(const uint8_t *aBytes, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    for (; aLength > 0; aLength--)
+    {
+        uint8_t byte;
+
+        byte = (aBytes == nullptr) ? 0 : *aBytes++;
+        SuccessOrExit(error = mArray.PushBack(byte));
+    }
+
+exit:
+    return error;
+}
+
+Error RouterAdvert::TxMessage::AppendHeader(const Header &aHeader)
+{
+    return AppendBytes(reinterpret_cast<const uint8_t *>(&aHeader), sizeof(Header));
+}
+
+Error RouterAdvert::TxMessage::AppendPrefixInfoOption(const Prefix &aPrefix,
+                                                      uint32_t      aValidLifetime,
+                                                      uint32_t      aPreferredLifetime)
 {
     Error             error = kErrorNone;
     PrefixInfoOption *pio;
@@ -250,9 +269,9 @@ exit:
     return error;
 }
 
-Error RouterAdvertMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
-                                                 uint32_t        aRouteLifetime,
-                                                 RoutePreference aPreference)
+Error RouterAdvert::TxMessage::AppendRouteInfoOption(const Prefix   &aPrefix,
+                                                     uint32_t        aRouteLifetime,
+                                                     RoutePreference aPreference)
 {
     Error            error = kErrorNone;
     RouteInfoOption *rio;
@@ -269,7 +288,7 @@ exit:
     return error;
 }
 
-Error RouterAdvertMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
+Error RouterAdvert::TxMessage::AppendFlagsExtensionOption(bool aStubRouterFlag)
 {
     Error             error = kErrorNone;
     RaFlagsExtOption *flagsOption;

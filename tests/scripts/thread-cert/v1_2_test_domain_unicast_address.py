@@ -242,10 +242,8 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         WAIT_TIME = WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         dua = self.nodes[MED_1_2].get_addr(config.DOMAIN_PREFIX)
-        assert ipaddress.ip_address(dua) == ipaddress.ip_address(
-            med_1_2_dua), 'Error: Expected SLAAC DUA not generated'
-        assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
-            dua), 'Error: Expected same SLAAC DUA not generated'
+        self.assertEqual(ipaddress.ip_address(dua), ipaddress.ip_address(med_1_2_dua))
+        self.assertEqual(ipaddress.ip_address(med_1_2_dua), ipaddress.ip_address(dua))
 
         self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
@@ -269,8 +267,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         dua = self.nodes[MED_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua, 'Error: Expected DUA not found'
-        assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
-            dua), 'Error: Expected same SLAAC DUA not generated'
+        self.assertEqual(ipaddress.ip_address(med_1_2_dua), ipaddress.ip_address(dua))
 
         self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 
@@ -299,8 +296,7 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         self.simulator.go(WAIT_TIME)
         dua = self.nodes[MED_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua, 'Error: Expected DUA not found'
-        assert ipaddress.ip_address(med_1_2_dua) == ipaddress.ip_address(
-            dua), 'Error: Expected same SLAAC DUA not generated'
+        self.assertEqual(ipaddress.ip_address(med_1_2_dua), ipaddress.ip_address(dua))
 
         self.__check_dua_registration(MED_1_2, med_1_2_dua_iid, domain_prefix_cid)
 

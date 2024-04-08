@@ -170,7 +170,7 @@ void Server::ProcessQuery(Request &aRequest)
             ExitNow();
         }
 
-        LogWarn("Error forwarding to upstream: %s", ErrorToString(error));
+        LogWarnOnError(error, "forwarding to upstream");
 
         rcode = Header::kResponseServerFailure;
 

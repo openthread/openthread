@@ -279,7 +279,7 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 exit:
     if (error == OT_ERROR_FAILED)
     {
-        otLogCritPlat("Failed to bind UDP socket: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("Failed to bind UDP socket: %s", strerror(errno));
     }
 
     return error;
@@ -321,7 +321,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
         if (otSysGetInfraNetifName() == nullptr || otSysGetInfraNetifName()[0] == '\0')
         {
-            otLogWarnPlat("No backbone interface given, %s fails.", __func__);
+            ot::Posix::Udp::LogWarn("No backbone interface given, %s fails.", __func__);
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
 #ifdef __linux__
@@ -378,7 +378,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 
         if (getsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, &len) != 0)
         {
-                      otLogWarnPlat("Failed to read socket bound device: %s", strerror(errno));
+                      ot::Posix::Udp::LogWarn("Failed to read socket bound device: %s", strerror(errno));
                       len = 0;
         }
 
@@ -392,7 +392,7 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
         {
                       fd = FdFromHandle(aUdpSocket->mHandle);
                       VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
-                          otLogWarnPlat("Failed to bind to device: %s", strerror(errno));
+                          ot::Posix::Udp::LogWarn("Failed to bind to device: %s", strerror(errno));
                           error = OT_ERROR_FAILED;
                       });
         }
@@ -406,8 +406,9 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
 #ifdef __APPLE__
         VerifyOrExit(errno == EAFNOSUPPORT && isDisconnect);
 #endif
-        otLogWarnPlat("Failed to connect to [%s]:%u: %s", Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
-                      aUdpSocket->mPeerName.mPort, strerror(errno));
+        ot::Posix::Udp::LogWarn("Failed to connect to [%s]:%u: %s",
+                                Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
+                                aUdpSocket->mPeerName.mPort, strerror(errno));
         error = OT_ERROR_FAILED;
     }
 
@@ -488,8 +489,9 @@ otError otPlatUdpJoinMulticastGroup(otUdpSocket        *aUdpSocket,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("IPV6_JOIN_GROUP failed: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("IPV6_JOIN_GROUP failed: %s", strerror(errno));
     }
+
     return error;
 }
 
@@ -528,13 +530,16 @@ otError otPlatUdpLeaveMulticastGroup(otUdpSocket        *aUdpSocket,
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogCritPlat("IPV6_LEAVE_GROUP failed: %s", strerror(errno));
+        ot::Posix::Udp::LogCrit("IPV6_LEAVE_GROUP failed: %s", strerror(errno));
     }
+
     return error;
 }
 
 namespace ot {
 namespace Posix {
+
+const char Udp::kLogModuleName[] = "Udp";
 
 void Udp::Update(otSysMainloopContext &aContext)
 {

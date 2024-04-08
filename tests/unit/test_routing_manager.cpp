@@ -126,7 +126,7 @@ static otRadioFrame sRadioTxFrame;
 static uint8_t      sRadioTxFramePsdu[OT_RADIO_FRAME_MAX_SIZE];
 static bool         sRadioTxOngoing = false;
 
-using Icmp6Packet = Ip6::Nd::RouterAdvertMessage::Icmp6Packet;
+using Icmp6Packet = Ip6::Nd::RouterAdvert::Icmp6Packet;
 
 enum ExpectedPio
 {
@@ -159,6 +159,12 @@ bool        sNsEmitted;      // Indicates if an NS message was emitted by BR.
 bool        sRespondToNs;    // Indicates whether or not to respond to NS.
 ExpectedPio sExpectedPio;    // Expected PIO in the emitted RA by BR (MUST be seen in RA to set `sRaValidated`).
 uint32_t    sOnLinkLifetime; // Valid lifetime for local on-link prefix from the last processed RA.
+
+// Indicate whether or not to check the emitted RA header (default route) lifetime
+bool sCheckRaHeaderLifetime;
+
+// Expected default route lifetime in emitted RA header by BR.
+uint32_t sExpectedRaHeaderLifetime;
 
 enum ExpectedRaHeaderFlags
 {
@@ -414,7 +420,7 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 {
     constexpr uint8_t kMaxPrefixes = 16;
 
-    Ip6::Nd::RouterAdvertMessage     raMsg(aPacket);
+    Ip6::Nd::RouterAdvert::RxMessage raMsg(aPacket);
     bool                             sawExpectedPio = false;
     Array<Ip6::Prefix, kMaxPrefixes> pioPrefixes;
     Array<Ip6::Prefix, kMaxPrefixes> rioPrefixes;
@@ -424,7 +430,10 @@ void ValidateRouterAdvert(const Icmp6Packet &aPacket)
 
     VerifyOrQuit(raMsg.IsValid());
 
-    VerifyOrQuit(raMsg.GetHeader().GetRouterLifetime() == 0);
+    if (sCheckRaHeaderLifetime)
+    {
+        VerifyOrQuit(raMsg.GetHeader().GetRouterLifetime() == sExpectedRaHeaderLifetime);
+    }
 
     switch (sExpectedRaHeaderFlags)
     {
@@ -570,7 +579,7 @@ exit:
 
 void LogRouterAdvert(const Icmp6Packet &aPacket)
 {
-    Ip6::Nd::RouterAdvertMessage raMsg(aPacket);
+    Ip6::Nd::RouterAdvert::RxMessage raMsg(aPacket);
 
     VerifyOrQuit(raMsg.IsValid());
 
@@ -854,17 +863,15 @@ struct RaFlags : public Clearable<RaFlags>
     bool mStubRouterFlag;
 };
 
-template <size_t N>
-uint16_t BuildRouterAdvert(uint8_t (&aBuffer)[N],
-                           const Pio          *aPios,
-                           uint16_t            aNumPios,
-                           const Rio          *aRios,
-                           uint16_t            aNumRios,
-                           const DefaultRoute &aDefaultRoute,
-                           const RaFlags      &aRaFlags)
+void BuildRouterAdvert(Ip6::Nd::RouterAdvert::TxMessage &aRaMsg,
+                       const Pio                        *aPios,
+                       uint16_t                          aNumPios,
+                       const Rio                        *aRios,
+                       uint16_t                          aNumRios,
+                       const DefaultRoute               &aDefaultRoute,
+                       const RaFlags                    &aRaFlags)
 {
-    Ip6::Nd::RouterAdvertMessage::Header header;
-    uint16_t                             length;
+    Ip6::Nd::RouterAdvert::Header header;
 
     header.SetRouterLifetime(aDefaultRoute.mLifetime);
     header.SetDefaultRouterPreference(aDefaultRoute.mPreference);
@@ -879,29 +886,22 @@ uint16_t BuildRouterAdvert(uint8_t (&aBuffer)[N],
         header.SetOtherConfigFlag();
     }
 
+    SuccessOrQuit(aRaMsg.AppendHeader(header));
+
+    if (aRaFlags.mStubRouterFlag)
     {
-        Ip6::Nd::RouterAdvertMessage raMsg(header, aBuffer);
-
-        if (aRaFlags.mStubRouterFlag)
-        {
-            SuccessOrQuit(raMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
-        }
-
-        for (; aNumPios > 0; aPios++, aNumPios--)
-        {
-            SuccessOrQuit(
-                raMsg.AppendPrefixInfoOption(aPios->mPrefix, aPios->mValidLifetime, aPios->mPreferredLifetime));
-        }
-
-        for (; aNumRios > 0; aRios++, aNumRios--)
-        {
-            SuccessOrQuit(raMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
-        }
-
-        length = raMsg.GetAsPacket().GetLength();
+        SuccessOrQuit(aRaMsg.AppendFlagsExtensionOption(/* aStubRouterFlag */ true));
     }
 
-    return length;
+    for (; aNumPios > 0; aPios++, aNumPios--)
+    {
+        SuccessOrQuit(aRaMsg.AppendPrefixInfoOption(aPios->mPrefix, aPios->mValidLifetime, aPios->mPreferredLifetime));
+    }
+
+    for (; aNumRios > 0; aRios++, aNumRios--)
+    {
+        SuccessOrQuit(aRaMsg.AppendRouteInfoOption(aRios->mPrefix, aRios->mValidLifetime, aRios->mPreference));
+    }
 }
 
 void SendRouterAdvert(const Ip6::Address &aRouterAddress,
@@ -912,12 +912,15 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress,
                       const DefaultRoute &aDefaultRoute,
                       const RaFlags      &aRaFlags)
 {
-    uint8_t  buffer[kMaxRaSize];
-    uint16_t length = BuildRouterAdvert(buffer, aPios, aNumPios, aRios, aNumRios, aDefaultRoute, aRaFlags);
+    Ip6::Nd::RouterAdvert::TxMessage raMsg;
+    Icmp6Packet                      packet;
 
-    SendRouterAdvert(aRouterAddress, buffer, length);
+    BuildRouterAdvert(raMsg, aPios, aNumPios, aRios, aNumRios, aDefaultRoute, aRaFlags);
+    raMsg.GetAsPacket(packet);
+
+    SendRouterAdvert(aRouterAddress, packet);
     Log("Sending RA from router %s", aRouterAddress.ToString().AsCString());
-    LogRouterAdvert(buffer, length);
+    LogRouterAdvert(packet);
 }
 
 template <uint16_t kNumPios, uint16_t kNumRios>
@@ -963,13 +966,16 @@ void SendRouterAdvert(const Ip6::Address &aRouterAddress, const RaFlags &aRaFlag
 
 template <uint16_t kNumPios> void SendRouterAdvertToBorderRoutingProcessIcmp6Ra(const Pio (&aPios)[kNumPios])
 {
-    uint8_t  buffer[kMaxRaSize];
-    uint16_t length = BuildRouterAdvert(buffer, aPios, kNumPios, nullptr, 0,
-                                        DefaultRoute(0, NetworkData::kRoutePreferenceMedium), RaFlags());
+    Ip6::Nd::RouterAdvert::TxMessage raMsg;
+    Icmp6Packet                      packet;
 
-    otPlatBorderRoutingProcessIcmp6Ra(sInstance, buffer, length);
+    BuildRouterAdvert(raMsg, aPios, kNumPios, nullptr, 0, DefaultRoute(0, NetworkData::kRoutePreferenceMedium),
+                      RaFlags());
+    raMsg.GetAsPacket(packet);
+
+    otPlatBorderRoutingProcessIcmp6Ra(sInstance, packet.GetBytes(), packet.GetLength());
     Log("Passing RA to otPlatBorderRoutingProcessIcmp6Ra");
-    LogRouterAdvert(buffer, length);
+    LogRouterAdvert(packet);
 }
 
 struct OnLinkPrefix : public Pio
@@ -1191,8 +1197,10 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
     sRaValidated = false;
     sExpectedPio = kNoPio;
     sExpectedRios.Clear();
-    sRespondToNs           = true;
-    sExpectedRaHeaderFlags = kRaHeaderFlagsNone;
+    sRespondToNs              = true;
+    sExpectedRaHeaderFlags    = kRaHeaderFlagsNone;
+    sCheckRaHeaderLifetime    = true;
+    sExpectedRaHeaderLifetime = 0;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Ensure device starts as leader.
@@ -2953,6 +2961,93 @@ void TestLearningAndCopyingOfFlags(void)
     FinalizeTest();
 }
 
+void TestLearnRaHeader(void)
+{
+    Ip6::Prefix localOnLink;
+    Ip6::Prefix localOmr;
+    Ip6::Prefix onLinkPrefix = PrefixFromString("2000:abba:baba::", 64);
+    uint16_t    heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestLearnRaHeader");
+
+    InitTest();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Start Routing Manager. Check emitted RS and RA messages.
+
+    sRsEmitted   = false;
+    sRaValidated = false;
+    sExpectedPio = kPioAdvertisingLocalOnLink;
+    sExpectedRios.Clear();
+
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(localOnLink));
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    Log("Local on-link prefix is %s", localOnLink.ToString().AsCString());
+    Log("Local OMR prefix is %s", localOmr.ToString().AsCString());
+
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(30000);
+
+    VerifyOrQuit(sRsEmitted);
+    VerifyOrQuit(sRaValidated);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    Log("Received RA was validated");
+
+    VerifyDiscoveredRoutersIsEmpty();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Send an RA from the same address (another entity on the device)
+    // advertising a default route.
+
+    SendRouterAdvert(sInfraIfAddress, DefaultRoute(1000, NetworkData::kRoutePreferenceLow));
+
+    AdvanceTime(1);
+    VerifyDiscoveredRouters({InfraRouter(sInfraIfAddress, /* M */ false, /* O */ false, /* StubRouter */ false)});
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // RoutingManager should learn the header from the
+    // received RA (from same address) and start advertising
+    // the same default route lifetime in the emitted RAs.
+
+    sRaValidated              = false;
+    sCheckRaHeaderLifetime    = true;
+    sExpectedRaHeaderLifetime = 1000;
+
+    AdvanceTime(30 * 1000);
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for longer than entry lifetime (for it to expire) and
+    // make sure `RoutingManager` stops advertising default route.
+
+    sCheckRaHeaderLifetime = false;
+
+    AdvanceTime(1000 * 1000);
+
+    sRaValidated              = false;
+    sCheckRaHeaderLifetime    = true;
+    sExpectedRaHeaderLifetime = 0;
+
+    AdvanceTime(700 * 1000);
+    VerifyOrQuit(sRaValidated);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    VerifyDiscoveredRoutersIsEmpty();
+
+    VerifyOrQuit(heapAllocations == sHeapAllocatedPtrs.GetLength());
+
+    Log("End of TestLearnRaHeader");
+    FinalizeTest();
+}
+
 void TestConflictingPrefix(void)
 {
     static const otExtendedPanId kExtPanId1 = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x7, 0x08}};
@@ -3924,6 +4019,7 @@ int main(void)
     ot::TestConflictingPrefix();
     ot::TestRouterNsProbe();
     ot::TestLearningAndCopyingOfFlags();
+    ot::TestLearnRaHeader();
 #if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
     ot::TestSavedOnLinkPrefixes();
 #endif

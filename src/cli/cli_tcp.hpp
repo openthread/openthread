@@ -49,7 +49,7 @@
 #endif
 
 #include "cli/cli_config.h"
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 #include "common/time.hpp"
 
 namespace ot {
@@ -59,11 +59,9 @@ namespace Cli {
  * Implements a CLI-based TCP example.
  *
  */
-class TcpExample : private Output
+class TcpExample : private Utils
 {
 public:
-    using Arg = Utils::CmdLineParser::Arg;
-
     /**
      * Constructor
      *

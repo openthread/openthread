@@ -34,71 +34,81 @@
 #include "test_util.h"
 
 namespace ot {
+namespace MeshCoP {
 
 #if OPENTHREAD_FTD
 
 void TestMinimumPassphrase(void)
 {
-    ot::Pskc              pskc;
-    const uint8_t         expectedPskc[] = {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee,
-                                            0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8};
-    const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
-    const char            passphrase[]   = "123456";
-    otInstance           *instance       = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
-                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0);
+    static const otExtendedPanId kExtPanId     = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
+    static const otNetworkName   kNetworkName  = {{'O', 'p', 'e', 'n', 'T', 'h', 'r', 'e', 'a', 'd', '\0'}};
+    static const char            kPassphrase[] = "123456";
+
+    static const otPskc kExpectedPskc = {
+        {0x44, 0x98, 0x8e, 0x22, 0xcf, 0x65, 0x2e, 0xee, 0xcc, 0xd1, 0xe4, 0xc0, 0x1d, 0x01, 0x54, 0xf8}};
+
+    Instance *instance = testInitInstance();
+    Pskc      pskc;
+
+    SuccessOrQuit(GeneratePskc(kPassphrase, AsCoreType(&kNetworkName), AsCoreType(&kExtPanId), pskc));
+    VerifyOrQuit(pskc == AsCoreType(&kExpectedPskc));
+
     testFreeInstance(instance);
 }
 
 void TestMaximumPassphrase(void)
 {
-    ot::Pskc              pskc;
-    const uint8_t         expectedPskc[] = {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f,
-                                            0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9};
-    const otExtendedPanId xpanid         = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
-    const char            passphrase[]   = "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "1234567812345678"
-                                           "123456781234567";
+    static const otExtendedPanId kExtPanId    = {{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}};
+    static const otNetworkName   kNetworkName = {{'O', 'p', 'e', 'n', 'T', 'h', 'r', 'e', 'a', 'd', '\0'}};
 
-    otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
-                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
+    static const char kPassphrase[] = "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "1234567812345678"
+                                      "123456781234567";
+
+    static const otPskc kExpectedPskc = {
+        {0x9e, 0x81, 0xbd, 0x35, 0xa2, 0x53, 0x76, 0x2f, 0x80, 0xee, 0x04, 0xff, 0x2f, 0xa2, 0x85, 0xe9}};
+
+    Instance *instance = testInitInstance();
+    Pskc      pskc;
+
+    SuccessOrQuit(GeneratePskc(kPassphrase, AsCoreType(&kNetworkName), AsCoreType(&kExtPanId), pskc));
+    VerifyOrQuit(pskc == AsCoreType(&kExpectedPskc));
+
     testFreeInstance(instance);
 }
 
 void TestExampleInSpec(void)
 {
-    ot::Pskc              pskc;
-    const uint8_t         expectedPskc[] = {0xc3, 0xf5, 0x93, 0x68, 0x44, 0x5a, 0x1b, 0x61,
-                                            0x06, 0xbe, 0x42, 0x0a, 0x70, 0x6d, 0x4c, 0xc9};
-    const otExtendedPanId xpanid         = {{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}};
-    const char            passphrase[]   = "12SECRETPASSWORD34";
+    static const otExtendedPanId kExtPanId     = {{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}};
+    static const otNetworkName   kNetworkName  = {{'T', 'e', 's', 't', ' ', 'N', 'e', 't', 'w', 'o', 'r', 'k', '\0'}};
+    static const char            kPassphrase[] = "12SECRETPASSWORD34";
 
-    otInstance *instance = testInitInstance();
-    SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase,
-                                            *reinterpret_cast<const ot::MeshCoP::NetworkName *>("Test Network"),
-                                            static_cast<const ot::MeshCoP::ExtendedPanId &>(xpanid), pskc));
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc.m8)) == 0);
+    static const otPskc kExpectedPskc = {
+        {0xc3, 0xf5, 0x93, 0x68, 0x44, 0x5a, 0x1b, 0x61, 0x06, 0xbe, 0x42, 0x0a, 0x70, 0x6d, 0x4c, 0xc9}};
+
+    Instance *instance = testInitInstance();
+    Pskc      pskc;
+
+    SuccessOrQuit(GeneratePskc(kPassphrase, AsCoreType(&kNetworkName), AsCoreType(&kExtPanId), pskc));
+    VerifyOrQuit(pskc == AsCoreType(&kExpectedPskc));
+
     testFreeInstance(instance);
 }
 
+} // namespace MeshCoP
 } // namespace ot
 
 #endif // OPENTHREAD_FTD
@@ -106,9 +116,9 @@ void TestExampleInSpec(void)
 int main(void)
 {
 #if OPENTHREAD_FTD
-    ot::TestMinimumPassphrase();
-    ot::TestMaximumPassphrase();
-    ot::TestExampleInSpec();
+    ot::MeshCoP::TestMinimumPassphrase();
+    ot::MeshCoP::TestMaximumPassphrase();
+    ot::MeshCoP::TestExampleInSpec();
     printf("All tests passed\n");
 #else
     printf("PSKc generation is not supported on non-ftd build\n");

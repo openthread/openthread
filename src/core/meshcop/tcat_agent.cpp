@@ -94,7 +94,7 @@ Error TcatAgent::Start(const TcatAgent::VendorInfo &aVendorInfo,
     mAlreadyCommissioned        = false;
 
 exit:
-    LogError("start TCAT agent", error);
+    LogWarnOnError(error, "start TCAT agent");
     return error;
 }
 
@@ -461,9 +461,9 @@ exit:
 
 Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMessage, uint16_t aOffset, uint16_t aLength)
 {
-    Dataset                  dataset;
-    otOperationalDatasetTlvs datasetTlvs;
-    Error                    error;
+    Dataset       dataset;
+    Dataset::Tlvs datasetTlvs;
+    Error         error;
 
     SuccessOrExit(error = dataset.ReadFromMessage(aIncommingMessage, aOffset, aLength));
 
@@ -499,16 +499,6 @@ Error TcatAgent::HandleStartThreadInterface(void)
 exit:
     return error;
 }
-
-#if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_WARN)
-void TcatAgent::LogError(const char *aActionText, Error aError)
-{
-    if (aError != kErrorNone)
-    {
-        LogWarn("Failed to %s: %s", aActionText, ErrorToString(aError));
-    }
-}
-#endif
 
 } // namespace MeshCoP
 } // namespace ot

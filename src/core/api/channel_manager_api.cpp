@@ -33,7 +33,9 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && \
+    (OPENTHREAD_FTD ||                          \
+     (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE))
 
 #include <openthread/channel_manager.h>
 
@@ -43,16 +45,19 @@
 
 using namespace ot;
 
+#if OPENTHREAD_FTD
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
-    AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestChannelChange(aChannel);
+    AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestNetworkChannelChange(aChannel);
 }
+#endif
 
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetRequestedChannel();
 }
 
+#if OPENTHREAD_FTD
 uint16_t otChannelManagerGetDelay(otInstance *aInstance)
 {
     return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetDelay();
@@ -66,19 +71,39 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay)
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
 {
-    return AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestChannelSelect(aSkipQualityCheck);
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestNetworkChannelSelect(aSkipQualityCheck);
 }
 #endif
 
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
 {
-    AsCoreType(aInstance).Get<Utils::ChannelManager>().SetAutoChannelSelectionEnabled(aEnabled);
+    AsCoreType(aInstance).Get<Utils::ChannelManager>().SetAutoNetworkChannelSelectionEnabled(aEnabled);
 }
 
 bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance)
 {
-    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetAutoChannelSelectionEnabled();
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetAutoNetworkChannelSelectionEnabled();
 }
+#endif // OPENTHREAD_FTD
+
+#if (OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE)
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+otError otChannelManagerRequestCslChannelSelect(otInstance *aInstance, bool aSkipQualityCheck)
+{
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().RequestCslChannelSelect(aSkipQualityCheck);
+}
+#endif
+
+void otChannelManagerSetAutoCslChannelSelectionEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Utils::ChannelManager>().SetAutoCslChannelSelectionEnabled(aEnabled);
+}
+
+bool otChannelManagerGetAutoCslChannelSelectionEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Utils::ChannelManager>().GetAutoCslChannelSelectionEnabled();
+}
+#endif
 
 otError otChannelManagerSetAutoChannelSelectionInterval(otInstance *aInstance, uint32_t aInterval)
 {

@@ -121,8 +121,7 @@ template <> otError SrpServer::Process<Cmd("addrmode")>(Arg aArgs[])
  */
 template <> otError SrpServer::Process<Cmd("auto")>(Arg aArgs[])
 {
-    return Interpreter::GetInterpreter().ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode,
-                                                              otSrpServerSetAutoEnableMode);
+    return ProcessEnableDisable(aArgs, otSrpServerIsAutoEnableMode, otSrpServerSetAutoEnableMode);
 }
 #endif
 

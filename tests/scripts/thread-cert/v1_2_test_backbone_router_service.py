@@ -128,7 +128,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         WAIT_TIME = BBR_REGISTRATION_JITTER + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Primary')
-        assert self.nodes[BBR_1].get_backbone_router()['seqno'] == 2
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router()['seqno'], 2)
 
         # 3) Reset BBR_1 and bring it back after its original router id is released
         # 200s (100s MaxNeighborAge + 90s InfiniteCost + 10s redundance)
@@ -186,7 +186,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         # Check no SRV_DATA.ntf.
         messages = self.simulator.get_messages_sent_by(BBR_2)
         msg = messages.next_coap_message('0.02', '/a/sd', False)
-        assert (msg is None), "Error: %d sent unexpected SRV_DATA.ntf when there is PBbr already"
+        self.assertIsNone(msg)
 
         # Flush relative message queue.
         self.flush_nodes([BBR_1])
@@ -203,7 +203,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
         messages.next_coap_message('0.02', '/a/sd', True)
         self.assertEqual(self.nodes[BBR_1].get_backbone_router_state(), 'Secondary')
         # Verify Sequence number increases when become Secondary from Primary.
-        assert self.nodes[BBR_1].get_backbone_router()['seqno'] == (BBR_1_SEQNO + 1)
+        self.assertEqual(self.nodes[BBR_1].get_backbone_router()['seqno'], BBR_1_SEQNO + 1)
 
         # 4a) Check communication via DUA.
         bbr2_dua = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
@@ -238,7 +238,7 @@ class TestBackboneRouterService(thread_cert.TestCase):
 
         # 6a) Check the uniqueness of DUA by comparing the one in above 4a).
         bbr2_dua2 = self.nodes[BBR_2].get_addr(config.DOMAIN_PREFIX)
-        assert bbr2_dua == bbr2_dua2, 'Error: Unexpected different DUA ({} v.s. {})'.format(bbr2_dua, bbr2_dua2)
+        self.assertEqual(bbr2_dua, bbr2_dua2)
 
         # 6b) Check communication via DUA
         self.assertTrue(self.nodes[BBR_1].ping(bbr2_dua))

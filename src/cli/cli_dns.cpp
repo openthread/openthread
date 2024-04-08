@@ -679,8 +679,7 @@ template <> otError Dns::Process<Cmd("server")>(Arg aArgs[])
          * @par api_copy
          * #otDnssdUpstreamQuerySetEnabled
          */
-        error = Interpreter::GetInterpreter().ProcessEnableDisable(aArgs + 1, otDnssdUpstreamQueryIsEnabled,
-                                                                   otDnssdUpstreamQuerySetEnabled);
+        error = ProcessEnableDisable(aArgs + 1, otDnssdUpstreamQueryIsEnabled, otDnssdUpstreamQuerySetEnabled);
     }
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
     else

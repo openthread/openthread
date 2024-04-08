@@ -146,8 +146,12 @@ uint8_t Message::WriteExtendedOptionField(uint16_t aValue, uint8_t *&aBuffer)
     return rval;
 }
 
-Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+Error Message::AppendOptionHeader(uint16_t aNumber, uint16_t aLength)
 {
+    /*
+     * Appends a CoAP Option header field (Option Delta/Length) per RFC 7252.
+     */
+
     Error    error = kErrorNone;
     uint16_t delta;
     uint8_t  header[kMaxOptionHeaderSize];
@@ -167,9 +171,32 @@ Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aVal
     VerifyOrExit(static_cast<uint32_t>(GetLength()) + headerLength + aLength < kMaxHeaderLength, error = kErrorNoBufs);
 
     SuccessOrExit(error = AppendBytes(header, headerLength));
-    SuccessOrExit(error = AppendBytes(aValue, aLength));
 
     GetHelpData().mOptionLast = aNumber;
+
+exit:
+    return error;
+}
+
+Error Message::AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
+    SuccessOrExit(error = AppendBytes(aValue, aLength));
+
+    GetHelpData().mHeaderLength = GetLength();
+
+exit:
+    return error;
+}
+
+Error Message::AppendOptionFromMessage(uint16_t aNumber, uint16_t aLength, const Message &aMessage, uint16_t aOffset)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = AppendOptionHeader(aNumber, aLength));
+    SuccessOrExit(error = AppendBytesFromMessage(aMessage, aOffset, aLength));
 
     GetHelpData().mHeaderLength = GetLength();
 

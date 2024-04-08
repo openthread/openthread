@@ -38,7 +38,7 @@
 
 #include <openthread/netdata.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 namespace ot {
 namespace Cli {
@@ -47,11 +47,9 @@ namespace Cli {
  * Implements the Network Data CLI.
  *
  */
-class NetworkData : private Output
+class NetworkData : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * This constant specifies the string size for representing Network Data prefix/route entry flags.
      *
@@ -132,6 +130,8 @@ public:
 private:
     using Command = CommandEntry<NetworkData>;
 
+    static constexpr uint16_t kAnyRloc16 = 0xffff;
+
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError GetNextPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig, bool aLocal);
@@ -139,11 +139,7 @@ private:
     otError GetNextService(otNetworkDataIterator *aIterator, otServiceConfig *aConfig, bool aLocal);
 
     otError OutputBinary(bool aLocal);
-    void    OutputPrefixes(bool aLocal);
-    void    OutputRoutes(bool aLocal);
-    void    OutputServices(bool aLocal);
-    void    OutputLowpanContexts(bool aLocal);
-    void    OutputCommissioningDataset(bool aLocal);
+    void    OutputNetworkData(bool aLocal, uint16_t aRloc16);
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_SIGNAL_NETWORK_DATA_FULL
     static void HandleNetdataFull(void *aContext) { static_cast<NetworkData *>(aContext)->HandleNetdataFull(); }

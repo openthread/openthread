@@ -124,7 +124,7 @@ void UpdateIpSets(otInstance *aInstance)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogWarnPlat("Failed to update ipsets: %s", otThreadErrorToString(error));
+        otLogWarnPlat("Firewall - failed to update ipsets: %s", otThreadErrorToString(error));
     }
 }
 

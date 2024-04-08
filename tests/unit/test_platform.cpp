@@ -694,39 +694,39 @@ OT_TOOL_WEAK otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowe
 otError otPlatBleEnable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleDisable(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStart(otInstance *aInstance, uint16_t aInterval)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aInterval);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapAdvStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGapDisconnect(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGattMtuGet(otInstance *aInstance, uint16_t *aMtu)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aMtu);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 
 otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, const otBleRadioPacket *aPacket)
@@ -734,7 +734,7 @@ otError otPlatBleGattServerIndicate(otInstance *aInstance, uint16_t aHandle, con
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aHandle);
     OT_UNUSED_VARIABLE(aPacket);
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return OT_ERROR_NONE;
 }
 #endif // OPENTHREAD_CONFIG_BLE_TCAT_ENABLE
 

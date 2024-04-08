@@ -714,7 +714,7 @@ exit:
             mReassemblyList.DequeueAndFree(*message);
         }
 
-        LogWarn("Reassembly failed: %s", ErrorToString(error));
+        LogWarnOnError(error, "reassemble");
     }
 
     if (isFragmented)
@@ -769,11 +769,8 @@ void Ip6::SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::H
     error = mIcmp.SendError(aIcmpType, aIcmpCode, messageInfo, aMessage);
 
 exit:
-
-    if (error != kErrorNone)
-    {
-        LogWarn("Failed to send ICMP error: %s", ErrorToString(error));
-    }
+    LogWarnOnError(error, "send ICMP");
+    OT_UNUSED_VARIABLE(error);
 }
 
 #else
@@ -916,11 +913,7 @@ Error Ip6::HandlePayload(Header            &aIp6Header,
     }
 
 exit:
-    if (error != kErrorNone)
-    {
-        LogNote("Failed to handle payload: %s", ErrorToString(error));
-    }
-
+    LogWarnOnError(error, "handle payload");
     return error;
 }
 
@@ -955,17 +948,6 @@ Error Ip6::PassToHost(OwnedPtr<Message> &aMessagePtr,
 
     if (mIsReceiveIp6FilterEnabled && aApplyFilter)
     {
-#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-        // Do not pass messages sent to an RLOC/ALOC, except
-        // Service Locator
-
-        bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
-                         aMessageInfo.GetSockAddr().GetIid().IsLocator();
-
-        VerifyOrExit(!isLocator || aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
-                     error = kErrorNoRoute);
-#endif
-
         switch (aIpProto)
         {
         case kProtoIcmp6:

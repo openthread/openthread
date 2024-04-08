@@ -76,12 +76,12 @@ VENDOR_APP_URL = 35
 
 r1.set_vendor_name('nest')
 r1.set_vendor_model('marble')
-r1.set_vendor_sw_version('ot-1.3.1')
+r1.set_vendor_sw_version('ot-1.4')
 r1.set_vendor_app_url('https://example.com/vendor-app')
 
 verify(r1.get_vendor_name() == 'nest')
 verify(r1.get_vendor_model() == 'marble')
-verify(r1.get_vendor_sw_version() == 'ot-1.3.1')
+verify(r1.get_vendor_sw_version() == 'ot-1.4')
 verify(r1.get_vendor_app_url() == 'https://example.com/vendor-app')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

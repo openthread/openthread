@@ -223,6 +223,17 @@ class Node(object):
     def set_channel(self, channel):
         self._cli_no_output('channel', channel)
 
+    def get_csl_config(self):
+        outputs = self.cli('csl')
+        result = {}
+        for line in outputs:
+            fields = line.split(':')
+            result[fields[0].strip()] = fields[1].strip()
+        return result
+
+    def set_csl_period(self, period):
+        self._cli_no_output('csl period', period)
+
     def get_ext_addr(self):
         return self._cli_single_output('extaddr')
 
@@ -387,19 +398,23 @@ class Node(object):
     #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # netdata
 
-    def get_netdata(self):
-        outputs = self.cli('netdata show')
+    def get_netdata(self, rloc16=None):
+        outputs = self.cli('netdata show', rloc16)
         outputs = [line.strip() for line in outputs]
         routes_index = outputs.index('Routes:')
         services_index = outputs.index('Services:')
-        contexts_index = outputs.index('Contexts:')
-        commissioning_index = outputs.index('Commissioning:')
+        if rloc16 is None:
+            contexts_index = outputs.index('Contexts:')
+            commissioning_index = outputs.index('Commissioning:')
         result = {}
         result['prefixes'] = outputs[1:routes_index]
         result['routes'] = outputs[routes_index + 1:services_index]
-        result['services'] = outputs[services_index + 1:contexts_index]
-        result['contexts'] = outputs[contexts_index + 1:commissioning_index]
-        result['commissioning'] = outputs[commissioning_index + 1:]
+        if rloc16 is None:
+            result['services'] = outputs[services_index + 1:contexts_index]
+            result['contexts'] = outputs[contexts_index + 1:commissioning_index]
+            result['commissioning'] = outputs[commissioning_index + 1:]
+        else:
+            result['services'] = outputs[services_index + 1:]
 
         return result
 
@@ -641,6 +656,12 @@ class Node(object):
 
     def srp_server_disable(self):
         self._cli_no_output('srp server disable')
+
+    def srp_server_auto_enable(self):
+        self._cli_no_output('srp server auto enable')
+
+    def srp_server_auto_disable(self):
+        self._cli_no_output('srp server auto disable')
 
     def srp_server_set_lease(self, min_lease, max_lease, min_key_lease, max_key_lease):
         self._cli_no_output('srp server lease', min_lease, max_lease, min_key_lease, max_key_lease)
@@ -965,7 +986,8 @@ def verify_within(condition_checker_func, wait_time, arg=None, delay_time=0.1):
         except VerifyError as e:
             if time.time() - start_time > wait_time:
                 print('Took too long to pass the condition ({}>{} sec)'.format(time.time() - start_time, wait_time))
-                print(e.message)
+                if hasattr(e, 'message'):
+                    print(e.message)
                 raise e
         except BaseException:
             raise

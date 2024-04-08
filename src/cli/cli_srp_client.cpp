@@ -58,7 +58,7 @@ exit:
 }
 
 SrpClient::SrpClient(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mCallbackEnabled(false)
 {
     otSrpClientSetCallback(GetInstancePtr(), SrpClient::HandleCallback, this);
@@ -453,7 +453,7 @@ exit:
  */
 template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
 {
-    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
+    return ProcessGetSet(aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
 /**
@@ -475,8 +475,7 @@ template <> otError SrpClient::Process<Cmd("leaseinterval")>(Arg aArgs[])
  */
 template <> otError SrpClient::Process<Cmd("keyleaseinterval")>(Arg aArgs[])
 {
-    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval,
-                                                       otSrpClientSetKeyLeaseInterval);
+    return ProcessGetSet(aArgs, otSrpClientGetKeyLeaseInterval, otSrpClientSetKeyLeaseInterval);
 }
 
 template <> otError SrpClient::Process<Cmd("server")>(Arg aArgs[])
@@ -577,9 +576,9 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
      * * -->                          [@ca{weight}] [@ca{txt}]
      * The `servicename` parameter can optionally include a list of service subtype labels that are
      * separated by commas. The examples here use generic naming. The `priority` and `weight` (both are `uint16_t`
-     * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT data
-     * associated with the service. The `txt` value must be in hex-string format and is treated as an already encoded
-     * TXT data byte sequence.
+     * values) parameters are optional, and if not provided zero is used. The optional `txt` parameter sets the TXT
+     * data associated with the service. The `txt` value must be in hex-string format and is treated as an already
+     * encoded TXT data byte sequence.
      * @par
      * Adds a service with a given instance name, service name, and port number.
      * @moreinfo{@srp}.
@@ -664,8 +663,8 @@ template <> otError SrpClient::Process<Cmd("service")>(Arg aArgs[])
     {
         // `key [enable/disable]`
 
-        error = Interpreter::GetInterpreter().ProcessEnableDisable(aArgs + 1, otSrpClientIsServiceKeyRecordEnabled,
-                                                                   otSrpClientSetServiceKeyRecordEnabled);
+        error = ProcessEnableDisable(aArgs + 1, otSrpClientIsServiceKeyRecordEnabled,
+                                     otSrpClientSetServiceKeyRecordEnabled);
     }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else
@@ -929,7 +928,7 @@ exit:
  */
 template <> otError SrpClient::Process<Cmd("ttl")>(Arg aArgs[])
 {
-    return Interpreter::GetInterpreter().ProcessGetSet(aArgs, otSrpClientGetTtl, otSrpClientSetTtl);
+    return ProcessGetSet(aArgs, otSrpClientGetTtl, otSrpClientSetTtl);
 }
 
 void SrpClient::HandleCallback(otError                    aError,

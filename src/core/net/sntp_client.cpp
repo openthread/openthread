@@ -193,7 +193,7 @@ exit:
     if (error != kErrorNone)
     {
         FreeMessage(messageCopy);
-        LogWarn("Failed to send SNTP request: %s", ErrorToString(error));
+        LogWarnOnError(error, "send SNTP request");
     }
 }
 

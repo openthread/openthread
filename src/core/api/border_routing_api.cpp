@@ -75,6 +75,11 @@ void otBorderRoutingClearRouteInfoOptionPreference(otInstance *aInstance)
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ClearRouteInfoOptionPreference();
 }
 
+otError otBorderRoutingSetExtraRouterAdvertOptions(otInstance *aInstance, const uint8_t *aOptions, uint16_t aLength)
+{
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().SetExtraRouterAdvertOptions(aOptions, aLength);
+}
+
 otRoutePreference otBorderRoutingGetRoutePreference(otInstance *aInstance)
 {
     return static_cast<otRoutePreference>(

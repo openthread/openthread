@@ -29,12 +29,13 @@
 #ifndef OT_POSIX_PLATFORM_RADIO_HPP_
 #define OT_POSIX_PLATFORM_RADIO_HPP_
 
+#include "hdlc_interface.hpp"
+#include "logger.hpp"
+#include "radio_url.hpp"
+#include "spi_interface.hpp"
+#include "vendor_interface.hpp"
 #include "common/code_utils.hpp"
 #include "lib/spinel/radio_spinel.hpp"
-#include "posix/platform/hdlc_interface.hpp"
-#include "posix/platform/radio_url.hpp"
-#include "posix/platform/spi_interface.hpp"
-#include "posix/platform/vendor_interface.hpp"
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
@@ -48,9 +49,11 @@ namespace Posix {
  * Manages Thread radio.
  *
  */
-class Radio
+class Radio : public Logger<Radio>
 {
 public:
+    static const char kLogModuleName[]; ///< Module name used for logging.
+
     /**
      * Creates the radio manager.
      *

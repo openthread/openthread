@@ -113,7 +113,7 @@ public:
          * containing the CSL IE was transmitted until the next channel sample,
          * see IEEE 802.15.4-2015, section 6.12.2.
          *
-         * The Thread standard further defines the CSL phase (see Thread 1.3.1,
+         * The Thread standard further defines the CSL phase (see Thread 1.4,
          * section 3.2.6.3.4, also conforming to IEEE 802.15.4-2020, section
          * 6.12.2.1):
          *  * The "first symbol" from the definition SHALL be interpreted as the

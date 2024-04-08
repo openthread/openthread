@@ -124,7 +124,7 @@ void PanIdQueryServer::SendConflict(void)
 
 exit:
     FreeMessageOnError(message, error);
-    MeshCoP::LogError("send panid conflict", error);
+    LogWarnOnError(error, "send panid conflict");
 }
 
 void PanIdQueryServer::HandleTimer(void)

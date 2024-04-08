@@ -33,7 +33,7 @@
 
 #include <openthread/tcat.h>
 
-#include "cli/cli_output.hpp"
+#include "cli/cli_utils.hpp"
 
 #if OPENTHREAD_CONFIG_BLE_TCAT_ENABLE && OPENTHREAD_CONFIG_CLI_BLE_SECURE_ENABLE
 
@@ -45,11 +45,9 @@ namespace Cli {
  * Implements the Tcat CLI interpreter.
  *
  */
-class Tcat : private Output
+class Tcat : private Utils
 {
 public:
-    typedef Utils::CmdLineParser::Arg Arg;
-
     /**
      * Constructor
      *
@@ -58,7 +56,7 @@ public:
      *
      */
     Tcat(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-        : Output(aInstance, aOutputImplementer)
+        : Utils(aInstance, aOutputImplementer)
     {
     }
 

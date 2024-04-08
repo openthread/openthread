@@ -45,6 +45,7 @@
 #include <openthread/logging.h>
 #include <openthread/platform/trel.h>
 
+#include "logger.hpp"
 #include "radio_url.hpp"
 #include "system.hpp"
 #include "common/code_utils.hpp"
@@ -72,6 +73,53 @@ static char sInterfaceName[IFNAMSIZ + 1];
 static bool sInitialized = false;
 static bool sEnabled     = false;
 static int  sSocket      = -1;
+
+static const char kLogModuleName[] = "Trel";
+
+static void LogCrit(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_CRIT, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogWarn(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_WARN, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogNote(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_NOTE, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogInfo(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_INFO, kLogModuleName, aFormat, args);
+    va_end(args);
+}
+
+static void LogDebg(const char *aFormat, ...)
+{
+    va_list args;
+
+    va_start(args, aFormat);
+    otLogPlatArgs(OT_LOG_LEVEL_DEBG, kLogModuleName, aFormat, args);
+    va_end(args);
+}
 
 static const char *Ip6AddrToString(const void *aAddress)
 {
@@ -121,7 +169,7 @@ static void PrepareSocket(uint16_t &aUdpPort)
     struct sockaddr_in6 sockAddr;
     socklen_t           sockLen;
 
-    otLogDebgPlat("[trel] PrepareSocket()");
+    LogDebg("PrepareSocket()");
 
     sSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
@@ -141,7 +189,7 @@ static void PrepareSocket(uint16_t &aUdpPort)
 
     if (bind(sSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
     {
-        otLogCritPlat("[trel] Failed to bind socket");
+        LogCrit("Failed to bind socket");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
@@ -149,7 +197,7 @@ static void PrepareSocket(uint16_t &aUdpPort)
 
     if (getsockname(sSocket, (struct sockaddr *)&sockAddr, &sockLen) == -1)
     {
-        otLogCritPlat("[trel] Failed to get the socket name");
+        LogCrit("Failed to get the socket name");
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
 
@@ -173,7 +221,7 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
 
     if (ret != aLength)
     {
-        otLogDebgPlat("[trel] SendPacket() -- sendto() failed errno %d", errno);
+        LogDebg("SendPacket() -- sendto() failed errno %d", errno);
 
         switch (errno)
         {
@@ -194,8 +242,8 @@ static otError SendPacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
     }
 
 exit:
-    otLogDebgPlat("[trel] SendPacket([%s]:%u) err:%s pkt:%s", Ip6AddrToString(&aDestSockAddr->mAddress),
-                  aDestSockAddr->mPort, otThreadErrorToString(error), BufferToString(aBuffer, aLength));
+    LogDebg("SendPacket([%s]:%u) err:%s pkt:%s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
+            otThreadErrorToString(error), BufferToString(aBuffer, aLength));
     if (error != OT_ERROR_NONE)
     {
         ++sCounters.mTxFailure;
@@ -222,8 +270,8 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
         sRxPacketLength = sizeof(sRxPacketLength);
     }
 
-    otLogDebgPlat("[trel] ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
-                  ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
+    LogDebg("ReceivePacket() - received from [%s]:%d, id:%d, pkt:%s", Ip6AddrToString(&sockAddr.sin6_addr),
+            ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id, BufferToString(sRxPacketBuffer, sRxPacketLength));
 
     if (sEnabled)
     {
@@ -257,7 +305,7 @@ static void SendQueuedPackets(void)
 
         if (SendPacket(packet->mBuffer, packet->mLength, &packet->mDestSockAddr) == OT_ERROR_INVALID_STATE)
         {
-            otLogDebgPlat("[trel] SendQueuedPackets() - SendPacket() would block");
+            LogDebg("SendQueuedPackets() - SendPacket() would block");
             break;
         }
 
@@ -287,7 +335,7 @@ static void EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
     // Allocate an available packet entry (from the free packet list)
     // and copy the packet content into it.
 
-    VerifyOrExit(sFreeTxPacketHead != NULL, otLogWarnPlat("[trel] EnqueuePacket failed, queue is full"));
+    VerifyOrExit(sFreeTxPacketHead != NULL, LogWarn("EnqueuePacket failed, queue is full"));
     packet            = sFreeTxPacketHead;
     sFreeTxPacketHead = sFreeTxPacketHead->mNext;
 
@@ -309,8 +357,8 @@ static void EnqueuePacket(const uint8_t *aBuffer, uint16_t aLength, const otSock
         sTxPacketQueueTail        = packet;
     }
 
-    otLogDebgPlat("[trel] EnqueuePacket([%s]:%u) - %s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
-                  BufferToString(aBuffer, aLength));
+    LogDebg("EnqueuePacket([%s]:%u) - %s", Ip6AddrToString(&aDestSockAddr->mAddress), aDestSockAddr->mPort,
+            BufferToString(aBuffer, aLength));
 
 exit:
     return;
@@ -518,7 +566,14 @@ void otPlatTrelResetCounters(otInstance *aInstance)
 
 void platformTrelInit(const char *aTrelUrl)
 {
-    otLogDebgPlat("[trel] platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
+    // To silence "unused function" warning.
+    (void)LogCrit;
+    (void)LogWarn;
+    (void)LogInfo;
+    (void)LogNote;
+    (void)LogDebg;
+
+    LogDebg("platformTrelInit(aTrelUrl:\"%s\")", aTrelUrl != nullptr ? aTrelUrl : "");
 
     assert(!sInitialized);
 
@@ -545,7 +600,7 @@ void platformTrelDeinit(void)
     otPlatTrelDisable(nullptr);
     sInterfaceName[0] = '\0';
     sInitialized      = false;
-    otLogDebgPlat("[trel] platformTrelDeinit()");
+    LogDebg("platformTrelDeinit()");
 
 exit:
     return;

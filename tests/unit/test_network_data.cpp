@@ -86,32 +86,32 @@ bool CompareOnMeshPrefixConfig(const otBorderRouterConfig &aConfig1, const otBor
            (aConfig1.mDefaultRoute == aConfig2.mDefaultRoute) && (aConfig1.mOnMesh == aConfig2.mOnMesh);
 }
 
-template <uint8_t kLength>
-void VerifyRlocsArray(const uint16_t *aRlocs, uint16_t aRlocsLength, const uint16_t (&aExpectedRlocs)[kLength])
+template <uint8_t kLength> void VerifyRlocsArray(const Rlocs &aRlocs, const uint16_t (&aExpectedRlocs)[kLength])
 {
-    VerifyOrQuit(aRlocsLength == kLength);
+    VerifyOrQuit(aRlocs.GetLength() == kLength);
 
     printf("\nRLOCs: { ");
 
-    for (uint16_t index = 0; index < aRlocsLength; index++)
+    for (uint16_t rloc : aRlocs)
     {
-        VerifyOrQuit(aRlocs[index] == aExpectedRlocs[index]);
-        printf("0x%04x ", aRlocs[index]);
+        printf("0x%04x ", rloc);
     }
 
     printf("}");
+
+    for (uint16_t index = 0; index < kLength; index++)
+    {
+        VerifyOrQuit(aRlocs.Contains(aExpectedRlocs[index]));
+    }
 }
 
 void TestNetworkDataIterator(void)
 {
-    static constexpr uint8_t kMaxRlocsArray = 10;
-
     Instance           *instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig rconfig;
     OnMeshPrefixConfig  pconfig;
-    uint16_t            rlocs[kMaxRlocsArray];
-    uint8_t             rlocsLength;
+    Rlocs               rlocs;
 
     instance = testInitInstance();
     VerifyOrQuit(instance != nullptr);
@@ -168,19 +168,25 @@ void TestNetworkDataIterator(void)
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocs);
+        netData.FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocs);
+
+        netData.FindRlocs(kAnyBrOrServer, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocs);
+
+        netData.FindRlocs(kAnyBrOrServer, kChildRoleOnly, rlocs);
+        VerifyOrQuit(rlocs.GetLength() == 0);
+
+        netData.FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocs);
         VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocs));
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocs);
+        netData.FindRlocs(kBrProvidingExternalIpConn, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocs);
         VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocs));
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
-        VerifyOrQuit(rlocsLength == 0);
+        netData.FindRlocs(kBrProvidingExternalIpConn, kChildRoleOnly, rlocs);
+        VerifyOrQuit(rlocs.GetLength() == 0);
         VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == 0);
 
         for (uint16_t rloc16 : kRlocs)
@@ -284,33 +290,29 @@ void TestNetworkDataIterator(void)
             VerifyOrQuit(CompareExternalRouteConfig(rconfig, route));
         }
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+        netData.FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsAnyRole);
+
+        netData.FindRlocs(kAnyBrOrServer, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsRouterRole);
+
+        netData.FindRlocs(kAnyBrOrServer, kChildRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsChildRole);
+
+        netData.FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsAnyRole);
         VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocsAnyRole));
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsRouterRole);
+        netData.FindRlocs(kBrProvidingExternalIpConn, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsRouterRole);
         VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocsRouterRole));
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsChildRole);
+        netData.FindRlocs(kBrProvidingExternalIpConn, kChildRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsChildRole);
         VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kRlocsChildRole));
 
-        // Test failure case when given array is smaller than number of RLOCs.
-        rlocsLength = GetArrayLength(kRlocsAnyRole) - 1;
-        VerifyOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength) == kErrorNoBufs);
-        VerifyOrQuit(rlocsLength == GetArrayLength(kRlocsAnyRole) - 1);
-        for (uint8_t index = 0; index < rlocsLength; index++)
-        {
-            VerifyOrQuit(rlocs[index] == kRlocsAnyRole[index]);
-        }
-
-        rlocsLength = GetArrayLength(kRlocsAnyRole);
-        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
+        netData.FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsAnyRole);
 
         for (uint16_t rloc16 : kRlocsAnyRole)
         {
@@ -434,10 +436,13 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        const uint16_t kRlocsAnyRole[]     = {0xec00, 0x2801, 0x2800};
-        const uint16_t kRlocsRouterRole[]  = {0xec00, 0x2800};
-        const uint16_t kRlocsChildRole[]   = {0x2801};
-        const uint16_t kNonExistingRlocs[] = {0x6000, 0x0000, 0x2806, 0x4c00};
+        const uint16_t kRlocsAnyRole[]      = {0xec00, 0x2801, 0x2800, 0x4c00};
+        const uint16_t kRlocsRouterRole[]   = {0xec00, 0x2800, 0x4c00};
+        const uint16_t kRlocsChildRole[]    = {0x2801};
+        const uint16_t kBrRlocsAnyRole[]    = {0xec00, 0x2801, 0x2800};
+        const uint16_t kBrRlocsRouterRole[] = {0xec00, 0x2800};
+        const uint16_t kBrRlocsChildRole[]  = {0x2801};
+        const uint16_t kNonExistingRlocs[]  = {0x6000, 0x0000, 0x2806, 0x4c00};
 
         NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
@@ -462,22 +467,28 @@ void TestNetworkDataIterator(void)
             VerifyOrQuit(CompareOnMeshPrefixConfig(pconfig, prefix));
         }
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kAnyRole, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsAnyRole);
-        VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kRlocsAnyRole));
+        netData.FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsAnyRole);
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kRouterRoleOnly, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsRouterRole);
-        VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kRlocsRouterRole));
+        netData.FindRlocs(kAnyBrOrServer, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsRouterRole);
 
-        rlocsLength = GetArrayLength(rlocs);
-        SuccessOrQuit(netData.FindBorderRouters(kChildRoleOnly, rlocs, rlocsLength));
-        VerifyRlocsArray(rlocs, rlocsLength, kRlocsChildRole);
-        VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kRlocsChildRole));
+        netData.FindRlocs(kAnyBrOrServer, kChildRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kRlocsChildRole);
 
-        for (uint16_t rloc16 : kRlocsAnyRole)
+        netData.FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kBrRlocsAnyRole);
+        VerifyOrQuit(netData.CountBorderRouters(kAnyRole) == GetArrayLength(kBrRlocsAnyRole));
+
+        netData.FindRlocs(kBrProvidingExternalIpConn, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kBrRlocsRouterRole);
+        VerifyOrQuit(netData.CountBorderRouters(kRouterRoleOnly) == GetArrayLength(kBrRlocsRouterRole));
+
+        netData.FindRlocs(kBrProvidingExternalIpConn, kChildRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kBrRlocsChildRole);
+        VerifyOrQuit(netData.CountBorderRouters(kChildRoleOnly) == GetArrayLength(kBrRlocsChildRole));
+
+        for (uint16_t rloc16 : kBrRlocsAnyRole)
         {
             VerifyOrQuit(netData.ContainsBorderRouterWithRloc(rloc16));
         }
@@ -681,16 +692,33 @@ void TestNetworkDataDsnSrpServices(void)
             {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12, Service::DnsSrpUnicast::kFromServerData, 0x6c00},
         };
 
+        const uint16_t kExpectedRlocs[] = {0x6c00, 0x2800, 0x4c00, 0x0000};
+
         const uint8_t kPreferredAnycastEntryIndex = 2;
 
         Service::Manager            &manager = instance->Get<Service::Manager>();
         Service::Manager::Iterator   iterator;
         Service::DnsSrpAnycast::Info anycastInfo;
         Service::DnsSrpUnicast::Info unicastInfo;
+        Rlocs                        rlocs;
 
         reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(kNetworkData, sizeof(kNetworkData));
 
         DumpBuffer("netdata", kNetworkData, sizeof(kNetworkData));
+
+        // Verify `FindRlocs()`
+
+        instance->Get<Leader>().FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
+        VerifyRlocsArray(rlocs, kExpectedRlocs);
+
+        instance->Get<Leader>().FindRlocs(kAnyBrOrServer, kRouterRoleOnly, rlocs);
+        VerifyRlocsArray(rlocs, kExpectedRlocs);
+
+        instance->Get<Leader>().FindRlocs(kAnyBrOrServer, kChildRoleOnly, rlocs);
+        VerifyOrQuit(rlocs.GetLength() == 0);
+
+        instance->Get<Leader>().FindRlocs(kBrProvidingExternalIpConn, kAnyRole, rlocs);
+        VerifyOrQuit(rlocs.GetLength() == 0);
 
         // Verify all the "DNS/SRP Anycast Service" entries in Network Data
 

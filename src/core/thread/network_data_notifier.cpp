@@ -129,13 +129,14 @@ Error Notifier::RemoveStaleChildEntries(void)
     // - `kErrorNoBufs` if could not allocate message to send message.
     // - `kErrorNotFound` if no stale child entries were found.
 
-    Error    error    = kErrorNotFound;
-    Iterator iterator = kIteratorInit;
-    uint16_t rloc16;
+    Error error = kErrorNotFound;
+    Rlocs rlocs;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsRouterOrLeader());
 
-    while (Get<Leader>().GetNextServer(iterator, rloc16) == kErrorNone)
+    Get<Leader>().FindRlocs(kAnyBrOrServer, kAnyRole, rlocs);
+
+    for (uint16_t rloc16 : rlocs)
     {
         if (!Mle::IsActiveRouter(rloc16) && Mle::RouterIdMatch(Get<Mle::MleRouter>().GetRloc16(), rloc16) &&
             Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)

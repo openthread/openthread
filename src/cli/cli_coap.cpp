@@ -45,7 +45,7 @@ namespace ot {
 namespace Cli {
 
 Coap::Coap(otInstance *aInstance, OutputImplementer &aOutputImplementer)
-    : Output(aInstance, aOutputImplementer)
+    : Utils(aInstance, aOutputImplementer)
     , mUseDefaultRequestTxParameters(true)
     , mUseDefaultResponseTxParameters(true)
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -949,7 +949,7 @@ void Coap::HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo)
         }
         else
         {
-            responseCode = OT_COAP_CODE_VALID;
+            responseCode = OT_COAP_CODE_CHANGED;
         }
 
         responseMessage = otCoapNewMessage(GetInstancePtr(), nullptr);

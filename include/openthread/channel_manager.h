@@ -47,8 +47,14 @@ extern "C" {
  * @brief
  *   This module includes functions for Channel Manager.
  *
- *   The functions in this module are available when Channel Manager feature
- *   (`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE`) is enabled. Channel Manager is available only on an FTD build.
+ *   The functions in this module are available when Channel Manager features
+ *   `OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` or `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE &&
+ * OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE` are enabled. Channel Manager behavior depends on the
+ * device role. It manages the network-wide PAN channel on a Full Thread Device in rx-on-when-idle mode, or with
+ * `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE` set,
+ *   selects CSL channel in synchronized rx-off-when-idle mode. On a Minimal Thread Device
+ *   `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE` selects
+ * the CSL channel.
  *
  * @{
  *
@@ -77,7 +83,9 @@ void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChanne
 uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance);
 
 /**
- * Gets the delay (in seconds) used by Channel Manager for a channel change.
+ * Gets the delay (in seconds) used by Channel Manager for a network channel change.
+ *
+ * Only available on FTDs.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  *
@@ -87,10 +95,10 @@ uint8_t otChannelManagerGetRequestedChannel(otInstance *aInstance);
 uint16_t otChannelManagerGetDelay(otInstance *aInstance);
 
 /**
- * Sets the delay (in seconds) used for a channel change.
+ * Sets the delay (in seconds) used for a network channel change.
  *
- * The delay should preferably be longer than the maximum data poll interval used by all sleepy-end-devices within the
- * Thread network.
+ * Only available on FTDs. The delay should preferably be longer than the maximum data poll interval used by all
+ * Sleepy End Devices within the Thread network.
  *
  * @param[in]  aInstance          A pointer to an OpenThread instance.
  * @param[in]  aDelay             Delay in seconds.
@@ -117,7 +125,7 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
  *
  * 2) If the first step passes, then `ChannelManager` selects a potentially better channel. It uses the collected
  *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
- *    (see otChannelManagerSetSupportedChannels() and otChannelManagerSetFavoredChannels()).
+ *    (see `otChannelManagerSetSupportedChannels()` and `otChannelManagerSetFavoredChannels()`).
  *
  * 3) If the newly selected channel is different from the current channel, `ChannelManager` requests/starts the
  *    channel change process (internally invoking a `RequestChannelChange()`).
@@ -132,10 +140,41 @@ otError otChannelManagerSetDelay(otInstance *aInstance, uint16_t aDelay);
 otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);
 
 /**
- * Enables or disables the auto-channel-selection functionality.
+ * Requests that `ChannelManager` checks and selects a new CSL channel and starts a CSL channel change.
+ *
+ * Only available with `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE &&
+ * OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE`. This function asks the `ChannelManager` to select a
+ * channel by itself (based on collected channel quality info).
+ *
+ * Once called, the Channel Manager will perform the following 3 steps:
+ *
+ * 1) `ChannelManager` decides if the CSL channel change would be helpful. This check can be skipped if
+ *    `aSkipQualityCheck` is set to true (forcing a CSL channel selection to happen and skipping the quality check).
+ *    This step uses the collected link quality metrics on the device (such as CCA failure rate, frame and message
+ *    error rates per neighbor, etc.) to determine if the current channel quality is at the level that justifies
+ *    a CSL channel change.
+ *
+ * 2) If the first step passes, then `ChannelManager` selects a potentially better CSL channel. It uses the collected
+ *    channel quality data by `ChannelMonitor` module. The supported and favored channels are used at this step.
+ *    (see `otChannelManagerSetSupportedChannels()` and `otChannelManagerSetFavoredChannels()`).
+ *
+ * 3) If the newly selected CSL channel is different from the current CSL channel, `ChannelManager` starts the
+ *    CSL channel change process.
+ *
+ * @param[in] aInstance                A pointer to an OpenThread instance.
+ * @param[in] aSkipQualityCheck        Indicates whether the quality check (step 1) should be skipped.
+ *
+ * @retval OT_ERROR_NONE               Channel selection finished successfully.
+ * @retval OT_ERROR_NOT_FOUND          Supported channel mask is empty, therefore could not select a channel.
+ *
+ */
+otError otChannelManagerRequestCslChannelSelect(otInstance *aInstance, bool aSkipQualityCheck);
+
+/**
+ * Enables or disables the auto-channel-selection functionality for network channel.
  *
  * When enabled, `ChannelManager` will periodically invoke a `RequestChannelSelect(false)`. The period interval
- * can be set by `SetAutoChannelSelectionInterval()`.
+ * can be set by `otChannelManagerSetAutoChannelSelectionInterval()`.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  * @param[in]  aEnabled     Indicates whether to enable or disable this functionality.
@@ -144,7 +183,7 @@ otError otChannelManagerRequestChannelSelect(otInstance *aInstance, bool aSkipQu
 void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * Indicates whether the auto-channel-selection functionality is enabled or not.
+ * Indicates whether the auto-channel-selection functionality for a network channel is enabled or not.
  *
  * @param[in]  aInstance    A pointer to an OpenThread instance.
  *
@@ -152,6 +191,33 @@ void otChannelManagerSetAutoChannelSelectionEnabled(otInstance *aInstance, bool 
  *
  */
 bool otChannelManagerGetAutoChannelSelectionEnabled(otInstance *aInstance);
+
+/**
+ * Enables or disables the auto-channel-selection functionality for a CSL channel.
+ *
+ * Only available with `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE &&
+ * OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE`. When enabled, `ChannelManager` will periodically invoke
+ * a `otChannelManagerRequestCslChannelSelect()`. The period interval can be set by
+ * `otChannelManagerSetAutoChannelSelectionInterval()`.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ * @param[in]  aEnabled     Indicates whether to enable or disable this functionality.
+ *
+ */
+void otChannelManagerSetAutoCslChannelSelectionEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * Indicates whether the auto-csl-channel-selection functionality is enabled or not.
+ *
+ * Only available with `OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE &&
+ * OPENTHREAD_CONFIG_CHANNEL_MANAGER_CSL_CHANNEL_SELECT_ENABLE`.
+ *
+ * @param[in]  aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns TRUE if enabled, FALSE if disabled.
+ *
+ */
+bool otChannelManagerGetAutoCslChannelSelectionEnabled(otInstance *aInstance);
 
 /**
  * Sets the period interval (in seconds) used by auto-channel-selection functionality.

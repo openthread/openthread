@@ -276,7 +276,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
         dua2 = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua2, 'Error: Expected DUA ({}) not found'.format(dua2)
-        assert dua2 != dua, 'Error: Expected Different DUA not found, same DUA {}'.format(dua2)
+        self.assertNotEqual(dua2, dua)
 
         # e) (repeated) Configure BBR_1 to respond with per remaining error status:
         #   - increase BBR seqno to trigger reregistration

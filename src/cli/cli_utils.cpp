@@ -31,7 +31,7 @@
  *   This file contains implementation of the CLI output module.
  */
 
-#include "cli_output.hpp"
+#include "cli_utils.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +48,7 @@
 namespace ot {
 namespace Cli {
 
-const char Output::kUnknownString[] = "unknown";
+const char Utils::kUnknownString[] = "unknown";
 
 OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallbackContext)
     : mCallback(aCallback)
@@ -60,7 +60,7 @@ OutputImplementer::OutputImplementer(otCliOutputCallback aCallback, void *aCallb
 {
 }
 
-void Output::OutputFormat(const char *aFormat, ...)
+void Utils::OutputFormat(const char *aFormat, ...)
 {
     va_list args;
 
@@ -69,7 +69,7 @@ void Output::OutputFormat(const char *aFormat, ...)
     va_end(args);
 }
 
-void Output::OutputFormat(uint8_t aIndentSize, const char *aFormat, ...)
+void Utils::OutputFormat(uint8_t aIndentSize, const char *aFormat, ...)
 {
     va_list args;
 
@@ -80,7 +80,7 @@ void Output::OutputFormat(uint8_t aIndentSize, const char *aFormat, ...)
     va_end(args);
 }
 
-void Output::OutputLine(const char *aFormat, ...)
+void Utils::OutputLine(const char *aFormat, ...)
 {
     va_list args;
 
@@ -91,7 +91,7 @@ void Output::OutputLine(const char *aFormat, ...)
     OutputNewLine();
 }
 
-void Output::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
+void Utils::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
 {
     va_list args;
 
@@ -104,11 +104,11 @@ void Output::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
     OutputNewLine();
 }
 
-void Output::OutputNewLine(void) { OutputFormat("\r\n"); }
+void Utils::OutputNewLine(void) { OutputFormat("\r\n"); }
 
-void Output::OutputSpaces(uint8_t aCount) { OutputFormat("%*s", aCount, ""); }
+void Utils::OutputSpaces(uint8_t aCount) { OutputFormat("%*s", aCount, ""); }
 
-void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
+void Utils::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 {
     for (uint16_t i = 0; i < aLength; i++)
     {
@@ -116,13 +116,13 @@ void Output::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
     }
 }
 
-void Output::OutputBytesLine(const uint8_t *aBytes, uint16_t aLength)
+void Utils::OutputBytesLine(const uint8_t *aBytes, uint16_t aLength)
 {
     OutputBytes(aBytes, aLength);
     OutputNewLine();
 }
 
-const char *Output::Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer)
+const char *Utils::Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer)
 {
     char *cur = &aBuffer.mChars[Uint64StringBuffer::kSize - 1];
 
@@ -143,24 +143,24 @@ const char *Output::Uint64ToString(uint64_t aUint64, Uint64StringBuffer &aBuffer
     return cur;
 }
 
-void Output::OutputUint64(uint64_t aUint64)
+void Utils::OutputUint64(uint64_t aUint64)
 {
     Uint64StringBuffer buffer;
 
     OutputFormat("%s", Uint64ToString(aUint64, buffer));
 }
 
-void Output::OutputUint64Line(uint64_t aUint64)
+void Utils::OutputUint64Line(uint64_t aUint64)
 {
     OutputUint64(aUint64);
     OutputNewLine();
 }
 
-void Output::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
+void Utils::OutputEnabledDisabledStatus(bool aEnabled) { OutputLine(aEnabled ? "Enabled" : "Disabled"); }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void Output::OutputIp6Address(const otIp6Address &aAddress)
+void Utils::OutputIp6Address(const otIp6Address &aAddress)
 {
     char string[OT_IP6_ADDRESS_STRING_SIZE];
 
@@ -169,13 +169,13 @@ void Output::OutputIp6Address(const otIp6Address &aAddress)
     return OutputFormat("%s", string);
 }
 
-void Output::OutputIp6AddressLine(const otIp6Address &aAddress)
+void Utils::OutputIp6AddressLine(const otIp6Address &aAddress)
 {
     OutputIp6Address(aAddress);
     OutputNewLine();
 }
 
-void Output::OutputIp6Prefix(const otIp6Prefix &aPrefix)
+void Utils::OutputIp6Prefix(const otIp6Prefix &aPrefix)
 {
     char string[OT_IP6_PREFIX_STRING_SIZE];
 
@@ -184,25 +184,25 @@ void Output::OutputIp6Prefix(const otIp6Prefix &aPrefix)
     OutputFormat("%s", string);
 }
 
-void Output::OutputIp6PrefixLine(const otIp6Prefix &aPrefix)
+void Utils::OutputIp6PrefixLine(const otIp6Prefix &aPrefix)
 {
     OutputIp6Prefix(aPrefix);
     OutputNewLine();
 }
 
-void Output::OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix)
+void Utils::OutputIp6Prefix(const otIp6NetworkPrefix &aPrefix)
 {
     OutputFormat("%x:%x:%x:%x::/64", (aPrefix.m8[0] << 8) | aPrefix.m8[1], (aPrefix.m8[2] << 8) | aPrefix.m8[3],
                  (aPrefix.m8[4] << 8) | aPrefix.m8[5], (aPrefix.m8[6] << 8) | aPrefix.m8[7]);
 }
 
-void Output::OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix)
+void Utils::OutputIp6PrefixLine(const otIp6NetworkPrefix &aPrefix)
 {
     OutputIp6Prefix(aPrefix);
     OutputNewLine();
 }
 
-void Output::OutputSockAddr(const otSockAddr &aSockAddr)
+void Utils::OutputSockAddr(const otSockAddr &aSockAddr)
 {
     char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
@@ -211,13 +211,13 @@ void Output::OutputSockAddr(const otSockAddr &aSockAddr)
     return OutputFormat("%s", string);
 }
 
-void Output::OutputSockAddrLine(const otSockAddr &aSockAddr)
+void Utils::OutputSockAddrLine(const otSockAddr &aSockAddr)
 {
     OutputSockAddr(aSockAddr);
     OutputNewLine();
 }
 
-void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
+void Utils::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
     otDnsTxtEntry         entry;
     otDnsTxtEntryIterator iterator;
@@ -262,7 +262,7 @@ void Output::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
     OutputFormat("]");
 }
 
-const char *Output::PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer)
+const char *Utils::PercentageToString(uint16_t aValue, PercentageStringBuffer &aBuffer)
 {
     uint32_t     scaledValue = aValue;
     StringWriter writer(aBuffer.mChars, sizeof(aBuffer.mChars));
@@ -275,7 +275,7 @@ const char *Output::PercentageToString(uint16_t aValue, PercentageStringBuffer &
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
-void Output::OutputFormatV(const char *aFormat, va_list aArguments) { mImplementer.OutputV(aFormat, aArguments); }
+void Utils::OutputFormatV(const char *aFormat, va_list aArguments) { mImplementer.OutputV(aFormat, aArguments); }
 
 void OutputImplementer::OutputV(const char *aFormat, va_list aArguments)
 {
@@ -370,7 +370,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-void Output::LogInput(const Arg *aArgs)
+void Utils::LogInput(const Arg *aArgs)
 {
     String<kInputOutputLogStringSize> inputString;
 
@@ -383,7 +383,7 @@ void Output::LogInput(const Arg *aArgs)
 }
 #endif
 
-void Output::OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[])
+void Utils::OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[])
 {
     for (uint8_t index = 0; index < aNumColumns; index++)
     {
@@ -412,7 +412,7 @@ void Output::OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[],
     OutputTableSeparator(aNumColumns, aWidths);
 }
 
-void Output::OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[])
+void Utils::OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[])
 {
     for (uint8_t index = 0; index < aNumColumns; index++)
     {
@@ -425,6 +425,96 @@ void Output::OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[])
     }
 
     OutputLine("+");
+}
+
+otError Utils::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "enable")
+    {
+        aEnable = true;
+    }
+    else if (aArg == "disable")
+    {
+        aEnable = false;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Utils::ProcessEnableDisable(Arg aArgs[], SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Utils::ProcessEnableDisable(Arg aArgs[], SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        error = aSetEnabledHandler(GetInstancePtr(), enable);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
+otError Utils::ProcessEnableDisable(Arg               aArgs[],
+                                    IsEnabledHandler  aIsEnabledHandler,
+                                    SetEnabledHandler aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
+}
+
+otError Utils::ProcessEnableDisable(Arg                       aArgs[],
+                                    IsEnabledHandler          aIsEnabledHandler,
+                                    SetEnabledHandlerFailable aSetEnabledHandler)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(aIsEnabledHandler(GetInstancePtr()));
+    }
+    else
+    {
+        error = ProcessEnableDisable(aArgs, aSetEnabledHandler);
+    }
+
+    return error;
 }
 
 } // namespace Cli

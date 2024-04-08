@@ -125,7 +125,7 @@ void Leader::SendPetitionResponse(const Coap::Message    &aRequest,
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("send petition response", error);
+    LogWarnOnError(error, "send petition response");
 }
 
 template <> void Leader::HandleTmf<kUriLeaderKeepAlive>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -192,7 +192,7 @@ void Leader::SendKeepAliveResponse(const Coap::Message    &aRequest,
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("send keep alive response", error);
+    LogWarnOnError(error, "send keep alive response");
 }
 
 void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
@@ -211,7 +211,7 @@ void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 
 exit:
     FreeMessageOnError(message, error);
-    LogError("send dataset changed", error);
+    LogWarnOnError(error, "send dataset changed");
 }
 
 Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)

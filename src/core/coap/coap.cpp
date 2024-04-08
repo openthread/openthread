@@ -619,7 +619,6 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
 {
     Error            error       = kErrorNone;
     bool             isOptionSet = false;
-    uint64_t         optionBuf   = 0;
     uint16_t         blockOption = 0;
     Option::Iterator iterator;
 
@@ -655,8 +654,9 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         }
 
         // Copy option
-        SuccessOrExit(error = iterator.ReadOptionValue(&optionBuf));
-        SuccessOrExit(error = aRequest.AppendOption(optionNumber, iterator.GetOption()->GetLength(), &optionBuf));
+        SuccessOrExit(error = aRequest.AppendOptionFromMessage(optionNumber, iterator.GetOption()->GetLength(),
+                                                               iterator.GetMessage(),
+                                                               iterator.GetOptionValueMessageOffset()));
     }
 
     if (!isOptionSet)
