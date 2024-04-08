@@ -490,7 +490,7 @@ public:
      *
      */
     Error AppendUriQueryOptions(const char *aUriQuery);
-	
+
     /**
      * Appends a Block option
      *

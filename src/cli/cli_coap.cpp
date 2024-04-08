@@ -583,13 +583,13 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     otError       error   = OT_ERROR_NONE;
     otMessage    *message = nullptr;
     otMessageInfo messageInfo;
-    uint16_t      payloadLength = 0;
+    uint16_t      payloadLength    = 0;
     const char   *uriQueryStartPtr = nullptr;
 	
     // Default parameters
-    char         coapUri[kMaxUriLength] = "test";
+    char         coapUri[kMaxUriLength]      = "test";
     char         coapUriQuery[kMaxUriLength] = "";	
-    otCoapType   coapType               = OT_COAP_TYPE_NON_CONFIRMABLE;
+    otCoapType   coapType                    = OT_COAP_TYPE_NON_CONFIRMABLE;
     otIp6Address coapDestinationIp;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     bool           coapBlock     = false;
@@ -694,8 +694,8 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     else
     {
         // "?" presents in URI --> contains URI path AND URI query parts
-        strncpy(coapUriQuery, uriQueryStartPtr + 1, strlen(coapUri) - (uriQueryStartPtr + 1 - coapUri));
-        memset((char*) uriQueryStartPtr, '\0', strlen(coapUri) - (uriQueryStartPtr - coapUri));
+        strncpy(coapUriQuery, uriQueryStartPtr + 1, strlen(coapUri) - (std::size_t)(uriQueryStartPtr + 1 - coapUri));
+        memset((char *)uriQueryStartPtr, '\0', strlen(coapUri) - (std::size_t)(uriQueryStartPtr - coapUri));
         
         SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
         SuccessOrExit(error = otCoapMessageAppendUriQueryOptions(message, coapUriQuery));
