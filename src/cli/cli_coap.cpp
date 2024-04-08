@@ -39,6 +39,7 @@
 
 #include <cstddef>
 #include <ctype.h>
+#include <cstddef.h>
 
 #include "cli/cli.hpp"
 
