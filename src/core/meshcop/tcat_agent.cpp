@@ -224,14 +224,14 @@ bool TcatAgent::CheckCommandClassAuthorizationFlags(CommandClassFlags aCommissio
 
         if (datasetError == kErrorNone)
         {
-            if (datasetInfo.IsNetworkNamePresent() && mCommissionerHasNetworkName &&
-                (datasetInfo.GetNetworkName() == mCommissionerNetworkName))
+            if (datasetInfo.IsPresent<Dataset::kNetworkName>() && mCommissionerHasNetworkName &&
+                (datasetInfo.Get<Dataset::kNetworkName>() == mCommissionerNetworkName))
             {
                 networkNamesMatch = true;
             }
 
-            if (datasetInfo.IsExtendedPanIdPresent() && mCommissionerHasExtendedPanId &&
-                (datasetInfo.GetExtendedPanId() == mCommissionerExtendedPanId))
+            if (datasetInfo.IsPresent<Dataset::kExtendedPanId>() && mCommissionerHasExtendedPanId &&
+                (datasetInfo.Get<Dataset::kExtendedPanId>() == mCommissionerExtendedPanId))
             {
                 extendedPanIdsMatch = true;
             }
@@ -487,7 +487,7 @@ Error TcatAgent::HandleStartThreadInterface(void)
     Dataset::Info datasetInfo;
 
     VerifyOrExit(Get<ActiveDatasetManager>().Read(datasetInfo) == kErrorNone, error = kErrorInvalidState);
-    VerifyOrExit(datasetInfo.IsNetworkKeyPresent(), error = kErrorInvalidState);
+    VerifyOrExit(datasetInfo.IsPresent<Dataset::kNetworkKey>(), error = kErrorInvalidState);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(!Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);

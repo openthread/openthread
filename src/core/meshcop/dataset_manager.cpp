@@ -525,62 +525,62 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 
     length = 0;
 
-    if (aDatasetComponents.IsActiveTimestampPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kActiveTimestamp>())
     {
         datasetTlvs[length++] = Tlv::kActiveTimestamp;
     }
 
-    if (aDatasetComponents.IsPendingTimestampPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPendingTimestamp>())
     {
         datasetTlvs[length++] = Tlv::kPendingTimestamp;
     }
 
-    if (aDatasetComponents.IsNetworkKeyPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kNetworkKey>())
     {
         datasetTlvs[length++] = Tlv::kNetworkKey;
     }
 
-    if (aDatasetComponents.IsNetworkNamePresent())
+    if (aDatasetComponents.IsPresent<Dataset::kNetworkName>())
     {
         datasetTlvs[length++] = Tlv::kNetworkName;
     }
 
-    if (aDatasetComponents.IsExtendedPanIdPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kExtendedPanId>())
     {
         datasetTlvs[length++] = Tlv::kExtendedPanId;
     }
 
-    if (aDatasetComponents.IsMeshLocalPrefixPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kMeshLocalPrefix>())
     {
         datasetTlvs[length++] = Tlv::kMeshLocalPrefix;
     }
 
-    if (aDatasetComponents.IsDelayPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kDelay>())
     {
         datasetTlvs[length++] = Tlv::kDelayTimer;
     }
 
-    if (aDatasetComponents.IsPanIdPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPanId>())
     {
         datasetTlvs[length++] = Tlv::kPanId;
     }
 
-    if (aDatasetComponents.IsChannelPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kChannel>())
     {
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.IsPskcPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
         datasetTlvs[length++] = Tlv::kPskc;
     }
 
-    if (aDatasetComponents.IsSecurityPolicyPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kSecurityPolicy>())
     {
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.IsChannelMaskPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kChannelMask>())
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
@@ -638,8 +638,9 @@ bool ActiveDatasetManager::IsCommissioned(void) const
 
     SuccessOrExit(Read(datasetInfo));
 
-    isValid = (datasetInfo.IsNetworkKeyPresent() && datasetInfo.IsNetworkNamePresent() &&
-               datasetInfo.IsExtendedPanIdPresent() && datasetInfo.IsPanIdPresent() && datasetInfo.IsChannelPresent());
+    isValid = (datasetInfo.IsPresent<Dataset::kNetworkKey>() && datasetInfo.IsPresent<Dataset::kNetworkName>() &&
+               datasetInfo.IsPresent<Dataset::kExtendedPanId>() && datasetInfo.IsPresent<Dataset::kPanId>() &&
+               datasetInfo.IsPresent<Dataset::kChannel>());
 
 exit:
     return isValid;
