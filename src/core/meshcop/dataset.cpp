@@ -56,6 +56,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     Error            error;
     Mac::ChannelMask supportedChannels = aInstance.Get<Mac::Mac>().GetSupportedChannelMask();
     Mac::ChannelMask preferredChannels(aInstance.Get<Radio>().GetPreferredChannelMask());
+    StringWriter     nameWriter(mNetworkName.m8, sizeof(mNetworkName));
 
     // If the preferred channel mask is not empty, select a random
     // channel from it, otherwise choose one from the supported
@@ -83,7 +84,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     SuccessOrExit(error = Random::Crypto::Fill(mExtendedPanId));
     SuccessOrExit(error = AsCoreType(&mMeshLocalPrefix).GenerateRandomUla());
 
-    snprintf(mNetworkName.m8, sizeof(mNetworkName), "%s-%04x", NetworkName::kNetworkNameInit, mPanId);
+    nameWriter.Append("%s-%04x", NetworkName::kNetworkNameInit, mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
     mComponents.mIsNetworkKeyPresent      = true;
