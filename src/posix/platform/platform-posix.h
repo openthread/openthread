@@ -52,6 +52,7 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
+#include "coprocessor_mode.h"
 #include "lib/platform/exit_code.h"
 #include "lib/url/url.hpp"
 
@@ -82,17 +83,6 @@ enum
     OT_SIM_EVENT_UART_WRITE         = 2,
     OT_SIM_EVENT_RADIO_SPINEL_WRITE = 3,
     OT_EVENT_DATA_MAX_SIZE          = 1024,
-};
-
-/**
- * Represents the mode of the co-processor.
- * A co-processor could be either a RCP or NCP.
- */
-enum CoprocessorMode
-{
-    OT_COPROCESSOR_UNKNOWN = 0,
-    OT_COPROCESSOR_RCP     = 1,
-    OT_COPROCESSOR_NCP     = 2,
 };
 
 OT_TOOL_PACKED_BEGIN

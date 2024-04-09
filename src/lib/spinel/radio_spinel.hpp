@@ -801,20 +801,6 @@ public:
 #endif
 
     /**
-     * Checks whether the spinel interface is radio-only.
-     *
-     * @param[out] aSupportsRcpApiVersion          A reference to a boolean variable to update whether the list of
-     *                                             spinel capabilities includes `SPINEL_CAP_RCP_API_VERSION`.
-     * @param[out] aSupportsRcpMinHostApiVersion   A reference to a boolean variable to update whether the list of
-     *                                             spinel capabilities includes `SPINEL_CAP_RCP_MIN_HOST_API_VERSION`.
-     *
-     * @retval  TRUE    The radio chip is in radio-only mode.
-     * @retval  FALSE   Otherwise.
-     *
-     */
-    bool IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
-
-    /**
      * Returns the next timepoint to recalculate RCP time offset.
      *
      * @returns The timepoint to start the recalculation of RCP time offset.
@@ -1093,6 +1079,7 @@ private:
     otError CheckSpinelVersion(void);
     otError CheckRadioCapabilities(void);
     otError CheckRcpApiVersion(bool aSupportsRcpApiVersion, bool aSupportsRcpMinHostApiVersion);
+    void    InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion);
 
     /**
      * Triggers a state transfer of the state machine.

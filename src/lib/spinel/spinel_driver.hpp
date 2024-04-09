@@ -35,6 +35,7 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
+#include "posix/platform/coprocessor_mode.h"
 
 namespace ot {
 namespace Spinel {
@@ -72,10 +73,10 @@ public:
      * @param[in]  aIidListLength              The Length of the @p aIidList.
      *
      */
-    void Init(SpinelInterface    &aSpinelInterface,
-              bool                aSoftwareReset,
-              const spinel_iid_t *aIidList,
-              uint8_t             aIidListLength);
+    CoprocessorMode Init(SpinelInterface    &aSpinelInterface,
+                         bool                aSoftwareReset,
+                         const spinel_iid_t *aIidList,
+                         uint8_t             aIidListLength);
 
     /**
      * Deinitialize this SpinelDriver Instance.
@@ -189,11 +190,14 @@ public:
      */
     SpinelInterface *GetSpinelInterface(void) const { return mSpinelInterface; }
 
+    const uint8_t *GetCapsBuffer(spinel_size_t &aCapsLength);
+
 private:
     static constexpr uint16_t kMaxSpinelFrame    = SPINEL_FRAME_MAX_SIZE;
     static constexpr uint16_t kVersionStringSize = 128;
     static constexpr uint32_t kUsPerMs           = 1000; ///< Microseconds per millisecond.
     static constexpr uint32_t kMaxWaitTime       = 2000; ///< Max time to wait for response in milliseconds.
+    static constexpr uint16_t kCapsBufferSize    = 100;  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
 
     /**
      * Checks whether given interface ID is part of list of IIDs to be allowed.
@@ -220,8 +224,10 @@ private:
 
     otError SendCommand(uint32_t aCommand, spinel_prop_key_t aKey, spinel_tid_t aTid);
 
-    otError CheckSpinelVersion(void);
-    otError GetCoprocessorVersion(void);
+    otError         CheckSpinelVersion(void);
+    otError         GetCoprocessorVersion(void);
+    otError         GetCoprocessorCaps(void);
+    CoprocessorMode CheckCoprocessorMode(void);
 
     void ProcessFrameQueue(void);
 
@@ -242,6 +248,9 @@ private:
 
     bool mIsCoProcessorReady;
     char mVersion[kVersionStringSize];
+
+    uint8_t       mCapsBuffer[kCapsBufferSize];
+    spinel_size_t mCapsLength;
 };
 
 } // namespace Spinel

@@ -52,17 +52,20 @@ SpinelDriver::SpinelDriver(void)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
     , mIsCoProcessorReady(false)
+    , mCapsLength(0)
 {
     memset(mVersion, 0, sizeof(mVersion));
 
     mReceivedFrameHandler.Set(&HandleInitialFrame, this);
 }
 
-void SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
-                        bool                aSoftwareReset,
-                        const spinel_iid_t *aIidList,
-                        uint8_t             aIidListLength)
+CoprocessorMode SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
+                                   bool                aSoftwareReset,
+                                   const spinel_iid_t *aIidList,
+                                   uint8_t             aIidListLength)
 {
+    CoprocessorMode mode;
+
     mSpinelInterface = &aSpinelInterface;
     mRxFrameBuffer.Clear();
     SuccessOrDie(mSpinelInterface->Init(HandleReceivedFrame, this, mRxFrameBuffer));
@@ -79,8 +82,16 @@ void SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
     ResetCoProcessor(aSoftwareReset);
     SuccessOrDie(CheckSpinelVersion());
     SuccessOrDie(GetCoprocessorVersion());
+    SuccessOrDie(GetCoprocessorCaps());
 
-    // TODO: Check Capability and decide the mode
+    mode = CheckCoprocessorMode();
+    if (mode == OT_COPROCESSOR_UNKNOWN)
+    {
+        LogCrit("The coprocessor mode is unknown!");
+        DieNow(OT_EXIT_FAILURE);
+    }
+
+    return mode;
 }
 
 void SpinelDriver::Deinit(void)
@@ -232,6 +243,12 @@ void SpinelDriver::SetFrameHandler(ReceivedFrameHandler aReceivedFrameHandler,
     mSavedFrameHandler.Set(aSavedFrameHandler, aContext);
 }
 
+const uint8_t *SpinelDriver::GetCapsBuffer(spinel_size_t &aCapsLength)
+{
+    aCapsLength = mCapsLength;
+    return mCapsBuffer;
+}
+
 otError SpinelDriver::WaitResponse()
 {
     otError  error = OT_ERROR_NONE;
@@ -366,11 +383,17 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
 
                 VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
             }
+            else if (key == SPINEL_PROP_CAPS)
+            {
+                mCapsLength = sizeof(mCapsBuffer);
+                unpacked =
+                    spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, mCapsBuffer, &mCapsLength);
+
+                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+            }
 
             mIsWaitingForResponse = false;
         }
-
-        // mWaitingKey = SPINEL_PROP_LAST_STATUS;
     }
     else
     {
@@ -415,6 +438,49 @@ otError SpinelDriver::GetCoprocessorVersion(void)
     SuccessOrExit(error = WaitResponse());
 exit:
     return error;
+}
+
+otError SpinelDriver::GetCoprocessorCaps(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_CAPS, sTid));
+    mIsWaitingForResponse = true;
+    mWaitingKey           = SPINEL_PROP_CAPS;
+
+    SuccessOrExit(error = WaitResponse());
+exit:
+    return error;
+}
+
+CoprocessorMode SpinelDriver::CheckCoprocessorMode(void)
+{
+    CoprocessorMode mode       = OT_COPROCESSOR_UNKNOWN;
+    const uint8_t  *capsData   = mCapsBuffer;
+    spinel_size_t   capsLength = mCapsLength;
+
+    while (capsLength > 0)
+    {
+        unsigned int   capability;
+        spinel_ssize_t unpacked;
+
+        unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+
+        if (capability == SPINEL_CAP_CONFIG_RADIO)
+        {
+            mode = OT_COPROCESSOR_RCP;
+        }
+        else if (capability == SPINEL_CAP_CONFIG_FTD || capability == SPINEL_CAP_CONFIG_MTD)
+        {
+            mode = OT_COPROCESSOR_NCP;
+        }
+
+        capsData += unpacked;
+        capsLength -= static_cast<spinel_size_t>(unpacked);
+    }
+
+    return mode;
 }
 
 void SpinelDriver::ProcessFrameQueue(void)

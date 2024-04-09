@@ -135,7 +135,7 @@ void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSwReset, SpinelDri
 
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, sIeeeEui64.m8));
 
-    VerifyOrDie(IsRcp(supportsRcpApiVersion, supportsRcpMinHostApiVersion), OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+    InitializeCaps(supportsRcpApiVersion, supportsRcpMinHostApiVersion);
 
     if (!aSkipRcpCompatibilityCheck)
     {
@@ -187,18 +187,16 @@ exit:
     return error;
 }
 
-bool RadioSpinel::IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion)
+void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion)
 {
-    uint8_t        capsBuffer[kCapsBufferSize];
-    const uint8_t *capsData         = capsBuffer;
-    spinel_size_t  capsLength       = sizeof(capsBuffer);
+    const uint8_t *capsData;
+    spinel_size_t  capsLength;
     bool           supportsRawRadio = false;
-    bool           isRcp            = false;
+
+    capsData = mSpinelDriver->GetCapsBuffer(capsLength);
 
     aSupportsRcpApiVersion        = false;
     aSupportsRcpMinHostApiVersion = false;
-
-    SuccessOrDie(Get(SPINEL_PROP_CAPS, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength));
 
     while (capsLength > 0)
     {
@@ -211,11 +209,6 @@ bool RadioSpinel::IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostA
         if (capability == SPINEL_CAP_MAC_RAW)
         {
             supportsRawRadio = true;
-        }
-
-        if (capability == SPINEL_CAP_CONFIG_RADIO)
-        {
-            isRcp = true;
         }
 
         if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
@@ -242,13 +235,11 @@ bool RadioSpinel::IsRcp(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostA
         capsLength -= static_cast<spinel_size_t>(unpacked);
     }
 
-    if (!supportsRawRadio && isRcp)
+    if (!supportsRawRadio)
     {
         LogCrit("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
-
-    return isRcp;
 }
 
 otError RadioSpinel::CheckRadioCapabilities(void)

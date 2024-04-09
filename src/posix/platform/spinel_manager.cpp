@@ -58,8 +58,9 @@ SpinelManager::~SpinelManager(void) { Deinit(); }
 
 CoprocessorMode SpinelManager::Init(const char *aUrl)
 {
-    bool         swReset;
-    spinel_iid_t iidList[ot::Spinel::kSpinelHeaderMaxNumIid];
+    bool            swReset;
+    spinel_iid_t    iidList[ot::Spinel::kSpinelHeaderMaxNumIid];
+    CoprocessorMode mode;
 
     mUrl.Init(aUrl);
     VerifyOrDie(mUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
@@ -75,12 +76,11 @@ CoprocessorMode SpinelManager::Init(const char *aUrl)
 
     swReset = !mUrl.HasParam("no-reset");
 
-    mSpinelDriver.Init(*mSpinelInterface, swReset, iidList, OT_ARRAY_LENGTH(iidList));
+    mode = mSpinelDriver.Init(*mSpinelInterface, swReset, iidList, OT_ARRAY_LENGTH(iidList));
 
     otLogDebgPlat("instance init:%p - iid = %d", (void *)&mSpinelDriver, iidList[0]);
 
-    // TODO: Fix it as RCP mode for now
-    return OT_COPROCESSOR_RCP;
+    return mode;
 }
 
 void SpinelManager::Deinit(void)
