@@ -144,6 +144,7 @@ typedef enum otIcmp6EchoMode
     OT_ICMP6_ECHO_HANDLER_UNICAST_ONLY   = 1, ///< ICMPv6 Echo processing enabled only for unicast requests only
     OT_ICMP6_ECHO_HANDLER_MULTICAST_ONLY = 2, ///< ICMPv6 Echo processing enabled only for multicast requests only
     OT_ICMP6_ECHO_HANDLER_ALL            = 3, ///< ICMPv6 Echo processing enabled for unicast and multicast requests
+    OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY = 4, ///< ICMPv6 Echo processing enabled for RLOC/ALOC destinations only
 } otIcmp6EchoMode;
 
 /**
