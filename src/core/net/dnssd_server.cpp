@@ -974,10 +974,7 @@ void Server::ProxyQueryInfo::ReadFrom(const ProxyQuery &aQuery)
     SuccessOrAssert(aQuery.Read(aQuery.GetLength() - sizeof(ProxyQueryInfo), *this));
 }
 
-void Server::ProxyQueryInfo::RemoveFrom(ProxyQuery &aQuery) const
-{
-    SuccessOrAssert(aQuery.SetLength(aQuery.GetLength() - sizeof(ProxyQueryInfo)));
-}
+void Server::ProxyQueryInfo::RemoveFrom(ProxyQuery &aQuery) const { aQuery.RemoveFooter(sizeof(ProxyQueryInfo)); }
 
 void Server::ProxyQueryInfo::UpdateIn(ProxyQuery &aQuery) const
 {

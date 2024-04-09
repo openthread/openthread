@@ -667,6 +667,17 @@ public:
     Error InsertHeader(uint16_t aOffset, uint16_t aLength);
 
     /**
+     * Removes footer bytes from the end of the message.
+     *
+     * The caller should ensure the message contains the bytes to be removed, otherwise as many bytes as available
+     * will be removed.
+     *
+     * @param[in] aLength   Number of footer bytes to remove from end of the `Message`.
+     *
+     */
+    void RemoveFooter(uint16_t aLength);
+
+    /**
      * Appends bytes to the end of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
