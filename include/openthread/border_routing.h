@@ -508,8 +508,7 @@ otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance
 typedef void (*otBorderRoutingRequestDhcp6PdCallback)(bool aRequest, void *aContext);
 
 /**
- * Set the callback when state of request/release a prefix via DHCPv6 Prefix Delegation (PD)
- * for Thread interface changed.
+Sets the callback whenever the state of a prefix request or release, via the DHCPv6 Prefix Delegation (PD), changes on the Thread interface.
  *
  * Subsequent calls to this function will replace the previously set callback
  *
