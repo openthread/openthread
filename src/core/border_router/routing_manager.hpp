@@ -564,7 +564,7 @@ public:
      * Sets the callback to notify when the state of request/release a prefix via DHCPv6 Prefix Delegation (PD) is
      * changed.
      *
-     * @param[in] aCallback  A pointer to a function that is called when request/release PD state changes.
+     * @param[in] aCallback  A pointer to a function that is called whenever the state of a prefix request or release changes.
      * @param[in] aContext   A pointer to arbitrary context information.
      *
      */
