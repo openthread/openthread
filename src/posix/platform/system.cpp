@@ -129,12 +129,21 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket)
 
 void platformInit(otPlatformConfig *aPlatformConfig)
 {
+    CoprocessorType type;
+
 #if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
     platformBacktraceInit();
 #endif
 
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
-    platformSpinelInit(get802154RadioUrl(aPlatformConfig));
+
+    type = platformSpinelInit(get802154RadioUrl(aPlatformConfig));
+    if (type != OT_COPROCESSOR_RCP)
+    {
+        printf("Only RCP is supported!\n");
+        exit(OT_EXIT_FAILURE);
+    }
+
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 
     // For Dry-Run option, only init the radio.
