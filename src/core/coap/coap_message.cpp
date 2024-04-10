@@ -97,7 +97,7 @@ void Message::Finish(void)
 
     if (GetHelpData().mPayloadMarkerSet && (GetHelpData().mHeaderLength == GetLength()))
     {
-        IgnoreError(SetLength(GetLength() - 1));
+        RemoveFooter(sizeof(uint8_t));
     }
 
     WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());

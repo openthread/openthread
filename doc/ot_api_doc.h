@@ -58,6 +58,7 @@
  * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
+ * @defgroup api-mdns                 Multicast DNS
  * @defgroup api-nat64                NAT64
  * @defgroup api-srp                  SRP
  * @defgroup api-ping-sender          Ping Sender
@@ -154,6 +155,7 @@
  * @}
  *
  * @defgroup api-sntp                 SNTP
+ * @defgroup api-verhoeff-checksum    Verhoeff Checksum
  *
  * @}
  *
@@ -180,6 +182,7 @@
  * @defgroup plat-memory              Memory
  * @defgroup plat-messagepool         Message Pool
  * @defgroup plat-misc                Miscellaneous
+ * @defgroup plat-mdns                Multicast DNS
  * @defgroup plat-multipan            Multipan
  * @defgroup plat-otns                Network Simulator
  * @defgroup plat-radio               Radio

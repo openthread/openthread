@@ -135,6 +135,7 @@ add_library(openthread-posix
     infra_if.cpp
     logging.cpp
     mainloop.cpp
+    mdns_socket.cpp
     memory.cpp
     misc.cpp
     multicast_routing.cpp

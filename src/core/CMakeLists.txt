@@ -62,6 +62,7 @@ set(COMMON_SOURCES
     api/link_metrics_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
+    api/mdns_api.cpp
     api/mesh_diag_api.cpp
     api/message_api.cpp
     api/multi_radio_api.cpp
@@ -86,6 +87,7 @@ set(COMMON_SOURCES
     api/thread_ftd_api.cpp
     api/trel_api.cpp
     api/udp_api.cpp
+    api/verhoeff_checksum_api.cpp
     backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
     backbone_router/bbr_local.cpp
@@ -177,6 +179,7 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/mdns.cpp
     net/nat64_translator.cpp
     net/nd6.cpp
     net/nd_agent.cpp
@@ -257,6 +260,7 @@ set(COMMON_SOURCES
     utils/power_calibration.cpp
     utils/slaac_address.cpp
     utils/srp_client_buffers.cpp
+    utils/verhoeff_checksum.cpp
 )
 
 set(RADIO_COMMON_SOURCES

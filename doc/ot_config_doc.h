@@ -69,6 +69,7 @@
  * @defgroup config-mesh-forwarder           Mesh Forwarder
  * @defgroup config-misc                     Miscellaneous Constants
  * @defgroup config-mle                      MLE Service
+ * @defgroup config-mdns                     Multicast DNS
  * @defgroup config-nat64                    NAT64
  * @defgroup config-netdata-publisher        Network Data Publisher
  * @defgroup config-network-diagnostic       Network Diagnostics

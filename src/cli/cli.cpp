@@ -45,6 +45,7 @@
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
+#include <openthread/verhoeff_checksum.h>
 #include "common/num_utils.hpp"
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
@@ -117,6 +118,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #if OPENTHREAD_CLI_DNS_ENABLE
     , mDns(aInstance, *this)
+#endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+    , mMdns(aInstance, *this)
 #endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     , mBbr(aInstance, *this)
@@ -2760,6 +2764,10 @@ exit:
 
 #if OPENTHREAD_CLI_DNS_ENABLE
 template <> otError Interpreter::Process<Cmd("dns")>(Arg aArgs[]) { return mDns.Process(aArgs); }
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+template <> otError Interpreter::Process<Cmd("mdns")>(Arg aArgs[]) { return mMdns.Process(aArgs); }
 #endif
 
 #if OPENTHREAD_FTD
@@ -8355,6 +8363,57 @@ void Interpreter::HandleIp6Receive(otMessage *aMessage, void *aContext)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
+template <> otError Interpreter::Process<Cmd("verhoeff")>(Arg aArgs[])
+{
+    otError error;
+
+    /**
+     * @cli verhoeff calculate
+     * @code
+     * verhoeff calculate 30731842
+     * 1
+     * Done
+     * @endcode
+     * @cparam verhoeff calculate @ca{decimalstring}
+     * @par api_copy
+     * #otVerhoeffChecksumCalculate
+     */
+    if (aArgs[0] == "calculate")
+    {
+        char checksum;
+
+        VerifyOrExit(!aArgs[1].IsEmpty() && aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        SuccessOrExit(error = otVerhoeffChecksumCalculate(aArgs[1].GetCString(), &checksum));
+        OutputLine("%c", checksum);
+    }
+    /**
+     * @cli verhoeff validate
+     * @code
+     * verhoeff validate 307318421
+     * Done
+     * @endcode
+     * @cparam verhoeff validate @ca{decimalstring}
+     * @par api_copy
+     * #otVerhoeffChecksumValidate
+     */
+    else if (aArgs[0] == "validate")
+    {
+        VerifyOrExit(!aArgs[1].IsEmpty() && aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+        error = otVerhoeffChecksumValidate(aArgs[1].GetCString());
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
@@ -8527,6 +8586,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
         CmdEntry("macfilter"),
 #endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
+        CmdEntry("mdns"),
+#endif
 #if OPENTHREAD_CONFIG_MESH_DIAG_ENABLE && OPENTHREAD_FTD
         CmdEntry("meshdiag"),
 #endif
@@ -8653,6 +8715,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
         CmdEntry("uptime"),
 #endif
         CmdEntry("vendor"),
+#if OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+        CmdEntry("verhoeff"),
+#endif
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         CmdEntry("version"),
     };

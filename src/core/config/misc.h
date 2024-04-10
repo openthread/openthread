@@ -142,6 +142,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+ *
+ * Define to 1 to enable Verhoeff checksum utility module.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE
+#define OPENTHREAD_CONFIG_VERHOEFF_CHECKSUM_ENABLE OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
  *
  * Define to 1 to enable multiple instance support.

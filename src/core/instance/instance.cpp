@@ -122,6 +122,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     , mDnsDso(*this)
 #endif
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    , mMdnsCore(*this)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(*this)
 #endif
@@ -329,6 +332,19 @@ Instance *Instance::InitMultiple(uint8_t aIdx)
 
 exit:
     return instance;
+}
+
+Instance &Instance::Get(uint8_t aIdx)
+{
+    void *instance = gMultiInstanceRaw + aIdx * INSTANCE_SIZE_ALIGNED;
+    return *static_cast<Instance *>(instance);
+}
+
+uint8_t Instance::GetIdx(Instance *aInstance)
+{
+    return static_cast<uint8_t>(
+        (reinterpret_cast<uint8_t *>(aInstance) - reinterpret_cast<uint8_t *>(gMultiInstanceRaw)) /
+        INSTANCE_SIZE_ALIGNED);
 }
 
 #endif // #if OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE

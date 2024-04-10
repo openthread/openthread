@@ -555,6 +555,35 @@ otError otPlatRadioSetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t aTh
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+
+OT_TOOL_WEAK otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+}
+
+OT_TOOL_WEAK void otPlatMdnsSendUnicast(otInstance                  *aInstance,
+                                        otMessage                   *aMessage,
+                                        const otPlatMdnsAddressInfo *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMessage);
+    OT_UNUSED_VARIABLE(aAddress);
+}
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
 OT_TOOL_WEAK void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)

@@ -92,6 +92,7 @@
 #include "net/dnssd_server.hpp"
 #include "net/ip6.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/mdns.hpp"
 #include "net/nat64_translator.hpp"
 #include "net/nd_agent.hpp"
 #include "net/netif.hpp"
@@ -202,6 +203,26 @@ public:
      *
      */
     static Instance *InitMultiple(uint8_t aIdx);
+
+    /**
+     * Returns a reference to the OpenThread instance.
+     *
+     * @param[in] aIdx The index of the OpenThread instance to get.
+     *
+     * @returns A reference to the OpenThread instance.
+     *
+     */
+    static Instance &Get(uint8_t aIdx);
+
+    /**
+     * Returns the index of the OpenThread instance.
+     *
+     * @param[in] aInstance The reference of the OpenThread instance to get index.
+     *
+     * @returns The index of the OpenThread instance.
+     *
+     */
+    static uint8_t GetIdx(Instance *aInstance);
 #endif
 
 #else // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -504,6 +525,10 @@ private:
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
     Dns::Dso mDnsDso;
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    Dns::Multicast::Core mMdnsCore;
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -903,6 +928,10 @@ template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void) { return m
 
 #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 template <> inline Dns::Dso &Instance::Get(void) { return mDnsDso; }
+#endif
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+template <> inline Dns::Multicast::Core &Instance::Get(void) { return mMdnsCore; }
 #endif
 
 template <> inline NetworkDiagnostic::Server &Instance::Get(void) { return mNetworkDiagnosticServer; }
