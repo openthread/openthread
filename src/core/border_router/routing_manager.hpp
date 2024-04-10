@@ -541,6 +541,19 @@ public:
     }
 
     /**
+     * Handles a prefix delegated from a DHCPv6 PD server. The prefix is received on the DHCPv6 PD client callback and
+     * then this method can be used to configure the prefix in the Routing Manager module.
+     *
+     * Note: This method is a part of DHCPv6 PD support on Thread border routers. For platforms where it doesn't make
+     * sense to generate a RA to set a DHCPv6 PD prefix this method can be used to set the prefix directly. The lifetime
+     * of the prefix can be updated by calling the function again with updated values.
+     *
+     * @param[in] aPrefixInfo  Prefix information structure received from the DHCPv6 PD server.
+     *
+     */
+    void ProcessDhcpPdPrefix(const PrefixTableEntry &aPrefixInfo) { mPdPrefixManager.ProcessDhcpPdPrefix(aPrefixInfo); }
+
+    /**
      * Enables / Disables the functions for DHCPv6 PD.
      *
      * @param[in] aEnabled  Whether to accept platform generated RA messages.
@@ -753,6 +766,7 @@ private:
             void               SetFrom(const RouterAdvert::Header &aRaHeader);
             void               SetFrom(const PrefixInfoOption &aPio);
             void               SetFrom(const RouteInfoOption &aRio);
+            void               SetFrom(const PrefixTableEntry &aPrefixTableEntry);
             Type               GetType(void) const { return mType; }
             bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
             bool               IsRoutePrefix(void) const { return (mType == kTypeRoute); }
@@ -762,6 +776,7 @@ private:
             void               ClearValidLifetime(void) { mValidLifetime = 0; }
             TimeMilli          GetExpireTime(void) const;
             TimeMilli          GetStaleTime(void) const;
+            TimeMilli          GetStaleTimeFromPreferredLifetime(void) const;
             RoutePreference    GetPreference(void) const;
             bool               operator==(const Entry &aOther) const;
             bool               Matches(const Matcher &aMatcher) const;
@@ -1276,6 +1291,7 @@ private:
         Dhcp6PdState       GetState(void) const;
 
         void  ProcessPlatformGeneratedRa(const uint8_t *aRouterAdvert, uint16_t aLength);
+        void  ProcessDhcpPdPrefix(const PrefixTableEntry &aPrefixTableEntry);
         Error GetPrefixInfo(PrefixTableEntry &aInfo) const;
         Error GetProcessedRaInfo(PdProcessedRaInfo &aPdProcessedRaInfo) const;
         void  HandleTimer(void) { WithdrawPrefix(); }
@@ -1290,7 +1306,8 @@ private:
         }
 
     private:
-        Error Process(const RouterAdvert::RxMessage &aMessage);
+        Error Process(const RouterAdvert::RxMessage *aMessage, const PrefixTableEntry *aPrefixTableEntry);
+        bool  ProcessPrefixEntry(DiscoveredPrefixTable::Entry &aEntry, DiscoveredPrefixTable::Entry &aFavoredEntry);
         void  EvaluateStateChange(Dhcp6PdState aOldState);
         void  WithdrawPrefix(void);
         void  StartStop(bool aStart);
