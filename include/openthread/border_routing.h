@@ -513,7 +513,7 @@ Sets the callback whenever the state of a prefix request or release, via the DHC
  * Subsequent calls to this function replace the previously set callback.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aCallback  A pointer to a function that is called when request/release PD state changes.
+ * @param[in] aCallback  A pointer to a function that is called whenever the state of a prefix request or release changes. 
  * @param[in] aContext   A pointer to arbitrary context information.
  *
  *
