@@ -572,81 +572,84 @@ Message *MeshForwarder::PrepareNextDirectTransmission(void)
 {
     Message *curMessage, *nextMessage;
     Error    error = kErrorNone;
-
-    for (curMessage = mSendQueue.GetHead(); curMessage; curMessage = nextMessage)
-    {
-        // We set the `nextMessage` here but it can be updated again
-        // after the `switch(message.GetType())` since it may be
-        // evicted during message processing (e.g., from the call to
-        // `UpdateIp6Route()` due to Address Solicit).
-
-        nextMessage = curMessage->GetNext();
-
-        if (!curMessage->IsDirectTransmission() || curMessage->IsResolvingAddress())
-        {
-            continue;
-        }
-
+    
 #if OPENTHREAD_CONFIG_DELAY_AWARE_QUEUE_MANAGEMENT_ENABLE
-        if (UpdateEcnOrDrop(*curMessage, /* aPreparingToSend */ true) == kErrorDrop)
-        {
-            continue;
-        }
+    IgnoreError(RemoveAgedMessages());
 #endif
-        curMessage->SetDoNotEvict(true);
 
-        switch (curMessage->GetType())
+    for (uint8_t priority = Message::kPriorityNet; priority >= Message::kPriorityLow; priority--)
+    {
+        for (curMessage = mSendQueue.GetHeadForPriority(static_cast<Message::Priority>(priority)); curMessage;
+             curMessage = nextMessage)
         {
-        case Message::kTypeIp6:
-            error = UpdateIp6Route(*curMessage);
-            break;
-
+            // We set the `nextMessage` here but it can be updated again
+            // after the `switch(message.GetType())` since it may be
+            // evicted during message processing (e.g., from the call to
+            // `UpdateIp6Route()` due to Address Solicit).
+            
+            nextMessage = curMessage->GetNext();
+            
+            if (!curMessage->IsDirectTransmission() || curMessage->IsResolvingAddress())
+            {
+                continue;
+            }
+            
+            
+            curMessage->SetDoNotEvict(true);
+            
+            switch (curMessage->GetType())
+            {
+                case Message::kTypeIp6:
+                    error = UpdateIp6Route(*curMessage);
+                    break;
+                    
 #if OPENTHREAD_FTD
-
-        case Message::kType6lowpan:
-            error = UpdateMeshRoute(*curMessage);
-            break;
-
+                    
+                case Message::kType6lowpan:
+                    error = UpdateMeshRoute(*curMessage);
+                    break;
+                    
 #endif
-
+                    
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        case Message::kTypeMacEmptyData:
-            error = kErrorNone;
-            break;
+                case Message::kTypeMacEmptyData:
+                    error = kErrorNone;
+                    break;
 #endif
-
-        default:
-            error = kErrorDrop;
-            break;
-        }
-
-        curMessage->SetDoNotEvict(false);
-
-        // the next message may have been evicted during processing (e.g. due to Address Solicit)
-        nextMessage = curMessage->GetNext();
-
-        switch (error)
-        {
-        case kErrorNone:
+                    
+                default:
+                    error = kErrorDrop;
+                    break;
+            }
+            
+            curMessage->SetDoNotEvict(false);
+            
+            // the next message may have been evicted during processing (e.g. due to Address Solicit)
+            nextMessage = curMessage->GetNext();
+            
+            switch (error)
+            {
+                case kErrorNone:
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
-            mTxQueueStats.UpdateFor(*curMessage);
+                    mTxQueueStats.UpdateFor(*curMessage);
 #endif
-            ExitNow();
-
+                    ExitNow();
+                    
 #if OPENTHREAD_FTD
-        case kErrorAddressQuery:
-            curMessage->SetResolvingAddress(true);
-            continue;
+                case kErrorAddressQuery:
+                    curMessage->SetResolvingAddress(true);
+                    continue;
 #endif
-
-        default:
+                    
+                default:
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE
-            mTxQueueStats.UpdateFor(*curMessage);
+                    mTxQueueStats.UpdateFor(*curMessage);
 #endif
-            LogMessage(kMessageDrop, *curMessage, error);
-            FinalizeMessageDirectTx(*curMessage, error);
-            mSendQueue.DequeueAndFree(*curMessage);
-            continue;
+                    LogMessage(kMessageDrop, *curMessage, error);
+                    FinalizeMessageDirectTx(*curMessage, error);
+                    mSendQueue.DequeueAndFree(*curMessage);
+                    continue;
+            }
         }
     }
 
