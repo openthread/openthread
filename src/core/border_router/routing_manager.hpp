@@ -561,8 +561,7 @@ public:
     Dhcp6PdState GetDhcp6PdState(void) const { return mPdPrefixManager.GetState(); }
 
     /**
-     * Sets the callback to notify when the state of request/release a prefix via DHCPv6 Prefix Delegation (PD) is
-     * changed.
+* Sets the callback whenever the state of a prefix request or release, via the DHCPv6 Prefix Delegation (PD), changes on the Thread interface.
      *
      * @param[in] aCallback  A pointer to a function that is called whenever the state of a prefix request or release changes.
      * @param[in] aContext   A pointer to arbitrary context information.
