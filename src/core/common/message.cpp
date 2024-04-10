@@ -547,6 +547,8 @@ exit:
     return error;
 }
 
+void Message::RemoveFooter(uint16_t aLength) { IgnoreError(SetLength(GetLength() - Min(aLength, GetLength()))); }
+
 void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) const
 {
     // This method gets the first message chunk (contiguous data

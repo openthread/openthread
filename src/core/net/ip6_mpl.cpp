@@ -465,10 +465,7 @@ void Mpl::Metadata::ReadFrom(const Message &aMessage)
     IgnoreError(aMessage.Read(length - sizeof(*this), *this));
 }
 
-void Mpl::Metadata::RemoveFrom(Message &aMessage) const
-{
-    SuccessOrAssert(aMessage.SetLength(aMessage.GetLength() - sizeof(*this)));
-}
+void Mpl::Metadata::RemoveFrom(Message &aMessage) const { aMessage.RemoveFooter(sizeof(*this)); }
 
 void Mpl::Metadata::UpdateIn(Message &aMessage) const { aMessage.Write(aMessage.GetLength() - sizeof(*this), *this); }
 
