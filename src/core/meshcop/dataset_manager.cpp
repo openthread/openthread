@@ -53,6 +53,9 @@ namespace MeshCoP {
 
 RegisterLogModule("DatasetManager");
 
+//---------------------------------------------------------------------------------------------------------------------
+// DatasetManager
+
 DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::Handler aTimerHandler)
     : InstanceLocator(aInstance)
     , mLocal(aInstance, aType)
@@ -344,53 +347,34 @@ exit:
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    Tlv      tlv;
-    uint16_t offset = aMessage.GetOffset();
-    uint8_t  tlvs[Dataset::kMaxGetTypes];
-    uint8_t  length = 0;
+    TlvList  tlvList;
+    uint8_t  tlvType;
+    uint16_t offset;
+    uint16_t length;
 
-    while (offset < aMessage.GetLength())
+    SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, Tlv::kGet, offset, length));
+
+    for (; length > 0; length--, offset++)
     {
-        SuccessOrExit(aMessage.Read(offset, tlv));
-
-        if (tlv.GetType() == Tlv::kGet)
-        {
-            length = tlv.GetLength();
-
-            if (length > (sizeof(tlvs) - 1))
-            {
-                // leave space for potential DelayTimer type below
-                length = sizeof(tlvs) - 1;
-            }
-
-            aMessage.ReadBytes(offset + sizeof(Tlv), tlvs, length);
-            break;
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
+        IgnoreError(aMessage.Read(offset, tlvType));
+        tlvList.Add(tlvType);
     }
 
-    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && IsPendingDataset());
+    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1
+    // Section 8.7.5.4).
 
-    for (uint8_t i = 0; i < length; i++)
+    if (!tlvList.IsEmpty() && IsPendingDataset())
     {
-        if (tlvs[i] == Tlv::kDelayTimer)
-        {
-            ExitNow();
-        }
+        tlvList.Add(Tlv::kDelayTimer);
     }
-
-    tlvs[length++] = Tlv::kDelayTimer;
 
 exit:
-    SendGetResponse(aMessage, aMessageInfo, tlvs, length);
+    SendGetResponse(aMessage, aMessageInfo, tlvList);
 }
 
 void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
-                                     uint8_t                *aTlvs,
-                                     uint8_t                 aLength) const
+                                     const TlvList          &aTlvList) const
 {
     Error          error = kErrorNone;
     Coap::Message *message;
@@ -401,31 +385,23 @@ void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
     message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    if (aLength == 0)
+    for (const Tlv *tlv = dataset.GetTlvsStart(); tlv < dataset.GetTlvsEnd(); tlv = tlv->GetNext())
     {
-        for (const Tlv *cur = dataset.GetTlvsStart(); cur < dataset.GetTlvsEnd(); cur = cur->GetNext())
+        bool shouldAppend = true;
+
+        if (!aTlvList.IsEmpty())
         {
-            if (cur->GetType() != Tlv::kNetworkKey || Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
-            {
-                SuccessOrExit(error = cur->AppendTo(*message));
-            }
+            shouldAppend = aTlvList.Contains(tlv->GetType());
         }
-    }
-    else
-    {
-        for (uint8_t index = 0; index < aLength; index++)
+
+        if ((tlv->GetType() == Tlv::kNetworkKey) && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
         {
-            const Tlv *tlv;
+            shouldAppend = false;
+        }
 
-            if (aTlvs[index] == Tlv::kNetworkKey && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
-            {
-                continue;
-            }
-
-            if ((tlv = dataset.FindTlv(static_cast<Tlv::Type>(aTlvs[index]))) != nullptr)
-            {
-                SuccessOrExit(error = tlv->AppendTo(*message));
-            }
+        if (shouldAppend)
+        {
+            SuccessOrExit(error = tlv->AppendTo(*message));
         }
     }
 
@@ -603,6 +579,17 @@ exit:
     return error;
 }
 
+void DatasetManager::TlvList::Add(uint8_t aTlvType)
+{
+    if (!Contains(aTlvType))
+    {
+        IgnoreError(PushBack(aTlvType));
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// ActiveDatasetManager
+
 ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kActive, ActiveDatasetManager::HandleTimer)
 {
@@ -650,6 +637,9 @@ void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, con
 }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// PendingDatasetManager
 
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
