@@ -59,12 +59,12 @@ SpinelDriver::SpinelDriver(void)
     mReceivedFrameHandler.Set(&HandleInitialFrame, this);
 }
 
-CoprocessorMode SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
+CoprocessorType SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
                                    bool                aSoftwareReset,
                                    const spinel_iid_t *aIidList,
                                    uint8_t             aIidListLength)
 {
-    CoprocessorMode mode;
+    CoprocessorType mode;
 
     mSpinelInterface = &aSpinelInterface;
     mRxFrameBuffer.Clear();
@@ -84,7 +84,7 @@ CoprocessorMode SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
     SuccessOrDie(GetCoprocessorVersion());
     SuccessOrDie(GetCoprocessorCaps());
 
-    mode = CheckCoprocessorMode();
+    mode = CheckCoprocessorType();
     if (mode == OT_COPROCESSOR_UNKNOWN)
     {
         LogCrit("The coprocessor mode is unknown!");
@@ -453,9 +453,9 @@ exit:
     return error;
 }
 
-CoprocessorMode SpinelDriver::CheckCoprocessorMode(void)
+CoprocessorType SpinelDriver::CheckCoprocessorType(void)
 {
-    CoprocessorMode mode       = OT_COPROCESSOR_UNKNOWN;
+    CoprocessorType mode       = OT_COPROCESSOR_UNKNOWN;
     const uint8_t  *capsData   = mCapsBuffer;
     spinel_size_t   capsLength = mCapsLength;
 

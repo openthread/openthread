@@ -56,11 +56,11 @@ SpinelManager::SpinelManager(void)
 
 SpinelManager::~SpinelManager(void) { Deinit(); }
 
-CoprocessorMode SpinelManager::Init(const char *aUrl)
+CoprocessorType SpinelManager::Init(const char *aUrl)
 {
     bool            swReset;
     spinel_iid_t    iidList[ot::Spinel::kSpinelHeaderMaxNumIid];
-    CoprocessorMode mode;
+    CoprocessorType mode;
 
     mUrl.Init(aUrl);
     VerifyOrDie(mUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
@@ -193,7 +193,7 @@ void SpinelManager::VirtualTimeInit(void)
 } // namespace Posix
 } // namespace ot
 
-CoprocessorMode platformSpinelInit(const char *aUrl) { return sSpinelManager.Init(aUrl); }
+CoprocessorType platformSpinelInit(const char *aUrl) { return sSpinelManager.Init(aUrl); }
 
 void platformSpinelDeinit(void) { return sSpinelManager.Deinit(); }
 

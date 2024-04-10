@@ -46,7 +46,7 @@ public:
 
     ~SpinelManager(void);
 
-    CoprocessorMode Init(const char *aUrl);
+    CoprocessorType Init(const char *aUrl);
 
     void Deinit(void);
 

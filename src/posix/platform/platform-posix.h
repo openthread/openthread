@@ -52,7 +52,7 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
-#include "coprocessor_mode.h"
+#include "coprocessor_type.h"
 #include "lib/platform/exit_code.h"
 #include "lib/url/url.hpp"
 
@@ -443,7 +443,7 @@ void platformBacktraceInit(void);
  * @retval  RCP      The Co-processor is a RCP.
  * @retval  NCP      The Co-processor is a NCP.
  */
-CoprocessorMode platformSpinelInit(const char *aUrl);
+CoprocessorType platformSpinelInit(const char *aUrl);
 
 /**
  * Shuts down the spinel service used by OpenThread.

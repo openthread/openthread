@@ -37,7 +37,7 @@ extern "C" {
  * Represents the mode of the co-processor.
  * A co-processor could be either a RCP or NCP.
  */
-enum CoprocessorMode
+enum CoprocessorType
 {
     OT_COPROCESSOR_UNKNOWN = 0,
     OT_COPROCESSOR_RCP     = 1,

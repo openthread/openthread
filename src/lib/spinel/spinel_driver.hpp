@@ -35,7 +35,7 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
-#include "posix/platform/coprocessor_mode.h"
+#include "posix/platform/coprocessor_type.h"
 
 namespace ot {
 namespace Spinel {
@@ -73,7 +73,7 @@ public:
      * @param[in]  aIidListLength              The Length of the @p aIidList.
      *
      */
-    CoprocessorMode Init(SpinelInterface    &aSpinelInterface,
+    CoprocessorType Init(SpinelInterface    &aSpinelInterface,
                          bool                aSoftwareReset,
                          const spinel_iid_t *aIidList,
                          uint8_t             aIidListLength);
@@ -227,7 +227,7 @@ private:
     otError         CheckSpinelVersion(void);
     otError         GetCoprocessorVersion(void);
     otError         GetCoprocessorCaps(void);
-    CoprocessorMode CheckCoprocessorMode(void);
+    CoprocessorType CheckCoprocessorType(void);
 
     void ProcessFrameQueue(void);
 
