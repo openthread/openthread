@@ -510,7 +510,7 @@ typedef void (*otBorderRoutingRequestDhcp6PdCallback)(bool aRequest, void *aCont
 /**
 Sets the callback whenever the state of a prefix request or release, via the DHCPv6 Prefix Delegation (PD), changes on the Thread interface.
  *
- * Subsequent calls to this function will replace the previously set callback
+ * Subsequent calls to this function replace the previously set callback.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to a function that is called when request/release PD state changes.
