@@ -61,7 +61,7 @@ Error DatasetUpdater::RequestUpdate(const Dataset::Info &aDataset, UpdaterCallba
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(mDataset == nullptr, error = kErrorBusy);
 
-    VerifyOrExit(!aDataset.IsActiveTimestampPresent() && !aDataset.IsPendingTimestampPresent(),
+    VerifyOrExit(!aDataset.IsPresent<Dataset::kActiveTimestamp>() && !aDataset.IsPresent<Dataset::kPendingTimestamp>(),
                  error = kErrorInvalidArgs);
 
     message = Get<MessagePool>().Allocate(Message::kTypeOther);
@@ -119,7 +119,7 @@ void DatasetUpdater::PreparePendingDataset(void)
 
     IgnoreError(dataset.SetFrom(requestedDataset));
 
-    if (!requestedDataset.IsDelayPresent())
+    if (!requestedDataset.IsPresent<Dataset::kDelay>())
     {
         uint32_t delay = kDefaultDelay;
 
@@ -190,8 +190,8 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
             Timestamp requestedDatasetTimestamp;
             Timestamp activeDatasetTimestamp;
 
-            requestedDataset.GetActiveTimestamp(requestedDatasetTimestamp);
-            dataset.GetActiveTimestamp(activeDatasetTimestamp);
+            requestedDataset.Get<MeshCoP::Dataset::kActiveTimestamp>(requestedDatasetTimestamp);
+            dataset.Get<MeshCoP::Dataset::kActiveTimestamp>(activeDatasetTimestamp);
             if (Timestamp::Compare(requestedDatasetTimestamp, activeDatasetTimestamp) <= 0)
             {
                 Finish(kErrorAlready);

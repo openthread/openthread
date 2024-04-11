@@ -82,107 +82,51 @@ public:
     typedef otOperationalDatasetTlvs Tlvs;
 
     /**
+     * Represents a component in Dataset.
+     *
+     */
+    enum Component : uint8_t
+    {
+        kActiveTimestamp,  ///< Active Timestamp
+        kPendingTimestamp, ///< Pending Timestamp
+        kNetworkKey,       ///< Network Key
+        kNetworkName,      ///< Network Name
+        kExtendedPanId,    ///< Extended PAN Identifier
+        kMeshLocalPrefix,  ///< Mesh Local Prefix
+        kDelay,            ///< Delay
+        kPanId,            ///< PAN Identifier
+        kChannel,          ///< Channel
+        kPskc,             ///< PSKc
+        kSecurityPolicy,   ///< Security Policy
+        kChannelMask,      ///< Channel Mask
+    };
+
+    template <Component kComponent> struct TypeFor; ///< Specifies the associate type for a given `Component`.
+
+    class Info;
+
+    /**
      * Represents presence of different components in Active or Pending Operational Dataset.
      *
      */
     class Components : public otOperationalDatasetComponents, public Clearable<Components>
     {
+        friend class Info;
+
     public:
         /**
-         * Indicates whether or not the Active Timestamp is present in the Dataset.
+         * Indicates whether or not the specified `kComponent` is present in the Dataset.
          *
-         * @returns TRUE if Active Timestamp is present, FALSE otherwise.
+         * @tparam kComponent  The component to check.
+         *
+         * @retval TRUE   The component is present in the Dataset.
+         * @retval FALSE  The component is not present in the Dataset.
          *
          */
-        bool IsActiveTimestampPresent(void) const { return mIsActiveTimestampPresent; }
+        template <Component kComponent> bool IsPresent(void) const;
 
-        /**
-         * Indicates whether or not the Pending Timestamp is present in the Dataset.
-         *
-         * @returns TRUE if Pending Timestamp is present, FALSE otherwise.
-         *
-         */
-        bool IsPendingTimestampPresent(void) const { return mIsPendingTimestampPresent; }
-
-        /**
-         * Indicates whether or not the Network Key is present in the Dataset.
-         *
-         * @returns TRUE if Network Key is present, FALSE otherwise.
-         *
-         */
-        bool IsNetworkKeyPresent(void) const { return mIsNetworkKeyPresent; }
-
-        /**
-         * Indicates whether or not the Network Name is present in the Dataset.
-         *
-         * @returns TRUE if Network Name is present, FALSE otherwise.
-         *
-         */
-        bool IsNetworkNamePresent(void) const { return mIsNetworkNamePresent; }
-
-        /**
-         * Indicates whether or not the Extended PAN ID is present in the Dataset.
-         *
-         * @returns TRUE if Extended PAN ID is present, FALSE otherwise.
-         *
-         */
-        bool IsExtendedPanIdPresent(void) const { return mIsExtendedPanIdPresent; }
-
-        /**
-         * Indicates whether or not the Mesh Local Prefix is present in the Dataset.
-         *
-         * @returns TRUE if Mesh Local Prefix is present, FALSE otherwise.
-         *
-         */
-        bool IsMeshLocalPrefixPresent(void) const { return mIsMeshLocalPrefixPresent; }
-
-        /**
-         * Indicates whether or not the Delay Timer is present in the Dataset.
-         *
-         * @returns TRUE if Delay Timer is present, FALSE otherwise.
-         *
-         */
-        bool IsDelayPresent(void) const { return mIsDelayPresent; }
-
-        /**
-         * Indicates whether or not the PAN ID is present in the Dataset.
-         *
-         * @returns TRUE if PAN ID is present, FALSE otherwise.
-         *
-         */
-        bool IsPanIdPresent(void) const { return mIsPanIdPresent; }
-
-        /**
-         * Indicates whether or not the Channel is present in the Dataset.
-         *
-         * @returns TRUE if Channel is present, FALSE otherwise.
-         *
-         */
-        bool IsChannelPresent(void) const { return mIsChannelPresent; }
-
-        /**
-         * Indicates whether or not the PSKc is present in the Dataset.
-         *
-         * @returns TRUE if PSKc is present, FALSE otherwise.
-         *
-         */
-        bool IsPskcPresent(void) const { return mIsPskcPresent; }
-
-        /**
-         * Indicates whether or not the Security Policy is present in the Dataset.
-         *
-         * @returns TRUE if Security Policy is present, FALSE otherwise.
-         *
-         */
-        bool IsSecurityPolicyPresent(void) const { return mIsSecurityPolicyPresent; }
-
-        /**
-         * Indicates whether or not the Channel Mask is present in the Dataset.
-         *
-         * @returns TRUE if Channel Mask is present, FALSE otherwise.
-         *
-         */
-        bool IsChannelMaskPresent(void) const { return mIsChannelMaskPresent; }
+    private:
+        template <Component kComponent> void MarkAsPresent(void);
     };
 
     /**
@@ -193,389 +137,66 @@ public:
     {
     public:
         /**
-         * Indicates whether or not the Active Timestamp is present in the Dataset.
+         * Indicates whether or not the specified component is present in the Dataset.
          *
-         * @returns TRUE if Active Timestamp is present, FALSE otherwise.
+         * @tparam kComponent  The component to check.
+         *
+         * @retval TRUE   The component is present in the Dataset.
+         * @retval FALSE  The component is not present in the Dataset.
          *
          */
-        bool IsActiveTimestampPresent(void) const { return mComponents.mIsActiveTimestampPresent; }
+        template <Component kComponent> bool IsPresent(void) const { return GetComponents().IsPresent<kComponent>(); }
 
         /**
-         * Gets the Active Timestamp in the Dataset.
+         * Gets the specified component in the Dataset.
          *
-         * MUST be used when Active Timestamp component is present in the Dataset, otherwise its behavior is
-         * undefined.
+         * @tparam  kComponent  The component to check.
          *
-         * @param[out] aTimestamp  A reference to output the Active Timestamp in the Dataset.
+         * MUST be used when component is present in the Dataset, otherwise its behavior is undefined.
+         *
+         * @returns The component value.
          *
          */
-        void GetActiveTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mActiveTimestamp); }
+        template <Component kComponent> const typename TypeFor<kComponent>::Type &Get(void) const;
 
         /**
-         * Sets the Active Timestamp in the Dataset.
+         * Gets the specified component in the Dataset.
          *
-         * @param[in] aTimestamp   A Timestamp value.
+         * @tparam  kComponent  The component to check.
+         *
+         * MUST be used when component is present in the Dataset, otherwise its behavior is undefined.
+         *
+         * @pram[out] aComponent  A reference to output the component value.
          *
          */
-        void SetActiveTimestamp(const Timestamp &aTimestamp)
+        template <Component kComponent> void Get(typename TypeFor<kComponent>::Type &aComponent) const;
+
+        /**
+         * Sets the specified component in the Dataset.
+         *
+         * @tparam  kComponent  The component to set.
+         *
+         * @param[in] aComponent   The component value.
+         *
+         */
+        template <Component kComponent> void Set(const typename TypeFor<kComponent>::Type &aComponent)
         {
-            aTimestamp.ConvertTo(mActiveTimestamp);
-            mComponents.mIsActiveTimestampPresent = true;
+            GetComponents().MarkAsPresent<kComponent>();
+            AsNonConst(Get<kComponent>()) = aComponent;
         }
 
         /**
-         * Indicates whether or not the Pending Timestamp is present in the Dataset.
+         * Returns a reference to the specified component in the Dataset to be updated by caller.
          *
-         * @returns TRUE if Pending Timestamp is present, FALSE otherwise.
+         * @tparam  kComponent  The component to set.
          *
-         */
-        bool IsPendingTimestampPresent(void) const { return mComponents.mIsPendingTimestampPresent; }
-
-        /**
-         * Gets the Pending Timestamp in the Dataset.
-         *
-         * MUST be used when Pending Timestamp component is present in the Dataset, otherwise its behavior
-         * is undefined.
-         *
-         * @param[out] aTimestamp  A reference to output the Pending Timestamp in the Dataset.
+         * @returns A reference to the component in the Dataset.
          *
          */
-        void GetPendingTimestamp(Timestamp &aTimestamp) const { aTimestamp.SetFromTimestamp(mPendingTimestamp); }
-
-        /**
-         * Sets the Pending Timestamp in the Dataset.
-         *
-         * @param[in] aTimestamp   A Timestamp value.
-         *
-         */
-        void SetPendingTimestamp(const Timestamp &aTimestamp)
+        template <Component kComponent> typename TypeFor<kComponent>::Type &Update(void)
         {
-            aTimestamp.ConvertTo(mPendingTimestamp);
-            mComponents.mIsPendingTimestampPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Network Key is present in the Dataset.
-         *
-         * @returns TRUE if Network Key is present, FALSE otherwise.
-         *
-         */
-        bool IsNetworkKeyPresent(void) const { return mComponents.mIsNetworkKeyPresent; }
-
-        /**
-         * Gets the Network Key in the Dataset.
-         *
-         * MUST be used when Network Key component is present in the Dataset, otherwise its behavior
-         * is undefined.
-         *
-         * @returns The Network Key in the Dataset.
-         *
-         */
-        const NetworkKey &GetNetworkKey(void) const { return AsCoreType(&mNetworkKey); }
-
-        /**
-         * Sets the Network Key in the Dataset.
-         *
-         * @param[in] aNetworkKey  A Network Key.
-         *
-         */
-        void SetNetworkKey(const NetworkKey &aNetworkKey)
-        {
-            mNetworkKey                      = aNetworkKey;
-            mComponents.mIsNetworkKeyPresent = true;
-        }
-
-        /**
-         * Returns a reference to the Network Key in the Dataset to be updated by caller.
-         *
-         * @returns A reference to the Network Key in the Dataset.
-         *
-         */
-        NetworkKey &UpdateNetworkKey(void)
-        {
-            mComponents.mIsNetworkKeyPresent = true;
-            return AsCoreType(&mNetworkKey);
-        }
-
-        /**
-         * Indicates whether or not the Network Name is present in the Dataset.
-         *
-         * @returns TRUE if Network Name is present, FALSE otherwise.
-         *
-         */
-        bool IsNetworkNamePresent(void) const { return mComponents.mIsNetworkNamePresent; }
-
-        /**
-         * Gets the Network Name in the Dataset.
-         *
-         * MUST be used when Network Name component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Network Name in the Dataset.
-         *
-         */
-        const NetworkName &GetNetworkName(void) const { return AsCoreType(&mNetworkName); }
-
-        /**
-         * Sets the Network Name in the Dataset.
-         *
-         * @param[in] aNetworkNameData   A Network Name Data.
-         *
-         */
-        void SetNetworkName(const NameData &aNetworkNameData)
-        {
-            IgnoreError(AsCoreType(&mNetworkName).Set(aNetworkNameData));
-            mComponents.mIsNetworkNamePresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Extended PAN ID is present in the Dataset.
-         *
-         * @returns TRUE if Extended PAN ID is present, FALSE otherwise.
-         *
-         */
-        bool IsExtendedPanIdPresent(void) const { return mComponents.mIsExtendedPanIdPresent; }
-
-        /**
-         * Gets the Extended PAN ID in the Dataset.
-         *
-         * MUST be used when Extended PAN ID component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Extended PAN ID in the Dataset.
-         *
-         */
-        const ExtendedPanId &GetExtendedPanId(void) const { return AsCoreType(&mExtendedPanId); }
-
-        /**
-         * Sets the Extended PAN ID in the Dataset.
-         *
-         * @param[in] aExtendedPanId   An Extended PAN ID.
-         *
-         */
-        void SetExtendedPanId(const ExtendedPanId &aExtendedPanId)
-        {
-            mExtendedPanId                      = aExtendedPanId;
-            mComponents.mIsExtendedPanIdPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Mesh Local Prefix is present in the Dataset.
-         *
-         * @returns TRUE if Mesh Local Prefix is present, FALSE otherwise.
-         *
-         */
-        bool IsMeshLocalPrefixPresent(void) const { return mComponents.mIsMeshLocalPrefixPresent; }
-
-        /**
-         * Gets the Mesh Local Prefix in the Dataset.
-         *
-         * MUST be used when Mesh Local Prefix component is present in the Dataset, otherwise its behavior
-         * is undefined.
-         *
-         * @returns The Mesh Local Prefix in the Dataset.
-         *
-         */
-        const Ip6::NetworkPrefix &GetMeshLocalPrefix(void) const
-        {
-            return static_cast<const Ip6::NetworkPrefix &>(mMeshLocalPrefix);
-        }
-
-        /**
-         * Sets the Mesh Local Prefix in the Dataset.
-         *
-         * @param[in] aMeshLocalPrefix   A Mesh Local Prefix.
-         *
-         */
-        void SetMeshLocalPrefix(const Ip6::NetworkPrefix &aMeshLocalPrefix)
-        {
-            mMeshLocalPrefix                      = aMeshLocalPrefix;
-            mComponents.mIsMeshLocalPrefixPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Delay Timer is present in the Dataset.
-         *
-         * @returns TRUE if Delay Timer is present, FALSE otherwise.
-         *
-         */
-        bool IsDelayPresent(void) const { return mComponents.mIsDelayPresent; }
-
-        /**
-         * Gets the Delay Timer in the Dataset.
-         *
-         * MUST be used when Delay Timer component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Delay Timer in the Dataset.
-         *
-         */
-        uint32_t GetDelay(void) const { return mDelay; }
-
-        /**
-         * Sets the Delay Timer in the Dataset.
-         *
-         * @param[in] aDelay  A Delay value.
-         *
-         */
-        void SetDelay(uint32_t aDelay)
-        {
-            mDelay                      = aDelay;
-            mComponents.mIsDelayPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the PAN ID is present in the Dataset.
-         *
-         * @returns TRUE if PAN ID is present, FALSE otherwise.
-         *
-         */
-        bool IsPanIdPresent(void) const { return mComponents.mIsPanIdPresent; }
-
-        /**
-         * Gets the PAN ID in the Dataset.
-         *
-         * MUST be used when PAN ID component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The PAN ID in the Dataset.
-         *
-         */
-        Mac::PanId GetPanId(void) const { return mPanId; }
-
-        /**
-         * Sets the PAN ID in the Dataset.
-         *
-         * @param[in] aPanId  A PAN ID.
-         *
-         */
-        void SetPanId(Mac::PanId aPanId)
-        {
-            mPanId                      = aPanId;
-            mComponents.mIsPanIdPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Channel is present in the Dataset.
-         *
-         * @returns TRUE if Channel is present, FALSE otherwise.
-         *
-         */
-        bool IsChannelPresent(void) const { return mComponents.mIsChannelPresent; }
-
-        /**
-         * Gets the Channel in the Dataset.
-         *
-         * MUST be used when Channel component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Channel in the Dataset.
-         *
-         */
-        uint16_t GetChannel(void) const { return mChannel; }
-
-        /**
-         * Sets the Channel in the Dataset.
-         *
-         * @param[in] aChannel  A Channel.
-         *
-         */
-        void SetChannel(uint16_t aChannel)
-        {
-            mChannel                      = aChannel;
-            mComponents.mIsChannelPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the PSKc is present in the Dataset.
-         *
-         * @returns TRUE if PSKc is present, FALSE otherwise.
-         *
-         */
-        bool IsPskcPresent(void) const { return mComponents.mIsPskcPresent; }
-
-        /**
-         * Gets the PSKc in the Dataset.
-         *
-         * MUST be used when PSKc component is present in the Dataset, otherwise its behavior is undefined.
-         *
-         * @returns The PSKc in the Dataset.
-         *
-         */
-        const Pskc &GetPskc(void) const { return AsCoreType(&mPskc); }
-
-        /**
-         * Set the PSKc in the Dataset.
-         *
-         * @param[in] aPskc  A PSKc value.
-         *
-         */
-        void SetPskc(const Pskc &aPskc)
-        {
-            mPskc                      = aPskc;
-            mComponents.mIsPskcPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Security Policy is present in the Dataset.
-         *
-         * @returns TRUE if Security Policy is present, FALSE otherwise.
-         *
-         */
-        bool IsSecurityPolicyPresent(void) const { return mComponents.mIsSecurityPolicyPresent; }
-
-        /**
-         * Gets the Security Policy in the Dataset.
-         *
-         * MUST be used when Security Policy component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Security Policy in the Dataset.
-         *
-         */
-        const SecurityPolicy &GetSecurityPolicy(void) const { return AsCoreType(&mSecurityPolicy); }
-
-        /**
-         * Sets the Security Policy in the Dataset.
-         *
-         * @param[in] aSecurityPolicy  A Security Policy to set in Dataset.
-         *
-         */
-        void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
-        {
-            mSecurityPolicy                      = aSecurityPolicy;
-            mComponents.mIsSecurityPolicyPresent = true;
-        }
-
-        /**
-         * Indicates whether or not the Channel Mask is present in the Dataset.
-         *
-         * @returns TRUE if Channel Mask is present, FALSE otherwise.
-         *
-         */
-        bool IsChannelMaskPresent(void) const { return mComponents.mIsChannelMaskPresent; }
-
-        /**
-         * Gets the Channel Mask in the Dataset.
-         *
-         * MUST be used when Channel Mask component is present in the Dataset, otherwise its behavior is
-         * undefined.
-         *
-         * @returns The Channel Mask in the Dataset.
-         *
-         */
-        otChannelMask GetChannelMask(void) const { return mChannelMask; }
-
-        /**
-         * Sets the Channel Mask in the Dataset.
-         *
-         * @param[in] aChannelMask   A Channel Mask value.
-         *
-         */
-        void SetChannelMask(otChannelMask aChannelMask)
-        {
-            mChannelMask                      = aChannelMask;
-            mComponents.mIsChannelMaskPresent = true;
+            GetComponents().MarkAsPresent<kComponent>();
+            return AsNonConst(Get<kComponent>());
         }
 
         /**
@@ -606,6 +227,10 @@ public:
          *
          */
         bool IsSubsetOf(const Info &aOther) const;
+
+    private:
+        Components       &GetComponents(void) { return static_cast<Components &>(mComponents); }
+        const Components &GetComponents(void) const { return static_cast<const Components &>(mComponents); }
     };
 
     /**
@@ -993,6 +618,121 @@ private:
     TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
 };
+
+//---------------------------------------------------------------------------------------------------------------------
+// Template specializations
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// `Dataset::Components::IsPresent()` and `Dataset::Components::MarkAsPresent()`
+
+#define DefineIsPresentAndMarkAsPresent(Component)                                            \
+    template <> inline bool Dataset::Components::IsPresent<Dataset::k##Component>(void) const \
+    {                                                                                         \
+        return mIs##Component##Present;                                                       \
+    }                                                                                         \
+                                                                                              \
+    template <> inline void Dataset::Components::MarkAsPresent<Dataset::k##Component>(void)   \
+    {                                                                                         \
+        mIs##Component##Present = true;                                                       \
+    }
+
+// clang-format off
+
+DefineIsPresentAndMarkAsPresent(ActiveTimestamp)
+DefineIsPresentAndMarkAsPresent(PendingTimestamp)
+DefineIsPresentAndMarkAsPresent(NetworkKey)
+DefineIsPresentAndMarkAsPresent(NetworkName)
+DefineIsPresentAndMarkAsPresent(ExtendedPanId)
+DefineIsPresentAndMarkAsPresent(MeshLocalPrefix)
+DefineIsPresentAndMarkAsPresent(Delay)
+DefineIsPresentAndMarkAsPresent(PanId)
+DefineIsPresentAndMarkAsPresent(Channel)
+DefineIsPresentAndMarkAsPresent(Pskc)
+DefineIsPresentAndMarkAsPresent(SecurityPolicy)
+DefineIsPresentAndMarkAsPresent(ChannelMask)
+
+#undef DefineIsPresentAndMarkAsPresent
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// `Dataset::TypeFor<>`
+
+template <> struct Dataset::TypeFor<Dataset::kActiveTimestamp>  { using Type = Timestamp; };
+template <> struct Dataset::TypeFor<Dataset::kPendingTimestamp> { using Type = Timestamp; };
+template <> struct Dataset::TypeFor<Dataset::kNetworkKey>       { using Type = NetworkKey; };
+template <> struct Dataset::TypeFor<Dataset::kNetworkName>      { using Type = NetworkName; };
+template <> struct Dataset::TypeFor<Dataset::kExtendedPanId>    { using Type = ExtendedPanId; };
+template <> struct Dataset::TypeFor<Dataset::kMeshLocalPrefix>  { using Type = Ip6::NetworkPrefix; };
+template <> struct Dataset::TypeFor<Dataset::kDelay>            { using Type = uint32_t; };
+template <> struct Dataset::TypeFor<Dataset::kPanId>            { using Type = Mac::PanId; };
+template <> struct Dataset::TypeFor<Dataset::kChannel>          { using Type = uint16_t; };
+template <> struct Dataset::TypeFor<Dataset::kPskc>             { using Type = Pskc; };
+template <> struct Dataset::TypeFor<Dataset::kSecurityPolicy>   { using Type = SecurityPolicy; };
+template <> struct Dataset::TypeFor<Dataset::kChannelMask>      { using Type = uint32_t; };
+
+// clang-format on
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Dataset::Info::Get<>()
+
+template <> inline const NetworkKey &Dataset::Info::Get<Dataset::kNetworkKey>(void) const
+{
+    return AsCoreType(&mNetworkKey);
+}
+
+template <> inline const NetworkName &Dataset::Info::Get<Dataset::kNetworkName>(void) const
+{
+    return AsCoreType(&mNetworkName);
+}
+
+template <> inline const ExtendedPanId &Dataset::Info::Get<Dataset::kExtendedPanId>(void) const
+{
+    return AsCoreType(&mExtendedPanId);
+}
+
+template <> inline const Ip6::NetworkPrefix &Dataset::Info::Get<Dataset::kMeshLocalPrefix>(void) const
+{
+    return static_cast<const Ip6::NetworkPrefix &>(mMeshLocalPrefix);
+}
+
+template <> inline const uint32_t &Dataset::Info::Get<Dataset::kDelay>(void) const { return mDelay; }
+
+template <> inline const Mac::PanId &Dataset::Info::Get<Dataset::kPanId>(void) const { return mPanId; }
+
+template <> inline const uint16_t &Dataset::Info::Get<Dataset::kChannel>(void) const { return mChannel; }
+
+template <> inline const Pskc &Dataset::Info::Get<Dataset::kPskc>(void) const { return AsCoreType(&mPskc); }
+
+template <> inline const SecurityPolicy &Dataset::Info::Get<Dataset::kSecurityPolicy>(void) const
+{
+    return AsCoreType(&mSecurityPolicy);
+}
+
+template <> inline const uint32_t &Dataset::Info::Get<Dataset::kChannelMask>(void) const { return mChannelMask; }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Active and Pending Timestamp
+
+template <> inline void Dataset::Info::Get<Dataset::kActiveTimestamp>(Timestamp &aTimestamp) const
+{
+    aTimestamp.SetFromTimestamp(mActiveTimestamp);
+}
+
+template <> inline void Dataset::Info::Get<Dataset::kPendingTimestamp>(Timestamp &aTimestamp) const
+{
+    aTimestamp.SetFromTimestamp(mPendingTimestamp);
+}
+
+template <> inline void Dataset::Info::Set<Dataset::kActiveTimestamp>(const Timestamp &aTimestamp)
+{
+    GetComponents().MarkAsPresent<kActiveTimestamp>();
+    aTimestamp.ConvertTo(mActiveTimestamp);
+}
+
+template <> inline void Dataset::Info::Set<Dataset::kPendingTimestamp>(const Timestamp &aTimestamp)
+{
+    GetComponents().MarkAsPresent<kPendingTimestamp>();
+    aTimestamp.ConvertTo(mPendingTimestamp);
+}
 
 } // namespace MeshCoP
 

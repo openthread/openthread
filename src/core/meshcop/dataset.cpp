@@ -105,49 +105,49 @@ bool Dataset::Info::IsSubsetOf(const Info &aOther) const
 {
     bool isSubset = false;
 
-    if (IsNetworkKeyPresent())
+    if (IsPresent<kNetworkKey>())
     {
-        VerifyOrExit(aOther.IsNetworkKeyPresent() && GetNetworkKey() == aOther.GetNetworkKey());
+        VerifyOrExit(aOther.IsPresent<kNetworkKey>() && Get<kNetworkKey>() == aOther.Get<kNetworkKey>());
     }
 
-    if (IsNetworkNamePresent())
+    if (IsPresent<kNetworkName>())
     {
-        VerifyOrExit(aOther.IsNetworkNamePresent() && GetNetworkName() == aOther.GetNetworkName());
+        VerifyOrExit(aOther.IsPresent<kNetworkName>() && Get<kNetworkName>() == aOther.Get<kNetworkName>());
     }
 
-    if (IsExtendedPanIdPresent())
+    if (IsPresent<kExtendedPanId>())
     {
-        VerifyOrExit(aOther.IsExtendedPanIdPresent() && GetExtendedPanId() == aOther.GetExtendedPanId());
+        VerifyOrExit(aOther.IsPresent<kExtendedPanId>() && Get<kExtendedPanId>() == aOther.Get<kExtendedPanId>());
     }
 
-    if (IsMeshLocalPrefixPresent())
+    if (IsPresent<kMeshLocalPrefix>())
     {
-        VerifyOrExit(aOther.IsMeshLocalPrefixPresent() && GetMeshLocalPrefix() == aOther.GetMeshLocalPrefix());
+        VerifyOrExit(aOther.IsPresent<kMeshLocalPrefix>() && Get<kMeshLocalPrefix>() == aOther.Get<kMeshLocalPrefix>());
     }
 
-    if (IsPanIdPresent())
+    if (IsPresent<kPanId>())
     {
-        VerifyOrExit(aOther.IsPanIdPresent() && GetPanId() == aOther.GetPanId());
+        VerifyOrExit(aOther.IsPresent<kPanId>() && Get<kPanId>() == aOther.Get<kPanId>());
     }
 
-    if (IsChannelPresent())
+    if (IsPresent<kChannel>())
     {
-        VerifyOrExit(aOther.IsChannelPresent() && GetChannel() == aOther.GetChannel());
+        VerifyOrExit(aOther.IsPresent<kChannel>() && Get<kChannel>() == aOther.Get<kChannel>());
     }
 
-    if (IsPskcPresent())
+    if (IsPresent<kPskc>())
     {
-        VerifyOrExit(aOther.IsPskcPresent() && GetPskc() == aOther.GetPskc());
+        VerifyOrExit(aOther.IsPresent<kPskc>() && Get<kPskc>() == aOther.Get<kPskc>());
     }
 
-    if (IsSecurityPolicyPresent())
+    if (IsPresent<kSecurityPolicy>())
     {
-        VerifyOrExit(aOther.IsSecurityPolicyPresent() && GetSecurityPolicy() == aOther.GetSecurityPolicy());
+        VerifyOrExit(aOther.IsPresent<kSecurityPolicy>() && Get<kSecurityPolicy>() == aOther.Get<kSecurityPolicy>());
     }
 
-    if (IsChannelMaskPresent())
+    if (IsPresent<kChannelMask>())
     {
-        VerifyOrExit(aOther.IsChannelMaskPresent() && GetChannelMask() == aOther.GetChannelMask());
+        VerifyOrExit(aOther.IsPresent<kChannelMask>() && Get<kChannelMask>() == aOther.Get<kChannelMask>());
     }
 
     isSubset = true;
@@ -191,11 +191,11 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
         switch (cur->GetType())
         {
         case Tlv::kActiveTimestamp:
-            aDatasetInfo.SetActiveTimestamp(cur->ReadValueAs<ActiveTimestampTlv>());
+            aDatasetInfo.Set<kActiveTimestamp>(cur->ReadValueAs<ActiveTimestampTlv>());
             break;
 
         case Tlv::kChannel:
-            aDatasetInfo.SetChannel(cur->ReadValueAs<ChannelTlv>().GetChannel());
+            aDatasetInfo.Set<kChannel>(cur->ReadValueAs<ChannelTlv>().GetChannel());
             break;
 
         case Tlv::kChannelMask:
@@ -204,46 +204,46 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
 
             if (As<ChannelMaskTlv>(cur)->ReadChannelMask(mask) == kErrorNone)
             {
-                aDatasetInfo.SetChannelMask(mask);
+                aDatasetInfo.Set<kChannelMask>(mask);
             }
 
             break;
         }
 
         case Tlv::kDelayTimer:
-            aDatasetInfo.SetDelay(cur->ReadValueAs<DelayTimerTlv>());
+            aDatasetInfo.Set<kDelay>(cur->ReadValueAs<DelayTimerTlv>());
             break;
 
         case Tlv::kExtendedPanId:
-            aDatasetInfo.SetExtendedPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
+            aDatasetInfo.Set<kExtendedPanId>(cur->ReadValueAs<ExtendedPanIdTlv>());
             break;
 
         case Tlv::kMeshLocalPrefix:
-            aDatasetInfo.SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
+            aDatasetInfo.Set<kMeshLocalPrefix>(cur->ReadValueAs<MeshLocalPrefixTlv>());
             break;
 
         case Tlv::kNetworkKey:
-            aDatasetInfo.SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
+            aDatasetInfo.Set<kNetworkKey>(cur->ReadValueAs<NetworkKeyTlv>());
             break;
 
         case Tlv::kNetworkName:
-            aDatasetInfo.SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName());
+            IgnoreError(aDatasetInfo.Update<kNetworkName>().Set(As<NetworkNameTlv>(cur)->GetNetworkName()));
             break;
 
         case Tlv::kPanId:
-            aDatasetInfo.SetPanId(cur->ReadValueAs<PanIdTlv>());
+            aDatasetInfo.Set<kPanId>(cur->ReadValueAs<PanIdTlv>());
             break;
 
         case Tlv::kPendingTimestamp:
-            aDatasetInfo.SetPendingTimestamp(cur->ReadValueAs<PendingTimestampTlv>());
+            aDatasetInfo.Set<kPendingTimestamp>(cur->ReadValueAs<PendingTimestampTlv>());
             break;
 
         case Tlv::kPskc:
-            aDatasetInfo.SetPskc(cur->ReadValueAs<PskcTlv>());
+            aDatasetInfo.Set<kPskc>(cur->ReadValueAs<PskcTlv>());
             break;
 
         case Tlv::kSecurityPolicy:
-            aDatasetInfo.SetSecurityPolicy(As<SecurityPolicyTlv>(cur)->GetSecurityPolicy());
+            aDatasetInfo.Set<kSecurityPolicy>(As<SecurityPolicyTlv>(cur)->GetSecurityPolicy());
             break;
 
         default:
@@ -282,81 +282,81 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 {
     Error error = kErrorNone;
 
-    if (aDatasetInfo.IsActiveTimestampPresent())
+    if (aDatasetInfo.IsPresent<kActiveTimestamp>())
     {
         Timestamp activeTimestamp;
 
-        aDatasetInfo.GetActiveTimestamp(activeTimestamp);
+        aDatasetInfo.Get<kActiveTimestamp>(activeTimestamp);
         IgnoreError(Write<ActiveTimestampTlv>(activeTimestamp));
     }
 
-    if (aDatasetInfo.IsPendingTimestampPresent())
+    if (aDatasetInfo.IsPresent<kPendingTimestamp>())
     {
         Timestamp pendingTimestamp;
 
-        aDatasetInfo.GetPendingTimestamp(pendingTimestamp);
+        aDatasetInfo.Get<kPendingTimestamp>(pendingTimestamp);
         IgnoreError(Write<PendingTimestampTlv>(pendingTimestamp));
     }
 
-    if (aDatasetInfo.IsDelayPresent())
+    if (aDatasetInfo.IsPresent<kDelay>())
     {
-        IgnoreError(Write<DelayTimerTlv>(aDatasetInfo.GetDelay()));
+        IgnoreError(Write<DelayTimerTlv>(aDatasetInfo.Get<kDelay>()));
     }
 
-    if (aDatasetInfo.IsChannelPresent())
+    if (aDatasetInfo.IsPresent<kChannel>())
     {
         ChannelTlvValue channelValue;
 
-        channelValue.SetChannelAndPage(aDatasetInfo.GetChannel());
+        channelValue.SetChannelAndPage(aDatasetInfo.Get<kChannel>());
         IgnoreError(Write<ChannelTlv>(channelValue));
     }
 
-    if (aDatasetInfo.IsChannelMaskPresent())
+    if (aDatasetInfo.IsPresent<kChannelMask>())
     {
         ChannelMaskTlv::Value value;
 
-        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.GetChannelMask());
+        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.Get<kChannelMask>());
         IgnoreError(WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
     }
 
-    if (aDatasetInfo.IsExtendedPanIdPresent())
+    if (aDatasetInfo.IsPresent<kExtendedPanId>())
     {
-        IgnoreError(Write<ExtendedPanIdTlv>(aDatasetInfo.GetExtendedPanId()));
+        IgnoreError(Write<ExtendedPanIdTlv>(aDatasetInfo.Get<kExtendedPanId>()));
     }
 
-    if (aDatasetInfo.IsMeshLocalPrefixPresent())
+    if (aDatasetInfo.IsPresent<kMeshLocalPrefix>())
     {
-        IgnoreError(Write<MeshLocalPrefixTlv>(aDatasetInfo.GetMeshLocalPrefix()));
+        IgnoreError(Write<MeshLocalPrefixTlv>(aDatasetInfo.Get<kMeshLocalPrefix>()));
     }
 
-    if (aDatasetInfo.IsNetworkKeyPresent())
+    if (aDatasetInfo.IsPresent<kNetworkKey>())
     {
-        IgnoreError(Write<NetworkKeyTlv>(aDatasetInfo.GetNetworkKey()));
+        IgnoreError(Write<NetworkKeyTlv>(aDatasetInfo.Get<kNetworkKey>()));
     }
 
-    if (aDatasetInfo.IsNetworkNamePresent())
+    if (aDatasetInfo.IsPresent<kNetworkName>())
     {
-        NameData nameData = aDatasetInfo.GetNetworkName().GetAsData();
+        NameData nameData = aDatasetInfo.Get<kNetworkName>().GetAsData();
 
         IgnoreError(WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
     }
 
-    if (aDatasetInfo.IsPanIdPresent())
+    if (aDatasetInfo.IsPresent<kPanId>())
     {
-        IgnoreError(Write<PanIdTlv>(aDatasetInfo.GetPanId()));
+        IgnoreError(Write<PanIdTlv>(aDatasetInfo.Get<kPanId>()));
     }
 
-    if (aDatasetInfo.IsPskcPresent())
+    if (aDatasetInfo.IsPresent<kPskc>())
     {
-        IgnoreError(Write<PskcTlv>(aDatasetInfo.GetPskc()));
+        IgnoreError(Write<PskcTlv>(aDatasetInfo.Get<kPskc>()));
     }
 
-    if (aDatasetInfo.IsSecurityPolicyPresent())
+    if (aDatasetInfo.IsPresent<kSecurityPolicy>())
     {
         SecurityPolicyTlv tlv;
 
         tlv.Init();
-        tlv.SetSecurityPolicy(aDatasetInfo.GetSecurityPolicy());
+        tlv.SetSecurityPolicy(aDatasetInfo.Get<kSecurityPolicy>());
         IgnoreError(WriteTlv(tlv));
     }
 

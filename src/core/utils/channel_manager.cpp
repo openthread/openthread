@@ -162,8 +162,8 @@ void ChannelManager::StartDatasetUpdate(void)
     MeshCoP::Dataset::Info dataset;
 
     dataset.Clear();
-    dataset.SetChannel(mChannel);
-    dataset.SetDelay(Time::SecToMsec(mDelay));
+    dataset.Set<MeshCoP::Dataset::kChannel>(mChannel);
+    dataset.Set<MeshCoP::Dataset::kDelay>(Time::SecToMsec(mDelay));
 
     switch (Get<MeshCoP::DatasetUpdater>().RequestUpdate(dataset, HandleDatasetUpdateDone, this))
     {
