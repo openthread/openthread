@@ -335,7 +335,7 @@ otError otMdnsUnregisterService(otInstance *aInstance, const otMdnsService *aSer
  *
  * The fields in @p aKey follow these rules:
  *
- * - If the key is associated with a host entry, `mName` specifies the host name and `mServcieType` MUST be NULL.
+ * - If the key is associated with a host entry, `mName` specifies the host name and `mServiceType` MUST be NULL.
  * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
  *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
  *   key record is `<mName>.<mServiceTye>`.
@@ -368,7 +368,7 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  *
  * The fields in @p aKey follow these rules:
  *
- * - If the key is associated with a host entry, `mName` specifies the host name and `mServcieType` MUST be NULL.
+ * - If the key is associated with a host entry, `mName` specifies the host name and `mServiceType` MUST be NULL.
  * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
  *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
  *   key record is `<mName>.<mServiceTye>`.
