@@ -52,7 +52,6 @@ SpinelDriver::SpinelDriver(void)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
     , mIsCoProcessorReady(false)
-    , mCapsLength(0)
 {
     memset(mVersion, 0, sizeof(mVersion));
 
@@ -64,7 +63,7 @@ CoprocessorType SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
                                    const spinel_iid_t *aIidList,
                                    uint8_t             aIidListLength)
 {
-    CoprocessorType mode;
+    CoprocessorType coprocessorType;
 
     mSpinelInterface = &aSpinelInterface;
     mRxFrameBuffer.Clear();
@@ -84,14 +83,14 @@ CoprocessorType SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
     SuccessOrDie(GetCoprocessorVersion());
     SuccessOrDie(GetCoprocessorCaps());
 
-    mode = CheckCoprocessorType();
-    if (mode == OT_COPROCESSOR_UNKNOWN)
+    coprocessorType = CheckCoprocessorType();
+    if (coprocessorType == OT_COPROCESSOR_UNKNOWN)
     {
         LogCrit("The coprocessor mode is unknown!");
         DieNow(OT_EXIT_FAILURE);
     }
 
-    return mode;
+    return coprocessorType;
 }
 
 void SpinelDriver::Deinit(void)
@@ -106,8 +105,6 @@ otError SpinelDriver::SendReset(uint8_t aResetType)
     uint8_t        buffer[kMaxSpinelFrame];
     spinel_ssize_t packed;
 
-    VerifyOrExit(aResetType != SPINEL_RESET_BOOTLOADER, error = OT_ERROR_NOT_CAPABLE);
-
     // Pack the header, command and key
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_UINT8_S,
                                   SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mIid), SPINEL_CMD_RESET, aResetType);
@@ -115,7 +112,7 @@ otError SpinelDriver::SendReset(uint8_t aResetType)
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     SuccessOrExit(error = mSpinelInterface->SendFrame(buffer, static_cast<uint16_t>(packed)));
-    LogSpinelFrame(buffer, static_cast<uint16_t>(packed), true);
+    LogSpinelFrame(buffer, static_cast<uint16_t>(packed), true /* aTx */);
 
 exit:
     return error;
@@ -243,12 +240,6 @@ void SpinelDriver::SetFrameHandler(ReceivedFrameHandler aReceivedFrameHandler,
     mSavedFrameHandler.Set(aSavedFrameHandler, aContext);
 }
 
-const uint8_t *SpinelDriver::GetCapsBuffer(spinel_size_t &aCapsLength)
-{
-    aCapsLength = mCapsLength;
-    return mCapsBuffer;
-}
-
 otError SpinelDriver::WaitResponse()
 {
     otError  error = OT_ERROR_NONE;
@@ -310,7 +301,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         mRxFrameBuffer.DiscardFrame();
-        LogWarn("Error handling hdlc frame: %s", otThreadErrorToString(error));
+        LogWarn("Error handling spinel frame: %s", otThreadErrorToString(error));
     }
 }
 
@@ -385,11 +376,26 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
             }
             else if (key == SPINEL_PROP_CAPS)
             {
-                mCapsLength = sizeof(mCapsBuffer);
-                unpacked =
-                    spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, mCapsBuffer, &mCapsLength);
+                uint8_t        capsBuffer[kCapsBufferSize];
+                spinel_size_t  capsLength = sizeof(capsBuffer);
+                const uint8_t *capsData   = capsBuffer;
+
+                unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength);
 
                 VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+                while (capsLength > 0)
+                {
+                    unsigned int capability;
+
+                    unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+                    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+                    SuccessOrExit(error = mCoprocessorCaps.PushBack(capability));
+
+                    capsData += unpacked;
+                    capsLength -= static_cast<spinel_size_t>(unpacked);
+                }
             }
 
             mIsWaitingForResponse = false;
@@ -455,32 +461,18 @@ exit:
 
 CoprocessorType SpinelDriver::CheckCoprocessorType(void)
 {
-    CoprocessorType mode       = OT_COPROCESSOR_UNKNOWN;
-    const uint8_t  *capsData   = mCapsBuffer;
-    spinel_size_t   capsLength = mCapsLength;
+    CoprocessorType type = OT_COPROCESSOR_UNKNOWN;
 
-    while (capsLength > 0)
+    if (CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
     {
-        unsigned int   capability;
-        spinel_ssize_t unpacked;
-
-        unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
-
-        if (capability == SPINEL_CAP_CONFIG_RADIO)
-        {
-            mode = OT_COPROCESSOR_RCP;
-        }
-        else if (capability == SPINEL_CAP_CONFIG_FTD || capability == SPINEL_CAP_CONFIG_MTD)
-        {
-            mode = OT_COPROCESSOR_NCP;
-        }
-
-        capsData += unpacked;
-        capsLength -= static_cast<spinel_size_t>(unpacked);
+        type = OT_COPROCESSOR_RCP;
+    }
+    else if (CoprocessorHasCap(SPINEL_CAP_CONFIG_FTD) || CoprocessorHasCap(SPINEL_CAP_CONFIG_MTD))
+    {
+        type = OT_COPROCESSOR_NCP;
     }
 
-    return mode;
+    return type;
 }
 
 void SpinelDriver::ProcessFrameQueue(void)

@@ -1045,9 +1045,17 @@ public:
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
 #endif
 
-    bool HasPendingFrame(void) { return mSpinelDriver->HasPendingFrame(); }
-
-    otError SendReset(uint8_t aResetType) { return mSpinelDriver->SendReset(aResetType); }
+    /**
+     * Sends a reset command to the RCP.
+     *
+     * @param[in] aResetType The reset type.
+     *
+     * @retval  OT_ERROR_NONE               Successfully removed item from the property.
+     * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
+     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
+     *
+     */
+    otError SendReset(uint8_t aResetType);
 
 private:
     enum

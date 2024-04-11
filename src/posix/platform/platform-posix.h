@@ -439,9 +439,9 @@ void platformBacktraceInit(void);
  *
  * @param[in]   aUrl  A pointer to the null-terminated spinel URL.
  *
- * @retval  UNKNOWN  The initialization fails.
- * @retval  RCP      The Co-processor is a RCP.
- * @retval  NCP      The Co-processor is a NCP.
+ * @retval  OT_COPROCESSOR_UNKNOWN  The initialization fails.
+ * @retval  OT_COPROCESSOR_RCP      The Co-processor is a RCP.
+ * @retval  OT_COPROCESSOR_NCP      The Co-processor is a NCP.
  */
 CoprocessorType platformSpinelInit(const char *aUrl);
 

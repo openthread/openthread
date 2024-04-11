@@ -189,51 +189,13 @@ exit:
 
 void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion)
 {
-    const uint8_t *capsData;
-    spinel_size_t  capsLength;
-    bool           supportsRawRadio = false;
+    bool supportsRawRadio;
 
-    capsData = mSpinelDriver->GetCapsBuffer(capsLength);
-
-    aSupportsRcpApiVersion        = false;
-    aSupportsRcpMinHostApiVersion = false;
-
-    while (capsLength > 0)
-    {
-        unsigned int   capability;
-        spinel_ssize_t unpacked;
-
-        unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-        VerifyOrDie(unpacked > 0, OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
-
-        if (capability == SPINEL_CAP_MAC_RAW)
-        {
-            supportsRawRadio = true;
-        }
-
-        if (capability == SPINEL_CAP_OPENTHREAD_LOG_METADATA)
-        {
-            sSupportsLogStream = true;
-        }
-
-        if (capability == SPINEL_CAP_RCP_API_VERSION)
-        {
-            aSupportsRcpApiVersion = true;
-        }
-
-        if (capability == SPINEL_CAP_RCP_RESET_TO_BOOTLOADER)
-        {
-            sSupportsResetToBootloader = true;
-        }
-
-        if (capability == SPINEL_PROP_RCP_MIN_HOST_API_VERSION)
-        {
-            aSupportsRcpMinHostApiVersion = true;
-        }
-
-        capsData += unpacked;
-        capsLength -= static_cast<spinel_size_t>(unpacked);
-    }
+    supportsRawRadio              = mSpinelDriver->CoprocessorHasCap(SPINEL_CAP_MAC_RAW);
+    sSupportsLogStream            = mSpinelDriver->CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
+    aSupportsRcpApiVersion        = mSpinelDriver->CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
+    sSupportsResetToBootloader    = mSpinelDriver->CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
+    aSupportsRcpMinHostApiVersion = mSpinelDriver->CoprocessorHasCap(SPINEL_PROP_RCP_MIN_HOST_API_VERSION);
 
     if (!supportsRawRadio)
     {
@@ -533,6 +495,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
                 ExitNow();
             }
 
+            // this clear is necessary in case the RCP has sent messages between disable and reset
             mSpinelDriver->ClearRxBuffer();
             mSpinelDriver->SetCoProcessorReady();
 
@@ -636,6 +599,20 @@ void RadioSpinel::SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestoreP
     mVendorRestorePropertiesContext  = aContext;
 }
 #endif
+
+otError RadioSpinel::SendReset(uint8_t aResetType)
+{
+    otError error;
+
+    if ((aResetType == SPINEL_RESET_BOOTLOADER) && !sSupportsResetToBootloader)
+    {
+        ExitNow(error = OT_ERROR_NOT_CAPABLE);
+    }
+    error = mSpinelDriver->SendReset(aResetType);
+
+exit:
+    return error;
+}
 
 otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
                                      const uint8_t  *aBuffer,
@@ -1936,6 +1913,10 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     {
         mSpinelDriver->SetCoProcessorReady();
     }
+    else
+    {
+        mSpinelDriver->ResetCoProcessor(mResetRadioOnStartup);
+    }
 
     mCmdTidsInUse = 0;
     mCmdNextTid   = 1;
@@ -1943,11 +1924,6 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     mWaitingTid   = 0;
     mError        = OT_ERROR_NONE;
     mIsTimeSynced = false;
-
-    if (!skipReset)
-    {
-        mSpinelDriver->ResetCoProcessor(mResetRadioOnStartup);
-    }
 
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
     mState = kStateSleep;

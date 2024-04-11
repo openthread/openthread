@@ -31,6 +31,7 @@
 
 #include <openthread/instance.h>
 
+#include "common/array.hpp"
 #include "common/callback.hpp"
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
@@ -104,7 +105,6 @@ public:
      *
      * @retval  OT_ERROR_NONE               Successfully removed item from the property.
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
-     * @retval  OT_ERROR_NOT_CAPABLE        Requested reset type is not supported by the co-processor
      *
      */
     otError SendReset(uint8_t aResetType);
@@ -117,7 +117,7 @@ public:
      * method will first try a software reset. If the software reset succeeds, the method exits. Otherwise the method
      * will then try a hardware reset. If `aSoftwareReset` is `false`, then method will directly try a hardware reset.
      *
-     * @param[in]  aSwReset                 TRUE to try SW reset at first, FALSE to directly try HW reset.
+     * @param[in]  aSoftwareReset                 TRUE to try SW reset at first, FALSE to directly try HW reset.
      *
      */
     void ResetCoProcessor(bool aSoftwareReset);
@@ -190,7 +190,15 @@ public:
      */
     SpinelInterface *GetSpinelInterface(void) const { return mSpinelInterface; }
 
-    const uint8_t *GetCapsBuffer(spinel_size_t &aCapsLength);
+    /**
+     * Returns if the co-processor has some capability
+     *
+     * @param[in] aCapability  The capability queried.
+     *
+     * @returns `true` if the co-processor has the capability. `false` otherwise.
+     *
+     */
+    bool CoprocessorHasCap(unsigned int aCapability) { return mCoprocessorCaps.Contains(aCapability); }
 
 private:
     static constexpr uint16_t kMaxSpinelFrame    = SPINEL_FRAME_MAX_SIZE;
@@ -198,17 +206,6 @@ private:
     static constexpr uint32_t kUsPerMs           = 1000; ///< Microseconds per millisecond.
     static constexpr uint32_t kMaxWaitTime       = 2000; ///< Max time to wait for response in milliseconds.
     static constexpr uint16_t kCapsBufferSize    = 100;  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
-
-    /**
-     * Checks whether given interface ID is part of list of IIDs to be allowed.
-     *
-     * @param[in] aIid    Spinel Interface ID.
-     *
-     * @retval  TRUE    Given IID present in allow list.
-     * @retval  FALSE   Otherwise.
-     *
-     */
-    inline bool IsFrameForUs(spinel_iid_t aIid);
 
     otError WaitResponse(void);
 
@@ -249,8 +246,7 @@ private:
     bool mIsCoProcessorReady;
     char mVersion[kVersionStringSize];
 
-    uint8_t       mCapsBuffer[kCapsBufferSize];
-    spinel_size_t mCapsLength;
+    ot::Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
 };
 
 } // namespace Spinel
