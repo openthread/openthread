@@ -397,11 +397,10 @@ private:
         NameOffsets      mOffsets;
     };
 
-    bool           IsRunning(void) const { return mSocket.IsBound(); }
-    static void    HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void           HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void           ProcessQuery(Request &aRequest);
-    static uint8_t GetNameLength(const char *aName);
+    bool        IsRunning(void) const { return mSocket.IsBound(); }
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void        ProcessQuery(Request &aRequest);
 
     void        ResolveByProxy(Response &aResponse, const Ip6::MessageInfo &aMessageInfo);
     void        RemoveQueryAndPrepareResponse(ProxyQuery &aQuery, const ProxyQueryInfo &aInfo, Response &aResponse);
