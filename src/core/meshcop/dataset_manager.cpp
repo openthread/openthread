@@ -466,30 +466,11 @@ Error DatasetManager::SendSetRequest(const Dataset::Info     &aDatasetInfo,
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-
-    if (Get<Commissioner>().IsActive())
+    if (Get<Commissioner>().IsActive() && (Tlv::Find<CommissionerSessionIdTlv>(aTlvs, aLength) == nullptr))
     {
-        const Tlv *end          = reinterpret_cast<const Tlv *>(aTlvs + aLength);
-        bool       hasSessionId = false;
-
-        for (const Tlv *cur = reinterpret_cast<const Tlv *>(aTlvs); cur < end; cur = cur->GetNext())
-        {
-            VerifyOrExit((cur + 1) <= end, error = kErrorInvalidArgs);
-
-            if (cur->GetType() == Tlv::kCommissionerSessionId)
-            {
-                hasSessionId = true;
-                break;
-            }
-        }
-
-        if (!hasSessionId)
-        {
-            SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, Get<Commissioner>().GetSessionId()));
-        }
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, Get<Commissioner>().GetSessionId()));
     }
-
-#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#endif
 
     SuccessOrExit(error = AppendDatasetToMessage(aDatasetInfo, *message));
 
