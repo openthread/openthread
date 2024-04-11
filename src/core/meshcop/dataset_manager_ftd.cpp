@@ -202,11 +202,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                uint32_t delayTimer = datasetTlv.ReadValueAs<DelayTimerTlv>();
+                uint32_t delayTimer = Min(datasetTlv.ReadValueAs<DelayTimerTlv>(), DelayTimerTlv::kMaxDelay);
 
-                if (doesAffectNetworkKey && delayTimer < kDefaultDelayTimer)
+                if (doesAffectNetworkKey && delayTimer < DelayTimerTlv::kDefaultDelay)
                 {
-                    delayTimer = kDefaultDelayTimer;
+                    delayTimer = DelayTimerTlv::kDefaultDelay;
                 }
                 else
                 {

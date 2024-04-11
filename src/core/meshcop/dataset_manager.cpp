@@ -725,10 +725,7 @@ void PendingDatasetManager::StartDelayTimer(void)
     tlv = dataset.FindTlv(Tlv::kDelayTimer);
     VerifyOrExit(tlv != nullptr);
 
-    delay = tlv->ReadValueAs<DelayTimerTlv>();
-
-    // the Timer implementation does not support the full 32 bit range
-    delay = Min(delay, Timer::kMaxDelay);
+    delay = Min(tlv->ReadValueAs<DelayTimerTlv>(), DelayTimerTlv::kMaxDelay);
 
     mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
     LogInfo("delay timer started %lu", ToUlong(delay));
@@ -739,25 +736,9 @@ exit:
 
 void PendingDatasetManager::HandleDelayTimer(void)
 {
-    Tlv    *tlv;
     Dataset dataset;
 
     IgnoreError(Read(dataset));
-
-    // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
-    // the remainder and wait some more.
-    if ((tlv = dataset.FindTlv(Tlv::kDelayTimer)) != nullptr)
-    {
-        uint32_t elapsed = mDelayTimer.GetFireTime() - dataset.GetUpdateTime();
-        uint32_t delay   = tlv->ReadValueAs<DelayTimerTlv>();
-
-        if (elapsed < delay)
-        {
-            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
-            ExitNow();
-        }
-    }
-
     LogInfo("pending delay timer expired");
 
     dataset.ConvertToActive();
@@ -765,9 +746,6 @@ void PendingDatasetManager::HandleDelayTimer(void)
     Get<ActiveDatasetManager>().Save(dataset);
 
     Clear();
-
-exit:
-    return;
 }
 
 template <>
