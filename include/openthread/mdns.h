@@ -338,7 +338,7 @@ otError otMdnsUnregisterService(otInstance *aInstance, const otMdnsService *aSer
  * - If the key is associated with a host entry, `mName` specifies the host name and `mServiceType` MUST be NULL.
  * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
  *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
- *   key record is `<mName>.<mServiceTye>`.
+ *   key record is `<mName>.<mServiceType>`.
  * - The `mKeyData` field contains the key record's data with `mKeyDataLength` as its length in byes.
  * - The `mTtl` specifies the TTL if non-zero. If zero, the mDNS module will use the default TTL of 120 seconds.
  * - Other fields in @p aKey structure are ignored in an `otMdnsRegisterKey()` call.
@@ -371,7 +371,7 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  * - If the key is associated with a host entry, `mName` specifies the host name and `mServiceType` MUST be NULL.
  * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
  *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
- *   key record is `<mName>.<mServiceTye>`.
+ *   key record is `<mName>.<mServiceType>`.
  * - Other fields in @p aKey structure are ignored in an `otMdnsUnregisterKey()` call.
  *
  * If there is no previously registered key with the same name, no action is performed.
