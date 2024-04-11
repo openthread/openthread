@@ -509,7 +509,14 @@ void Dataset::RemoveTlv(Tlv *aTlv)
     }
 }
 
-Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated) const
+Error Dataset::ApplyConfiguration(Instance &aInstance) const
+{
+    bool isNetworkKeyUpdated;
+
+    return ApplyConfiguration(aInstance, isNetworkKeyUpdated);
+}
+
+Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdated) const
 {
     Mac::Mac   &mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
@@ -517,10 +524,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
     VerifyOrExit(IsValid(), error = kErrorParse);
 
-    if (aIsNetworkKeyUpdated)
-    {
-        *aIsNetworkKeyUpdated = false;
-    }
+    aIsNetworkKeyUpdated = false;
 
     for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
@@ -559,9 +563,9 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
             keyManager.GetNetworkKey(networkKey);
 
-            if (aIsNetworkKeyUpdated && (cur->ReadValueAs<NetworkKeyTlv>() != networkKey))
+            if (cur->ReadValueAs<NetworkKeyTlv>() != networkKey)
             {
-                *aIsNetworkKeyUpdated = true;
+                aIsNetworkKeyUpdated = true;
             }
 
             keyManager.SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
@@ -569,11 +573,9 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         }
 
 #if OPENTHREAD_FTD
-
         case Tlv::kPskc:
             keyManager.SetPskc(cur->ReadValueAs<PskcTlv>());
             break;
-
 #endif
 
         case Tlv::kMeshLocalPrefix:

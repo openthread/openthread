@@ -886,13 +886,24 @@ public:
      * Applies the Active or Pending Dataset to the Thread interface.
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
-     * @param[out] aIsNetworkKeyUpdated A pointer to where to place whether network key was updated.
      *
      * @retval kErrorNone   Successfully applied configuration.
      * @retval kErrorParse  The dataset has at least one TLV with invalid format.
      *
      */
-    Error ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated = nullptr) const;
+    Error ApplyConfiguration(Instance &aInstance) const;
+
+    /**
+     * Applies the Active or Pending Dataset to the Thread interface.
+     *
+     * @param[in]  aInstance              A reference to the OpenThread instance.
+     * @param[out] aIsNetworkKeyUpdated   Variable to return whether network key was updated.
+     *
+     * @retval kErrorNone   Successfully applied configuration, @p aIsNetworkKeyUpdated is changed.
+     * @retval kErrorParse  The dataset has at least one TLV with invalid format.
+     *
+     */
+    Error ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdated) const;
 
     /**
      * Converts a Pending Dataset to an Active Dataset.
