@@ -666,11 +666,6 @@ void Server::Response::IncResourceRecordCount(void)
     }
 }
 
-uint8_t Server::GetNameLength(const char *aName)
-{
-    return static_cast<uint8_t>(StringLength(aName, Name::kMaxNameLength));
-}
-
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 void Server::Response::Log(void) const
 {
