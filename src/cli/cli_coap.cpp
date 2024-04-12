@@ -37,7 +37,6 @@
 
 #include <openthread/random_noncrypto.h>
 
-#include <cstddef>
 #include <ctype.h>
 
 #include "cli/cli.hpp"
@@ -585,11 +584,10 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     otMessage    *message = nullptr;
     otMessageInfo messageInfo;
     uint16_t      payloadLength    = 0;
-    const char   *uriQueryStartPtr = nullptr;
+    char         *uriQueryStartPtr = nullptr;
 
     // Default parameters
     char         coapUri[kMaxUriLength]      = "test";
-    char         coapUriQuery[kMaxUriLength] = "";
     otCoapType   coapType                    = OT_COAP_TYPE_NON_CONFIRMABLE;
     otIp6Address coapDestinationIp;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -685,7 +683,7 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     }
 #endif
 
-    uriQueryStartPtr = StringFind(coapUri, '?');
+    uriQueryStartPtr = const_cast<char *>(StringFind(coapUri, '?'));
 
     if (uriQueryStartPtr == nullptr)
     {
@@ -695,13 +693,9 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     else
     {
         // "?" presents in URI --> contains URI path AND URI query parts
-        strncpy(coapUriQuery, uriQueryStartPtr + 1,
-                strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr + 1 - coapUri));
-        memset(const_cast<char *>(uriQueryStartPtr), '\0',
-               strlen(coapUri) - static_cast<size_t>(uriQueryStartPtr - coapUri));
-
+        *uriQueryStartPtr++ = '\0';
         SuccessOrExit(error = otCoapMessageAppendUriPathOptions(message, coapUri));
-        SuccessOrExit(error = otCoapMessageAppendUriQueryOptions(message, coapUriQuery));
+        SuccessOrExit(error = otCoapMessageAppendUriQueryOptions(message, uriQueryStartPtr));
     }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
