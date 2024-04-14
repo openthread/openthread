@@ -55,7 +55,8 @@ SpinelDriver::SpinelDriver(void)
 {
     memset(mVersion, 0, sizeof(mVersion));
 
-    mReceivedFrameHandler.Set(&HandleInitialFrame, this);
+    mReceivedFrameHandler = &HandleInitialFrame;
+    mFrameHandlerContext  = this;
 }
 
 void SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
@@ -225,8 +226,9 @@ void SpinelDriver::SetFrameHandler(ReceivedFrameHandler aReceivedFrameHandler,
                                    SavedFrameHandler    aSavedFrameHandler,
                                    void                *aContext)
 {
-    mReceivedFrameHandler.Set(aReceivedFrameHandler, aContext);
-    mSavedFrameHandler.Set(aSavedFrameHandler, aContext);
+    mReceivedFrameHandler = aReceivedFrameHandler;
+    mSavedFrameHandler    = aSavedFrameHandler;
+    mFrameHandlerContext  = aContext;
 }
 
 otError SpinelDriver::WaitResponse()
@@ -261,12 +263,13 @@ void SpinelDriver::HandleReceivedFrame(void)
     uint8_t        header;
     spinel_ssize_t unpacked;
     bool           shouldSave = true;
+    spinel_iid_t   iid;
 
     LogSpinelFrame(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), false);
     unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 
     // Accept spinel messages with the correct IID or broadcast IID.
-    spinel_iid_t iid = SPINEL_HEADER_GET_IID(header);
+    iid = SPINEL_HEADER_GET_IID(header);
 
     if (!mIidList.Contains(iid))
     {
@@ -276,7 +279,10 @@ void SpinelDriver::HandleReceivedFrame(void)
 
     VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG, error = OT_ERROR_PARSE);
 
-    mReceivedFrameHandler.InvokeIfSet(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), header, shouldSave);
+    assert(mReceivedFrameHandler != nullptr && mFrameHandlerContext != nullptr);
+    mReceivedFrameHandler(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), header, shouldSave,
+                          mFrameHandlerContext);
+
     if (shouldSave)
     {
         error = mRxFrameBuffer.SaveFrame();
@@ -453,9 +459,11 @@ void SpinelDriver::ProcessFrameQueue(void)
     uint8_t *frame = nullptr;
     uint16_t length;
 
+    assert(mSavedFrameHandler != nullptr && mFrameHandlerContext != nullptr);
+
     while (mRxFrameBuffer.GetNextSavedFrame(frame, length) == OT_ERROR_NONE)
     {
-        mSavedFrameHandler.InvokeIfSet(frame, length);
+        mSavedFrameHandler(frame, length, mFrameHandlerContext);
     }
 
     mRxFrameBuffer.ClearSavedFrames();

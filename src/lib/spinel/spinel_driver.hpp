@@ -31,7 +31,6 @@
 
 #include <openthread/instance.h>
 
-#include "common/array.hpp"
 #include "common/callback.hpp"
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
@@ -50,13 +49,13 @@ static constexpr uint8_t kSpinelHeaderMaxNumIid = 4;
 static constexpr uint8_t kSpinelHeaderMaxNumIid = 1;
 #endif
 
-typedef void (
-    *ReceivedFrameHandler)(const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aSave, void *aContext);
-typedef void (*SavedFrameHandler)(const uint8_t *aFrame, uint16_t aLength, void *aContext);
-
 class SpinelDriver : public Logger
 {
 public:
+    typedef void (
+        *ReceivedFrameHandler)(const uint8_t *aFrame, uint16_t aLength, uint8_t aHeader, bool &aSave, void *aContext);
+    typedef void (*SavedFrameHandler)(const uint8_t *aFrame, uint16_t aLength, void *aContext);
+
     /**
      * Constructor of the SpinelDriver.
      *
@@ -112,11 +111,11 @@ public:
      * Reset the co-processor.
      *
      * This method will reset the co-processor and wait until the co-process is ready (receiving SPINEL_PROP_LAST_STATUS
-     * from the NCP). The reset will be either a software or hardware reset. If `aSoftwareReset` is `true`, then the
+     * from the it). The reset will be either a software or hardware reset. If `aSoftwareReset` is `true`, then the
      * method will first try a software reset. If the software reset succeeds, the method exits. Otherwise the method
      * will then try a hardware reset. If `aSoftwareReset` is `false`, then method will directly try a hardware reset.
      *
-     * @param[in]  aSoftwareReset                 TRUE to try SW reset at first, FALSE to directly try HW reset.
+     * @param[in]  aSoftwareReset                 TRUE to try SW reset first, FALSE to directly try HW reset.
      *
      */
     void ResetCoProcessor(bool aSoftwareReset);
@@ -158,7 +157,7 @@ public:
      * @param[in] aFormat     The format string of the arguments to send.
      * @param[in] aArgs       The argument list.
      *
-     * @retval  OT_ERROR_NONE Successfully sent the command through spinel interface.
+     * @retval  OT_ERROR_NONE           Successfully sent the command through spinel interface.
      * @retval  OT_ERROR_INVALID_STATE  The spinel interface is in an invalid state.
      * @retval  OT_ERROR_NO_BUFS        The spinel interface doesn't have enough buffer.
      *
@@ -206,6 +205,60 @@ private:
     static constexpr uint32_t kMaxWaitTime       = 2000; ///< Max time to wait for response in milliseconds.
     static constexpr uint16_t kCapsBufferSize    = 100;  ///< Max buffer size used to store `SPINEL_PROP_CAPS` value.
 
+    /**
+     * Represents an array of elements with a fixed max size.
+     *
+     * @tparam Type        The array element type.
+     * @tparam kMaxSize    Specifies the max array size (maximum number of elements in the array).
+     *
+     */
+    template <typename Type, uint16_t kMaxSize> class Array
+    {
+        static_assert(kMaxSize != 0, "Array `kMaxSize` cannot be zero");
+
+    public:
+        Array(void)
+            : mLength(0)
+        {
+        }
+
+        uint16_t GetMaxSize(void) const { return kMaxSize; }
+
+        bool IsFull(void) const { return (mLength == GetMaxSize()); }
+
+        otError PushBack(const Type &aEntry)
+        {
+            return IsFull() ? OT_ERROR_NO_BUFS : (mElements[mLength++] = aEntry, OT_ERROR_NONE);
+        }
+
+        const Type *Find(const Type &aEntry) const
+        {
+            const Type *matched = nullptr;
+
+            for (const Type &element : *this)
+            {
+                if (element == aEntry)
+                {
+                    matched = &element;
+                    break;
+                }
+            }
+
+            return matched;
+        }
+
+        bool Contains(const Type &aEntry) const { return Find(aEntry) != nullptr; }
+
+        Type       *begin(void) { return &mElements[0]; }
+        Type       *end(void) { return &mElements[mLength]; }
+        const Type *begin(void) const { return &mElements[0]; }
+        const Type *end(void) const { return &mElements[mLength]; }
+
+    private:
+        Type     mElements[kMaxSize];
+        uint16_t mLength;
+    };
+
     otError WaitResponse(void);
 
     static void HandleReceivedFrame(void *aContext);
@@ -232,11 +285,12 @@ private:
     spinel_prop_key_t mWaitingKey; ///< The property key of current transaction.
     bool              mIsWaitingForResponse;
 
-    spinel_iid_t                                    mIid;
-    ot::Array<spinel_iid_t, kSpinelHeaderMaxNumIid> mIidList;
+    spinel_iid_t                                mIid;
+    Array<spinel_iid_t, kSpinelHeaderMaxNumIid> mIidList;
 
-    Callback<ReceivedFrameHandler> mReceivedFrameHandler;
-    Callback<SavedFrameHandler>    mSavedFrameHandler;
+    ReceivedFrameHandler mReceivedFrameHandler;
+    SavedFrameHandler    mSavedFrameHandler;
+    void                *mFrameHandlerContext;
 
     int mSpinelVersionMajor;
     int mSpinelVersionMinor;
@@ -244,7 +298,7 @@ private:
     bool mIsCoProcessorReady;
     char mVersion[kVersionStringSize];
 
-    ot::Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
+    Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
 };
 
 } // namespace Spinel
