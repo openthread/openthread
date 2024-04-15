@@ -158,6 +158,23 @@ const char *StateTlv::StateToString(State aState)
     return aState == kReject ? kStateStrings[2] : kStateStrings[aState];
 }
 
+uint32_t DelayTimerTlv::CalculateRemainingDelay(const Tlv &aDelayTimerTlv, TimeMilli aUpdateTime)
+{
+    uint32_t delay   = Min(aDelayTimerTlv.ReadValueAs<DelayTimerTlv>(), kMaxDelay);
+    uint32_t elapsed = TimerMilli::GetNow() - aUpdateTime;
+
+    if (delay > elapsed)
+    {
+        delay -= elapsed;
+    }
+    else
+    {
+        delay = 0;
+    }
+
+    return delay;
+}
+
 bool ChannelMaskTlv::IsValid(void) const
 {
     uint32_t channelMask;

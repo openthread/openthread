@@ -473,19 +473,9 @@ Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
         }
         else if (cur->GetType() == Tlv::kDelayTimer)
         {
-            uint32_t elapsed    = TimerMilli::GetNow() - mUpdateTime;
-            uint32_t delayTimer = cur->ReadValueAs<DelayTimerTlv>();
+            uint32_t remainingDelay = DelayTimerTlv::CalculateRemainingDelay(*cur, mUpdateTime);
 
-            if (delayTimer > elapsed)
-            {
-                delayTimer -= elapsed;
-            }
-            else
-            {
-                delayTimer = 0;
-            }
-
-            SuccessOrExit(error = Tlv::Append<DelayTimerTlv>(aMessage, delayTimer));
+            SuccessOrExit(error = Tlv::Append<DelayTimerTlv>(aMessage, remainingDelay));
         }
         else
         {
