@@ -63,7 +63,6 @@ class Dataset
 public:
     static constexpr uint8_t kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max size of MeshCoP Dataset (bytes)
     static constexpr uint8_t kMaxValueSize = 16;                                ///< Max size of a TLV value (bytes)
-    static constexpr uint8_t kMaxGetTypes  = 64;                                ///< Max number of types in MGMT_GET.req
 
     /**
      * Represents the Dataset type (active or pending).
