@@ -388,6 +388,16 @@ void otThreadSetThreadVersionCheckEnabled(otInstance *aInstance, bool aEnabled)
     AsCoreType(aInstance).Get<Mle::MleRouter>().SetThreadVersionCheckEnabled(aEnabled);
 }
 
+void otThreadSetTmfOriginFilterEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Ip6::Ip6>().SetTmfOriginFilterEnabled(aEnabled);
+}
+
+bool otThreadIsTmfOriginFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Ip6::Ip6>().IsTmfOriginFilterEnabled();
+}
+
 void otThreadGetRouterIdRange(otInstance *aInstance, uint8_t *aMinRouterId, uint8_t *aMaxRouterId)
 {
     AssertPointerIsNotNull(aMinRouterId);

@@ -1251,6 +1251,42 @@ template <> otError Interpreter::Process<Cmd("ccm")>(Arg aArgs[])
     return ProcessEnableDisable(aArgs, otThreadSetCcmEnabled);
 }
 
+template <> otError Interpreter::Process<Cmd("test")>(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    /**
+     * @cli test tmforiginfilter
+     * @code
+     * test tmforiginfilter
+     * Enabled
+     * @endcode
+     * @code
+     * test tmforiginfilter enable
+     * Done
+     * @endcode
+     * @code
+     * test tmforiginfilter disable
+     * Done
+     * @endcode
+     * @cparam test tmforiginfilter [@ca{enable|disable}]
+     * @par
+     * Enables or disables the filter to drop TMF UDP messages from untrusted origin.
+     * @par
+     * By default the filter that drops TMF UDP messages from untrusted origin
+     * is enabled. When disabled, UDP messages sent to the TMF port that originate
+     * from untrusted origin (such as host, CLI or an external IPv6 node) will be
+     * allowed.
+     * @note `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required.
+     */
+    if (aArgs[0] == "tmforiginfilter")
+    {
+        error = ProcessEnableDisable(aArgs + 1, otThreadIsTmfOriginFilterEnabled, otThreadSetTmfOriginFilterEnabled);
+    }
+
+    return error;
+}
+
 /**
  * @cli tvcheck (enable,disable)
  * @code
@@ -8694,6 +8730,9 @@ otError Interpreter::ProcessCommand(Arg aArgs[])
 #endif
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
         CmdEntry("tcp"),
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        CmdEntry("test"),
 #endif
         CmdEntry("thread"),
 #if OPENTHREAD_CONFIG_TX_QUEUE_STATISTICS_ENABLE

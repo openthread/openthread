@@ -68,6 +68,9 @@ RegisterLogModule("Ip6");
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsReceiveIp6FilterEnabled(false)
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mTmfOriginFilterEnabled(true)
+#endif
     , mSendQueueTask(aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
@@ -1239,7 +1242,11 @@ Error Ip6::HandleDatagram(OwnedPtr<Message> aMessagePtr, bool aIsReassembled)
                 error = aMessagePtr->Read(aMessagePtr->GetOffset() + Udp::Header::kDestPortFieldOffset, destPort));
             destPort = BigEndian::HostSwap16(destPort);
 
-            if (destPort == Tmf::kUdpPort)
+            if (destPort == Tmf::kUdpPort
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+                && mTmfOriginFilterEnabled
+#endif
+            )
             {
                 LogNote("Dropping TMF message from untrusted origin");
                 ExitNow(error = kErrorDrop);
