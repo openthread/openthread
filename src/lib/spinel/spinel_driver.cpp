@@ -122,7 +122,7 @@ void SpinelDriver::ResetCoProcessor(bool aSoftwareReset)
         (WaitResponse() == OT_ERROR_NONE))
     {
         VerifyOrExit(mIsCoProcessorReady, resetDone = false);
-        LogCrit("Software reset Co-Processor successfully");
+        LogCrit("Software reset co-processor successfully");
         ExitNow(resetDone = true);
     }
 
@@ -137,17 +137,17 @@ void SpinelDriver::ResetCoProcessor(bool aSoftwareReset)
 
     if (hardwareReset)
     {
-        LogInfo("Hardware reset Co-Processor successfully");
+        LogInfo("Hardware reset co-processor successfully");
     }
     else
     {
-        LogInfo("Co-Processor self reset successfully");
+        LogInfo("co-processor self reset successfully");
     }
 
 exit:
     if (!resetDone)
     {
-        LogCrit("Failed to reset Co-Processor!");
+        LogCrit("Failed to reset co-processor!");
         DieNow(OT_EXIT_FAILURE);
     }
 }
@@ -231,7 +231,7 @@ void SpinelDriver::SetFrameHandler(ReceivedFrameHandler aReceivedFrameHandler,
     mFrameHandlerContext  = aContext;
 }
 
-otError SpinelDriver::WaitResponse()
+otError SpinelDriver::WaitResponse(void)
 {
     otError  error = OT_ERROR_NONE;
     uint64_t end   = otPlatTimeGet() + kMaxWaitTime * kUsPerMs;
@@ -340,12 +340,12 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
                 // this clear is necessary in case the RCP has sent messages between disable and reset
                 mRxFrameBuffer.Clear();
 
-                LogInfo("Co-Processor reset: %s", spinel_status_to_cstr(status));
+                LogInfo("co-processor reset: %s", spinel_status_to_cstr(status));
                 mIsCoProcessorReady = true;
             }
             else
             {
-                LogInfo("Co-Processor last status: %s", spinel_status_to_cstr(status));
+                LogInfo("co-processor last status: %s", spinel_status_to_cstr(status));
                 ExitNow();
             }
         }
@@ -419,7 +419,7 @@ otError SpinelDriver::CheckSpinelVersion(void)
     if ((mSpinelVersionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
         (mSpinelVersionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
     {
-        LogCrit("Spinel version mismatch - Posix:%d.%d, Co-Processor:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
+        LogCrit("Spinel version mismatch - Posix:%d.%d, co-processor:%d.%d", SPINEL_PROTOCOL_VERSION_THREAD_MAJOR,
                 SPINEL_PROTOCOL_VERSION_THREAD_MINOR, mSpinelVersionMajor, mSpinelVersionMinor);
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
