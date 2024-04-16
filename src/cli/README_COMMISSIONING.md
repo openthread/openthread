@@ -2,8 +2,7 @@
 
 ## Overview
 
-Commissioning is the process of adding a new Thread device, called the Joiner, to a Thread network. This process is done 
-under guidance of a [Commissioner](README_COMMISSIONER.md).
+Commissioning is the process of adding a new Thread device, called the Joiner, to a Thread network. This process is done under guidance of a [Commissioner](README_COMMISSIONER.md).
 
 ## Quick Start
 
