@@ -57,4 +57,81 @@ expect_line "Done"
 send "linkmetricsmgr xxx\n"
 expect_line "InvalidCommand"
 
+# Test continuous enable
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+sleep 10
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+send "linkmetricsmgr show\n"
+expect -re {ExtAddr:([0-9a-f]){16}, LinkMargin:\d+, Rssi:\-?\d+}
+expect "Done"
+
+# Test continuous disable
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+sleep 10
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+send "linkmetricsmgr show\n"
+expect_line "Done"
+
+# Test continuous switch
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+sleep 10
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+send "linkmetricsmgr show\n"
+expect -re {ExtAddr:([0-9a-f]){16}, LinkMargin:\d+, Rssi:\-?\d+}
+expect "Done"
+
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+send "linkmetricsmgr enable\n"
+expect_line "Done"
+send "linkmetricsmgr disable\n"
+expect_line "Done"
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+sleep 10
+
+send "ping $addr\n"
+expect "16 bytes from $addr: icmp_seq="
+
+send "linkmetricsmgr show\n"
+expect_line "Done"
+
 dispose_all
