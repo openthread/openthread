@@ -197,19 +197,21 @@ exit:
 
 void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion)
 {
-    bool supportsRawRadio;
-
-    supportsRawRadio              = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_MAC_RAW);
-    sSupportsLogStream            = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
-    aSupportsRcpApiVersion        = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
-    sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
-    aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_PROP_RCP_MIN_HOST_API_VERSION);
-
-    if (!supportsRawRadio)
+    if (!mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
+    {
+        LogCrit("The co-processor isn't a RCP!");
+        DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
+    }
+    if (!mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_MAC_RAW))
     {
         LogCrit("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
+
+    sSupportsLogStream            = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
+    aSupportsRcpApiVersion        = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
+    sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
+    aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_PROP_RCP_MIN_HOST_API_VERSION);
 }
 
 otError RadioSpinel::CheckRadioCapabilities(void)
@@ -513,7 +515,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
             // this clear is necessary in case the RCP has sent messages between disable and reset
             mSpinelDriver.ClearRxBuffer();
-            mSpinelDriver.SetCoProcessorReady();
+            mSpinelDriver.SetCoprocessorReady();
 
             LogInfo("RCP reset: %s", spinel_status_to_cstr(status));
             sIsReady = true;
@@ -1933,11 +1935,11 @@ void RadioSpinel::RecoverFromRcpFailure(void)
     mSpinelDriver.ClearRxBuffer();
     if (skipReset)
     {
-        mSpinelDriver.SetCoProcessorReady();
+        mSpinelDriver.SetCoprocessorReady();
     }
     else
     {
-        mSpinelDriver.ResetCoProcessor(mResetRadioOnStartup);
+        mSpinelDriver.ResetCoprocessor(mResetRadioOnStartup);
     }
 
     mCmdTidsInUse = 0;

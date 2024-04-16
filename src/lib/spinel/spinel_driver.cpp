@@ -51,7 +51,7 @@ SpinelDriver::SpinelDriver(void)
     , mIid(SPINEL_HEADER_INVALID_IID)
     , mSpinelVersionMajor(-1)
     , mSpinelVersionMinor(-1)
-    , mIsCoProcessorReady(false)
+    , mIsCoprocessorReady(false)
 {
     memset(mVersion, 0, sizeof(mVersion));
 
@@ -77,7 +77,7 @@ void SpinelDriver::Init(SpinelInterface    &aSpinelInterface,
     }
     mIid = aIidList[0];
 
-    ResetCoProcessor(aSoftwareReset);
+    ResetCoprocessor(aSoftwareReset);
     SuccessOrDie(CheckSpinelVersion());
     SuccessOrDie(GetCoprocessorVersion());
     SuccessOrDie(GetCoprocessorCaps());
@@ -108,20 +108,20 @@ exit:
     return error;
 }
 
-void SpinelDriver::ResetCoProcessor(bool aSoftwareReset)
+void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
 {
     bool hardwareReset;
     bool resetDone = false;
 
     // Avoid resetting the device twice in a row in Multipan RCP architecture
-    VerifyOrExit(!mIsCoProcessorReady, resetDone = true);
+    VerifyOrExit(!mIsCoprocessorReady, resetDone = true);
 
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
-    if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (!mIsCoProcessorReady) &&
+    if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (!mIsCoprocessorReady) &&
         (WaitResponse() == OT_ERROR_NONE))
     {
-        VerifyOrExit(mIsCoProcessorReady, resetDone = false);
+        VerifyOrExit(mIsCoprocessorReady, resetDone = false);
         LogCrit("Software reset co-processor successfully");
         ExitNow(resetDone = true);
     }
@@ -247,7 +247,7 @@ otError SpinelDriver::WaitResponse(void)
             LogWarn("Wait for response timeout");
             ExitNow(error = OT_ERROR_RESPONSE_TIMEOUT);
         }
-    } while (mIsWaitingForResponse || !mIsCoProcessorReady);
+    } while (mIsWaitingForResponse || !mIsCoprocessorReady);
 
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
@@ -326,79 +326,72 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
     VerifyOrExit(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED,
                  error = OT_ERROR_PARSE);
 
-    if (cmd == SPINEL_CMD_PROP_VALUE_IS)
+    VerifyOrExit(cmd == SPINEL_CMD_PROP_VALUE_IS, error = OT_ERROR_DROP);
+
+    if (key == SPINEL_PROP_LAST_STATUS)
     {
-        if (key == SPINEL_PROP_LAST_STATUS)
+        spinel_status_t status = SPINEL_STATUS_OK;
+
+        unpacked = spinel_datatype_unpack(data, len, "i", &status);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
-            spinel_status_t status = SPINEL_STATUS_OK;
+            // this clear is necessary in case the RCP has sent messages between disable and reset
+            mRxFrameBuffer.Clear();
 
-            unpacked = spinel_datatype_unpack(data, len, "i", &status);
-            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
-            if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
-            {
-                // this clear is necessary in case the RCP has sent messages between disable and reset
-                mRxFrameBuffer.Clear();
-
-                LogInfo("co-processor reset: %s", spinel_status_to_cstr(status));
-                mIsCoProcessorReady = true;
-            }
-            else
-            {
-                LogInfo("co-processor last status: %s", spinel_status_to_cstr(status));
-                ExitNow();
-            }
+            LogInfo("co-processor reset: %s", spinel_status_to_cstr(status));
+            mIsCoprocessorReady = true;
         }
         else
         {
-            // Drop other frames when the key isn't waiting key.
-            VerifyOrExit(mWaitingKey == key, error = OT_ERROR_DROP);
-
-            if (key == SPINEL_PROP_PROTOCOL_VERSION)
-            {
-                unpacked =
-                    spinel_datatype_unpack(data, len, (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S),
-                                           &mSpinelVersionMajor, &mSpinelVersionMinor);
-
-                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-            }
-            else if (key == SPINEL_PROP_NCP_VERSION)
-            {
-                unpacked =
-                    spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion));
-
-                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-            }
-            else if (key == SPINEL_PROP_CAPS)
-            {
-                uint8_t        capsBuffer[kCapsBufferSize];
-                spinel_size_t  capsLength = sizeof(capsBuffer);
-                const uint8_t *capsData   = capsBuffer;
-
-                unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength);
-
-                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
-                while (capsLength > 0)
-                {
-                    unsigned int capability;
-
-                    unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-                    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
-                    SuccessOrExit(error = mCoprocessorCaps.PushBack(capability));
-
-                    capsData += unpacked;
-                    capsLength -= static_cast<spinel_size_t>(unpacked);
-                }
-            }
-
-            mIsWaitingForResponse = false;
+            LogInfo("co-processor last status: %s", spinel_status_to_cstr(status));
+            ExitNow();
         }
     }
     else
     {
-        ExitNow(error = OT_ERROR_DROP);
+        // Drop other frames when the key isn't waiting key.
+        VerifyOrExit(mWaitingKey == key, error = OT_ERROR_DROP);
+
+        if (key == SPINEL_PROP_PROTOCOL_VERSION)
+        {
+            unpacked = spinel_datatype_unpack(data, len, (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S),
+                                              &mSpinelVersionMajor, &mSpinelVersionMinor);
+
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        }
+        else if (key == SPINEL_PROP_NCP_VERSION)
+        {
+            unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion));
+
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+        }
+        else if (key == SPINEL_PROP_CAPS)
+        {
+            uint8_t        capsBuffer[kCapsBufferSize];
+            spinel_size_t  capsLength = sizeof(capsBuffer);
+            const uint8_t *capsData   = capsBuffer;
+
+            unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength);
+
+            VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+            while (capsLength > 0)
+            {
+                unsigned int capability;
+
+                unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
+                VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+                SuccessOrExit(error = mCoprocessorCaps.PushBack(capability));
+
+                capsData += unpacked;
+                capsLength -= static_cast<spinel_size_t>(unpacked);
+            }
+        }
+
+        mIsWaitingForResponse = false;
     }
 
 exit:

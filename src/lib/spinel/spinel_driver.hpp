@@ -94,7 +94,7 @@ public:
      *
      * This method is used to skip a reset.
      */
-    void SetCoProcessorReady(void) { mIsCoProcessorReady = true; }
+    void SetCoprocessorReady(void) { mIsCoprocessorReady = true; }
 
     /**
      * Send a reset command to the co-processor.
@@ -118,7 +118,7 @@ public:
      * @param[in]  aSoftwareReset                 TRUE to try SW reset first, FALSE to directly try HW reset.
      *
      */
-    void ResetCoProcessor(bool aSoftwareReset);
+    void ResetCoprocessor(bool aSoftwareReset);
 
     /**
      * Processes any pending the I/O data.
@@ -295,7 +295,7 @@ private:
     int mSpinelVersionMajor;
     int mSpinelVersionMinor;
 
-    bool mIsCoProcessorReady;
+    bool mIsCoprocessorReady;
     char mVersion[kVersionStringSize];
 
     Array<unsigned int, kCapsBufferSize> mCoprocessorCaps;
