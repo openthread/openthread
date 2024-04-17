@@ -245,12 +245,18 @@ public:
     void Clear(void);
 
     /**
-     * Indicates whether or not the dataset appears to be well-formed.
+     * Parses and validates all TLVs contained within the Dataset.
      *
-     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
+     * Performs the following checks all TLVs in the Dataset:
+     *  - Ensures correct TLV format and expected minimum length for known TLV types that may appear in a Dataset.
+     *  - Validates TLV value when applicable (e.g., Channel TLV using a supported channel).
+     *  - Ensures no duplicate occurrence of same TLV type.
+     *
+     * @retval kErrorNone   Successfully validated all the TLVs in the Dataset.
+     * @retval kErrorParse  Dataset TLVs is not well-formed.
      *
      */
-    bool IsValid(void) const;
+    Error ValidateTlvs(void) const;
 
     /**
      * Validates the format and value of a given MeshCoP TLV used in Dataset.
@@ -438,6 +444,21 @@ public:
      *
      */
     void RemoveTlv(Tlv::Type aType);
+
+    /**
+     * Merges TLVs from a given Dataset into this Dataset.
+     *
+     * TLVs from @p aDataset are parsed and updated in the current Dataset. If same TLV already exists, it will be
+     * replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aDataset   A Dataset.
+     *
+     * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
+     * @retval kErrorParse   The @p aDataset is not valid.
+     * @retval kErrorNoBufs  Could not add the TLV due to insufficient buffer space.
+     *
+     */
+    Error MergeTlvsFrom(const Dataset &aDataset);
 
     /**
      * Returns a pointer to the byte representation of the Dataset.

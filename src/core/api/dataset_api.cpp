@@ -162,7 +162,7 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
     AssertPointerIsNotNull(aDatasetTlvs);
 
     dataset.SetFrom(*aDatasetTlvs);
-    VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);
+    VerifyOrExit(dataset.ValidateTlvs() == kErrorNone, error = kErrorInvalidArgs);
     dataset.ConvertTo(AsCoreType(aDataset));
 
 exit:

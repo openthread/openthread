@@ -165,18 +165,28 @@ Dataset::Dataset(void)
 
 void Dataset::Clear(void) { mLength = 0; }
 
-bool Dataset::IsValid(void) const
+Error Dataset::ValidateTlvs(void) const
 {
-    bool       rval = true;
-    const Tlv *end  = GetTlvsEnd();
+    Error      error = kErrorParse;
+    const Tlv *end   = GetTlvsEnd();
+    uint16_t  validatedLength;
 
-    for (const Tlv *cur = GetTlvsStart(); cur < end; cur = cur->GetNext())
+    VerifyOrExit(GetSize() <= kMaxSize);
+
+    for (const Tlv *tlv = GetTlvsStart(); tlv < end; tlv = tlv->GetNext())
     {
-        VerifyOrExit(!cur->IsExtended() && (cur + 1) <= end && cur->GetNext() <= end && IsTlvValid(*cur), rval = false);
+        VerifyOrExit(!tlv->IsExtended() && ((tlv + 1) <= end) && (tlv->GetNext() <= end));
+        VerifyOrExit(IsTlvValid(*tlv));
+
+        // Ensure there are no duplicate TLVs.
+        validatedLength = static_cast<uint16_t>(reinterpret_cast<const uint8_t *>(tlv) - mTlvs);
+        VerifyOrExit(Tlv::FindTlv(mTlvs, validatedLength, tlv->GetType()) == nullptr);
     }
 
+    error = kErrorNone;
+
 exit:
-    return rval;
+    return error;
 }
 
 bool Dataset::IsTlvValid(const Tlv &aTlv)
@@ -460,10 +470,9 @@ Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16
     SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
 
-    VerifyOrExit(IsValid(), error = kErrorParse);
+    SuccessOrExit(error = ValidateTlvs());
 
     mUpdateTime = TimerMilli::GetNow();
-    error       = kErrorNone;
 
 exit:
     return error;
@@ -483,6 +492,21 @@ void Dataset::RemoveTlv(Tlv *aTlv)
     }
 }
 
+Error Dataset::MergeTlvsFrom(const Dataset &aDataset)
+{
+    Error error;
+
+    SuccessOrExit(error = aDataset.ValidateTlvs());
+
+    for (const Tlv *tlv = aDataset.GetTlvsStart(); tlv < aDataset.GetTlvsEnd(); tlv = tlv->GetNext())
+    {
+        SuccessOrExit(error = WriteTlv(*tlv));
+    }
+
+exit:
+    return error;
+}
+
 Error Dataset::ApplyConfiguration(Instance &aInstance) const
 {
     bool isNetworkKeyUpdated;
@@ -496,7 +520,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdate
     KeyManager &keyManager = aInstance.Get<KeyManager>();
     Error       error      = kErrorNone;
 
-    VerifyOrExit(IsValid(), error = kErrorParse);
+    SuccessOrExit(error = ValidateTlvs());
 
     aIsNetworkKeyUpdated = false;
 
