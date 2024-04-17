@@ -104,7 +104,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // verify the request includes a timestamp that is ahead of the locally stored value
     SuccessOrExit(Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp));
 
-    if (GetType() == Dataset::kPending)
+    if (IsPendingDataset())
     {
         Timestamp pendingTimestamp;
 
@@ -155,7 +155,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (GetType() == Dataset::kPending && (!hasNetworkKey || !doesAffectNetworkKey))
+    if (IsPendingDataset() && (!hasNetworkKey || !doesAffectNetworkKey))
     {
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDatasetManager>().GetTimestamp();
@@ -175,7 +175,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || GetType() == Dataset::kPending || !doesAffectConnectivity);
+    VerifyOrExit(!isUpdateFromCommissioner || IsPendingDataset() || !doesAffectConnectivity);
 
     if (isUpdateFromCommissioner)
     {
@@ -184,7 +184,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
     }
 
-    if (GetType() == Dataset::kPending || !doesAffectConnectivity)
+    if (IsPendingDataset() || !doesAffectConnectivity)
     {
         offset = aMessage.GetOffset();
 
