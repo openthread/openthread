@@ -732,7 +732,11 @@ Error Name::ExtractLabels(const char *aName, const char *aSuffixName, char *aLab
     nameLength -= (suffixLength + 1);
     VerifyOrExit(nameLength < aLabelsSize, error = kErrorNoBufs);
 
-    memcpy(aLabels, aName, nameLength);
+    if (aLabels != aName)
+    {
+        memmove(aLabels, aName, nameLength);
+    }
+
     aLabels[nameLength] = kNullChar;
     error               = kErrorNone;
 
