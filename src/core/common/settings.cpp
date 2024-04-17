@@ -224,7 +224,7 @@ Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
 Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
 {
     Key   key   = KeyForDatasetType(aType);
-    Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetSize());
+    Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetLength());
 
     Log(kActionSave, error, key);
 
@@ -234,12 +234,12 @@ Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshC
 Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
 {
     Error    error  = kErrorNone;
-    uint16_t length = MeshCoP::Dataset::kMaxSize;
+    uint16_t length = MeshCoP::Dataset::kMaxLength;
 
     SuccessOrExit(error = Get<SettingsDriver>().Get(KeyForDatasetType(aType), aDataset.GetBytes(), &length));
-    VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
+    VerifyOrExit(length <= MeshCoP::Dataset::kMaxLength, error = kErrorNotFound);
 
-    aDataset.SetSize(length);
+    aDataset.SetLength(static_cast<uint8_t>(length));
 
 exit:
     return error;

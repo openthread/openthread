@@ -167,6 +167,7 @@ public:
      * @param[in]  aDatasetTlvs  The Dataset to save as `Dataset::Tlvs`.
      *
      * @retval kErrorNone             Successfully saved the dataset.
+     * @retval kErrorInvalidArgs      The dataset TLVs is invalid, its length is longer than `Dataset::kMaxLength`.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */

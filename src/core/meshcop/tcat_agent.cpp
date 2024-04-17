@@ -465,7 +465,8 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMess
     Dataset::Tlvs datasetTlvs;
     Error         error;
 
-    SuccessOrExit(error = dataset.ReadFromMessage(aIncommingMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.SetFrom(aIncommingMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ValidateTlvs());
 
     if (!CheckCommandClassAuthorizationFlags(mCommissionerAuthorizationField.mApplicationFlags,
                                              mDeviceAuthorizationField.mApplicationFlags, &dataset))

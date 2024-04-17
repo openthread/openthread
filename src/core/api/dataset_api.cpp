@@ -161,26 +161,22 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
 
     AssertPointerIsNotNull(aDatasetTlvs);
 
-    dataset.SetFrom(*aDatasetTlvs);
-    VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    VerifyOrExit(dataset.ValidateTlvs() == kErrorNone, error = kErrorInvalidArgs);
     dataset.ConvertTo(AsCoreType(aDataset));
 
 exit:
     return error;
 }
 
-otError otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
+void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
 {
-    Error            error = kErrorNone;
     MeshCoP::Dataset dataset;
 
     AssertPointerIsNotNull(aDatasetTlvs);
 
-    SuccessOrExit(error = dataset.SetFrom(AsCoreType(aDataset)));
+    dataset.SetFrom(AsCoreType(aDataset));
     dataset.ConvertTo(*aDatasetTlvs);
-
-exit:
-    return error;
 }
 
 otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs)
@@ -190,8 +186,8 @@ otError otDatasetUpdateTlvs(const otOperationalDataset *aDataset, otOperationalD
 
     AssertPointerIsNotNull(aDatasetTlvs);
 
-    dataset.SetFrom(*aDatasetTlvs);
-    SuccessOrExit(error = dataset.SetFrom(AsCoreType(aDataset)));
+    SuccessOrExit(error = dataset.SetFrom(*aDatasetTlvs));
+    SuccessOrExit(error = dataset.WriteTlvsFrom(AsCoreType(aDataset)));
     dataset.ConvertTo(*aDatasetTlvs);
 
 exit:

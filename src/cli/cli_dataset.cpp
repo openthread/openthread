@@ -612,7 +612,7 @@ template <> otError Dataset::Process<Cmd("init")>(Arg aArgs[])
         otOperationalDataset dataset;
 
         SuccessOrExit(error = otDatasetCreateNewNetwork(GetInstancePtr(), &dataset));
-        SuccessOrExit(error = otDatasetConvertToTlvs(&dataset, &sDatasetTlvs));
+        otDatasetConvertToTlvs(&dataset, &sDatasetTlvs);
     }
 #endif
     else if (aArgs[0] == "tlvs")
@@ -1105,7 +1105,7 @@ template <> otError Dataset::Process<Cmd("set")>(Arg aArgs[])
     {
         otOperationalDataset     dataset;
         otOperationalDatasetTlvs datasetTlvs;
-        uint16_t                 tlvsLength = MeshCoP::Dataset::kMaxSize;
+        uint16_t                 tlvsLength = OT_OPERATIONAL_DATASET_MAX_LENGTH;
 
         SuccessOrExit(error = aArgs[1].ParseAsHexString(tlvsLength, datasetTlvs.mTlvs));
         datasetTlvs.mLength = static_cast<uint8_t>(tlvsLength);

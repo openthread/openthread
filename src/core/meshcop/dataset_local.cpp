@@ -151,7 +151,7 @@ Error DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
     Error   error;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
+    dataset.SetFrom(aDatasetInfo);
     SuccessOrExit(error = Save(dataset));
 
 exit:
@@ -160,11 +160,14 @@ exit:
 
 Error DatasetLocal::Save(const Dataset::Tlvs &aDatasetTlvs)
 {
+    Error   error = kErrorNone;
     Dataset dataset;
 
-    dataset.SetFrom(aDatasetTlvs);
+    SuccessOrExit(error = dataset.SetFrom(aDatasetTlvs));
+    error = Save(dataset);
 
-    return Save(dataset);
+exit:
+    return error;
 }
 
 Error DatasetLocal::Save(const Dataset &aDataset)
@@ -175,7 +178,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
     DestroySecurelyStoredKeys();
 #endif
 
-    if (aDataset.GetSize() == 0)
+    if (aDataset.GetLength() == 0)
     {
         // do not propagate error back
         IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
@@ -188,7 +191,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
         // Store the network key and PSKC in the secure storage instead of settings.
         Dataset dataset;
 
-        dataset.Set(GetType(), aDataset);
+        dataset.SetFrom(aDataset);
         MoveKeysToSecureStorage(dataset);
         SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
 #else
@@ -258,7 +261,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
     {
         Dataset dataset;
 
-        dataset.Set(GetType(), aDataset);
+        dataset.SetFrom(aDataset);
         MoveKeysToSecureStorage(dataset);
         SuccessOrAssert(Get<Settings>().SaveOperationalDataset(mType, dataset));
     }

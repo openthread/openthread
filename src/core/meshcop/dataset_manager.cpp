@@ -273,7 +273,7 @@ void DatasetManager::SendSet(void)
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     IgnoreError(Read(dataset));
-    SuccessOrExit(error = message->AppendBytes(dataset.GetBytes(), dataset.GetSize()));
+    SuccessOrExit(error = message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
 
     IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(
@@ -410,14 +410,10 @@ exit:
 
 Error DatasetManager::AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const
 {
-    Error   error;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
-    error = aMessage.AppendBytes(dataset.GetBytes(), dataset.GetSize());
-
-exit:
-    return error;
+    dataset.SetFrom(aDatasetInfo);
+    return aMessage.AppendBytes(dataset.GetBytes(), dataset.GetLength());
 }
 
 Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
@@ -605,7 +601,8 @@ Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
     Error   error = kErrorNone;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ValidateTlvs());
     SuccessOrExit(error = dataset.Write<ActiveTimestampTlv>(aTimestamp));
     error = DatasetManager::Save(dataset);
 
@@ -686,7 +683,8 @@ Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
     Error   error = kErrorNone;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ValidateTlvs());
     SuccessOrExit(dataset.Write<PendingTimestampTlv>(aTimestamp));
     SuccessOrExit(error = DatasetManager::Save(dataset));
     StartDelayTimer();

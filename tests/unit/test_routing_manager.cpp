@@ -1185,7 +1185,7 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     otOperationalDatasetTlvs datasetTlvs;
 
-    SuccessOrQuit(otDatasetConvertToTlvs(&kDataset, &datasetTlvs));
+    otDatasetConvertToTlvs(&kDataset, &datasetTlvs);
     SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));

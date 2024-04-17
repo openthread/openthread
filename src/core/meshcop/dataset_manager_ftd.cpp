@@ -75,7 +75,7 @@ Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 
     dataset.RemoveTlv(IsActiveDataset() ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
 
-    return Tlv::AppendTlv(aMessage, mleTlvType, dataset.GetBytes(), static_cast<uint8_t>(dataset.GetSize()));
+    return Tlv::AppendTlv(aMessage, mleTlvType, dataset.GetBytes(), dataset.GetLength());
 }
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -104,7 +104,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // verify that does not overflow dataset buffer
-    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
+    VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxLength);
 
     // verify the request includes a timestamp that is ahead of the locally stored value
     SuccessOrExit(Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp));

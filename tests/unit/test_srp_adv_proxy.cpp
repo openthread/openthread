@@ -537,7 +537,7 @@ void InitTest(void)
     otOperationalDatasetTlvs datasetTlvs;
 
     SuccessOrQuit(otDatasetCreateNewNetwork(sInstance, &dataset));
-    SuccessOrQuit(otDatasetConvertToTlvs(&dataset, &datasetTlvs));
+    otDatasetConvertToTlvs(&dataset, &datasetTlvs);
     SuccessOrQuit(otDatasetSetActiveTlvs(sInstance, &datasetTlvs));
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
