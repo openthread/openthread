@@ -160,16 +160,6 @@ public:
      */
     const Tlv *GetNext(void) const { return As<Tlv>(ot::Tlv::GetNext()); }
 
-    /**
-     * Indicates whether a TLV appears to be well-formed.
-     *
-     * @param[in]  aTlv  A reference to the TLV.
-     *
-     * @returns TRUE if the TLV appears to be well-formed, FALSE otherwise.
-     *
-     */
-    static bool IsValid(const Tlv &aTlv);
-
 } OT_TOOL_PACKED_END;
 
 /**

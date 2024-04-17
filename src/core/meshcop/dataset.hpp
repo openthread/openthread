@@ -253,6 +253,20 @@ public:
     bool IsValid(void) const;
 
     /**
+     * Validates the format and value of a given MeshCoP TLV used in Dataset.
+     *
+     * TLV types that can appear in an Active or Pending Operational Dataset are validated. Other TLV types including
+     * unknown TLV types are considered as valid.
+     *
+     * @param[in]  aTlv    The TLV to validate.
+     *
+     * @retval  TRUE       The TLV format and value is valid, or TLV type is unknown (not supported in Dataset).
+     * @retval  FALSE      The TLV format or value is invalid.
+     *
+     */
+    static bool IsTlvValid(const Tlv &aTlv);
+
+    /**
      * Indicates whether or not a given TLV type is present in the Dataset.
      *
      * @param[in] aType  The TLV type to check.
