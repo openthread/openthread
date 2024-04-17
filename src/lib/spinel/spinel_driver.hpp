@@ -31,7 +31,6 @@
 
 #include <openthread/instance.h>
 
-#include "common/callback.hpp"
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
