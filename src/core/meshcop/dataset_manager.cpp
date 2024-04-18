@@ -216,8 +216,7 @@ void DatasetManager::HandleDatasetUpdated(void)
 
 void DatasetManager::SignalDatasetChange(void) const
 {
-    Get<Notifier>().Signal(mLocal.GetType() == Dataset::kActive ? kEventActiveDatasetChanged
-                                                                : kEventPendingDatasetChanged);
+    Get<Notifier>().Signal(IsActiveDataset() ? kEventActiveDatasetChanged : kEventPendingDatasetChanged);
 }
 
 Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
@@ -407,7 +406,7 @@ void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
+    LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
             aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
