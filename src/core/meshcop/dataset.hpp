@@ -495,18 +495,6 @@ public:
     void SetFrom(const Tlvs &aTlvs);
 
     /**
-     * Appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
-     *
-     * @param[in] aType          The type of the dataset, active or pending.
-     * @param[in] aMessage       A message to append to.
-     *
-     * @retval kErrorNone    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval kErrorNoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
-     *
-     */
-    Error AppendMleDatasetTlv(Type aType, Message &aMessage) const;
-
-    /**
      * Applies the Active or Pending Dataset to the Thread interface.
      *
      * @param[in]  aInstance            A reference to the OpenThread instance.
