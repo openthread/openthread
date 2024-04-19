@@ -298,6 +298,58 @@ public:
     const Tlv *FindTlv(Tlv::Type aType) const;
 
     /**
+     * Finds and reads a simple TLV in the Dataset.
+     *
+     * If the specified TLV type is not found, `kErrorNotFound` is reported.
+     *
+     * @tparam  SimpleTlvType   The simple TLV type (must be a sub-class of `SimpleTlvInfo`).
+     *
+     * @param[out] aValue       A reference to return the read TLV value.
+     *
+     * @retval kErrorNone      Successfully found and read the TLV value. @p aValue is updated.
+     * @retval kErrorNotFound  Could not find the TLV in the Dataset.
+     *
+     */
+    template <typename SimpleTlvType> Error Read(typename SimpleTlvType::ValueType &aValue) const
+    {
+        const Tlv *tlv = FindTlv(static_cast<Tlv::Type>(SimpleTlvType::kType));
+
+        return (tlv == nullptr) ? kErrorNotFound : (aValue = tlv->ReadValueAs<SimpleTlvType>(), kErrorNone);
+    }
+
+    /**
+     * Finds and reads an `uint` TLV in the Dataset.
+     *
+     * If the specified TLV type is not found, `kErrorNotFound` is reported.
+     *
+     * @tparam  UintTlvType     The integer simple TLV type (must be a sub-class of `UintTlvInfo`).
+     *
+     * @param[out] aValue       A reference to return the read TLV value.
+     *
+     * @retval kErrorNone      Successfully found and read the TLV value. @p aValue is updated.
+     * @retval kErrorNotFound  Could not find the TLV in the Dataset.
+     *
+     */
+    template <typename UintTlvType> Error Read(typename UintTlvType::UintValueType &aValue) const
+    {
+        const Tlv *tlv = FindTlv(static_cast<Tlv::Type>(UintTlvType::kType));
+
+        return (tlv == nullptr) ? kErrorNotFound : (aValue = tlv->ReadValueAs<UintTlvType>(), kErrorNone);
+    }
+
+    /**
+     * Reads the Timestamp (Active or Pending).
+     *
+     * @param[in]  aType       The type: active or pending.
+     * @param[out] aTimestamp  A reference to a `Timestamp` to output the value.
+     *
+     * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
+     * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
+     *
+     */
+    Error ReadTimestamp(Type aType, Timestamp &aTimestamp) const;
+
+    /**
      * Writes a TLV to the Dataset.
      *
      * If the specified TLV type already exists, it will be replaced. Otherwise, the TLV will be appended.
@@ -428,27 +480,6 @@ public:
      *
      */
     TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
-
-    /**
-     * Gets the Timestamp (Active or Pending).
-     *
-     * @param[in]  aType       The type: active or pending.
-     * @param[out] aTimestamp  A reference to a `Timestamp` to output the value.
-     *
-     * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
-     * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
-     *
-     */
-    Error GetTimestamp(Type aType, Timestamp &aTimestamp) const;
-
-    /**
-     * Sets the Timestamp value.
-     *
-     * @param[in] aType        The type: active or pending.
-     * @param[in] aTimestamp   A Timestamp.
-     *
-     */
-    void SetTimestamp(Type aType, const Timestamp &aTimestamp);
 
     /**
      * Reads the Dataset from a given message and checks that it is well-formed and valid.

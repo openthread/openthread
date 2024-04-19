@@ -79,7 +79,7 @@ Error DatasetManager::Restore(void)
 
     SuccessOrExit(error = mLocal.Restore(dataset));
 
-    mTimestampValid = (dataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone);
+    mTimestampValid = (dataset.ReadTimestamp(GetType(), mTimestamp) == kErrorNone);
 
     if (IsActiveDataset())
     {
@@ -121,7 +121,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
     int   compare;
     bool  isNetworkKeyUpdated = false;
 
-    if (aDataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone)
+    if (aDataset.ReadTimestamp(GetType(), mTimestamp) == kErrorNone)
     {
         mTimestampValid = true;
 
@@ -261,7 +261,7 @@ void DatasetManager::SendSet(void)
 
         IgnoreError(Get<PendingDatasetManager>().Read(pendingDataset));
 
-        if ((pendingDataset.GetTimestamp(Dataset::kActive, timestamp) == kErrorNone) &&
+        if ((pendingDataset.Read<ActiveTimestampTlv>(timestamp) == kErrorNone) &&
             (Timestamp::Compare(&timestamp, mLocal.GetTimestamp()) == 0))
         {
             // stop registration attempts during dataset transition
@@ -622,7 +622,7 @@ Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
     Dataset dataset;
 
     SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
-    dataset.SetTimestamp(Dataset::kActive, aTimestamp);
+    SuccessOrExit(error = dataset.Write<ActiveTimestampTlv>(aTimestamp));
     error = DatasetManager::Save(dataset);
 
 exit:
@@ -703,7 +703,7 @@ Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
     Dataset dataset;
 
     SuccessOrExit(error = dataset.ReadFromMessage(aMessage, aOffset, aLength));
-    dataset.SetTimestamp(Dataset::kPending, aTimestamp);
+    SuccessOrExit(dataset.Write<PendingTimestampTlv>(aTimestamp));
     SuccessOrExit(error = DatasetManager::Save(dataset));
     StartDelayTimer();
 
