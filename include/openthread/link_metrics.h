@@ -248,6 +248,17 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
                                    uint8_t             aLength);
 
 /**
+ * If Link Metrics Manager is enabled.
+ *
+ * @param[in] aInstance       A pointer to an OpenThread instance.
+ *
+ * @retval TRUE   Link Metrics Manager is enabled.
+ * @retval FALSE  Link Metrics Manager is not enabled.
+ *
+ */
+bool otLinkMetricsManagerIsEnabled(otInstance *aInstance);
+
+/**
  * Enable or disable Link Metrics Manager.
  *
  * @param[in] aInstance       A pointer to an OpenThread instance.
