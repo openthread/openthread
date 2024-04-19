@@ -116,7 +116,21 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
-#define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE OPENTHREAD_CONFIG_SRP_SERVER_ADVERTISING_PROXY_ENABLE
+#define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+ *
+ * Define as 1 to enable run-time selection of DNSSD module, i.e., whether the native OpenThread mDNS module is used or
+ * the platform `otPlatDnssd` APIs are used (DNSSD support is delegated to the platform layer).
+ *
+ * This config is mainly intended for testing, allowing test-specific `otPlatDnssd` APIs to be used instead of the
+ * native mDNS module in unit tests.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+#define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION 0
 #endif
 
 /**

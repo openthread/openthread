@@ -1282,7 +1282,7 @@ static void SendHostAddrResponse(const char *aHostName,
 
     Log("Sending AAAA response for %s numAddrs:%u, cach-flush:%u", aHostName, aNumAddrs, aCacheFlush);
 
-    for (uint16_t index = 0; index < aNumAddrs; index++)
+    for (uint32_t index = 0; index < aNumAddrs; index++)
     {
         record.SetTtl(aAddrAndTtls[index].mTtl);
         record.SetAddress(aAddrAndTtls[index].mAddress);
@@ -2563,7 +2563,7 @@ void TestServiceSubTypeReg(void)
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 7, /* Auth */ 0, /* Addnl */ 1);
         dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
 
-        for (uint8_t index = 0; index < service.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service.mSubTypeLabels[index], service);
         }
@@ -2647,7 +2647,7 @@ void TestServiceSubTypeReg(void)
     dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
     dnsMsg->Validate(service, kInAnswerSection, kCheckServicesPtr);
 
-    for (uint8_t index = 0; index < service.mSubTypeLabelsLength; index++)
+    for (uint16_t index = 0; index < service.mSubTypeLabelsLength; index++)
     {
         Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         Log("Send a PTR query for sub-type `%s` and validate the response", service.mSubTypeLabels[index]);
@@ -2746,7 +2746,7 @@ void TestServiceSubTypeReg(void)
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 6, /* Auth */ 0, /* Addnl */ 1);
         dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr);
 
-        for (uint8_t index = 0; index < service.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service.mSubTypeLabels[index], service);
         }
@@ -2803,7 +2803,7 @@ void TestServiceSubTypeReg(void)
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 7, /* Auth */ 0, /* Addnl */ 0);
         dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr, kGoodBye);
 
-        for (uint8_t index = 0; index < service.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service.mSubTypeLabels[index], service, kGoodBye);
         }
@@ -3347,12 +3347,12 @@ void TestQuery(void)
         dnsMsg->Validate(key1, kInAnswerSection);
         dnsMsg->Validate(key2, kInAnswerSection);
 
-        for (uint8_t index = 0; index < service1.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service1.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service1.mSubTypeLabels[index], service1);
         }
 
-        for (uint8_t index = 0; index < service3.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service3.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service3.mSubTypeLabels[index], service3);
         }
@@ -3654,7 +3654,7 @@ void TestQuery(void)
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 5, /* Auth */ 0, /* Addnl */ 0);
         dnsMsg->Validate(service1, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr, kGoodBye);
 
-        for (uint8_t index = 0; index < service1.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service1.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service1.mSubTypeLabels[index], service1, kGoodBye);
         }
@@ -3683,7 +3683,7 @@ void TestQuery(void)
     dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 5, /* Auth */ 0, /* Addnl */ 0);
     dnsMsg->Validate(service1, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr, kGoodBye);
 
-    for (uint8_t index = 0; index < service1.mSubTypeLabelsLength; index++)
+    for (uint16_t index = 0; index < service1.mSubTypeLabelsLength; index++)
     {
         dnsMsg->ValidateSubType(service1.mSubTypeLabels[index], service1, kGoodBye);
     }
@@ -3767,7 +3767,7 @@ void TestMultiPacket(void)
         dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 7, /* Auth */ 0, /* Addnl */ 1);
         dnsMsg->Validate(service, kInAnswerSection, kCheckSrv | kCheckTxt | kCheckPtr | kCheckServicesPtr);
 
-        for (uint8_t index = 0; index < service.mSubTypeLabelsLength; index++)
+        for (uint16_t index = 0; index < service.mSubTypeLabelsLength; index++)
         {
             dnsMsg->ValidateSubType(service.mSubTypeLabels[index], service);
         }
