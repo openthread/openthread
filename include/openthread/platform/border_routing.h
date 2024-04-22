@@ -65,6 +65,25 @@ extern "C" {
  */
 extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength);
 
+/**
+ * Process a prefix received from the DHCPv6 PD Server. The prefix is received on
+ * the DHCPv6 PD client callback and provided to the Routing Manager via this
+ * API.
+ *
+ * The prefix lifetime can be updated by calling the function again with updated time values.
+ * If the preferred lifetime of the prefix is set to 0, the prefix becomes deprecated.
+ * When this function is called multiple times, the smallest prefix is preferred as this rule allows
+ * choosing a GUA instead of a ULA.
+ *
+ * Requires `OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE`.
+ *
+ * @param[in] aInstance   A pointer to an OpenThread instance.
+ * @param[in] aPrefixInfo A pointer to the prefix information structure
+ *
+ */
+extern void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
+                                                    const otBorderRoutingPrefixTableEntry *aPrefixInfo);
+
 #ifdef __cplusplus
 }
 #endif
