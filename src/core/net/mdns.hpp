@@ -46,6 +46,7 @@
 #include "common/heap_data.hpp"
 #include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
+#include "common/locator.hpp"
 #include "common/owned_ptr.hpp"
 #include "common/owning_list.hpp"
 #include "common/retain_ptr.hpp"
@@ -62,6 +63,14 @@
  *   This file includes definitions for the Multicast DNS per RFC 6762.
  *
  */
+
+/**
+ * Represents an opaque (and empty) type for an mDNS iterator.
+ *
+ */
+struct otMdnsIterator
+{
+};
 
 namespace ot {
 namespace Dns {
@@ -95,6 +104,7 @@ public:
     typedef otMdnsRequestId        RequestId;        ///< A request Identifier.
     typedef otMdnsRegisterCallback RegisterCallback; ///< Registration callback.
     typedef otMdnsConflictCallback ConflictCallback; ///< Conflict callback.
+    typedef otMdnsEntryState       EntryState;       ///< Host/Service/Key entry state.
     typedef otMdnsHost             Host;             ///< Host information.
     typedef otMdnsService          Service;          ///< Service information.
     typedef otMdnsKey              Key;              ///< Key information.
@@ -111,6 +121,7 @@ public:
     typedef otMdnsAddressCallback  AddressCallback;  ///< Address callback
     typedef otMdnsAddressResult    AddressResult;    ///< Address result.
     typedef otMdnsAddressAndTtl    AddressAndTtl;    ///< Address and TTL.
+    typedef otMdnsIterator         Iterator;         ///< An entry iterator.
 
     /**
      * Represents a socket address info.
@@ -323,10 +334,11 @@ public:
      *
      * The fields in @p aKey follow these rules:
      *
-     * - If the key is associated with a host entry, `mName` specifies the host name & `mServcieType` MUST be `nullptr`.
-     * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
-     *   a single label) and `mServiceType` specifies the service type (e.g. "_tst._udp"). In this case the DNS name
-     *   for key record is `<mName>.<mServiceTye>`.
+     * - If the key is associated with a host entry, the `mName` field specifies the host name and the `mServiceType`
+     *    MUST be `nullptr`.
+     * - If the key is associated with a service entry, the `mName` filed specifies the service instance label (always
+     *   treated as a single label) and the `mServiceType` filed specifies the service type (e.g. "_tst._udp"). In this
+     *   case the DNS name for key record is `<mName>.<mServiceTye>`.
      * - The `mKeyData` field contains the key record's data with `mKeyDataLength` as its length in byes.
      * - The `mTtl` specifies the TTL if non-zero. If zero, the mDNS module will use default TTL for the key entry.
      *
@@ -351,10 +363,11 @@ public:
      *
      * The fields in @p aKey follow these rules:
      *
-     * - If the key is associated with a host entry, `mName` specifies the host name & `mServcieType` MUST be `nullptr`.
-     * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
-     *   a single label) and `mServiceType` specifies the service type (e.g. "_tst._udp"). In this case the DNS name
-     *   for key record is `<mName>.<mServiceTye>`.
+     * - If the key is associated with a host entry, the `mName` field specifies the host name and the `mServiceType`
+     *    MUST be `nullptr`.
+     * - If the key is associated with a service entry, the `mName` filed specifies the service instance label (always
+     *   treated as a single label) and the `mServiceType` field specifies the service type (e.g. "_tst._udp"). In this
+     *   case the DNS name for key record is `<mName>.<mServiceTye>`.
      * - The rest of the fields in @p aKey structure are ignored in  a`otMdnsUnregisterKey()` call.
      *
      * If there is no previously registered key with the same name, no action is performed.
@@ -484,7 +497,7 @@ public:
      *
      * Initiates a continuous IPv6 address resolver for the specified host name in @p aResolver.
      *
-     * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The callback is invoked
+     * Discovered addresses are reported through the `mCallback` function in @p aResolver. The callback is invoked
      * whenever addresses are added or removed, providing an updated list. If all addresses are removed, the callback
      * is invoked with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).
      *
@@ -521,7 +534,7 @@ public:
      *
      * Initiates a continuous IPv4 address resolver for the specified host name in @p aResolver.
      *
-     * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The IPv4 addresses are
+     * Discovered addresses are reported through the `mCallback` function in @p aResolver. The IPv4 addresses are
      * represented using the IPv4-mapped IPv6 address format in `mAddresses` array.  The callback is invoked  whenever
      * addresses are added or removed, providing an updated list. If all addresses are removed, the callback is invoked
      * with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).
@@ -563,6 +576,72 @@ public:
      *
      */
     void SetMaxMessageSize(uint16_t aMaxSize) { mMaxMessageSize = aMaxSize; }
+
+    /**
+     * Allocates a new iterator.
+     *
+     * @returns   A pointer to the newly allocated iterator or `nullptr` if it fails to allocate.
+     *
+     */
+    Iterator *AllocateIterator(void);
+
+    /**
+     * Frees a previously allocated iterator.
+     *
+     * @param[in] aIterator  The iterator to free.
+     *
+     */
+    void FreeIterator(Iterator &aIterator);
+
+    /**
+     * Iterates over registered host entries.
+     *
+     * On success, @p aHost is populated with information about the next host. Pointers within the `Host` structure
+     * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
+     *
+     * @param[in]  aIterator   The iterator to use.
+     * @param[out] aHost       A `Host` to return the information about the next host entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aHost, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextHost(Iterator &aIterator, Host &aHost, EntryState &aState) const;
+
+    /**
+     * Iterates over registered service entries.
+     *
+     * On success, @p aService is populated with information about the next service. Pointers within the `Service`
+     * structure (like `mServiceType`) remain valid until the next call to any OpenThread stack's public or platform
+     * API/callback.
+     *
+     * @param[out] aService    A `Service` to return the information about the next service entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aService, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextService(Iterator &aIterator, Service &aService, EntryState &aState) const;
+
+    /**
+     * Iterates over registered key entries.
+     *
+     * On success, @p aKey is populated with information about the next key. Pointers within the `Key` structure
+     * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
+     *
+     * @param[out] aKey        A `Key` to return the information about the next key entry.
+     * @param[out] aState      An `EntryState` to return the entry state.
+     *
+     * @retval kErrorNone         @p aKey, @p aState, & @p aIterator are updated successfully.
+     * @retval kErrorNotFound     Reached the end of the list.
+     * @retval kErrorInvalidArg   @p aIterator is not valid.
+     *
+     */
+    Error GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const;
 
 private:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -626,6 +705,7 @@ private:
     class RxMessage;
     class ServiceEntry;
     class ServiceType;
+    class EntryIterator;
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -792,17 +872,19 @@ private:
     public:
         enum State : uint8_t
         {
-            kProbing,
-            kRegistered,
-            kConflict,
-            kRemoving,
+            kProbing    = OT_MDNS_ENTRY_STATE_PROBING,
+            kRegistered = OT_MDNS_ENTRY_STATE_REGISTERED,
+            kConflict   = OT_MDNS_ENTRY_STATE_CONFLICT,
+            kRemoving   = OT_MDNS_ENTRY_STATE_REMOVING,
         };
 
         State GetState(void) const { return mState; }
+        bool  HasKeyRecord(void) const { return mKeyRecord.IsPresent(); }
         void  Register(const Key &aKey, const Callback &aCallback);
         void  Unregister(const Key &aKey);
         void  InvokeCallbacks(void);
         void  ClearAppendState(void);
+        Error CopyKeyInfoTo(Key &aKey, EntryState &aState) const;
 
     protected:
         static constexpr uint32_t kMinIntervalProbeResponse = 250; // msec
@@ -891,6 +973,8 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+        Error CopyInfoTo(Host &aHost, EntryState &aState) const;
+        Error CopyInfoTo(Key &aKey, EntryState &aState) const;
 
     private:
         Error Init(Instance &aInstance, const char *aName);
@@ -946,6 +1030,8 @@ private:
         void  ClearAppendState(void);
         void  PrepareResponse(TxMessage &aResponse, TimeMilli aNow);
         void  HandleConflict(void);
+        Error CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const;
+        Error CopyInfoTo(Key &aKey, EntryState &aState) const;
 
     private:
         class SubType : public LinkedListEntry<SubType>, public Heap::Allocatable<SubType>, private ot::NonCopyable
@@ -1021,7 +1107,7 @@ private:
 
     public:
         Error    Init(Instance &aInstance, const char *aServiceType);
-        bool     Matches(const Name &aServcieTypeName) const;
+        bool     Matches(const Name &aServiceTypeName) const;
         bool     Matches(const Heap::String &aServiceType) const;
         bool     Matches(const ServiceType &aServiceType) const { return (this == &aServiceType); }
         void     IncrementNumEntries(void) { mNumEntries++; }
@@ -1714,6 +1800,43 @@ private:
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    class EntryIterator : public Iterator, public InstanceLocator, public Heap::Allocatable<EntryIterator>
+    {
+        friend class Heap::Allocatable<EntryIterator>;
+        friend class ServiceEntry;
+
+    public:
+        Error GetNextHost(Host &aHost, EntryState &aState);
+        Error GetNextService(Service &aService, EntryState &aState);
+        Error GetNextKey(Key &aKey, EntryState &aState);
+
+    private:
+        static constexpr uint16_t kArrayCapacityIncrement = 32;
+
+        enum Type : uint8_t
+        {
+            kUnspecified,
+            kHost,
+            kService,
+            kHostKey,
+            kServiceKey,
+        };
+
+        explicit EntryIterator(Instance &aInstance);
+
+        Type mType;
+
+        union
+        {
+            const HostEntry    *mHostEntry;
+            const ServiceEntry *mServiceEntry;
+        };
+
+        Heap::Array<const char *, kArrayCapacityIncrement> mSubTypeArray;
+    };
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     template <typename EntryType> OwningList<EntryType> &GetEntryList(void);
     template <typename EntryType, typename ItemInfo>
     Error Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback);
@@ -1782,7 +1905,7 @@ private:
     CacheTask                mCacheTask;
 };
 
-// Specializations of `Core::GetEntryList()` for `HostEntry` and `ServcieEntry`:
+// Specializations of `Core::GetEntryList()` for `HostEntry` and `ServiceEntry`:
 
 template <> inline OwningList<Core::HostEntry> &Core::GetEntryList<Core::HostEntry>(void) { return mHostEntries; }
 
