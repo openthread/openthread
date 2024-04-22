@@ -122,9 +122,18 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mCacheTimer.Stop();
     }
 
+    Get<Dnssd>().HandleMdnsCoreStateChange();
+
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+void Core::HandleInfraIfStateChanged(void)
+{
+    IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
+}
+#endif
 
 template <typename EntryType, typename ItemInfo>
 Error Core::Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback)
@@ -3536,6 +3545,8 @@ void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswe
     }
 
     // Question is for `ServiceEntry`
+
+    VerifyOrExit(serviceEntry != nullptr);
 
     if (!aQuestion.mIsServiceType)
     {

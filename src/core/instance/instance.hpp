@@ -481,7 +481,7 @@ private:
     SettingsDriver mSettingsDriver;
     MessagePool    mMessagePool;
 
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
     // DNS-SD (mDNS) platform is initialized early to
     // allow other modules to use it.
     Dnssd mDnssd;
@@ -902,7 +902,7 @@ template <> inline EnergyScanClient &Instance::Get(void) { return mCommissioner.
 template <> inline PanIdQueryClient &Instance::Get(void) { return mCommissioner.GetPanIdQueryClient(); }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE || OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 template <> inline Dnssd &Instance::Get(void) { return mDnssd; }
 #endif
 

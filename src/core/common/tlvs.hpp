@@ -530,6 +530,22 @@ public:
      *
      * On success this method grows the message by the size of the TLV.
      *
+     * @param[in]  aMessage      The message to append to.
+     * @param[in]  aType         The TLV type to append.
+     * @param[in]  aValue        A buffer containing the TLV value.
+     * @param[in]  aLength       The value length (in bytes).
+     *
+     * @retval kErrorNone     Successfully appended the TLV to the message.
+     * @retval kErrorNoBufs   Insufficient available buffers to grow the message.
+     *
+     */
+    static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
+
+    /**
+     * Appends a TLV with a given type and value to a message.
+     *
+     * On success this method grows the message by the size of the TLV.
+     *
      * @tparam     TlvType       The TLV type to append.
      *
      * @param[in]  aMessage      A reference to the message to append to.
@@ -687,7 +703,6 @@ private:
     };
 
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint16_t aLength);
-    static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
     static Error ReadStringTlv(const Message &aMessage, uint16_t aOffset, uint8_t aMaxStringLength, char *aValue);
     static Error FindStringTlv(const Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, char *aValue);
     static Error AppendStringTlv(Message &aMessage, uint8_t aType, uint8_t aMaxStringLength, const char *aValue);

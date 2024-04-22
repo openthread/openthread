@@ -450,43 +450,6 @@ exit:
 
 void Dataset::RemoveTlv(Tlv::Type aType) { RemoveTlv(FindTlv(aType)); }
 
-Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
-{
-    Error          error = kErrorNone;
-    Mle::Tlv       tlv;
-    Mle::Tlv::Type type;
-
-    VerifyOrExit(mLength > 0);
-
-    type = (aType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
-
-    tlv.SetType(type);
-    tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
-    SuccessOrExit(error = aMessage.Append(tlv));
-
-    for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
-    {
-        if (((aType == kActive) && (cur->GetType() == Tlv::kActiveTimestamp)) ||
-            ((aType == kPending) && (cur->GetType() == Tlv::kPendingTimestamp)))
-        {
-            ; // skip Active or Pending Timestamp TLV
-        }
-        else if (cur->GetType() == Tlv::kDelayTimer)
-        {
-            uint32_t remainingDelay = DelayTimerTlv::CalculateRemainingDelay(*cur, mUpdateTime);
-
-            SuccessOrExit(error = Tlv::Append<DelayTimerTlv>(aMessage, remainingDelay));
-        }
-        else
-        {
-            SuccessOrExit(error = cur->AppendTo(aMessage));
-        }
-    }
-
-exit:
-    return error;
-}
-
 void Dataset::RemoveTlv(Tlv *aTlv)
 {
     if (aTlv != nullptr)

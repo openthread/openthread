@@ -157,7 +157,12 @@ Error MleRouter::SetRouterEligible(bool aEligible)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit(IsFullThreadDevice() || !aEligible, error = kErrorNotCapable);
+    if (!IsFullThreadDevice())
+    {
+        VerifyOrExit(!aEligible, error = kErrorNotCapable);
+    }
+
+    VerifyOrExit(aEligible != mRouterEligible);
 
     mRouterEligible = aEligible;
 
@@ -168,6 +173,11 @@ Error MleRouter::SetRouterEligible(bool aEligible)
         break;
 
     case kRoleChild:
+        if (mRouterEligible)
+        {
+            mRouterRoleTransition.StartTimeout();
+        }
+
         Get<Mac::Mac>().SetBeaconEnabled(mRouterEligible);
         break;
 

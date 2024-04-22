@@ -171,6 +171,9 @@ bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
     case OT_ICMP6_ECHO_HANDLER_ALL:
         rval = true;
         break;
+    case OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY:
+        rval = aMessageInfo.GetSockAddr().GetIid().IsLocator();
+        break;
     }
 
     return rval;
@@ -184,8 +187,7 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
     MessageInfo replyMessageInfo;
     uint16_t    dataOffset;
 
-    // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo));
 
     LogInfo("Received Echo Request");
 

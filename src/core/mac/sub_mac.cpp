@@ -333,8 +333,8 @@ void SubMac::LogReceived(RxFrame *aFrame)
     //   be due to clocks drift and/or CSL Phase rounding error.
     // This means that a deviation absolute value greater than the margin would result in the frame
     // not being received out of the debug mode.
-    logString.Append("Expected sample time %lu, margin ±%lu, deviation %d", ToUlong(sampleTime), ToUlong(ahead),
-                     deviation);
+    logString.Append("Expected sample time %lu, margin ±%lu, deviation %ld", ToUlong(sampleTime), ToUlong(ahead),
+                     static_cast<long>(deviation));
 
     // Treat as a warning when the deviation is not within the margins. Neither kCslReceiveTimeAhead
     // or kMinReceiveOnAhead/kMinReceiveOnAfter are considered for the margin since they have no

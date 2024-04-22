@@ -109,6 +109,11 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
     else if (aInfraIfIndex != mInfraIf.GetIfIndex())
     {
         LogInfo("Reinitializing - InfraIfIndex:%lu -> %lu", ToUlong(mInfraIf.GetIfIndex()), ToUlong(aInfraIfIndex));
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+        IgnoreError(Get<Dns::Multicast::Core>().SetEnabled(false, mInfraIf.GetIfIndex()));
+#endif
+
         mInfraIf.SetIfIndex(aInfraIfIndex);
     }
 
@@ -1739,6 +1744,15 @@ void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const RouteInfoOption
     mLastUpdateTime          = TimerMilli::GetNow();
 }
 
+void RoutingManager::DiscoveredPrefixTable::Entry::SetFrom(const PrefixTableEntry &aPrefixTableEntry)
+{
+    mPrefix                    = AsCoreType(&aPrefixTableEntry.mPrefix);
+    mType                      = aPrefixTableEntry.mIsOnLink ? kTypeOnLink : kTypeRoute;
+    mValidLifetime             = aPrefixTableEntry.mValidLifetime;
+    mShared.mPreferredLifetime = aPrefixTableEntry.mPreferredLifetime;
+    mLastUpdateTime            = TimerMilli::GetNow();
+}
+
 bool RoutingManager::DiscoveredPrefixTable::Entry::operator==(const Entry &aOther) const
 {
     return (mType == aOther.mType) && (mPrefix == aOther.mPrefix);
@@ -1769,6 +1783,11 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
     uint32_t delay = Min(kRtrAdvStaleTime, IsOnLinkPrefix() ? GetPreferredLifetime() : mValidLifetime);
 
     return mLastUpdateTime + TimeMilli::SecToMsec(delay);
+}
+
+TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTimeFromPreferredLifetime(void) const
+{
+    return mLastUpdateTime + CalculateExpireDelay(GetPreferredLifetime());
 }
 
 bool RoutingManager::DiscoveredPrefixTable::Entry::IsDeprecated(void) const
@@ -3676,69 +3695,73 @@ void RoutingManager::PdPrefixManager::ProcessPlatformGeneratedRa(const uint8_t *
     Error                     error = kErrorNone;
     RouterAdvert::Icmp6Packet packet;
 
-    VerifyOrExit(IsRunning(), LogWarn("Ignore platform generated RA since PD is disabled or not running."));
-    packet.Init(aRouterAdvert, aLength);
-    error = Process(RouterAdvert::RxMessage(packet));
-    mNumPlatformRaReceived++;
-    mLastPlatformRaTime = TimerMilli::GetNow();
+    if (mEnabled)
+    {
+        packet.Init(aRouterAdvert, aLength);
+        RouterAdvert::RxMessage aMessage = RouterAdvert::RxMessage(packet);
 
-exit:
+        error = Process(&aMessage, nullptr);
+        mNumPlatformRaReceived++;
+        mLastPlatformRaTime = TimerMilli::GetNow();
+    }
+    else
+    {
+        LogWarn("Ignore platform generated RA since PD is disabled.");
+    }
+
     if (error != kErrorNone)
     {
         LogCrit("Failed to process platform generated ND OnMeshPrefix: %s", ErrorToString(error));
     }
 }
 
-Error RoutingManager::PdPrefixManager::Process(const RouterAdvert::RxMessage &aMessage)
+void RoutingManager::PdPrefixManager::ProcessDhcpPdPrefix(const PrefixTableEntry &aPrefixTableEntry)
 {
-    Error                        error = kErrorNone;
-    DiscoveredPrefixTable::Entry favoredEntry;
-    bool                         currentPrefixUpdated = false;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aMessage.IsValid(), error = kErrorParse);
+    VerifyOrExit(mEnabled, LogWarn("Ignore DHCPv6 delegated prefix since PD is disabled."));
+
+    error = Process(nullptr, &aPrefixTableEntry);
+
+exit:
+
+    if (error != kErrorNone)
+    {
+        LogCrit("Failed to process DHCPv6 delegated prefix: %s", ErrorToString(error));
+    }
+}
+
+Error RoutingManager::PdPrefixManager::Process(const RouterAdvert::RxMessage *aMessage,
+                                               const PrefixTableEntry        *aPrefixTableEntry)
+{
+    bool                         currentPrefixUpdated = false;
+    Error                        error                = kErrorNone;
+    DiscoveredPrefixTable::Entry favoredEntry;
+    DiscoveredPrefixTable::Entry entry;
+
     favoredEntry.Clear();
 
-    for (const Option &option : aMessage)
+    // aMessage or aPrefixTableEntry must be different from null
+    if (aMessage != nullptr)
     {
-        DiscoveredPrefixTable::Entry entry;
+        VerifyOrExit(aMessage->IsValid(), error = kErrorParse);
 
-        if (option.GetType() != Option::kTypePrefixInfo || !static_cast<const PrefixInfoOption &>(option).IsValid())
+        for (const Option &option : *aMessage)
         {
-            continue;
+            if (option.GetType() != Option::kTypePrefixInfo || !static_cast<const PrefixInfoOption &>(option).IsValid())
+            {
+                continue;
+            }
+
+            mNumPlatformPioProcessed++;
+            entry.SetFrom(static_cast<const PrefixInfoOption &>(option));
+            currentPrefixUpdated |= ProcessPrefixEntry(entry, favoredEntry);
         }
-
-        mNumPlatformPioProcessed++;
-        entry.SetFrom(static_cast<const PrefixInfoOption &>(option));
-
-        if (!IsValidPdPrefix(entry.GetPrefix()))
-        {
-            LogWarn("PdPrefixManager: Ignore invalid PIO entry %s", entry.GetPrefix().ToString().AsCString());
-            continue;
-        }
-
-        entry.mPrefix.Tidy();
-        entry.mPrefix.SetLength(kOmrPrefixLength);
-
-        // The platform may send another RA message to announce that the current prefix we are using is no longer
-        // preferred or no longer valid.
-        if (entry.GetPrefix() == GetPrefix())
-        {
-            currentPrefixUpdated = true;
-            mPrefix              = entry;
-        }
-
-        if (entry.IsDeprecated())
-        {
-            continue;
-        }
-
-        // Some platforms may delegate us more than one prefixes. We will pick the smallest one. This is a simple rule
-        // to pick the GUA prefix from the RA messages since GUA prefixes (2000::/3) are always smaller than ULA
-        // prefixes (fc00::/7).
-        if (favoredEntry.GetPrefix().GetLength() == 0 || entry.GetPrefix() < favoredEntry.GetPrefix())
-        {
-            favoredEntry = entry;
-        }
+    }
+    else // aPrefixTableEntry != nullptr
+    {
+        entry.SetFrom(*aPrefixTableEntry);
+        currentPrefixUpdated = ProcessPrefixEntry(entry, favoredEntry);
     }
 
     if (currentPrefixUpdated && mPrefix.IsDeprecated())
@@ -3757,7 +3780,15 @@ Error RoutingManager::PdPrefixManager::Process(const RouterAdvert::RxMessage &aM
 exit:
     if (HasPrefix())
     {
-        mTimer.FireAt(mPrefix.GetStaleTime());
+        // If prefix has been set from aPrefixTableEntry use only preferred lifetime to calculate stale time
+        if (aPrefixTableEntry)
+        {
+            mTimer.FireAt(mPrefix.GetStaleTimeFromPreferredLifetime());
+        }
+        else
+        {
+            mTimer.FireAt(mPrefix.GetStaleTime());
+        }
     }
     else
     {
@@ -3765,6 +3796,41 @@ exit:
     }
 
     return error;
+}
+
+bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(DiscoveredPrefixTable::Entry &aEntry,
+                                                         DiscoveredPrefixTable::Entry &aFavoredEntry)
+{
+    bool currentPrefixUpdated = false;
+
+    if (!IsValidPdPrefix(aEntry.GetPrefix()))
+    {
+        LogWarn("PdPrefixManager: Ignore invalid prefix entry %s", aEntry.GetPrefix().ToString().AsCString());
+        ExitNow();
+    }
+
+    aEntry.mPrefix.SetLength(kOmrPrefixLength);
+    aEntry.mPrefix.Tidy();
+
+    // Check if there is an update to the current prefix. The valid or preferred lifetime might change.
+    if (aEntry.GetPrefix() == GetPrefix())
+    {
+        currentPrefixUpdated = true;
+        mPrefix              = aEntry;
+    }
+
+    VerifyOrExit(!aEntry.IsDeprecated());
+
+    // Some platforms may delegate us more than one prefix. We will pick the smallest one. This is a simple rule
+    // to pick the GUA prefix from the RA messages since GUA prefixes (2000::/3) are always smaller than ULA
+    // prefixes (fc00::/7).
+    if (aFavoredEntry.GetPrefix().GetLength() == 0 || aEntry.GetPrefix() < aFavoredEntry.GetPrefix())
+    {
+        aFavoredEntry = aEntry;
+    }
+
+exit:
+    return currentPrefixUpdated;
 }
 
 void RoutingManager::PdPrefixManager::SetEnabled(bool aEnabled)
@@ -3782,6 +3848,14 @@ exit:
 extern "C" void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8_t *aMessage, uint16_t aLength)
 {
     AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessPlatformGeneratedRa(aMessage, aLength);
+}
+
+extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
+                                                        const otBorderRoutingPrefixTableEntry *aPrefixInfo)
+{
+    AssertPointerIsNotNull(aPrefixInfo);
+
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().ProcessDhcpPdPrefix(*aPrefixInfo);
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
