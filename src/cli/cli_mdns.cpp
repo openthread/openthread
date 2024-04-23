@@ -148,6 +148,29 @@ void Mdns::OutputKey(const otMdnsKey &aKey)
     OutputLine(kIndentSize, "ttl: %lu", ToUlong(aKey.mTtl));
 }
 
+void Mdns::OutputState(otMdnsEntryState aState)
+{
+    const char *stateString = "";
+
+    switch (aState)
+    {
+    case OT_MDNS_ENTRY_STATE_PROBING:
+        stateString = "probing";
+        break;
+    case OT_MDNS_ENTRY_STATE_REGISTERED:
+        stateString = "registered";
+        break;
+    case OT_MDNS_ENTRY_STATE_CONFLICT:
+        stateString = "conflict";
+        break;
+    case OT_MDNS_ENTRY_STATE_REMOVING:
+        stateString = "removing";
+        break;
+    }
+
+    OutputLine(kIndentSize, "state: %s", stateString);
+}
+
 template <> otError Mdns::Process<Cmd("register")>(Arg aArgs[])
 {
     // mdns [async] [host|service|key] <entry specific args>
@@ -458,6 +481,117 @@ exit:
     return error;
 }
 
+template <> otError Mdns::Process<Cmd("hosts")>(Arg aArgs[])
+{
+    otError          error    = OT_ERROR_NONE;
+    otMdnsIterator  *iterator = nullptr;
+    otMdnsHost       host;
+    otMdnsEntryState state;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    iterator = otMdnsAllocateIterator(GetInstancePtr());
+    VerifyOrExit(iterator != nullptr, error = OT_ERROR_NO_BUFS);
+
+    while (true)
+    {
+        error = otMdnsGetNextHost(GetInstancePtr(), iterator, &host, &state);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            error = OT_ERROR_NONE;
+            ExitNow();
+        }
+
+        SuccessOrExit(error);
+
+        OutputHost(host);
+        OutputState(state);
+    }
+
+exit:
+    if (iterator != nullptr)
+    {
+        otMdnsFreeIterator(GetInstancePtr(), iterator);
+    }
+
+    return error;
+}
+
+template <> otError Mdns::Process<Cmd("services")>(Arg aArgs[])
+{
+    otError          error    = OT_ERROR_NONE;
+    otMdnsIterator  *iterator = nullptr;
+    otMdnsService    service;
+    otMdnsEntryState state;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    iterator = otMdnsAllocateIterator(GetInstancePtr());
+    VerifyOrExit(iterator != nullptr, error = OT_ERROR_NO_BUFS);
+
+    while (true)
+    {
+        error = otMdnsGetNextService(GetInstancePtr(), iterator, &service, &state);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            error = OT_ERROR_NONE;
+            ExitNow();
+        }
+
+        SuccessOrExit(error);
+
+        OutputService(service);
+        OutputState(state);
+    }
+
+exit:
+    if (iterator != nullptr)
+    {
+        otMdnsFreeIterator(GetInstancePtr(), iterator);
+    }
+
+    return error;
+}
+
+template <> otError Mdns::Process<Cmd("keys")>(Arg aArgs[])
+{
+    otError          error    = OT_ERROR_NONE;
+    otMdnsIterator  *iterator = nullptr;
+    otMdnsKey        key;
+    otMdnsEntryState state;
+
+    VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    iterator = otMdnsAllocateIterator(GetInstancePtr());
+    VerifyOrExit(iterator != nullptr, error = OT_ERROR_NO_BUFS);
+
+    while (true)
+    {
+        error = otMdnsGetNextKey(GetInstancePtr(), iterator, &key, &state);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            error = OT_ERROR_NONE;
+            ExitNow();
+        }
+
+        SuccessOrExit(error);
+
+        OutputKey(key);
+        OutputState(state);
+    }
+
+exit:
+    if (iterator != nullptr)
+    {
+        otMdnsFreeIterator(GetInstancePtr(), iterator);
+    }
+
+    return error;
+}
+
 otError Mdns::ParseStartOrStop(const Arg &aArg, bool &aIsStart)
 {
     otError error = OT_ERROR_NONE;
@@ -743,9 +877,10 @@ otError Mdns::Process(Arg aArgs[])
     }
 
     static constexpr Command kCommands[] = {
-        CmdEntry("browser"),     CmdEntry("disable"),         CmdEntry("enable"),      CmdEntry("ip4resolver"),
-        CmdEntry("ip6resolver"), CmdEntry("register"),        CmdEntry("srvresolver"), CmdEntry("state"),
-        CmdEntry("txtresolver"), CmdEntry("unicastquestion"), CmdEntry("unregister"),
+        CmdEntry("browser"),         CmdEntry("disable"),     CmdEntry("enable"), CmdEntry("hosts"),
+        CmdEntry("ip4resolver"),     CmdEntry("ip6resolver"), CmdEntry("keys"),   CmdEntry("register"),
+        CmdEntry("services"),        CmdEntry("srvresolver"), CmdEntry("state"),  CmdEntry("txtresolver"),
+        CmdEntry("unicastquestion"), CmdEntry("unregister"),
     };
 
 #undef CmdEntry

@@ -106,7 +106,7 @@ Error MeshDiag::DiscoverTopology(const DiscoverConfig &aConfig, DiscoverCallback
     }
 
     mDiscover.mCallback.Set(aCallback, aContext);
-    mState = kStateDicoverTopology;
+    mState = kStateDiscoverTopology;
     mTimer.Start(kResponseTimeout);
 
 exit:
@@ -133,7 +133,7 @@ void MeshDiag::HandleDiagGetResponse(Coap::Message *aMessage, const Ip6::Message
 
     SuccessOrExit(aResult);
     VerifyOrExit(aMessage != nullptr);
-    VerifyOrExit(mState == kStateDicoverTopology);
+    VerifyOrExit(mState == kStateDiscoverTopology);
 
     SuccessOrExit(routerInfo.ParseFrom(*aMessage));
 
@@ -437,7 +437,7 @@ void MeshDiag::Cancel(void)
     case kStateQueryRouterNeighborTable:
         break;
 
-    case kStateDicoverTopology:
+    case kStateDiscoverTopology:
         IgnoreError(Get<Tmf::Agent>().AbortTransaction(HandleDiagGetResponse, this));
         break;
     }
@@ -460,7 +460,7 @@ void MeshDiag::Finalize(Error aError)
     case kStateIdle:
         break;
 
-    case kStateDicoverTopology:
+    case kStateDiscoverTopology:
         mDiscover.mCallback.InvokeIfSet(aError, nullptr);
         break;
 

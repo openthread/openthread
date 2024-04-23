@@ -58,7 +58,7 @@ RegisterLogModule("MeshCoPLeader");
 Leader::Leader(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance)
-    , mDelayTimerMinimal(kMinDelayTimer)
+    , mDelayTimerMinimal(DelayTimerTlv::kMinDelay)
     , mSessionId(Random::NonCrypto::GetUint16())
 {
 }
@@ -218,7 +218,7 @@ Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
     Error error = kErrorNone;
 
-    VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < kMinDelayTimer), error = kErrorInvalidArgs);
+    VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kMinDelay), error = kErrorInvalidArgs);
     mDelayTimerMinimal = aDelayTimerMinimal;
 
 exit:

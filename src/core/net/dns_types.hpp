@@ -1028,6 +1028,9 @@ public:
      * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
      * `kErrorParse` is returned.
      *
+     * The @p aLabels buffer may be the same as @p aName for in-place label extraction. In this case, the
+     * implementation avoids unnecessary character copies.
+     *
      * @param[in]   aName           The name to extract labels from.
      * @param[in]   aSuffixName     The suffix name (e.g., can be domain name).
      * @param[out]  aLabels         Pointer to buffer to copy the extracted labels.
@@ -1047,6 +1050,9 @@ public:
      * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
      * `kErrorParse` is returned.
      *
+     * The @p aLabels buffer may be the same as @p aName for in-place label extraction. In this case, the
+     * implementation avoids unnecessary character copies.
+     *
      * @tparam      kLabelsBufferSize   Size of the buffer string.
      *
      * @param[in]   aName           The name to extract labels from.
@@ -1062,6 +1068,28 @@ public:
     static Error ExtractLabels(const char *aName, const char *aSuffixName, char (&aLabels)[kLabelsBufferSize])
     {
         return ExtractLabels(aName, aSuffixName, aLabels, kLabelsBufferSize);
+    }
+
+    /**
+     * Strips a given suffix name (e.g., a domain name) from a given DNS name string, updating it in place.
+     *
+     * First checks that @p Name ends with the given @p aSuffixName, otherwise `kErrorParse` is returned.
+     *
+     * Both @p aName and @p aSuffixName MUST follow the same style regarding inclusion of trailing dot ('.'). Otherwise
+     * `kErrorParse` is returned.
+     *
+     * @tparam kNameBufferSize     The size of name buffer.
+     *
+     * @param[in]  aName           The name buffer to strip the @p aSuffixName from.
+     * @param[in]  aSuffixName     The suffix name (e.g., can be domain name).
+     *
+     * @retval kErrorNone          Successfully stripped the suffix name from @p aName.
+     * @retval kErrorParse         @p aName does not contain @p aSuffixName.
+     *
+     */
+    template <uint16_t kNameBufferSize> static Error StripName(char (&aName)[kNameBufferSize], const char *aSuffixName)
+    {
+        return ExtractLabels(aName, aSuffixName, aName, kNameBufferSize);
     }
 
     /**

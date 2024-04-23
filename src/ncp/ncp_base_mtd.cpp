@@ -2072,6 +2072,9 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_IPV6_ICMP_PING_OFFLOA
     case OT_ICMP6_ECHO_HANDLER_ALL:
         mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL;
         break;
+    case OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY:
+        mode = SPINEL_IPV6_ICMP_PING_OFFLOAD_RLOC_ALOC_ONLY;
+        break;
     };
 
     return mEncoder.WriteUint8(mode);
@@ -2098,6 +2101,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_IPV6_ICMP_PING_OFFLOA
         break;
     case SPINEL_IPV6_ICMP_PING_OFFLOAD_ALL:
         mode = OT_ICMP6_ECHO_HANDLER_ALL;
+        break;
+    case SPINEL_IPV6_ICMP_PING_OFFLOAD_RLOC_ALOC_ONLY:
+        mode = OT_ICMP6_ECHO_HANDLER_RLOC_ALOC_ONLY;
         break;
     };
 

@@ -122,9 +122,18 @@ Error Core::SetEnabled(bool aEnable, uint32_t aInfraIfIndex)
         mCacheTimer.Stop();
     }
 
+    Get<Dnssd>().HandleMdnsCoreStateChange();
+
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+void Core::HandleInfraIfStateChanged(void)
+{
+    IgnoreError(SetEnabled(Get<BorderRouter::InfraIf>().IsRunning(), Get<BorderRouter::InfraIf>().GetIfIndex()));
+}
+#endif
 
 template <typename EntryType, typename ItemInfo>
 Error Core::Register(const ItemInfo &aItemInfo, RequestId aRequestId, RegisterCallback aCallback)
@@ -190,6 +199,25 @@ Error Core::RegisterKey(const Key &aKey, RequestId aRequestId, RegisterCallback 
 Error Core::UnregisterKey(const Key &aKey)
 {
     return IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
+}
+
+Core::Iterator *Core::AllocateIterator(void) { return EntryIterator::Allocate(GetInstance()); }
+
+void Core::FreeIterator(Iterator &aIterator) { static_cast<EntryIterator &>(aIterator).Free(); }
+
+Error Core::GetNextHost(Iterator &aIterator, Host &aHost, EntryState &aState) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextHost(aHost, aState);
+}
+
+Error Core::GetNextService(Iterator &aIterator, Service &aService, EntryState &aState) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextService(aService, aState);
+}
+
+Error Core::GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextKey(aKey, aState);
 }
 
 void Core::InvokeConflictCallback(const char *aName, const char *aServiceType)
@@ -1247,6 +1275,23 @@ void Core::Entry::AppendNsecRecordTo(TxMessage       &aTxMessage,
     mAppendedNsec = true;
 }
 
+Error Core::Entry::CopyKeyInfoTo(Key &aKey, EntryState &aState) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mKeyRecord.IsPresent(), error = kErrorNotFound);
+
+    aKey.mKeyData       = mKeyData.GetBytes();
+    aKey.mKeyDataLength = mKeyData.GetLength();
+    aKey.mClass         = ResourceRecord::kClassInternet;
+    aKey.mTtl           = mKeyRecord.GetTtl();
+    aKey.mInfraIfIndex  = Get<Core>().mInfraIfIndex;
+    aState              = static_cast<EntryState>(GetState());
+
+exit:
+    return error;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core::HostEntry
 
@@ -1573,6 +1618,36 @@ void Core::HostEntry::AppendNameTo(TxMessage &aTxMessage, Section aSection)
 
 exit:
     return;
+}
+
+Error Core::HostEntry::CopyInfoTo(Host &aHost, EntryState &aState) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mAddrRecord.IsPresent(), error = kErrorNotFound);
+
+    aHost.mHostName        = mName.AsCString();
+    aHost.mAddresses       = mAddresses.AsCArray();
+    aHost.mAddressesLength = mAddresses.GetLength();
+    aHost.mTtl             = mAddrRecord.GetTtl();
+    aHost.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
+    aState                 = static_cast<EntryState>(GetState());
+
+exit:
+    return error;
+}
+
+Error Core::HostEntry::CopyInfoTo(Key &aKey, EntryState &aState) const
+{
+    Error error;
+
+    SuccessOrExit(error = CopyKeyInfoTo(aKey, aState));
+
+    aKey.mName        = mName.AsCString();
+    aKey.mServiceType = nullptr;
+
+exit:
+    return error;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -2189,9 +2264,10 @@ void Core::ServiceEntry::UpdateServiceTypes(void)
     // This method updates the `mServiceTypes` list adding or
     // removing this `ServiceEntry` info.
     //
-    // It is called whenever `ServcieEntry` state gets changed or an
-    // PTR record is added or removed. The service is valid when
-    // entry is registered and we have a PTR with non-zero TTL.
+    // It is called whenever the `ServiceEntry` state gets changed
+    // or a PTR record is added or removed. The service is valid
+    // when entry is registered and we have a PTR with non-zero
+    // TTL.
 
     bool         shouldAdd = (GetState() == kRegistered) && mPtrRecord.CanAnswer();
     ServiceType *serviceType;
@@ -2226,7 +2302,7 @@ void Core::ServiceEntry::UpdateServiceTypes(void)
             // the `mServiceTypes` list. It is safe to
             // remove here as this method will never be
             // called while we are iterating over the
-            // `mServcieTypes` list.
+            // `mServiceTypes` list.
 
             Get<Core>().mServiceTypes.RemoveMatching(*serviceType);
         }
@@ -2421,6 +2497,50 @@ exit:
     return;
 }
 
+Error Core::ServiceEntry::CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mPtrRecord.IsPresent(), error = kErrorNotFound);
+
+    aIterator.mSubTypeArray.Free();
+
+    for (const SubType &subType : mSubTypes)
+    {
+        SuccessOrAssert(aIterator.mSubTypeArray.PushBack(subType.mLabel.AsCString()));
+    }
+
+    aService.mHostName            = mHostName.AsCString();
+    aService.mServiceInstance     = mServiceInstance.AsCString();
+    aService.mServiceType         = mServiceType.AsCString();
+    aService.mSubTypeLabels       = aIterator.mSubTypeArray.AsCArray();
+    aService.mSubTypeLabelsLength = aIterator.mSubTypeArray.GetLength();
+    aService.mTxtData             = mTxtData.GetBytes();
+    aService.mTxtDataLength       = mTxtData.GetLength();
+    aService.mPort                = mPort;
+    aService.mPriority            = mPriority;
+    aService.mWeight              = mWeight;
+    aService.mTtl                 = mPtrRecord.GetTtl();
+    aService.mInfraIfIndex        = Get<Core>().mInfraIfIndex;
+    aState                        = static_cast<EntryState>(GetState());
+
+exit:
+    return error;
+}
+
+Error Core::ServiceEntry::CopyInfoTo(Key &aKey, EntryState &aState) const
+{
+    Error error;
+
+    SuccessOrExit(error = CopyKeyInfoTo(aKey, aState));
+
+    aKey.mName        = mServiceInstance.AsCString();
+    aKey.mServiceType = mServiceType.AsCString();
+
+exit:
+    return error;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Core::ServiceEntry::SubType
 
@@ -2477,9 +2597,9 @@ exit:
     return error;
 }
 
-bool Core::ServiceType::Matches(const Name &aServcieTypeName) const
+bool Core::ServiceType::Matches(const Name &aServiceTypeName) const
 {
-    return aServcieTypeName.Matches(/* aFirstLabel */ nullptr, mServiceType.AsCString(), kLocalDomain);
+    return aServiceTypeName.Matches(/* aFirstLabel */ nullptr, mServiceType.AsCString(), kLocalDomain);
 }
 
 bool Core::ServiceType::Matches(const Heap::String &aServiceType) const
@@ -3425,6 +3545,8 @@ void Core::RxMessage::AnswerQuestion(const Question &aQuestion, TimeMilli aAnswe
     }
 
     // Question is for `ServiceEntry`
+
+    VerifyOrExit(serviceEntry != nullptr);
 
     if (!aQuestion.mIsServiceType)
     {
@@ -5972,6 +6094,103 @@ exit:
 }
 
 void Core::Ip4AddrCache::PrepareAQuestion(TxMessage &aQuery) { PrepareQueryQuestion(aQuery, ResourceRecord::kTypeA); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// Core::Iterator
+
+Core::EntryIterator::EntryIterator(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mType(kUnspecified)
+{
+}
+
+Error Core::EntryIterator::GetNextHost(Host &aHost, EntryState &aState)
+{
+    Error error = kErrorNotFound;
+
+    if (mType == kUnspecified)
+    {
+        mHostEntry = Get<Core>().mHostEntries.GetHead();
+        mType      = kHost;
+    }
+    else
+    {
+        VerifyOrExit(mType == kHost, error = kErrorInvalidArgs);
+    }
+
+    while (error == kErrorNotFound)
+    {
+        VerifyOrExit(mHostEntry != nullptr);
+        error      = mHostEntry->CopyInfoTo(aHost, aState);
+        mHostEntry = mHostEntry->GetNext();
+    }
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextService(Service &aService, EntryState &aState)
+{
+    Error error = kErrorNotFound;
+
+    if (mType == kUnspecified)
+    {
+        mServiceEntry = Get<Core>().mServiceEntries.GetHead();
+        mType         = kService;
+    }
+    else
+    {
+        VerifyOrExit(mType == kService, error = kErrorInvalidArgs);
+    }
+
+    while (error == kErrorNotFound)
+    {
+        VerifyOrExit(mServiceEntry != nullptr);
+        error         = mServiceEntry->CopyInfoTo(aService, aState, *this);
+        mServiceEntry = mServiceEntry->GetNext();
+    }
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextKey(Key &aKey, EntryState &aState)
+{
+    Error error = kErrorNotFound;
+
+    if (mType == kUnspecified)
+    {
+        mHostEntry = Get<Core>().mHostEntries.GetHead();
+        mType      = kHostKey;
+    }
+    else
+    {
+        VerifyOrExit((mType == kServiceKey) || (mType == kHostKey), error = kErrorInvalidArgs);
+    }
+
+    while ((error == kErrorNotFound) && (mType == kHostKey))
+    {
+        if (mHostEntry == nullptr)
+        {
+            mServiceEntry = Get<Core>().mServiceEntries.GetHead();
+            mType         = kServiceKey;
+            break;
+        }
+
+        error      = mHostEntry->CopyInfoTo(aKey, aState);
+        mHostEntry = mHostEntry->GetNext();
+    }
+
+    while ((error == kErrorNotFound) && (mType == kServiceKey))
+    {
+        VerifyOrExit(mServiceEntry != nullptr);
+        error         = mServiceEntry->CopyInfoTo(aKey, aState);
+        mServiceEntry = mServiceEntry->GetNext();
+    }
+
+exit:
+    return error;
+}
 
 } // namespace Multicast
 } // namespace Dns

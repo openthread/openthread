@@ -64,11 +64,18 @@ RegisterLogModule("DatasetManager");
 
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
-    Dataset dataset;
+    Mle::Tlv::Type mleTlvType = IsActiveDataset() ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset;
+    Dataset        dataset;
 
     IgnoreError(Read(dataset));
 
-    return dataset.AppendMleDatasetTlv(GetType(), aMessage);
+    // Remove the Active or Pending Timestamp TLV from Dataset before
+    // appending to the message. The timestamp is appended as its own
+    // MLE TLV to the message.
+
+    dataset.RemoveTlv(IsActiveDataset() ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp);
+
+    return Tlv::AppendTlv(aMessage, mleTlvType, dataset.GetBytes(), static_cast<uint8_t>(dataset.GetSize()));
 }
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -104,7 +111,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // verify the request includes a timestamp that is ahead of the locally stored value
     SuccessOrExit(Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp));
 
-    if (GetType() == Dataset::kPending)
+    if (IsPendingDataset())
     {
         Timestamp pendingTimestamp;
 
@@ -155,7 +162,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (GetType() == Dataset::kPending && (!hasNetworkKey || !doesAffectNetworkKey))
+    if (IsPendingDataset() && (!hasNetworkKey || !doesAffectNetworkKey))
     {
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDatasetManager>().GetTimestamp();
@@ -175,7 +182,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || GetType() == Dataset::kPending || !doesAffectConnectivity);
+    VerifyOrExit(!isUpdateFromCommissioner || IsPendingDataset() || !doesAffectConnectivity);
 
     if (isUpdateFromCommissioner)
     {
@@ -184,7 +191,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
     }
 
-    if (GetType() == Dataset::kPending || !doesAffectConnectivity)
+    if (IsPendingDataset() || !doesAffectConnectivity)
     {
         offset = aMessage.GetOffset();
 
@@ -202,11 +209,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
 
             case Tlv::kDelayTimer:
             {
-                uint32_t delayTimer = datasetTlv.ReadValueAs<DelayTimerTlv>();
+                uint32_t delayTimer = Min(datasetTlv.ReadValueAs<DelayTimerTlv>(), DelayTimerTlv::kMaxDelay);
 
-                if (doesAffectNetworkKey && delayTimer < kDefaultDelayTimer)
+                if (doesAffectNetworkKey && delayTimer < DelayTimerTlv::kDefaultDelay)
                 {
-                    delayTimer = kDefaultDelayTimer;
+                    delayTimer = DelayTimerTlv::kDefaultDelay;
                 }
                 else
                 {

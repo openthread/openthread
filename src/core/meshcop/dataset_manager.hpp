@@ -183,12 +183,6 @@ public:
 
 protected:
     /**
-     * Default Delay Timer value for a Pending Operational Dataset (ms)
-     *
-     */
-    static constexpr uint32_t kDefaultDelayTimer = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY;
-
-    /**
      * Defines a generic Dataset TLV to read from a message.
      *
      */
@@ -339,6 +333,15 @@ protected:
     bool         mTimestampValid : 1;
 
 private:
+    static constexpr uint8_t kMaxGetTypes = 64; // Max number of types in MGMT_GET.req
+
+    class TlvList : public Array<uint8_t, kMaxGetTypes>
+    {
+    public:
+        TlvList(void) = default;
+        void Add(uint8_t aTlvType);
+    };
+
     static void HandleMgmtSetResponse(void                *aContext,
                                       otMessage           *aMessage,
                                       const otMessageInfo *aMessageInfo,
@@ -353,8 +356,7 @@ private:
     void  SendSet(void);
     void  SendGetResponse(const Coap::Message    &aRequest,
                           const Ip6::MessageInfo &aMessageInfo,
-                          uint8_t                *aTlvs,
-                          uint8_t                 aLength) const;
+                          const TlvList          &aTlvList) const;
 
 #if OPENTHREAD_FTD
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);

@@ -53,6 +53,9 @@ namespace MeshCoP {
 
 RegisterLogModule("DatasetManager");
 
+//---------------------------------------------------------------------------------------------------------------------
+// DatasetManager
+
 DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::Handler aTimerHandler)
     : InstanceLocator(aInstance)
     , mLocal(aInstance, aType)
@@ -124,7 +127,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
 
         if (IsActiveDataset())
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isNetworkKeyUpdated));
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), isNetworkKeyUpdated));
         }
     }
 
@@ -213,8 +216,7 @@ void DatasetManager::HandleDatasetUpdated(void)
 
 void DatasetManager::SignalDatasetChange(void) const
 {
-    Get<Notifier>().Signal(mLocal.GetType() == Dataset::kActive ? kEventActiveDatasetChanged
-                                                                : kEventPendingDatasetChanged);
+    Get<Notifier>().Signal(IsActiveDataset() ? kEventActiveDatasetChanged : kEventPendingDatasetChanged);
 }
 
 Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
@@ -344,53 +346,34 @@ exit:
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    Tlv      tlv;
-    uint16_t offset = aMessage.GetOffset();
-    uint8_t  tlvs[Dataset::kMaxGetTypes];
-    uint8_t  length = 0;
+    TlvList  tlvList;
+    uint8_t  tlvType;
+    uint16_t offset;
+    uint16_t length;
 
-    while (offset < aMessage.GetLength())
+    SuccessOrExit(Tlv::FindTlvValueOffset(aMessage, Tlv::kGet, offset, length));
+
+    for (; length > 0; length--, offset++)
     {
-        SuccessOrExit(aMessage.Read(offset, tlv));
-
-        if (tlv.GetType() == Tlv::kGet)
-        {
-            length = tlv.GetLength();
-
-            if (length > (sizeof(tlvs) - 1))
-            {
-                // leave space for potential DelayTimer type below
-                length = sizeof(tlvs) - 1;
-            }
-
-            aMessage.ReadBytes(offset + sizeof(Tlv), tlvs, length);
-            break;
-        }
-
-        offset += sizeof(tlv) + tlv.GetLength();
+        IgnoreError(aMessage.Read(offset, tlvType));
+        tlvList.Add(tlvType);
     }
 
-    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1 Section 8.7.5.4)
-    VerifyOrExit(length > 0 && IsPendingDataset());
+    // MGMT_PENDING_GET.rsp must include Delay Timer TLV (Thread 1.1.1
+    // Section 8.7.5.4).
 
-    for (uint8_t i = 0; i < length; i++)
+    if (!tlvList.IsEmpty() && IsPendingDataset())
     {
-        if (tlvs[i] == Tlv::kDelayTimer)
-        {
-            ExitNow();
-        }
+        tlvList.Add(Tlv::kDelayTimer);
     }
-
-    tlvs[length++] = Tlv::kDelayTimer;
 
 exit:
-    SendGetResponse(aMessage, aMessageInfo, tlvs, length);
+    SendGetResponse(aMessage, aMessageInfo, tlvList);
 }
 
 void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
                                      const Ip6::MessageInfo &aMessageInfo,
-                                     uint8_t                *aTlvs,
-                                     uint8_t                 aLength) const
+                                     const TlvList          &aTlvList) const
 {
     Error          error = kErrorNone;
     Coap::Message *message;
@@ -401,37 +384,29 @@ void DatasetManager::SendGetResponse(const Coap::Message    &aRequest,
     message = Get<Tmf::Agent>().NewPriorityResponseMessage(aRequest);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    if (aLength == 0)
+    for (const Tlv *tlv = dataset.GetTlvsStart(); tlv < dataset.GetTlvsEnd(); tlv = tlv->GetNext())
     {
-        for (const Tlv *cur = dataset.GetTlvsStart(); cur < dataset.GetTlvsEnd(); cur = cur->GetNext())
+        bool shouldAppend = true;
+
+        if (!aTlvList.IsEmpty())
         {
-            if (cur->GetType() != Tlv::kNetworkKey || Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
-            {
-                SuccessOrExit(error = cur->AppendTo(*message));
-            }
+            shouldAppend = aTlvList.Contains(tlv->GetType());
         }
-    }
-    else
-    {
-        for (uint8_t index = 0; index < aLength; index++)
+
+        if ((tlv->GetType() == Tlv::kNetworkKey) && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
         {
-            const Tlv *tlv;
+            shouldAppend = false;
+        }
 
-            if (aTlvs[index] == Tlv::kNetworkKey && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
-            {
-                continue;
-            }
-
-            if ((tlv = dataset.FindTlv(static_cast<Tlv::Type>(aTlvs[index]))) != nullptr)
-            {
-                SuccessOrExit(error = tlv->AppendTo(*message));
-            }
+        if (shouldAppend)
+        {
+            SuccessOrExit(error = tlv->AppendTo(*message));
         }
     }
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
-    LogInfo("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
+    LogInfo("sent %s dataset get response to %s", IsActiveDataset() ? "active" : "pending",
             aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
@@ -466,30 +441,11 @@ Error DatasetManager::SendSetRequest(const Dataset::Info     &aDatasetInfo,
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-
-    if (Get<Commissioner>().IsActive())
+    if (Get<Commissioner>().IsActive() && (Tlv::Find<CommissionerSessionIdTlv>(aTlvs, aLength) == nullptr))
     {
-        const Tlv *end          = reinterpret_cast<const Tlv *>(aTlvs + aLength);
-        bool       hasSessionId = false;
-
-        for (const Tlv *cur = reinterpret_cast<const Tlv *>(aTlvs); cur < end; cur = cur->GetNext())
-        {
-            VerifyOrExit((cur + 1) <= end, error = kErrorInvalidArgs);
-
-            if (cur->GetType() == Tlv::kCommissionerSessionId)
-            {
-                hasSessionId = true;
-                break;
-            }
-        }
-
-        if (!hasSessionId)
-        {
-            SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, Get<Commissioner>().GetSessionId()));
-        }
+        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, Get<Commissioner>().GetSessionId()));
     }
-
-#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#endif
 
     SuccessOrExit(error = AppendDatasetToMessage(aDatasetInfo, *message));
 
@@ -525,62 +481,62 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 
     length = 0;
 
-    if (aDatasetComponents.IsActiveTimestampPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kActiveTimestamp>())
     {
         datasetTlvs[length++] = Tlv::kActiveTimestamp;
     }
 
-    if (aDatasetComponents.IsPendingTimestampPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPendingTimestamp>())
     {
         datasetTlvs[length++] = Tlv::kPendingTimestamp;
     }
 
-    if (aDatasetComponents.IsNetworkKeyPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kNetworkKey>())
     {
         datasetTlvs[length++] = Tlv::kNetworkKey;
     }
 
-    if (aDatasetComponents.IsNetworkNamePresent())
+    if (aDatasetComponents.IsPresent<Dataset::kNetworkName>())
     {
         datasetTlvs[length++] = Tlv::kNetworkName;
     }
 
-    if (aDatasetComponents.IsExtendedPanIdPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kExtendedPanId>())
     {
         datasetTlvs[length++] = Tlv::kExtendedPanId;
     }
 
-    if (aDatasetComponents.IsMeshLocalPrefixPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kMeshLocalPrefix>())
     {
         datasetTlvs[length++] = Tlv::kMeshLocalPrefix;
     }
 
-    if (aDatasetComponents.IsDelayPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kDelay>())
     {
         datasetTlvs[length++] = Tlv::kDelayTimer;
     }
 
-    if (aDatasetComponents.IsPanIdPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPanId>())
     {
         datasetTlvs[length++] = Tlv::kPanId;
     }
 
-    if (aDatasetComponents.IsChannelPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kChannel>())
     {
         datasetTlvs[length++] = Tlv::kChannel;
     }
 
-    if (aDatasetComponents.IsPskcPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
         datasetTlvs[length++] = Tlv::kPskc;
     }
 
-    if (aDatasetComponents.IsSecurityPolicyPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kSecurityPolicy>())
     {
         datasetTlvs[length++] = Tlv::kSecurityPolicy;
     }
 
-    if (aDatasetComponents.IsChannelMaskPresent())
+    if (aDatasetComponents.IsPresent<Dataset::kChannelMask>())
     {
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
@@ -622,6 +578,17 @@ exit:
     return error;
 }
 
+void DatasetManager::TlvList::Add(uint8_t aTlvType)
+{
+    if (!Contains(aTlvType))
+    {
+        IgnoreError(PushBack(aTlvType));
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// ActiveDatasetManager
+
 ActiveDatasetManager::ActiveDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kActive, ActiveDatasetManager::HandleTimer)
 {
@@ -638,8 +605,9 @@ bool ActiveDatasetManager::IsCommissioned(void) const
 
     SuccessOrExit(Read(datasetInfo));
 
-    isValid = (datasetInfo.IsNetworkKeyPresent() && datasetInfo.IsNetworkNamePresent() &&
-               datasetInfo.IsExtendedPanIdPresent() && datasetInfo.IsPanIdPresent() && datasetInfo.IsChannelPresent());
+    isValid = (datasetInfo.IsPresent<Dataset::kNetworkKey>() && datasetInfo.IsPresent<Dataset::kNetworkName>() &&
+               datasetInfo.IsPresent<Dataset::kExtendedPanId>() && datasetInfo.IsPresent<Dataset::kPanId>() &&
+               datasetInfo.IsPresent<Dataset::kChannel>());
 
 exit:
     return isValid;
@@ -668,6 +636,9 @@ void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, con
 }
 
 void ActiveDatasetManager::HandleTimer(Timer &aTimer) { aTimer.Get<ActiveDatasetManager>().HandleTimer(); }
+
+//---------------------------------------------------------------------------------------------------------------------
+// PendingDatasetManager
 
 PendingDatasetManager::PendingDatasetManager(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDatasetManager::HandleTimer)
@@ -753,10 +724,7 @@ void PendingDatasetManager::StartDelayTimer(void)
     tlv = dataset.FindTlv(Tlv::kDelayTimer);
     VerifyOrExit(tlv != nullptr);
 
-    delay = tlv->ReadValueAs<DelayTimerTlv>();
-
-    // the Timer implementation does not support the full 32 bit range
-    delay = Min(delay, Timer::kMaxDelay);
+    delay = Min(tlv->ReadValueAs<DelayTimerTlv>(), DelayTimerTlv::kMaxDelay);
 
     mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
     LogInfo("delay timer started %lu", ToUlong(delay));
@@ -767,25 +735,9 @@ exit:
 
 void PendingDatasetManager::HandleDelayTimer(void)
 {
-    Tlv    *tlv;
     Dataset dataset;
 
     IgnoreError(Read(dataset));
-
-    // if the Delay Timer value is larger than what our Timer implementation can handle, we have to compute
-    // the remainder and wait some more.
-    if ((tlv = dataset.FindTlv(Tlv::kDelayTimer)) != nullptr)
-    {
-        uint32_t elapsed = mDelayTimer.GetFireTime() - dataset.GetUpdateTime();
-        uint32_t delay   = tlv->ReadValueAs<DelayTimerTlv>();
-
-        if (elapsed < delay)
-        {
-            mDelayTimer.StartAt(mDelayTimer.GetFireTime(), delay - elapsed);
-            ExitNow();
-        }
-    }
-
     LogInfo("pending delay timer expired");
 
     dataset.ConvertToActive();
@@ -793,9 +745,6 @@ void PendingDatasetManager::HandleDelayTimer(void)
     Get<ActiveDatasetManager>().Save(dataset);
 
     Clear();
-
-exit:
-    return;
 }
 
 template <>

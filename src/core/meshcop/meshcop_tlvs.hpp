@@ -611,7 +611,48 @@ typedef SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp> PendingTimestampTlv;
  * Defines Delay Timer TLV constants and types.
  *
  */
-typedef UintTlvInfo<Tlv::kDelayTimer, uint32_t> DelayTimerTlv;
+class DelayTimerTlv : public UintTlvInfo<Tlv::kDelayTimer, uint32_t>
+{
+public:
+    /**
+     * Minimum Delay Timer value (in msec).
+     *
+     */
+    static constexpr uint32_t kMinDelay = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY;
+
+    /**
+     * Maximum Delay Timer value (in msec).
+     *
+     */
+    static constexpr uint32_t kMaxDelay = (72 * Time::kOneHourInMsec);
+
+    /**
+     * Default Delay Timer value (in msec).
+     *
+     */
+    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY;
+
+    /**
+     * Calculates the remaining delay in milliseconds, based on the value read from a Delay Timer TLV and the specified
+     * update time.
+     *
+     * Ensures that the calculated delay does not exceed `kMaxDelay`. Also accounts for time already elapsed since
+     * @p aUpdateTime.
+     *
+     * Caller MUST ensure that @p aDelayTimerTlv is a Delay Timer TLV, otherwise behavior is undefined.
+     *
+     * @param[in] aDelayTimerTlv   The delay timer TLV to read delay from.
+     * @param[in] aUpdateTimer     The update time of the Dataset.
+     *
+     * @return The remaining delay (in msec).
+     *
+     */
+    static uint32_t CalculateRemainingDelay(const Tlv &aDelayTimerTlv, TimeMilli aUpdateTime);
+
+    static_assert(kMinDelay <= kMaxDelay, "TMF_PENDING_DATASET_MINIMUM_DELAY is larger than max allowed");
+    static_assert(kDefaultDelay <= kMaxDelay, "TMF_PENDING_DATASET_DEFAULT_DELAY is larger than max allowed");
+    static_assert(kDefaultDelay >= kMinDelay, "TMF_PENDING_DATASET_DEFAULT_DELAY is smaller than min allowed");
+};
 
 /**
  * Implements Channel Mask TLV generation and parsing.

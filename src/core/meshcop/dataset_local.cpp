@@ -106,25 +106,10 @@ Error DatasetLocal::Read(Dataset &aDataset) const
     }
     else
     {
-        uint32_t elapsed;
-        uint32_t delayTimer;
-        Tlv     *tlv = aDataset.FindTlv(Tlv::kDelayTimer);
+        Tlv *tlv = aDataset.FindTlv(Tlv::kDelayTimer);
 
         VerifyOrExit(tlv != nullptr);
-
-        elapsed    = TimerMilli::GetNow() - mUpdateTime;
-        delayTimer = tlv->ReadValueAs<DelayTimerTlv>();
-
-        if (delayTimer > elapsed)
-        {
-            delayTimer -= elapsed;
-        }
-        else
-        {
-            delayTimer = 0;
-        }
-
-        tlv->WriteValueAs<DelayTimerTlv>(delayTimer);
+        tlv->WriteValueAs<DelayTimerTlv>(DelayTimerTlv::CalculateRemainingDelay(*tlv, mUpdateTime));
     }
 
     aDataset.mUpdateTime = TimerMilli::GetNow();

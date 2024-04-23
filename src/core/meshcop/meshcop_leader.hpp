@@ -104,7 +104,6 @@ public:
     void SetEmptyCommissionerData(void);
 
 private:
-    static constexpr uint32_t kMinDelayTimer         = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY; // (msec)
     static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
     OT_TOOL_PACKED_BEGIN

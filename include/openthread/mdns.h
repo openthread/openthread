@@ -134,6 +134,24 @@ typedef otPlatDnssdService otMdnsService;
 typedef otPlatDnssdKey otMdnsKey;
 
 /**
+ * Represents an mDNS entry iterator.
+ *
+ */
+typedef struct otMdnsIterator otMdnsIterator;
+
+/**
+ * Represents a host/service/key entry state.
+ *
+ */
+typedef enum otMdnsEntryState
+{
+    OT_MDNS_ENTRY_STATE_PROBING,    ///< Probing to claim the name.
+    OT_MDNS_ENTRY_STATE_REGISTERED, ///< Entry is successfully registered.
+    OT_MDNS_ENTRY_STATE_CONFLICT,   ///< Name conflict was detected.
+    OT_MDNS_ENTRY_STATE_REMOVING,   ///< Entry is being removed (sending "goodbye" announcements).
+} otMdnsEntryState;
+
+/**
  * Enables or disables the mDNS module.
  *
  * The mDNS module should be enabled before registration any host, service, or key entries. Disabling mDNS will
@@ -335,10 +353,11 @@ otError otMdnsUnregisterService(otInstance *aInstance, const otMdnsService *aSer
  *
  * The fields in @p aKey follow these rules:
  *
- * - If the key is associated with a host entry, `mName` specifies the host name and `mServcieType` MUST be NULL.
- * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
- *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
- *   key record is `<mName>.<mServiceTye>`.
+ * - If the key is associated with a host entry, the `mName` field specifies the host name and the `mServiceType` MUST
+ *   be NULL.
+ * - If the key is associated with a service entry, the `mName` filed specifies the service instance label (always
+ *   treated as a single label) and the `mServiceType` filed specifies the service type (e.g., "_tst._udp"). In this
+ *   case the DNS name for key record is `<mName>.<mServiceTye>`.
  * - The `mKeyData` field contains the key record's data with `mKeyDataLength` as its length in byes.
  * - The `mTtl` specifies the TTL if non-zero. If zero, the mDNS module will use the default TTL of 120 seconds.
  * - Other fields in @p aKey structure are ignored in an `otMdnsRegisterKey()` call.
@@ -368,10 +387,11 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  *
  * The fields in @p aKey follow these rules:
  *
- * - If the key is associated with a host entry, `mName` specifies the host name and `mServcieType` MUST be NULL.
- * - If the key is associated with a service entry, `mName` specifies the service instance label (always treated as
- *   a single label) and `mServiceType` specifies the service type (e.g., "_tst._udp"). In this case the DNS name for
- *   key record is `<mName>.<mServiceTye>`.
+ * - If the key is associated with a host entry, the `mName` field specifies the host name and the `mServiceType` MUST
+ *   be NULL.
+ * - If the key is associated with a service entry, the `mName` filed specifies the service instance label (always
+ *   treated as a single label) and the `mServiceType` filed specifies the service type (e.g., "_tst._udp"). In this
+ *   case the DNS name for key record is `<mName>.<mServiceTye>`.
  * - Other fields in @p aKey structure are ignored in an `otMdnsUnregisterKey()` call.
  *
  * If there is no previously registered key with the same name, no action is performed.
@@ -387,6 +407,88 @@ otError otMdnsRegisterKey(otInstance            *aInstance,
  *
  */
 otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey);
+
+/**
+ * Allocates a new iterator.
+ *
+ * An allocated iterator must be freed by the caller using `otMdnsFreeIterator()`.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ *
+ * @returns A pointer to the allocated iterator, or `NULL` if it fails to allocate.
+ *
+ */
+otMdnsIterator *otMdnsAllocateIterator(otInstance *aInstance);
+
+/**
+ * Frees a previously allocated iterator.
+ *
+ * @param[in] aInstance    The OpenThread instance.
+ * @param[in] aIterator    The iterator to free.
+ *
+ */
+void otMdnsFreeIterator(otInstance *aInstance, otMdnsIterator *aIterator);
+
+/**
+ * Iterates over registered host entries.
+ *
+ * On success, @p aHost is populated with information about the next host. Pointers within the `otMdnsHost` structure
+ * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aHost       Pointer to an `otMdnsHost` to return the information about the next host entry.
+ * @param[out] aState      Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aHost, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextHost(otInstance       *aInstance,
+                          otMdnsIterator   *aIterator,
+                          otMdnsHost       *aHost,
+                          otMdnsEntryState *aState);
+
+/**
+ * Iterates over registered service entries.
+ *
+ * On success, @p aService is populated with information about the next service . Pointers within the `otMdnsService`
+ * structure (like `mServiceType`, `mSubTypeLabels`) remain valid until the next call to any OpenThread stack's public
+ * or platform API/callback.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aIterator    Pointer to the iterator to use.
+ * @param[out] aService     Pointer to an `otMdnsService` to return the information about the next service entry.
+ * @param[out] aState       Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aService, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextService(otInstance       *aInstance,
+                             otMdnsIterator   *aIterator,
+                             otMdnsService    *aService,
+                             otMdnsEntryState *aState);
+
+/**
+ * Iterates over registered key entries.
+ *
+ * On success, @p aKey is populated with information about the next key.  Pointers within the `otMdnsKey` structure
+ * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[in]  aIterator    Pointer to the iterator to use.
+ * @param[out] aKey         Pointer to an `otMdnsKey` to return the information about the next key entry.
+ * @param[out] aState       Pointer to an `otMdnsEntryState` to return the entry state.
+ *
+ * @retval OT_ERROR_NONE         @p aKey, @p aState, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  Iterator is not valid.
+ *
+ */
+otError otMdnsGetNextKey(otInstance *aInstance, otMdnsIterator *aIterator, otMdnsKey *aKey, otMdnsEntryState *aState);
 
 typedef struct otMdnsBrowseResult  otMdnsBrowseResult;
 typedef struct otMdnsSrvResult     otMdnsSrvResult;
@@ -661,7 +763,7 @@ otError otMdnsStopTxtResolver(otInstance *aInstance, const otMdnsTxtResolver *aR
  *
  * Initiates a continuous IPv6 address resolver for the specified host name in @p aResolver.
  *
- * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The callback is invoked
+ * Discovered addresses are reported through the `mCallback` function in @p aResolver. The callback is invoked
  * whenever addresses are added or removed, providing an updated list. If all addresses are removed, the callback is
  * invoked with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).
  *
@@ -700,7 +802,7 @@ otError otMdnsStopIp6AddressResolver(otInstance *aInstance, const otMdnsAddressR
  *
  * Initiates a continuous IPv4 address resolver for the specified host name in @p aResolver.
  *
- * Discovered addresses are reported through the `mCallback` function in @ p aResolver. The IPv4 addresses are
+ * Discovered addresses are reported through the `mCallback` function in @p aResolver. The IPv4 addresses are
  * represented using the IPv4-mapped IPv6 address format in `mAddresses` array.  The callback is invoked  whenever
  * addresses are added or removed, providing an updated list. If all addresses are removed, the callback is invoked
  * with an empty list (`mAddresses` will be NULL, and `mAddressesLength` will be zero).

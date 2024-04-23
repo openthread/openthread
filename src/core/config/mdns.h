@@ -69,6 +69,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+ *
+ * Define to 1 for mDNS module to be automatically enabled/disabled on the same infra-if used for border routing
+ * based on infra-if state.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF
+#define OPENTHREAD_CONFIG_MULTICAST_DNS_AUTO_ENABLE_ON_INFRA_IF OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MULTICAST_DNS_DEFAULT_QUESTION_UNICAST_ALLOWED
  *
  * Specified the default value for `otMdnsIsQuestionUnicastAllowed()` which indicates whether mDNS core is allowed to

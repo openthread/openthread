@@ -1,5 +1,9 @@
 # OpenThread CLI - Commissioner
 
+## Overview
+
+The Commissioner is an entity that can add new Thread devices securely to a Thread network. It also can manage a Thread network by changing network configuration parameters ([Operational Datasets](README_DATASET.md)) or sending specific management/diagnostic commands to selected Thread devices. Before a Commissioner can do its tasks, it has to petition to the Leader to get permission to become the Commissioner.
+
 ## Quick Start
 
 See [README_COMMISSIONING.md](README_COMMISSIONING.md).

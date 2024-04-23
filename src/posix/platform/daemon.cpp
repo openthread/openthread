@@ -28,7 +28,7 @@
 
 #include "posix/platform/daemon.hpp"
 
-#if defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 #include <cutils/sockets.h>
 #endif
 #include <fcntl.h>
@@ -174,7 +174,7 @@ exit:
     }
 }
 
-#if defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 void Daemon::createListenSocketOrDie(void)
 {
     Filename socketFile;
@@ -268,7 +268,7 @@ void Daemon::createListenSocketOrDie(void)
         DieNowWithMessage("bind", OT_EXIT_ERROR_ERRNO);
     }
 }
-#endif // defined(__ANDROID__) && !OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
 
 void Daemon::SetUp(void)
 {
@@ -307,7 +307,7 @@ void Daemon::TearDown(void)
         mSessionSocket = -1;
     }
 
-#if !defined(__ANDROID__) || OPENTHREAD_CONFIG_ANDROID_NDK_ENABLE
+#if !OPENTHREAD_POSIX_CONFIG_ANDROID_ENABLE
     // The `mListenSocket` is managed by `init` on Android
     if (mListenSocket != -1)
     {
