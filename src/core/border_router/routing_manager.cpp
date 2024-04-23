@@ -3642,6 +3642,8 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
         break;
     }
 
+    mExternalCallback.InvokeIfSet(static_cast<otBorderRoutingDhcp6PdState>(newState));
+
 exit:
     return;
 }

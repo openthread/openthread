@@ -499,6 +499,31 @@ void otBorderRoutingDhcp6PdSetEnabled(otInstance *aInstance, bool aEnabled);
 otBorderRoutingDhcp6PdState otBorderRoutingDhcp6PdGetState(otInstance *aInstance);
 
 /**
+ * When the state of a DHCPv6 Prefix Delegation (PD) on the Thread interface changes, this callback notifies processes
+ * in the OS of this changed state.
+ *
+ * @param[in] aState    The state of DHCPv6 Prefix Delegation State.
+ * @param[in] aContext  A pointer to arbitrary context information.
+ *
+ */
+typedef void (*otBorderRoutingRequestDhcp6PdCallback)(otBorderRoutingDhcp6PdState aState, void *aContext);
+
+/**
+ * Sets the callback whenever the DHCPv6 PD state changes on the Thread interface.
+ *
+ * Subsequent calls to this function replace the previously set callback.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ * @param[in] aCallback  A pointer to a function that is called whenever the DHCPv6 PD state changes.
+ * @param[in] aContext   A pointer to arbitrary context information.
+ *
+ *
+ */
+void otBorderRoutingDhcp6PdSetRequestCallback(otInstance                           *aInstance,
+                                              otBorderRoutingRequestDhcp6PdCallback aCallback,
+                                              void                                 *aContext);
+
+/**
  * @}
  *
  */
