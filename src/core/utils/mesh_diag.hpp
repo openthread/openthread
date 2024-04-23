@@ -246,7 +246,7 @@ private:
     enum State : uint8_t
     {
         kStateIdle,
-        kStateDicoverTopology,
+        kStateDiscoverTopology,
         kStateQueryChildTable,
         kStateQueryChildrenIp6Addrs,
         kStateQueryRouterNeighborTable,
