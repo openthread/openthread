@@ -85,7 +85,6 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     bool               isUpdateFromCommissioner = false;
     bool               doesAffectConnectivity   = false;
     bool               doesAffectNetworkKey     = false;
-    bool               hasNetworkKey            = false;
     StateTlv::State    state                    = StateTlv::kReject;
     Dataset            dataset;
     Timestamp          activeTimestamp;
@@ -95,14 +94,13 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     NetworkKey         networkKey;
     uint16_t           panId;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
-
     // verify that TLV data size is less than maximum TLV value size
     while (offset < aMessage.GetLength())
     {
         SuccessOrExit(aMessage.Read(offset, tlv));
         VerifyOrExit(tlv.GetLength() <= Dataset::kMaxValueSize);
         offset += sizeof(tlv) + tlv.GetLength();
+        VerifyOrExit(offset <= aMessage.GetLength());
     }
 
     // verify that does not overflow dataset buffer
@@ -151,7 +149,6 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     {
         NetworkKey localNetworkKey;
 
-        hasNetworkKey = true;
         Get<KeyManager>().GetNetworkKey(localNetworkKey);
 
         if (networkKey != localNetworkKey)
@@ -162,7 +159,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (IsPendingDataset() && (!hasNetworkKey || !doesAffectNetworkKey))
+    if (IsPendingDataset() && !doesAffectNetworkKey)
     {
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDatasetManager>().GetTimestamp();
@@ -181,17 +178,31 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         VerifyOrExit(localSessionId == sessionId);
     }
 
-    // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || IsPendingDataset() || !doesAffectConnectivity);
-
     if (isUpdateFromCommissioner)
     {
-        // Thread specification allows partial dataset changes for MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req
-        // from Commissioner based on existing active dataset.
+        // Verify an MGMT_ACTIVE_SET.req from a Commissioner does not
+        // affect connectivity
+
+        if (IsActiveDataset())
+        {
+            VerifyOrExit(!doesAffectConnectivity);
+        }
+
+        // Thread specification allows partial dataset changes for
+        // MGMT_ACTIVE_SET.req/MGMT_PENDING_SET.req from Commissioner
+        // based on existing active dataset.
+
         IgnoreError(Get<ActiveDatasetManager>().Read(dataset));
     }
 
-    if (IsPendingDataset() || !doesAffectConnectivity)
+    if (IsActiveDataset() && doesAffectConnectivity)
+    {
+        // MGMT_ACTIVE_SET.req which affects connectivity
+        // MUST be delayed using pending dataset.
+
+        Get<PendingDatasetManager>().ApplyActiveDataset(activeTimestamp, aMessage);
+    }
+    else
     {
         offset = aMessage.GetOffset();
 
@@ -236,10 +247,6 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         SuccessOrExit(Save(dataset));
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
     }
-    else
-    {
-        Get<PendingDatasetManager>().ApplyActiveDataset(activeTimestamp, aMessage);
-    }
 
     state = StateTlv::kAccept;
 
@@ -255,11 +262,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
 exit:
-
-    if (Get<Mle::MleRouter>().IsLeader())
-    {
-        SendSetResponse(aMessage, aMessageInfo, state);
-    }
+    SendSetResponse(aMessage, aMessageInfo, state);
 
     return (state == StateTlv::kAccept) ? kErrorNone : kErrorDrop;
 }
