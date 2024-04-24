@@ -93,6 +93,7 @@ RadioSpinel::RadioSpinel(void)
     , mRcpFailure(kRcpFailureNone)
     , mSrcMatchShortEntryCount(0)
     , mSrcMatchExtEntryCount(0)
+    , mSrcMatchEnabled(false)
     , mMacKeySet(false)
     , mCcaEnergyDetectThresholdSet(false)
     , mTransmitPowerSet(false)
@@ -100,6 +101,7 @@ RadioSpinel::RadioSpinel(void)
     , mFemLnaGainSet(false)
     , mEnergyScanning(false)
     , mMacFrameCounterSet(false)
+    , mSrcMatchSet(false)
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     , mDiagMode(false)
@@ -944,7 +946,17 @@ exit:
 
 otError RadioSpinel::EnableSrcMatch(bool aEnable)
 {
-    return Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, aEnable);
+    otError error;
+
+    SuccessOrExit(error = Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, aEnable));
+
+#if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+    mSrcMatchSet     = true;
+    mSrcMatchEnabled = aEnable;
+#endif
+
+exit:
+    return error;
 }
 
 otError RadioSpinel::AddSrcMatchShortEntry(uint16_t aShortAddress)
@@ -2075,6 +2087,11 @@ void RadioSpinel::RestoreProperties(void)
     {
         SuccessOrDie(
             Insert(SPINEL_PROP_MAC_SRC_MATCH_EXTENDED_ADDRESSES, SPINEL_DATATYPE_EUI64_S, mSrcMatchExtEntries[i].m8));
+    }
+
+    if (mSrcMatchSet)
+    {
+        SuccessOrDie(Set(SPINEL_PROP_MAC_SRC_MATCH_ENABLED, SPINEL_DATATYPE_BOOL_S, mSrcMatchEnabled));
     }
 
     if (mCcaEnergyDetectThresholdSet)

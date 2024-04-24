@@ -1278,6 +1278,7 @@ private:
     int8_t       mFemLnaGain;
     uint32_t     mMacFrameCounter;
     bool         mCoexEnabled : 1;
+    bool         mSrcMatchEnabled : 1;
 
     bool mMacKeySet : 1;                   ///< Whether MAC key has been set.
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.
@@ -1286,6 +1287,7 @@ private:
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
     bool mMacFrameCounterSet : 1;          ///< Whether the MAC frame counter has been set.
+    bool mSrcMatchSet : 1;                 ///< Whether the source match feature has been set.
 
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
