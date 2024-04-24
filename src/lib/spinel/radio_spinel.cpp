@@ -211,7 +211,7 @@ void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRc
     sSupportsLogStream            = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
     aSupportsRcpApiVersion        = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
     sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
-    aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_PROP_RCP_MIN_HOST_API_VERSION);
+    aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_MIN_HOST_API_VERSION);
 }
 
 otError RadioSpinel::CheckRadioCapabilities(void)
