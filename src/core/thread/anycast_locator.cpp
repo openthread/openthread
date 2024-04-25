@@ -109,13 +109,7 @@ void AnycastLocator::HandleResponse(Coap::Message *aMessage, const Ip6::MessageI
     address = &meshLocalAddress;
 
 exit:
-    if (mCallback.IsSet())
-    {
-        Callback<LocatorCallback> callbackCopy = mCallback;
-
-        mCallback.Clear();
-        callbackCopy.Invoke(aError, address, rloc16);
-    }
+    mCallback.InvokeAndClearIfSet(aError, address, rloc16);
 }
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE

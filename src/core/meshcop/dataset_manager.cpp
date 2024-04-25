@@ -323,6 +323,7 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::M
     SuccessOrExit(error = aError);
     VerifyOrExit(Tlv::Find<StateTlv>(*aMessage, state) == kErrorNone && state != StateTlv::kPending,
                  error = kErrorParse);
+
     if (state == StateTlv::kReject)
     {
         error = kErrorRejected;
@@ -333,13 +334,7 @@ exit:
 
     mMgmtPending = false;
 
-    if (mMgmtSetCallback.IsSet())
-    {
-        Callback<otDatasetMgmtSetCallback> callbackCopy = mMgmtSetCallback;
-
-        mMgmtSetCallback.Clear();
-        callbackCopy.Invoke(error);
-    }
+    mMgmtSetCallback.InvokeAndClearIfSet(error);
 
     mTimer.Start(kSendSetDelay);
 }

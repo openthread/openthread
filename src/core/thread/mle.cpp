@@ -253,14 +253,7 @@ void Mle::Stop(StopMode aMode)
 
 exit:
     mDetachGracefullyTimer.Stop();
-
-    if (mDetachGracefullyCallback.IsSet())
-    {
-        Callback<otDetachGracefullyCallback> callbackCopy = mDetachGracefullyCallback;
-
-        mDetachGracefullyCallback.Clear();
-        callbackCopy.Invoke();
-    }
+    mDetachGracefullyCallback.InvokeAndClearIfSet();
 }
 
 void Mle::ResetCounters(void)
