@@ -475,90 +475,79 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
     Error            error = kErrorNone;
     Coap::Message   *message;
     Tmf::MessageInfo messageInfo(GetInstance());
-    Tlv              tlv;
-    uint8_t          datasetTlvs[kMaxDatasetTlvs];
-    uint8_t          length;
-
-    length = 0;
+    TlvList          tlvList;
 
     if (aDatasetComponents.IsPresent<Dataset::kActiveTimestamp>())
     {
-        datasetTlvs[length++] = Tlv::kActiveTimestamp;
+        tlvList.Add(Tlv::kActiveTimestamp);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kPendingTimestamp>())
     {
-        datasetTlvs[length++] = Tlv::kPendingTimestamp;
+        tlvList.Add(Tlv::kPendingTimestamp);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kNetworkKey>())
     {
-        datasetTlvs[length++] = Tlv::kNetworkKey;
+        tlvList.Add(Tlv::kNetworkKey);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kNetworkName>())
     {
-        datasetTlvs[length++] = Tlv::kNetworkName;
+        tlvList.Add(Tlv::kNetworkName);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kExtendedPanId>())
     {
-        datasetTlvs[length++] = Tlv::kExtendedPanId;
+        tlvList.Add(Tlv::kExtendedPanId);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kMeshLocalPrefix>())
     {
-        datasetTlvs[length++] = Tlv::kMeshLocalPrefix;
+        tlvList.Add(Tlv::kMeshLocalPrefix);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kDelay>())
     {
-        datasetTlvs[length++] = Tlv::kDelayTimer;
+        tlvList.Add(Tlv::kDelayTimer);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kPanId>())
     {
-        datasetTlvs[length++] = Tlv::kPanId;
+        tlvList.Add(Tlv::kPanId);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kChannel>())
     {
-        datasetTlvs[length++] = Tlv::kChannel;
+        tlvList.Add(Tlv::kChannel);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kPskc>())
     {
-        datasetTlvs[length++] = Tlv::kPskc;
+        tlvList.Add(Tlv::kPskc);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kSecurityPolicy>())
     {
-        datasetTlvs[length++] = Tlv::kSecurityPolicy;
+        tlvList.Add(Tlv::kSecurityPolicy);
     }
 
     if (aDatasetComponents.IsPresent<Dataset::kChannelMask>())
     {
-        datasetTlvs[length++] = Tlv::kChannelMask;
+        tlvList.Add(Tlv::kChannelMask);
+    }
+
+    for (uint8_t index = 0; index < aLength; index++)
+    {
+        tlvList.Add(aTlvTypes[index]);
     }
 
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveGet : kUriPendingGet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    if (aLength + length > 0)
+    if (!tlvList.IsEmpty())
     {
-        tlv.SetType(Tlv::kGet);
-        tlv.SetLength(aLength + length);
-        SuccessOrExit(error = message->Append(tlv));
-
-        if (length > 0)
-        {
-            SuccessOrExit(error = message->AppendBytes(datasetTlvs, length));
-        }
-
-        if (aLength > 0)
-        {
-            SuccessOrExit(error = message->AppendBytes(aTlvTypes, aLength));
-        }
+        SuccessOrExit(error = Tlv::AppendTlv(*message, Tlv::kGet, tlvList.GetArrayBuffer(), tlvList.GetLength()));
     }
 
     IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
