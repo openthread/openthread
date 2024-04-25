@@ -291,7 +291,7 @@ Error DatasetManager::DatasetTlv::ReadFromMessage(const Message &aMessage, uint1
     SuccessOrExit(error = aMessage.Read(aOffset, this, sizeof(Tlv)));
     VerifyOrExit(GetLength() <= Dataset::kMaxValueSize, error = kErrorParse);
     SuccessOrExit(error = aMessage.Read(aOffset + sizeof(Tlv), mValue, GetLength()));
-    VerifyOrExit(Tlv::IsValid(*this), error = kErrorParse);
+    VerifyOrExit(Dataset::IsTlvValid(*this), error = kErrorParse);
 
 exit:
     return error;
