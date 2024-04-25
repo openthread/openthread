@@ -82,7 +82,7 @@ Error DatasetLocal::Restore(Dataset &aDataset)
     SuccessOrExit(error);
 
     mSaved            = true;
-    mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);
+    mTimestampPresent = (aDataset.ReadTimestamp(mType, mTimestamp) == kErrorNone);
 
 exit:
     return error;
@@ -199,7 +199,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
         LogInfo("%s dataset set", Dataset::TypeToString(mType));
     }
 
-    mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);
+    mTimestampPresent = (aDataset.ReadTimestamp(mType, mTimestamp) == kErrorNone);
     mUpdateTime       = TimerMilli::GetNow();
 
 exit:

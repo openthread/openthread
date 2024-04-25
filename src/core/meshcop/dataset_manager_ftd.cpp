@@ -443,7 +443,7 @@ void PendingDatasetManager::ApplyActiveDataset(const Timestamp &aTimestamp, Coap
 
     IgnoreError(dataset.Write<DelayTimerTlv>(Get<Leader>().GetDelayTimerMinimal()));
 
-    dataset.SetTimestamp(Dataset::kPending, aTimestamp);
+    IgnoreError(dataset.Write<PendingTimestampTlv>(aTimestamp));
     IgnoreError(DatasetManager::Save(dataset));
 
     StartDelayTimer();

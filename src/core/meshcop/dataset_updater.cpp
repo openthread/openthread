@@ -139,14 +139,14 @@ void DatasetUpdater::PreparePendingDataset(void)
         }
 
         timestamp.AdvanceRandomTicks();
-        dataset.SetTimestamp(Dataset::kPending, timestamp);
+        IgnoreError(dataset.Write<PendingTimestampTlv>(timestamp));
     }
 
     {
         Timestamp timestamp = dataset.FindTlv(Tlv::kActiveTimestamp)->ReadValueAs<ActiveTimestampTlv>();
 
         timestamp.AdvanceRandomTicks();
-        dataset.SetTimestamp(Dataset::kActive, timestamp);
+        IgnoreError(dataset.Write<ActiveTimestampTlv>(timestamp));
     }
 
     SuccessOrExit(error = Get<PendingDatasetManager>().Save(dataset));
