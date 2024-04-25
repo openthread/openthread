@@ -3982,8 +3982,8 @@ interface eth0
         AdvOnLink on;
         AdvAutonomous %s;
         AdvRouterAddr off;
-        AdvPreferredLifetime 40;
-        AdvValidLifetime 60;
+        AdvPreferredLifetime 1800;
+        AdvValidLifetime 1800;
     };
 };
 EOF

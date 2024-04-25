@@ -188,20 +188,6 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
 
-        # Wait 30 seconds for the radvd `ON_LINK_PREFIX` to be invalidated
-        # and make sure that Thread devices in both networks can't reach
-        # the on-link address.
-        self.simulator.go(30)  # Valid Lifetime of radvd PIO is set to 60 seconds.
-        self.assertEqual(len(host.get_matched_ula_addresses(ON_LINK_PREFIX)), 0)
-        self.assertFalse(router1.ping(host_on_link_addr))
-        self.assertFalse(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
-        self.assertFalse(router2.ping(host_on_link_addr))
-        self.assertFalse(host.ping(router2_omr_addr, backbone=True, interface=host_on_link_addr))
-
-        # Verify connectivity between the two networks.
-        self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-
 
 if __name__ == '__main__':
     unittest.main()

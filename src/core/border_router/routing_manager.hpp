@@ -715,6 +715,8 @@ private:
         void HandleRouterTimer(void);
 
     private:
+        static constexpr uint32_t kFavoredOnLinkPrefixMinPreferredLifetime = 1800; // In sec.
+
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
         static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
