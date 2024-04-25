@@ -104,6 +104,7 @@ build_simulation()
         "-DOT_MESSAGE_USE_HEAP=OFF"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"
+        "-DOT_PLATFORM_LOG_CRASH_DUMP=ON"
         "-DOT_REFERENCE_DEVICE=ON"
         "-DOT_SERVICE=ON"
         "-DOT_SRP_CLIENT=ON"
@@ -173,6 +174,7 @@ build_posix()
         "-DBUILD_TESTING=ON"
         "-DOT_MESSAGE_USE_HEAP=ON"
         "-DOT_PLATFORM_BOOTLOADER_MODE=ON"
+        "-DOT_PLATFORM_LOG_CRASH_DUMP=ON"
         "-DOT_THREAD_VERSION=${version}"
     )
 
