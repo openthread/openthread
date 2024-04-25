@@ -99,6 +99,11 @@ otError otLinkMetricsSendLinkProbe(otInstance         *aInstance,
 }
 
 #if OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
+bool otLinkMetricsManagerIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().IsEnabled();
+}
+
 void otLinkMetricsManagerSetEnabled(otInstance *aInstance, bool aEnable)
 {
     AsCoreType(aInstance).Get<Utils::LinkMetricsManager>().SetEnabled(aEnable);

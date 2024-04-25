@@ -152,6 +152,15 @@ public:
     explicit LinkMetricsManager(Instance &aInstance);
 
     /**
+     * Is the LinkMetricsManager feature enabled.
+     *
+     * @retval TRUE   Link Metrics Manager is enabled.
+     * @retval FALSE  Link Metrics Manager is not enabled.
+     *
+     */
+    bool IsEnabled(void) { return mEnabled; }
+
+    /**
      * Enable/Disable the LinkMetricsManager feature.
      *
      * @param[in]   aEnable  A boolean to indicate enable or disable.

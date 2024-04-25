@@ -3812,8 +3812,6 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-
     /**
      * @cli linkmetricsmgr (enable,disable)
      * @code
@@ -3829,7 +3827,7 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
      * #otLinkMetricsManagerSetEnabled
      *
      */
-    if (ProcessEnableDisable(aArgs, otLinkMetricsManagerSetEnabled) == OT_ERROR_NONE)
+    if (ProcessEnableDisable(aArgs, otLinkMetricsManagerIsEnabled, otLinkMetricsManagerSetEnabled) == OT_ERROR_NONE)
     {
     }
     /**
@@ -3868,7 +3866,6 @@ template <> otError Interpreter::Process<Cmd("linkmetricsmgr")>(Arg aArgs[])
         error = OT_ERROR_INVALID_COMMAND;
     }
 
-exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_LINK_METRICS_MANAGER_ENABLE
