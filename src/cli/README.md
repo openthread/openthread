@@ -121,6 +121,7 @@ Done
 - [srp](README_SRP.md)
 - [tcat](README_TCAT.md)
 - [tcp](README_TCP.md)
+- [test](#test-tmforiginfilter-enabledisable)
 - [thread](#thread-start)
 - [timeinqueue](#timeinqueue)
 - [trel](#trel)
@@ -3609,6 +3610,38 @@ Try to switch to state `detached`, `child`, `router` or `leader`.
 Done
 ```
 
+### test tmforiginfilter \[enable|disable\]
+
+Enable/disable filter that drops UDP messages sent to the TMF port from untrusted origin. Also get the current state of the filter if no argument is specified.
+
+Note: This filter is enabled by default.
+
+This command is intended for testing only. `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is required for all `test` sub-commands.
+
+Get the current state of the filter.
+
+```
+> test tmforiginfilter
+Enabled
+```
+
+Enable or disable the filter.
+
+```
+> test tmforiginfilter enable
+Done
+>
+> test tmforiginfilter
+Enabled
+>
+> test tmforiginfilter disable
+Done
+>
+> test tmforiginfilter
+Disabled
+>
+```
+
 ### thread start
 
 Enable Thread protocol operation and attach to a Thread network.
@@ -3821,7 +3854,7 @@ Done
 
 ### tvcheck disable
 
-Enable thread version check when upgrading to router or leader.
+Disable thread version check when upgrading to router or leader.
 
 Note: Thread version check is enabled by default.
 
