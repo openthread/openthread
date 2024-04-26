@@ -206,6 +206,25 @@ public:
             Invoke(static_cast<Args &&>(aArgs)...);
         }
     }
+
+    /**
+     * Invokes the callback handler if it is set and clears it.
+     *
+     * The method MUST be used when the handler function returns `void`.
+     *
+     * The callback is cleared first before invoking its handler to allow it to be set again from the handler
+     * implementation.
+     *
+     * @param[in] aArgs   The args to pass to the callback handler.
+     *
+     */
+    template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
+    {
+        Callback<HandlerType, kContextAsLastArg> callbackCopy = *this;
+
+        CallbackBase<HandlerType>::Clear();
+        callbackCopy.InvokeIfSet(static_cast<Args &&>(aArgs)...);
+    }
 };
 
 // Specialization for `kContextAsFirstArg`
@@ -235,6 +254,25 @@ public:
         {
             Invoke(static_cast<Args &&>(aArgs)...);
         }
+    }
+
+    /**
+     * Invokes the callback handler if it is set and clears it.
+     *
+     * The method MUST be used when the handler function returns `void`.
+     *
+     * The callback is cleared first before invoking its handler to allow it to be set again from the handler
+     * implementation.
+     *
+     * @param[in] aArgs   The args to pass to the callback handler.
+     *
+     */
+    template <typename... Args> void InvokeAndClearIfSet(Args &&...aArgs)
+    {
+        Callback<HandlerType, kContextAsFirstArg> callbackCopy = *this;
+
+        CallbackBase<HandlerType>::Clear();
+        callbackCopy.InvokeIfSet(static_cast<Args &&>(aArgs)...);
     }
 };
 
