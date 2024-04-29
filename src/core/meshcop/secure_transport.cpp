@@ -220,17 +220,11 @@ void SecureTransport::HandleReceive(Message &aMessage, const Ip6::MessageInfo &a
             mRemainingConnectionAttempts--;
         }
 
-        IgnoreError(mSocket.Connect(Ip6::SockAddr(aMessageInfo.GetPeerAddr(), aMessageInfo.GetPeerPort())));
-
         mMessageInfo.SetPeerAddr(aMessageInfo.GetPeerAddr());
         mMessageInfo.SetPeerPort(aMessageInfo.GetPeerPort());
         mMessageInfo.SetIsHostInterface(aMessageInfo.IsHostInterface());
 
-        if (Get<ThreadNetif>().HasUnicastAddress(aMessageInfo.GetSockAddr()))
-        {
-            mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
-        }
-
+        mMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
         mMessageInfo.SetSockPort(aMessageInfo.GetSockPort());
 
         SuccessOrExit(Setup(false));
@@ -514,7 +508,6 @@ void SecureTransport::Disconnect(void)
     mTimer.Start(kGuardTimeNewConnectionMilli);
 
     mMessageInfo.Clear();
-    IgnoreError(mSocket.Connect());
 
     FreeMbedtls();
 
