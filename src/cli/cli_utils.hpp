@@ -28,11 +28,11 @@
 
 /**
  * @file
- *   This file contains definitions for the CLI output.
+ *   This file contains definitions for the CLI util functions.
  */
 
-#ifndef CLI_OUTPUT_HPP_
-#define CLI_OUTPUT_HPP_
+#ifndef CLI_UTILS_HPP_
+#define CLI_UTILS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -184,7 +184,7 @@ public:
     }
 
     /**
-     * Initializes the `Output` object.
+     * Initializes the `Utils` object.
      *
      * @param[in] aInstance           A pointer to OpenThread instance.
      * @param[in] aImplementer        An `OutputImplementer`.
@@ -707,4 +707,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_OUTPUT_HPP_
+#endif // CLI_UTILS_HPP_
