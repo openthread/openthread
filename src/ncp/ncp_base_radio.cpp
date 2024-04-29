@@ -35,6 +35,7 @@
 #include <openthread/link.h>
 #include <openthread/link_raw.h>
 #include <openthread/ncp.h>
+#include <openthread/platform/misc.h>
 #include <openthread/platform/multipan.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
@@ -612,6 +613,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_ENH_ACK_PROBING>(
 exit:
     return error;
 }
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_RCP_LOG_CRASH_DUMP>(void) { return otPlatLogCrashDump(); }
 #endif
 
 } // namespace Ncp
