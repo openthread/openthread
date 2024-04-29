@@ -89,7 +89,7 @@ template <> otError SrpClient::Process<Cmd("autostart")>(Arg aArgs[])
         ExitNow();
     }
 
-    SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
 
     /**
      * @cli srp client autostart enable
@@ -173,7 +173,7 @@ template <> otError SrpClient::Process<Cmd("callback")>(Arg aArgs[])
         ExitNow();
     }
 
-    error = Interpreter::ParseEnableOrDisable(aArgs[0], mCallbackEnabled);
+    error = ParseEnableOrDisable(aArgs[0], mCallbackEnabled);
 
 exit:
     return error;
