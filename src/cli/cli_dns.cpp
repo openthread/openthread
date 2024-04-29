@@ -94,7 +94,7 @@ template <> otError Dns::Process<Cmd("compression")>(Arg aArgs[])
     {
         bool enable;
 
-        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
         otDnsSetNameCompressionEnabled(enable);
     }
 

@@ -360,7 +360,7 @@ template <> otError UdpExample::Process<Cmd("linksecurity")>(Arg aArgs[])
      */
     else
     {
-        error = Interpreter::ParseEnableOrDisable(aArgs[0], mLinkSecurityEnabled);
+        error = ParseEnableOrDisable(aArgs[0], mLinkSecurityEnabled);
     }
 
     return error;
