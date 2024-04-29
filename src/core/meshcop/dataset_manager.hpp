@@ -55,6 +55,12 @@ class DatasetManager : public InstanceLocator
 {
 public:
     /**
+     * Callback function pointer, invoked when a response to a MGMT_SET request is received or times out.
+     *
+     */
+    typedef otDatasetMgmtSetCallback MgmtSetCallback;
+
+    /**
      * Returns a pointer to the Timestamp.
      *
      * @returns A pointer to the Timestamp.
@@ -146,11 +152,11 @@ public:
      * @retval kErrorBusy    A previous request is ongoing.
      *
      */
-    Error SendSetRequest(const Dataset::Info     &aDatasetInfo,
-                         const uint8_t           *aTlvs,
-                         uint8_t                  aLength,
-                         otDatasetMgmtSetCallback aCallback,
-                         void                    *aContext);
+    Error SendSetRequest(const Dataset::Info &aDatasetInfo,
+                         const uint8_t       *aTlvs,
+                         uint8_t              aLength,
+                         MgmtSetCallback      aCallback,
+                         void                *aContext);
 
     /**
      * Sends a MGMT_GET request.
@@ -368,7 +374,7 @@ private:
     bool       mMgmtPending : 1;
     TimerMilli mTimer;
 
-    Callback<otDatasetMgmtSetCallback> mMgmtSetCallback;
+    Callback<MgmtSetCallback> mMgmtSetCallback;
 };
 
 class ActiveDatasetManager : public DatasetManager, private NonCopyable
