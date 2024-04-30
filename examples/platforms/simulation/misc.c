@@ -111,11 +111,5 @@ otPlatMcuPowerState otPlatGetMcuPowerState(otInstance *aInstance)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_LOG_CRASH_DUMP_ENABLE
-otError otPlatLogCrashDump(void)
-{
-    otLogCritPlat("LOGGING SIMULATED CRASH DUMP");
-    otLogCritPlat("Reset Reason: %d", sPlatResetReason);
-
-    return OT_ERROR_NONE;
-}
+otError otPlatLogCrashDump(void) { return OT_ERROR_NONE; }
 #endif
