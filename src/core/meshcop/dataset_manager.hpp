@@ -189,30 +189,6 @@ public:
 
 protected:
     /**
-     * Defines a generic Dataset TLV to read from a message.
-     *
-     */
-    OT_TOOL_PACKED_BEGIN
-    class DatasetTlv : public Tlv
-    {
-    public:
-        /**
-         * Reads the Dataset TLV from a given message at a given offset.
-         *
-         * @param[in]  aMessage  A message to read the TLV from.
-         * @param[in]  aOffset   An offset into the message to read from.
-         *
-         * @retval kErrorNone    The TLV was read successfully.
-         * @retval kErrorParse   The TLV was not well-formed and could not be parsed.
-         *
-         */
-        Error ReadFromMessage(const Message &aMessage, uint16_t aOffset);
-
-    private:
-        uint8_t mValue[Dataset::kMaxValueSize];
-    } OT_TOOL_PACKED_END;
-
-    /**
      * Initializes the object.
      *
      * @param[in]  aInstance      A reference to the OpenThread instance.
@@ -331,7 +307,7 @@ protected:
      * @retval kErrorDrop  The MGMT_SET request message was dropped.
      *
      */
-    Error HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleSet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     DatasetLocal mLocal;
@@ -347,6 +323,16 @@ private:
         TlvList(void) = default;
         void Add(uint8_t aTlvType);
     };
+
+#if OPENTHREAD_FTD
+    struct SetRequestInfo : Clearable<SetRequestInfo> // Information from a MGMT_SET request message.
+    {
+        Dataset mDataset;
+        bool    mIsFromCommissioner;
+        bool    mAffectsConnectivity;
+        bool    mAffectsNetworkKey;
+    };
+#endif
 
     static void HandleMgmtSetResponse(void                *aContext,
                                       otMessage           *aMessage,
@@ -365,7 +351,8 @@ private:
                           const TlvList          &aTlvList) const;
 
 #if OPENTHREAD_FTD
-    void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
+    Error ProcessSetRequest(const Coap::Message &aMessage, SetRequestInfo &aInfo) const;
+    void  SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
     static constexpr uint8_t  kMaxDatasetTlvs = 16;   // Maximum number of TLVs in a Dataset.
@@ -522,6 +509,7 @@ DeclareTmfHandler(ActiveDatasetManager, kUriActiveSet);
 class PendingDatasetManager : public DatasetManager, private NonCopyable
 {
     friend class Tmf::Agent;
+    friend class DatasetManager;
 
 public:
     /**
@@ -606,18 +594,13 @@ public:
      *
      */
     void StartLeader(void);
-
-    /**
-     * Generates a Pending Dataset from an Active Dataset.
-     *
-     * @param[in]  aTimestamp  The Active Dataset Timestamp.
-     * @param[in]  aMessage    The MGMT_SET message that contains an Active Dataset.
-     *
-     */
-    void ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage);
 #endif
 
 private:
+#if OPENTHREAD_FTD
+    void ApplyActiveDataset(Dataset &aDataset);
+#endif
+
     void StartDelayTimer(void);
 
     static void HandleTimer(Timer &aTimer);
