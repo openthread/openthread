@@ -37,12 +37,12 @@ extern "C" {
  * Represents the mode of the co-processor.
  * A co-processor could be either a RCP or NCP.
  */
-enum CoprocessorType
+typedef enum CoprocessorType
 {
     OT_COPROCESSOR_UNKNOWN = 0,
     OT_COPROCESSOR_RCP     = 1,
     OT_COPROCESSOR_NCP     = 2,
-};
+} CoprocessorType;
 
 #ifdef __cplusplus
 }

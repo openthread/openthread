@@ -43,6 +43,18 @@ class SpinelManager
 {
 public:
     /**
+     * Returns the static instance of the SpinelDriver.
+     *
+     */
+    static Spinel::SpinelDriver &GetSpinelDriver(void);
+
+    /**
+     * Returns the static instance of the SpinelManager.
+     *
+     */
+    static SpinelManager &GetSpinelManager(void);
+
+    /**
      * Constructor of the SpinelManager
      *
      */
@@ -78,51 +90,40 @@ public:
      * @returns The spinel interface.
      *
      */
-    ot::Spinel::SpinelInterface &GetSpinelInterface(void)
+    Spinel::SpinelInterface &GetSpinelInterface(void)
     {
         OT_ASSERT(mSpinelInterface != nullptr);
         return *mSpinelInterface;
     }
 
-    /**
-     * Returns the spinel driver.
-     *
-     * @returns The spinel driver.
-     *
-     */
-    ot::Spinel::SpinelDriver &GetSpinelDriver(void) { return mSpinelDriver; }
-
 private:
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     void VirtualTimeInit(void);
 #endif
-    void GetIidListFromUrl(spinel_iid_t (&aIidList)[ot::Spinel::kSpinelHeaderMaxNumIid]);
+    void GetIidListFromUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid]);
 
-    ot::Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
+    Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
-    static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)
-                                                          ? sizeof(ot::Posix::SpiInterface)
-                                                          : sizeof(ot::Posix::HdlcInterface);
+    static constexpr size_t kSpinelInterfaceRawSize = sizeof(Posix::SpiInterface) > sizeof(Posix::HdlcInterface)
+                                                          ? sizeof(Posix::SpiInterface)
+                                                          : sizeof(Posix::HdlcInterface);
 #elif OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE
-    static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::HdlcInterface);
+    static constexpr size_t kSpinelInterfaceRawSize = sizeof(Posix::HdlcInterface);
 #elif OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
-    static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface);
+    static constexpr size_t kSpinelInterfaceRawSize = sizeof(Posix::SpiInterface);
 #elif OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_ENABLE
-    static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::VendorInterface);
+    static constexpr size_t kSpinelInterfaceRawSize = sizeof(Posix::VendorInterface);
 #else
 #error "No Spinel interface is specified!"
 #endif
 
-    RadioUrl                     mUrl;
-    ot::Spinel::SpinelDriver     mSpinelDriver;
-    ot::Spinel::SpinelInterface *mSpinelInterface;
+    RadioUrl                 mUrl;
+    Spinel::SpinelDriver     mSpinelDriver;
+    Spinel::SpinelInterface *mSpinelInterface;
 
     OT_DEFINE_ALIGNED_VAR(mSpinelInterfaceRaw, kSpinelInterfaceRawSize, uint64_t);
 };
-
-ot::Spinel::SpinelDriver &GetSpinelDriver(void);
-SpinelManager            &GetSpinelManager(void);
 
 } // namespace Posix
 } // namespace ot

@@ -43,9 +43,9 @@ static ot::Posix::SpinelManager sSpinelManager;
 namespace ot {
 namespace Posix {
 
-SpinelManager &GetSpinelManager(void) { return sSpinelManager; }
+SpinelManager &SpinelManager::GetSpinelManager(void) { return sSpinelManager; }
 
-ot::Spinel::SpinelDriver &GetSpinelDriver(void) { return sSpinelManager.GetSpinelDriver(); }
+Spinel::SpinelDriver &SpinelManager::GetSpinelDriver(void) { return sSpinelManager.mSpinelDriver; }
 
 SpinelManager::SpinelManager(void)
     : mUrl(nullptr)
@@ -59,7 +59,7 @@ SpinelManager::~SpinelManager(void) { Deinit(); }
 CoprocessorType SpinelManager::Init(const char *aUrl)
 {
     bool            swReset;
-    spinel_iid_t    iidList[ot::Spinel::kSpinelHeaderMaxNumIid];
+    spinel_iid_t    iidList[Spinel::kSpinelHeaderMaxNumIid];
     CoprocessorType mode;
 
     mUrl.Init(aUrl);
@@ -94,9 +94,9 @@ void SpinelManager::Deinit(void)
     mSpinelDriver.Deinit();
 }
 
-ot::Spinel::SpinelInterface *SpinelManager::CreateSpinelInterface(const char *aInterfaceName)
+Spinel::SpinelInterface *SpinelManager::CreateSpinelInterface(const char *aInterfaceName)
 {
-    ot::Spinel::SpinelInterface *interface;
+    Spinel::SpinelInterface *interface;
 
     if (aInterfaceName == nullptr)
     {
@@ -129,7 +129,7 @@ ot::Spinel::SpinelInterface *SpinelManager::CreateSpinelInterface(const char *aI
     return interface;
 }
 
-void SpinelManager::GetIidListFromUrl(spinel_iid_t (&aIidList)[ot::Spinel::kSpinelHeaderMaxNumIid])
+void SpinelManager::GetIidListFromUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid])
 {
     const char *iidString;
     const char *iidListString;
@@ -201,14 +201,14 @@ void platformSpinelManagerDeinit(void) { return sSpinelManager.Deinit(); }
 void virtualTimeSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    sSpinelManager.GetSpinelDriver().Process(aEvent);
+    ot::Posix::SpinelManager::GetSpinelDriver().Process(aEvent);
 }
 #else
 void platformSpinelManagerProcess(otInstance *aInstance, const otSysMainloopContext *aContext)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sSpinelManager.GetSpinelDriver().Process(aContext);
+    ot::Posix::SpinelManager::GetSpinelDriver().Process(aContext);
 }
 #endif // OPENTHREAD_POSIX_VIRTUAL_TIME
 
@@ -216,7 +216,7 @@ void platformSpinelManagerUpdateFdSet(otSysMainloopContext *aContext)
 {
     sSpinelManager.GetSpinelInterface().UpdateFdSet(aContext);
 
-    if (sSpinelManager.GetSpinelDriver().HasPendingFrame())
+    if (ot::Posix::SpinelManager::GetSpinelDriver().HasPendingFrame())
     {
         aContext->mTimeout.tv_sec  = 0;
         aContext->mTimeout.tv_usec = 0;

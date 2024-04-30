@@ -76,7 +76,7 @@ public:
      * @returns A reference to the radio's spinel interface instance.
      *
      */
-    Spinel::SpinelInterface &GetSpinelInterface(void) { return GetSpinelManager().GetSpinelInterface(); }
+    Spinel::SpinelInterface &GetSpinelInterface(void) { return SpinelManager::GetSpinelManager().GetSpinelInterface(); }
 
     /**
      * Acts as an accessor to the radio spinel instance used by the radio.

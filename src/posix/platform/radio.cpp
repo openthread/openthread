@@ -89,7 +89,7 @@ void Radio::Init(const char *aUrl)
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver());
+    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &SpinelManager::GetSpinelDriver());
 
     ProcessRadioUrl(mRadioUrl);
 }
