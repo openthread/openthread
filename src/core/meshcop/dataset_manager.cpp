@@ -244,10 +244,8 @@ void DatasetManager::HandleTimer(void) { SendSet(); }
 
 void DatasetManager::SendSet(void)
 {
-    Error            error;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
-    Dataset          dataset;
+    Error   error = kErrorNone;
+    Dataset dataset;
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
@@ -264,44 +262,49 @@ void DatasetManager::SendSet(void)
         if ((pendingDataset.Read<ActiveTimestampTlv>(timestamp) == kErrorNone) &&
             (Timestamp::Compare(&timestamp, mLocal.GetTimestamp()) == 0))
         {
-            // stop registration attempts during dataset transition
+            // Stop registration attempts during dataset transition
             ExitNow(error = kErrorInvalidState);
         }
     }
 
+    IgnoreError(Read(dataset));
+
+    error = SendSetRequest(dataset);
+
+exit:
+    if (error == kErrorNoBufs)
+    {
+        mTimer.Start(kSendSetDelay);
+    }
+
+    if (error != kErrorAlready)
+    {
+        LogWarnOnError(error, "send Dataset set to leader");
+    }
+}
+
+Error DatasetManager::SendSetRequest(const Dataset &aDataset)
+{
+    Error            error   = kErrorNone;
+    Coap::Message   *message = nullptr;
+    Tmf::MessageInfo messageInfo(GetInstance());
+
+    VerifyOrExit(!mMgmtPending, error = kErrorAlready);
+
     message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
     VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
-    IgnoreError(Read(dataset));
-    SuccessOrExit(error = message->AppendBytes(dataset.GetBytes(), dataset.GetLength()));
-
+    SuccessOrExit(error = message->AppendBytes(aDataset.GetBytes(), aDataset.GetLength()));
     IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
-    SuccessOrExit(
-        error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DatasetManager::HandleMgmtSetResponse, this));
 
-    LogInfo("Sent %s set to leader", Dataset::TypeToString(GetType()));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
+    mMgmtPending = true;
+
+    LogInfo("Sent dataset set request to leader");
 
 exit:
-
-    switch (error)
-    {
-    case kErrorNone:
-        mMgmtPending = true;
-        break;
-
-    case kErrorNoBufs:
-        mTimer.Start(kSendSetDelay);
-        OT_FALL_THROUGH;
-
-    default:
-        if (error != kErrorAlready)
-        {
-            LogWarnOnError(error, "send Dataset set to leader");
-        }
-
-        FreeMessage(message);
-        break;
-    }
+    FreeMessageOnError(message, error);
+    return error;
 }
 
 void DatasetManager::HandleMgmtSetResponse(void                *aContext,
@@ -408,53 +411,29 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-Error DatasetManager::AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const
-{
-    Dataset dataset;
-
-    dataset.SetFrom(aDatasetInfo);
-    return aMessage.AppendBytes(dataset.GetBytes(), dataset.GetLength());
-}
-
 Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
                                      const uint8_t       *aTlvs,
                                      uint8_t              aLength,
                                      MgmtSetCallback      aCallback,
                                      void                *aContext)
 {
-    Error            error   = kErrorNone;
-    Coap::Message   *message = nullptr;
-    Tmf::MessageInfo messageInfo(GetInstance());
+    Error   error = kErrorNone;
+    Dataset dataset;
 
-    VerifyOrExit(!mMgmtPending, error = kErrorBusy);
-
-    message = Get<Tmf::Agent>().NewPriorityConfirmablePostMessage(IsActiveDataset() ? kUriActiveSet : kUriPendingSet);
-    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
+    dataset.SetFrom(aDatasetInfo);
+    SuccessOrExit(error = dataset.AppendTlvsFrom(aTlvs, aLength));
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
-    if (Get<Commissioner>().IsActive() && (Tlv::Find<CommissionerSessionIdTlv>(aTlvs, aLength) == nullptr))
+    if (Get<Commissioner>().IsActive() && !dataset.ContainsTlv(Tlv::kCommissionerSessionId))
     {
-        SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, Get<Commissioner>().GetSessionId()));
+        SuccessOrExit(error = dataset.Write<CommissionerSessionIdTlv>(Get<Commissioner>().GetSessionId()));
     }
 #endif
 
-    SuccessOrExit(error = AppendDatasetToMessage(aDatasetInfo, *message));
-
-    if (aLength > 0)
-    {
-        SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
-    }
-
-    IgnoreError(messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
-
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
+    SuccessOrExit(error = SendSetRequest(dataset));
     mMgmtSetCallback.Set(aCallback, aContext);
-    mMgmtPending = true;
-
-    LogInfo("sent dataset set request to leader");
 
 exit:
-    FreeMessageOnError(message, error);
     return error;
 }
 
