@@ -396,6 +396,7 @@ jobs:
         retention-days: 1
 
   upload-coverage:
+    if: github.repository == 'openthread/openthread'
     needs:
     - thread-1-3
     - packet-verification-low-power
