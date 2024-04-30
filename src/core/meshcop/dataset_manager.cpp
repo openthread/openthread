@@ -420,11 +420,11 @@ exit:
     return error;
 }
 
-Error DatasetManager::SendSetRequest(const Dataset::Info     &aDatasetInfo,
-                                     const uint8_t           *aTlvs,
-                                     uint8_t                  aLength,
-                                     otDatasetMgmtSetCallback aCallback,
-                                     void                    *aContext)
+Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
+                                     const uint8_t       *aTlvs,
+                                     uint8_t              aLength,
+                                     MgmtSetCallback      aCallback,
+                                     void                *aContext)
 {
     Error            error   = kErrorNone;
     Coap::Message   *message = nullptr;
