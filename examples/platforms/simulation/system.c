@@ -40,9 +40,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <getopt.h>
-#include <ifaddrs.h>
 #include <libgen.h>
-#include <netinet/in.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -55,7 +53,6 @@
 #include <openthread/platform/radio.h>
 
 #include "simul_utils.h"
-#include "utils/code_utils.h"
 
 uint32_t gNodeId = 1;
 
@@ -103,56 +100,6 @@ static void PrintUsage(const char *aProgramName, int aExitCode)
             aProgramName);
 
     exit(aExitCode);
-}
-
-static const char *GetLocalHostAddress(const char *aLocalHost)
-{
-    struct ifaddrs *ifaddr;
-    static char     ipstr[INET_ADDRSTRLEN] = {0};
-    const char     *rval                   = NULL;
-
-    {
-        struct in_addr addr;
-
-        otEXPECT_ACTION(inet_aton(aLocalHost, &addr) == 0, rval = aLocalHost);
-    }
-
-    if (getifaddrs(&ifaddr) == -1)
-    {
-        perror("getifaddrs");
-        exit(EXIT_FAILURE);
-    }
-
-    for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
-    {
-        if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET)
-        {
-            continue;
-        }
-
-        if (strcmp(ifa->ifa_name, aLocalHost) == 0)
-        {
-            struct sockaddr_in *addr = (struct sockaddr_in *)ifa->ifa_addr;
-
-            if (inet_ntop(AF_INET, &addr->sin_addr, ipstr, sizeof(ipstr)))
-            {
-                break;
-            }
-        }
-    }
-
-    freeifaddrs(ifaddr);
-
-    if (ipstr[0] == '\0')
-    {
-        fprintf(stderr, "Local host address not found!\n");
-        exit(EXIT_FAILURE);
-    }
-
-    rval = ipstr;
-
-exit:
-    return rval;
 }
 
 void otSysInit(int aArgCount, char *aArgVector[])
@@ -210,8 +157,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
             gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
             break;
         case OT_SIM_OPT_LOCAL_HOST:
-            gLocalHost = GetLocalHostAddress(optarg);
-            fprintf(stderr, "Simulate on %s\n", gLocalHost);
+            gLocalHost = optarg;
             break;
         case OT_SIM_OPT_TIME_SPEED:
             speedUpFactor = (uint32_t)strtol(optarg, &endptr, 10);
