@@ -117,7 +117,7 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
         OutputFormat(" %s", flagsString);
     }
 
-    OutputLine(" %s %04x", Interpreter::PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
 void NetworkData::RouteFlagsToString(const otExternalRouteConfig &aConfig, FlagsString &aString)
@@ -155,7 +155,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
         OutputFormat(" %s", flagsString);
     }
 
-    OutputLine(" %s %04x", Interpreter::PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
+    OutputLine(" %s %04x", PreferenceToString(aConfig.mPreference), aConfig.mRloc16);
 }
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)
@@ -343,7 +343,7 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
     {
         otBorderRouterConfig config;
 
-        SuccessOrExit(error = Interpreter::ParsePrefix(aArgs + 1, config));
+        SuccessOrExit(error = ParsePrefix(aArgs + 1, config));
         error = otNetDataPublishOnMeshPrefix(GetInstancePtr(), &config);
         ExitNow();
     }
@@ -364,7 +364,7 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
     {
         otExternalRouteConfig config;
 
-        SuccessOrExit(error = Interpreter::ParseRoute(aArgs + 1, config));
+        SuccessOrExit(error = ParseRoute(aArgs + 1, config));
         error = otNetDataPublishExternalRoute(GetInstancePtr(), &config);
         ExitNow();
     }
@@ -387,7 +387,7 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
         otExternalRouteConfig config;
 
         SuccessOrExit(error = aArgs[1].ParseAsIp6Prefix(prefix));
-        SuccessOrExit(error = Interpreter::ParseRoute(aArgs + 2, config));
+        SuccessOrExit(error = ParseRoute(aArgs + 2, config));
         error = otNetDataReplacePublishedExternalRoute(GetInstancePtr(), &prefix, &config);
         ExitNow();
     }
@@ -493,7 +493,7 @@ template <> otError NetworkData::Process<Cmd("steeringdata")>(Arg aArgs[])
 
     VerifyOrExit(aArgs[0] == "check", error = OT_ERROR_INVALID_ARGS);
 
-    error = Interpreter::ParseJoinerDiscerner(aArgs[1], discerner);
+    error = ParseJoinerDiscerner(aArgs[1], discerner);
 
     if (error == OT_ERROR_NOT_FOUND)
     {

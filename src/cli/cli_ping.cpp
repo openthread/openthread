@@ -96,7 +96,7 @@ otError PingSender::Process(Arg aArgs[])
         aArgs++;
     }
 
-    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64Synth));
+    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], config.mDestination, nat64Synth));
 
     if (nat64Synth)
     {

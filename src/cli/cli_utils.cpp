@@ -517,5 +517,270 @@ otError Utils::ProcessEnableDisable(Arg                       aArgs[],
     return error;
 }
 
+otError Utils::ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner)
+{
+    otError error;
+    char   *separator;
+
+    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    separator = strstr(aArg.GetCString(), "/");
+
+    VerifyOrExit(separator != nullptr, error = OT_ERROR_NOT_FOUND);
+
+    SuccessOrExit(error = ot::Utils::CmdLineParser::ParseAsUint8(separator + 1, aDiscerner.mLength));
+    VerifyOrExit(aDiscerner.mLength > 0 && aDiscerner.mLength <= 64, error = OT_ERROR_INVALID_ARGS);
+    *separator = '\0';
+    error      = aArg.ParseAsUint64(aDiscerner.mValue);
+
+exit:
+    return error;
+}
+
+otError Utils::ParsePreference(const Arg &aArg, otRoutePreference &aPreference)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArg == "high")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_HIGH;
+    }
+    else if (aArg == "med")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_MED;
+    }
+    else if (aArg == "low")
+    {
+        aPreference = OT_ROUTE_PREFERENCE_LOW;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+
+const char *Utils::PreferenceToString(signed int aPreference)
+{
+    const char *str = "";
+
+    switch (aPreference)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+        str = "low";
+        break;
+
+    case OT_ROUTE_PREFERENCE_MED:
+        str = "med";
+        break;
+
+    case OT_ROUTE_PREFERENCE_HIGH:
+        str = "high";
+        break;
+
+    default:
+        break;
+    }
+
+    return str;
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+otError Utils::ParseToIp6Address(otInstance *aInstance, const Arg &aArg, otIp6Address &aAddress, bool &aSynthesized)
+{
+    Error error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aArg.IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    error        = aArg.ParseAsIp6Address(aAddress);
+    aSynthesized = false;
+
+    if (error != OT_ERROR_NONE)
+    {
+        // It might be an IPv4 address, let's have a try.
+        otIp4Address ip4Address;
+
+        // Do not touch the error value if we failed to parse it as an IPv4 address.
+        SuccessOrExit(aArg.ParseAsIp4Address(ip4Address));
+        SuccessOrExit(error = otNat64SynthesizeIp6Address(aInstance, &ip4Address, &aAddress));
+        aSynthesized = true;
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+otError Utils::ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig)
+{
+    otError error = OT_ERROR_NONE;
+
+    ClearAllBytes(aConfig);
+
+    SuccessOrExit(error = aArgs[0].ParseAsIp6Prefix(aConfig.mPrefix));
+    aArgs++;
+
+    for (; !aArgs->IsEmpty(); aArgs++)
+    {
+        otRoutePreference preference;
+
+        if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
+        {
+            aConfig.mPreference = preference;
+        }
+        else
+        {
+            for (char *arg = aArgs->GetCString(); *arg != '\0'; arg++)
+            {
+                switch (*arg)
+                {
+                case 'p':
+                    aConfig.mPreferred = true;
+                    break;
+
+                case 'a':
+                    aConfig.mSlaac = true;
+                    break;
+
+                case 'd':
+                    aConfig.mDhcp = true;
+                    break;
+
+                case 'c':
+                    aConfig.mConfigure = true;
+                    break;
+
+                case 'r':
+                    aConfig.mDefaultRoute = true;
+                    break;
+
+                case 'o':
+                    aConfig.mOnMesh = true;
+                    break;
+
+                case 's':
+                    aConfig.mStable = true;
+                    break;
+
+                case 'n':
+                    aConfig.mNdDns = true;
+                    break;
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+                case 'D':
+                    aConfig.mDp = true;
+                    break;
+#endif
+                case '-':
+                    break;
+
+                default:
+                    ExitNow(error = OT_ERROR_INVALID_ARGS);
+                }
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError Utils::ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig)
+{
+    otError error = OT_ERROR_NONE;
+
+    ClearAllBytes(aConfig);
+
+    SuccessOrExit(error = aArgs[0].ParseAsIp6Prefix(aConfig.mPrefix));
+    aArgs++;
+
+    for (; !aArgs->IsEmpty(); aArgs++)
+    {
+        otRoutePreference preference;
+
+        if (ParsePreference(*aArgs, preference) == OT_ERROR_NONE)
+        {
+            aConfig.mPreference = preference;
+        }
+        else
+        {
+            for (char *arg = aArgs->GetCString(); *arg != '\0'; arg++)
+            {
+                switch (*arg)
+                {
+                case 's':
+                    aConfig.mStable = true;
+                    break;
+
+                case 'n':
+                    aConfig.mNat64 = true;
+                    break;
+
+                case 'a':
+                    aConfig.mAdvPio = true;
+                    break;
+
+                case '-':
+                    break;
+
+                default:
+                    ExitNow(error = OT_ERROR_INVALID_ARGS);
+                }
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+const char *Utils::LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize])
+{
+    char *flagsPtr = &aStringBuffer[0];
+
+    if (aLinkMode.mRxOnWhenIdle)
+    {
+        *flagsPtr++ = 'r';
+    }
+
+    if (aLinkMode.mDeviceType)
+    {
+        *flagsPtr++ = 'd';
+    }
+
+    if (aLinkMode.mNetworkData)
+    {
+        *flagsPtr++ = 'n';
+    }
+
+    if (flagsPtr == &aStringBuffer[0])
+    {
+        *flagsPtr++ = '-';
+    }
+
+    *flagsPtr = '\0';
+
+    return aStringBuffer;
+}
+
+const char *Utils::AddressOriginToString(uint8_t aOrigin)
+{
+    static const char *const kOriginStrings[4] = {
+        "thread", // 0, OT_ADDRESS_ORIGIN_THREAD
+        "slaac",  // 1, OT_ADDRESS_ORIGIN_SLAAC
+        "dhcp6",  // 2, OT_ADDRESS_ORIGIN_DHCPV6
+        "manual", // 3, OT_ADDRESS_ORIGIN_MANUAL
+    };
+
+    static_assert(0 == OT_ADDRESS_ORIGIN_THREAD, "OT_ADDRESS_ORIGIN_THREAD value is incorrect");
+    static_assert(1 == OT_ADDRESS_ORIGIN_SLAAC, "OT_ADDRESS_ORIGIN_SLAAC value is incorrect");
+    static_assert(2 == OT_ADDRESS_ORIGIN_DHCPV6, "OT_ADDRESS_ORIGIN_DHCPV6 value is incorrect");
+    static_assert(3 == OT_ADDRESS_ORIGIN_MANUAL, "OT_ADDRESS_ORIGIN_MANUAL value is incorrect");
+
+    return Stringify(aOrigin, kOriginStrings);
+}
+
 } // namespace Cli
 } // namespace ot

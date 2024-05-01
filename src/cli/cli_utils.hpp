@@ -38,7 +38,11 @@
 
 #include <stdarg.h>
 
+#include <openthread/border_router.h>
+#include <openthread/border_routing.h>
 #include <openthread/cli.h>
+#include <openthread/joiner.h>
+#include <openthread/thread.h>
 
 #include "cli_config.h"
 
@@ -644,6 +648,114 @@ public:
     otError ProcessEnableDisable(Arg                       aArgs[],
                                  IsEnabledHandler          aIsEnabledHandler,
                                  SetEnabledHandlerFailable aSetEnabledHandler);
+
+    /**
+     * Parses a given argument string as a route preference comparing it against  "high", "med", or
+     * "low".
+     *
+     * @param[in]  aArg          The argument string to parse.
+     * @param[out] aPreference   Reference to a `otRoutePreference` to return the parsed preference.
+     *
+     * @retval OT_ERROR_NONE             Successfully parsed @p aArg and updated @p aPreference.
+     * @retval OT_ERROR_INVALID_ARG      @p aArg is not a valid preference string "high", "med", or "low".
+     *
+     */
+    static otError ParsePreference(const Arg &aArg, otRoutePreference &aPreference);
+
+    /**
+     * Converts a route preference value to human-readable string.
+     *
+     * @param[in] aPreference   The preference value to convert (`OT_ROUTE_PREFERENCE_*` values).
+     *
+     * @returns A string representation @p aPreference.
+     *
+     */
+    static const char *PreferenceToString(signed int aPreference);
+
+    /**
+     * Parses the argument as an IP address.
+     *
+     * If the argument string is an IPv4 address, this method will try to synthesize an IPv6 address using preferred
+     * NAT64 prefix in the network data.
+     *
+     * @param[in]  aInstance       A pointer to OpenThread instance.
+     * @param[in]  aArg            The argument string to parse.
+     * @param[out] aAddress        A reference to an `otIp6Address` to output the parsed IPv6 address.
+     * @param[out] aSynthesized    Whether @p aAddress is synthesized from an IPv4 address.
+     *
+     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid IP address.
+     * @retval OT_ERROR_INVALID_STATE  No valid NAT64 prefix in the network data.
+     *
+     */
+    static otError ParseToIp6Address(otInstance   *aInstance,
+                                     const Arg    &aArg,
+                                     otIp6Address &aAddress,
+                                     bool         &aSynthesized);
+
+    /**
+     * Parses the argument as a Joiner Discerner.
+     *
+     * @param[in]  aArg            The argument string to parse.
+     * @param[out] aDiscerner      A reference to an `otJoinerDiscerner` to output the parsed discerner
+     *
+     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid joiner discerner.
+     *
+     */
+    static otError ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner);
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    /**
+     * Parses the argument as a Border Router configuration.
+     *
+     * @param[in]  aArg            The argument string to parse.
+     * @param[out] aConfig         A reference to an `otBorderRouterConfig` to output the configuration.
+     *
+     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid configuration.
+     *
+     */
+    static otError ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig);
+
+    /**
+     * Parses the argument as a External Route configuration.
+     *
+     * @param[in]  aArg            The argument string to parse.
+     * @param[out] aConfig         A reference to an `otExternalRouteConfig` to output the configuration.
+     *
+     * @retval OT_ERROR_NONE           The argument was parsed successfully.
+     * @retval OT_ERROR_INVALID_ARGS   The argument is empty or does not contain a valid configuration.
+     *
+     */
+    static otError ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig);
+#endif
+
+    static constexpr uint8_t kLinkModeStringSize = sizeof("rdn"); ///< Size of string buffer for a MLE Link Mode.
+
+    /**
+     * Converts a given MLE Link Mode to flag string.
+     *
+     * The characters 'r', 'd', and 'n' are respectively used for `mRxOnWhenIdle`, `mDeviceType` and `mNetworkData`
+     * flags. If all flags are `false`, then "-" is returned.
+     *
+     * @param[in]  aLinkMode       The MLE Link Mode to convert.
+     * @param[out] aStringBuffer   A reference to an string array to place the string.
+     *
+     * @returns A pointer @p aStringBuffer which contains the converted string.
+     *
+     */
+    static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
+
+    /**
+     * Converts an IPv6 address origin `OT_ADDRESS_ORIGIN_*` value to human-readable string.
+     *
+     * @param[in] aOrigin   The IPv6 address origin to convert.
+     *
+     * @returns A human-readable string representation of @p aOrigin.
+     *
+     */
+    static const char *AddressOriginToString(uint8_t aOrigin);
 
 protected:
     void OutputFormatV(const char *aFormat, va_list aArguments);

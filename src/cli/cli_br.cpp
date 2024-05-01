@@ -233,7 +233,7 @@ template <> otError Br::Process<Cmd("omrprefix")>(Arg aArgs[])
 
         OutputFormat("%s", outputPrefixTypes == kPrefixTypeFavored ? "" : "Favored: ");
         OutputIp6Prefix(favored);
-        OutputLine(" prf:%s", Interpreter::PreferenceToString(preference));
+        OutputLine(" prf:%s", PreferenceToString(preference));
     }
 
 exit:
@@ -365,7 +365,7 @@ template <> otError Br::Process<Cmd("nat64prefix")>(Arg aArgs[])
 
         OutputFormat("%s", outputPrefixTypes == kPrefixTypeFavored ? "" : "Favored: ");
         OutputIp6Prefix(favored);
-        OutputLine(" prf:%s", Interpreter::PreferenceToString(preference));
+        OutputLine(" prf:%s", PreferenceToString(preference));
     }
 
 exit:
@@ -424,7 +424,7 @@ template <> otError Br::Process<Cmd("prefixtable")>(Arg aArgs[])
         }
         else
         {
-            OutputFormat("route-prf:%s, ", Interpreter::PreferenceToString(entry.mRoutePreference));
+            OutputFormat("route-prf:%s, ", PreferenceToString(entry.mRoutePreference));
         }
 
         OutputFormat("router:");
@@ -594,8 +594,7 @@ template <> otError Br::Process<Cmd("rioprf")>(Arg aArgs[])
      */
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("%s",
-                   Interpreter::PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
+        OutputLine("%s", PreferenceToString(otBorderRoutingGetRouteInfoOptionPreference(GetInstancePtr())));
     }
     /**
      * @cli br rioprf clear
@@ -648,7 +647,7 @@ template <> otError Br::Process<Cmd("routeprf")>(Arg aArgs[])
      */
     if (aArgs[0].IsEmpty())
     {
-        OutputLine("%s", Interpreter::PreferenceToString(otBorderRoutingGetRoutePreference(GetInstancePtr())));
+        OutputLine("%s", PreferenceToString(otBorderRoutingGetRoutePreference(GetInstancePtr())));
     }
     /**
      * @cli br routeprf clear

@@ -383,7 +383,7 @@ template <> otError TcpExample::Process<Cmd("connect")>(Arg aArgs[])
 
     VerifyOrExit(mInitialized, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
+    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
 
     if (nat64Synth)
     {

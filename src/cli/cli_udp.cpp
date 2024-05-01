@@ -134,7 +134,7 @@ template <> otError UdpExample::Process<Cmd("connect")>(Arg aArgs[])
     otSockAddr sockaddr;
     bool       nat64Synth;
 
-    SuccessOrExit(error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
+    SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], sockaddr.mAddress, nat64Synth));
 
     if (nat64Synth)
     {
@@ -269,8 +269,7 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
     {
         bool nat64Synth;
 
-        SuccessOrExit(
-            error = Interpreter::ParseToIp6Address(GetInstancePtr(), aArgs[0], messageInfo.mPeerAddr, nat64Synth));
+        SuccessOrExit(error = ParseToIp6Address(GetInstancePtr(), aArgs[0], messageInfo.mPeerAddr, nat64Synth));
 
         if (nat64Synth)
         {

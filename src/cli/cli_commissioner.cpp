@@ -194,7 +194,7 @@ template <> otError Commissioner::Process<Cmd("joiner")>(Arg aArgs[])
     }
     else
     {
-        error = Interpreter::ParseJoinerDiscerner(aArgs[1], discerner);
+        error = ParseJoinerDiscerner(aArgs[1], discerner);
 
         if (error == OT_ERROR_NOT_FOUND)
         {
