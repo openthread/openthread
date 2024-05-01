@@ -201,6 +201,8 @@ Error Core::UnregisterKey(const Key &aKey)
     return IsKeyForService(aKey) ? Unregister<ServiceEntry>(aKey) : Unregister<HostEntry>(aKey);
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
 Core::Iterator *Core::AllocateIterator(void) { return EntryIterator::Allocate(GetInstance()); }
 
 void Core::FreeIterator(Iterator &aIterator) { static_cast<EntryIterator &>(aIterator).Free(); }
@@ -219,6 +221,33 @@ Error Core::GetNextKey(Iterator &aIterator, Key &aKey, EntryState &aState) const
 {
     return static_cast<EntryIterator &>(aIterator).GetNextKey(aKey, aState);
 }
+
+Error Core::GetNextBrowser(Iterator &aIterator, Browser &aBrowser, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextBrowser(aBrowser, aInfo);
+}
+
+Error Core::GetNextSrvResolver(Iterator &aIterator, SrvResolver &aResolver, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextSrvResolver(aResolver, aInfo);
+}
+
+Error Core::GetNextTxtResolver(Iterator &aIterator, TxtResolver &aResolver, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextTxtResolver(aResolver, aInfo);
+}
+
+Error Core::GetNextIp6AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextIp6AddressResolver(aResolver, aInfo);
+}
+
+Error Core::GetNextIp4AddressResolver(Iterator &aIterator, AddressResolver &aResolver, CacheInfo &aInfo) const
+{
+    return static_cast<EntryIterator &>(aIterator).GetNextIp4AddressResolver(aResolver, aInfo);
+}
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 void Core::InvokeConflictCallback(const char *aName, const char *aServiceType)
 {
@@ -1645,6 +1674,8 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
 Error Core::HostEntry::CopyInfoTo(Host &aHost, EntryState &aState) const
 {
     Error error = kErrorNone;
@@ -1674,6 +1705,8 @@ Error Core::HostEntry::CopyInfoTo(Key &aKey, EntryState &aState) const
 exit:
     return error;
 }
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 //----------------------------------------------------------------------------------------------------------------------
 // Core::ServiceEntry
@@ -2530,6 +2563,8 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
 Error Core::ServiceEntry::CopyInfoTo(Service &aService, EntryState &aState, EntryIterator &aIterator) const
 {
     Error error = kErrorNone;
@@ -2573,6 +2608,8 @@ Error Core::ServiceEntry::CopyInfoTo(Key &aKey, EntryState &aState) const
 exit:
     return error;
 }
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 //----------------------------------------------------------------------------------------------------------------------
 // Core::ServiceEntry::SubType
@@ -5215,6 +5252,20 @@ void Core::BrowseCache::ReportResultsTo(ResultCallback &aCallback) const
     }
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+void Core::BrowseCache::CopyInfoTo(Browser &aBrowser, CacheInfo &aInfo) const
+{
+    aBrowser.mServiceType   = mServiceType.AsCString();
+    aBrowser.mSubTypeLabel  = mSubTypeLabel.AsCString();
+    aBrowser.mInfraIfIndex  = Get<Core>().mInfraIfIndex;
+    aBrowser.mCallback      = nullptr;
+    aInfo.mIsActive         = IsActive();
+    aInfo.mHasCachedResults = !mPtrEntries.IsEmpty();
+}
+
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Core::BrowseCache::PtrEntry
 
@@ -5503,6 +5554,20 @@ void Core::SrvCache::ConvertTo(SrvResult &aResult) const
     aResult.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+void Core::SrvCache::CopyInfoTo(SrvResolver &aResolver, CacheInfo &aInfo) const
+{
+    aResolver.mServiceInstance = mServiceInstance.AsCString();
+    aResolver.mServiceType     = mServiceType.AsCString();
+    aResolver.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
+    aResolver.mCallback        = nullptr;
+    aInfo.mIsActive            = IsActive();
+    aInfo.mHasCachedResults    = mRecord.IsPresent();
+}
+
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Core::TxtCache
 
@@ -5673,6 +5738,20 @@ void Core::TxtCache::ConvertTo(TxtResult &aResult) const
     aResult.mTtl             = mRecord.GetTtl();
     aResult.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
 }
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+void Core::TxtCache::CopyInfoTo(TxtResolver &aResolver, CacheInfo &aInfo) const
+{
+    aResolver.mServiceInstance = mServiceInstance.AsCString();
+    aResolver.mServiceType     = mServiceType.AsCString();
+    aResolver.mInfraIfIndex    = Get<Core>().mInfraIfIndex;
+    aResolver.mCallback        = nullptr;
+    aInfo.mIsActive            = IsActive();
+    aInfo.mHasCachedResults    = mRecord.IsPresent();
+}
+
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // Core::AddrCache
@@ -6000,6 +6079,19 @@ void Core::AddrCache::CommitNewResponseEntries(void)
     ScheduleTimer();
 }
 
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
+
+void Core::AddrCache::CopyInfoTo(AddressResolver &aResolver, CacheInfo &aInfo) const
+{
+    aResolver.mHostName     = mName.AsCString();
+    aResolver.mInfraIfIndex = Get<Core>().mInfraIfIndex;
+    aResolver.mCallback     = nullptr;
+    aInfo.mIsActive         = IsActive();
+    aInfo.mHasCachedResults = !mCommittedEntries.IsEmpty();
+}
+
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // Core::AddrCache::AddrEntry
 
@@ -6089,6 +6181,8 @@ void Core::Ip4AddrCache::PrepareAQuestion(TxMessage &aQuery) { PrepareQueryQuest
 
 //---------------------------------------------------------------------------------------------------------------------
 // Core::Iterator
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 Core::EntryIterator::EntryIterator(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -6183,6 +6277,123 @@ Error Core::EntryIterator::GetNextKey(Key &aKey, EntryState &aState)
 exit:
     return error;
 }
+
+Error Core::EntryIterator::GetNextBrowser(Browser &aBrowser, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mBrowseCache = Get<Core>().mBrowseCacheList.GetHead();
+        mType        = kBrowser;
+    }
+    else
+    {
+        VerifyOrExit(mType == kBrowser, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mBrowseCache != nullptr, error = kErrorNotFound);
+
+    mBrowseCache->CopyInfoTo(aBrowser, aInfo);
+    mBrowseCache = mBrowseCache->GetNext();
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextSrvResolver(SrvResolver &aResolver, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mSrvCache = Get<Core>().mSrvCacheList.GetHead();
+        mType     = kSrvResolver;
+    }
+    else
+    {
+        VerifyOrExit(mType == kSrvResolver, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mSrvCache != nullptr, error = kErrorNotFound);
+
+    mSrvCache->CopyInfoTo(aResolver, aInfo);
+    mSrvCache = mSrvCache->GetNext();
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextTxtResolver(TxtResolver &aResolver, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mTxtCache = Get<Core>().mTxtCacheList.GetHead();
+        mType     = kTxtResolver;
+    }
+    else
+    {
+        VerifyOrExit(mType == kTxtResolver, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mTxtCache != nullptr, error = kErrorNotFound);
+
+    mTxtCache->CopyInfoTo(aResolver, aInfo);
+    mTxtCache = mTxtCache->GetNext();
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextIp6AddressResolver(AddressResolver &aResolver, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mIp6AddrCache = Get<Core>().mIp6AddrCacheList.GetHead();
+        mType         = kIp6AddrResolver;
+    }
+    else
+    {
+        VerifyOrExit(mType == kIp6AddrResolver, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mIp6AddrCache != nullptr, error = kErrorNotFound);
+
+    mIp6AddrCache->CopyInfoTo(aResolver, aInfo);
+    mIp6AddrCache = mIp6AddrCache->GetNext();
+
+exit:
+    return error;
+}
+
+Error Core::EntryIterator::GetNextIp4AddressResolver(AddressResolver &aResolver, CacheInfo &aInfo)
+{
+    Error error = kErrorNone;
+
+    if (mType == kUnspecified)
+    {
+        mIp4AddrCache = Get<Core>().mIp4AddrCacheList.GetHead();
+        mType         = kIp4AddrResolver;
+    }
+    else
+    {
+        VerifyOrExit(mType == kIp4AddrResolver, error = kErrorInvalidArgs);
+    }
+
+    VerifyOrExit(mIp4AddrCache != nullptr, error = kErrorNotFound);
+
+    mIp4AddrCache->CopyInfoTo(aResolver, aInfo);
+    mIp4AddrCache = mIp4AddrCache->GetNext();
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE
 
 } // namespace Multicast
 } // namespace Dns

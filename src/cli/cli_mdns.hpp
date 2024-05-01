@@ -111,6 +111,7 @@ private:
     void    OutputService(const otMdnsService &aService);
     void    OutputKey(const otMdnsKey &aKey);
     void    OutputState(otMdnsEntryState aState);
+    void    OutputCacheInfo(const otMdnsCacheInfo &aInfo);
     otError ProcessRegisterHost(Arg aArgs[]);
     otError ProcessRegisterService(Arg aArgs[]);
     otError ProcessRegisterKey(Arg aArgs[]);

@@ -411,6 +411,8 @@ otError otMdnsUnregisterKey(otInstance *aInstance, const otMdnsKey *aKey);
 /**
  * Allocates a new iterator.
  *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
  * An allocated iterator must be freed by the caller using `otMdnsFreeIterator()`.
  *
  * @param[in] aInstance    The OpenThread instance.
@@ -423,6 +425,8 @@ otMdnsIterator *otMdnsAllocateIterator(otInstance *aInstance);
 /**
  * Frees a previously allocated iterator.
  *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
  * @param[in] aInstance    The OpenThread instance.
  * @param[in] aIterator    The iterator to free.
  *
@@ -431,6 +435,8 @@ void otMdnsFreeIterator(otInstance *aInstance, otMdnsIterator *aIterator);
 
 /**
  * Iterates over registered host entries.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
  *
  * On success, @p aHost is populated with information about the next host. Pointers within the `otMdnsHost` structure
  * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
@@ -453,6 +459,8 @@ otError otMdnsGetNextHost(otInstance       *aInstance,
 /**
  * Iterates over registered service entries.
  *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
  * On success, @p aService is populated with information about the next service . Pointers within the `otMdnsService`
  * structure (like `mServiceType`, `mSubTypeLabels`) remain valid until the next call to any OpenThread stack's public
  * or platform API/callback.
@@ -474,6 +482,8 @@ otError otMdnsGetNextService(otInstance       *aInstance,
 
 /**
  * Iterates over registered key entries.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
  *
  * On success, @p aKey is populated with information about the next key.  Pointers within the `otMdnsKey` structure
  * (like `mName`) remain valid until the next call to any OpenThread stack's public or platform API/callback.
@@ -836,6 +846,140 @@ otError otMdnsStartIp4AddressResolver(otInstance *aInstance, const otMdnsAddress
  *
  */
 otError otMdnsStopIp4AddressResolver(otInstance *aInstance, const otMdnsAddressResolver *aResolver);
+
+/**
+ * Represents additional information about a browser/resolver and its cached results.
+ *
+ */
+typedef struct otMdnsCacheInfo
+{
+    bool mIsActive;         ///< Whether this is an active browser/resolver vs an opportunistic cached one.
+    bool mHasCachedResults; ///< Whether there is any cached results.
+} otMdnsCacheInfo;
+
+/**
+ * Iterates over browsers.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * On success, @p aBrowser is populated with information about the next browser. The `mCallback` field is always
+ * set to `NULL` as there may be multiple active browsers with different callbacks. Other pointers within the
+ * `otMdnsBrowser` structure remain valid until the next call to any OpenThread stack's public or platform API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aBrowser    Pointer to an `otMdnsBrowser` to return the information about the next browser.
+ * @param[out] aInfo       Pointer to an `otMdnsCacheInfo` to return additional information.
+ *
+ * @retval OT_ERROR_NONE         @p aBrowser, @p aInfo, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextBrowser(otInstance      *aInstance,
+                             otMdnsIterator  *aIterator,
+                             otMdnsBrowser   *aBrowser,
+                             otMdnsCacheInfo *aInfo);
+
+/**
+ * Iterates over SRV resolvers.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * On success, @p aResolver is populated with information about the next resolver. The `mCallback` field is always
+ * set to `NULL` as there may be multiple active resolvers with different callbacks. Other pointers within the
+ * `otMdnsSrvResolver` structure remain valid until the next call to any OpenThread stack's public or platform
+ * API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aResolver   Pointer to an `otMdnsSrvResolver` to return the information about the next resolver.
+ * @param[out] aInfo       Pointer to an `otMdnsCacheInfo` to return additional information.
+ *
+ * @retval OT_ERROR_NONE         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextSrvResolver(otInstance        *aInstance,
+                                 otMdnsIterator    *aIterator,
+                                 otMdnsSrvResolver *aResolver,
+                                 otMdnsCacheInfo   *aInfo);
+
+/**
+ * Iterates over TXT resolvers.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * On success, @p aResolver is populated with information about the next resolver. The `mCallback` field is always
+ * set to `NULL` as there may be multiple active resolvers with different callbacks. Other pointers within the
+ * `otMdnsTxtResolver` structure remain valid until the next call to any OpenThread stack's public or platform
+ * API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aResolver   Pointer to an `otMdnsTxtResolver` to return the information about the next resolver.
+ * @param[out] aInfo       Pointer to an `otMdnsCacheInfo` to return additional information.
+ *
+ * @retval OT_ERROR_NONE         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextTxtResolver(otInstance        *aInstance,
+                                 otMdnsIterator    *aIterator,
+                                 otMdnsTxtResolver *aResolver,
+                                 otMdnsCacheInfo   *aInfo);
+
+/**
+ * Iterates over IPv6 address resolvers.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * On success, @p aResolver is populated with information about the next resolver. The `mCallback` field is always
+ * set to `NULL` as there may be multiple active resolvers with different callbacks. Other pointers within the
+ * `otMdnsAddressResolver` structure remain valid until the next call to any OpenThread stack's public or platform
+ * API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aResolver   Pointer to an `otMdnsAddressResolver` to return the information about the next resolver.
+ * @param[out] aInfo       Pointer to an `otMdnsCacheInfo` to return additional information.
+ *
+ * @retval OT_ERROR_NONE         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextIp6AddressResolver(otInstance            *aInstance,
+                                        otMdnsIterator        *aIterator,
+                                        otMdnsAddressResolver *aResolver,
+                                        otMdnsCacheInfo       *aInfo);
+
+/**
+ * Iterates over IPv4 address resolvers.
+ *
+ * Requires `OPENTHREAD_CONFIG_MULTICAST_DNS_ENTRY_ITERATION_API_ENABLE`.
+ *
+ * On success, @p aResolver is populated with information about the next resolver. The `mCallback` field is always
+ * set to `NULL` as there may be multiple active resolvers with different callbacks. Other pointers within the
+ * `otMdnsAddressResolver` structure remain valid until the next call to any OpenThread stack's public or platform
+ * API/callback.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aIterator   Pointer to the iterator.
+ * @param[out] aResolver   Pointer to an `otMdnsAddressResolver` to return the information about the next resolver.
+ * @param[out] aInfo       Pointer to an `otMdnsCacheInfo` to return additional information.
+ *
+ * @retval OT_ERROR_NONE         @p aResolver, @p aInfo, & @p aIterator are updated successfully.
+ * @retval OT_ERROR_NOT_FOUND    Reached the end of the list.
+ * @retval OT_ERROR_INVALID_ARG  @p aIterator is not valid.
+ *
+ */
+otError otMdnsGetNextIp4AddressResolver(otInstance            *aInstance,
+                                        otMdnsIterator        *aIterator,
+                                        otMdnsAddressResolver *aResolver,
+                                        otMdnsCacheInfo       *aInfo);
 
 /**
  * @}
