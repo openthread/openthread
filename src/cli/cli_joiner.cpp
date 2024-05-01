@@ -108,7 +108,7 @@ template <> otError Joiner::Process<Cmd("discerner")>(Arg aArgs[])
         else
         {
             VerifyOrExit(aArgs[1].IsEmpty());
-            SuccessOrExit(Interpreter::ParseJoinerDiscerner(aArgs[0], discerner));
+            SuccessOrExit(ParseJoinerDiscerner(aArgs[0], discerner));
             error = otJoinerSetDiscerner(GetInstancePtr(), &discerner);
         }
     }
