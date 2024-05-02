@@ -159,6 +159,9 @@ public:
      * Initialize this radio transceiver.
      *
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
+     * @param[in]  aSoftwareReset              When doing RCP recovery, TRUE to try software reset first, FALSE to
+     *                                         directly do a hardware reset.
+     * @param[in]  aSpinelDriver               A pointer to the spinel driver instance that this object depends on.
      *
      */
     void Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver);
