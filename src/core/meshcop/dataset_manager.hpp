@@ -358,8 +358,8 @@ private:
     bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
     void  SignalDatasetChange(void) const;
     void  HandleDatasetUpdated(void);
-    Error AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const;
     void  SendSet(void);
+    Error SendSetRequest(const Dataset &aDataset);
     void  SendGetResponse(const Coap::Message    &aRequest,
                           const Ip6::MessageInfo &aMessageInfo,
                           const TlvList          &aTlvList) const;
