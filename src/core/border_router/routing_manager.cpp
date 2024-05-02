@@ -1433,37 +1433,6 @@ void RoutingManager::DiscoveredPrefixTable::FreeEntries(LinkedList<Entry> &aEntr
     }
 }
 
-const RoutingManager::DiscoveredPrefixTable::Entry *RoutingManager::DiscoveredPrefixTable::FindFavoredEntryToPublish(
-    const Ip6::Prefix &aPrefix) const
-{
-    // Finds the favored entry matching a given `aPrefix` in the table
-    // to publish in the Network Data. We can have multiple entries
-    // in the table matching the same `aPrefix` from different
-    // routers and potentially with different preference values. We
-    // select the one with the highest preference as the favored
-    // entry to publish.
-
-    const Entry *favoredEntry = nullptr;
-
-    for (const Router &router : mRouters)
-    {
-        for (const Entry &entry : router.mEntries)
-        {
-            if (entry.GetPrefix() != aPrefix)
-            {
-                continue;
-            }
-
-            if ((favoredEntry == nullptr) || (entry.GetPreference() > favoredEntry->GetPreference()))
-            {
-                favoredEntry = &entry;
-            }
-        }
-    }
-
-    return favoredEntry;
-}
-
 void RoutingManager::DiscoveredPrefixTable::HandleEntryTimer(void) { RemoveExpiredEntries(); }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)

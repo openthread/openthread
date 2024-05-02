@@ -885,22 +885,21 @@ private:
             void SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
         };
 
-        void         ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
-        void         ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
-        void         ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
-        void         ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
-        bool         Contains(const Entry::Checker &aChecker) const;
-        void         RemovePrefix(const Entry::Matcher &aMatcher);
-        void         RemoveOrDeprecateEntriesFromInactiveRouters(void);
-        void         RemoveRoutersWithNoEntriesOrFlags(void);
-        void         FreeRouters(LinkedList<Router> &aRouters);
-        void         FreeEntries(LinkedList<Entry> &aEntries);
-        void         UpdateNetworkDataOnChangeTo(Entry &aEntry);
-        const Entry *FindFavoredEntryToPublish(const Ip6::Prefix &aPrefix) const;
-        void         RemoveExpiredEntries(void);
-        void         SignalTableChanged(void);
-        void         UpdateRouterOnRx(Router &aRouter);
-        void         SendNeighborSolicitToRouter(const Router &aRouter);
+        void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
+        void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
+        void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
+        void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
+        bool Contains(const Entry::Checker &aChecker) const;
+        void RemovePrefix(const Entry::Matcher &aMatcher);
+        void RemoveOrDeprecateEntriesFromInactiveRouters(void);
+        void RemoveRoutersWithNoEntriesOrFlags(void);
+        void FreeRouters(LinkedList<Router> &aRouters);
+        void FreeEntries(LinkedList<Entry> &aEntries);
+        void UpdateNetworkDataOnChangeTo(Entry &aEntry);
+        void RemoveExpiredEntries(void);
+        void SignalTableChanged(void);
+        void UpdateRouterOnRx(Router &aRouter);
+        void SendNeighborSolicitToRouter(const Router &aRouter);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         Router *AllocateRouter(void) { return Router::Allocate(); }
         Entry  *AllocateEntry(void) { return Entry::Allocate(); }
