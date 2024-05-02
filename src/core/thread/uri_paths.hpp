@@ -58,6 +58,7 @@ enum Uri : uint8_t
     kUriBackboneQuery,          ///< Backbone Query ("b/bq")
     kUriAnnounceBegin,          ///< Announce Begin ("c/ab")
     kUriActiveGet,              ///< MGMT_ACTIVE_GET "c/ag"
+    kUriActiveReplace,          ///< MGMT_ACTIVE_REPLACE ("c/ar")
     kUriActiveSet,              ///< MGMT_ACTIVE_SET ("c/as")
     kUriCommissionerKeepAlive,  ///< Commissioner Keep Alive ("c/ca")
     kUriCommissionerGet,        ///< MGMT_COMMISSIONER_GET ("c/cg")
@@ -131,6 +132,7 @@ template <> const char *UriToString<kUriBackboneMlr>(void);
 template <> const char *UriToString<kUriBackboneQuery>(void);
 template <> const char *UriToString<kUriAnnounceBegin>(void);
 template <> const char *UriToString<kUriActiveGet>(void);
+template <> const char *UriToString<kUriActiveReplace>(void);
 template <> const char *UriToString<kUriActiveSet>(void);
 template <> const char *UriToString<kUriCommissionerKeepAlive>(void);
 template <> const char *UriToString<kUriCommissionerGet>(void);

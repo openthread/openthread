@@ -238,6 +238,36 @@ exit:
     return isValid;
 }
 
+bool Dataset::ContainsAllRequiredTlvsFor(Type aType) const
+{
+    static const Tlv::Type kActiveDatasetTlvs[] = {
+        Tlv::kActiveTimestamp, Tlv::kChannel,     Tlv::kChannelMask, Tlv::kExtendedPanId, Tlv::kMeshLocalPrefix,
+        Tlv::kNetworkKey,      Tlv::kNetworkName, Tlv::kPanId,       Tlv::kPskc,          Tlv::kSecurityPolicy,
+    };
+
+    static const Tlv::Type kPendingDatasetExtraTlvs[] = {Tlv::kPendingTimestamp, Tlv::kDelayTimer};
+
+    bool containsAll = false;
+
+    for (Tlv::Type tlvType : kActiveDatasetTlvs)
+    {
+        VerifyOrExit(ContainsTlv(tlvType));
+    }
+
+    if (aType == kPending)
+    {
+        for (Tlv::Type tlvType : kPendingDatasetExtraTlvs)
+        {
+            VerifyOrExit(ContainsTlv(tlvType));
+        }
+    }
+
+    containsAll = true;
+
+exit:
+    return containsAll;
+}
+
 const Tlv *Dataset::FindTlv(Tlv::Type aType) const { return As<Tlv>(Tlv::FindTlv(mTlvs, mLength, aType)); }
 
 void Dataset::ConvertTo(Info &aDatasetInfo) const

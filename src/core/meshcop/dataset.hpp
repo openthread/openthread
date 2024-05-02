@@ -297,6 +297,17 @@ public:
     }
 
     /**
+     * Indicates whether or not the Dataset contains all the required TLVs for an Active or Pending Dataset.
+     *
+     * @param[in] aType  The Dataset type, Active or Pending.
+     *
+     * @retval TRUE    The Dataset contains all the required TLVs for @p aType.
+     * @retval FALSE   The Dataset does not contain all the required TLVs for @p aType.
+     *
+     */
+    bool ContainsAllRequiredTlvsFor(Type aType) const;
+
+    /**
      * Searches for a given TLV type in the Dataset.
      *
      * @param[in] aType  The TLV type to find.

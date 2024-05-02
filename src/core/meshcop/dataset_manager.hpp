@@ -297,17 +297,25 @@ protected:
     void HandleTimer(void);
 
 #if OPENTHREAD_FTD
+    enum MgmtCommand : uint8_t ///< A MGMT command type.
+    {
+        kMgmtSet,     ///< MGMT_SET command
+        kMgmtReplace, ///< MGMT_REPLACE command
+    };
+
     /**
-     * Handles the MGMT_SET request message.
+     * Handles the MGMT_SET or MGMT_REPLACE request message.
      *
+     *
+     * @param[in]  aCommand      The MGMT command type (MGMT_REPLACE or MGMT_SET).
      * @param[in]  aMessage      The CoAP message buffer.
      * @param[in]  aMessageInfo  The message info.
      *
-     * @retval kErrorNone  The MGMT_SET request message was handled successfully.
-     * @retval kErrorDrop  The MGMT_SET request message was dropped.
+     * @retval kErrorNone  The request message was handled successfully.
+     * @retval kErrorDrop  The request message was dropped.
      *
      */
-    Error HandleSet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #endif
 
     DatasetLocal mLocal;
@@ -325,7 +333,7 @@ private:
     };
 
 #if OPENTHREAD_FTD
-    struct SetRequestInfo : Clearable<SetRequestInfo> // Information from a MGMT_SET request message.
+    struct RequestInfo : Clearable<RequestInfo> // Info from a MGMT_SET or MGMT_REPLACE request.
     {
         Dataset mDataset;
         bool    mIsFromCommissioner;
@@ -351,8 +359,10 @@ private:
                           const TlvList          &aTlvList) const;
 
 #if OPENTHREAD_FTD
-    Error ProcessSetRequest(const Coap::Message &aMessage, SetRequestInfo &aInfo) const;
-    void  SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
+    Error ProcessSetOrReplaceRequest(MgmtCommand aCommand, const Coap::Message &aMessage, RequestInfo &aInfo) const;
+    void  SendSetOrReplaceResponse(const Coap::Message    &aRequest,
+                                   const Ip6::MessageInfo &aMessageInfo,
+                                   StateTlv::State         aState);
 #endif
 
     static constexpr uint8_t  kMaxDatasetTlvs = 16;   // Maximum number of TLVs in a Dataset.
@@ -504,6 +514,7 @@ private:
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveGet);
 #if OPENTHREAD_FTD
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveSet);
+DeclareTmfHandler(ActiveDatasetManager, kUriActiveReplace);
 #endif
 
 class PendingDatasetManager : public DatasetManager, private NonCopyable

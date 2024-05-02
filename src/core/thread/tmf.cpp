@@ -132,6 +132,7 @@ bool Agent::HandleResource(const char *aUriPath, Message &aMessage, const Ip6::M
         Case(kUriAddressSolicit, Mle::MleRouter);
         Case(kUriAddressRelease, Mle::MleRouter);
         Case(kUriActiveSet, MeshCoP::ActiveDatasetManager);
+        Case(kUriActiveReplace, MeshCoP::ActiveDatasetManager);
         Case(kUriPendingSet, MeshCoP::PendingDatasetManager);
         Case(kUriLeaderPetition, MeshCoP::Leader);
         Case(kUriLeaderKeepAlive, MeshCoP::Leader);

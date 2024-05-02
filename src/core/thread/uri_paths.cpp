@@ -69,33 +69,34 @@ static constexpr Entry kEntries[] = {
     {"b/bq"},  // (9) kUriBackboneQuery
     {"c/ab"},  // (10) kUriAnnounceBegin
     {"c/ag"},  // (11) kUriActiveGet
-    {"c/as"},  // (12) kUriActiveSet
-    {"c/ca"},  // (13) kUriCommissionerKeepAlive
-    {"c/cg"},  // (14) kUriCommissionerGet
-    {"c/cp"},  // (15) kUriCommissionerPetition
-    {"c/cs"},  // (16) kUriCommissionerSet
-    {"c/dc"},  // (17) kUriDatasetChanged
-    {"c/er"},  // (18) kUriEnergyReport
-    {"c/es"},  // (19) kUriEnergyScan
-    {"c/je"},  // (20) kUriJoinerEntrust
-    {"c/jf"},  // (21) kUriJoinerFinalize
-    {"c/la"},  // (22) kUriLeaderKeepAlive
-    {"c/lp"},  // (23) kUriLeaderPetition
-    {"c/pc"},  // (24) kUriPanIdConflict
-    {"c/pg"},  // (25) kUriPendingGet
-    {"c/pq"},  // (26) kUriPanIdQuery
-    {"c/ps"},  // (27) kUriPendingSet
-    {"c/rx"},  // (28) kUriRelayRx
-    {"c/tx"},  // (29) kUriRelayTx
-    {"c/ur"},  // (30) kUriProxyRx
-    {"c/ut"},  // (31) kUriProxyTx
-    {"d/da"},  // (32) kUriDiagnosticGetAnswer
-    {"d/dg"},  // (33) kUriDiagnosticGetRequest
-    {"d/dq"},  // (34) kUriDiagnosticGetQuery
-    {"d/dr"},  // (35) kUriDiagnosticReset
-    {"n/dn"},  // (36) kUriDuaRegistrationNotify
-    {"n/dr"},  // (37) kUriDuaRegistrationRequest
-    {"n/mr"},  // (38) kUriMlr
+    {"c/ar"},  // (12) kUriActiveReplace
+    {"c/as"},  // (13) kUriActiveSet
+    {"c/ca"},  // (14) kUriCommissionerKeepAlive
+    {"c/cg"},  // (15) kUriCommissionerGet
+    {"c/cp"},  // (16) kUriCommissionerPetition
+    {"c/cs"},  // (17) kUriCommissionerSet
+    {"c/dc"},  // (18) kUriDatasetChanged
+    {"c/er"},  // (19) kUriEnergyReport
+    {"c/es"},  // (20) kUriEnergyScan
+    {"c/je"},  // (21) kUriJoinerEntrust
+    {"c/jf"},  // (22) kUriJoinerFinalize
+    {"c/la"},  // (23) kUriLeaderKeepAlive
+    {"c/lp"},  // (24) kUriLeaderPetition
+    {"c/pc"},  // (25) kUriPanIdConflict
+    {"c/pg"},  // (26) kUriPendingGet
+    {"c/pq"},  // (27) kUriPanIdQuery
+    {"c/ps"},  // (28) kUriPendingSet
+    {"c/rx"},  // (29) kUriRelayRx
+    {"c/tx"},  // (30) kUriRelayTx
+    {"c/ur"},  // (31) kUriProxyRx
+    {"c/ut"},  // (32) kUriProxyTx
+    {"d/da"},  // (33) kUriDiagnosticGetAnswer
+    {"d/dg"},  // (34) kUriDiagnosticGetRequest
+    {"d/dq"},  // (35) kUriDiagnosticGetQuery
+    {"d/dr"},  // (36) kUriDiagnosticReset
+    {"n/dn"},  // (37) kUriDuaRegistrationNotify
+    {"n/dr"},  // (38) kUriDuaRegistrationRequest
+    {"n/mr"},  // (39) kUriMlr
 };
 
 static_assert(BinarySearch::IsSorted(kEntries), "kEntries is not sorted");
@@ -112,33 +113,34 @@ static_assert(8 == kUriBackboneMlr, "kUriBackboneMlr (`b/bmr`) is invalid");
 static_assert(9 == kUriBackboneQuery, "kUriBackboneQuery (`b/bq`) is invalid");
 static_assert(10 == kUriAnnounceBegin, "kUriAnnounceBegin (`c/ab`) is invalid");
 static_assert(11 == kUriActiveGet, "kUriActiveGet (`c/ag`) is invalid");
-static_assert(12 == kUriActiveSet, "kUriActiveSet (`c/as`) is invalid");
-static_assert(13 == kUriCommissionerKeepAlive, "kUriCommissionerKeepAlive (`c/ca`) is invalid");
-static_assert(14 == kUriCommissionerGet, "kUriCommissionerGet (`c/cg`) is invalid");
-static_assert(15 == kUriCommissionerPetition, "kUriCommissionerPetition (`c/cp`) is invalid");
-static_assert(16 == kUriCommissionerSet, "kUriCommissionerSet (`c/cs`) is invalid");
-static_assert(17 == kUriDatasetChanged, "kUriDatasetChanged (`c/dc`) is invalid");
-static_assert(18 == kUriEnergyReport, "kUriEnergyReport (`c/er`) is invalid");
-static_assert(19 == kUriEnergyScan, "kUriEnergyScan (`c/es`) is invalid");
-static_assert(20 == kUriJoinerEntrust, "kUriJoinerEntrust (`c/je`) is invalid");
-static_assert(21 == kUriJoinerFinalize, "kUriJoinerFinalize (`c/jf`) is invalid");
-static_assert(22 == kUriLeaderKeepAlive, "kUriLeaderKeepAlive (`c/la`) is invalid");
-static_assert(23 == kUriLeaderPetition, "kUriLeaderPetition (`c/lp`) is invalid");
-static_assert(24 == kUriPanIdConflict, "kUriPanIdConflict (`c/pc`) is invalid");
-static_assert(25 == kUriPendingGet, "kUriPendingGet (`c/pg`) is invalid");
-static_assert(26 == kUriPanIdQuery, "kUriPanIdQuery (`c/pq`) is invalid");
-static_assert(27 == kUriPendingSet, "kUriPendingSet (`c/ps`) is invalid");
-static_assert(28 == kUriRelayRx, "kUriRelayRx (`c/rx`) is invalid");
-static_assert(29 == kUriRelayTx, "kUriRelayTx (`c/tx`) is invalid");
-static_assert(30 == kUriProxyRx, "kUriProxyRx (`c/ur`) is invalid");
-static_assert(31 == kUriProxyTx, "kUriProxyTx (`c/ut`) is invalid");
-static_assert(32 == kUriDiagnosticGetAnswer, "kUriDiagnosticGetAnswer (`d/da`) is invalid");
-static_assert(33 == kUriDiagnosticGetRequest, "kUriDiagnosticGetRequest (`d/dg`) is invalid");
-static_assert(34 == kUriDiagnosticGetQuery, "kUriDiagnosticGetQuery (`d/dq`) is invalid");
-static_assert(35 == kUriDiagnosticReset, "kUriDiagnosticReset (`d/dr`) is invalid");
-static_assert(36 == kUriDuaRegistrationNotify, "kUriDuaRegistrationNotify (`n/dn`) is invalid");
-static_assert(37 == kUriDuaRegistrationRequest, "kUriDuaRegistrationRequest (`n/dr`) is invalid");
-static_assert(38 == kUriMlr, "kUriMlr (`n/mr`) is invalid");
+static_assert(12 == kUriActiveReplace, "kUriActiveReplace (`c/ar`) is invalid");
+static_assert(13 == kUriActiveSet, "kUriActiveSet (`c/as`) is invalid");
+static_assert(14 == kUriCommissionerKeepAlive, "kUriCommissionerKeepAlive (`c/ca`) is invalid");
+static_assert(15 == kUriCommissionerGet, "kUriCommissionerGet (`c/cg`) is invalid");
+static_assert(16 == kUriCommissionerPetition, "kUriCommissionerPetition (`c/cp`) is invalid");
+static_assert(17 == kUriCommissionerSet, "kUriCommissionerSet (`c/cs`) is invalid");
+static_assert(18 == kUriDatasetChanged, "kUriDatasetChanged (`c/dc`) is invalid");
+static_assert(19 == kUriEnergyReport, "kUriEnergyReport (`c/er`) is invalid");
+static_assert(20 == kUriEnergyScan, "kUriEnergyScan (`c/es`) is invalid");
+static_assert(21 == kUriJoinerEntrust, "kUriJoinerEntrust (`c/je`) is invalid");
+static_assert(22 == kUriJoinerFinalize, "kUriJoinerFinalize (`c/jf`) is invalid");
+static_assert(23 == kUriLeaderKeepAlive, "kUriLeaderKeepAlive (`c/la`) is invalid");
+static_assert(24 == kUriLeaderPetition, "kUriLeaderPetition (`c/lp`) is invalid");
+static_assert(25 == kUriPanIdConflict, "kUriPanIdConflict (`c/pc`) is invalid");
+static_assert(26 == kUriPendingGet, "kUriPendingGet (`c/pg`) is invalid");
+static_assert(27 == kUriPanIdQuery, "kUriPanIdQuery (`c/pq`) is invalid");
+static_assert(28 == kUriPendingSet, "kUriPendingSet (`c/ps`) is invalid");
+static_assert(29 == kUriRelayRx, "kUriRelayRx (`c/rx`) is invalid");
+static_assert(30 == kUriRelayTx, "kUriRelayTx (`c/tx`) is invalid");
+static_assert(31 == kUriProxyRx, "kUriProxyRx (`c/ur`) is invalid");
+static_assert(32 == kUriProxyTx, "kUriProxyTx (`c/ut`) is invalid");
+static_assert(33 == kUriDiagnosticGetAnswer, "kUriDiagnosticGetAnswer (`d/da`) is invalid");
+static_assert(34 == kUriDiagnosticGetRequest, "kUriDiagnosticGetRequest (`d/dg`) is invalid");
+static_assert(35 == kUriDiagnosticGetQuery, "kUriDiagnosticGetQuery (`d/dq`) is invalid");
+static_assert(36 == kUriDiagnosticReset, "kUriDiagnosticReset (`d/dr`) is invalid");
+static_assert(37 == kUriDuaRegistrationNotify, "kUriDuaRegistrationNotify (`n/dn`) is invalid");
+static_assert(38 == kUriDuaRegistrationRequest, "kUriDuaRegistrationRequest (`n/dr`) is invalid");
+static_assert(39 == kUriMlr, "kUriMlr (`n/mr`) is invalid");
 
 } // namespace UriList
 
@@ -173,6 +175,7 @@ template <> const char *UriToString<kUriBackboneMlr>(void) { return "BackboneMlr
 template <> const char *UriToString<kUriBackboneQuery>(void) { return "BackboneQuery"; }
 template <> const char *UriToString<kUriAnnounceBegin>(void) { return "AnnounceBegin"; }
 template <> const char *UriToString<kUriActiveGet>(void) { return "ActiveGet"; }
+template <> const char *UriToString<kUriActiveReplace>(void) { return "ActiveReplace"; }
 template <> const char *UriToString<kUriActiveSet>(void) { return "ActiveSet"; }
 template <> const char *UriToString<kUriCommissionerKeepAlive>(void) { return "CommissionerKeepAlive"; }
 template <> const char *UriToString<kUriCommissionerGet>(void) { return "CommissionerGet"; }
