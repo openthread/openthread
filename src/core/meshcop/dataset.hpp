@@ -61,8 +61,7 @@ class Dataset
     friend class DatasetLocal;
 
 public:
-    static constexpr uint8_t kMaxLength    = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max length of Dataset (bytes)
-    static constexpr uint8_t kMaxValueSize = 16;                                ///< Max size of a TLV value (bytes)
+    static constexpr uint8_t kMaxLength = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max length of Dataset (bytes)
 
     /**
      * Represents the Dataset type (active or pending).
