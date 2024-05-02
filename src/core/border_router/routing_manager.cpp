@@ -482,10 +482,6 @@ void RoutingManager::UpdateDiscoveredPrefixTableOnNetDataChange(void)
     }
 }
 
-// This method evaluate the routing policy depends on prefix and route
-// information on Thread Network and infra link. As a result, this
-// method May send RA messages on infra link and publish/unpublish
-// OMR and NAT64 prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
     OT_ASSERT(mIsRunning);
@@ -815,15 +811,14 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, c
 
     VerifyOrExit(mOmrPrefixManager.GetLocalPrefix().GetPrefix() != aPrefix);
 
-    // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
-    // The `RioAdvertiser` prefixes and the OMR prefix set in Network Data should eventually
-    // be equal, but there is time that they are not synchronized immediately:
-    // 1. Network Data could contain more OMR prefixes than `RioAdvertiser` because
-    //    we added random delay before Evaluating routing policy when Network Data is changed.
-    // 2. `RioAdvertiser` prefixes could contain more OMR prefixes than Network Data because
-    //    it takes time to sync a new OMR prefix into Network Data (multicast loopback RA
-    //    messages are usually faster than Thread Network Data propagation).
-    // They are the reasons why we need both the checks.
+    // Disregard our own advertised OMR prefixes and those currently
+    // present in the Thread Network Data.
+    //
+    // There should be eventual parity between the `RioAdvertiser`
+    // prefixes and the OMR prefixes in Network Data, but temporary
+    // discrepancies can occur due to the tx timing of RAs and time
+    // required to update Network Data (registering with leader). So
+    // both checks are necessary.
 
     VerifyOrExit(!mRioAdvertiser.HasAdvertised(aPrefix));
     VerifyOrExit(!Get<RoutingManager>().NetworkDataContainsOmrPrefix(aPrefix));
@@ -2331,25 +2326,18 @@ void RoutingManager::OnLinkPrefixManager::Evaluate(void)
 
     if ((mFavoredDiscoveredPrefix.GetLength() == 0) || (mFavoredDiscoveredPrefix == mLocalPrefix))
     {
-        // We need to advertise our local on-link prefix when there is
-        // no discovered on-link prefix. If the favored discovered
-        // prefix is the same as our local on-link prefix we also
-        // start advertising the local prefix to add redundancy. Note
-        // that local on-link prefix is derived from extended PAN ID
-        // and therefore is the same for all BRs on the same Thread
-        // mesh.
+        // We advertise the local on-link prefix if no other prefix is
+        // discovered, or if the favored discovered prefix is the
+        // same as the local prefix (for redundancy). Note that the
+        // local on-link prefix, derived from the extended PAN ID, is
+        // identical for all BRs on the same Thread mesh.
 
         PublishAndAdvertise();
 
-        // We remove the local on-link prefix from discovered prefix
-        // table, in case it was previously discovered and included in
-        // the table (now as a deprecating entry). We remove it with
-        // `kKeepInNetData` flag to ensure that the prefix is not
-        // unpublished from network data.
-        //
-        // Note that `ShouldProcessPrefixInfoOption()` will also check
-        // not allow the local on-link prefix to be added in the prefix
-        // table while we are advertising it.
+        // We remove the local on-link prefix from the discovered prefix
+        // table, in case it was previously discovered and is now
+        // deprecating. `ShouldProcessPrefixInfoOption()` also prevents
+        // adding the local prefix to the table while we're advertising it.
 
         Get<RoutingManager>().mDiscoveredPrefixTable.RemoveOnLinkPrefix(mLocalPrefix);
 
@@ -2852,14 +2840,13 @@ Error RoutingManager::RioAdvertiser::AppendRios(RouterAdvert::TxMessage &aRaMess
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
     {
-        // Decision on whether or not to include the local OMR prefix is
+        // The decision to include the local OMR prefix as a RIO is
         // delegated to `OmrPrefixManager.ShouldAdvertiseLocalAsRio()`
-        // at step (1). Here as we iterate over the Network Data
-        // prefixes, we skip entries matching the local OMR prefix.
-        // In particular, `OmrPrefixManager` may have decided to remove the
-        // local prefix and not advertise it anymore, but it may still be
-        // present in the Network Data (due to delay of registering changes
-        // with leader).
+        // at step (1). Here, as we iterate over Network Data prefixes,
+        // we exclude entries matching the local OMR prefix. This is
+        // because `OmrPrefixManager` may have decided to stop advertising
+        // it, while it might still be present in the Network Data due to
+        // delays in registering changes with the leader.
 
         if (prefixConfig.mDp)
         {
@@ -3038,7 +3025,7 @@ void RoutingManager::RoutePublisher::DeterminePrefixFor(State aState, Ip6::Prefi
     {
     case kDoNotPublish:
     case kPublishDefault:
-        // `Clear()` will set the prefix `::/0`.
+        // `Clear()` will set the prefix to `::/0`.
         break;
     case kPublishUla:
         aPrefix = GetUlaPrefix();
@@ -3348,8 +3335,11 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
     }
 
 #if OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
-    // When there is an prefix other than mLocalPrefix, means there is an external translator available. So we bypass
-    // the NAT64 translator by clearing the NAT64 prefix in the translator.
+
+    // If a prefix other than `mLocalPrefix` is present, an external
+    // translator is available. To bypass the NAT64 translator, we
+    // clear its NAT64 prefix.
+
     if (mPublishedPrefix == mLocalPrefix)
     {
         Get<Nat64::Translator>().SetNat64Prefix(mLocalPrefix);
@@ -3573,7 +3563,11 @@ exit:
     return;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// PdPrefixManager
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
 const char *RoutingManager::PdPrefixManager::StateToString(Dhcp6PdState aState)
 {
     static const char *const kStateStrings[] = {
@@ -3632,7 +3626,6 @@ void RoutingManager::PdPrefixManager::EvaluateStateChange(Dhcp6PdState aOldState
     VerifyOrExit(aOldState != newState);
     LogInfo("PdPrefixManager: %s -> %s", StateToString(aOldState), StateToString(newState));
 
-    // TODO: We may also want to inform the platform that PD is stopped.
     switch (newState)
     {
     case kDhcp6PdStateDisabled:
@@ -3744,7 +3737,8 @@ Error RoutingManager::PdPrefixManager::Process(const RouterAdvert::RxMessage *aM
 
     favoredEntry.Clear();
 
-    // aMessage or aPrefixTableEntry must be different from null
+    // Either `aMessage` or `aPrefixTableEntry` must be non-null.
+
     if (aMessage != nullptr)
     {
         VerifyOrExit(aMessage->IsValid(), error = kErrorParse);
@@ -3815,7 +3809,9 @@ bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(DiscoveredPrefixTable::
     aEntry.mPrefix.SetLength(kOmrPrefixLength);
     aEntry.mPrefix.Tidy();
 
-    // Check if there is an update to the current prefix. The valid or preferred lifetime might change.
+    // Check if there is an update to the current prefix. The valid or
+    // preferred lifetime may have changed.
+
     if (aEntry.GetPrefix() == GetPrefix())
     {
         currentPrefixUpdated = true;
@@ -3824,9 +3820,11 @@ bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(DiscoveredPrefixTable::
 
     VerifyOrExit(!aEntry.IsDeprecated());
 
-    // Some platforms may delegate us more than one prefix. We will pick the smallest one. This is a simple rule
-    // to pick the GUA prefix from the RA messages since GUA prefixes (2000::/3) are always smaller than ULA
-    // prefixes (fc00::/7).
+    // Some platforms may delegate multiple prefixes. We'll select the
+    // smallest one, as GUA prefixes (`2000::/3`) are inherently
+    // smaller than ULA prefixes (`fc00::/7`). This rule prefers GUA
+    // prefixes over ULA.
+
     if (aFavoredEntry.GetPrefix().GetLength() == 0 || aEntry.GetPrefix() < aFavoredEntry.GetPrefix())
     {
         aFavoredEntry = aEntry;
