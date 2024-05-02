@@ -7087,6 +7087,10 @@ template <> otError Interpreter::Process<Cmd("debug")>(Arg aArgs[])
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
         "br nat64prefix",
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+        "br pd state",
+        "br pd omrprefix",
+#endif
 #endif
         "bufferinfo",
     };
