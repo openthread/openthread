@@ -53,11 +53,7 @@
 namespace ot {
 namespace Spinel {
 
-char RadioSpinel::sVersion[kVersionStringSize] = "";
-
 otExtAddress RadioSpinel::sIeeeEui64;
-
-bool RadioSpinel::sIsReady = false; ///< NCP ready.
 
 bool RadioSpinel::sSupportsLogStream =
     false; ///< RCP supports `LOG_STREAM` property with OpenThread log meta-data format.
@@ -71,7 +67,6 @@ otRadioCaps RadioSpinel::sRadioCaps = OT_RADIO_CAPS_NONE;
 RadioSpinel::RadioSpinel(void)
     : Logger("RadioSpinel")
     , mInstance(nullptr)
-    , mSpinelInterface(nullptr)
     , mCmdTidsInUse(0)
     , mCmdNextTid(1)
     , mTxRadioTid(0)
@@ -80,7 +75,6 @@ RadioSpinel::RadioSpinel(void)
     , mPropertyFormat(nullptr)
     , mExpectedCommand(0)
     , mError(OT_ERROR_NONE)
-    , mIid(SPINEL_HEADER_INVALID_IID)
     , mTransmitFrame(nullptr)
     , mShortAddress(0)
     , mPanId(0xffff)
@@ -117,34 +111,31 @@ RadioSpinel::RadioSpinel(void)
     , mVendorRestorePropertiesCallback(nullptr)
     , mVendorRestorePropertiesContext(nullptr)
 #endif
+    , mSpinelDriver(nullptr)
 {
     memset(&mRadioSpinelMetrics, 0, sizeof(mRadioSpinelMetrics));
     memset(&mCallbacks, 0, sizeof(mCallbacks));
 }
 
-void RadioSpinel::Init(SpinelInterface    &aSpinelInterface,
-                       bool                aResetRadio,
-                       bool                aSkipRcpCompatibilityCheck,
-                       const spinel_iid_t *aIidList,
-                       uint8_t             aIidListLength)
+void RadioSpinel::Init(bool aSkipRcpCompatibilityCheck, bool aSoftwareReset, SpinelDriver *aSpinelDriver)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
     bool    supportsRcpMinHostApiVersion;
 
+    OT_UNUSED_VARIABLE(aSoftwareReset);
+
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
-    mResetRadioOnStartup = aResetRadio;
+    mResetRadioOnStartup = aSoftwareReset;
 #endif
 
-    mSpinelInterface = &aSpinelInterface;
+    mSpinelDriver = aSpinelDriver;
+    mSpinelDriver->SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     memset(&mTxIeInfo, 0, sizeof(otRadioIeInfo));
     mTxRadioFrame.mInfo.mTxInfo.mIeInfo = &mTxIeInfo;
 #endif
-
-    mSpinelDriver.Init(aSpinelInterface, aResetRadio, aIidList, aIidListLength);
-    mSpinelDriver.SetFrameHandler(&HandleReceivedFrame, &HandleSavedFrame, this);
 
     SuccessOrExit(error = Get(SPINEL_PROP_HWADDR, SPINEL_DATATYPE_EUI64_S, sIeeeEui64.m8));
     InitializeCaps(supportsRcpApiVersion, supportsRcpMinHostApiVersion);
@@ -207,22 +198,23 @@ exit:
 
 void RadioSpinel::InitializeCaps(bool &aSupportsRcpApiVersion, bool &aSupportsRcpMinHostApiVersion)
 {
-    if (!mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
+    if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_CONFIG_RADIO))
     {
         LogCrit("The co-processor isn't a RCP!");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
-    if (!mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_MAC_RAW))
+
+    if (!GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_MAC_RAW))
     {
         LogCrit("RCP capability list does not include support for radio/raw mode");
         DieNow(OT_EXIT_RADIO_SPINEL_INCOMPATIBLE);
     }
 
-    sSupportsLogStream            = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
-    aSupportsRcpApiVersion        = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
-    aSupportsRcpMinHostApiVersion = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_MIN_HOST_API_VERSION);
-    sSupportsResetToBootloader    = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
-    sSupportsLogCrashDump         = mSpinelDriver.CoprocessorHasCap(SPINEL_CAP_RCP_LOG_CRASH_DUMP);
+    sSupportsLogStream            = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_OPENTHREAD_LOG_METADATA);
+    aSupportsRcpApiVersion        = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_RCP_API_VERSION);
+    sSupportsResetToBootloader    = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_RCP_RESET_TO_BOOTLOADER);
+    aSupportsRcpMinHostApiVersion = GetSpinelDriver().CoprocessorHasCap(SPINEL_PROP_RCP_MIN_HOST_API_VERSION);
+    sSupportsLogCrashDump         = GetSpinelDriver().CoprocessorHasCap(SPINEL_CAP_RCP_LOG_CRASH_DUMP);
 }
 
 otError RadioSpinel::CheckRadioCapabilities(void)
@@ -312,12 +304,6 @@ exit:
 
 void RadioSpinel::Deinit(void)
 {
-    if (mSpinelInterface != nullptr)
-    {
-        mSpinelInterface->Deinit();
-        mSpinelInterface = nullptr;
-    }
-
     // This allows implementing pseudo reset.
     new (this) RadioSpinel();
 }
@@ -525,11 +511,10 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
             }
 
             // this clear is necessary in case the RCP has sent messages between disable and reset
-            mSpinelDriver.ClearRxBuffer();
-            mSpinelDriver.SetCoprocessorReady();
+            mSpinelDriver->ClearRxBuffer();
+            mSpinelDriver->SetCoprocessorReady();
 
             LogInfo("RCP reset: %s", spinel_status_to_cstr(status));
-            sIsReady = true;
         }
         else if (status == SPINEL_STATUS_SWITCHOVER_DONE || status == SPINEL_STATUS_SWITCHOVER_FAILED)
         {
@@ -630,6 +615,12 @@ void RadioSpinel::SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestoreP
 }
 #endif
 
+SpinelDriver &RadioSpinel::GetSpinelDriver(void) const
+{
+    OT_ASSERT(mSpinelDriver != nullptr);
+    return *mSpinelDriver;
+}
+
 otError RadioSpinel::SendReset(uint8_t aResetType)
 {
     otError error;
@@ -638,7 +629,7 @@ otError RadioSpinel::SendReset(uint8_t aResetType)
     {
         ExitNow(error = OT_ERROR_NOT_CAPABLE);
     }
-    error = mSpinelDriver.SendReset(aResetType);
+    error = GetSpinelDriver().SendReset(aResetType);
 
 exit:
     return error;
@@ -788,7 +779,7 @@ void RadioSpinel::ProcessRadioStateMachine(void)
 
 void RadioSpinel::Process(const void *aContext)
 {
-    mSpinelDriver.Process(aContext);
+    OT_UNUSED_VARIABLE(aContext);
 
     ProcessRadioStateMachine();
     RecoverFromRcpFailure();
@@ -1383,7 +1374,7 @@ otError RadioSpinel::WaitResponse(bool aHandleRcpTimeout)
         uint64_t now;
 
         now = otPlatTimeGet();
-        if ((end <= now) || (mSpinelInterface->WaitForFrame(end - now) != OT_ERROR_NONE))
+        if ((end <= now) || (GetSpinelDriver().GetSpinelInterface()->WaitForFrame(end - now) != OT_ERROR_NONE))
         {
             LogWarn("Wait for response timeout");
             if (aHandleRcpTimeout)
@@ -1433,7 +1424,7 @@ otError RadioSpinel::RequestV(uint32_t command, spinel_prop_key_t aKey, const ch
 
     VerifyOrExit(tid > 0, error = OT_ERROR_BUSY);
 
-    error = mSpinelDriver.SendCommand(command, aKey, tid, aFormat, aArgs);
+    error = GetSpinelDriver().SendCommand(command, aKey, tid, aFormat, aArgs);
     SuccessOrExit(error);
 
     if (aKey == SPINEL_PROP_STREAM_RAW)
@@ -1887,7 +1878,7 @@ exit:
 
 uint64_t RadioSpinel::GetNow(void) { return (mIsTimeSynced) ? (otPlatTimeGet() + mRadioTimeOffset) : UINT64_MAX; }
 
-uint32_t RadioSpinel::GetBusSpeed(void) const { return mSpinelInterface->GetBusSpeed(); }
+uint32_t RadioSpinel::GetBusSpeed(void) const { return GetSpinelDriver().GetSpinelInterface()->GetBusSpeed(); }
 
 void RadioSpinel::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
@@ -1953,14 +1944,14 @@ void RadioSpinel::RecoverFromRcpFailure(void)
 
     mState = kStateDisabled;
 
-    mSpinelDriver.ClearRxBuffer();
+    GetSpinelDriver().ClearRxBuffer();
     if (skipReset)
     {
-        mSpinelDriver.SetCoprocessorReady();
+        GetSpinelDriver().SetCoprocessorReady();
     }
     else
     {
-        mSpinelDriver.ResetCoprocessor(mResetRadioOnStartup);
+        GetSpinelDriver().ResetCoprocessor(mResetRadioOnStartup);
     }
 
     mCmdTidsInUse = 0;

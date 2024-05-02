@@ -33,9 +33,11 @@
 #include "logger.hpp"
 #include "radio_url.hpp"
 #include "spi_interface.hpp"
+#include "spinel_manager.hpp"
 #include "vendor_interface.hpp"
 #include "common/code_utils.hpp"
 #include "lib/spinel/radio_spinel.hpp"
+#include "lib/spinel/spinel_driver.hpp"
 #if OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 #ifdef OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
 #include OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_HEADER
@@ -74,11 +76,7 @@ public:
      * @returns A reference to the radio's spinel interface instance.
      *
      */
-    Spinel::SpinelInterface &GetSpinelInterface(void)
-    {
-        OT_ASSERT(mSpinelInterface != nullptr);
-        return *mSpinelInterface;
-    }
+    Spinel::SpinelInterface &GetSpinelInterface(void) { return SpinelManager::GetSpinelManager().GetSpinelInterface(); }
 
     /**
      * Acts as an accessor to the radio spinel instance used by the radio.
@@ -89,14 +87,8 @@ public:
     Spinel::RadioSpinel &GetRadioSpinel(void) { return mRadioSpinel; }
 
 private:
-#if OPENTHREAD_POSIX_VIRTUAL_TIME
-    void VirtualTimeInit(void);
-#endif
     void ProcessRadioUrl(const RadioUrl &aRadioUrl);
     void ProcessMaxPowerTable(const RadioUrl &aRadioUrl);
-
-    Spinel::SpinelInterface *CreateSpinelInterface(const char *aInterfaceName);
-    void                     GetIidListFromRadioUrl(spinel_iid_t (&aIidList)[Spinel::kSpinelHeaderMaxNumIid]);
 
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_HDLC_INTERFACE_ENABLE && OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
     static constexpr size_t kSpinelInterfaceRawSize = sizeof(ot::Posix::SpiInterface) > sizeof(ot::Posix::HdlcInterface)
@@ -118,9 +110,6 @@ private:
 #else
     Spinel::RadioSpinel     mRadioSpinel;
 #endif
-    Spinel::SpinelInterface *mSpinelInterface;
-
-    OT_DEFINE_ALIGNED_VAR(mSpinelInterfaceRaw, kSpinelInterfaceRawSize, uint64_t);
 };
 
 } // namespace Posix

@@ -145,6 +145,7 @@ add_library(openthread-posix
     radio_url.cpp
     resolver.cpp
     settings.cpp
+    spinel_manager.cpp
     spi_interface.cpp
     system.cpp
     trel.cpp

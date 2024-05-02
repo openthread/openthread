@@ -52,6 +52,7 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
+#include "coprocessor_type.h"
 #include "lib/platform/exit_code.h"
 #include "lib/url/url.hpp"
 
@@ -338,13 +339,22 @@ void virtualTimeReceiveEvent(struct VirtualTimeEvent *aEvent);
 void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
 
 /**
- * Performs radio spinel processing of virtual time simulation.
+ * Performs radio processing of virtual time simulation.
  *
  * @param[in]   aInstance   A pointer to the OpenThread instance.
  * @param[in]   aEvent      A pointer to the current event.
  *
  */
-void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
+void virtualTimeRadioProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
+
+/**
+ * Performs radio  processing of virtual time simulation.
+ *
+ * @param[in]   aInstance   A pointer to the OpenThread instance.
+ * @param[in]   aEvent      A pointer to the current event.
+ *
+ */
+void virtualTimeSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
 
 enum SocketBlockOption
 {
@@ -420,6 +430,40 @@ extern otInstance *gInstance;
  *
  */
 void platformBacktraceInit(void);
+
+/**
+ * Initializes the spinel service used by OpenThread.
+ *
+ * @param[in]   aUrl  A pointer to the null-terminated spinel URL.
+ *
+ * @retval  OT_COPROCESSOR_UNKNOWN  The initialization fails.
+ * @retval  OT_COPROCESSOR_RCP      The Co-processor is a RCP.
+ * @retval  OT_COPROCESSOR_NCP      The Co-processor is a NCP.
+ */
+CoprocessorType platformSpinelManagerInit(const char *aUrl);
+
+/**
+ * Shuts down the spinel service used by OpenThread.
+ *
+ */
+void platformSpinelManagerDeinit(void);
+
+/**
+ * Performs spinel driver processing.
+ *
+ * @param[in]   aInstance   A pointer to the OT instance.
+ * @param[in]   aContext    A pointer to the mainloop context.
+ *
+ */
+void platformSpinelManagerProcess(otInstance *aInstance, const otSysMainloopContext *aContext);
+
+/**
+ * Updates the file descriptor sets with file descriptors used by the spinel driver.
+ *
+ * @param[in]   aContext    A pointer to the mainloop context.
+ *
+ */
+void platformSpinelManagerUpdateFdSet(otSysMainloopContext *aContext);
 
 #ifdef __cplusplus
 }
