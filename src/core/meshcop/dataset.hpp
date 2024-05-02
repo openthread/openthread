@@ -61,7 +61,7 @@ class Dataset
     friend class DatasetLocal;
 
 public:
-    static constexpr uint8_t kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max size of MeshCoP Dataset (bytes)
+    static constexpr uint8_t kMaxLength    = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max length of Dataset (bytes)
     static constexpr uint8_t kMaxValueSize = 16;                                ///< Max size of a TLV value (bytes)
 
     /**
@@ -242,15 +242,21 @@ public:
      * Clears the Dataset.
      *
      */
-    void Clear(void);
+    void Clear(void) { mLength = 0; }
 
     /**
-     * Indicates whether or not the dataset appears to be well-formed.
+     * Parses and validates all TLVs contained within the Dataset.
      *
-     * @returns TRUE if the dataset appears to be well-formed, FALSE otherwise.
+     * Performs the following checks all TLVs in the Dataset:
+     *  - Ensures correct TLV format and expected minimum length for known TLV types that may appear in a Dataset.
+     *  - Validates TLV value when applicable (e.g., Channel TLV using a supported channel).
+     *  - Ensures no duplicate occurrence of same TLV type.
+     *
+     * @retval kErrorNone   Successfully validated all the TLVs in the Dataset.
+     * @retval kErrorParse  Dataset TLVs is not well-formed.
      *
      */
-    bool IsValid(void) const;
+    Error ValidateTlvs(void) const;
 
     /**
      * Validates the format and value of a given MeshCoP TLV used in Dataset.
@@ -430,6 +436,66 @@ public:
     }
 
     /**
+     * Writes TLVs parsed from a given Dataset into this Dataset.
+     *
+     * TLVs from @p aDataset are parsed and written in the current Dataset. If the same TLV already exists, it will be
+     * replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aDataset   A Dataset.
+     *
+     * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
+     * @retval kErrorParse   The @p aDataset is not valid.
+     * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
+     *
+     */
+    Error WriteTlvsFrom(const Dataset &aDataset);
+
+    /**
+     * Writes TLVs parsed from a given buffer containing a sequence of TLVs into this Dataset.
+     *
+     * TLVs from @p aTlvs buffer are parsed and written in the current Dataset. If the same TLV already exists, it will
+     * be replaced. Otherwise, the TLV will be appended.
+     *
+     * @param[in] aTlvs     A pointer to a buffer containing TLVs.
+     * @param[in] aLength   Number of bytes in @p aTlvs buffer.
+     *
+     * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
+     * @retval kErrorParse   The @p aTlvs is not valid.
+     * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
+     *
+     */
+    Error WriteTlvsFrom(const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
+     * Writes TLVs corresponding to the components in a given `Dataset::Info` into this Dataset.
+     *
+     * If the same TLV already exists, it will be replaced. Otherwise the TLV will be appended.
+     *
+     * @param[in] aDataseInfo     A `Dataset::Info`.
+     *
+     * @retval kErrorNone    Successfully merged TLVs from @p aDataseInfo into this Dataset.
+     * @retval kErrorNoBufs  Could not add the TLVs due to insufficient buffer space.
+     *
+     */
+    Error WriteTlvsFrom(const Dataset::Info &aDatasetInfo);
+
+    /**
+     * Appends a given sequence of TLVs to the Dataset.
+     *
+     * @note Unlike `WriteTlvsFrom()`, this method does not validate the @p aTlvs to be well-formed or check that there
+     * are no duplicates. It is up to caller to validate the resulting `Dataset` (e.g., using `ValidateTlvs()`) if
+     * desired.
+     *
+     * @param[in] aTlvs     A pointer to a buffer containing TLVs.
+     * @param[in] aLength   Number of bytes in @p aTlvs buffer.
+     *
+     * @retval kErrorNone    Successfully merged TLVs from @p Dataset into this Dataset.
+     * @retval kErrorNoBufs  Could not append the TLVs due to insufficient buffer space.
+     *
+     */
+    Error AppendTlvsFrom(const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
      * Removes a TLV from the Dataset.
      *
      * If the Dataset does not contain the given TLV type, no action is performed.
@@ -472,12 +538,12 @@ public:
     void ConvertTo(Tlvs &aTlvs) const;
 
     /**
-     * Returns the Dataset size in bytes.
+     * Returns the Dataset length in bytes.
      *
-     * @returns The Dataset size in bytes.
+     * @returns The Dataset length in bytes.
      *
      */
-    uint16_t GetSize(void) const { return mLength; }
+    uint8_t GetLength(void) const { return mLength; }
 
     /**
      * Sets the Dataset size in bytes.
@@ -485,7 +551,7 @@ public:
      * @param[in] aSize  The Dataset size in bytes.
      *
      */
-    void SetSize(uint16_t aSize) { mLength = aSize; }
+    void SetLength(uint8_t aLength) { mLength = aLength; }
 
     /**
      * Returns the local time the dataset was last updated.
@@ -496,48 +562,57 @@ public:
     TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
-     * Reads the Dataset from a given message and checks that it is well-formed and valid.
+     * Sets this Dataset using an existing Dataset.
      *
-     * @param[in]  aMessage  The message to read from.
-     * @param[in]  aOffset   The offset in @p aMessage to start reading the Dataset TLVs.
-     * @param[in]  aLength   The dataset length in bytes.
-     *
-     * @retval kErrorNone    Successfully read and validated the Dataset.
-     * @retval kErrorParse   Could not read or parse the dataset from @p aMessage.
-     *
-     */
-    Error ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
-
-    /**
-     * Sets the Dataset using an existing Dataset.
-     *
-     * If this Dataset is an Active Dataset, any Pending Timestamp and Delay Timer TLVs will be omitted in the copy
-     * from @p aDataset.
-     *
-     * @param[in]  aType     The type of the dataset, active or pending.
      * @param[in]  aDataset  The input Dataset.
      *
      */
-    void Set(Type aType, const Dataset &aDataset);
+    void SetFrom(const Dataset &aDataset);
 
     /**
      * Sets the Dataset from a given structure representation.
      *
      * @param[in]  aDatasetInfo  The input Dataset as `Dataset::Info`.
      *
-     * @retval kErrorNone         Successfully set the Dataset.
-     * @retval kErrorInvalidArgs  Dataset is missing Active and/or Pending Timestamp.
-     *
      */
-    Error SetFrom(const Info &aDatasetInfo);
+    void SetFrom(const Info &aDatasetInfo);
 
     /**
-     * Sets the Dataset using @p aDataset.
+     * Sets the Dataset from a given sequence of TLVs.
      *
-     * @param[in]  aDataset  The input Dataset as `Tlvs`.
+     * @param[in]  aTlvs          The input Dataset as `Tlvs`.
+     *
+     * @retval kErrorNone         Successfully set the Dataset.
+     * @retval kErrorInvalidArgs  The @p aTlvs is invalid and its length is longer than `kMaxLength`.
      *
      */
-    void SetFrom(const Tlvs &aTlvs);
+    Error SetFrom(const Tlvs &aTlvs);
+
+    /**
+     * Sets the Dataset from a buffer containing a sequence of TLVs.
+     *
+     * @param[in] aTlvs     A pointer to a buffer containing TLVs.
+     * @param[in] aLength   Number of bytes in @p aTlvs buffer.
+     *
+     * @retval kErrorNone         Successfully set the Dataset.
+     * @retval kErrorInvalidArgs  @p aLength is longer than `kMaxLength`.
+     *
+     */
+    Error SetFrom(const uint8_t *aTlvs, uint8_t aLength);
+
+    /**
+     * Sets the Dataset by reading the TLVs bytes from given message.
+     *
+     * @param[in]  aMessage  The message to read from.
+     * @param[in]  aOffset   The offset in @p aMessage to start reading the Dataset TLVs.
+     * @param[in]  aLength   The dataset length in bytes.
+     *
+     * @retval kErrorNone    Successfully set the Dataset.
+     * @retval kInvalidArgs  The @p aLength is longer than `kMaxLength`.
+     * @retval kErrorParse   Could not read or parse the dataset from @p aMessage.
+     *
+     */
+    Error SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * Applies the Active or Pending Dataset to the Thread interface.
@@ -565,7 +640,7 @@ public:
     /**
      * Converts a Pending Dataset to an Active Dataset.
      *
-     * Removes the Delay Timer and Pending Timestamp TLVs
+     * Removes the Delay Timer and Pending Timestamp TLVs.
      *
      */
     void ConvertToActive(void);
@@ -646,9 +721,9 @@ public:
 private:
     void RemoveTlv(Tlv *aTlv);
 
-    uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
-    TimeMilli mUpdateTime;     ///< Local time last updated
-    uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
+    uint8_t   mTlvs[kMaxLength];
+    uint8_t   mLength;
+    TimeMilli mUpdateTime; // Local time last updated
 };
 
 //---------------------------------------------------------------------------------------------------------------------

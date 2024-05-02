@@ -117,7 +117,7 @@ void DatasetUpdater::PreparePendingDataset(void)
         ExitNow(error = kErrorNone);
     }
 
-    IgnoreError(dataset.SetFrom(requestedDataset));
+    SuccessOrExit(dataset.WriteTlvsFrom(requestedDataset));
 
     if (!requestedDataset.IsPresent<Dataset::kDelay>())
     {

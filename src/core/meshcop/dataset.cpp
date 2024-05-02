@@ -157,26 +157,34 @@ exit:
 }
 
 Dataset::Dataset(void)
-    : mUpdateTime(0)
-    , mLength(0)
+    : mLength(0)
+    , mUpdateTime(0)
 {
     ClearAllBytes(mTlvs);
 }
 
-void Dataset::Clear(void) { mLength = 0; }
-
-bool Dataset::IsValid(void) const
+Error Dataset::ValidateTlvs(void) const
 {
-    bool       rval = true;
-    const Tlv *end  = GetTlvsEnd();
+    Error      error = kErrorParse;
+    const Tlv *end   = GetTlvsEnd();
+    uint16_t   validatedLength;
 
-    for (const Tlv *cur = GetTlvsStart(); cur < end; cur = cur->GetNext())
+    VerifyOrExit(mLength <= kMaxLength);
+
+    for (const Tlv *tlv = GetTlvsStart(); tlv < end; tlv = tlv->GetNext())
     {
-        VerifyOrExit(!cur->IsExtended() && (cur + 1) <= end && cur->GetNext() <= end && IsTlvValid(*cur), rval = false);
+        VerifyOrExit(!tlv->IsExtended() && ((tlv + 1) <= end) && (tlv->GetNext() <= end));
+        VerifyOrExit(IsTlvValid(*tlv));
+
+        // Ensure there are no duplicate TLVs.
+        validatedLength = static_cast<uint16_t>(reinterpret_cast<const uint8_t *>(tlv) - mTlvs);
+        VerifyOrExit(Tlv::FindTlv(mTlvs, validatedLength, tlv->GetType()) == nullptr);
     }
 
+    error = kErrorNone;
+
 exit:
-    return rval;
+    return error;
 }
 
 bool Dataset::IsTlvValid(const Tlv &aTlv)
@@ -308,110 +316,50 @@ void Dataset::ConvertTo(Tlvs &aTlvs) const
     aTlvs.mLength = static_cast<uint8_t>(mLength);
 }
 
-void Dataset::Set(Type aType, const Dataset &aDataset)
+void Dataset::SetFrom(const Dataset &aDataset)
 {
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
-    mLength = aDataset.mLength;
-
-    if (aType == kActive)
-    {
-        RemoveTlv(Tlv::kPendingTimestamp);
-        RemoveTlv(Tlv::kDelayTimer);
-    }
-
+    mLength     = aDataset.mLength;
     mUpdateTime = aDataset.GetUpdateTime();
 }
 
-void Dataset::SetFrom(const Tlvs &aTlvs)
-{
-    mLength = aTlvs.mLength;
-    memcpy(mTlvs, aTlvs.mTlvs, mLength);
-}
+Error Dataset::SetFrom(const Tlvs &aTlvs) { return SetFrom(aTlvs.mTlvs, aTlvs.mLength); }
 
-Error Dataset::SetFrom(const Info &aDatasetInfo)
+Error Dataset::SetFrom(const uint8_t *aTlvs, uint8_t aLength)
 {
     Error error = kErrorNone;
 
-    if (aDatasetInfo.IsPresent<kActiveTimestamp>())
-    {
-        Timestamp activeTimestamp;
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
 
-        aDatasetInfo.Get<kActiveTimestamp>(activeTimestamp);
-        IgnoreError(Write<ActiveTimestampTlv>(activeTimestamp));
-    }
-
-    if (aDatasetInfo.IsPresent<kPendingTimestamp>())
-    {
-        Timestamp pendingTimestamp;
-
-        aDatasetInfo.Get<kPendingTimestamp>(pendingTimestamp);
-        IgnoreError(Write<PendingTimestampTlv>(pendingTimestamp));
-    }
-
-    if (aDatasetInfo.IsPresent<kDelay>())
-    {
-        IgnoreError(Write<DelayTimerTlv>(aDatasetInfo.Get<kDelay>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kChannel>())
-    {
-        ChannelTlvValue channelValue;
-
-        channelValue.SetChannelAndPage(aDatasetInfo.Get<kChannel>());
-        IgnoreError(Write<ChannelTlv>(channelValue));
-    }
-
-    if (aDatasetInfo.IsPresent<kChannelMask>())
-    {
-        ChannelMaskTlv::Value value;
-
-        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.Get<kChannelMask>());
-        IgnoreError(WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
-    }
-
-    if (aDatasetInfo.IsPresent<kExtendedPanId>())
-    {
-        IgnoreError(Write<ExtendedPanIdTlv>(aDatasetInfo.Get<kExtendedPanId>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kMeshLocalPrefix>())
-    {
-        IgnoreError(Write<MeshLocalPrefixTlv>(aDatasetInfo.Get<kMeshLocalPrefix>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kNetworkKey>())
-    {
-        IgnoreError(Write<NetworkKeyTlv>(aDatasetInfo.Get<kNetworkKey>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kNetworkName>())
-    {
-        NameData nameData = aDatasetInfo.Get<kNetworkName>().GetAsData();
-
-        IgnoreError(WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
-    }
-
-    if (aDatasetInfo.IsPresent<kPanId>())
-    {
-        IgnoreError(Write<PanIdTlv>(aDatasetInfo.Get<kPanId>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kPskc>())
-    {
-        IgnoreError(Write<PskcTlv>(aDatasetInfo.Get<kPskc>()));
-    }
-
-    if (aDatasetInfo.IsPresent<kSecurityPolicy>())
-    {
-        SecurityPolicyTlv tlv;
-
-        tlv.Init();
-        tlv.SetSecurityPolicy(aDatasetInfo.Get<kSecurityPolicy>());
-        IgnoreError(WriteTlv(tlv));
-    }
+    mLength = aLength;
+    memcpy(mTlvs, aTlvs, mLength);
 
     mUpdateTime = TimerMilli::GetNow();
 
+exit:
+    return error;
+}
+
+void Dataset::SetFrom(const Info &aDatasetInfo)
+{
+    Clear();
+    IgnoreError(WriteTlvsFrom(aDatasetInfo));
+
+    // `mUpdateTime` is already set by `WriteTlvsFrom()`.
+}
+
+Error Dataset::SetFrom(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLength <= kMaxLength, error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = aMessage.Read(aOffset, mTlvs, aLength));
+    mLength = static_cast<uint8_t>(aLength);
+
+    mUpdateTime = TimerMilli::GetNow();
+
+exit:
     return error;
 }
 
@@ -451,19 +399,129 @@ exit:
 
 Error Dataset::WriteTlv(const Tlv &aTlv) { return WriteTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength()); }
 
-Error Dataset::ReadFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+Error Dataset::WriteTlvsFrom(const Dataset &aDataset)
 {
-    Error error = kErrorParse;
+    Error error;
 
-    VerifyOrExit(aLength <= kMaxSize);
+    SuccessOrExit(error = aDataset.ValidateTlvs());
 
-    SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
-    mLength = aLength;
+    for (const Tlv *tlv = aDataset.GetTlvsStart(); tlv < aDataset.GetTlvsEnd(); tlv = tlv->GetNext())
+    {
+        SuccessOrExit(error = WriteTlv(*tlv));
+    }
 
-    VerifyOrExit(IsValid(), error = kErrorParse);
+exit:
+    return error;
+}
 
-    mUpdateTime = TimerMilli::GetNow();
-    error       = kErrorNone;
+Error Dataset::WriteTlvsFrom(const uint8_t *aTlvs, uint8_t aLength)
+{
+    Error   error;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.SetFrom(aTlvs, aLength));
+    error = WriteTlvsFrom(dataset);
+
+exit:
+    return error;
+}
+
+Error Dataset::WriteTlvsFrom(const Dataset::Info &aDatasetInfo)
+{
+    Error error = kErrorNone;
+
+    if (aDatasetInfo.IsPresent<kActiveTimestamp>())
+    {
+        Timestamp activeTimestamp;
+
+        aDatasetInfo.Get<kActiveTimestamp>(activeTimestamp);
+        SuccessOrExit(error = Write<ActiveTimestampTlv>(activeTimestamp));
+    }
+
+    if (aDatasetInfo.IsPresent<kPendingTimestamp>())
+    {
+        Timestamp pendingTimestamp;
+
+        aDatasetInfo.Get<kPendingTimestamp>(pendingTimestamp);
+        SuccessOrExit(error = Write<PendingTimestampTlv>(pendingTimestamp));
+    }
+
+    if (aDatasetInfo.IsPresent<kDelay>())
+    {
+        SuccessOrExit(error = Write<DelayTimerTlv>(aDatasetInfo.Get<kDelay>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kChannel>())
+    {
+        ChannelTlvValue channelValue;
+
+        channelValue.SetChannelAndPage(aDatasetInfo.Get<kChannel>());
+        SuccessOrExit(error = Write<ChannelTlv>(channelValue));
+    }
+
+    if (aDatasetInfo.IsPresent<kChannelMask>())
+    {
+        ChannelMaskTlv::Value value;
+
+        ChannelMaskTlv::PrepareValue(value, aDatasetInfo.Get<kChannelMask>());
+        SuccessOrExit(error = WriteTlv(Tlv::kChannelMask, value.mData, value.mLength));
+    }
+
+    if (aDatasetInfo.IsPresent<kExtendedPanId>())
+    {
+        SuccessOrExit(error = Write<ExtendedPanIdTlv>(aDatasetInfo.Get<kExtendedPanId>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kMeshLocalPrefix>())
+    {
+        SuccessOrExit(error = Write<MeshLocalPrefixTlv>(aDatasetInfo.Get<kMeshLocalPrefix>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kNetworkKey>())
+    {
+        SuccessOrExit(error = Write<NetworkKeyTlv>(aDatasetInfo.Get<kNetworkKey>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kNetworkName>())
+    {
+        NameData nameData = aDatasetInfo.Get<kNetworkName>().GetAsData();
+
+        SuccessOrExit(error = WriteTlv(Tlv::kNetworkName, nameData.GetBuffer(), nameData.GetLength()));
+    }
+
+    if (aDatasetInfo.IsPresent<kPanId>())
+    {
+        SuccessOrExit(error = Write<PanIdTlv>(aDatasetInfo.Get<kPanId>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kPskc>())
+    {
+        SuccessOrExit(error = Write<PskcTlv>(aDatasetInfo.Get<kPskc>()));
+    }
+
+    if (aDatasetInfo.IsPresent<kSecurityPolicy>())
+    {
+        SecurityPolicyTlv tlv;
+
+        tlv.Init();
+        tlv.SetSecurityPolicy(aDatasetInfo.Get<kSecurityPolicy>());
+        SuccessOrExit(error = WriteTlv(tlv));
+    }
+
+exit:
+    return error;
+}
+
+Error Dataset::AppendTlvsFrom(const uint8_t *aTlvs, uint8_t aLength)
+{
+    Error    error     = kErrorNone;
+    uint16_t newLength = mLength;
+
+    newLength += aLength;
+    VerifyOrExit(newLength <= kMaxLength, error = kErrorNoBufs);
+
+    memcpy(mTlvs + mLength, aTlvs, aLength);
+    mLength += aLength;
 
 exit:
     return error;
@@ -496,7 +554,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdate
     KeyManager &keyManager = aInstance.Get<KeyManager>();
     Error       error      = kErrorNone;
 
-    VerifyOrExit(IsValid(), error = kErrorParse);
+    SuccessOrExit(error = ValidateTlvs());
 
     aIsNetworkKeyUpdated = false;
 

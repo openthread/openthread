@@ -589,7 +589,7 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
  * @param[out] aDataset      A pointer to where the dataset will be placed.
  *
  * @retval OT_ERROR_NONE          Successfully set @p aDataset from @p aDatasetTlvs.
- * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs is invalid.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs's length is longer than `OT_OPERATIONAL_DATASET_MAX_LENGTH`.
  *
  */
 otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
@@ -600,11 +600,8 @@ otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOpera
  * @param[in]  aDataset      An Operational dataset to convert to TLVs.
  * @param[out] aDatasetTlvs  A pointer to dataset TLVs to return the result.
  *
- * @retval OT_ERROR_NONE          Successfully converted @p aDataset and updated @p aDatasetTlvs.
- * @retval OT_ERROR_INVALID_ARGS  @p aDataset is invalid, does not contain active or pending timestamps.
- *
  */
-otError otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
+void otDatasetConvertToTlvs(const otOperationalDataset *aDataset, otOperationalDatasetTlvs *aDatasetTlvs);
 
 /**
  * Updates a given Operational Dataset.
