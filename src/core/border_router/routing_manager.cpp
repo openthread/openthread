@@ -3775,8 +3775,8 @@ bool RoutingManager::PdPrefixManager::ProcessPrefixEntry(DiscoveredPrefixTable::
         ExitNow();
     }
 
-    aEntry.mPrefix.SetLength(kOmrPrefixLength);
     aEntry.mPrefix.Tidy();
+    aEntry.mPrefix.SetLength(kOmrPrefixLength);
 
     // Check if there is an update to the current prefix. The valid or
     // preferred lifetime may have changed.
