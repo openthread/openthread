@@ -212,6 +212,8 @@ Error DatasetManager::HandleSet(const Coap::Message &aMessage, const Ip6::Messag
     StateTlv::State state = StateTlv::kReject;
     SetRequestInfo  info;
 
+    VerifyOrExit(Get<Mle::Mle>().IsLeader());
+
     SuccessOrExit(ProcessSetRequest(aMessage, info));
 
     if (IsActiveDataset() && info.mAffectsConnectivity)
@@ -374,7 +376,6 @@ void ActiveDatasetManager::StartLeader(void) {}
 template <>
 void ActiveDatasetManager::HandleTmf<kUriActiveSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(Get<Mle::Mle>().IsLeader());
     SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     IgnoreError(ApplyConfiguration());
 
@@ -387,7 +388,6 @@ void PendingDatasetManager::StartLeader(void) { StartDelayTimer(); }
 template <>
 void PendingDatasetManager::HandleTmf<kUriPendingSet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    VerifyOrExit(Get<Mle::Mle>().IsLeader());
     SuccessOrExit(DatasetManager::HandleSet(aMessage, aMessageInfo));
     StartDelayTimer();
 
