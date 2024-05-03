@@ -209,6 +209,18 @@ running
 Done
 ```
 
+Usage `br pd omrprefix`
+
+Get the DHCPv6 Prefix Delegation (PD) provided off-mesh-routable (OMR) prefix.
+
+`OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE` is required.
+
+```bash
+> br pd omrprefix
+2001:db8:cafe:0:0/64 lifetime:1800 preferred:1800
+Done
+```
+
 ### prefixtable
 
 Usage: `br prefixtable`

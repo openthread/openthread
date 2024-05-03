@@ -485,6 +485,25 @@ template <> otError Br::Process<Cmd("pd")>(Arg aArgs[])
 
         OutputLine("%s", Stringify(otBorderRoutingDhcp6PdGetState(GetInstancePtr()), kDhcpv6PdStateStrings));
     }
+    /**
+     * @cli br pd omrprefix
+     * @code
+     * br pd omrprefix
+     * 2001:db8:cafe:0:0/64 lifetime:1800 preferred:1800
+     * Done
+     * @endcode
+     * @par api_copy
+     * #otBorderRoutingGetPdOmrPrefix
+     */
+    else if (aArgs[0] == "omrprefix")
+    {
+        otBorderRoutingPrefixTableEntry entry;
+
+        SuccessOrExit(error = otBorderRoutingGetPdOmrPrefix(GetInstancePtr(), &entry));
+
+        OutputIp6Prefix(entry.mPrefix);
+        OutputLine(" lifetime:%lu preferred:%lu", ToUlong(entry.mValidLifetime), ToUlong(entry.mPreferredLifetime));
+    }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
