@@ -51,12 +51,12 @@ class BleStreamSecure:
         if cafile:
             self.ssl_context.load_verify_locations(cafile=cafile)
 
-    async def do_handshake(self, hostname):
+    async def do_handshake(self):
         self.ssl_object = self.ssl_context.wrap_bio(
             incoming=self.incoming,
             outgoing=self.outgoing,
             server_side=False,
-            server_hostname=hostname,
+            server_hostname=None,
         )
         while True:
             try:
