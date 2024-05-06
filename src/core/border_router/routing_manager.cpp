@@ -683,6 +683,53 @@ bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
            !aOnLinkPrefix.IsMulticast();
 }
 
+bool RoutingManager::IsExternalRoutePublished() const
+{
+    NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
+    NetworkData::ExternalRouteConfig routeConfig;
+    bool                             isPublished = false;
+    uint16_t                         rloc16;
+
+    rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
+    // Iterate through the external routes in the network data
+    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, routeConfig) == kErrorNone)
+    {
+        // Check if the route is stable and matches the current RLOC16
+        if (routeConfig.mStable && (routeConfig.GetRloc16() == rloc16))
+        {
+            isPublished = true;
+            break;
+        }
+    }
+
+    return isPublished;
+}
+
+bool RoutingManager::IsDefaultRoutePublished() const
+{
+    NetworkData::Iterator            iterator = NetworkData::kIteratorInit;
+    NetworkData::ExternalRouteConfig routeConfig;
+    bool                             isPublished = false;
+    Ip6::Prefix                      defaultRoutePrefix = AsCoreType(&Ip6::kDefaultRoutePrefix);
+    uint16_t                         rloc16;
+
+    rloc16 = Get<Mle::MleRouter>().GetRloc16();
+
+    // Iterate through the external routes in the network data
+    while (Get<NetworkData::Leader>().GetNextExternalRoute(iterator, routeConfig) == kErrorNone)
+    {
+        // Check if the route is stable, matches the current RLOC16 and is the default route
+        if (routeConfig.mStable && (routeConfig.GetRloc16() == rloc16) && (routeConfig.GetPrefix() == defaultRoutePrefix))
+        {
+            isPublished = true;
+            break;
+        }
+    }
+
+    return isPublished;
+}
+
 void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
 {
     // This is a callback from `RsSender` and is invoked when it

@@ -286,6 +286,14 @@ public:
      */
     void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
 
+    /**
+     * Gets the RLOC16.
+     *
+     * @return The border router's RLOC16.
+     *
+     */
+    uint16_t GetRloc16(void) const { return mRloc16; }
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
      * Indicates whether or not the external route configuration is valid.

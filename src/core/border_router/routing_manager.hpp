@@ -454,6 +454,28 @@ public:
     static bool IsValidOmrPrefix(const Ip6::Prefix &aPrefix);
 
     /**
+     * @brief Checks if any external route is published.
+     *
+     * This function iterates through the external routes in the network data and checks
+     * if there is a stable route that matches the current RLOC16.
+     *
+     * @retval TRUE   an external route is published,
+     * @retval FALSE  no external route is published.
+     */
+    bool IsExternalRoutePublished(void) const;
+
+    /**
+     * @brief Checks if the default route is published.
+     *
+     * This function iterates through the external routes in the network data and checks if
+     * there is a stable route that matches the current RLOC16 and is the default route prefix.
+     *
+     * @retval TRUE  an default route (::/0) is published
+     * @retval FALSE no default route is published.
+     */
+    bool IsDefaultRoutePublished(void) const;
+
+    /**
      * Initializes a `PrefixTableIterator`.
      *
      * An iterator can be initialized again to start from the beginning of the table.
