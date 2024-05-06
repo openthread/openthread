@@ -2941,11 +2941,6 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // RoutePublisher
 
-const otIp6Prefix RoutingManager::RoutePublisher::kUlaPrefix = {
-    {{{0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}},
-    7,
-};
-
 RoutingManager::RoutePublisher::RoutePublisher(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mState(kDoNotPublish)

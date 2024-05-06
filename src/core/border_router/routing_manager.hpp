@@ -1161,12 +1161,10 @@ private:
         void HandleNotifierEvents(Events aEvents);
         void HandleTimer(void);
 
-        static const Ip6::Prefix &GetUlaPrefix(void) { return AsCoreType(&kUlaPrefix); }
+        static const Ip6::Prefix &GetUlaPrefix(void) { return AsCoreType(&Ip6::kUlaPrefix); }
 
     private:
         static constexpr uint32_t kDelayBeforePrfUpdateOnLinkQuality3 = TimeMilli::SecToMsec(5 * 60);
-
-        static const otIp6Prefix kUlaPrefix;
 
         enum State : uint8_t
         {

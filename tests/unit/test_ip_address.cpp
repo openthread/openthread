@@ -580,6 +580,10 @@ void TestIp6Prefix(void)
     VerifyOrQuit(!PrefixFrom("fc00::", 6).IsUniqueLocal());
     VerifyOrQuit(!PrefixFrom("f800::", 7).IsUniqueLocal());
     VerifyOrQuit(!PrefixFrom("fe00::", 7).IsUniqueLocal());
+
+    // Test default route and ULA prefix data structure, as well as the operator==
+    VerifyOrQuit(PrefixFrom("::",     0) == AsCoreType(&Ip6::kDefaultRoutePrefix));
+    VerifyOrQuit(PrefixFrom("fc00::", 7) == AsCoreType(&Ip6::kUlaPrefix));
 }
 
 void TestIp6PrefixTidy(void)

@@ -1069,6 +1069,28 @@ private:
 
 } OT_TOOL_PACKED_END;
 
+// define "fc00::/7" - prefix of Unique Local Unicast Addresses (RFC 4193)
+constexpr otIp6Prefix kUlaPrefix = {
+    { // mPrefix
+        { // mFields
+            0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        }
+    },
+    7 // mLength
+};
+
+// define "::/0" - the default route prefix
+constexpr otIp6Prefix kDefaultRoutePrefix = {
+    { // mPrefix
+        { // mFields
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        }
+    },
+    0  // mLength
+};
+
 /**
  * @}
  *
