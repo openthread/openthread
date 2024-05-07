@@ -1740,7 +1740,7 @@ bool RoutingManager::DiscoveredPrefixTable::Entry::Matches(const ExpirationCheck
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetExpireTime(void) const
 {
-    return mLastUpdateTime + CalculateExpireDelay(mValidLifetime);
+    return CalculateExpirationTime(mValidLifetime);
 }
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
@@ -1752,14 +1752,14 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTime(void) const
 
 TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::GetStaleTimeFromPreferredLifetime(void) const
 {
-    return mLastUpdateTime + CalculateExpireDelay(GetPreferredLifetime());
+    return CalculateExpirationTime(GetPreferredLifetime());
 }
 
 bool RoutingManager::DiscoveredPrefixTable::Entry::IsDeprecated(void) const
 {
     OT_ASSERT(IsOnLinkPrefix());
 
-    return mLastUpdateTime + CalculateExpireDelay(GetPreferredLifetime()) <= TimerMilli::GetNow();
+    return CalculateExpirationTime(GetPreferredLifetime()) <= TimerMilli::GetNow();
 }
 
 RoutingManager::RoutePreference RoutingManager::DiscoveredPrefixTable::Entry::GetPreference(void) const
@@ -1798,20 +1798,14 @@ void RoutingManager::DiscoveredPrefixTable::Entry::AdoptValidAndPreferredLifetim
     mLastUpdateTime            = aEntry.GetLastUpdateTime();
 }
 
-uint32_t RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpireDelay(uint32_t aValidLifetime)
+TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpirationTime(uint32_t aLifetime) const
 {
-    uint32_t delay;
+    // `aLifetime` is in unit of seconds. We clamp the lifetime to max
+    // interval supported by `Timer` (`2^31` msec or ~24.8 days).
 
-    if (aValidLifetime * static_cast<uint64_t>(1000) > Timer::kMaxDelay)
-    {
-        delay = Timer::kMaxDelay;
-    }
-    else
-    {
-        delay = aValidLifetime * 1000;
-    }
+    static constexpr uint32_t kMaxLifetime = Time::MsecToSec(Timer::kMaxDelay);
 
-    return delay;
+    return mLastUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
 }
 
 //---------------------------------------------------------------------------------------------------------------------

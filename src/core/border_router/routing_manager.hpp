@@ -787,7 +787,7 @@ private:
             RoutePreference GetRoutePreference(void) const { return mShared.mRoutePreference; }
 
         private:
-            static uint32_t CalculateExpireDelay(uint32_t aValidLifetime);
+            TimeMilli CalculateExpirationTime(uint32_t aLifetime) const;
 
             Entry      *mNext;
             Ip6::Prefix mPrefix;
