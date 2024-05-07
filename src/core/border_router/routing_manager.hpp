@@ -62,6 +62,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/notifier.hpp"
+#include "common/owning_list.hpp"
 #include "common/pool.hpp"
 #include "common/string.hpp"
 #include "common/timer.hpp"
@@ -700,6 +701,8 @@ private:
                       public Unequatable<Entry>,
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
                       public Heap::Allocatable<Entry>,
+#else
+                      public InstanceLocatorInit,
 #endif
                       private Clearable<Entry>
         {
@@ -757,6 +760,10 @@ private:
                 TimeMilli mNow;
             };
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+            void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
+            void Free(void);
+#endif
             void               SetFrom(const RouterAdvert::Header &aRaHeader);
             void               SetFrom(const PrefixInfoOption &aPio);
             void               SetFrom(const RouteInfoOption &aRio);
@@ -804,6 +811,8 @@ private:
         struct Router : public LinkedListEntry<Router>,
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
                         public Heap::Allocatable<Router>,
+#else
+                        public InstanceLocatorInit,
 #endif
                         public Clearable<Router>
         {
@@ -823,13 +832,18 @@ private:
                 kContainsNoEntriesOrFlags
             };
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+            void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
+            void Free(void);
+#endif
+
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker aChecker) const;
             void CopyInfoTo(RouterEntry &aEntry) const;
 
             Router           *mNext;
             Ip6::Address      mAddress;
-            LinkedList<Entry> mEntries;
+            OwningList<Entry> mEntries;
             TimeMilli         mTimeout;
             uint8_t           mNsProbeCount;
             bool              mManagedAddressConfigFlag : 1;
@@ -867,8 +881,6 @@ private:
         void RemovePrefix(const Entry::Matcher &aMatcher);
         void RemoveOrDeprecateEntriesFromInactiveRouters(void);
         void RemoveRoutersWithNoEntriesOrFlags(void);
-        void FreeRouters(LinkedList<Router> &aRouters);
-        void FreeEntries(LinkedList<Entry> &aEntries);
         void UpdateNetworkDataOnChangeTo(Entry &aEntry);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
@@ -877,20 +889,16 @@ private:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         Router *AllocateRouter(void) { return Router::Allocate(); }
         Entry  *AllocateEntry(void) { return Entry::Allocate(); }
-        void    FreeRouter(Router &aRouter) { aRouter.Free(); }
-        void    FreeEntry(Entry &aEntry) { aEntry.Free(); }
 #else
-        Router *AllocateRouter(void) { return mRouterPool.Allocate(); }
-        Entry  *AllocateEntry(void) { return mEntryPool.Allocate(); }
-        void    FreeRouter(Router &aRouter) { mRouterPool.Free(aRouter); }
-        void    FreeEntry(Entry &aEntry) { mEntryPool.Free(aEntry); }
+        Router *AllocateRouter(void);
+        Entry  *AllocateEntry(void);
 #endif
 
         using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
         using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableEntryTimer>;
         using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableRouterTimer>;
 
-        LinkedList<Router> mRouters;
+        OwningList<Router> mRouters;
         EntryTimer         mEntryTimer;
         RouterTimer        mRouterTimer;
         SignalTask         mSignalTask;

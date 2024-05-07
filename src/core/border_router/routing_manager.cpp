@@ -1199,6 +1199,32 @@ exit:
     return;
 }
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+
+RoutingManager::DiscoveredPrefixTable::Router *RoutingManager::DiscoveredPrefixTable::AllocateRouter(void)
+{
+    Router *router = mRouterPool.Allocate();
+
+    VerifyOrExit(router != nullptr);
+    router->Init(GetInstance());
+
+exit:
+    return router;
+}
+
+RoutingManager::DiscoveredPrefixTable::Entry *RoutingManager::DiscoveredPrefixTable::AllocateEntry(void)
+{
+    Entry *entry = mEntryPool.Allocate();
+
+    VerifyOrExit(entry != nullptr);
+    entry->Init(GetInstance());
+
+exit:
+    return entry;
+}
+
+#endif // !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+
 bool RoutingManager::DiscoveredPrefixTable::Contains(const Entry::Checker &aChecker) const
 {
     bool contains = false;
@@ -1270,16 +1296,15 @@ void RoutingManager::DiscoveredPrefixTable::RemovePrefix(const Entry::Matcher &a
 {
     // Removes all entries matching a given prefix from the table.
 
-    LinkedList<Entry> removedEntries;
+    bool didRemove = false;
 
     for (Router &router : mRouters)
     {
-        router.mEntries.RemoveAllMatching(aMatcher, removedEntries);
+        didRemove |= router.mEntries.RemoveAndFreeAllMatching(aMatcher);
     }
 
-    VerifyOrExit(!removedEntries.IsEmpty());
+    VerifyOrExit(didRemove);
 
-    FreeEntries(removedEntries);
     RemoveRoutersWithNoEntriesOrFlags();
 
     SignalTableChanged();
@@ -1292,12 +1317,7 @@ void RoutingManager::DiscoveredPrefixTable::RemoveAllEntries(void)
 {
     // Remove all entries from the table.
 
-    for (Router &router : mRouters)
-    {
-        FreeEntries(router.mEntries);
-    }
-
-    FreeRouters(mRouters);
+    mRouters.Free();
     mEntryTimer.Stop();
 
     SignalTableChanged();
@@ -1398,57 +1418,28 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::CalculateNextStaleTime(TimeMill
 
 void RoutingManager::DiscoveredPrefixTable::RemoveRoutersWithNoEntriesOrFlags(void)
 {
-    LinkedList<Router> routersToFree;
-
-    mRouters.RemoveAllMatching(Router::kContainsNoEntriesOrFlags, routersToFree);
-    FreeRouters(routersToFree);
-}
-
-void RoutingManager::DiscoveredPrefixTable::FreeRouters(LinkedList<Router> &aRouters)
-{
-    // Frees all routers in the given list `aRouters`
-
-    Router *router;
-
-    while ((router = aRouters.Pop()) != nullptr)
-    {
-        FreeRouter(*router);
-    }
-}
-
-void RoutingManager::DiscoveredPrefixTable::FreeEntries(LinkedList<Entry> &aEntries)
-{
-    // Frees all entries in the given list `aEntries`.
-
-    Entry *entry;
-
-    while ((entry = aEntries.Pop()) != nullptr)
-    {
-        FreeEntry(*entry);
-    }
+    mRouters.RemoveAndFreeAllMatching(Router::kContainsNoEntriesOrFlags);
 }
 
 void RoutingManager::DiscoveredPrefixTable::HandleEntryTimer(void) { RemoveExpiredEntries(); }
 
 void RoutingManager::DiscoveredPrefixTable::RemoveExpiredEntries(void)
 {
-    TimeMilli         now            = TimerMilli::GetNow();
-    TimeMilli         nextExpireTime = now.GetDistantFuture();
-    LinkedList<Entry> expiredEntries;
+    TimeMilli now            = TimerMilli::GetNow();
+    TimeMilli nextExpireTime = now.GetDistantFuture();
+    bool      didRemove      = false;
 
     for (Router &router : mRouters)
     {
-        router.mEntries.RemoveAllMatching(Entry::ExpirationChecker(now), expiredEntries);
+        didRemove |= router.mEntries.RemoveAndFreeAllMatching(Entry::ExpirationChecker(now));
     }
 
     RemoveRoutersWithNoEntriesOrFlags();
 
-    if (!expiredEntries.IsEmpty())
+    if (didRemove)
     {
         SignalTableChanged();
     }
-
-    FreeEntries(expiredEntries);
 
     // Determine the next expire time and schedule timer.
 
@@ -1808,6 +1799,13 @@ TimeMilli RoutingManager::DiscoveredPrefixTable::Entry::CalculateExpirationTime(
     return mLastUpdateTime + Time::SecToMsec(Min(aLifetime, kMaxLifetime));
 }
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+void RoutingManager::DiscoveredPrefixTable::Entry::Free(void)
+{
+    Get<RoutingManager>().mDiscoveredPrefixTable.mEntryPool.Free(*this);
+}
+#endif
+
 //---------------------------------------------------------------------------------------------------------------------
 // DiscoveredPrefixTable::Router
 
@@ -1839,6 +1837,14 @@ void RoutingManager::DiscoveredPrefixTable::Router::CopyInfoTo(RouterEntry &aEnt
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
     aEntry.mStubRouterFlag           = mStubRouterFlag;
 }
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+void RoutingManager::DiscoveredPrefixTable::Router::Free(void)
+{
+    mEntries.Free();
+    Get<RoutingManager>().mDiscoveredPrefixTable.mRouterPool.Free(*this);
+}
+#endif
 
 //---------------------------------------------------------------------------------------------------------------------
 // FavoredOmrPrefix
