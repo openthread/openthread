@@ -52,7 +52,7 @@ typedef struct utilsSocket
     } mGroupAddr;                       ///< The group sock address for simulating radio.
 } utilsSocket;
 
-extern const char *gLocalHost; ///< Local host address to use for sockets
+extern const char *gLocalInterface; ///< Local interface name or address to use for sockets
 
 /**
  * Adds a file descriptor (FD) to a given FD set.

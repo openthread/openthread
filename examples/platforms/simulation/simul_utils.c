@@ -39,7 +39,7 @@
 #define UTILS_SOCKET_GROUP_ADDR "224.0.0.116"
 #define UTILS_SOCKET_GROUP_ADDR6 "ff02::116"
 
-const char *gLocalHost = UTILS_SOCKET_LOCAL_HOST_ADDR;
+const char *gLocalInterface = UTILS_SOCKET_LOCAL_HOST_ADDR;
 
 void utilsAddFdToFdSet(int aFd, fd_set *aFdSet, int *aMaxFd)
 {
@@ -210,7 +210,7 @@ exit:
     }
 }
 
-static bool TryInitSocketIfname(utilsSocket *aSocket, const char *aLocalHost)
+static bool TryInitSocketIfname(utilsSocket *aSocket, const char *aLocalInterface)
 {
     const struct in6_addr *addr6   = NULL;
     const struct in6_addr *addr6ll = NULL;
@@ -218,7 +218,7 @@ static bool TryInitSocketIfname(utilsSocket *aSocket, const char *aLocalHost)
     struct ifaddrs        *ifaddr  = NULL;
     unsigned int           ifIndex = 0;
 
-    otEXPECT((ifIndex = if_nametoindex(aLocalHost)));
+    otEXPECT((ifIndex = if_nametoindex(aLocalInterface)));
 
     if (getifaddrs(&ifaddr) == -1)
     {
@@ -228,7 +228,7 @@ static bool TryInitSocketIfname(utilsSocket *aSocket, const char *aLocalHost)
 
     for (struct ifaddrs *ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
     {
-        if (ifa->ifa_addr == NULL || strcmp(ifa->ifa_name, aLocalHost) != 0)
+        if (ifa->ifa_addr == NULL || strcmp(ifa->ifa_name, aLocalInterface) != 0)
         {
             continue;
         }
@@ -280,11 +280,11 @@ exit:
     return aSocket->mInitialized;
 }
 
-static bool TryInitSocketIp4(utilsSocket *aSocket, const char *aLocalHost)
+static bool TryInitSocketIp4(utilsSocket *aSocket, const char *aLocalInterface)
 {
     struct in_addr addr4;
 
-    otEXPECT(inet_pton(AF_INET, aLocalHost, &addr4));
+    otEXPECT(inet_pton(AF_INET, aLocalInterface, &addr4));
 
     InitTxSocketIp4(aSocket, &addr4);
     InitRxSocket(aSocket, &addr4, 0);
@@ -295,12 +295,12 @@ exit:
     return aSocket->mInitialized;
 }
 
-static bool TryInitSocketIp6(utilsSocket *aSocket, const char *aLocalHost)
+static bool TryInitSocketIp6(utilsSocket *aSocket, const char *aLocalInterface)
 {
     struct in6_addr addr6;
     struct ifaddrs *ifaddr = NULL;
 
-    otEXPECT(inet_pton(AF_INET6, aLocalHost, &addr6));
+    otEXPECT(inet_pton(AF_INET6, aLocalInterface, &addr6));
 
     if (getifaddrs(&ifaddr) == -1)
     {
@@ -351,10 +351,10 @@ void utilsInitSocket(utilsSocket *aSocket, uint16_t aPortBase)
     aSocket->mRxFd        = -1;
     aSocket->mPort        = (uint16_t)(aSocket->mPortBase + gNodeId);
 
-    if (!TryInitSocketIfname(aSocket, gLocalHost) && !TryInitSocketIp4(aSocket, gLocalHost) &&
-        !TryInitSocketIp6(aSocket, gLocalHost))
+    if (!TryInitSocketIfname(aSocket, gLocalInterface) && !TryInitSocketIp4(aSocket, gLocalInterface) &&
+        !TryInitSocketIp6(aSocket, gLocalInterface))
     {
-        fprintf(stderr, "Failed to simulate node %d on %s\n", gNodeId, gLocalHost);
+        fprintf(stderr, "Failed to simulate node %d on %s\n", gNodeId, gLocalInterface);
         exit(EXIT_FAILURE);
     }
 }
