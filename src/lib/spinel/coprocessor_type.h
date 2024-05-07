@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OT_PLATFORM_COPROCESSOR_MODE_H_
-#define OT_PLATFORM_COPROCESSOR_MODE_H_
+#ifndef COPROCESSOR_TYPE_H_
+#define COPROCESSOR_TYPE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,4 +47,4 @@ typedef enum CoprocessorType
 #ifdef __cplusplus
 }
 #endif
-#endif // OT_PLATFORM_COPROCESSOR_MODE_H_
+#endif // COPROCESSOR_TYPE_H_
