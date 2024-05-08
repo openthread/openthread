@@ -2002,7 +2002,11 @@ void RadioSpinel::RecoverFromRcpFailure(void)
 
     --mRcpFailureCount;
 
-    SuccessOrDie(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+    if (sSupportsLogCrashDump)
+    {
+        LogDebg("RCP supports crash dump logging. Requesting crash dump.");
+        SuccessOrDie(Set(SPINEL_PROP_RCP_LOG_CRASH_DUMP, nullptr));
+    }
 
     LogNote("RCP recovery is done");
 
