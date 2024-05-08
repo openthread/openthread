@@ -31,10 +31,10 @@
 
 #include <openthread/instance.h>
 
+#include "lib/spinel/coprocessor_type.h"
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_interface.hpp"
-#include "posix/platform/coprocessor_type.h"
 
 namespace ot {
 namespace Spinel {
