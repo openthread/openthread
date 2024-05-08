@@ -144,17 +144,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
- *
- * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
- * `RadioSpinel` platform is used.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
-#define OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE 8192
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
  *
  * Define to 1 if you want to enable proprietary radio support as defined by platform.

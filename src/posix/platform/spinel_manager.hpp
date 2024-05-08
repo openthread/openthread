@@ -29,6 +29,8 @@
 #ifndef POSIX_PLATFORM_SPINEL_MANAGER_HPP_
 #define POSIX_PLATFORM_SPINEL_MANAGER_HPP_
 
+#include <assert.h>
+
 #include "common/code_utils.hpp"
 #include "lib/spinel/spinel_driver.hpp"
 #include "posix/platform/hdlc_interface.hpp"
@@ -92,7 +94,7 @@ public:
      */
     Spinel::SpinelInterface &GetSpinelInterface(void)
     {
-        OT_ASSERT(mSpinelInterface != nullptr);
+        assert(mSpinelInterface != nullptr);
         return *mSpinelInterface;
     }
 

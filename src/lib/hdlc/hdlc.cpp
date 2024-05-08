@@ -34,7 +34,7 @@
 
 #include <stdlib.h>
 
-#include "common/code_utils.hpp"
+#include "lib/utils/code_utils.hpp"
 
 namespace ot {
 namespace Hdlc {
@@ -136,14 +136,14 @@ otError Encoder::Encode(uint8_t aByte)
 
     if (HdlcByteNeedsEscape(aByte))
     {
-        VerifyOrExit(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
+        ACTION_IF_NOT(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
 
-        IgnoreError(mWritePointer.WriteByte(kEscapeSequence));
-        IgnoreError(mWritePointer.WriteByte(aByte ^ 0x20));
+        IGNORE_RETURN(mWritePointer.WriteByte(kEscapeSequence));
+        IGNORE_RETURN(mWritePointer.WriteByte(aByte ^ 0x20));
     }
     else
     {
-        SuccessOrExit(error = mWritePointer.WriteByte(aByte));
+        ENSURE_NO_ERROR(error = mWritePointer.WriteByte(aByte));
     }
 
     mFcs = UpdateFcs(mFcs, aByte);
@@ -160,7 +160,7 @@ otError Encoder::Encode(const uint8_t *aData, uint16_t aLength)
 
     while (aLength--)
     {
-        SuccessOrExit(error = Encode(*aData++));
+        ENSURE_NO_ERROR(error = Encode(*aData++));
     }
 
 exit:
@@ -183,10 +183,10 @@ otError Encoder::EndFrame(void)
 
     fcs ^= 0xffff;
 
-    SuccessOrExit(error = Encode(fcs & 0xff));
-    SuccessOrExit(error = Encode(fcs >> 8));
+    ENSURE_NO_ERROR(error = Encode(fcs & 0xff));
+    ENSURE_NO_ERROR(error = Encode(fcs >> 8));
 
-    SuccessOrExit(error = mWritePointer.WriteByte(kFlagSequence));
+    ENSURE_NO_ERROR(error = mWritePointer.WriteByte(kFlagSequence));
 
 exit:
 
@@ -276,7 +276,7 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
                 if (mWritePointer->CanWrite(sizeof(uint8_t)))
                 {
                     mFcs = UpdateFcs(mFcs, byte);
-                    IgnoreError(mWritePointer->WriteByte(byte));
+                    IGNORE_RETURN(mWritePointer->WriteByte(byte));
                     mDecodedLength++;
                 }
                 else
@@ -295,7 +295,7 @@ void Decoder::Decode(const uint8_t *aData, uint16_t aLength)
             {
                 byte ^= 0x20;
                 mFcs = UpdateFcs(mFcs, byte);
-                IgnoreError(mWritePointer->WriteByte(byte));
+                IGNORE_RETURN(mWritePointer->WriteByte(byte));
                 mDecodedLength++;
                 mState = kStateSync;
             }

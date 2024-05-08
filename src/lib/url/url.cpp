@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/common/code_utils.hpp"
+#include "lib/utils/code_utils.hpp"
 
 namespace ot {
 namespace Url {
@@ -54,7 +54,7 @@ otError Url::Init(char *aUrl)
     mProtocol = aUrl;
 
     url = strstr(aUrl, "://");
-    VerifyOrExit(url != nullptr, error = OT_ERROR_PARSE);
+    ACTION_IF_NOT(url != nullptr, error = OT_ERROR_PARSE);
     *url = '\0';
     url += sizeof("://") - 1;
     mPath = url;
@@ -91,7 +91,7 @@ const char *Url::GetValue(const char *aName, const char *aLastValue) const
     }
     else
     {
-        VerifyOrExit(aLastValue > mQuery && aLastValue < mEnd);
+        ENSURE(aLastValue > mQuery && aLastValue < mEnd);
         start = aLastValue + strlen(aLastValue) + 1;
     }
 
@@ -103,11 +103,11 @@ const char *Url::GetValue(const char *aName, const char *aLastValue) const
         {
             if (start[len] == '=')
             {
-                ExitNow(rval = &start[len + 1]);
+                EXIT_NOW(rval = &start[len + 1]);
             }
             else if (start[len] == '\0')
             {
-                ExitNow(rval = &start[len]);
+                EXIT_NOW(rval = &start[len]);
             }
         }
         last  = start;
@@ -124,10 +124,10 @@ otError Url::ParseUint32(const char *aName, uint32_t &aValue) const
     const char *str;
     long long   value;
 
-    VerifyOrExit((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
+    ACTION_IF_NOT((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
 
     value = strtoll(str, nullptr, 0);
-    VerifyOrExit(0 <= value && value <= UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
+    ACTION_IF_NOT(0 <= value && value <= UINT32_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<uint32_t>(value);
 
 exit:
@@ -139,8 +139,8 @@ otError Url::ParseUint16(const char *aName, uint16_t &aValue) const
     otError  error = OT_ERROR_NONE;
     uint32_t value;
 
-    SuccessOrExit(error = ParseUint32(aName, value));
-    VerifyOrExit(value <= UINT16_MAX, error = OT_ERROR_INVALID_ARGS);
+    ENSURE_NO_ERROR(error = ParseUint32(aName, value));
+    ACTION_IF_NOT(value <= UINT16_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<uint16_t>(value);
 
 exit:
@@ -152,8 +152,8 @@ otError Url::ParseUint8(const char *aName, uint8_t &aValue) const
     otError  error = OT_ERROR_NONE;
     uint32_t value;
 
-    SuccessOrExit(error = ParseUint32(aName, value));
-    VerifyOrExit(value <= UINT8_MAX, error = OT_ERROR_INVALID_ARGS);
+    ENSURE_NO_ERROR(error = ParseUint32(aName, value));
+    ACTION_IF_NOT(value <= UINT8_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<uint8_t>(value);
 
 exit:
@@ -166,10 +166,10 @@ otError Url::ParseInt32(const char *aName, int32_t &aValue) const
     const char *str;
     long long   value;
 
-    VerifyOrExit((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
+    ACTION_IF_NOT((str = GetValue(aName)) != nullptr, error = OT_ERROR_NOT_FOUND);
 
     value = strtoll(str, nullptr, 0);
-    VerifyOrExit(INT32_MIN <= value && value <= INT32_MAX, error = OT_ERROR_INVALID_ARGS);
+    ACTION_IF_NOT(INT32_MIN <= value && value <= INT32_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<int32_t>(value);
 
 exit:
@@ -181,8 +181,8 @@ otError Url::ParseInt16(const char *aName, int16_t &aValue) const
     otError error = OT_ERROR_NONE;
     int32_t value;
 
-    SuccessOrExit(error = ParseInt32(aName, value));
-    VerifyOrExit(INT16_MIN <= value && value <= INT16_MAX, error = OT_ERROR_INVALID_ARGS);
+    ENSURE_NO_ERROR(error = ParseInt32(aName, value));
+    ACTION_IF_NOT(INT16_MIN <= value && value <= INT16_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<int16_t>(value);
 
 exit:
@@ -194,8 +194,8 @@ otError Url::ParseInt8(const char *aName, int8_t &aValue) const
     otError error = OT_ERROR_NONE;
     int32_t value;
 
-    SuccessOrExit(error = ParseInt32(aName, value));
-    VerifyOrExit(INT8_MIN <= value && value <= INT8_MAX, error = OT_ERROR_INVALID_ARGS);
+    ENSURE_NO_ERROR(error = ParseInt32(aName, value));
+    ACTION_IF_NOT(INT8_MIN <= value && value <= INT8_MAX, error = OT_ERROR_INVALID_ARGS);
     aValue = static_cast<int8_t>(value);
 
 exit:

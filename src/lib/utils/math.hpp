@@ -26,40 +26,60 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPINEL_LOGGER_HPP_
-#define SPINEL_LOGGER_HPP_
+/**
+ * @file
+ *   This file includes definitions for generic number utility functions (min, max).
+ */
 
-#include <openthread/error.h>
-#include <openthread/platform/toolchain.h>
+#ifndef LIB_UTILS_MATH_HPP_
+#define LIB_UTILS_MATH_HPP_
 
 namespace ot {
-namespace Spinel {
+namespace Lib {
+namespace Utils {
 
-class Logger
-{
-protected:
-    explicit Logger(const char *aModuleName);
+/**
+ * This template function returns the minimum of two given values.
+ *
+ * Uses `operator<` to compare the values.
+ *
+ * @tparam Type   The value type.
+ *
+ * @param[in] aFirst  The first value.
+ * @param[in] aSecond The second value.
+ *
+ * @returns The minimum of @p aFirst and @p aSecond.
+ *
+ */
+template <typename Type> Type Min(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aFirst : aSecond; }
 
-    void LogIfFail(const char *aText, otError aError);
+/**
+ * This template function returns the maximum of two given values.
+ *
+ * Uses `operator<` to compare the values.
+ *
+ * @tparam Type   The value type.
+ *
+ * @param[in] aFirst  The first value.
+ * @param[in] aSecond The second value.
+ *
+ * @returns The maximum of @p aFirst and @p aSecond.
+ *
+ */
+template <typename Type> Type Max(Type aFirst, Type aSecond) { return (aFirst < aSecond) ? aSecond : aFirst; }
 
-    void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
+/**
+ * Casts a given `uint32_t` to `unsigned long`.
+ *
+ * @param[in] aUint32   A `uint32_t` value.
+ *
+ * @returns The @p aUint32 value as `unsigned long`.
+ *
+ */
+inline unsigned long ToUlong(uint32_t aUint32) { return static_cast<unsigned long>(aUint32); }
 
-    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
-    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
-
-    enum
-    {
-        kChannelMaskBufferSize = 32, ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
-    };
-
-    const char *mModuleName;
-};
-
-} // namespace Spinel
+} // namespace Utils
+} // namespace Lib
 } // namespace ot
 
-#endif // SPINEL_LOG_HPP_
+#endif // LIB_UTILS_MATH_HPP_

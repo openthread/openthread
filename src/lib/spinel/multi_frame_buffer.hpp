@@ -33,16 +33,12 @@
 #ifndef SPINEL_MULTI_FRAME_BUFFER_HPP_
 #define SPINEL_MULTI_FRAME_BUFFER_HPP_
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openthread/error.h>
-
-#include "common/array.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/encoding.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -367,7 +363,7 @@ public:
     {
         otError error = OT_ERROR_NONE;
 
-        OT_ASSERT(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
+        assert(aFrame == nullptr || (mBuffer <= aFrame && aFrame < GetArrayEnd(mBuffer)));
 
         aFrame = (aFrame == nullptr) ? mBuffer : aFrame + aLength;
 
@@ -449,6 +445,38 @@ private:
         kHeaderTotalLengthOffset = 0,
         kHeaderSkipLengthOffset  = sizeof(uint16_t),
         kHeaderSize              = sizeof(uint16_t) + sizeof(uint16_t),
+    };
+
+    template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&aArray)[kArrayLength])
+    {
+        return &aArray[kArrayLength];
+    }
+
+    template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
+    {
+        return &aArray[kArrayLength];
+    }
+
+    static inline void IgnoreError(otError aError)
+    {
+        do
+        {
+            (void)(aError);
+        } while (false);
+    }
+
+    class LittleEndian
+    {
+    public:
+        static inline uint16_t ReadUint16(const uint8_t *aBuffer)
+        {
+            return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]);
+        }
+        static inline void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
+        {
+            aBuffer[0] = (aValue >> 8) & 0xff;
+            aBuffer[1] = (aValue >> 0) & 0xff;
+        }
     };
 
     uint8_t  mBuffer[kSize];
