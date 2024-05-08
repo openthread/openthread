@@ -313,11 +313,8 @@ void Core::HandleEntryTimer(void)
 
 void Core::RemoveEmptyEntries(void)
 {
-    OwningList<HostEntry>    removedHosts;
-    OwningList<ServiceEntry> removedServices;
-
-    mHostEntries.RemoveAllMatching(Entry::kRemoving, removedHosts);
-    mServiceEntries.RemoveAllMatching(Entry::kRemoving, removedServices);
+    mHostEntries.RemoveAndFreeAllMatching(Entry::kRemoving);
+    mServiceEntries.RemoveAndFreeAllMatching(Entry::kRemoving);
 }
 
 void Core::HandleEntryTask(void)
@@ -1874,9 +1871,7 @@ void Core::ServiceEntry::ClearService(void)
 
 void Core::ServiceEntry::ScheduleToRemoveIfEmpty(void)
 {
-    OwningList<SubType> removedSubTypes;
-
-    mSubTypes.RemoveAllMatching(EmptyChecker(), removedSubTypes);
+    mSubTypes.RemoveAndFreeAllMatching(EmptyChecker());
 
     if (IsEmpty())
     {
@@ -2149,8 +2144,6 @@ void Core::ServiceEntry::PrepareResponseRecords(TxMessage &aResponse, TimeMilli 
 
 void Core::ServiceEntry::UpdateRecordsState(const TxMessage &aResponse)
 {
-    OwningList<SubType> removedSubTypes;
-
     Entry::UpdateRecordsState(aResponse);
 
     mPtrRecord.UpdateStateAfterAnswer(aResponse);
@@ -2162,7 +2155,7 @@ void Core::ServiceEntry::UpdateRecordsState(const TxMessage &aResponse)
         subType.mPtrRecord.UpdateStateAfterAnswer(aResponse);
     }
 
-    mSubTypes.RemoveAllMatching(EmptyChecker(), removedSubTypes);
+    mSubTypes.RemoveAndFreeAllMatching(EmptyChecker());
 
     if (IsEmpty())
     {
@@ -4142,11 +4135,10 @@ void Core::TxMessageHistory::CalculateHash(const Message &aMessage, Hash &aHash)
 
 void Core::TxMessageHistory::HandleTimer(void)
 {
-    TimeMilli             now      = TimerMilli::GetNow();
-    TimeMilli             nextTime = now.GetDistantFuture();
-    OwningList<HashEntry> expiredEntries;
+    TimeMilli now      = TimerMilli::GetNow();
+    TimeMilli nextTime = now.GetDistantFuture();
 
-    mHashEntries.RemoveAllMatching(ExpireChecker(now), expiredEntries);
+    mHashEntries.RemoveAndFreeAllMatching(ExpireChecker(now));
 
     for (const HashEntry &entry : mHashEntries)
     {
@@ -4268,21 +4260,16 @@ void Core::AddPassiveIp6AddrCache(const char *aHostName)
 
 void Core::HandleCacheTimer(void)
 {
-    CacheTimerContext        context(GetInstance());
-    ExpireChecker            expireChecker(context.GetNow());
-    OwningList<BrowseCache>  expiredBrowseList;
-    OwningList<SrvCache>     expiredSrvList;
-    OwningList<TxtCache>     expiredTxtList;
-    OwningList<Ip6AddrCache> expiredIp6AddrList;
-    OwningList<Ip4AddrCache> expiredIp4AddrList;
+    CacheTimerContext context(GetInstance());
+    ExpireChecker     expireChecker(context.GetNow());
 
     // First remove all expired entries.
 
-    mBrowseCacheList.RemoveAllMatching(expireChecker, expiredBrowseList);
-    mSrvCacheList.RemoveAllMatching(expireChecker, expiredSrvList);
-    mTxtCacheList.RemoveAllMatching(expireChecker, expiredTxtList);
-    mIp6AddrCacheList.RemoveAllMatching(expireChecker, expiredIp6AddrList);
-    mIp4AddrCacheList.RemoveAllMatching(expireChecker, expiredIp4AddrList);
+    mBrowseCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mSrvCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mTxtCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mIp6AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
+    mIp4AddrCacheList.RemoveAndFreeAllMatching(expireChecker);
 
     // Process cache types in a specific order to optimize name
     // compression when constructing query messages.
@@ -4720,9 +4707,7 @@ exit:
 
 void Core::CacheEntry::ClearEmptyCallbacks(void)
 {
-    CallbackList emptyCallbacks;
-
-    mCallbacks.RemoveAllMatching(EmptyChecker(), emptyCallbacks);
+    mCallbacks.RemoveAndFreeAllMatching(EmptyChecker());
 
     if (mCallbacks.IsEmpty())
     {
@@ -5765,13 +5750,13 @@ void Core::AddrCache::DetermineRecordFireTime(void)
 
 void Core::AddrCache::ProcessExpiredRecords(TimeMilli aNow)
 {
-    OwningList<AddrEntry>      expiredEntries;
     Heap::Array<AddressAndTtl> addrArray;
     AddressResult              result;
+    bool                       didRemoveAny;
 
-    mCommittedEntries.RemoveAllMatching(ExpireChecker(aNow), expiredEntries);
+    didRemoveAny = mCommittedEntries.RemoveAndFreeAllMatching(ExpireChecker(aNow));
 
-    VerifyOrExit(!expiredEntries.IsEmpty());
+    VerifyOrExit(didRemoveAny);
 
     ConstructResult(result, addrArray);
     InvokeCallbacks(result);
@@ -5963,9 +5948,7 @@ void Core::AddrCache::CommitNewResponseEntries(void)
     }
     else
     {
-        OwningList<AddrEntry> removedEntries;
-
-        mCommittedEntries.RemoveAllMatching(EmptyChecker(), removedEntries);
+        mCommittedEntries.RemoveAndFreeAllMatching(EmptyChecker());
     }
 
     while (!mNewEntries.IsEmpty())

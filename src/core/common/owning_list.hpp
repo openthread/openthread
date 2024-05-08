@@ -149,6 +149,29 @@ public:
     {
         LinkedList<Type>::RemoveAllMatching(aIndicator, aRemovedList);
     }
+
+    /**
+     * Removes and frees all entries in the list matching a given entry indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against entries
+     * in the list. To check that an entry matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` entry in the list. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in] aIndicator   An entry indicator to match against entries in the list.
+     *
+     * @retval TRUE    At least one matching entry was removed.
+     * @retval FALSE   No matching entry was found.
+     *
+     */
+    template <typename Indicator> bool RemoveAndFreeAllMatching(const Indicator &aIndicator)
+    {
+        OwningList removedList;
+
+        RemoveAllMatching(aIndicator, removedList);
+        return !removedList.IsEmpty();
+    }
 };
 
 } // namespace ot
