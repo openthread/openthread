@@ -256,6 +256,8 @@ template <> otError UdpExample::Process<Cmd("send")>(Arg aArgs[])
     otMessageInfo     messageInfo;
     otMessageSettings messageSettings = {mLinkSecurityEnabled, OT_MESSAGE_PRIORITY_NORMAL};
 
+    VerifyOrExit(otUdpIsOpen(GetInstancePtr(), &mSocket), error = OT_ERROR_INVALID_STATE);
+
     ClearAllBytes(messageInfo);
 
     // Possible argument formats:
