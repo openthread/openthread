@@ -1145,6 +1145,7 @@ private:
             : mMessage(aMessage)
             , mNextLabelOffset(aLabelOffset)
             , mNameEndOffset(kUnsetNameEndOffset)
+            , mMinLabelOffset(aLabelOffset)
         {
         }
 
@@ -1162,6 +1163,7 @@ private:
         uint8_t        mLabelLength;      // Length of current label (number of chars).
         uint16_t       mNextLabelOffset;  // Offset in `mMessage` to the start of the next label.
         uint16_t       mNameEndOffset;    // Offset in `mMessage` to the byte after the end of domain name field.
+        uint16_t       mMinLabelOffset;   // Offset in `mMessage` to the start of the earliest parsed label.
     };
 
     Name(const char *aString, const Message *aMessage, uint16_t aOffset)
