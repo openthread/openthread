@@ -164,6 +164,12 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otErro
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of radio platform APIs
 
+OT_TOOL_WEAK void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
+}
+
 OT_TOOL_WEAK uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);

@@ -117,6 +117,7 @@ static otRadioIeInfo sTransmitIeInfo;
 
 static otExtAddress   sExtAddress;
 static otShortAddress sShortAddress;
+static otShortAddress sAlternateShortAddress;
 static otPanId        sPanid;
 static bool           sPromiscuous = false;
 static bool           sTxWait      = false;
@@ -395,6 +396,15 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
     assert(aInstance != NULL);
 
     sShortAddress = aShortAddress;
+}
+
+void otPlatRadioSetAlternateShortAddress(otInstance *aInstance, otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    assert(aInstance != NULL);
+
+    sAlternateShortAddress = aShortAddress;
 }
 
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
@@ -956,8 +966,9 @@ void radioProcessFrame(otInstance *aInstance)
 
     otEXPECT(sPromiscuous == false);
 
-    otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
-                    error = OT_ERROR_ABORT);
+    otEXPECT_ACTION(
+        otMacFrameDoesAddrMatchAny(&sReceiveFrame, sPanid, sShortAddress, sAlternateShortAddress, &sExtAddress),
+        error = OT_ERROR_ABORT);
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     otEXPECT_ACTION(otMacFrameGetSrcAddr(&sReceiveFrame, &macAddress) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
