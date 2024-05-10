@@ -51,8 +51,12 @@ namespace ot {
 
 namespace MeshCoP {
 
+class PendingDatasetManager;
+
 class DatasetManager : public InstanceLocator
 {
+    friend class PendingDatasetManager;
+
 public:
     /**
      * Callback function pointer, invoked when a response to a MGMT_SET request is received or times out.
@@ -149,7 +153,7 @@ public:
      * @retval kErrorParse  The dataset has at least one TLV with invalid format.
      *
      */
-    Error Save(const Dataset &aDataset);
+    Error Save(const Dataset &aDataset) { return Save(aDataset, /* aAllowOlderTimestamp */ false); }
 
     /**
      * Sets the Operational Dataset for the partition read from a given message.
@@ -347,6 +351,7 @@ private:
 
     bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
     bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
     void  SignalDatasetChange(void) const;
     void  SyncLocalWithLeader(const Dataset &aDataset);
     Error SendSetRequest(const Dataset &aDataset);
