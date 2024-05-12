@@ -2253,6 +2253,9 @@ void TestExtPanIdChange(void)
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
+
     AdvanceTime(300000);
     VerifyOrQuit(sRaValidated);
     VerifyOrQuit(sDeprecatingPrefixes.GetLength() == 1);
@@ -2550,6 +2553,7 @@ void TestExtPanIdChange(void)
     sExpectedPio = kPioDeprecatingLocalOnLink;
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+
     AdvanceTime(100);
 
     VerifyOrQuit(sRaValidated);
@@ -2583,6 +2587,9 @@ void TestExtPanIdChange(void)
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
 
     AdvanceTime(30000);
 
@@ -3324,6 +3331,9 @@ void TestSavedOnLinkPrefixes(void)
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
+
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
     AdvanceTime(30000);
@@ -3359,6 +3369,9 @@ void TestSavedOnLinkPrefixes(void)
     testFreeInstance(sInstance);
 
     InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
 
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
@@ -3411,6 +3424,9 @@ void TestSavedOnLinkPrefixes(void)
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
 
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
+
     AdvanceTime(100);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3456,6 +3472,10 @@ void TestSavedOnLinkPrefixes(void)
     InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+    Log("Local OMR prefix is changed to %s", localOmr.ToString().AsCString());
+
     AdvanceTime(100);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

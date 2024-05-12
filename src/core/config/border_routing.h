@@ -148,6 +148,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
+ *
+ * Define to 1 so for the routing manager to determine the local OMR prefix from Partition ID.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_LOCAL_OMR_FROM_PARTITION_ID_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
  *
  * Specifies whether to support handling platform generated ND messages.
