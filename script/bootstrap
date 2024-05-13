@@ -86,7 +86,26 @@ install_packages_opkg()
 
 install_packages_rpm()
 {
-    echo 'rpm not supported currently' && false
+    PM=yum
+    [ "command -v dnf" ] && PM=dnf
+    echo 'Installing toolchain dependencies...'
+
+    # sudo $PM check-update
+    sudo $PM install -y gcc-c++ cmake ninja-build ShellCheck
+
+    echo 'Installing GNU Arm Embedded Toolchain...'
+
+    PLATFORM=$(lsb_release -is)
+    ARCH=$(arch)
+
+    sudo $PM install -y wget bzip2
+    (cd /tmp \
+        && wget --tries 4 --no-check-certificate --quiet -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
+        && sudo tar xjf gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 -C /opt \
+        && rm gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
+        && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
+
+    install_packages_pretty_format
 }
 
 install_packages_brew()
