@@ -30,18 +30,18 @@
 # Script to generate a TCAT Commissioner X509v3 certificate.
 
 if [ $# -ne 2 ]; then
-  echo "Usage: ./create-cert-tcat-commissioner.sh <NameOfCommissioner> <NameOfCA>"
-  exit 1
+    echo "Usage: ./create-cert-tcat-commissioner.sh <NameOfCommissioner> <NameOfCA>"
+    exit 1
 fi
 set -eu
 
 # number of days certificate is valid
-(( VALIDITY="14" ))
+((VALIDITY = "14"))
 echo "create-cert-tcat-commissioner.sh - Using validity param -days ${VALIDITY}"
 
 NAME=${1}
 CANAME=${2}
-(( ID=${NAME:0-1} ))
+((ID = ${NAME:0-1}))
 CACERTFILE="ca/${CANAME}_cert.pem"
 
 echo "  TCAT commissioner name   : ${NAME}"
@@ -50,14 +50,14 @@ echo "  Numeric serial ID        : ${ID}"
 
 # create csr for TCAT Commissioner
 openssl req -new -key "keys/${NAME}_key.pem" -out "${NAME}.csr" -subj \
-             "/CN=TCAT Example ${NAME}/serialNumber=3523-1543-000${ID}"
+    "/CN=TCAT Example ${NAME}/serialNumber=3523-1543-000${ID}"
 
 # sign csr by CA
 mkdir -p "output/${NAME}"
 openssl x509 -set_serial "92429${ID}" -CAform PEM -CA "${CACERTFILE}" \
-  -CAkey "ca/${CANAME}_key.pem" -extfile "ext/${NAME}.ext" -extensions \
-  "${NAME}" -req -in "${NAME}.csr" -out "output/${NAME}/commissioner_cert.pem" \
-  -days "${VALIDITY}" -sha256
+    -CAkey "ca/${CANAME}_key.pem" -extfile "ext/${NAME}.ext" -extensions \
+    "${NAME}" -req -in "${NAME}.csr" -out "output/${NAME}/commissioner_cert.pem" \
+    -days "${VALIDITY}" -sha256
 
 # delete temp files
 rm -f "${NAME}.csr"

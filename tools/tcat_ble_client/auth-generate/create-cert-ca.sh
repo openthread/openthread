@@ -32,26 +32,26 @@
 # work for those TCAT Devices.
 
 if [ $# -ne 1 ]; then
-  echo "Usage: ./create-cert-ca.sh <NameOfCA>"
-  exit 1
+    echo "Usage: ./create-cert-ca.sh <NameOfCA>"
+    exit 1
 fi
 set -eu
 
 # days certificate is valid
-(( VALIDITY=20*365 ))
+((VALIDITY = 20 * 365))
 
 NAME=${1}
 
 # create csr
 openssl req -new -key "ca/${NAME}_key.pem" -out "${NAME}.csr" \
-            -subj "/CN=TCAT Example CA '${NAME}'/O=Example Inc/L=Example City/ST=CA/C=US"
+    -subj "/CN=TCAT Example CA '${NAME}'/O=Example Inc/L=Example City/ST=CA/C=US"
 
 # self-sign csr
-mkdir -p output >& /dev/null
+mkdir -p output
 openssl x509 -set_serial 0x01 -extfile "ext/${NAME}.ext" \
- -extensions "${NAME}" -req -in "${NAME}.csr" \
- -signkey "ca/${NAME}_key.pem" -out "ca/${NAME}_cert.pem" \
- -days "${VALIDITY}" -sha256
+    -extensions "${NAME}" -req -in "${NAME}.csr" \
+    -signkey "ca/${NAME}_key.pem" -out "ca/${NAME}_cert.pem" \
+    -days "${VALIDITY}" -sha256
 
 # delete temp files
 rm -f "${NAME}.csr"

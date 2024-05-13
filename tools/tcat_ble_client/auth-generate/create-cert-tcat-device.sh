@@ -30,39 +30,39 @@
 # Script to generate a TCAT Device X509v3 certificate.
 
 if [ $# -ne 2 ]; then
-  echo "Usage: ./create-cert-tcat-device.sh <NameOfDevice> <NameOfCA>"
-  exit 1
+    echo "Usage: ./create-cert-tcat-device.sh <NameOfDevice> <NameOfCA>"
+    exit 1
 fi
 set -eu
 
 # days certificate is valid
-SECONDS1=$(date +%s) # time now
+SECONDS1=$(date +%s)                               # time now
 SECONDS2=$(date --date="2999-12-31 23:59:59Z" +%s) # target end time
-(( VALIDITY="(${SECONDS2}-${SECONDS1})/(24*3600)" ))
+((VALIDITY = "(${SECONDS2}-${SECONDS1})/(24*3600)"))
 echo "create-cert-tcat-device.sh - Using validity param -days ${VALIDITY}"
 
 NAME="${1}"
 CANAME="${2}"
 CACERTFILE="ca/${CANAME}_cert.pem"
-(( ID=${NAME:0-1} ))
-(( SERIAL=13800+ID ))
+((ID = ${NAME:0-1}))
+((SERIAL = 13800 + ID))
 
 echo "  TCAT device name   : ${NAME}"
 echo "  TCAT device CA name: ${CANAME}"
 echo "  Numeric serial ID  : ${ID}"
 
 # create csr for device.
-# conform to 802.1AR guidelines, using only CN + serialNumber when 
+# conform to 802.1AR guidelines, using only CN + serialNumber when
 # manufacturer is already present as CA. CN is not even mandatory, but just good practice.
 openssl req -new -key "keys/${NAME}_key.pem" -out "${NAME}.csr" -subj \
-             "/CN=TCAT Example ${NAME}/serialNumber=4723-9833-000${ID}"
+    "/CN=TCAT Example ${NAME}/serialNumber=4723-9833-000${ID}"
 
 # sign csr by CA
 mkdir -p "output/${NAME}"
 openssl x509 -set_serial "${SERIAL}" -CAform PEM -CA "${CACERTFILE}" \
-  -CAkey "ca/${CANAME}_key.pem" -extfile "ext/${NAME}.ext" -extensions \
-  "${NAME}" -req -in "${NAME}.csr" -out "output/${NAME}/device_cert.pem" \
-  -days "${VALIDITY}" -sha256
+    -CAkey "ca/${CANAME}_key.pem" -extfile "ext/${NAME}.ext" -extensions \
+    "${NAME}" -req -in "${NAME}.csr" -out "output/${NAME}/device_cert.pem" \
+    -days "${VALIDITY}" -sha256
 
 # delete temp files
 rm -f "${NAME}.csr"
