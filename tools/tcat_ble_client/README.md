@@ -49,16 +49,13 @@ The application will connect to the first matching device discovered and set up 
 
 ## Usage with a specific TCAT Commissioner identity
 
-The TCAT Commissioner's certificate specifies what permissions it has obtained for specific features of managing a TCAT Device.
-By default, the identity in the `auth` directory is used.
-In order to use a different TCAT Commissioner certificate (identity), use the `--cert_path` argument, as follows:
+The TCAT Commissioner's certificate specifies what permissions it has obtained for specific features of managing a TCAT Device. By default, the identity in the `auth` directory is used. In order to use a different TCAT Commissioner certificate (identity), use the `--cert_path` argument, as follows:
 
 ```bash
 poetry run python3 bbtc.py --cert_path <certs-path> {<device specifier> | --scan}
 ```
 
-where `<certs-path>` is the directory where the private key, certificate, and CA certificate of the TCAT Commissioner 
-are stored.
+where `<certs-path>` is the directory where the private key, certificate, and CA certificate of the TCAT Commissioner are stored.
 
 For example to use a pre-configured identity `CommCert2` (related to Thread certification tests):
 
@@ -66,10 +63,9 @@ For example to use a pre-configured identity `CommCert2` (related to Thread cert
 poetry run python3 bbtc.py --cert_path ./auth-cert/CommCert2 --name 'Thread BLE'
 ```
 
-The `auth-cert` directory contains some other identities too, for testing purposes. Refer to Thread TCAT test plan 
-documents for details.
+The `auth-cert` directory contains some other identities too, for testing purposes. Refer to Thread TCAT test plan documents for details.
 
-See [GENERATING_CERTIFICATES.md](GENERATING_CERTIFICATES.md) for details on generating own certificates. 
+See [GENERATING_CERTIFICATES.md](GENERATING_CERTIFICATES.md) for details on generating own certificates.
 
 ## TCAT Commissioner CLI Commands
 

@@ -10,8 +10,7 @@ Extensions were introduced in version 3 of the X.509 standard for certificates. 
 
 ## Certificates generation (by script)
 
-The directory `auth-generate` contains example scripts and a Makefile to generate TCAT Commissioner certificates and 
-TCAT Device certificates. The scripts can also handle multiple CAs, and provide the most detailed view on how to generate these certificates.
+The directory `auth-generate` contains example scripts and a Makefile to generate TCAT Commissioner certificates and TCAT Device certificates. The scripts can also handle multiple CAs, and provide the most detailed view on how to generate these certificates.
 
 To generate all certificates:
 
@@ -20,12 +19,9 @@ cd auth-generate
 make
 ```
 
-This will create an `output` directory with subdirectories for each of the created identities. Each subdirectory can 
-be used as a value for the BBTC Commissioner `--cert_path` argument, if needed.
+This will create an `output` directory with subdirectories for each of the created identities. Each subdirectory can be used as a value for the BBTC Commissioner `--cert_path` argument, if needed.
 
-NOTE: the directory `auth-generate/ca` contains an example CA certificate and private key (for signing). Other CAs can be added 
-in here. This CA is not the same CA used for the TCAT Commissioner and Device identities in the `auth` and `auth-cert` directories! The CA for the 
-latter is privately maintained by Thread Group.
+NOTE: the directory `auth-generate/ca` contains an example CA certificate and private key (for signing). Other CAs can be added in here. This CA is not the same CA used for the TCAT Commissioner and Device identities in the `auth` and `auth-cert` directories! The CA for the latter is privately maintained by Thread Group.
 
 ## Certificates generation (manually)
 
@@ -91,8 +87,7 @@ openssl asn1parse -inform PEM -in commissioner_cert.pem
 
 ## Configurations
 
-file: `commissioner.cnf` (line `1.3.6.1.4.1.44970.3 = DER:21:01:01:01:01` specifies permissions (all))
-See scripts in `auth-generate` directory for more details.
+file: `commissioner.cnf` (line `1.3.6.1.4.1.44970.3 = DER:21:01:01:01:01` specifies permissions (all)) See scripts in `auth-generate` directory for more details.
 
 ```
 [ req ]
