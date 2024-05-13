@@ -112,6 +112,9 @@ void TestTcat(void)
     constexpr uint16_t kConnectionId = 0;
     const int          kCertificateThreadVersion = 2;
     const int          kCertificateAuthorizationField = 3;
+    const uint8_t      expectedTcatAuthField[5] = {0x20, 0x01, 0x01, 0x01, 0x01};
+    uint8_t            attributeBuffer[8];
+    size_t             attributeLen;
 
     TestBleSecure ble;
     Instance     *instance = testInitInstance();
@@ -140,8 +143,7 @@ void TestTcat(void)
     VerifyOrQuit(!ble.IsConnected() && !ble.IsBleConnectionOpen());
 
     // Verify that Thread-attribute parsing isn't available yet when not connected as client or server.
-    uint8_t attributeBuffer[8];
-    size_t  attributeLen = sizeof(attributeBuffer);
+    attributeLen = sizeof(attributeBuffer);
     VerifyOrQuit(otBleSecureGetThreadAttributeFromPeerCertificate(instance, kCertificateAuthorizationField,
                                                                   &attributeBuffer[0], &attributeLen) == kErrorInvalidState);
     attributeLen = sizeof(attributeBuffer);
@@ -166,12 +168,11 @@ void TestTcat(void)
                                                                  &attributeBuffer[0], &attributeLen));
     VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] >= kThreadVersion1p4);
 
+    static_assert(5 == sizeof(expectedTcatAuthField), "expectedTcatAuthField size incorrect for test");
     attributeLen = 5;
-    uint8_t expectedTcatAuthField[5] = {0x20, 0x01, 0x01, 0x01, 0x01};
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateAuthorizationField,
                                                                   &attributeBuffer[0], &attributeLen));
-    VerifyOrQuit(attributeLen == 5 && memcmp(&expectedTcatAuthField, &attributeBuffer, 5) == 0);
-
+    VerifyOrQuit(attributeLen == 5 && memcmp(&expectedTcatAuthField, &attributeBuffer, attributeLen) == 0);
 
     // Validate TLS connection can be started only when peer is connected
     otBleSecureDisconnect(instance);

@@ -331,10 +331,11 @@ void BleSecure::HandleTlsConnected(bool aConnected)
         if (mTcatAgent.IsEnabled())
         {
             Error err = mTcatAgent.Connected(mTls);
+
             if (err != kErrorNone){
-                mTls.Close()
+                mTls.Close();
                 LogWarn("Rejected TCAT Commissioner, error: %s", ErrorToString(err));
-                return;
+                ExitNow();
             }
         }
     }
@@ -350,6 +351,9 @@ void BleSecure::HandleTlsConnected(bool aConnected)
     }
 
     mConnectCallback.InvokeIfSet(&GetInstance(), aConnected, true);
+
+exit:
+    return;
 }
 
 void BleSecure::HandleTlsReceive(void *aContext, uint8_t *aBuf, uint16_t aLength)
