@@ -612,8 +612,9 @@ Error Name::LabelIterator::GetNextLabel(void)
             // `mMessage.GetOffset()` must point to the start of the
             // DNS header.
             nextLabelOffset = mMessage.GetOffset() + (BigEndian::HostSwap16(pointerValue) & kPointerLabelOffsetMask);
-            VerifyOrExit(nextLabelOffset < mNextLabelOffset, error = kErrorParse);
+            VerifyOrExit(nextLabelOffset < mMinLabelOffset, error = kErrorParse);
             mNextLabelOffset = nextLabelOffset;
+            mMinLabelOffset  = nextLabelOffset;
 
             // Go back through the `while(true)` loop to get the next label.
         }

@@ -1066,7 +1066,7 @@ public:
      *
      */
     void SetVendorRestorePropertiesCallback(otRadioSpinelVendorRestorePropertiesCallback aCallback, void *aContext);
-#endif
+#endif // OPENTHREAD_SPINEL_CONFIG_VENDOR_HOOK_ENABLE
 
 private:
     enum

@@ -52,8 +52,8 @@
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
-#include "coprocessor_type.h"
 #include "lib/platform/exit_code.h"
+#include "lib/spinel/coprocessor_type.h"
 #include "lib/url/url.hpp"
 
 /**

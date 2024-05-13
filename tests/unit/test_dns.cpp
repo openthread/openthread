@@ -1031,6 +1031,85 @@ void TestDnsCompressedName(void)
     printf("- Name3 after `AppendTo()`: \"%s\"\n", name);
     // `ReadName()` for name-4 will fail due to first label containing dot char.
 
+    printf("----------------------------------------------------------------\n");
+    printf("Improperly formatted names (looped)\n");
+
+    {
+        // Pointer label jumps forward to offset 6.
+        static const uint8_t kEncodedName[] = {3, 'F', 'O', 'O', 0xc0, 6, 2, 'A', 'B', 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("pointer-moving-forward", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+    }
+
+    {
+        // Pointer label jumps back to offset 0 creating a loop.
+        static const uint8_t kEncodedName[] = {0xc0, 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-name", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+    }
+
+    {
+        // After first label, we have a pointer label jumping back to
+        // offset 0, creating a loop.
+
+        static const uint8_t kEncodedName[] = {3, 'F', 'O', 'O', 0xc0, 0};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-one-label", kEncodedName, sizeof(kEncodedName));
+        offset = 0;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+        VerifyOrQuit(Dns::Name::CompareName(*message, offset, "FOO.") == kErrorParse);
+    }
+
+    {
+        // After two labels we have a pointer label jumping back to
+        // start of the first label. Name itself starts at offset 3
+        // (first 3 bytes are unused).
+
+        static const uint8_t kEncodedName[] = {0, 0, 0, 3, 'F', 'O', 'O', 2, 'B', 'A', 0xc0, 3};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("looped-two-labels", kEncodedName, sizeof(kEncodedName));
+        offset = 3;
+        VerifyOrQuit(Dns::Name::ParseName(*message, offset) == kErrorParse);
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name) == kErrorParse);
+        VerifyOrQuit(Dns::Name::CompareName(*message, offset, "FOO.BA.") == kErrorParse);
+    }
+
+    {
+        // Same as last case, but pointer label now points to
+        // immediately before the first label (at offset 2). The name
+        // is now valid.
+
+        static const uint8_t kEncodedName[] = {0, 0, 0, 3, 'F', 'O', 'O', 2, 'B', 'A', 0xc0, 2};
+
+        SuccessOrQuit(message->SetLength(0));
+        SuccessOrQuit(message->Append(kEncodedName));
+        DumpBuffer("valid-name", kEncodedName, sizeof(kEncodedName));
+        offset = 3;
+        SuccessOrQuit(Dns::Name::ParseName(*message, offset));
+        VerifyOrQuit(offset == sizeof(kEncodedName));
+
+        offset = 3;
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name));
+        VerifyOrQuit(offset == sizeof(kEncodedName));
+        VerifyOrQuit(strcmp(name, "FOO.BA.") == 0);
+        printf("Read name =\"%s\"\n", name);
+    }
+
     message->Free();
     message2->Free();
     testFreeInstance(instance);
