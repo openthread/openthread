@@ -84,6 +84,13 @@ proc spawn_node {id {type ""} {radio_url ""}} {
         set gcov_prefix "ot-run/$argv0/ot-gcda.$id"
     }
 
+    if {[info exists ::env(OT_SIMULATION_LOCAL_HOST)]} {
+        set ot_simulation_local_host $::env(OT_SIMULATION_LOCAL_HOST)
+        set radio_url "$radio_url&forkpty-arg=-L$ot_simulation_local_host"
+    } else {
+        set ot_simulation_local_host "127.0.0.1"
+    }
+
     switch -regexp ${type} {
         {rcp|rcp-cli} {
             # Sleep 0.2 seconds to ensure that the ot-rcp in the previous test has exited to
@@ -97,7 +104,8 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             expect_line "Done"
         }
         cli {
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd $id
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd \
+                -L$ot_simulation_local_host $id
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"
@@ -105,7 +113,8 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             expect_line "Done"
         }
         mtd {
-            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd $id
+            spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd \
+                -L$ot_simulation_local_host $id
             send "factoryreset\n"
             wait_for "state" "disabled"
             expect_line "Done"

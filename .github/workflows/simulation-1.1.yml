@@ -364,6 +364,34 @@ jobs:
         path: tmp/coverage.info
         retention-days: 1
 
+  simulation-local-host:
+    runs-on: ubuntu-20.04
+    env:
+      COVERAGE: 1
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+      with:
+        egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+    - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov
+    - name: Run
+      run: |
+        ./script/check-simulation-local-host
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      with:
+        name: cov-simulation-local-host
+        path: tmp/coverage.info
+        retention-days: 1
+
   upload-coverage:
     needs:
     - packet-verification

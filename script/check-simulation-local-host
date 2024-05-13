@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/bin/bash
 #
 #  Copyright (c) 2024, The OpenThread Authors.
 #  All rights reserved.
@@ -27,18 +27,58 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-source "tests/scripts/expect/_common.exp"
+set -euxo pipefail
 
-spawn_node 1 rcp "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=-Llo&forkpty-arg=1"
-send "factoryreset\n"
-wait_for "state" "disabled"
-setup_default_network
-attach
+IFACE_NAME="dummy116"
+EXPECT_TEST=tests/scripts/expect/cli-ping.exp
 
-spawn_node 2 rcp "spinel+hdlc+uart://$::env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--local-host=127.0.0.1&forkpty-arg=2"
-send "factoryreset\n"
-wait_for "state" "disabled"
-setup_default_network
-attach child
+cleanup()
+{
+    echo "Cleaning up..."
+    sudo ip link set dev "$IFACE_NAME" down
+    sudo ip link del dev "$IFACE_NAME"
+}
 
-dispose_all
+setup_dummy116()
+{
+    ip -V >/dev/null 2>&1 || {
+        echo "Error: iproute2 is required but not installed. Please install it (e.g., 'sudo apt install iproute2' or similar) and try again."
+        exit 1
+    }
+
+    ip link show "$IFACE_NAME" >/dev/null 2>&1 || sudo ip link add "$IFACE_NAME" type dummy
+
+    sudo ip link set dev "$IFACE_NAME" up
+
+    IP6ADDR="$(ip addr show $IFACE_NAME | grep fe80:: | awk '{print $2}' | cut -d/ -f1)"
+    echo "Simulated interface $IFACE_NAME created with IPv6 address $IP6ADDR"
+
+    trap cleanup EXIT
+}
+
+test_ipv6()
+{
+    setup_dummy116
+    OT_SIMULATION_LOCAL_HOST=$IFACE_NAME ./script/test build expect $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=$IP6ADDR ./script/test build expect $EXPECT_TEST
+
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IFACE_NAME ./script/test build expect $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=$IP6ADDR ./script/test build expect $EXPECT_TEST
+}
+
+test_ipv4()
+{
+    OT_SIMULATION_LOCAL_HOST=lo ./script/test build expect $EXPECT_TEST
+    OT_SIMULATION_LOCAL_HOST=127.0.0.1 ./script/test build expect $EXPECT_TEST
+
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=lo ./script/test build expect $EXPECT_TEST
+    OT_NODE_TYPE=rcp OT_SIMULATION_LOCAL_HOST=127.0.0.1 ./script/test build expect $EXPECT_TEST
+}
+
+main()
+{
+    test_ipv4
+    test_ipv6
+}
+
+main "$@"
