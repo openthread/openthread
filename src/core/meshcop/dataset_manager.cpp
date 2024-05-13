@@ -115,6 +115,34 @@ void DatasetManager::Clear(void)
 
 void DatasetManager::HandleDetach(void) { IgnoreError(Restore()); }
 
+Error DatasetManager::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Error   error = kErrorNone;
+    Dataset dataset;
+
+    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
+    SuccessOrExit(error = dataset.ValidateTlvs());
+
+    if (IsActiveDataset())
+    {
+        SuccessOrExit(error = dataset.Write<ActiveTimestampTlv>(aTimestamp));
+    }
+    else
+    {
+        SuccessOrExit(error = dataset.Write<PendingTimestampTlv>(aTimestamp));
+    }
+
+    SuccessOrExit(error = Save(dataset));
+
+    if (IsPendingDataset())
+    {
+        Get<PendingDatasetManager>().StartDelayTimer(dataset);
+    }
+
+exit:
+    return error;
+}
+
 Error DatasetManager::Save(const Dataset &aDataset)
 {
     Error error = kErrorNone;
@@ -152,23 +180,22 @@ exit:
     return error;
 }
 
-Error DatasetManager::Save(const Dataset::Info &aDatasetInfo)
+Error DatasetManager::SaveLocal(const Dataset::Info &aDatasetInfo)
 {
-    Error error;
+    Dataset dataset;
 
-    SuccessOrExit(error = mLocal.Save(aDatasetInfo));
-    HandleDatasetUpdated();
+    dataset.SetFrom(aDatasetInfo);
 
-exit:
-    return error;
+    return SaveLocal(dataset);
 }
 
-Error DatasetManager::Save(const Dataset::Tlvs &aDatasetTlvs)
+Error DatasetManager::SaveLocal(const Dataset::Tlvs &aDatasetTlvs)
 {
-    Error error;
+    Error   error;
+    Dataset dataset;
 
-    SuccessOrExit(error = mLocal.Save(aDatasetTlvs));
-    HandleDatasetUpdated();
+    SuccessOrExit(error = dataset.SetFrom(aDatasetTlvs));
+    error = SaveLocal(dataset);
 
 exit:
     return error;
@@ -179,14 +206,12 @@ Error DatasetManager::SaveLocal(const Dataset &aDataset)
     Error error;
 
     SuccessOrExit(error = mLocal.Save(aDataset));
-    HandleDatasetUpdated();
 
-exit:
-    return error;
-}
+    if (IsPendingDataset())
+    {
+        Get<PendingDatasetManager>().StartDelayTimer(aDataset);
+    }
 
-void DatasetManager::HandleDatasetUpdated(void)
-{
     switch (Get<Mle::MleRouter>().GetRole())
     {
     case Mle::kRoleDisabled:
@@ -194,11 +219,11 @@ void DatasetManager::HandleDatasetUpdated(void)
         break;
 
     case Mle::kRoleChild:
-        SendSet();
+        SyncLocalWithLeader(aDataset);
         break;
 #if OPENTHREAD_FTD
     case Mle::kRoleRouter:
-        SendSet();
+        SyncLocalWithLeader(aDataset);
         break;
 
     case Mle::kRoleLeader:
@@ -212,6 +237,9 @@ void DatasetManager::HandleDatasetUpdated(void)
     }
 
     SignalDatasetChange();
+
+exit:
+    return error;
 }
 
 void DatasetManager::SignalDatasetChange(void) const
@@ -240,12 +268,24 @@ exit:
     return error;
 }
 
-void DatasetManager::HandleTimer(void) { SendSet(); }
-
-void DatasetManager::SendSet(void)
+void DatasetManager::HandleTimer(void)
 {
-    Error   error = kErrorNone;
     Dataset dataset;
+
+    SuccessOrExit(Read(dataset));
+    SyncLocalWithLeader(dataset);
+
+exit:
+    return;
+}
+
+void DatasetManager::SyncLocalWithLeader(const Dataset &aDataset)
+{
+    // Attempts to synchronize the local Dataset with the leader by
+    // sending `MGMT_SET` command if the local Dataset's timestamp is
+    // newer.
+
+    Error error = kErrorNone;
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
@@ -267,9 +307,7 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    IgnoreError(Read(dataset));
-
-    error = SendSetRequest(dataset);
+    error = SendSetRequest(aDataset);
 
 exit:
     if (error == kErrorNoBufs)
@@ -572,23 +610,6 @@ exit:
     return isValid;
 }
 
-Error ActiveDatasetManager::Save(const Timestamp &aTimestamp,
-                                 const Message   &aMessage,
-                                 uint16_t         aOffset,
-                                 uint16_t         aLength)
-{
-    Error   error = kErrorNone;
-    Dataset dataset;
-
-    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
-    SuccessOrExit(error = dataset.ValidateTlvs());
-    SuccessOrExit(error = dataset.Write<ActiveTimestampTlv>(aTimestamp));
-    error = DatasetManager::Save(dataset);
-
-exit:
-    return error;
-}
-
 template <>
 void ActiveDatasetManager::HandleTmf<kUriActiveGet>(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
@@ -621,73 +642,28 @@ void PendingDatasetManager::ClearNetwork(void)
     IgnoreError(DatasetManager::Save(dataset));
 }
 
-Error PendingDatasetManager::Save(const Dataset::Info &aDatasetInfo)
-{
-    Error error;
-
-    SuccessOrExit(error = DatasetManager::Save(aDatasetInfo));
-    StartDelayTimer();
-
-exit:
-    return error;
-}
-
-Error PendingDatasetManager::Save(const Dataset::Tlvs &aDatasetTlvs)
-{
-    Error error;
-
-    SuccessOrExit(error = DatasetManager::Save(aDatasetTlvs));
-    StartDelayTimer();
-
-exit:
-    return error;
-}
-
-Error PendingDatasetManager::Save(const Dataset &aDataset)
-{
-    Error error;
-
-    SuccessOrExit(error = DatasetManager::SaveLocal(aDataset));
-    StartDelayTimer();
-
-exit:
-    return error;
-}
-
-Error PendingDatasetManager::Save(const Timestamp &aTimestamp,
-                                  const Message   &aMessage,
-                                  uint16_t         aOffset,
-                                  uint16_t         aLength)
-{
-    Error   error = kErrorNone;
-    Dataset dataset;
-
-    SuccessOrExit(error = dataset.SetFrom(aMessage, aOffset, aLength));
-    SuccessOrExit(error = dataset.ValidateTlvs());
-    SuccessOrExit(dataset.Write<PendingTimestampTlv>(aTimestamp));
-    SuccessOrExit(error = DatasetManager::Save(dataset));
-    StartDelayTimer();
-
-exit:
-    return error;
-}
-
 void PendingDatasetManager::StartDelayTimer(void)
 {
-    Tlv     *tlv;
-    uint32_t delay;
-    Dataset  dataset;
+    Dataset dataset;
 
-    IgnoreError(Read(dataset));
+    SuccessOrExit(Read(dataset));
+    StartDelayTimer(dataset);
+
+exit:
+    return;
+}
+
+void PendingDatasetManager::StartDelayTimer(const Dataset &aDataset)
+{
+    uint32_t delay;
 
     mDelayTimer.Stop();
 
-    tlv = dataset.FindTlv(Tlv::kDelayTimer);
-    VerifyOrExit(tlv != nullptr);
+    SuccessOrExit(aDataset.Read<DelayTimerTlv>(delay));
 
-    delay = Min(tlv->ReadValueAs<DelayTimerTlv>(), DelayTimerTlv::kMaxDelay);
+    delay = Min(delay, DelayTimerTlv::kMaxDelay);
 
-    mDelayTimer.StartAt(dataset.GetUpdateTime(), delay);
+    mDelayTimer.StartAt(aDataset.GetUpdateTime(), delay);
     LogInfo("delay timer started %lu", ToUlong(delay));
 
 exit:
@@ -703,7 +679,7 @@ void PendingDatasetManager::HandleDelayTimer(void)
 
     dataset.ConvertToActive();
 
-    Get<ActiveDatasetManager>().Save(dataset);
+    IgnoreError(Get<ActiveDatasetManager>().Save(dataset));
 
     Clear();
 }

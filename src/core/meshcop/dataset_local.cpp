@@ -146,30 +146,6 @@ exit:
     return error;
 }
 
-Error DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
-{
-    Error   error;
-    Dataset dataset;
-
-    dataset.SetFrom(aDatasetInfo);
-    SuccessOrExit(error = Save(dataset));
-
-exit:
-    return error;
-}
-
-Error DatasetLocal::Save(const Dataset::Tlvs &aDatasetTlvs)
-{
-    Error   error = kErrorNone;
-    Dataset dataset;
-
-    SuccessOrExit(error = dataset.SetFrom(aDatasetTlvs));
-    error = Save(dataset);
-
-exit:
-    return error;
-}
-
 Error DatasetLocal::Save(const Dataset &aDataset)
 {
     Error error = kErrorNone;

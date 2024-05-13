@@ -61,14 +61,14 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
 
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(AsCoreType(aDataset));
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SaveLocal(AsCoreType(aDataset));
 }
 
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     AssertPointerIsNotNull(aDataset);
 
-    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().Save(*aDataset);
+    return AsCoreType(aInstance).Get<MeshCoP::ActiveDatasetManager>().SaveLocal(*aDataset);
 }
 
 otError otDatasetGetPending(otInstance *aInstance, otOperationalDataset *aDataset)
@@ -85,14 +85,14 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(AsCoreType(aDataset));
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SaveLocal(AsCoreType(aDataset));
 }
 
 otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset)
 {
     AssertPointerIsNotNull(aDataset);
 
-    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().Save(*aDataset);
+    return AsCoreType(aInstance).Get<MeshCoP::PendingDatasetManager>().SaveLocal(*aDataset);
 }
 
 otError otDatasetSendMgmtActiveGet(otInstance                           *aInstance,

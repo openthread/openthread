@@ -476,7 +476,7 @@ Error TcatAgent::HandleSetActiveOperationalDataset(const Message &aIncommingMess
     }
 
     dataset.ConvertTo(datasetTlvs);
-    error = Get<ActiveDatasetManager>().Save(datasetTlvs);
+    error = Get<ActiveDatasetManager>().SaveLocal(datasetTlvs);
 
 exit:
     return error;

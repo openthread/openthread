@@ -433,7 +433,7 @@ void PendingDatasetManager::ApplyActiveDataset(Dataset &aDataset)
     SuccessOrExit(aDataset.Write<DelayTimerTlv>(Get<Leader>().GetDelayTimerMinimal()));
 
     IgnoreError(DatasetManager::Save(aDataset));
-    StartDelayTimer();
+    StartDelayTimer(aDataset);
 
 exit:
     return;
