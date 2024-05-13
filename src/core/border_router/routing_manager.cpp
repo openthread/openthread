@@ -3503,10 +3503,10 @@ void RoutingManager::RaInfo::IncrementTxCountAndSaveHash(const InfraIf::Icmp6Pac
         mLastHashIndex = 0;
     }
 
-    CalculateHash(aRaMessage, mHashes[mLastHashIndex]);
+    CalculateHash(RouterAdvert::RxMessage(aRaMessage), mHashes[mLastHashIndex]);
 }
 
-bool RoutingManager::RaInfo::IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const
+bool RoutingManager::RaInfo::IsRaFromManager(const RouterAdvert::RxMessage &aRaMessage) const
 {
     // Determines whether or not a received RA message was prepared by
     // by `RoutingManager` itself (is present in the saved `mHashes`).
@@ -3516,7 +3516,7 @@ bool RoutingManager::RaInfo::IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMess
     uint32_t count         = Min<uint32_t>(mTxCount, kNumHashEntries);
     Hash     hash;
 
-    CalculateHash(aRaMessage.GetAsPacket(), hash);
+    CalculateHash(aRaMessage, hash);
 
     for (; count > 0; count--)
     {
@@ -3541,12 +3541,17 @@ bool RoutingManager::RaInfo::IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMess
     return isFromManager;
 }
 
-void RoutingManager::RaInfo::CalculateHash(const InfraIf::Icmp6Packet &aRaMessage, Hash &aHash)
+void RoutingManager::RaInfo::CalculateHash(const RouterAdvert::RxMessage &aRaMessage, Hash &aHash)
 {
-    Crypto::Sha256 sha256;
+    RouterAdvert::Header header;
+    Crypto::Sha256       sha256;
+
+    header = aRaMessage.GetHeader();
+    header.SetChecksum(0);
 
     sha256.Start();
-    sha256.Update(aRaMessage.GetBytes(), aRaMessage.GetLength());
+    sha256.Update(header);
+    sha256.Update(aRaMessage.GetOptionStart(), aRaMessage.GetOptionLength());
     sha256.Finish(aHash);
 }
 

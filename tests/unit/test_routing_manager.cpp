@@ -295,7 +295,8 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
 {
-    Icmp6Packet packet;
+    Icmp6Packet        packet;
+    Ip6::Icmp::Header *header;
 
     Log("otPlatInfraIfSendIcmp6Nd(aDestAddr: %s, aBufferLength:%u)", AsCoreType(aDestAddress).ToString().AsCString(),
         aBufferLength);
@@ -306,7 +307,9 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
 
     VerifyOrQuit(aBufferLength >= sizeof(Ip6::Icmp::Header));
 
-    switch (reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer)->GetType())
+    header = reinterpret_cast<Ip6::Icmp::Header *>(const_cast<uint8_t *>(aBuffer));
+
+    switch (header->GetType())
     {
     case Ip6::Icmp::Header::kTypeRouterSolicit:
         Log("  Router Solicit message");
@@ -317,6 +320,9 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
         Log("  Router Advertisement message");
         LogRouterAdvert(packet);
         ValidateRouterAdvert(packet);
+        // Intentionally modify the checksum field in RA Header
+        // before passing it back to the OT stack.
+        header->SetChecksum(0x1234);
         otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
