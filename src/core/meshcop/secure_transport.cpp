@@ -734,9 +734,10 @@ Error SecureTransport::GetThreadAttributeFromCertificate(const mbedtls_x509_crt 
         // TODO: extensions with isCritical == 1 that are unknown should lead to rejection of the entire cert.
         if (extnOid.len == sizeof(oid) && memcmp(extnOid.p, oid, sizeof(oid)) == 0)
         {
-            VerifyOrExit(len >= 2, error = kErrorParse); // per RFC 5280, octet string must contain ASN.1 Type Length Value
-            VerifyOrExit( *(p+1) == len-2, error = kErrorParse); // check TLV Length byte, not Type.
-            *aAttributeLength = len-2; // strip the ASN.1 Type Length bytes from the embedded TLV
+            // per RFC 5280, octet string must contain ASN.1 Type Length Value octets
+            VerifyOrExit(len >= 2, error = kErrorParse);
+            VerifyOrExit( *(p+1) == len-2, error = kErrorParse); // check TLV Length, not Type.
+            *aAttributeLength = len-2; // strip the ASN.1 Type Length bytes from embedded TLV
 
             if (aAttributeBuffer != nullptr)
             {
