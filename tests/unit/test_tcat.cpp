@@ -107,12 +107,12 @@ static void HandleBleSecureConnect(otInstance *aInstance, bool aConnected, bool 
 
 void TestTcat(void)
 {
-    const char         kPskdVendor[] = "J01NM3";
-    const char         kUrl[]        = "dummy_url";
-    constexpr uint16_t kConnectionId = 0;
-    const int          kCertificateThreadVersion = 2;
+    const char         kPskdVendor[]                  = "J01NM3";
+    const char         kUrl[]                         = "dummy_url";
+    constexpr uint16_t kConnectionId                  = 0;
+    const int          kCertificateThreadVersion      = 2;
     const int          kCertificateAuthorizationField = 3;
-    const uint8_t      expectedTcatAuthField[5] = {0x20, 0x01, 0x01, 0x01, 0x01};
+    const uint8_t      expectedTcatAuthField[5]       = {0x20, 0x01, 0x01, 0x01, 0x01};
     uint8_t            attributeBuffer[8];
     size_t             attributeLen;
 
@@ -145,10 +145,11 @@ void TestTcat(void)
     // Verify that Thread-attribute parsing isn't available yet when not connected as client or server.
     attributeLen = sizeof(attributeBuffer);
     VerifyOrQuit(otBleSecureGetThreadAttributeFromPeerCertificate(instance, kCertificateAuthorizationField,
-                                                                  &attributeBuffer[0], &attributeLen) == kErrorInvalidState);
+                                                                  &attributeBuffer[0],
+                                                                  &attributeLen) == kErrorInvalidState);
     attributeLen = sizeof(attributeBuffer);
-    VerifyOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
-                                                                 &attributeBuffer[0], &attributeLen) == kErrorInvalidState);
+    VerifyOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(
+                     instance, kCertificateThreadVersion, &attributeBuffer[0], &attributeLen) == kErrorInvalidState);
 
     // Validate connection callbacks when calling `otBleSecureDisconnect()`
     otPlatBleGapOnConnected(instance, kConnectionId);
@@ -165,7 +166,7 @@ void TestTcat(void)
     // Test that the Thread-specific attributes can be decoded properly.
     attributeLen = 1;
     SuccessOrQuit(otBleSecureGetThreadAttributeFromOwnCertificate(instance, kCertificateThreadVersion,
-                                                                 &attributeBuffer[0], &attributeLen));
+                                                                  &attributeBuffer[0], &attributeLen));
     VerifyOrQuit(attributeLen == 1 && attributeBuffer[0] >= kThreadVersion1p4);
 
     static_assert(5 == sizeof(expectedTcatAuthField), "expectedTcatAuthField size incorrect for test");

@@ -736,13 +736,13 @@ Error SecureTransport::GetThreadAttributeFromCertificate(const mbedtls_x509_crt 
         {
             // per RFC 5280, octet string must contain ASN.1 Type Length Value octets
             VerifyOrExit(len >= 2, error = kErrorParse);
-            VerifyOrExit( *(p+1) == len-2, error = kErrorParse); // check TLV Length, not Type.
-            *aAttributeLength = len-2; // strip the ASN.1 Type Length bytes from embedded TLV
+            VerifyOrExit(*(p + 1) == len - 2, error = kErrorParse); // check TLV Length, not Type.
+            *aAttributeLength = len - 2; // strip the ASN.1 Type Length bytes from embedded TLV
 
             if (aAttributeBuffer != nullptr)
             {
                 VerifyOrExit(*aAttributeLength <= attributeBufferSize, error = kErrorNoBufs);
-                memcpy(aAttributeBuffer, p+2, *aAttributeLength);
+                memcpy(aAttributeBuffer, p + 2, *aAttributeLength);
             }
 
             error = kErrorNone;
