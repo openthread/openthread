@@ -628,13 +628,78 @@ private:
         kToReplyToRs,
     };
 
+    class LifetimedPrefix
+    {
+        // Represents an IPv6 prefix with its valid lifetime. Used as
+        // base class for `OnLinkPrefix` or `RoutePrefix`.
+
+    public:
+        enum UlaChecker : bool
+        {
+            kIsNotUla = false,
+            kIsUla    = true,
+        };
+
+        struct ExpirationChecker
+        {
+            explicit ExpirationChecker(TimeMilli aNow) { mNow = aNow; }
+            TimeMilli mNow;
+        };
+
+        const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
+        Ip6::Prefix       &GetPrefix(void) { return mPrefix; }
+        const TimeMilli   &GetLastUpdateTime(void) const { return mLastUpdateTime; }
+        uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
+        TimeMilli          GetExpireTime(void) const { return CalculateExpirationTime(mValidLifetime); }
+
+        bool Matches(const Ip6::Prefix &aPrefix) const { return (mPrefix == aPrefix); }
+        bool Matches(const UlaChecker &aIsUla) const { return (mPrefix.IsUniqueLocal() == aIsUla); }
+        bool Matches(const ExpirationChecker &aChecker) const { return (GetExpireTime() <= aChecker.mNow); }
+
+    protected:
+        LifetimedPrefix(void) = default;
+
+        TimeMilli CalculateExpirationTime(uint32_t aLifetime) const;
+
+        Ip6::Prefix mPrefix;
+        uint32_t    mValidLifetime;
+        TimeMilli   mLastUpdateTime;
+    };
+
+    class OnLinkPrefix : public LifetimedPrefix, public Clearable<OnLinkPrefix>
+    {
+    public:
+        void      SetFrom(const PrefixInfoOption &aPio);
+        void      SetFrom(const PrefixTableEntry &aPrefixTableEntry);
+        uint32_t  GetPreferredLifetime(void) const { return mPreferredLifetime; }
+        void      ClearPreferredLifetime(void) { mPreferredLifetime = 0; }
+        bool      IsDeprecated(void) const;
+        TimeMilli GetStaleTime(void) const;
+        TimeMilli GetStaleTimeFromPreferredLifetime(void) const;
+        void      AdoptValidAndPreferredLifetimesFrom(const OnLinkPrefix &aPrefix);
+        void      CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const;
+
+    private:
+        uint32_t mPreferredLifetime;
+    };
+
+    class RoutePrefix : public LifetimedPrefix, public Clearable<RoutePrefix>
+    {
+    public:
+        void            SetFrom(const RouteInfoOption &aRio);
+        void            SetFrom(const RouterAdvert::Header &aRaHeader);
+        void            ClearValidLifetime(void) { mValidLifetime = 0; }
+        TimeMilli       GetStaleTime(void) const;
+        RoutePreference GetRoutePreference(void) const { return mRoutePreference; }
+        void            CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli aNow) const;
+
+    private:
+        RoutePreference mRoutePreference;
+    };
+
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
     void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
     void HandleDiscoveredPrefixTableRouterTimer(void) { mDiscoveredPrefixTable.HandleRouterTimer(); }
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-    class PdPrefixManager; // For DiscoveredPrefixTable::Entry
-#endif
 
     class DiscoveredPrefixTable : public InstanceLocator
     {
@@ -645,20 +710,12 @@ private:
         // `RoutingManager` by calling its `ShouldProcessPrefixInfoOption()`
         // and `ShouldProcessRouteInfoOption()` methods.
         //
-        // It manages the lifetime of the discovered entries and publishes
-        // and unpublishes the prefixes in the Network Data (as external
-        // route) as they are added or removed.
-        //
         // When there is any change in the table (an entry is added, removed,
         // or modified), it signals the change to `RoutingManager` by calling
         // `HandleDiscoveredPrefixTableChanged()` callback. A `Tasklet` is
         // used for signalling which ensures that if there are multiple
         // changes within the same flow of execution, the callback is
         // invoked after all the changes are processed.
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-        friend class PdPrefixManager; // For DiscoveredPrefixTable::Entry
-#endif
 
     public:
         explicit DiscoveredPrefixTable(Instance &aInstance);
@@ -692,129 +749,24 @@ private:
     private:
         static constexpr uint32_t kFavoredOnLinkPrefixMinPreferredLifetime = 1800; // In sec.
 
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-        static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
-        static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
-#endif
-
-        class Entry : public LinkedListEntry<Entry>,
-                      public Unequatable<Entry>,
+        template <class Type>
+        struct Entry : public Type,
+                       public LinkedListEntry<Entry<Type>>,
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-                      public Heap::Allocatable<Entry>,
+                       public Heap::Allocatable<Entry<Type>>
 #else
-                      public InstanceLocatorInit,
+                       public InstanceLocatorInit
 #endif
-                      private Clearable<Entry>
         {
-            friend class LinkedListEntry<Entry>;
-            friend class Clearable<Entry>;
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
-            friend class PdPrefixManager;
-#endif
-
-        public:
-            enum Type : uint8_t
-            {
-                kTypeOnLink,
-                kTypeRoute,
-            };
-
-            struct Matcher
-            {
-                Matcher(const Ip6::Prefix &aPrefix, Type aType)
-                    : mPrefix(aPrefix)
-                    , mType(aType)
-                {
-                }
-
-                const Ip6::Prefix &mPrefix;
-                Type               mType;
-            };
-
-            struct Checker
-            {
-                enum Mode : uint8_t
-                {
-                    kIsUla,
-                    kIsNotUla,
-                };
-
-                Checker(Mode aMode, Type aType)
-                    : mMode(aMode)
-                    , mType(aType)
-
-                {
-                }
-
-                Mode mMode;
-                Type mType;
-            };
-
-            struct ExpirationChecker
-            {
-                explicit ExpirationChecker(TimeMilli aNow)
-                    : mNow(aNow)
-                {
-                }
-
-                TimeMilli mNow;
-            };
-
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
             void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
             void Free(void);
 #endif
-            void               SetFrom(const RouterAdvert::Header &aRaHeader);
-            void               SetFrom(const PrefixInfoOption &aPio);
-            void               SetFrom(const RouteInfoOption &aRio);
-            void               SetFrom(const PrefixTableEntry &aPrefixTableEntry);
-            Type               GetType(void) const { return mType; }
-            bool               IsOnLinkPrefix(void) const { return (mType == kTypeOnLink); }
-            bool               IsRoutePrefix(void) const { return (mType == kTypeRoute); }
-            const Ip6::Prefix &GetPrefix(void) const { return mPrefix; }
-            const TimeMilli   &GetLastUpdateTime(void) const { return mLastUpdateTime; }
-            uint32_t           GetValidLifetime(void) const { return mValidLifetime; }
-            void               ClearValidLifetime(void) { mValidLifetime = 0; }
-            TimeMilli          GetExpireTime(void) const;
-            TimeMilli          GetStaleTime(void) const;
-            TimeMilli          GetStaleTimeFromPreferredLifetime(void) const;
-            RoutePreference    GetPreference(void) const;
-            bool               operator==(const Entry &aOther) const;
-            bool               Matches(const Matcher &aMatcher) const;
-            bool               Matches(const Checker &aChecker) const;
-            bool               Matches(const ExpirationChecker &aChecker) const;
 
-            // Methods to use when `IsOnLinkPrefix()`
-            uint32_t GetPreferredLifetime(void) const { return mShared.mPreferredLifetime; }
-            void     ClearPreferredLifetime(void) { mShared.mPreferredLifetime = 0; }
-            bool     IsDeprecated(void) const;
-            void     AdoptValidAndPreferredLifetimesFrom(const Entry &aEntry);
-
-            // Method to use when `!IsOnlinkPrefix()`
-            RoutePreference GetRoutePreference(void) const { return mShared.mRoutePreference; }
-
-        private:
-            TimeMilli CalculateExpirationTime(uint32_t aLifetime) const;
-
-            Entry      *mNext;
-            Ip6::Prefix mPrefix;
-            Type        mType;
-            TimeMilli   mLastUpdateTime;
-            uint32_t    mValidLifetime;
-            union
-            {
-                uint32_t        mPreferredLifetime; // Applicable when prefix is on-link.
-                RoutePreference mRoutePreference;   // Applicable when prefix is not on-link
-            } mShared;
+            Entry<Type> *mNext;
         };
 
-        struct Router : public LinkedListEntry<Router>,
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-                        public Heap::Allocatable<Router>,
-#else
-                        public InstanceLocatorInit,
-#endif
-                        public Clearable<Router>
+        struct Router : public Clearable<Router>
         {
             // The timeout (in msec) for router staying in active state
             // before starting the Neighbor Solicitation (NS) probes.
@@ -832,79 +784,109 @@ private:
                 kContainsNoEntriesOrFlags
             };
 
-#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-            void Init(Instance &aInstance) { InstanceLocatorInit::Init(aInstance); }
-            void Free(void);
-#endif
-
             bool Matches(const Ip6::Address &aAddress) const { return aAddress == mAddress; }
             bool Matches(EmptyChecker aChecker) const;
             void CopyInfoTo(RouterEntry &aEntry) const;
 
-            Router           *mNext;
-            Ip6::Address      mAddress;
-            OwningList<Entry> mEntries;
-            TimeMilli         mTimeout;
-            uint8_t           mNsProbeCount;
-            bool              mManagedAddressConfigFlag : 1;
-            bool              mOtherConfigFlag : 1;
-            bool              mStubRouterFlag : 1;
+            using OnLinkPrefixList = OwningList<Entry<OnLinkPrefix>>;
+            using RoutePrefixList  = OwningList<Entry<RoutePrefix>>;
+
+            Ip6::Address     mAddress;
+            OnLinkPrefixList mOnLinkPrefixes;
+            RoutePrefixList  mRoutePrefixes;
+            TimeMilli        mTimeout;
+            uint8_t          mNsProbeCount;
+            bool             mManagedAddressConfigFlag : 1;
+            bool             mOtherConfigFlag : 1;
+            bool             mStubRouterFlag : 1;
         };
 
         class Iterator : public PrefixTableIterator
         {
         public:
-            enum AdvanceMode : uint8_t
+            enum Type : uint8_t
             {
-                kToNextEntry,
-                kToNextRouter,
+                kUnspecified,
+                kRouterIterator,
+                kPrefixIterator,
             };
 
-            void Init(const LinkedList<Router> &aRouters);
-            void Advance(AdvanceMode aMode);
+            enum EntryType : uint8_t
+            {
+                kOnLinkPrefix,
+                kRoutePrefix,
+            };
 
-            const Router *GetRouter(void) const { return static_cast<const Router *>(mPtr1); }
-            const Entry  *GetEntry(void) const { return static_cast<const Entry *>(mPtr2); }
-            TimeMilli     GetInitTime(void) const { return TimeMilli(mData32); }
+            void                 Init(const Entry<Router> *aRoutersHead);
+            Error                AdvanceToNextRouter(Type aType);
+            Error                AdvanceToNextEntry(void);
+            TimeMilli            GetInitTime(void) const { return TimeMilli(mData1); }
+            Type                 GetType(void) const { return static_cast<Type>(mData2); }
+            const Entry<Router> *GetRouter(void) const { return static_cast<const Entry<Router> *>(mPtr1); }
+            EntryType            GetEntryType(void) const { return static_cast<EntryType>(mData3); }
+
+            template <class PrefixType> const Entry<PrefixType> *GetEntry(void) const
+            {
+                return static_cast<const Entry<PrefixType> *>(mPtr2);
+            }
 
         private:
-            void SetRouter(const Router *aRouter) { mPtr1 = aRouter; }
-            void SetEntry(const Entry *aEntry) { mPtr2 = aEntry; }
-            void SetInitTime(void) { mData32 = TimerMilli::GetNow().GetValue(); }
+            void SetRouter(const Entry<Router> *aRouter) { mPtr1 = aRouter; }
+            void SetInitTime(void) { mData1 = TimerMilli::GetNow().GetValue(); }
+            void SetEntry(const void *aEntry) { mPtr2 = aEntry; }
+            bool HasEntry(void) const { return mPtr2 != nullptr; }
+            void SetEntryType(EntryType aType) { mData3 = aType; }
+            void SetType(Type aType) { mData2 = aType; }
         };
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+        static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
+        static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
+
+        union SharedEntry
+        {
+            SharedEntry(void) { mNext = nullptr; }
+            void               SetNext(SharedEntry *aNext) { mNext = aNext; }
+            SharedEntry       *GetNext(void) { return mNext; }
+            const SharedEntry *GetNext(void) const { return mNext; }
+
+            template <class PrefixType> Entry<PrefixType> &GetEntry(void);
+
+            SharedEntry        *mNext;
+            Entry<OnLinkPrefix> mOnLinkEntry;
+            Entry<RoutePrefix>  mRouteEntry;
+        };
+#endif
 
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
-        bool Contains(const Entry::Checker &aChecker) const;
-        void RemovePrefix(const Entry::Matcher &aMatcher);
+        bool ContainsOnLinkPrefix(OnLinkPrefix::UlaChecker aUlaChecker) const;
         void RemoveOrDeprecateEntriesFromInactiveRouters(void);
         void RemoveRoutersWithNoEntriesOrFlags(void);
-        void UpdateNetworkDataOnChangeTo(Entry &aEntry);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
         void UpdateRouterOnRx(Router &aRouter);
         void SendNeighborSolicitToRouter(const Router &aRouter);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-        Router *AllocateRouter(void) { return Router::Allocate(); }
-        Entry  *AllocateEntry(void) { return Entry::Allocate(); }
+        template <class Type> Entry<Type> *AllocateEntry(void) { return Entry<Type>::Allocate(); }
 #else
-        Router *AllocateRouter(void);
-        Entry  *AllocateEntry(void);
+        template <class Type> Entry<Type> *AllocateEntry(void);
 #endif
 
         using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
         using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableEntryTimer>;
         using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableRouterTimer>;
+        using RouterList  = OwningList<Entry<Router>>;
 
-        OwningList<Router> mRouters;
-        EntryTimer         mEntryTimer;
-        RouterTimer        mRouterTimer;
-        SignalTask         mSignalTask;
+        RouterList  mRouters;
+        EntryTimer  mEntryTimer;
+        RouterTimer mRouterTimer;
+        SignalTask  mSignalTask;
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
-        Pool<Entry, kMaxEntries>  mEntryPool;
-        Pool<Router, kMaxRouters> mRouterPool;
+        Pool<SharedEntry, kMaxEntries>   mEntryPool;
+        Pool<Entry<Router>, kMaxRouters> mRouterPool;
 #endif
     };
 
@@ -1300,7 +1282,7 @@ private:
         void  SetStateCallback(PdCallback aCallback, void *aContext) { mStateCallback.Set(aCallback, aContext); }
 
     private:
-        class PrefixEntry : public DiscoveredPrefixTable::Entry
+        class PrefixEntry : public OnLinkPrefix
         {
         public:
             PrefixEntry(void) { Clear(); }
@@ -1409,6 +1391,35 @@ private:
     DiscoveredPrefixStaleTimer mDiscoveredPrefixStaleTimer;
     RoutingPolicyTimer         mRoutingPolicyTimer;
 };
+
+#if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
+
+// Template specializations
+
+template <>
+inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::OnLinkPrefix>
+    &RoutingManager::DiscoveredPrefixTable::SharedEntry::GetEntry(void)
+{
+    return mOnLinkEntry;
+}
+
+template <>
+inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::RoutePrefix>
+    &RoutingManager::DiscoveredPrefixTable::SharedEntry::GetEntry(void)
+{
+    return mRouteEntry;
+}
+
+// Declare template (full) specializations for `Router` type.
+
+template <>
+RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::DiscoveredPrefixTable::Router>
+    *RoutingManager::DiscoveredPrefixTable::AllocateEntry(void);
+
+template <>
+void RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::DiscoveredPrefixTable::Router>::Free(void);
+
+#endif // #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 
 } // namespace BorderRouter
 
