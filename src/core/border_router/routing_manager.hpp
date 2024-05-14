@@ -565,6 +565,9 @@ public:
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 private:
+    //------------------------------------------------------------------------------------------------------------------
+    // Constants
+
     static constexpr uint8_t kMaxOnMeshPrefixes = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_ON_MESH_PREFIXES;
 
     static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
@@ -605,6 +608,9 @@ private:
     static_assert(kPolicyEvaluationMaxDelay > kPolicyEvaluationMinDelay,
                   "kPolicyEvaluationMaxDelay must be larger than kPolicyEvaluationMinDelay");
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Typedefs
+
     using Option                 = Ip6::Nd::Option;
     using PrefixInfoOption       = Ip6::Nd::PrefixInfoOption;
     using RouteInfoOption        = Ip6::Nd::RouteInfoOption;
@@ -613,6 +619,9 @@ private:
     using NeighborAdvertMessage  = Ip6::Nd::NeighborAdvertMessage;
     using NeighborSolicitMessage = Ip6::Nd::NeighborSolicitMessage;
     using RouterSolicitMessage   = Ip6::Nd::RouterSolicitMessage;
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Enumerations
 
     enum RouterAdvTxMode : uint8_t // Used in `SendRouterAdvertisement()`
     {
@@ -627,6 +636,9 @@ private:
         kAfterRandomDelay,
         kToReplyToRs,
     };
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Nested types
 
     class LifetimedPrefix
     {
@@ -666,6 +678,8 @@ private:
         TimeMilli   mLastUpdateTime;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     class OnLinkPrefix : public LifetimedPrefix, public Clearable<OnLinkPrefix>
     {
     public:
@@ -683,6 +697,8 @@ private:
         uint32_t mPreferredLifetime;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     class RoutePrefix : public LifetimedPrefix, public Clearable<RoutePrefix>
     {
     public:
@@ -696,6 +712,8 @@ private:
     private:
         RoutePreference mRoutePreference;
     };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
     void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
@@ -749,6 +767,8 @@ private:
     private:
         static constexpr uint32_t kFavoredOnLinkPrefixMinPreferredLifetime = 1800; // In sec.
 
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
         template <class Type>
         struct Entry : public Type,
                        public LinkedListEntry<Entry<Type>>,
@@ -765,6 +785,8 @@ private:
 
             Entry<Type> *mNext;
         };
+
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         struct Router : public Clearable<Router>
         {
@@ -800,6 +822,8 @@ private:
             bool             mOtherConfigFlag : 1;
             bool             mStubRouterFlag : 1;
         };
+
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         class Iterator : public PrefixTableIterator
         {
@@ -839,6 +863,8 @@ private:
             void SetType(Type aType) { mData2 = aType; }
         };
 
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         static constexpr uint16_t kMaxRouters = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_ROUTERS;
         static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_BORDER_ROUTING_MAX_DISCOVERED_PREFIXES;
@@ -857,6 +883,8 @@ private:
             Entry<RoutePrefix>  mRouteEntry;
         };
 #endif
+
+        //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
         void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
@@ -890,6 +918,8 @@ private:
 #endif
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     class OmrPrefixManager;
 
     class OmrPrefix : public Clearable<OmrPrefix>
@@ -910,6 +940,8 @@ private:
         bool            mIsDomainPrefix;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     class FavoredOmrPrefix : public OmrPrefix
     {
         friend class OmrPrefixManager;
@@ -922,6 +954,8 @@ private:
         void SetFrom(const OmrPrefix &aOmrPrefix);
         bool IsFavoredOver(const NetworkData::OnMeshPrefixConfig &aOmrPrefixConfig) const;
     };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     class OmrPrefixManager : public InstanceLocator
     {
@@ -955,6 +989,8 @@ private:
         bool             mIsLocalAddedInNetData;
         bool             mDefaultRoute;
     };
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     void HandleOnLinkPrefixManagerTimer(void) { mOnLinkPrefixManager.HandleTimer(); }
 
@@ -1021,6 +1057,8 @@ private:
         ExpireTimer                       mTimer;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleRioAdvertiserimer(void) { mRioAdvertiser.HandleTimer(); }
 
     class RioAdvertiser : public InstanceLocator
@@ -1077,7 +1115,10 @@ private:
         bool            mUserSetPreference;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
     void HandleNat64PrefixManagerTimer(void) { mNat64PrefixManager.HandleTimer(); }
 
     class Nat64PrefixManager : public InstanceLocator
@@ -1121,7 +1162,10 @@ private:
         RoutePreference mPublishedPreference; // The published prefix preference.
         Nat64Timer      mTimer;
     };
+
 #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     void HandleRoutePublisherTimer(void) { mRoutePublisher.HandleTimer(); }
 
@@ -1174,6 +1218,8 @@ private:
         DelayTimer      mTimer;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     struct RaInfo
     {
         // Tracks info about emitted RA messages:
@@ -1216,6 +1262,8 @@ private:
         uint16_t             mLastHashIndex;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     void HandleRsSenderTimer(void) { mRsSender.HandleTimer(); }
 
     class RsSender : public InstanceLocator
@@ -1252,7 +1300,10 @@ private:
         TimeMilli mStartTime;
     };
 
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+
     void HandlePdPrefixManagerTimer(void) { mPdPrefixManager.HandleTimer(); }
 
     class PdPrefixManager : public InstanceLocator
@@ -1314,6 +1365,9 @@ private:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
+    //------------------------------------------------------------------------------------------------------------------
+    // Methods
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -1347,6 +1401,9 @@ private:
 
     static void LogPrefixInfoOption(const Ip6::Prefix &aPrefix, uint32_t aValidLifetime, uint32_t aPreferredLifetime);
     static void LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLifetime, RoutePreference aPreference);
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Variables
 
     using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
     using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;
@@ -1394,7 +1451,8 @@ private:
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 
-// Template specializations
+//----------------------------------------------------------------------------------------------------------------------
+// Template specializations and declarations
 
 template <>
 inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::OnLinkPrefix>
