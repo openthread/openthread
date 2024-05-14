@@ -153,29 +153,6 @@ public:
     /**
      * Stores the dataset into non-volatile memory.
      *
-     * @param[in] aDatasetInfo     The Dataset to save as `Dataset::Info`.
-     *
-     * @retval kErrorNone             Successfully saved the dataset.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error Save(const Dataset::Info &aDatasetInfo);
-
-    /**
-     * Stores the dataset into non-volatile memory.
-     *
-     * @param[in]  aDatasetTlvs  The Dataset to save as `Dataset::Tlvs`.
-     *
-     * @retval kErrorNone             Successfully saved the dataset.
-     * @retval kErrorInvalidArgs      The dataset TLVs is invalid, its length is longer than `Dataset::kMaxLength`.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error Save(const Dataset::Tlvs &aDatasetTlvs);
-
-    /**
-     * Stores the dataset into non-volatile memory.
-     *
      * @param[in]  aDataset  The Dataset to save.
      *
      * @retval kErrorNone             Successfully saved the dataset.

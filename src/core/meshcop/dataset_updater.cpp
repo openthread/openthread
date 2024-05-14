@@ -149,7 +149,7 @@ void DatasetUpdater::PreparePendingDataset(void)
         IgnoreError(dataset.Write<ActiveTimestampTlv>(timestamp));
     }
 
-    SuccessOrExit(error = Get<PendingDatasetManager>().Save(dataset));
+    SuccessOrExit(error = Get<PendingDatasetManager>().SaveLocal(dataset));
 
 exit:
     if (error != kErrorNone)
