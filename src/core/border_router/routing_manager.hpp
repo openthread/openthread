@@ -1259,8 +1259,8 @@ private:
         }
 
         void        IncrementTxCountAndSaveHash(const InfraIf::Icmp6Packet &aRaMessage);
-        bool        IsRaFromManager(const Ip6::Nd::RouterAdvert::RxMessage &aRaMessage) const;
-        static void CalculateHash(const InfraIf::Icmp6Packet &aRaMessage, Hash &aHash);
+        bool        IsRaFromManager(const RouterAdvert::RxMessage &aRaMessage) const;
+        static void CalculateHash(const RouterAdvert::RxMessage &aRaMessage, Hash &aHash);
 
         RouterAdvert::Header mHeader;
         TimeMilli            mHeaderUpdateTime;

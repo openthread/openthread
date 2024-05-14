@@ -729,6 +729,22 @@ public:
          */
         bool ContainsAnyOptions(void) const { return (mData.GetLength() > sizeof(Header)); }
 
+        /**
+         * Returns pointer to the start of option bytes (after header).
+         *
+         * @returns Pointer to start of options.
+         *
+         */
+        const uint8_t *GetOptionStart(void) const { return (mData.GetBytes() + sizeof(Header)); }
+
+        /**
+         * Gets the length (number of bytes) of options.
+         *
+         * @returns Number of bytes after header specifying RA options.
+         *
+         */
+        uint16_t GetOptionLength(void) const { return ContainsAnyOptions() ? mData.GetLength() - sizeof(Header) : 0; }
+
         // The following methods are intended to support range-based `for`
         // loop iteration over `Option`s in the RA message.
 
@@ -736,7 +752,6 @@ public:
         Option::Iterator end(void) const { return Option::Iterator(); }
 
     private:
-        const uint8_t *GetOptionStart(void) const { return (mData.GetBytes() + sizeof(Header)); }
         const uint8_t *GetDataEnd(void) const { return mData.GetBytes() + mData.GetLength(); }
 
         Data<kWithUint16Length> mData;
