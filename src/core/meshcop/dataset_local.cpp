@@ -66,7 +66,7 @@ void DatasetLocal::Clear(void)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroySecurelyStoredKeys();
 #endif
-    IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
+    Get<Settings>().DeleteOperationalDataset(mType);
     mTimestamp.Clear();
     mTimestampPresent = false;
     mSaved            = false;
@@ -146,18 +146,15 @@ exit:
     return error;
 }
 
-Error DatasetLocal::Save(const Dataset &aDataset)
+void DatasetLocal::Save(const Dataset &aDataset)
 {
-    Error error = kErrorNone;
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     DestroySecurelyStoredKeys();
 #endif
 
     if (aDataset.GetLength() == 0)
     {
-        // do not propagate error back
-        IgnoreError(Get<Settings>().DeleteOperationalDataset(mType));
+        Get<Settings>().DeleteOperationalDataset(mType);
         mSaved = false;
         LogInfo("%s dataset deleted", Dataset::TypeToString(mType));
     }
@@ -169,9 +166,9 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 
         dataset.SetFrom(aDataset);
         MoveKeysToSecureStorage(dataset);
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, dataset));
+        Get<Settings>().SaveOperationalDataset(mType, dataset);
 #else
-        SuccessOrExit(error = Get<Settings>().SaveOperationalDataset(mType, aDataset));
+        Get<Settings>().SaveOperationalDataset(mType, aDataset);
 #endif
 
         mSaved = true;
@@ -180,9 +177,6 @@ Error DatasetLocal::Save(const Dataset &aDataset)
 
     mTimestampPresent = (aDataset.ReadTimestamp(mType, mTimestamp) == kErrorNone);
     mUpdateTime       = TimerMilli::GetNow();
-
-exit:
-    return error;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -239,7 +233,7 @@ void DatasetLocal::EmplaceSecurelyStoredKeys(Dataset &aDataset) const
 
         dataset.SetFrom(aDataset);
         MoveKeysToSecureStorage(dataset);
-        SuccessOrAssert(Get<Settings>().SaveOperationalDataset(mType, dataset));
+        Get<Settings>().SaveOperationalDataset(mType, dataset);
     }
 }
 

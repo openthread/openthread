@@ -163,7 +163,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
 
     if (isNetworkKeyUpdated || compare > 0)
     {
-        SuccessOrExit(error = mLocal.Save(aDataset));
+        mLocal.Save(aDataset);
 
 #if OPENTHREAD_FTD
         Get<NetworkData::Leader>().IncrementVersionAndStableVersion();
@@ -180,32 +180,31 @@ exit:
     return error;
 }
 
-Error DatasetManager::SaveLocal(const Dataset::Info &aDatasetInfo)
+void DatasetManager::SaveLocal(const Dataset::Info &aDatasetInfo)
 {
     Dataset dataset;
 
     dataset.SetFrom(aDatasetInfo);
-
-    return SaveLocal(dataset);
+    SaveLocal(dataset);
 }
 
 Error DatasetManager::SaveLocal(const Dataset::Tlvs &aDatasetTlvs)
 {
-    Error   error;
+    Error   error = kErrorInvalidArgs;
     Dataset dataset;
 
-    SuccessOrExit(error = dataset.SetFrom(aDatasetTlvs));
-    error = SaveLocal(dataset);
+    SuccessOrExit(dataset.SetFrom(aDatasetTlvs));
+    SuccessOrExit(dataset.ValidateTlvs());
+    SaveLocal(dataset);
+    error = kErrorNone;
 
 exit:
     return error;
 }
 
-Error DatasetManager::SaveLocal(const Dataset &aDataset)
+void DatasetManager::SaveLocal(const Dataset &aDataset)
 {
-    Error error;
-
-    SuccessOrExit(error = mLocal.Save(aDataset));
+    mLocal.Save(aDataset);
 
     if (IsPendingDataset())
     {
@@ -237,9 +236,6 @@ Error DatasetManager::SaveLocal(const Dataset &aDataset)
     }
 
     SignalDatasetChange();
-
-exit:
-    return error;
 }
 
 void DatasetManager::SignalDatasetChange(void) const

@@ -35,6 +35,7 @@
 
 #include "common/array.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/locator_getters.hpp"
 #include "common/num_utils.hpp"
 #include "instance/instance.hpp"
@@ -221,14 +222,14 @@ Settings::Key Settings::KeyForDatasetType(MeshCoP::Dataset::Type aType)
     return (aType == MeshCoP::Dataset::kActive) ? kKeyActiveDataset : kKeyPendingDataset;
 }
 
-Error Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
+void Settings::SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset)
 {
     Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Set(key, aDataset.GetBytes(), aDataset.GetLength());
 
     Log(kActionSave, error, key);
 
-    return error;
+    SuccessOrAssert(error);
 }
 
 Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const
@@ -242,17 +243,17 @@ Error Settings::ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Da
     aDataset.SetLength(static_cast<uint8_t>(length));
 
 exit:
+    OT_ASSERT(error != kErrorNotImplemented);
     return error;
 }
 
-Error Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
+void Settings::DeleteOperationalDataset(MeshCoP::Dataset::Type aType)
 {
     Key   key   = KeyForDatasetType(aType);
     Error error = Get<SettingsDriver>().Delete(key);
 
     Log(kActionDelete, error, key);
-
-    return error;
+    OT_ASSERT(error != kErrorNotImplemented);
 }
 
 #if OPENTHREAD_FTD

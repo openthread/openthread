@@ -115,30 +115,24 @@ public:
      *
      * @param[in]  aDataset  The Operational Dataset.
      *
-     * @retval kErrorNone   Successfully applied configuration.
-     * @retval kErrorParse  The dataset has at least one TLV with invalid format.
-     *
      */
-    Error SaveLocal(const Dataset &aDataset);
+    void SaveLocal(const Dataset &aDataset);
 
     /**
      * Saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDatasetInfo  The Operational Dataset as `Dataset::Info`.
      *
-     * @retval kErrorNone             Successfully saved the dataset.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
      */
-    Error SaveLocal(const Dataset::Info &aDatasetInfo);
+    void SaveLocal(const Dataset::Info &aDatasetInfo);
 
     /**
      * Saves the Operational Dataset in non-volatile memory.
      *
      * @param[in]  aDatasetTlvs  The Operational Dataset as `Dataset::Tlvs`.
      *
-     * @retval kErrorNone             Successfully saved the dataset.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     * @retval kErrorNone         Successfully saved the dataset.
+     * @retval kErrorInvalidArgs  The @p aDatasetTlvs is invalid. It is too long or contains incorrect TLV formatting.
      *
      */
     Error SaveLocal(const Dataset::Tlvs &aDatasetTlvs);
