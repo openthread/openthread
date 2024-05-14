@@ -699,7 +699,7 @@ void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
 
     if (mRaInfo.mHeaderUpdateTime <= aStartTime)
     {
-        UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr);
+        UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr, kThisBrOtherEntity);
     }
 
     ScheduleRoutingPolicyEvaluation(kImmediately);
@@ -737,25 +737,28 @@ exit:
 
 void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
-    RouterAdvert::RxMessage routerAdvMessage(aPacket);
+    RouterAdvert::RxMessage raMsg(aPacket);
+    RouterAdvOrigin         raOrigin = kAnotherRouter;
 
     OT_ASSERT(mIsRunning);
 
-    VerifyOrExit(routerAdvMessage.IsValid());
+    VerifyOrExit(raMsg.IsValid());
 
     Get<Ip6::Ip6>().GetBorderRoutingCounters().mRaRx++;
 
-    LogInfo("Received RA from %s on %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString());
-    DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
-
-    mDiscoveredPrefixTable.ProcessRouterAdvertMessage(routerAdvMessage, aSrcAddress);
-
-    // Remember the header and parameters of RA messages which are
-    // initiated from the infra interface.
     if (mInfraIf.HasAddress(aSrcAddress))
     {
-        UpdateRouterAdvertHeader(&routerAdvMessage);
+        raOrigin = mRaInfo.IsRaFromManager(raMsg) ? kThisBrRoutingManager : kThisBrOtherEntity;
     }
+
+    LogInfo("Received RA from %s on %s %s", aSrcAddress.ToString().AsCString(), mInfraIf.ToString().AsCString(),
+            RouterAdvOriginToString(raOrigin));
+
+    DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
+
+    mDiscoveredPrefixTable.ProcessRouterAdvertMessage(raMsg, aSrcAddress, raOrigin);
+
+    UpdateRouterAdvertHeader(&raMsg, raOrigin);
 
 exit:
     return;
@@ -885,24 +888,18 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
-void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRouterAdvertMessage)
+void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRaMsg, RouterAdvOrigin aRaOrigin)
 {
     // Updates the `mRaInfo` from the given RA message.
 
     RouterAdvert::Header oldHeader;
 
-    if (aRouterAdvertMessage != nullptr)
-    {
-        // We skip and do not update RA header if the received RA message
-        // was not prepared and sent by `RoutingManager` itself.
-
-        VerifyOrExit(!mRaInfo.IsRaFromManager(*aRouterAdvertMessage));
-    }
+    VerifyOrExit(aRaOrigin == kThisBrOtherEntity);
 
     oldHeader                 = mRaInfo.mHeader;
     mRaInfo.mHeaderUpdateTime = TimerMilli::GetNow();
 
-    if (aRouterAdvertMessage == nullptr || aRouterAdvertMessage->GetHeader().GetRouterLifetime() == 0)
+    if (aRaMsg == nullptr || aRaMsg->GetHeader().GetRouterLifetime() == 0)
     {
         mRaInfo.mHeader.SetToDefault();
         mRaInfo.mIsHeaderFromHost = false;
@@ -913,7 +910,7 @@ void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRo
         // which indicates to platform that it needs to do the
         // calculation and update it.
 
-        mRaInfo.mHeader = aRouterAdvertMessage->GetHeader();
+        mRaInfo.mHeader = aRaMsg->GetHeader();
         mRaInfo.mHeader.SetChecksum(0);
         mRaInfo.mIsHeaderFromHost = true;
     }
@@ -970,6 +967,7 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
+
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &aPrefix,
                                          uint32_t           aValidLifetime,
                                          uint32_t           aPreferredLifetime)
@@ -983,10 +981,28 @@ void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &aPrefix, uint32_t aLi
     LogInfo("- RIO %s (lifetime:%lu, prf:%s)", aPrefix.ToString().AsCString(), ToUlong(aLifetime),
             RoutePreferenceToString(aPreference));
 }
+
+const char *RoutingManager::RouterAdvOriginToString(RouterAdvOrigin aRaOrigin)
+{
+    static const char *const kOriginStrings[] = {
+        "",                          // (0) kAnotherRouter
+        "(this BR routing-manager)", // (1) kThisBrRoutingManager
+        "(this BR other sw entity)", // (2) kThisBrOtherEntity
+    };
+
+    static_assert(0 == kAnotherRouter, "kAnotherRouter value is incorrect");
+    static_assert(1 == kThisBrRoutingManager, "kThisBrRoutingManager value is incorrect");
+    static_assert(2 == kThisBrOtherEntity, "kThisBrOtherEntity value is incorrect");
+
+    return kOriginStrings[aRaOrigin];
+}
+
 #else
+
 void RoutingManager::LogPrefixInfoOption(const Ip6::Prefix &, uint32_t, uint32_t) {}
 void RoutingManager::LogRouteInfoOption(const Ip6::Prefix &, uint32_t, RoutePreference) {}
-#endif
+
+#endif // OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
 
 //---------------------------------------------------------------------------------------------------------------------
 // LifetimedPrefix
@@ -1118,11 +1134,16 @@ RoutingManager::DiscoveredPrefixTable::DiscoveredPrefixTable(Instance &aInstance
 }
 
 void RoutingManager::DiscoveredPrefixTable::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
-                                                                       const Ip6::Address            &aSrcAddress)
+                                                                       const Ip6::Address            &aSrcAddress,
+                                                                       RouterAdvOrigin                aRaOrigin)
 {
     // Process a received RA message and update the prefix table.
 
-    Router *router = mRouters.FindMatching(aSrcAddress);
+    Router *router;
+
+    VerifyOrExit(aRaOrigin != kThisBrRoutingManager);
+
+    router = mRouters.FindMatching(aSrcAddress);
 
     if (router == nullptr)
     {

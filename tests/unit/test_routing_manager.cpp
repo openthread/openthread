@@ -317,6 +317,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
         Log("  Router Advertisement message");
         LogRouterAdvert(packet);
         ValidateRouterAdvert(packet);
+        otPlatInfraIfRecvIcmp6Nd(sInstance, kInfraIfIndex, &sInfraIfAddress, aBuffer, aBufferLength);
         break;
 
     case Ip6::Icmp::Header::kTypeNeighborSolicit:
