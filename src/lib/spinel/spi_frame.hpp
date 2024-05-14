@@ -236,11 +236,11 @@ private:
     class LittleEndian
     {
     public:
-        static inline uint16_t ReadUint16(const uint8_t *aBuffer)
+        static uint16_t ReadUint16(const uint8_t *aBuffer)
         {
             return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]);
         }
-        static inline void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
+        static void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
         {
             aBuffer[0] = (aValue >> 8) & 0xff;
             aBuffer[1] = (aValue >> 0) & 0xff;

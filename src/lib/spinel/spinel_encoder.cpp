@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#include "lib/utils/code_utils.hpp"
+#include "lib/utils/utils.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -197,7 +197,7 @@ otError Encoder::OpenStruct(void)
 {
     otError error = OT_ERROR_NONE;
 
-    ACTION_IF_NOT(mNumOpenStructs < kMaxNestedStructs, error = OT_ERROR_INVALID_STATE);
+    ENSURE(mNumOpenStructs < kMaxNestedStructs, error = OT_ERROR_INVALID_STATE);
     ENSURE_NO_ERROR(error = mNcpBuffer.InFrameGetPosition(mStructPosition[mNumOpenStructs]));
 
     // Reserve bytes for the length to be filled when the struct gets closed.
@@ -216,12 +216,12 @@ otError Encoder::CloseStruct(void)
     uint16_t len;
     uint8_t  buffer[sizeof(uint16_t)];
 
-    ACTION_IF_NOT(mNumOpenStructs > 0, error = OT_ERROR_INVALID_STATE);
+    ENSURE(mNumOpenStructs > 0, error = OT_ERROR_INVALID_STATE);
 
     mNumOpenStructs--;
 
     len = mNcpBuffer.InFrameGetDistance(mStructPosition[mNumOpenStructs]);
-    ACTION_IF_NOT(len >= sizeof(uint16_t), error = OT_ERROR_INVALID_STATE);
+    ENSURE(len >= sizeof(uint16_t), error = OT_ERROR_INVALID_STATE);
 
     len -= sizeof(uint16_t);
 
@@ -266,7 +266,7 @@ otError Encoder::WritePacked(const char *aPackFormat, ...)
     va_start(args, aPackFormat);
 
     packedLen = spinel_datatype_vpack(buf, sizeof(buf), aPackFormat, args);
-    ACTION_IF_NOT((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
+    ENSURE((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
 
     error = mNcpBuffer.InFrameFeedData(buf, static_cast<uint16_t>(packedLen));
 
@@ -283,7 +283,7 @@ otError Encoder::WriteVPacked(const char *aPackFormat, va_list aArgs)
     spinel_ssize_t packedLen;
 
     packedLen = spinel_datatype_vpack(buf, sizeof(buf), aPackFormat, aArgs);
-    ACTION_IF_NOT((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
+    ENSURE((packedLen > 0) && (packedLen <= static_cast<spinel_ssize_t>(sizeof(buf))), error = OT_ERROR_NO_BUFS);
 
     error = mNcpBuffer.InFrameFeedData(buf, static_cast<uint16_t>(packedLen));
 

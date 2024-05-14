@@ -447,32 +447,26 @@ private:
         kHeaderSize              = sizeof(uint16_t) + sizeof(uint16_t),
     };
 
-    template <typename Type, uint16_t kArrayLength> inline Type *GetArrayEnd(Type (&aArray)[kArrayLength])
+    template <typename Type, uint16_t kArrayLength> Type *GetArrayEnd(Type (&aArray)[kArrayLength])
     {
         return &aArray[kArrayLength];
     }
 
-    template <typename Type, uint16_t kArrayLength> inline const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
+    template <typename Type, uint16_t kArrayLength> const Type *GetArrayEnd(const Type (&aArray)[kArrayLength])
     {
         return &aArray[kArrayLength];
     }
 
-    static inline void IgnoreError(otError aError)
-    {
-        do
-        {
-            (void)(aError);
-        } while (false);
-    }
+    static void IgnoreError(otError aError) { (void)(aError); }
 
     class LittleEndian
     {
     public:
-        static inline uint16_t ReadUint16(const uint8_t *aBuffer)
+        static uint16_t ReadUint16(const uint8_t *aBuffer)
         {
             return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]);
         }
-        static inline void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
+        static void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
         {
             aBuffer[0] = (aValue >> 8) & 0xff;
             aBuffer[1] = (aValue >> 0) & 0xff;

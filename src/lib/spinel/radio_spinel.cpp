@@ -46,7 +46,7 @@
 #include "lib/spinel/logger.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
-#include "lib/utils/code_utils.hpp"
+#include "lib/utils/utils.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -320,8 +320,8 @@ void RadioSpinel::HandleNotification(const uint8_t *aFrame, uint16_t aLength, bo
 
     unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
 
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
-    ACTION_IF_NOT(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
 
     switch (cmd)
     {
@@ -364,9 +364,9 @@ void RadioSpinel::HandleNotification(const uint8_t *aFrame, uint16_t aLength)
     otError           error = OT_ERROR_NONE;
 
     unpacked = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
-    ACTION_IF_NOT(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
-    ENSURE(cmd == SPINEL_CMD_PROP_VALUE_IS);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(SPINEL_HEADER_GET_TID(header) == 0, error = OT_ERROR_PARSE);
+    ENSURE(cmd == SPINEL_CMD_PROP_VALUE_IS, NO_ACTION);
     HandleValueIs(key, data, static_cast<uint16_t>(len));
 
 exit:
@@ -385,8 +385,7 @@ void RadioSpinel::HandleResponse(const uint8_t *aBuffer, uint16_t aLength)
     otError           error  = OT_ERROR_NONE;
 
     rval = spinel_datatype_unpack(aBuffer, aLength, "CiiD", &header, &cmd, &key, &data, &len);
-    ACTION_IF_NOT(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED,
-                  error = OT_ERROR_PARSE);
+    ENSURE(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED, error = OT_ERROR_PARSE);
 
     if (mWaitingTid == SPINEL_HEADER_GET_TID(header))
     {
@@ -425,7 +424,7 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
         spinel_status_t status;
         spinel_ssize_t  unpacked = spinel_datatype_unpack(aBuffer, aLength, "i", &status);
 
-        ACTION_IF_NOT(unpacked > 0, mError = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, mError = OT_ERROR_PARSE);
         mError = SpinelStatusToOtError(status);
     }
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
@@ -434,10 +433,10 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
         spinel_ssize_t unpacked;
 
         mError = OT_ERROR_NONE;
-        ENSURE(mDiagOutput != nullptr);
+        ENSURE(mDiagOutput != nullptr, NO_ACTION);
         unpacked =
             spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, mDiagOutput, &mDiagOutputMaxLen);
-        ACTION_IF_NOT(unpacked > 0, mError = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, mError = OT_ERROR_PARSE);
     }
 #endif
     else if (aKey == mWaitingKey)
@@ -457,7 +456,7 @@ void RadioSpinel::HandleWaitingResponse(uint32_t          aCommand,
                 spinel_ssize_t unpacked =
                     spinel_datatype_vunpack_in_place(aBuffer, aLength, mPropertyFormat, mPropertyArgs);
 
-                ACTION_IF_NOT(unpacked > 0, mError = OT_ERROR_PARSE);
+                ENSURE(unpacked > 0, mError = OT_ERROR_PARSE);
                 mError = OT_ERROR_NONE;
             }
         }
@@ -498,7 +497,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
         spinel_status_t status = SPINEL_STATUS_OK;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, "i", &status);
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
         if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
@@ -533,7 +532,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, "Cc", &scanChannel, &maxRssi);
 
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
         mEnergyScanning = false;
@@ -548,7 +547,7 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
 
         unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength, SPINEL_DATATYPE_DATA_S, logStream, &len);
         assert(len < sizeof(logStream));
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
         logStream[len] = '\0';
         LogDebg("RCP => %s", logStream);
     }
@@ -558,12 +557,12 @@ void RadioSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, 
         uint8_t     logLevel;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UTF8_S, &logString);
-        ACTION_IF_NOT(unpacked >= 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked >= 0, error = OT_ERROR_PARSE);
         aBuffer += unpacked;
         aLength -= unpacked;
 
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S, &logLevel);
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
         switch (logLevel)
         {
@@ -645,7 +644,7 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
     unsigned int   receiveError = 0;
     spinel_ssize_t unpacked;
 
-    ACTION_IF_NOT(aLength > 0, aFrame.mLength = 0);
+    ENSURE(aLength > 0, aFrame.mLength = 0);
 
     unpacked = spinel_datatype_unpack_in_place(aBuffer, aLength,
                                                SPINEL_DATATYPE_DATA_WLEN_S                          // Frame
@@ -663,7 +662,7 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
                                                &aFrame.mChannel, &aFrame.mInfo.mRxInfo.mLqi,
                                                &aFrame.mInfo.mRxInfo.mTimestamp, &receiveError);
 
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
     aUnpacked = unpacked;
 
     aBuffer += unpacked;
@@ -679,7 +678,7 @@ otError RadioSpinel::ParseRadioFrame(otRadioFrame   &aFrame,
                                                 ),
                                             &aFrame.mInfo.mRxInfo.mAckKeyId, &aFrame.mInfo.mRxInfo.mAckFrameCounter);
 
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
         aUnpacked += unpacked;
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -800,7 +799,7 @@ otError RadioSpinel::SetRxOnWhenIdle(bool aEnable)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE(mRxOnWhenIdle != aEnable);
+    ENSURE(mRxOnWhenIdle != aEnable, NO_ACTION);
     ENSURE_NO_ERROR(error = Set(SPINEL_PROP_MAC_RX_ON_WHEN_IDLE_MODE, SPINEL_DATATYPE_BOOL_S, aEnable));
     mRxOnWhenIdle = aEnable;
 
@@ -812,7 +811,7 @@ otError RadioSpinel::SetShortAddress(uint16_t aAddress)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE(mShortAddress != aAddress);
+    ENSURE(mShortAddress != aAddress, NO_ACTION);
     ENSURE_NO_ERROR(error = Set(SPINEL_PROP_MAC_15_4_SADDR, SPINEL_DATATYPE_UINT16_S, aAddress));
     mShortAddress = aAddress;
 
@@ -828,7 +827,7 @@ otError RadioSpinel::ReadMacKey(const otMacKeyMaterial &aKeyMaterial, otMacKey &
     otError error = otPlatCryptoExportKey(aKeyMaterial.mKeyMaterial.mKeyRef, aKey.m8, sizeof(aKey), &keySize);
 
     ENSURE_NO_ERROR(error);
-    ACTION_IF_NOT(keySize == sizeof(otMacKey), error = OT_ERROR_FAILED);
+    ENSURE(keySize == sizeof(otMacKey), error = OT_ERROR_FAILED);
 
 exit:
     return error;
@@ -934,7 +933,7 @@ otError RadioSpinel::SetPanId(uint16_t aPanId)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE(mPanId != aPanId);
+    ENSURE(mPanId != aPanId, NO_ACTION);
     ENSURE_NO_ERROR(error = Set(SPINEL_PROP_MAC_15_4_PANID, SPINEL_DATATYPE_UINT16_S, aPanId));
     mPanId = aPanId;
 
@@ -1229,7 +1228,7 @@ otError RadioSpinel::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 {
     otError error;
 
-    ACTION_IF_NOT(sRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN, error = OT_ERROR_NOT_CAPABLE);
+    ENSURE(sRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN, error = OT_ERROR_NOT_CAPABLE);
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mScanChannel    = aScanChannel;
@@ -1420,7 +1419,7 @@ otError RadioSpinel::RequestV(uint32_t command, spinel_prop_key_t aKey, const ch
     otError      error = OT_ERROR_NONE;
     spinel_tid_t tid   = GetNextTid();
 
-    ACTION_IF_NOT(tid > 0, error = OT_ERROR_BUSY);
+    ENSURE(tid > 0, error = OT_ERROR_BUSY);
 
     error = GetSpinelDriver().SendCommand(command, aKey, tid, aFormat, aArgs);
     ENSURE_NO_ERROR(error);
@@ -1429,7 +1428,7 @@ otError RadioSpinel::RequestV(uint32_t command, spinel_prop_key_t aKey, const ch
     {
         // not allowed to send another frame before the last frame is done.
         assert(mTxRadioTid == 0);
-        ACTION_IF_NOT(mTxRadioTid == 0, error = OT_ERROR_BUSY);
+        ENSURE(mTxRadioTid == 0, error = OT_ERROR_BUSY);
         mTxRadioTid = tid;
     }
     else
@@ -1509,22 +1508,22 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
     bool            headerUpdated = false;
     spinel_ssize_t  unpacked;
 
-    ACTION_IF_NOT(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
+    ENSURE(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status);
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
     unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &headerUpdated);
-    ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+    ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
 
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
@@ -1551,7 +1550,7 @@ void RadioSpinel::HandleTransmitDone(uint32_t          aCommand,
         // Replace transmit frame security key index and frame counter with the one filled by RCP
         unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT32_S, &keyId,
                                           &frameCounter);
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetKeyId(keyId);
         static_cast<Mac::TxFrame *>(mTransmitFrame)->SetFrameCounter(frameCounter);
 
@@ -1582,7 +1581,7 @@ otError RadioSpinel::Transmit(otRadioFrame &aFrame)
 {
     otError error = OT_ERROR_INVALID_STATE;
 
-    ENSURE(mState == kStateReceive || (mState == kStateSleep && (sRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)));
+    ENSURE(mState == kStateReceive || (mState == kStateSleep && (sRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX)), NO_ACTION);
 
     mTransmitFrame = &aFrame;
 
@@ -1661,7 +1660,7 @@ otError RadioSpinel::Receive(uint8_t aChannel)
 {
     otError error = OT_ERROR_NONE;
 
-    ACTION_IF_NOT(mState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
+    ENSURE(mState != kStateDisabled, error = OT_ERROR_INVALID_STATE);
 
     if (mChannel != aChannel)
     {
@@ -1717,7 +1716,7 @@ otError RadioSpinel::Enable(otInstance *aInstance)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE(!IsEnabled());
+    ENSURE(!IsEnabled(), NO_ACTION);
 
     mInstance = aInstance;
 
@@ -1742,8 +1741,8 @@ otError RadioSpinel::Disable(void)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE(IsEnabled());
-    ACTION_IF_NOT(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
+    ENSURE(IsEnabled(), NO_ACTION);
+    ENSURE(mState == kStateSleep, error = OT_ERROR_INVALID_STATE);
 
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, false));
     mState    = kStateDisabled;
@@ -1787,8 +1786,8 @@ uint32_t RadioSpinel::GetRadioChannelMask(bool aPreferred)
         spinel_ssize_t unpacked;
 
         unpacked = spinel_datatype_unpack(maskData, maskLength, SPINEL_DATATYPE_UINT8_S, &channel);
-        ACTION_IF_NOT(unpacked > 0, error = OT_ERROR_FAILED);
-        ACTION_IF_NOT(channel < kChannelMaskBufferSize, error = OT_ERROR_PARSE);
+        ENSURE(unpacked > 0, error = OT_ERROR_FAILED);
+        ENSURE(channel < kChannelMaskBufferSize, error = OT_ERROR_PARSE);
         channelMask |= (1UL << channel);
 
         maskData += unpacked;
@@ -1848,12 +1847,12 @@ void RadioSpinel::CalcRcpTimeOffset(void)
      *         D = T1' - ((T0 + T2)/ 2)
      */
 
-    ENSURE(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()));
+    ENSURE(!mIsTimeSynced || (otPlatTimeGet() >= GetNextRadioTimeRecalcStart()), NO_ACTION);
 
     LogDebg("Trying to get RCP time offset");
 
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_UINT64_S, remoteTimestamp);
-    ACTION_IF_NOT(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+    ENSURE(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     localTxTimestamp = otPlatTimeGet();
 
@@ -1863,7 +1862,7 @@ void RadioSpinel::CalcRcpTimeOffset(void)
 
     localRxTimestamp = otPlatTimeGet();
 
-    ACTION_IF_NOT(error == OT_ERROR_NONE, mRadioTimeRecalcStart = localRxTimestamp);
+    ENSURE(error == OT_ERROR_NONE, mRadioTimeRecalcStart = localRxTimestamp);
 
     mRadioTimeOffset      = (remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2)));
     mIsTimeSynced         = true;
@@ -2165,7 +2164,7 @@ otError RadioSpinel::SetMultipanActiveInterface(spinel_iid_t aIid, bool aComplet
     otError error;
     uint8_t value;
 
-    ACTION_IF_NOT(aIid == (aIid & SPINEL_MULTIPAN_INTERFACE_ID_MASK), error = OT_ERROR_INVALID_ARGS);
+    ENSURE(aIid == (aIid & SPINEL_MULTIPAN_INTERFACE_ID_MASK), error = OT_ERROR_INVALID_ARGS);
 
     value = static_cast<uint8_t>(aIid);
     if (aCompletePending)
@@ -2182,7 +2181,7 @@ exit:
 otError RadioSpinel::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower)
 {
     otError error = OT_ERROR_NONE;
-    ACTION_IF_NOT(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    ENSURE(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
     mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
     error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
 
@@ -2214,7 +2213,7 @@ otError RadioSpinel::GetRadioRegion(uint16_t *aRegionCode)
 {
     otError error = OT_ERROR_NONE;
 
-    ACTION_IF_NOT(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
+    ENSURE(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
     error = Get(SPINEL_PROP_PHY_REGION_CODE, SPINEL_DATATYPE_UINT16_S, aRegionCode);
 
 exit:
@@ -2301,7 +2300,7 @@ otError RadioSpinel::ClearCalibratedPowers(void) { return Set(SPINEL_PROP_PHY_CA
 otError RadioSpinel::SetChannelTargetPower(uint8_t aChannel, int16_t aTargetPower)
 {
     otError error = OT_ERROR_NONE;
-    ACTION_IF_NOT(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    ENSURE(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
     error =
         Set(SPINEL_PROP_PHY_CHAN_TARGET_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT16_S, aChannel, aTargetPower);
 

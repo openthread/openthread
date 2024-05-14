@@ -34,7 +34,7 @@
 
 #include <stdlib.h>
 
-#include "lib/utils/code_utils.hpp"
+#include "lib/utils/utils.hpp"
 
 namespace ot {
 namespace Hdlc {
@@ -136,7 +136,7 @@ otError Encoder::Encode(uint8_t aByte)
 
     if (HdlcByteNeedsEscape(aByte))
     {
-        ACTION_IF_NOT(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
+        ENSURE(mWritePointer.CanWrite(2), error = OT_ERROR_NO_BUFS);
 
         IGNORE_RETURN(mWritePointer.WriteByte(kEscapeSequence));
         IGNORE_RETURN(mWritePointer.WriteByte(aByte ^ 0x20));

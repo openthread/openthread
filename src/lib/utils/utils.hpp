@@ -59,20 +59,10 @@
     } while (false)
 
 /**
- * Checks for the specified condition, which is expected to commonly be true, and  branches to the local
- * label 'exit' if the condition is false.
- *
- * @param[in]  aCondition  A Boolean expression to be evaluated.
+ * Does nothing. This is passed to ENSURE when there is no action to do.
  *
  */
-#define ENSURE(aCondition) \
-    do                     \
-    {                      \
-        if (!(aCondition)) \
-        {                  \
-            goto exit;     \
-        }                  \
-    } while (false)
+#define NO_ACTION
 
 /**
  * Checks for the specified condition, which is expected to commonly be true, and both executes @a ... and
@@ -82,14 +72,14 @@
  * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
  *
  */
-#define ACTION_IF_NOT(aCondition, aAction) \
-    do                                     \
-    {                                      \
-        if (!(aCondition))                 \
-        {                                  \
-            aAction;                       \
-            goto exit;                     \
-        }                                  \
+#define ENSURE(aCondition, aAction) \
+    do                              \
+    {                               \
+        if (!(aCondition))          \
+        {                           \
+            aAction;                \
+            goto exit;              \
+        }                           \
     } while (false)
 
 /**
