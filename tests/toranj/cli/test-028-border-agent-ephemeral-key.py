@@ -34,9 +34,7 @@ import time
 # -----------------------------------------------------------------------------------------------------------------------
 # Test description:
 #
-# Validate changes to `IntervalMax` for MLE Advertisement Trickle Timer based on number of
-# router neighbors of the device.
-#
+# Validate Border Agent ephemeral key APIs.
 
 test_name = __file__[:-3] if __file__.endswith('.py') else __file__
 print('-' * 120)
