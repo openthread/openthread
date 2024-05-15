@@ -431,7 +431,7 @@ public:
      * @retval FALSE Otherwise.
      *
      */
-    bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix);
+    bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
 #endif
 
 #endif // OPENTHREAD_FTD

@@ -1358,44 +1358,40 @@ void Leader::HandleTimer(void)
     }
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix)
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
 {
-    PrefixTlv *prefixTlv;
-    bool       contains = false;
+    bool                   contains = false;
+    const PrefixTlv       *prefixTlv;
+    const BorderRouterTlv *brSubTlv;
 
     VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
 
     prefixTlv = FindPrefix(aPrefix);
     VerifyOrExit(prefixTlv != nullptr);
 
-    for (int i = 0; i < 2; i++)
+    brSubTlv = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ true);
+
+    VerifyOrExit(brSubTlv != nullptr);
+
+    for (const BorderRouterEntry *entry = brSubTlv->GetFirstEntry(); entry <= brSubTlv->GetLastEntry(); entry++)
     {
-        const BorderRouterTlv *borderRouter = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
+        OnMeshPrefixConfig config;
 
-        if (borderRouter == nullptr)
+        config.SetFrom(*prefixTlv, *brSubTlv, *entry);
+
+        if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
         {
-            continue;
-        }
-
-        for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
-             entry                          = entry->GetNext())
-        {
-            OnMeshPrefixConfig config;
-
-            config.SetFrom(*prefixTlv, *borderRouter, *entry);
-
-            if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
-            {
-                ExitNow(contains = true);
-            }
+            ExitNow(contains = true);
         }
     }
 
 exit:
     return contains;
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 //---------------------------------------------------------------------------------------------------------------------
 // Leader::ContextIds
