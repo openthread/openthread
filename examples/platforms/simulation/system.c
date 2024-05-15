@@ -76,7 +76,7 @@ enum
 {
     OT_SIM_OPT_HELP               = 'h',
     OT_SIM_OPT_ENABLE_ENERGY_SCAN = 'E',
-    OT_SIM_OPT_LOCAL_HOST         = 'L',
+    OT_SIM_OPT_LOCAL_INTERFACE    = 'L',
     OT_SIM_OPT_SLEEP_TO_TX        = 't',
     OT_SIM_OPT_TIME_SPEED         = 's',
     OT_SIM_OPT_LOG_FILE           = 'l',
@@ -90,6 +90,7 @@ static void PrintUsage(const char *aProgramName, int aExitCode)
             "    %s [Options] NodeId\n"
             "Options:\n"
             "    -h --help                  Display this usage information.\n"
+            "    -L --local-interface=val   The address or name of the netif to simulate Thread radio.\n"
             "    -E --enable-energy-scan    Enable energy scan capability.\n"
             "    -t --sleep-to-tx           Let radio support direct transition from sleep to TX with CSMA.\n"
             "    -s --time-speed=val        Speed up the time in simulation.\n"
@@ -112,7 +113,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
         {"enable-energy-scan", no_argument, 0, OT_SIM_OPT_ENABLE_ENERGY_SCAN},
         {"sleep-to-tx", no_argument, 0, OT_SIM_OPT_SLEEP_TO_TX},
         {"time-speed", required_argument, 0, OT_SIM_OPT_TIME_SPEED},
-        {"local-host", required_argument, 0, OT_SIM_OPT_LOCAL_HOST},
+        {"local-interface", required_argument, 0, OT_SIM_OPT_LOCAL_INTERFACE},
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
         {"log-file", required_argument, 0, OT_SIM_OPT_LOG_FILE},
 #endif
@@ -156,8 +157,8 @@ void otSysInit(int aArgCount, char *aArgVector[])
         case OT_SIM_OPT_SLEEP_TO_TX:
             gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
             break;
-        case OT_SIM_OPT_LOCAL_HOST:
-            gLocalHost = optarg;
+        case OT_SIM_OPT_LOCAL_INTERFACE:
+            gLocalInterface = optarg;
             break;
         case OT_SIM_OPT_TIME_SPEED:
             speedUpFactor = (uint32_t)strtol(optarg, &endptr, 10);
