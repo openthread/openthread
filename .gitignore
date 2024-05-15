@@ -1,4 +1,5 @@
 *.a
+*.a.*
 *.bak
 *.flash
 *.gcda
@@ -14,6 +15,8 @@
 *.swp
 *.trs
 *.bak
+*.map
+*.cmake
 *~
 .DS_Store
 .vagrant
@@ -25,6 +28,14 @@ doc/Doxyfile
 doc/html
 output
 /tmp/
+
+# OT exectuables
+ot-cli-ftd
+ot-cli-mtd
+ot-cli-radio
+ot-ncp-ftd
+ot-ncp-mtd
+ot-rcp
 
 # IDE / editor files
 .idea/**
@@ -39,3 +50,7 @@ __pycache__
 CTestTestfile.cmake
 ot-test-*
 Testing/
+
+# Misc
+DartConfiguration.tcl
+third_party/mbedtls/openthread-mbedtls-config.h
