@@ -45,6 +45,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/infra_if.h>
+#include <openthread/platform/logging.h>
 #include <openthread/platform/otns.h>
 #include <openthread/platform/radio.h>
 
@@ -60,6 +61,8 @@
 
 otInstance *gInstance = nullptr;
 bool        gDryRun   = false;
+
+CoprocessorType sCoprocessorType = OT_COPROCESSOR_UNKNOWN;
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -127,26 +130,11 @@ void otSysSetInfraNetif(const char *aInfraNetifName, int aIcmp6Socket)
 }
 #endif
 
-void platformInit(otPlatformConfig *aPlatformConfig)
+void platformInitRcpMode(otPlatformConfig *aPlatformConfig)
 {
-    CoprocessorType type;
-
-#if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
-    platformBacktraceInit();
-#endif
-
-    platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
-
-    type = platformSpinelManagerInit(get802154RadioUrl(aPlatformConfig));
-    if (type != OT_COPROCESSOR_RCP)
-    {
-        printf("Only RCP is supported!\n");
-        exit(OT_EXIT_FAILURE);
-    }
-
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 
-    // For Dry-Run option, only init the radio.
+    // For Dry-Run option, only init the co-processor.
     VerifyOrExit(!aPlatformConfig->mDryRun);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -175,9 +163,43 @@ void platformInit(otPlatformConfig *aPlatformConfig)
     ot::Posix::Udp::Get().Init(aPlatformConfig->mInterfaceName);
 #endif
 #endif
-
 exit:
     return;
+}
+
+void platformInitNcpMode(otPlatformConfig *aPlatformConfig)
+{
+    // Do nothing now.
+    OT_UNUSED_VARIABLE(aPlatformConfig);
+}
+
+void platformInit(otPlatformConfig *aPlatformConfig)
+{
+#if OPENTHREAD_POSIX_CONFIG_BACKTRACE_ENABLE
+    platformBacktraceInit();
+#endif
+
+    platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
+
+    sCoprocessorType = platformSpinelManagerInit(get802154RadioUrl(aPlatformConfig));
+
+    switch (sCoprocessorType)
+    {
+    case OT_COPROCESSOR_RCP:
+        platformInitRcpMode(aPlatformConfig);
+        break;
+
+    case OT_COPROCESSOR_NCP:
+        platformInitNcpMode(aPlatformConfig);
+        break;
+
+    default:
+        otPlatLog(OT_LOG_LEVEL_CRIT, OT_LOG_REGION_PLATFORM, "Unknown type of the co-processor!\n");
+        exit(OT_EXIT_FAILURE);
+        break;
+    }
+
+    aPlatformConfig->mCoprocessorType = sCoprocessorType;
 }
 
 void platformSetUp(otPlatformConfig *aPlatformConfig)
@@ -233,11 +255,14 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
     platformInit(aPlatformConfig);
 
-    gDryRun   = aPlatformConfig->mDryRun;
-    gInstance = otInstanceInitSingle();
-    OT_ASSERT(gInstance != nullptr);
+    gDryRun = aPlatformConfig->mDryRun;
+    if (sCoprocessorType == OT_COPROCESSOR_RCP)
+    {
+        gInstance = otInstanceInitSingle();
+        OT_ASSERT(gInstance != nullptr);
 
-    platformSetUp(aPlatformConfig);
+        platformSetUp(aPlatformConfig);
+    }
 
     return gInstance;
 }
@@ -270,13 +295,14 @@ exit:
     return;
 }
 
-void platformDeinit(void)
+void platformDeinitRcpMode(void)
 {
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
     platformSpinelManagerDeinit();
+    sCoprocessorType = OT_COPROCESSOR_UNKNOWN;
 
     // For Dry-Run option, only the radio is initialized.
     VerifyOrExit(!gDryRun);
@@ -303,14 +329,26 @@ exit:
     return;
 }
 
+void platformDeinitNcpMode(void)
+{
+    platformSpinelManagerDeinit();
+    sCoprocessorType = OT_COPROCESSOR_UNKNOWN;
+}
+
 void otSysDeinit(void)
 {
-    OT_ASSERT(gInstance != nullptr);
-
-    platformTearDown();
-    otInstanceFinalize(gInstance);
-    gInstance = nullptr;
-    platformDeinit();
+    if (sCoprocessorType == OT_COPROCESSOR_RCP)
+    {
+        OT_ASSERT(gInstance != nullptr);
+        platformTearDown();
+        otInstanceFinalize(gInstance);
+        gInstance = nullptr;
+        platformDeinitRcpMode();
+    }
+    else if (sCoprocessorType == OT_COPROCESSOR_NCP)
+    {
+        platformDeinitNcpMode();
+    }
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
