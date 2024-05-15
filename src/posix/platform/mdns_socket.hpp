@@ -28,9 +28,8 @@
 #ifndef OT_POSIX_PLATFORM_MDNS_SOCKET_HPP_
 #define OT_POSIX_PLATFORM_MDNS_SOCKET_HPP_
 
+#include "openthread-core-config.h"
 #include "openthread-posix-config.h"
-
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 #include <openthread/nat64.h>
 #include <openthread/platform/mdns_socket.h>
@@ -39,6 +38,8 @@
 #include "mainloop.hpp"
 
 #include "core/common/non_copyable.hpp"
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 namespace ot {
 namespace Posix {

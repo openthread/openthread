@@ -30,6 +30,7 @@
 #define OT_POSIX_PLATFORM_MULTICAST_ROUTING_HPP_
 
 #include "openthread-posix-config.h"
+#include "openthread-posix-core-related-config.h"
 
 #if OPENTHREAD_POSIX_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 

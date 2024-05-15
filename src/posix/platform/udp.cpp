@@ -48,6 +48,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 
+#include <openthread-core-config.h>
 #include <openthread/udp.h>
 #include <openthread/platform/udp.h>
 

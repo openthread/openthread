@@ -31,9 +31,9 @@
  *   This file implements the infrastructure interface for posix.
  */
 
-#include "platform-posix.h"
+#include "infra_if.hpp"
 
-#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
+#include "platform-posix.h"
 
 #ifdef __APPLE__
 #define __APPLE_USE_RFC_3542
@@ -54,14 +54,15 @@
 #include <linux/rtnetlink.h>
 #endif
 
+#include <openthread-core-config.h>
 #include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
-#include "posix/platform/infra_if.hpp"
 
+#if OPENTHREAD_POSIX_CONFIG_INFRA_IF_ENABLE
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
     bool            ret     = false;

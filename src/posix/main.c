@@ -27,6 +27,7 @@
  */
 
 #include "platform/openthread-posix-config.h"
+#include "platform/openthread-posix-daemon-config.h"
 
 #include <openthread/config.h>
 

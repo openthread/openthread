@@ -37,11 +37,11 @@
 #include "openthread-posix-config.h"
 
 #include "logger.hpp"
-#include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
 #include "lib/spinel/multi_frame_buffer.hpp"
 #include "lib/spinel/spi_frame.hpp"
 #include "lib/spinel/spinel_interface.hpp"
+#include "lib/url/url.hpp"
 
 #include <openthread/openthread-system.h>
 

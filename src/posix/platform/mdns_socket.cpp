@@ -28,8 +28,6 @@
 
 #include "mdns_socket.hpp"
 
-#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
-
 #include <arpa/inet.h>
 #include <errno.h>
 #include <net/if.h>
@@ -44,6 +42,8 @@
 #include "ip6_utils.hpp"
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
+
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
 
 extern "C" otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
 {

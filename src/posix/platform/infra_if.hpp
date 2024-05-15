@@ -35,8 +35,10 @@
 #define OT_POSIX_PLATFORM_INFRA_IF_HPP_
 
 #include "openthread-posix-config.h"
+#include "openthread-posix-core-related-config.h"
 
 #include <net/if.h>
+#include <signal.h>
 #include <openthread/nat64.h>
 #include <openthread/openthread-system.h>
 

@@ -38,8 +38,8 @@
 
 #include <openthread/openthread-system.h>
 
-#include "platform-posix.h"
 #include "lib/spinel/spinel_interface.hpp"
+#include "lib/url/url.hpp"
 
 namespace ot {
 namespace Posix {

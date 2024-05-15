@@ -32,6 +32,7 @@
  */
 
 #include "openthread-posix-config.h"
+#include "openthread-posix-core-related-config.h"
 #include "platform-posix.h"
 
 #if defined(__APPLE__)
