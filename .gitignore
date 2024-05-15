@@ -34,3 +34,8 @@ cmake-build-*/**
 
 # Python bytecodes
 __pycache__
+
+# Unit test files
+CTestTestfile.cmake
+ot-test-*
+Testing/
