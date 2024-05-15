@@ -1399,7 +1399,6 @@ private:
     bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateDiscoveredPrefixTableOnNetDataChange(void);
-    bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool NetworkDataContainsUlaRoute(void) const;
     void UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRaMsg, RouterAdvOrigin aRaOrigin);
     void ResetDiscoveredPrefixStaleTimer(void);

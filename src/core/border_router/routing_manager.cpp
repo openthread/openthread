@@ -825,7 +825,7 @@ bool RoutingManager::ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, c
     // both checks are necessary.
 
     VerifyOrExit(!mRioAdvertiser.HasAdvertised(aPrefix));
-    VerifyOrExit(!Get<RoutingManager>().NetworkDataContainsOmrPrefix(aPrefix));
+    VerifyOrExit(!Get<NetworkData::Leader>().ContainsOmrPrefix(aPrefix));
 
     shouldProcess = true;
 
@@ -846,24 +846,6 @@ void RoutingManager::HandleDiscoveredPrefixTableChanged(void)
 
 exit:
     return;
-}
-
-bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
-{
-    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
-    bool                            contains = false;
-
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
-    {
-        if (IsValidOmrPrefix(onMeshPrefixConfig) && onMeshPrefixConfig.GetPrefix() == aPrefix)
-        {
-            contains = true;
-            break;
-        }
-    }
-
-    return contains;
 }
 
 bool RoutingManager::NetworkDataContainsUlaRoute(void) const
@@ -2127,28 +2109,7 @@ bool RoutingManager::OmrPrefixManager::ShouldAdvertiseLocalAsRio(void) const
     // may still be present in Network Data for a short interval due
     // to delays in registering changes with the leader.
 
-    bool                            shouldAdvertise = false;
-    NetworkData::Iterator           iterator        = NetworkData::kIteratorInit;
-    NetworkData::OnMeshPrefixConfig prefixConfig;
-
-    VerifyOrExit(mIsLocalAddedInNetData);
-
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, prefixConfig) == kErrorNone)
-    {
-        if (!IsValidOmrPrefix(prefixConfig))
-        {
-            continue;
-        }
-
-        if (prefixConfig.GetPrefix() == mLocalPrefix.GetPrefix())
-        {
-            shouldAdvertise = true;
-            break;
-        }
-    }
-
-exit:
-    return shouldAdvertise;
+    return mIsLocalAddedInNetData && Get<NetworkData::Leader>().ContainsOmrPrefix(mLocalPrefix.GetPrefix());
 }
 
 Error RoutingManager::OmrPrefixManager::AddLocalToNetData(void)

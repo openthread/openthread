@@ -1358,41 +1358,6 @@ void Leader::HandleTimer(void)
     }
 }
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-bool Leader::ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
-{
-    bool                   contains = false;
-    const PrefixTlv       *prefixTlv;
-    const BorderRouterTlv *brSubTlv;
-
-    VerifyOrExit(BorderRouter::RoutingManager::IsValidOmrPrefix(aPrefix));
-
-    prefixTlv = FindPrefix(aPrefix);
-    VerifyOrExit(prefixTlv != nullptr);
-
-    brSubTlv = prefixTlv->FindSubTlv<BorderRouterTlv>(/* aStable */ true);
-
-    VerifyOrExit(brSubTlv != nullptr);
-
-    for (const BorderRouterEntry *entry = brSubTlv->GetFirstEntry(); entry <= brSubTlv->GetLastEntry(); entry++)
-    {
-        OnMeshPrefixConfig config;
-
-        config.SetFrom(*prefixTlv, *brSubTlv, *entry);
-
-        if (BorderRouter::RoutingManager::IsValidOmrPrefix(config))
-        {
-            ExitNow(contains = true);
-        }
-    }
-
-exit:
-    return contains;
-}
-
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
 //---------------------------------------------------------------------------------------------------------------------
 // Leader::ContextIds
 

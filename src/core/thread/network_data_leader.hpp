@@ -421,20 +421,23 @@ public:
      */
     const ServiceTlv *FindServiceById(uint8_t aServiceId) const;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#endif // OPENTHREAD_FTD
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * Indicates whether a given Prefix can act as a valid OMR prefix and exists in the network data.
+     * Indicates whether Network Data contains a valid OMR prefix.
+     *
+     * If the given @p aPrefix is itself not a valid OMR prefix, this method will return `false`, regardless of
+     * whether the prefix is present in the Network Data.
      *
      * @param[in]  aPrefix   The OMR prefix to check.
      *
-     * @retval TRUE  If @p aPrefix is a valid OMR prefix and Network Data contains @p aPrefix.
-     * @retval FALSE Otherwise.
+     * @retval TRUE   Network Data contains a valid OMR prefix entry matching @p aPrefix.
+     * @retval FALSE  Network Data does not contain a valid OMR prefix entry matching @p aPrefix.
      *
      */
     bool ContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
 #endif
-
-#endif // OPENTHREAD_FTD
 
 private:
     using FilterIndexes = MeshCoP::SteeringData::HashBitIndexes;
