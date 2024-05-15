@@ -89,10 +89,16 @@ private:
         kPrefixTypeFavored = 1u << 1,
     };
 
+    enum RouterOutputMode : uint8_t
+    {
+        kShortVersion,
+        kLongVersion,
+    };
+
     template <CommandId kCommandId> otError Process(Arg aArgs[]);
 
     otError ParsePrefixTypeArgs(Arg aArgs[], PrefixType &aFlags);
-    void    OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry);
+    void    OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutputMode aMode);
 };
 
 } // namespace Cli

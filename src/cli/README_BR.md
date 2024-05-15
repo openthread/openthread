@@ -351,9 +351,10 @@ Info per router:
   - M: Managed Address Config flag
   - O: Other Config flag
   - Stub: Stub Router flag (indicates whether the router is a stub router)
+- Milliseconds since last received message from this router
 
 ```bash
 > br routers
-ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1)
+ff02:0:0:0:0:0:0:1 (M:0 O:0 Stub:1) ms-since-rx:1505
 Done
 ```

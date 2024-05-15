@@ -1652,9 +1652,10 @@ exit:
 
 void RoutingManager::RxRaTracker::UpdateRouterOnRx(Router &aRouter)
 {
-    aRouter.mNsProbeCount = 0;
-    aRouter.mTimeout = TimerMilli::GetNow() + Random::NonCrypto::AddJitter(Router::kActiveTimeout, Router::kJitter);
+    aRouter.mNsProbeCount   = 0;
+    aRouter.mLastUpdateTime = TimerMilli::GetNow();
 
+    aRouter.mTimeout = aRouter.mLastUpdateTime + Random::NonCrypto::AddJitter(Router::kActiveTimeout, Router::kJitter);
     mRouterTimer.FireAtIfEarlier(aRouter.mTimeout);
 }
 
@@ -1779,7 +1780,7 @@ Error RoutingManager::RxRaTracker::GetNextEntry(PrefixTableIterator &aIterator, 
 
     SuccessOrExit(error = iterator.AdvanceToNextEntry());
 
-    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter);
+    iterator.GetRouter()->CopyInfoTo(aEntry.mRouter, iterator.GetInitTime());
 
     switch (iterator.GetEntryType())
     {
@@ -1803,7 +1804,7 @@ Error RoutingManager::RxRaTracker::GetNextRouter(PrefixTableIterator &aIterator,
     ClearAllBytes(aEntry);
 
     SuccessOrExit(error = iterator.AdvanceToNextRouter(Iterator::kRouterIterator));
-    iterator.GetRouter()->CopyInfoTo(aEntry);
+    iterator.GetRouter()->CopyInfoTo(aEntry, iterator.GetInitTime());
 
 exit:
     return error;
@@ -1926,9 +1927,10 @@ bool RoutingManager::RxRaTracker::Router::Matches(EmptyChecker aChecker) const
     return !hasFlags && mOnLinkPrefixes.IsEmpty() && mRoutePrefixes.IsEmpty();
 }
 
-void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry) const
+void RoutingManager::RxRaTracker::Router::CopyInfoTo(RouterEntry &aEntry, TimeMilli aNow) const
 {
     aEntry.mAddress                  = mAddress;
+    aEntry.mMsecSinceLastUpdate      = aNow - mLastUpdateTime;
     aEntry.mManagedAddressConfigFlag = mManagedAddressConfigFlag;
     aEntry.mOtherConfigFlag          = mOtherConfigFlag;
     aEntry.mStubRouterFlag           = mStubRouterFlag;
