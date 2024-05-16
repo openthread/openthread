@@ -597,7 +597,15 @@ void RoutingManager::SendRouterAdvertisement(RouterAdvTxMode aRaTxMode)
 
     LogInfo("Preparing RA");
 
-    header = mTxRaInfo.mHeader;
+    if (mRxRaTracker.GetLocalRaHeaderToMirror().IsValid())
+    {
+        header = mRxRaTracker.GetLocalRaHeaderToMirror();
+    }
+    else
+    {
+        header.SetToDefault();
+    }
+
     mRxRaTracker.DetermineAndSetFlags(header);
 
     SuccessOrExit(error = raMsg.AppendHeader(header));
@@ -696,12 +704,6 @@ void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
     // Solicitation.
 
     mRxRaTracker.RemoveOrDeprecateOldEntries(aStartTime);
-
-    if (mTxRaInfo.mHeaderUpdateTime <= aStartTime)
-    {
-        UpdateRouterAdvertHeader(/* aRouterAdvertMessage */ nullptr, kThisBrOtherEntity);
-    }
-
     ScheduleRoutingPolicyEvaluation(kImmediately);
 }
 
@@ -757,8 +759,6 @@ void RoutingManager::HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPack
     DumpDebg("[BR-CERT] direction=recv | type=RA |", aPacket.GetBytes(), aPacket.GetLength());
 
     mRxRaTracker.ProcessRouterAdvertMessage(raMsg, aSrcAddress, raOrigin);
-
-    UpdateRouterAdvertHeader(&raMsg, raOrigin);
 
 exit:
     return;
@@ -870,48 +870,6 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     return contains;
 }
 
-void RoutingManager::UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRaMsg, RouterAdvOrigin aRaOrigin)
-{
-    // Updates the `mTxRaInfo` from the given RA message.
-
-    RouterAdvert::Header oldHeader;
-
-    VerifyOrExit(aRaOrigin == kThisBrOtherEntity);
-
-    oldHeader                   = mTxRaInfo.mHeader;
-    mTxRaInfo.mHeaderUpdateTime = TimerMilli::GetNow();
-
-    if (aRaMsg == nullptr || aRaMsg->GetHeader().GetRouterLifetime() == 0)
-    {
-        mTxRaInfo.mHeader.SetToDefault();
-        mTxRaInfo.mIsHeaderFromHost = false;
-    }
-    else
-    {
-        // The checksum is set to zero in `mTxRaInfo.mHeader`
-        // which indicates to platform that it needs to do the
-        // calculation and update it.
-
-        mTxRaInfo.mHeader = aRaMsg->GetHeader();
-        mTxRaInfo.mHeader.SetChecksum(0);
-        mTxRaInfo.mIsHeaderFromHost = true;
-    }
-
-    ResetDiscoveredPrefixStaleTimer();
-
-    if (mTxRaInfo.mHeader != oldHeader)
-    {
-        // If there was a change to the header, start timer to
-        // reevaluate routing policy and send RA message with new
-        // header.
-
-        ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
-    }
-
-exit:
-    return;
-}
-
 void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
 {
     TimeMilli now = TimerMilli::GetNow();
@@ -923,14 +881,6 @@ void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
     // discovered prefixes and host RA messages.
 
     nextStaleTime = mRxRaTracker.CalculateNextStaleTime(now);
-
-    // Check for stale Router Advertisement Message if learnt from Host.
-    if (mTxRaInfo.mIsHeaderFromHost)
-    {
-        TimeMilli raStaleTime = Max(now, mTxRaInfo.mHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
-
-        nextStaleTime = Min(nextStaleTime, raStaleTime);
-    }
 
     if (nextStaleTime == now.GetDistantFuture())
     {
@@ -1113,6 +1063,7 @@ RoutingManager::RxRaTracker::RxRaTracker(Instance &aInstance)
     , mRouterTimer(aInstance)
     , mSignalTask(aInstance)
 {
+    mLocalRaHeader.Clear();
 }
 
 void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
@@ -1150,7 +1101,7 @@ void RoutingManager::RxRaTracker::ProcessRouterAdvertMessage(const RouterAdvert:
     // in a `::/0` RIO override the preference and lifetime values in
     // the RA header (per RFC 4191 section 3.1).
 
-    ProcessRaHeader(aRaMessage.GetHeader(), *router);
+    ProcessRaHeader(aRaMessage.GetHeader(), *router, aRaOrigin);
 
     for (const Option &option : aRaMessage)
     {
@@ -1181,7 +1132,9 @@ exit:
     return;
 }
 
-void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter)
+void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aRaHeader,
+                                                  Router                     &aRouter,
+                                                  RouterAdvOrigin             aRaOrigin)
 {
     bool                managedFlag = aRaHeader.IsManagedAddressConfigFlagSet();
     bool                otherFlag   = aRaHeader.IsOtherConfigFlagSet();
@@ -1200,6 +1153,36 @@ void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aR
     {
         aRouter.mOtherConfigFlag = otherFlag;
         SignalTableChanged();
+    }
+
+    if (aRaOrigin == kThisBrOtherEntity)
+    {
+        // Update `mLocalRaHeader`, which tracks the RA header of
+        // locally generated RA by another sw entity running on this
+        // device.
+
+        RouterAdvert::Header oldHeader = mLocalRaHeader;
+
+        if (aRaHeader.GetRouterLifetime() == 0)
+        {
+            mLocalRaHeader.Clear();
+        }
+        else
+        {
+            mLocalRaHeader           = aRaHeader;
+            mLocalRaHeaderUpdateTime = TimerMilli::GetNow();
+
+            // The checksum is set to zero which indicates to platform
+            // that it needs to do the calculation and update it.
+
+            mLocalRaHeader.SetChecksum(0);
+        }
+
+        if (mLocalRaHeader != oldHeader)
+        {
+            SignalTableChanged();
+            Get<RoutingManager>().ScheduleRoutingPolicyEvaluation(kAfterRandomDelay);
+        }
     }
 
     prefix.Clear();
@@ -1496,6 +1479,8 @@ void RoutingManager::RxRaTracker::RemoveAllEntries(void)
     mRouters.Free();
     mEntryTimer.Stop();
 
+    mLocalRaHeader.Clear();
+
     SignalTableChanged();
 }
 
@@ -1523,6 +1508,12 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateOldEntries(TimeMilli aTimeThr
                 SignalTableChanged();
             }
         }
+    }
+
+    if (mLocalRaHeader.IsValid() && (mLocalRaHeaderUpdateTime <= aTimeThreshold))
+    {
+        mLocalRaHeader.Clear();
+        SignalTableChanged();
     }
 
     RemoveExpiredEntries();
@@ -1562,7 +1553,7 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(vo
 TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) const
 {
     TimeMilli onLinkStaleTime = aNow;
-    TimeMilli routeStaleTime  = aNow.GetDistantFuture();
+    TimeMilli staleTime       = aNow.GetDistantFuture();
     bool      foundOnLink     = false;
 
     // For on-link prefixes, we consider stale time as when all on-link
@@ -1586,11 +1577,23 @@ TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) co
         {
             TimeMilli entryStaleTime = Max(aNow, entry.GetStaleTime());
 
-            routeStaleTime = Min(routeStaleTime, entryStaleTime);
+            staleTime = Min(staleTime, entryStaleTime);
         }
     }
 
-    return foundOnLink ? Min(onLinkStaleTime, routeStaleTime) : routeStaleTime;
+    if (foundOnLink)
+    {
+        staleTime = Min(staleTime, onLinkStaleTime);
+    }
+
+    if (mLocalRaHeader.IsValid())
+    {
+        TimeMilli raHeaderStaleTime = Max(aNow, mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
+
+        staleTime = Min(staleTime, raHeaderStaleTime);
+    }
+
+    return staleTime;
 }
 
 void RoutingManager::RxRaTracker::RemoveRoutersWithNoEntriesOrFlags(void)
