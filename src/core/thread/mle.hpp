@@ -1060,6 +1060,7 @@ private:
     class RxMessage : public Message
     {
     public:
+        bool  ContainsTlv(Tlv::Type aTlvType) const;
         Error ReadChallengeTlv(RxChallenge &aChallenge) const;
         Error ReadResponseTlv(RxChallenge &aResponse) const;
         Error ReadFrameCounterTlvs(uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
