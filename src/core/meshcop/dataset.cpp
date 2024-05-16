@@ -238,34 +238,48 @@ exit:
     return isValid;
 }
 
-bool Dataset::ContainsAllRequiredTlvsFor(Type aType) const
+bool Dataset::ContainsAllTlvs(const Tlv::Type aTlvTypes[], uint8_t aLength) const
 {
-    static const Tlv::Type kActiveDatasetTlvs[] = {
-        Tlv::kActiveTimestamp, Tlv::kChannel,     Tlv::kChannelMask, Tlv::kExtendedPanId, Tlv::kMeshLocalPrefix,
-        Tlv::kNetworkKey,      Tlv::kNetworkName, Tlv::kPanId,       Tlv::kPskc,          Tlv::kSecurityPolicy,
-    };
+    bool containsAll = true;
 
-    static const Tlv::Type kPendingDatasetExtraTlvs[] = {Tlv::kPendingTimestamp, Tlv::kDelayTimer};
-
-    bool containsAll = false;
-
-    for (Tlv::Type tlvType : kActiveDatasetTlvs)
+    for (uint8_t index = 0; index < aLength; index++)
     {
-        VerifyOrExit(ContainsTlv(tlvType));
-    }
-
-    if (aType == kPending)
-    {
-        for (Tlv::Type tlvType : kPendingDatasetExtraTlvs)
+        if (!ContainsTlv(aTlvTypes[index]))
         {
-            VerifyOrExit(ContainsTlv(tlvType));
+            containsAll = false;
+            break;
         }
     }
 
-    containsAll = true;
-
-exit:
     return containsAll;
+}
+
+bool Dataset::ContainsAllRequiredTlvsFor(Type aType) const
+{
+    static const Tlv::Type kDatasetTlvs[] = {
+        Tlv::kActiveTimestamp,
+        Tlv::kChannel,
+        Tlv::kChannelMask,
+        Tlv::kExtendedPanId,
+        Tlv::kMeshLocalPrefix,
+        Tlv::kNetworkKey,
+        Tlv::kNetworkName,
+        Tlv::kPanId,
+        Tlv::kPskc,
+        Tlv::kSecurityPolicy,
+        // The last two TLVs are for Pending Dataset
+        Tlv::kPendingTimestamp,
+        Tlv::kDelayTimer,
+    };
+
+    uint8_t length = sizeof(kDatasetTlvs);
+
+    if (aType == kActive)
+    {
+        length -= 2;
+    }
+
+    return ContainsAllTlvs(kDatasetTlvs, length);
 }
 
 const Tlv *Dataset::FindTlv(Tlv::Type aType) const { return As<Tlv>(Tlv::FindTlv(mTlvs, mLength, aType)); }
