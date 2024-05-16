@@ -16,7 +16,6 @@
 *.trs
 *.bak
 *.map
-*.cmake
 *~
 .DS_Store
 .vagrant
