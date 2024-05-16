@@ -464,10 +464,7 @@ public:
      * @param[out] aIterator  The iterator to initialize.
      *
      */
-    void InitPrefixTableIterator(PrefixTableIterator &aIterator) const
-    {
-        mDiscoveredPrefixTable.InitIterator(aIterator);
-    }
+    void InitPrefixTableIterator(PrefixTableIterator &aIterator) const { mRxRaTracker.InitIterator(aIterator); }
 
     /**
      * Iterates over entries in the discovered prefix table.
@@ -481,7 +478,7 @@ public:
      */
     Error GetNextPrefixTableEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const
     {
-        return mDiscoveredPrefixTable.GetNextEntry(aIterator, aEntry);
+        return mRxRaTracker.GetNextEntry(aIterator, aEntry);
     }
 
     /**
@@ -496,7 +493,7 @@ public:
      */
     Error GetNextRouterEntry(PrefixTableIterator &aIterator, RouterEntry &aEntry) const
     {
-        return mDiscoveredPrefixTable.GetNextRouter(aIterator, aEntry);
+        return mRxRaTracker.GetNextRouter(aIterator, aEntry);
     }
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
@@ -722,28 +719,26 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleDiscoveredPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
-    void HandleDiscoveredPrefixTableEntryTimer(void) { mDiscoveredPrefixTable.HandleEntryTimer(); }
-    void HandleDiscoveredPrefixTableRouterTimer(void) { mDiscoveredPrefixTable.HandleRouterTimer(); }
+    void HandleRaPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
+    void HandleRxRaTrackerEntryTimer(void) { mRxRaTracker.HandleEntryTimer(); }
+    void HandleRxRaTrackerRouterTimer(void) { mRxRaTracker.HandleRouterTimer(); }
 
-    class DiscoveredPrefixTable : public InstanceLocator
+    class RxRaTracker : public InstanceLocator
     {
-        // This class maintains the discovered on-link and route prefixes
-        // from the received RA messages by processing PIO and RIO options
-        // from the message. It takes care of processing the RA message but
-        // delegates the decision whether to include or exclude a prefix to
-        // `RoutingManager` by calling its `ShouldProcessPrefixInfoOption()`
-        // and `ShouldProcessRouteInfoOption()` methods.
+        // Processes received RA and NA messages tracking a table of active
+        // routers and their advertised on-link and route prefixes. Also
+        // manages prefix lifetimes and router reachability (sending NS probes
+        // as needed).
         //
         // When there is any change in the table (an entry is added, removed,
         // or modified), it signals the change to `RoutingManager` by calling
-        // `HandleDiscoveredPrefixTableChanged()` callback. A `Tasklet` is
-        // used for signalling which ensures that if there are multiple
-        // changes within the same flow of execution, the callback is
-        // invoked after all the changes are processed.
+        // `HandleRaPrefixTableChanged()` callback. A `Tasklet` is used for
+        // signalling which ensures that if there are multiple changes within
+        // the same flow of execution, the callback is invoked after all the
+        // changes are processed.
 
     public:
-        explicit DiscoveredPrefixTable(Instance &aInstance);
+        explicit RxRaTracker(Instance &aInstance);
 
         void ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
                                         const Ip6::Address            &aSrcAddress,
@@ -912,9 +907,9 @@ private:
         template <class Type> Entry<Type> *AllocateEntry(void);
 #endif
 
-        using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableChanged>;
-        using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableEntryTimer>;
-        using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixTableRouterTimer>;
+        using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleRaPrefixTableChanged>;
+        using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerEntryTimer>;
+        using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
         using RouterList  = OwningList<Entry<Router>>;
 
         RouterList  mRouters;
@@ -1018,7 +1013,7 @@ private:
         const Ip6::Prefix &GetLocalPrefix(void) const { return mLocalPrefix; }
         const Ip6::Prefix &GetFavoredDiscoveredPrefix(void) const { return mFavoredDiscoveredPrefix; }
         bool               IsInitalEvaluationDone(void) const;
-        void               HandleDiscoveredPrefixTableChanged(void);
+        void               HandleRaPrefixTableChanged(void);
         bool               ShouldPublishUlaRoute(void) const;
         Error              AppendAsPiosTo(RouterAdvert::TxMessage &aRaMessage);
         bool               IsPublishingOrAdvertising(void) const;
@@ -1229,7 +1224,7 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    struct RaInfo
+    struct TxRaInfo
     {
         // Tracks info about emitted RA messages:
         //
@@ -1249,7 +1244,7 @@ private:
 
         static constexpr uint16_t kNumHashEntries = 5;
 
-        RaInfo(void)
+        TxRaInfo(void)
             : mHeaderUpdateTime(TimerMilli::GetNow())
             , mIsHeaderFromHost(false)
             , mTxCount(0)
@@ -1398,7 +1393,7 @@ private:
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
     bool ShouldProcessPrefixInfoOption(const PrefixInfoOption &aPio, const Ip6::Prefix &aPrefix);
     bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
-    void UpdateDiscoveredPrefixTableOnNetDataChange(void);
+    void UpdateRxRaTrackerOnNetDataChange(void);
     bool NetworkDataContainsUlaRoute(void) const;
     void UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRaMsg, RouterAdvOrigin aRaOrigin);
     void ResetDiscoveredPrefixStaleTimer(void);
@@ -1439,7 +1434,7 @@ private:
 
     OnLinkPrefixManager mOnLinkPrefixManager;
 
-    DiscoveredPrefixTable mDiscoveredPrefixTable;
+    RxRaTracker mRxRaTracker;
 
     RoutePublisher mRoutePublisher;
 
@@ -1451,7 +1446,7 @@ private:
     PdPrefixManager mPdPrefixManager;
 #endif
 
-    RaInfo     mRaInfo;
+    TxRaInfo   mTxRaInfo;
     RsSender   mRsSender;
     Heap::Data mExtraRaOptions;
 
@@ -1465,15 +1460,15 @@ private:
 // Template specializations and declarations
 
 template <>
-inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::OnLinkPrefix>
-    &RoutingManager::DiscoveredPrefixTable::SharedEntry::GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::OnLinkPrefix>
+    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
 {
     return mOnLinkEntry;
 }
 
 template <>
-inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::RoutePrefix>
-    &RoutingManager::DiscoveredPrefixTable::SharedEntry::GetEntry(void)
+inline RoutingManager::RxRaTracker::Entry<RoutingManager::RoutePrefix>
+    &RoutingManager::RxRaTracker::SharedEntry::GetEntry(void)
 {
     return mRouteEntry;
 }
@@ -1481,11 +1476,10 @@ inline RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::RoutePrefix>
 // Declare template (full) specializations for `Router` type.
 
 template <>
-RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::DiscoveredPrefixTable::Router>
-    *RoutingManager::DiscoveredPrefixTable::AllocateEntry(void);
+RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker::Router> *RoutingManager::RxRaTracker::AllocateEntry(
+    void);
 
-template <>
-void RoutingManager::DiscoveredPrefixTable::Entry<RoutingManager::DiscoveredPrefixTable::Router>::Free(void);
+template <> void RoutingManager::RxRaTracker::Entry<RoutingManager::RxRaTracker::Router>::Free(void);
 
 #endif // #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
 
