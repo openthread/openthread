@@ -109,9 +109,9 @@ otError SpinelDriver::SendReset(uint8_t aResetType)
     packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_UINT8_S,
                                   SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mIid), SPINEL_CMD_RESET, aResetType);
 
-    ENSURE(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+    EXPECT(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
-    ENSURE_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, static_cast<uint16_t>(packed)));
+    EXPECT_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, static_cast<uint16_t>(packed)));
     LogSpinelFrame(buffer, static_cast<uint16_t>(packed), true /* aTx */);
 
 exit:
@@ -124,13 +124,13 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
     bool resetDone = false;
 
     // Avoid resetting the device twice in a row in Multipan RCP architecture
-    ENSURE(!mIsCoprocessorReady, resetDone = true);
+    EXPECT(!mIsCoprocessorReady, resetDone = true);
 
     mWaitingKey = SPINEL_PROP_LAST_STATUS;
 
     if (aSoftwareReset && (SendReset(SPINEL_RESET_STACK) == OT_ERROR_NONE) && (WaitResponse() == OT_ERROR_NONE))
     {
-        ENSURE(mIsCoprocessorReady, resetDone = false);
+        EXPECT(mIsCoprocessorReady, resetDone = false);
         LogCrit("Software reset co-processor successfully");
         EXIT_NOW(resetDone = true);
     }
@@ -139,7 +139,7 @@ void SpinelDriver::ResetCoprocessor(bool aSoftwareReset)
 
     if (hardwareReset)
     {
-        ENSURE_NO_ERROR(WaitResponse());
+        EXPECT_NO_ERROR(WaitResponse());
     }
 
     resetDone = true;
@@ -187,11 +187,11 @@ otError SpinelDriver::SendCommand(uint32_t aCommand, spinel_prop_key_t aKey, spi
     packed = spinel_datatype_pack(buffer, sizeof(buffer), "Cii", SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mIid) | aTid,
                                   aCommand, aKey);
 
-    ENSURE(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+    EXPECT(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     offset = static_cast<uint16_t>(packed);
 
-    ENSURE_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
+    EXPECT_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
 
 exit:
     return error;
@@ -212,7 +212,7 @@ otError SpinelDriver::SendCommand(uint32_t          aCommand,
     packed = spinel_datatype_pack(buffer, sizeof(buffer), "Cii", SPINEL_HEADER_FLAG | SPINEL_HEADER_IID(mIid) | aTid,
                                   aCommand, aKey);
 
-    ENSURE(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+    EXPECT(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
     offset = static_cast<uint16_t>(packed);
 
@@ -220,12 +220,12 @@ otError SpinelDriver::SendCommand(uint32_t          aCommand,
     if (aFormat)
     {
         packed = spinel_datatype_vpack(buffer + offset, sizeof(buffer) - offset, aFormat, aArgs);
-        ENSURE(packed > 0 && static_cast<size_t>(packed + offset) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
+        EXPECT(packed > 0 && static_cast<size_t>(packed + offset) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
         offset += static_cast<uint16_t>(packed);
     }
 
-    ENSURE_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
+    EXPECT_NO_ERROR(error = mSpinelInterface->SendFrame(buffer, offset));
 
 exit:
     return error;
@@ -286,7 +286,7 @@ void SpinelDriver::HandleReceivedFrame(void)
         EXIT_NOW();
     }
 
-    ENSURE(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG, error = OT_ERROR_PARSE);
+    EXPECT(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG, error = OT_ERROR_PARSE);
 
     assert(mReceivedFrameHandler != nullptr && mFrameHandlerContext != nullptr);
     mReceivedFrameHandler(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), header, shouldSave,
@@ -332,16 +332,16 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
     OT_UNUSED_VARIABLE(aHeader);
 
     rval = spinel_datatype_unpack(aFrame, aLength, "CiiD", &header, &cmd, &key, &data, &len);
-    ENSURE(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED, error = OT_ERROR_PARSE);
+    EXPECT(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED, error = OT_ERROR_PARSE);
 
-    ENSURE(cmd == SPINEL_CMD_PROP_VALUE_IS, error = OT_ERROR_DROP);
+    EXPECT(cmd == SPINEL_CMD_PROP_VALUE_IS, error = OT_ERROR_DROP);
 
     if (key == SPINEL_PROP_LAST_STATUS)
     {
         spinel_status_t status = SPINEL_STATUS_OK;
 
         unpacked = spinel_datatype_unpack(data, len, "i", &status);
-        ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+        EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
 
         if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
         {
@@ -360,20 +360,20 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
     else
     {
         // Drop other frames when the key isn't waiting key.
-        ENSURE(mWaitingKey == key, error = OT_ERROR_DROP);
+        EXPECT(mWaitingKey == key, error = OT_ERROR_DROP);
 
         if (key == SPINEL_PROP_PROTOCOL_VERSION)
         {
             unpacked = spinel_datatype_unpack(data, len, (SPINEL_DATATYPE_UINT_PACKED_S SPINEL_DATATYPE_UINT_PACKED_S),
                                               &mSpinelVersionMajor, &mSpinelVersionMinor);
 
-            ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+            EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
         }
         else if (key == SPINEL_PROP_NCP_VERSION)
         {
             unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion));
 
-            ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+            EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
         }
         else if (key == SPINEL_PROP_CAPS)
         {
@@ -383,16 +383,16 @@ void SpinelDriver::HandleInitialFrame(const uint8_t *aFrame, uint16_t aLength, u
 
             unpacked = spinel_datatype_unpack_in_place(data, len, SPINEL_DATATYPE_DATA_S, capsBuffer, &capsLength);
 
-            ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+            EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
 
             while (capsLength > 0)
             {
                 unsigned int capability;
 
                 unpacked = spinel_datatype_unpack(capsData, capsLength, SPINEL_DATATYPE_UINT_PACKED_S, &capability);
-                ENSURE(unpacked > 0, error = OT_ERROR_PARSE);
+                EXPECT(unpacked > 0, error = OT_ERROR_PARSE);
 
-                ENSURE_NO_ERROR(error = mCoprocessorCaps.PushBack(capability));
+                EXPECT_NO_ERROR(error = mCoprocessorCaps.PushBack(capability));
 
                 capsData += unpacked;
                 capsLength -= static_cast<spinel_size_t>(unpacked);
@@ -411,11 +411,11 @@ otError SpinelDriver::CheckSpinelVersion(void)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_PROTOCOL_VERSION, sTid));
+    EXPECT_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_PROTOCOL_VERSION, sTid));
     mIsWaitingForResponse = true;
     mWaitingKey           = SPINEL_PROP_PROTOCOL_VERSION;
 
-    ENSURE_NO_ERROR(error = WaitResponse());
+    EXPECT_NO_ERROR(error = WaitResponse());
 
     if ((mSpinelVersionMajor != SPINEL_PROTOCOL_VERSION_THREAD_MAJOR) ||
         (mSpinelVersionMinor != SPINEL_PROTOCOL_VERSION_THREAD_MINOR))
@@ -433,11 +433,11 @@ otError SpinelDriver::GetCoprocessorVersion(void)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_NCP_VERSION, sTid));
+    EXPECT_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_NCP_VERSION, sTid));
     mIsWaitingForResponse = true;
     mWaitingKey           = SPINEL_PROP_NCP_VERSION;
 
-    ENSURE_NO_ERROR(error = WaitResponse());
+    EXPECT_NO_ERROR(error = WaitResponse());
 exit:
     return error;
 }
@@ -446,11 +446,11 @@ otError SpinelDriver::GetCoprocessorCaps(void)
 {
     otError error = OT_ERROR_NONE;
 
-    ENSURE_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_CAPS, sTid));
+    EXPECT_NO_ERROR(error = SendCommand(SPINEL_CMD_PROP_VALUE_GET, SPINEL_PROP_CAPS, sTid));
     mIsWaitingForResponse = true;
     mWaitingKey           = SPINEL_PROP_CAPS;
 
-    ENSURE_NO_ERROR(error = WaitResponse());
+    EXPECT_NO_ERROR(error = WaitResponse());
 exit:
     return error;
 }

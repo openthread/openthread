@@ -49,7 +49,7 @@
  * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
  *
  */
-#define ENSURE_NO_ERROR(aStatus) \
+#define EXPECT_NO_ERROR(aStatus) \
     do                           \
     {                            \
         if ((aStatus) != 0)      \
@@ -59,7 +59,7 @@
     } while (false)
 
 /**
- * Does nothing. This is passed to ENSURE when there is no action to do.
+ * Does nothing. This is passed to EXPECT when there is no action to do.
  *
  */
 #define NO_ACTION
@@ -72,7 +72,7 @@
  * @param[in]  aAction     An optional expression or block to execute when the assertion fails.
  *
  */
-#define ENSURE(aCondition, aAction) \
+#define EXPECT(aCondition, aAction) \
     do                              \
     {                               \
         if (!(aCondition))          \
