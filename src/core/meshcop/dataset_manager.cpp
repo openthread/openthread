@@ -593,14 +593,15 @@ bool ActiveDatasetManager::IsComplete(void) const { return mLocal.IsSaved() && m
 
 bool ActiveDatasetManager::IsCommissioned(void) const
 {
-    Dataset::Info datasetInfo;
-    bool          isValid = false;
+    static const Tlv::Type kRequiredTlvs[] = {
+        Tlv::kNetworkKey, Tlv::kNetworkName, Tlv::kExtendedPanId, Tlv::kPanId, Tlv::kChannel,
+    };
 
-    SuccessOrExit(Read(datasetInfo));
+    Dataset dataset;
+    bool    isValid = false;
 
-    isValid = (datasetInfo.IsPresent<Dataset::kNetworkKey>() && datasetInfo.IsPresent<Dataset::kNetworkName>() &&
-               datasetInfo.IsPresent<Dataset::kExtendedPanId>() && datasetInfo.IsPresent<Dataset::kPanId>() &&
-               datasetInfo.IsPresent<Dataset::kChannel>());
+    SuccessOrExit(Read(dataset));
+    isValid = dataset.ContainsAllTlvs(kRequiredTlvs, sizeof(kRequiredTlvs));
 
 exit:
     return isValid;

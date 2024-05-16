@@ -297,6 +297,18 @@ public:
     }
 
     /**
+     * Indicates whether or not the Dataset contains all the TLVs from a given array.
+     *
+     * @param[in] aTlvTypes    An array of TLV types.
+     * @param[in] aLength      Length of @p aTlvTypes array.
+     *
+     * @retval TRUE    The Dataset contains all the TLVs in @p aTlvTypes array.
+     * @retval FALSE   The Dataset does not contain all the TLVs in @p aTlvTypes array.
+     *
+     */
+    bool ContainsAllTlvs(const Tlv::Type aTlvTypes[], uint8_t aLength) const;
+
+    /**
      * Indicates whether or not the Dataset contains all the required TLVs for an Active or Pending Dataset.
      *
      * @param[in] aType  The Dataset type, Active or Pending.
