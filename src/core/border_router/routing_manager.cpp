@@ -726,7 +726,7 @@ void RoutingManager::HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPa
 {
     const NeighborAdvertMessage *naMsg;
 
-    VerifyOrExit(aPacket.GetLength() >= sizeof(naMsg));
+    VerifyOrExit(aPacket.GetLength() >= sizeof(NeighborAdvertMessage));
     naMsg = reinterpret_cast<const NeighborAdvertMessage *>(aPacket.GetBytes());
 
     mDiscoveredPrefixTable.ProcessNeighborAdvertMessage(*naMsg);
