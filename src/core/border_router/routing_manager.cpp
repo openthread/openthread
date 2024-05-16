@@ -1183,12 +1183,24 @@ exit:
 
 void RoutingManager::DiscoveredPrefixTable::ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter)
 {
+    bool                managedFlag = aRaHeader.IsManagedAddressConfigFlagSet();
+    bool                otherFlag   = aRaHeader.IsOtherConfigFlagSet();
     Entry<RoutePrefix> *entry;
     Ip6::Prefix         prefix;
 
-    aRouter.mManagedAddressConfigFlag = aRaHeader.IsManagedAddressConfigFlagSet();
-    aRouter.mOtherConfigFlag          = aRaHeader.IsOtherConfigFlagSet();
-    LogInfo("- RA Header - flags - M:%u O:%u", aRouter.mManagedAddressConfigFlag, aRouter.mOtherConfigFlag);
+    LogInfo("- RA Header - flags - M:%u O:%u", managedFlag, otherFlag);
+
+    if (aRouter.mManagedAddressConfigFlag != managedFlag)
+    {
+        aRouter.mManagedAddressConfigFlag = managedFlag;
+        SignalTableChanged();
+    }
+
+    if (aRouter.mOtherConfigFlag != otherFlag)
+    {
+        aRouter.mOtherConfigFlag = otherFlag;
+        SignalTableChanged();
+    }
 
     prefix.Clear();
     entry = aRouter.mRoutePrefixes.FindMatching(prefix);
