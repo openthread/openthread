@@ -533,7 +533,7 @@ template <> void Joiner::HandleTmf<kUriJoinerEntrust>(Coap::Message &aMessage, c
     datasetInfo.Set<Dataset::kChannel>(Get<Mac::Mac>().GetPanChannel());
     datasetInfo.Set<Dataset::kPanId>(Get<Mac::Mac>().GetPanId());
 
-    IgnoreError(Get<ActiveDatasetManager>().SaveLocal(datasetInfo));
+    Get<ActiveDatasetManager>().SaveLocal(datasetInfo);
 
     LogInfo("Joiner successful!");
 

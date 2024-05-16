@@ -881,11 +881,8 @@ public:
      * @param[in]   aType       The Dataset type (active or pending) to save.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
      *
-     * @retval kErrorNone             Successfully saved the Dataset.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
      */
-    Error SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
+    void SaveOperationalDataset(MeshCoP::Dataset::Type aType, const MeshCoP::Dataset &aDataset);
 
     /**
      * Reads the Operational Dataset (active or pending).
@@ -895,7 +892,6 @@ public:
      *
      * @retval kErrorNone             Successfully read the Dataset.
      * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
     Error ReadOperationalDataset(MeshCoP::Dataset::Type aType, MeshCoP::Dataset &aDataset) const;
@@ -905,11 +901,8 @@ public:
      *
      * @param[in]   aType            The Dataset type (active or pending) to delete.
      *
-     * @retval kErrorNone            Successfully deleted the Dataset.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
      */
-    Error DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
+    void DeleteOperationalDataset(MeshCoP::Dataset::Type aType);
 
     /**
      * Reads a specified settings entry.

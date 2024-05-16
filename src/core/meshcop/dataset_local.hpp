@@ -155,11 +155,8 @@ public:
      *
      * @param[in]  aDataset  The Dataset to save.
      *
-     * @retval kErrorNone             Successfully saved the dataset.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
      */
-    Error Save(const Dataset &aDataset);
+    void Save(const Dataset &aDataset);
 
 private:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

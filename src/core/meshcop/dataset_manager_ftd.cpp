@@ -376,7 +376,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.WriteTlv(tlv));
     }
 
-    SuccessOrExit(error = mLocal.Save(dataset));
+    mLocal.Save(dataset);
     IgnoreError(Restore());
 
     LogInfo("Generated local dataset");

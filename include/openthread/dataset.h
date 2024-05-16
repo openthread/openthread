@@ -380,12 +380,15 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
  * its Parent. Note that a router-capable device will not transition to the Router or Leader roles until it has a
  * complete Active Dataset.
  *
+ * This function consistently returns `OT_ERROR_NONE` and can effectively be treated as having a `void` return type.
+ * Previously, other errors (e.g., `OT_ERROR_NOT_IMPLEMENTED`) were allowed for legacy reasons. However, as
+ * non-volatile storage is now mandatory for Thread operation, any failure to save the dataset will trigger an
+ * assertion. The `otError` return type is retained for backward compatibility.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
- * @retval OT_ERROR_NONE             Successfully set the Active Operational Dataset.
- * @retval OT_ERROR_NO_BUFS          Insufficient buffer space to set the Active Operational Dataset.
- * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+ * @retval OT_ERROR_NONE    Successfully set the Active Operational Dataset.
  *
  */
 otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aDataset);
@@ -409,9 +412,8 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Active Operational Dataset.
  *
- * @retval OT_ERROR_NONE             Successfully set the Active Operational Dataset.
- * @retval OT_ERROR_NO_BUFS          Insufficient buffer space to set the Active Operational Dataset.
- * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+ * @retval OT_ERROR_NONE          Successfully set the Active Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
  *
  */
 otError otDatasetSetActiveTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
@@ -443,12 +445,15 @@ otError otDatasetGetPendingTlvs(otInstance *aInstance, otOperationalDatasetTlvs 
 /**
  * Sets the Pending Operational Dataset.
  *
+ * This function consistently returns `OT_ERROR_NONE` and can effectively be treated as having a `void` return type.
+ * Previously, other errors (e.g., `OT_ERROR_NOT_IMPLEMENTED`) were allowed for legacy reasons. However, as
+ * non-volatile storage is now mandatory for Thread operation, any failure to save the dataset will trigger an
+ * assertion. The `otError` return type is retained for backward compatibility.
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
- * @retval OT_ERROR_NONE             Successfully set the Pending Operational Dataset.
- * @retval OT_ERROR_NO_BUFS          Insufficient buffer space to set the Pending Operational Dataset.
- * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+ * @retval OT_ERROR_NONE    Successfully set the Pending Operational Dataset.
  *
  */
 otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *aDataset);
@@ -459,9 +464,8 @@ otError otDatasetSetPending(otInstance *aInstance, const otOperationalDataset *a
  * @param[in]  aInstance A pointer to an OpenThread instance.
  * @param[in]  aDataset  A pointer to the Pending Operational Dataset.
  *
- * @retval OT_ERROR_NONE             Successfully set the Pending Operational Dataset.
- * @retval OT_ERROR_NO_BUFS          Insufficient buffer space to set the Pending Operational Dataset.
- * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+ * @retval OT_ERROR_NONE          Successfully set the Pending Operational Dataset.
+ * @retval OT_ERROR_INVALID_ARGS  The @p aDataset is invalid. It is too long or contains incorrect TLV formatting.
  *
  */
 otError otDatasetSetPendingTlvs(otInstance *aInstance, const otOperationalDatasetTlvs *aDataset);
