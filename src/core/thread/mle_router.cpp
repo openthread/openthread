@@ -952,7 +952,7 @@ Error MleRouter::HandleLinkAccept(RxInfo &aRxInfo, bool aRequest)
         VerifyOrExit(GetRloc16() == address16, error = kErrorDrop);
 
         SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
-        SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
+        SetLeaderData(leaderData);
 
         mRouterTable.Clear();
         SuccessOrExit(error = aRxInfo.mMessage.ReadRouteTlv(routeTlv));

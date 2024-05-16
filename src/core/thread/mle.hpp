@@ -1257,6 +1257,7 @@ private:
     void       SetStateDetached(void);
     void       SetStateChild(uint16_t aRloc16);
     void       SetLeaderData(uint32_t aPartitionId, uint8_t aWeighting, uint8_t aLeaderRouterId);
+    void       SetLeaderData(const LeaderData &aLeaderData);
     void       InformPreviousChannel(void);
     bool       IsAnnounceAttach(void) const { return mAlternatePanId != Mac::kPanIdBroadcast; }
     void       ScheduleMessageTransmissionTimer(void);
