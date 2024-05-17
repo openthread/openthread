@@ -2903,20 +2903,15 @@ bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
 
 Error Mle::HandleLeaderData(RxInfo &aRxInfo)
 {
-    Error                     error = kErrorNone;
-    LeaderData                leaderData;
-    MeshCoP::Timestamp        activeTimestamp;
-    MeshCoP::Timestamp        pendingTimestamp;
-    const MeshCoP::Timestamp *timestamp;
-    bool                      hasActiveTimestamp  = false;
-    bool                      hasPendingTimestamp = false;
-    uint16_t                  networkDataOffset;
-    uint16_t                  networkDataLength;
-    uint16_t                  activeDatasetOffset  = 0;
-    uint16_t                  activeDatasetLength  = 0;
-    uint16_t                  pendingDatasetOffset = 0;
-    uint16_t                  pendingDatasetLength = 0;
-    bool                      dataRequest          = false;
+    Error              error = kErrorNone;
+    LeaderData         leaderData;
+    MeshCoP::Timestamp activeTimestamp;
+    MeshCoP::Timestamp pendingTimestamp;
+    bool               saveActiveDataset  = false;
+    bool               savePendingDataset = false;
+    bool               dataRequest        = false;
+    uint16_t           offset;
+    uint16_t           length;
 
     SuccessOrExit(error = aRxInfo.mMessage.ReadLeaderDataTlv(leaderData));
 
@@ -2941,18 +2936,20 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     switch (Tlv::Find<ActiveTimestampTlv>(aRxInfo.mMessage, activeTimestamp))
     {
     case kErrorNone:
-        hasActiveTimestamp = true;
-
-        timestamp = Get<MeshCoP::ActiveDatasetManager>().GetTimestamp();
-
-        // Send an MLE Data Request if the received timestamp
-        // mismatches the local value and the message does not
-        // include the dataset.
-        if (!IsLeader() && (MeshCoP::Timestamp::Compare(&activeTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, activeDatasetOffset, activeDatasetLength) !=
-             kErrorNone))
+#if OPENTHREAD_FTD
+        if (IsLeader())
         {
-            ExitNow(dataRequest = true);
+            break;
+        }
+#endif
+        if (MeshCoP::Timestamp::Compare(&activeTimestamp, Get<MeshCoP::ActiveDatasetManager>().GetTimestamp()) != 0)
+        {
+            // Send an MLE Data Request if the received timestamp
+            // mismatches the local value and the message does not
+            // include the dataset.
+
+            VerifyOrExit(aRxInfo.mMessage.ContainsTlv(Tlv::kActiveDataset), dataRequest = true);
+            saveActiveDataset = true;
         }
 
         break;
@@ -2967,15 +2964,16 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     switch (Tlv::Find<PendingTimestampTlv>(aRxInfo.mMessage, pendingTimestamp))
     {
     case kErrorNone:
-        hasPendingTimestamp = true;
-
-        timestamp = Get<MeshCoP::PendingDatasetManager>().GetTimestamp();
-
-        if (!IsLeader() && (MeshCoP::Timestamp::Compare(&pendingTimestamp, timestamp) != 0) &&
-            (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, pendingDatasetOffset,
-                                     pendingDatasetLength) != kErrorNone))
+#if OPENTHREAD_FTD
+        if (IsLeader())
         {
-            ExitNow(dataRequest = true);
+            break;
+        }
+#endif
+        if (MeshCoP::Timestamp::Compare(&pendingTimestamp, Get<MeshCoP::PendingDatasetManager>().GetTimestamp()) != 0)
+        {
+            VerifyOrExit(aRxInfo.mMessage.ContainsTlv(Tlv::kPendingDataset), dataRequest = true);
+            savePendingDataset = true;
         }
 
         break;
@@ -2987,12 +2985,11 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
         ExitNow(error = kErrorParse);
     }
 
-    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, networkDataOffset, networkDataLength) ==
-        kErrorNone)
+    if (Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kNetworkData, offset, length) == kErrorNone)
     {
-        error = Get<NetworkData::Leader>().SetNetworkData(
-            leaderData.GetDataVersion(NetworkData::kFullSet), leaderData.GetDataVersion(NetworkData::kStableSubset),
-            GetNetworkDataType(), aRxInfo.mMessage, networkDataOffset, networkDataLength);
+        error = Get<NetworkData::Leader>().SetNetworkData(leaderData.GetDataVersion(NetworkData::kFullSet),
+                                                          leaderData.GetDataVersion(NetworkData::kStableSubset),
+                                                          GetNetworkDataType(), aRxInfo.mMessage, offset, length);
         SuccessOrExit(error);
     }
     else
@@ -3008,22 +3005,21 @@ Error Mle::HandleLeaderData(RxInfo &aRxInfo)
     else
 #endif
     {
-        if (hasActiveTimestamp)
+        // We previously confirmed the message contains an
+        // Active or a Pending Dataset TLV before setting the
+        // corresponding `saveDataset` flag, so we can safely
+        // `IgnoreError()` on `FindTlvValueOffset()`.
+
+        if (saveActiveDataset)
         {
-            if (activeDatasetOffset > 0)
-            {
-                IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(activeTimestamp, aRxInfo.mMessage,
-                                                                      activeDatasetOffset, activeDatasetLength));
-            }
+            IgnoreError(Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kActiveDataset, offset, length));
+            IgnoreError(Get<MeshCoP::ActiveDatasetManager>().Save(activeTimestamp, aRxInfo.mMessage, offset, length));
         }
 
-        if (hasPendingTimestamp)
+        if (savePendingDataset)
         {
-            if (pendingDatasetOffset > 0)
-            {
-                IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(pendingTimestamp, aRxInfo.mMessage,
-                                                                       pendingDatasetOffset, pendingDatasetLength));
-            }
+            IgnoreError(Tlv::FindTlvValueOffset(aRxInfo.mMessage, Tlv::kPendingDataset, offset, length));
+            IgnoreError(Get<MeshCoP::PendingDatasetManager>().Save(pendingTimestamp, aRxInfo.mMessage, offset, length));
         }
     }
 
@@ -4950,6 +4946,14 @@ exit:
 
 //---------------------------------------------------------------------------------------------------------------------
 // RxMessage
+
+bool Mle::RxMessage::ContainsTlv(Tlv::Type aTlvType) const
+{
+    uint16_t offset;
+    uint16_t length;
+
+    return Tlv::FindTlvValueOffset(*this, aTlvType, offset, length) == kErrorNone;
+}
 
 Error Mle::RxMessage::ReadChallengeOrResponse(uint8_t aTlvType, RxChallenge &aRxChallenge) const
 {
