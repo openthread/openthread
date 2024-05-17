@@ -907,6 +907,7 @@ private:
         void Init(Instance &aInstance);
         void SetCallback(const Callback &aCallback);
         void ClearCallback(void) { mCallback.Clear(); }
+        void MarkToInvokeCallbackUnconditionally(void);
         void StartProbing(void);
         void SetStateToConflict(void);
         void SetStateToRemoving(void);
@@ -939,6 +940,7 @@ private:
         bool       mMulticastNsecPending : 1;
         bool       mUnicastNsecPending : 1;
         bool       mAppendedNsec : 1;
+        bool       mBypassCallbackStateCheck : 1;
         TimeMilli  mNsecAnswerTime;
         Heap::Data mKeyData;
         Callback   mCallback;

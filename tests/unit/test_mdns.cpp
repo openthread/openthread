@@ -1853,6 +1853,70 @@ void TestHostReg(void)
     AdvanceTime(15000);
     VerifyOrQuit(sDnsMessages.IsEmpty());
 
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register a host with no address (first time)");
+
+    host.mHostName        = "newhost";
+    host.mAddresses       = nullptr;
+    host.mAddressesLength = 0;
+    host.mTtl             = 1500;
+
+    sRegCallbacks[2].Reset();
+    SuccessOrQuit(mdns->RegisterHost(host, 2, HandleSuccessCallback));
+
+    AdvanceTime(1);
+    VerifyOrQuit(sRegCallbacks[2].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register the same host now with an address");
+
+    host.mAddresses       = &hostAddresses[0];
+    host.mAddressesLength = 1;
+
+    sRegCallbacks[3].Reset();
+    SuccessOrQuit(mdns->RegisterHost(host, 3, HandleSuccessCallback));
+
+    AdvanceTime(15000);
+    VerifyOrQuit(sRegCallbacks[3].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register the same host again now with no address");
+
+    host.mAddressesLength = 0;
+
+    sRegCallbacks[4].Reset();
+    sDnsMessages.Clear();
+    SuccessOrQuit(mdns->RegisterHost(host, 4, HandleSuccessCallback));
+
+    AdvanceTime(1);
+    VerifyOrQuit(sRegCallbacks[4].mWasCalled);
+
+    for (uint8_t anncCount = 0; anncCount < kNumAnnounces; anncCount++)
+    {
+        AdvanceTime((anncCount == 0) ? 0 : (1U << (anncCount - 1)) * 1000);
+
+        VerifyOrQuit(!sDnsMessages.IsEmpty());
+        dnsMsg = sDnsMessages.GetHead();
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->Validate(host, kInAnswerSection, kGoodBye);
+        VerifyOrQuit(dnsMsg->GetNext() == nullptr);
+        sDnsMessages.Clear();
+    }
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+    Log("Register the same host again now adding an address");
+
+    host.mAddresses       = &hostAddresses[1];
+    host.mAddressesLength = 1;
+
+    sRegCallbacks[5].Reset();
+    SuccessOrQuit(mdns->RegisterHost(host, 5, HandleSuccessCallback));
+
+    AdvanceTime(15000);
+    VerifyOrQuit(sRegCallbacks[5].mWasCalled);
+
+    Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
     SuccessOrQuit(mdns->SetEnabled(false, kInfraIfIndex));
     VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
 
