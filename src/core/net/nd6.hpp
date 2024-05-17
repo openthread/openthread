@@ -539,7 +539,7 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class Header : public Equatable<Header>, private Clearable<Header>
+    class Header : public Equatable<Header>, public Clearable<Header>
     {
         friend class Clearable<Header>;
 
@@ -550,6 +550,15 @@ public:
          *
          */
         Header(void) { SetToDefault(); }
+
+        /**
+         * Indicates whether the header is valid by checking the type field to match Router Advertisement ICMPv6 type.
+         *
+         * @retval TRUE  The header is valid.
+         * @retval FALSE The header is not valid.
+         *
+         */
+        bool IsValid(void) const { return GetType() == Icmp::Header::kTypeRouterAdvert; }
 
         /**
          * Sets the RA message to default values.

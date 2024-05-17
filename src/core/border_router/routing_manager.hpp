@@ -757,6 +757,8 @@ private:
         void RemoveAllEntries(void);
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
 
+        const RouterAdvert::Header &GetLocalRaHeaderToMirror(void) const { return mLocalRaHeader; }
+
         TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
         void DetermineAndSetFlags(RouterAdvert::Header &aHeader) const;
@@ -890,7 +892,7 @@ private:
 
         //-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-        void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter);
+        void ProcessRaHeader(const RouterAdvert::Header &aRaHeader, Router &aRouter, RouterAdvOrigin aRaOrigin);
         void ProcessPrefixInfoOption(const PrefixInfoOption &aPio, Router &aRouter);
         void ProcessRouteInfoOption(const RouteInfoOption &aRio, Router &aRouter);
         void ProcessRaFlagsExtOption(const RaFlagsExtOption &aFlagsOption, Router &aRouter);
@@ -912,10 +914,12 @@ private:
         using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
         using RouterList  = OwningList<Entry<Router>>;
 
-        RouterList  mRouters;
-        EntryTimer  mEntryTimer;
-        RouterTimer mRouterTimer;
-        SignalTask  mSignalTask;
+        RouterList           mRouters;
+        EntryTimer           mEntryTimer;
+        RouterTimer          mRouterTimer;
+        SignalTask           mSignalTask;
+        RouterAdvert::Header mLocalRaHeader;
+        TimeMilli            mLocalRaHeaderUpdateTime;
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
         Pool<SharedEntry, kMaxEntries>   mEntryPool;
         Pool<Entry<Router>, kMaxRouters> mRouterPool;
@@ -1231,23 +1235,14 @@ private:
         // - Number of RAs sent
         // - Last RA TX time
         // - Hashes of last TX RAs (to tell if a received RA is from
-        //   `RoutingManager` itself)
-        // - RA header to use, and
-        // - Whether the RA header is discovered from receiving RAs
-        //   from the host itself.
-        //
-        // This ensures that if an entity on host is advertising certain
-        // info in its RA header (e.g., a default route), the RAs we
-        // emit from `RoutingManager` also include the same header.
+        //   `RoutingManager` itself).
 
         typedef Crypto::Sha256::Hash Hash;
 
         static constexpr uint16_t kNumHashEntries = 5;
 
         TxRaInfo(void)
-            : mHeaderUpdateTime(TimerMilli::GetNow())
-            , mIsHeaderFromHost(false)
-            , mTxCount(0)
+            : mTxCount(0)
             , mLastTxTime(TimerMilli::GetNow() - kMinDelayBetweenRtrAdvs)
             , mLastHashIndex(0)
         {
@@ -1257,13 +1252,10 @@ private:
         bool        IsRaFromManager(const RouterAdvert::RxMessage &aRaMessage) const;
         static void CalculateHash(const RouterAdvert::RxMessage &aRaMessage, Hash &aHash);
 
-        RouterAdvert::Header mHeader;
-        TimeMilli            mHeaderUpdateTime;
-        bool                 mIsHeaderFromHost;
-        uint32_t             mTxCount;
-        TimeMilli            mLastTxTime;
-        Hash                 mHashes[kNumHashEntries];
-        uint16_t             mLastHashIndex;
+        uint32_t  mTxCount;
+        TimeMilli mLastTxTime;
+        Hash      mHashes[kNumHashEntries];
+        uint16_t  mLastHashIndex;
     };
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1395,7 +1387,6 @@ private:
     bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateRxRaTrackerOnNetDataChange(void);
     bool NetworkDataContainsUlaRoute(void) const;
-    void UpdateRouterAdvertHeader(const RouterAdvert::RxMessage *aRaMsg, RouterAdvOrigin aRaOrigin);
     void ResetDiscoveredPrefixStaleTimer(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
