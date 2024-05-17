@@ -193,6 +193,7 @@ if [ "$TORANJ_CLI" = 1 ]; then
     run cli/test-026-coaps-conn-limit.py
     run cli/test-027-slaac-address.py
     run cli/test-028-border-agent-ephemeral-key.py
+    run cli/test-029-pending-dataset-key-change.py
     run cli/test-400-srp-client-server.py
     run cli/test-401-srp-server-address-cache-snoop.py
     run cli/test-500-two-brs-two-networks.py

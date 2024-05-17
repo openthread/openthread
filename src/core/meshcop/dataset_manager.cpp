@@ -143,11 +143,10 @@ exit:
     return error;
 }
 
-Error DatasetManager::Save(const Dataset &aDataset)
+Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
 {
     Error error = kErrorNone;
     int   compare;
-    bool  isNetworkKeyUpdated = false;
 
     if (aDataset.ReadTimestamp(GetType(), mTimestamp) == kErrorNone)
     {
@@ -155,13 +154,13 @@ Error DatasetManager::Save(const Dataset &aDataset)
 
         if (IsActiveDataset())
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), isNetworkKeyUpdated));
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
         }
     }
 
     compare = Timestamp::Compare(mTimestampValid ? &mTimestamp : nullptr, mLocal.GetTimestamp());
 
-    if (isNetworkKeyUpdated || compare > 0)
+    if ((compare > 0) || aAllowOlderTimestamp)
     {
         mLocal.Save(aDataset);
 
@@ -669,15 +668,45 @@ exit:
 
 void PendingDatasetManager::HandleDelayTimer(void)
 {
-    Dataset dataset;
+    Dataset   dataset;
+    Timestamp activeTimestamp;
+    bool      shouldReplaceActive = false;
 
     IgnoreError(Read(dataset));
-    LogInfo("pending delay timer expired");
+    LogInfo("Pending delay timer expired");
 
-    dataset.ConvertToActive();
+    // Determine whether the Pending Dataset should replace the
+    // current Active Dataset. This is allowed if the Pending
+    // Dataset's Active Timestamp is newer, or the Pending Dataset
+    // contains a different key.
 
-    IgnoreError(Get<ActiveDatasetManager>().Save(dataset));
+    SuccessOrExit(dataset.Read<ActiveTimestampTlv>(activeTimestamp));
 
+    if (Timestamp::Compare(&activeTimestamp, Get<ActiveDatasetManager>().GetTimestamp()) > 0)
+    {
+        shouldReplaceActive = true;
+    }
+    else
+    {
+        NetworkKey newKey;
+        NetworkKey currentKey;
+
+        SuccessOrExit(dataset.Read<NetworkKeyTlv>(newKey));
+        Get<KeyManager>().GetNetworkKey(currentKey);
+        shouldReplaceActive = (currentKey != newKey);
+    }
+
+    VerifyOrExit(shouldReplaceActive);
+
+    // Convert Pending Dataset to Active by removing the Pending
+    // Timestamp and the Delay Timer TLVs.
+
+    dataset.RemoveTlv(Tlv::kPendingTimestamp);
+    dataset.RemoveTlv(Tlv::kDelayTimer);
+
+    IgnoreError(Get<ActiveDatasetManager>().Save(dataset, /* aAllowOlderTimestamp */ true));
+
+exit:
     Clear();
 }
 

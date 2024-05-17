@@ -587,20 +587,11 @@ void Dataset::RemoveTlv(Tlv *aTlv)
 
 Error Dataset::ApplyConfiguration(Instance &aInstance) const
 {
-    bool isNetworkKeyUpdated;
-
-    return ApplyConfiguration(aInstance, isNetworkKeyUpdated);
-}
-
-Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdated) const
-{
     Mac::Mac   &mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
     Error       error      = kErrorNone;
 
     SuccessOrExit(error = ValidateTlvs());
-
-    aIsNetworkKeyUpdated = false;
 
     for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
@@ -634,19 +625,8 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdate
             break;
 
         case Tlv::kNetworkKey:
-        {
-            NetworkKey networkKey;
-
-            keyManager.GetNetworkKey(networkKey);
-
-            if (cur->ReadValueAs<NetworkKeyTlv>() != networkKey)
-            {
-                aIsNetworkKeyUpdated = true;
-            }
-
             keyManager.SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
             break;
-        }
 
 #if OPENTHREAD_FTD
         case Tlv::kPskc:
@@ -669,12 +649,6 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool &aIsNetworkKeyUpdate
 
 exit:
     return error;
-}
-
-void Dataset::ConvertToActive(void)
-{
-    RemoveTlv(Tlv::kPendingTimestamp);
-    RemoveTlv(Tlv::kDelayTimer);
 }
 
 const char *Dataset::TypeToString(Type aType) { return (aType == kActive) ? "Active" : "Pending"; }

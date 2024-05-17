@@ -161,6 +161,7 @@
 
 // For `toranj` test script the value is decreased so that the tests can be run faster.
 #define OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY 1000
+#define OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY 1000
 
 #define OPENTHREAD_CONFIG_NCP_ENABLE_MCU_POWER_STATE_CONTROL 1
 
