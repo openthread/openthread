@@ -35,8 +35,6 @@
 
 #include <stdint.h>
 
-#include "common/encoding.hpp"
-
 namespace ot {
 namespace Spinel {
 
@@ -233,6 +231,20 @@ private:
         kFlagReset       = (1 << 7), // Flag byte RESET bit.
         kFlagPattern     = 0x02,     // Flag byte PATTERN bits.
         kFlagPatternMask = 0x03,     // Flag byte PATTERN mask.
+    };
+
+    class LittleEndian
+    {
+    public:
+        static uint16_t ReadUint16(const uint8_t *aBuffer)
+        {
+            return static_cast<uint16_t>((aBuffer[0] << 8) | aBuffer[1]);
+        }
+        static void WriteUint16(uint16_t aValue, uint8_t *aBuffer)
+        {
+            aBuffer[0] = (aValue >> 8) & 0xff;
+            aBuffer[1] = (aValue >> 0) & 0xff;
+        }
     };
 
     uint8_t *mBuffer;

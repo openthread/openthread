@@ -54,6 +54,8 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
+#include "common/code_utils.hpp"
+
 #if OPENTHREAD_POSIX_CONFIG_SPINEL_SPI_INTERFACE_ENABLE
 #include <linux/gpio.h>
 #include <linux/ioctl.h>

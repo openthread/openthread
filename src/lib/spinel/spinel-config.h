@@ -26,40 +26,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPINEL_LOGGER_HPP_
-#define SPINEL_LOGGER_HPP_
+/**
+ * @file
+ *   This file includes compile-time configuration constants for lib spinel.
+ */
 
-#include <openthread/error.h>
-#include <openthread/platform/toolchain.h>
+#ifndef SPINEL_CONFIG_H_
+#define SPINEL_CONFIG_H_
 
-namespace ot {
-namespace Spinel {
+/**
+ * @def OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
+ *
+ * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when
+ * `RadioSpinel` platform is used.
+ *
+ */
+#ifndef OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE
+#define OPENTHREAD_LIB_SPINEL_RX_FRAME_BUFFER_SIZE 8192
+#endif
 
-class Logger
-{
-protected:
-    explicit Logger(const char *aModuleName);
+/**
+ * @def OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
+ *
+ * The maximum log string size (number of chars).
+ *
+ */
+#ifndef OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE
+#define OPENTHREAD_LIB_SPINEL_LOG_MAX_SIZE 1024
+#endif
 
-    void LogIfFail(const char *aText, otError aError);
+/**
+ * @def OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
+ *
+ * The maximum OpenThread log string size (number of chars) supported by NCP using Spinel `StreamWrite`.
+ *
+ */
+#ifndef OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE
+#define OPENTHREAD_LIB_SPINEL_NCP_LOG_MAX_SIZE 150
+#endif
 
-    void LogCrit(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogWarn(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogNote(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogInfo(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-    void LogDebg(const char *aFormat, ...) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 3);
-
-    uint32_t Snprintf(char *aDest, uint32_t aSize, const char *aFormat, ...);
-    void     LogSpinelFrame(const uint8_t *aFrame, uint16_t aLength, bool aTx);
-
-    enum
-    {
-        kChannelMaskBufferSize = 32, ///< Max buffer size used to store `SPINEL_PROP_PHY_CHAN_SUPPORTED` value.
-    };
-
-    const char *mModuleName;
-};
-
-} // namespace Spinel
-} // namespace ot
-
-#endif // SPINEL_LOG_HPP_
+#endif // SPINEL_CONFIG_H_

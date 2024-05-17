@@ -32,8 +32,8 @@
 
 #include "spinel_decoder.hpp"
 
-#include "common/code_utils.hpp"
 #include "common/string.hpp"
+#include "lib/utils/utils.hpp"
 
 namespace ot {
 namespace Spinel {
@@ -72,7 +72,7 @@ otError Decoder::ReadBool(bool &aBool)
     otError error = OT_ERROR_NONE;
     uint8_t byte;
 
-    SuccessOrExit(error = ReadUint8(byte));
+    EXPECT_NO_ERROR(error = ReadUint8(byte));
 
     // Boolean value are encoded in 8-bits as either 0x00 or 0x01. All other values are illegal.
     if (byte == 0x00)
@@ -96,7 +96,7 @@ otError Decoder::ReadUint8(uint8_t &aUint8)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
     aUint8 = mFrame[mIndex];
     mIndex += sizeof(uint8_t);
 
@@ -109,7 +109,7 @@ otError Decoder::ReadInt8(int8_t &aInt8)
     otError error = OT_ERROR_NONE;
     uint8_t byte;
 
-    SuccessOrExit(error = ReadUint8(byte));
+    EXPECT_NO_ERROR(error = ReadUint8(byte));
     aInt8 = static_cast<int8_t>(byte);
 
 exit:
@@ -120,7 +120,7 @@ otError Decoder::ReadUint16(uint16_t &aUint16)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndex + sizeof(uint16_t) <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + sizeof(uint16_t) <= mEnd, error = OT_ERROR_PARSE);
 
     aUint16 = static_cast<uint16_t>(mFrame[mIndex] | (mFrame[mIndex + 1] << 8));
 
@@ -135,7 +135,7 @@ otError Decoder::ReadInt16(int16_t &aInt16)
     otError  error = OT_ERROR_NONE;
     uint16_t u16;
 
-    SuccessOrExit(error = ReadUint16(u16));
+    EXPECT_NO_ERROR(error = ReadUint16(u16));
     aInt16 = static_cast<int16_t>(u16);
 
 exit:
@@ -146,7 +146,7 @@ otError Decoder::ReadUint32(uint32_t &aUint32)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndex + sizeof(uint32_t) <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + sizeof(uint32_t) <= mEnd, error = OT_ERROR_PARSE);
 
     aUint32 = ((static_cast<uint32_t>(mFrame[mIndex + 0]) << 0) | (static_cast<uint32_t>(mFrame[mIndex + 1]) << 8) |
                (static_cast<uint32_t>(mFrame[mIndex + 2]) << 16) | (static_cast<uint32_t>(mFrame[mIndex + 3]) << 24));
@@ -162,7 +162,7 @@ otError Decoder::ReadInt32(int32_t &aInt32)
     otError  error = OT_ERROR_NONE;
     uint32_t u32;
 
-    SuccessOrExit(error = ReadUint32(u32));
+    EXPECT_NO_ERROR(error = ReadUint32(u32));
     aInt32 = static_cast<int32_t>(u32);
 
 exit:
@@ -173,7 +173,7 @@ otError Decoder::ReadUint64(uint64_t &aUint64)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndex + sizeof(uint64_t) <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + sizeof(uint64_t) <= mEnd, error = OT_ERROR_PARSE);
 
     aUint64 = ((static_cast<uint64_t>(mFrame[mIndex + 0]) << 0) | (static_cast<uint64_t>(mFrame[mIndex + 1]) << 8) |
                (static_cast<uint64_t>(mFrame[mIndex + 2]) << 16) | (static_cast<uint64_t>(mFrame[mIndex + 3]) << 24) |
@@ -191,7 +191,7 @@ otError Decoder::ReadInt64(int64_t &aInt64)
     otError  error = OT_ERROR_NONE;
     uint64_t u64;
 
-    SuccessOrExit(error = ReadUint64(u64));
+    EXPECT_NO_ERROR(error = ReadUint64(u64));
     aInt64 = static_cast<int64_t>(u64);
 
 exit:
@@ -205,7 +205,7 @@ otError Decoder::ReadUintPacked(unsigned int &aUint)
     unsigned int   uint;
 
     parsedLen = spinel_packed_uint_decode(&mFrame[mIndex], mEnd - mIndex, &uint);
-    VerifyOrExit(parsedLen > 0, error = OT_ERROR_PARSE);
+    EXPECT(parsedLen > 0, error = OT_ERROR_PARSE);
 
     mIndex += parsedLen;
     aUint = uint;
@@ -219,7 +219,7 @@ otError Decoder::ReadItem(const uint8_t **aPtr, uint16_t aSize)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mIndex + aSize <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + aSize <= mEnd, error = OT_ERROR_PARSE);
 
     *aPtr = &mFrame[mIndex];
 
@@ -234,8 +234,8 @@ otError Decoder::ReadIp6Address(spinel_ipv6addr_t &aIp6Addr)
     otError                  error       = OT_ERROR_NONE;
     const spinel_ipv6addr_t *ipv6AddrPtr = nullptr;
 
-    SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
-    VerifyOrExit(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadIp6Address(ipv6AddrPtr));
+    EXPECT(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
     aIp6Addr = *ipv6AddrPtr;
 
 exit:
@@ -247,8 +247,8 @@ otError Decoder::ReadIp6Address(otIp6Address &aIp6Addr)
     otError             error       = OT_ERROR_NONE;
     const otIp6Address *ipv6AddrPtr = nullptr;
 
-    SuccessOrExit(error = ReadIp6Address(ipv6AddrPtr));
-    VerifyOrExit(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadIp6Address(ipv6AddrPtr));
+    EXPECT(ipv6AddrPtr != nullptr, error = OT_ERROR_PARSE);
     aIp6Addr = *ipv6AddrPtr;
 
 exit:
@@ -260,8 +260,8 @@ otError Decoder::ReadEui64(spinel_eui64_t &aEui64)
     otError               error    = OT_ERROR_NONE;
     const spinel_eui64_t *eui64Ptr = nullptr;
 
-    SuccessOrExit(error = ReadEui64(eui64Ptr));
-    VerifyOrExit(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadEui64(eui64Ptr));
+    EXPECT(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui64 = *eui64Ptr;
 
 exit:
@@ -273,8 +273,8 @@ otError Decoder::ReadEui64(otExtAddress &aEui64)
     otError             error    = OT_ERROR_NONE;
     const otExtAddress *eui64Ptr = nullptr;
 
-    SuccessOrExit(error = ReadEui64(eui64Ptr));
-    VerifyOrExit(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadEui64(eui64Ptr));
+    EXPECT(eui64Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui64 = *eui64Ptr;
 
 exit:
@@ -286,8 +286,8 @@ otError Decoder::ReadEui48(spinel_eui48_t &aEui48)
     otError               error    = OT_ERROR_NONE;
     const spinel_eui48_t *eui48Ptr = nullptr;
 
-    SuccessOrExit(error = ReadEui48(eui48Ptr));
-    VerifyOrExit(eui48Ptr != nullptr, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadEui48(eui48Ptr));
+    EXPECT(eui48Ptr != nullptr, error = OT_ERROR_PARSE);
     aEui48 = *eui48Ptr;
 
 exit:
@@ -300,10 +300,10 @@ otError Decoder::ReadUtf8(const char *&aUtf8)
     size_t  len;
 
     // Ensure there is at least one byte (for null character).
-    VerifyOrExit(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
+    EXPECT(mIndex + sizeof(uint8_t) <= mEnd, error = OT_ERROR_PARSE);
 
     len = StringLength(reinterpret_cast<const char *>(&mFrame[mIndex]), mEnd - mIndex);
-    VerifyOrExit(len < static_cast<uint16_t>(mEnd - mIndex), error = OT_ERROR_PARSE);
+    EXPECT(len < static_cast<uint16_t>(mEnd - mIndex), error = OT_ERROR_PARSE);
 
     aUtf8 = reinterpret_cast<const char *>(&mFrame[mIndex]);
 
@@ -326,8 +326,8 @@ otError Decoder::ReadDataWithLen(const uint8_t *&aData, uint16_t &aDataLen)
     otError  error = OT_ERROR_NONE;
     uint16_t len;
 
-    SuccessOrExit(error = ReadUint16(len));
-    SuccessOrExit(error = ReadItem(&aData, len));
+    EXPECT_NO_ERROR(error = ReadUint16(len));
+    EXPECT_NO_ERROR(error = ReadItem(&aData, len));
     aDataLen = len;
 
 exit:
@@ -339,10 +339,10 @@ otError Decoder::OpenStruct(void)
     otError  error = OT_ERROR_NONE;
     uint16_t structLen;
 
-    VerifyOrExit(mNumOpenStructs < kMaxNestedStructs, error = OT_ERROR_INVALID_STATE);
+    EXPECT(mNumOpenStructs < kMaxNestedStructs, error = OT_ERROR_INVALID_STATE);
 
-    SuccessOrExit(error = ReadUint16(structLen));
-    VerifyOrExit(structLen <= mEnd - mIndex, error = OT_ERROR_PARSE);
+    EXPECT_NO_ERROR(error = ReadUint16(structLen));
+    EXPECT(structLen <= mEnd - mIndex, error = OT_ERROR_PARSE);
 
     mPrevEnd[mNumOpenStructs] = mEnd;
     mEnd                      = (mIndex + structLen);
@@ -356,7 +356,7 @@ otError Decoder::CloseStruct(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(mNumOpenStructs > 0, error = OT_ERROR_INVALID_STATE);
+    EXPECT(mNumOpenStructs > 0, error = OT_ERROR_INVALID_STATE);
 
     // If there is a saved position and it is contained
     // within the current struct being closed, the saved
@@ -387,7 +387,7 @@ otError Decoder::ResetToSaved(void)
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(IsSavedPositionValid(), error = OT_ERROR_INVALID_STATE);
+    EXPECT(IsSavedPositionValid(), error = OT_ERROR_INVALID_STATE);
 
     mIndex          = mSavedIndex;
     mEnd            = mSavedEnd;
