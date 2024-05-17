@@ -84,7 +84,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mPdPrefixManager(aInstance)
 #endif
     , mRsSender(aInstance)
-    , mDiscoveredPrefixStaleTimer(aInstance)
     , mRoutingPolicyTimer(aInstance)
 {
     mBrUlaPrefix.Clear();
@@ -343,8 +342,7 @@ void RoutingManager::Stop(void)
 
     SendRouterAdvertisement(kInvalidateAllPrevPrefixes);
 
-    mRxRaTracker.RemoveAllEntries();
-    mDiscoveredPrefixStaleTimer.Stop();
+    mRxRaTracker.Stop();
 
     mTxRaInfo.mTxCount = 0;
 
@@ -707,12 +705,6 @@ void RoutingManager::HandleRsSenderFinished(TimeMilli aStartTime)
     ScheduleRoutingPolicyEvaluation(kImmediately);
 }
 
-void RoutingManager::HandleDiscoveredPrefixStaleTimer(void)
-{
-    LogInfo("Stale On-Link or OMR Prefixes or RA messages are detected");
-    mRsSender.Start();
-}
-
 void RoutingManager::HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress)
 {
     OT_UNUSED_VARIABLE(aPacket);
@@ -840,7 +832,6 @@ void RoutingManager::HandleRaPrefixTableChanged(void)
 
     VerifyOrExit(mIsRunning);
 
-    ResetDiscoveredPrefixStaleTimer();
     mOnLinkPrefixManager.HandleRaPrefixTableChanged();
     mRoutePublisher.Evaluate();
 
@@ -868,34 +859,6 @@ bool RoutingManager::NetworkDataContainsUlaRoute(void) const
     }
 
     return contains;
-}
-
-void RoutingManager::ResetDiscoveredPrefixStaleTimer(void)
-{
-    TimeMilli now = TimerMilli::GetNow();
-    TimeMilli nextStaleTime;
-
-    OT_ASSERT(mIsRunning);
-
-    // The stale timer triggers sending RS to check the state of
-    // discovered prefixes and host RA messages.
-
-    nextStaleTime = mRxRaTracker.CalculateNextStaleTime(now);
-
-    if (nextStaleTime == now.GetDistantFuture())
-    {
-        if (mDiscoveredPrefixStaleTimer.IsRunning())
-        {
-            LogDebg("Prefix stale timer stopped");
-        }
-
-        mDiscoveredPrefixStaleTimer.Stop();
-    }
-    else
-    {
-        mDiscoveredPrefixStaleTimer.FireAt(nextStaleTime);
-        LogDebg("Prefix stale timer scheduled in %lu ms", ToUlong(nextStaleTime - now));
-    }
 }
 
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_INFO)
@@ -1059,7 +1022,8 @@ void RoutingManager::RoutePrefix::CopyInfoTo(PrefixTableEntry &aEntry, TimeMilli
 
 RoutingManager::RxRaTracker::RxRaTracker(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mEntryTimer(aInstance)
+    , mExpirationTimer(aInstance)
+    , mStaleTimer(aInstance)
     , mRouterTimer(aInstance)
     , mSignalTask(aInstance)
 {
@@ -1210,7 +1174,7 @@ void RoutingManager::RxRaTracker::ProcessRaHeader(const RouterAdvert::Header &aR
         entry->SetFrom(aRaHeader);
     }
 
-    mEntryTimer.FireAtIfEarlier(entry->GetExpireTime());
+    mExpirationTimer.FireAtIfEarlier(entry->GetExpireTime());
 
     SignalTableChanged();
 
@@ -1255,7 +1219,7 @@ void RoutingManager::RxRaTracker::ProcessPrefixInfoOption(const PrefixInfoOption
         entry->AdoptValidAndPreferredLifetimesFrom(newPrefix);
     }
 
-    mEntryTimer.FireAtIfEarlier(entry->GetExpireTime());
+    mExpirationTimer.FireAtIfEarlier(entry->GetExpireTime());
 
     SignalTableChanged();
 
@@ -1297,7 +1261,7 @@ void RoutingManager::RxRaTracker::ProcessRouteInfoOption(const RouteInfoOption &
         entry->SetFrom(aRio);
     }
 
-    mEntryTimer.FireAtIfEarlier(entry->GetExpireTime());
+    mExpirationTimer.FireAtIfEarlier(entry->GetExpireTime());
 
     SignalTableChanged();
 
@@ -1472,14 +1436,14 @@ exit:
     return;
 }
 
-void RoutingManager::RxRaTracker::RemoveAllEntries(void)
+void RoutingManager::RxRaTracker::Stop(void)
 {
-    // Remove all entries from the table.
-
     mRouters.Free();
-    mEntryTimer.Stop();
-
     mLocalRaHeader.Clear();
+
+    mExpirationTimer.Stop();
+    mStaleTimer.Stop();
+    mRouterTimer.Stop();
 
     SignalTableChanged();
 }
@@ -1550,15 +1514,18 @@ void RoutingManager::RxRaTracker::RemoveOrDeprecateEntriesFromInactiveRouters(vo
     RemoveExpiredEntries();
 }
 
-TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) const
+void RoutingManager::RxRaTracker::ScheduleStaleTimer(void)
 {
-    TimeMilli onLinkStaleTime = aNow;
-    TimeMilli staleTime       = aNow.GetDistantFuture();
+    TimeMilli now             = TimerMilli::GetNow();
+    TimeMilli onLinkStaleTime = now;
+    TimeMilli staleTime       = now.GetDistantFuture();
     bool      foundOnLink     = false;
 
     // For on-link prefixes, we consider stale time as when all on-link
     // prefixes become stale (the latest stale time) but for route
     // prefixes we consider the earliest stale time.
+
+    mStaleTimer.Stop();
 
     for (const Router &router : mRouters)
     {
@@ -1566,7 +1533,7 @@ TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) co
         {
             if (!entry.IsDeprecated())
             {
-                TimeMilli entryStaleTime = Max(aNow, entry.GetStaleTime());
+                TimeMilli entryStaleTime = Max(now, entry.GetStaleTime());
 
                 onLinkStaleTime = Max(onLinkStaleTime, entryStaleTime);
                 foundOnLink     = true;
@@ -1575,7 +1542,7 @@ TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) co
 
         for (const RoutePrefix &entry : router.mRoutePrefixes)
         {
-            TimeMilli entryStaleTime = Max(aNow, entry.GetStaleTime());
+            TimeMilli entryStaleTime = Max(now, entry.GetStaleTime());
 
             staleTime = Min(staleTime, entryStaleTime);
         }
@@ -1588,12 +1555,26 @@ TimeMilli RoutingManager::RxRaTracker::CalculateNextStaleTime(TimeMilli aNow) co
 
     if (mLocalRaHeader.IsValid())
     {
-        TimeMilli raHeaderStaleTime = Max(aNow, mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
+        TimeMilli raHeaderStaleTime = Max(now, mLocalRaHeaderUpdateTime + Time::SecToMsec(kRtrAdvStaleTime));
 
         staleTime = Min(staleTime, raHeaderStaleTime);
     }
 
-    return staleTime;
+    if (staleTime != now.GetDistantFuture())
+    {
+        mStaleTimer.FireAt(staleTime);
+    }
+}
+
+void RoutingManager::RxRaTracker::HandleStaleTimer(void)
+{
+    VerifyOrExit(Get<RoutingManager>().IsRunning());
+
+    LogInfo("Stale timer expired");
+    Get<RoutingManager>().mRsSender.Start();
+
+exit:
+    return;
 }
 
 void RoutingManager::RxRaTracker::RemoveRoutersWithNoEntriesOrFlags(void)
@@ -1601,7 +1582,7 @@ void RoutingManager::RxRaTracker::RemoveRoutersWithNoEntriesOrFlags(void)
     mRouters.RemoveAndFreeAllMatching(Router::kContainsNoEntriesOrFlags);
 }
 
-void RoutingManager::RxRaTracker::HandleEntryTimer(void) { RemoveExpiredEntries(); }
+void RoutingManager::RxRaTracker::HandleExpirationTimer(void) { RemoveExpiredEntries(); }
 
 void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
 {
@@ -1640,11 +1621,17 @@ void RoutingManager::RxRaTracker::RemoveExpiredEntries(void)
 
     if (nextExpireTime != now.GetDistantFuture())
     {
-        mEntryTimer.FireAt(nextExpireTime);
+        mExpirationTimer.FireAt(nextExpireTime);
     }
 }
 
 void RoutingManager::RxRaTracker::SignalTableChanged(void) { mSignalTask.Post(); }
+
+void RoutingManager::RxRaTracker::HandleSignalTask(void)
+{
+    ScheduleStaleTimer();
+    Get<RoutingManager>().HandleRaPrefixTableChanged();
+}
 
 void RoutingManager::RxRaTracker::ProcessNeighborAdvertMessage(const NeighborAdvertMessage &aNaMessage)
 {
