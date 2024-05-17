@@ -36,6 +36,7 @@ set -euxo pipefail
     cmake -GNinja \
         -DCMAKE_C_FLAGS="${CFLAGS}" \
         -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+        -DBUILD_TESTING=OFF \
         -DOT_BUILD_EXECUTABLES=OFF \
         -DOT_FUZZ_TARGETS=ON \
         -DOT_MTD=OFF \
