@@ -121,28 +121,6 @@ public:
     Error Read(Dataset &aDataset) const;
 
     /**
-     * Retrieves the dataset from non-volatile memory.
-     *
-     * @param[out]  aDatasetInfo  Where to place the dataset as `Dataset::Info`.
-     *
-     * @retval kErrorNone      Successfully retrieved the dataset.
-     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    Error Read(Dataset::Info &aDatasetInfo) const;
-
-    /**
-     * Retrieves the dataset from non-volatile memory.
-     *
-     * @param[out]  aDatasetTlvs  Where to place the dataset.
-     *
-     * @retval kErrorNone      Successfully retrieved the dataset.
-     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
-     *
-     */
-    Error Read(Dataset::Tlvs &aDatasetTlvs) const;
-
-    /**
      * Returns the local time this dataset was last updated or restored.
      *
      * @returns The local time this dataset was last updated or restored.
@@ -178,9 +156,6 @@ private:
     void DestroySecurelyStoredKeys(void) const;
     void EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
 #endif
-
-    bool IsActive(void) const { return (mType == Dataset::kActive); }
-    void SetTimestamp(const Dataset &aDataset);
 
     Timestamp     mTimestamp;            ///< Active or Pending Timestamp
     TimeMilli     mUpdateTime;           ///< Local time last updated

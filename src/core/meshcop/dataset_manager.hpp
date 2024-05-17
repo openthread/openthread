@@ -97,7 +97,7 @@ public:
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Error Read(Dataset::Info &aDatasetInfo) const { return mLocal.Read(aDatasetInfo); }
+    Error Read(Dataset::Info &aDatasetInfo) const;
 
     /**
      * Retrieves the dataset from non-volatile memory.
@@ -108,7 +108,7 @@ public:
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Error Read(Dataset::Tlvs &aDatasetTlvs) const { return mLocal.Read(aDatasetTlvs); }
+    Error Read(Dataset::Tlvs &aDatasetTlvs) const;
 
     /**
      * Saves the Operational Dataset in non-volatile memory.

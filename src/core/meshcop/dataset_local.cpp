@@ -118,34 +118,6 @@ exit:
     return error;
 }
 
-Error DatasetLocal::Read(Dataset::Info &aDatasetInfo) const
-{
-    Dataset dataset;
-    Error   error;
-
-    aDatasetInfo.Clear();
-
-    SuccessOrExit(error = Read(dataset));
-    dataset.ConvertTo(aDatasetInfo);
-
-exit:
-    return error;
-}
-
-Error DatasetLocal::Read(Dataset::Tlvs &aDatasetTlvs) const
-{
-    Dataset dataset;
-    Error   error;
-
-    ClearAllBytes(aDatasetTlvs);
-
-    SuccessOrExit(error = Read(dataset));
-    dataset.ConvertTo(aDatasetTlvs);
-
-exit:
-    return error;
-}
-
 void DatasetLocal::Save(const Dataset &aDataset)
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
