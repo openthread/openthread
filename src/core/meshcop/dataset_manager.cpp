@@ -92,6 +92,34 @@ exit:
     return error;
 }
 
+Error DatasetManager::Read(Dataset::Info &aDatasetInfo) const
+{
+    Dataset dataset;
+    Error   error;
+
+    aDatasetInfo.Clear();
+
+    SuccessOrExit(error = Read(dataset));
+    dataset.ConvertTo(aDatasetInfo);
+
+exit:
+    return error;
+}
+
+Error DatasetManager::Read(Dataset::Tlvs &aDatasetTlvs) const
+{
+    Dataset dataset;
+    Error   error;
+
+    ClearAllBytes(aDatasetTlvs);
+
+    SuccessOrExit(error = Read(dataset));
+    dataset.ConvertTo(aDatasetTlvs);
+
+exit:
+    return error;
+}
+
 Error DatasetManager::ApplyConfiguration(void) const
 {
     Error   error;
