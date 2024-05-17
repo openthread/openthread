@@ -638,15 +638,13 @@ Error SecureTransport::GetPeerSubjectAttributeByOid(const char *aOid,
 
     VerifyOrExit(aAttributeBuffer != nullptr, error = kErrorNoBufs);
     VerifyOrExit(peerCert != nullptr, error = kErrorInvalidState);
+
     data = mbedtls_asn1_find_named_data(&peerCert->subject, aOid, aOidLength);
     VerifyOrExit(data != nullptr, error = kErrorNotFound);
+
     length = data->val.len;
     VerifyOrExit(length <= attributeBufferSize, error = kErrorNoBufs);
-
-    if (aAttributeLength != nullptr)
-    {
-        *aAttributeLength = length;
-    }
+    *aAttributeLength = length;
 
     if (aAsn1Type != nullptr)
     {
