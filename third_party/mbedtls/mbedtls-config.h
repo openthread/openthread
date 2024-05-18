@@ -152,11 +152,9 @@
 #endif
 
 #include "mbedtls/version.h"
-// Include in the legacy config name adjustment file for mbedtls >= 3.5.0
-#if (MBEDTLS_VERSION_NUMBER >= 0x03050000)
-    #include "mbedtls/config_adjust_legacy_crypto.h"
+#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
+    // Configuration sanity check. Done automatically in Mbed TLS >= 3.0.
+    #include "mbedtls/check_config.h"
 #endif
-
-#include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */
