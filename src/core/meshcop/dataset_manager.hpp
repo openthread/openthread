@@ -51,10 +51,12 @@ namespace ot {
 
 namespace MeshCoP {
 
+class ActiveDatasetManager;
 class PendingDatasetManager;
 
 class DatasetManager : public InstanceLocator
 {
+    friend class ActiveDatasetManager;
     friend class PendingDatasetManager;
 
 public:
@@ -249,83 +251,11 @@ public:
     Error AppendMleDatasetTlv(Message &aMessage) const;
 #endif
 
-protected:
-    /**
-     * Initializes the object.
-     *
-     * @param[in]  aInstance      A reference to the OpenThread instance.
-     * @param[in]  aType          Dataset type, Active or Pending.
-     * @param[in]  aTimerHandler  The registration timer handler.
-     *
-     */
-    DatasetManager(Instance &aInstance, Dataset::Type aType, TimerMilli::Handler aTimerHandler);
-
-    /**
-     * Gets the Operational Dataset type (Active or Pending).
-     *
-     * @returns The Operational Dataset type.
-     *
-     */
-    Dataset::Type GetType(void) const { return mLocal.GetType(); }
-
-    /**
-     * Clears the Operational Dataset.
-     *
-     */
-    void Clear(void);
-
-    /**
-     * Handles a MGMT_GET request message.
-     *
-     * @param[in]  aMessage      The CoAP message buffer.
-     * @param[in]  aMessageInfo  The message info.
-     *
-     */
-    void HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
-
-    /**
-     * Compares the partition's Operational Dataset with that stored in non-volatile memory.
-     *
-     * If the partition's Operational Dataset is newer, the non-volatile storage is updated.
-     * If the partition's Operational Dataset is older, the registration process is started.
-     *
-     */
-    void HandleNetworkUpdate(void);
-
-    /**
-     * Initiates a network data registration message with the Leader.
-     *
-     */
-    void HandleTimer(void);
-
-#if OPENTHREAD_FTD
-    enum MgmtCommand : uint8_t ///< A MGMT command type.
-    {
-        kMgmtSet,     ///< MGMT_SET command
-        kMgmtReplace, ///< MGMT_REPLACE command
-    };
-
-    /**
-     * Handles the MGMT_SET or MGMT_REPLACE request message.
-     *
-     *
-     * @param[in]  aCommand      The MGMT command type (MGMT_REPLACE or MGMT_SET).
-     * @param[in]  aMessage      The CoAP message buffer.
-     * @param[in]  aMessageInfo  The message info.
-     *
-     * @retval kErrorNone  The request message was handled successfully.
-     * @retval kErrorDrop  The request message was dropped.
-     *
-     */
-    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-#endif
-
-    DatasetLocal mLocal;
-    Timestamp    mTimestamp;
-    bool         mTimestampValid : 1;
-
 private:
-    static constexpr uint8_t kMaxGetTypes = 64; // Max number of types in MGMT_GET.req
+    static constexpr uint8_t  kMaxGetTypes  = 64;   // Max number of types in MGMT_GET.req
+    static constexpr uint32_t kSendSetDelay = 5000; // in msec.
+
+    using Type = Dataset::Type;
 
     class TlvList : public Array<uint8_t, kMaxGetTypes>
     {
@@ -335,6 +265,12 @@ private:
     };
 
 #if OPENTHREAD_FTD
+    enum MgmtCommand : uint8_t
+    {
+        kMgmtSet,
+        kMgmtReplace,
+    };
+
     struct RequestInfo : Clearable<RequestInfo> // Info from a MGMT_SET or MGMT_REPLACE request.
     {
         Dataset mDataset;
@@ -343,14 +279,15 @@ private:
         bool    mAffectsNetworkKey;
     };
 #endif
-    static void HandleMgmtSetResponse(void                *aContext,
-                                      otMessage           *aMessage,
-                                      const otMessageInfo *aMessageInfo,
-                                      Error                aError);
-    void        HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
-    bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
-    bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
+    DatasetManager(Instance &aInstance, Type aType, TimerMilli::Handler aTimerHandler);
+
+    Type  GetType(void) const { return mLocal.GetType(); }
+    bool  IsActiveDataset(void) const { return mLocal.GetType() == Dataset::kActive; }
+    bool  IsPendingDataset(void) const { return mLocal.GetType() == Dataset::kPending; }
+    void  Clear(void);
+    void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
+    void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
     void  SignalDatasetChange(void) const;
     void  SyncLocalWithLeader(const Dataset &aDataset);
@@ -358,22 +295,30 @@ private:
     void  SendGetResponse(const Coap::Message    &aRequest,
                           const Ip6::MessageInfo &aMessageInfo,
                           const TlvList          &aTlvList) const;
+    void  HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
+
+    static void HandleMgmtSetResponse(void                *aContext,
+                                      otMessage           *aMessage,
+                                      const otMessageInfo *aMessageInfo,
+                                      Error                aError);
 
 #if OPENTHREAD_FTD
+    Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     Error ProcessSetOrReplaceRequest(MgmtCommand aCommand, const Coap::Message &aMessage, RequestInfo &aInfo) const;
     void  SendSetOrReplaceResponse(const Coap::Message    &aRequest,
                                    const Ip6::MessageInfo &aMessageInfo,
                                    StateTlv::State         aState);
 #endif
 
-    static constexpr uint8_t  kMaxDatasetTlvs = 16;   // Maximum number of TLVs in a Dataset.
-    static constexpr uint32_t kSendSetDelay   = 5000; // Milliseconds
-
-    bool       mMgmtPending : 1;
-    TimerMilli mTimer;
-
+    DatasetLocal              mLocal;
+    Timestamp                 mTimestamp;
+    bool                      mTimestampValid : 1;
+    bool                      mMgmtPending : 1;
+    TimerMilli                mTimer;
     Callback<MgmtSetCallback> mMgmtSetCallback;
 };
+
+//----------------------------------------------------------------------------------------------------------------------
 
 class ActiveDatasetManager : public DatasetManager, private NonCopyable
 {
@@ -468,6 +413,8 @@ DeclareTmfHandler(ActiveDatasetManager, kUriActiveGet);
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveSet);
 DeclareTmfHandler(ActiveDatasetManager, kUriActiveReplace);
 #endif
+
+//----------------------------------------------------------------------------------------------------------------------
 
 class PendingDatasetManager : public DatasetManager, private NonCopyable
 {

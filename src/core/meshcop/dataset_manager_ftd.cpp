@@ -62,6 +62,9 @@ namespace MeshCoP {
 
 RegisterLogModule("DatasetManager");
 
+//----------------------------------------------------------------------------------------------------------------------
+// DatasetManager
+
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
     Mle::Tlv::Type mleTlvType = IsActiveDataset() ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset;
@@ -286,6 +289,9 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+// ActiveDatasetManager
+
 #if OPENTHREAD_CONFIG_OPERATIONAL_DATASET_AUTO_INIT
 Error ActiveDatasetManager::GenerateLocal(void)
 {
@@ -409,6 +415,9 @@ void ActiveDatasetManager::HandleTmf<kUriActiveReplace>(Coap::Message &aMessage,
 exit:
     return;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// PendingDatasetManager
 
 void PendingDatasetManager::StartLeader(void) { StartDelayTimer(); }
 
