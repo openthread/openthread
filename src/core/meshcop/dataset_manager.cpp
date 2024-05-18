@@ -670,6 +670,8 @@ void PendingDatasetManager::StartDelayTimer(void)
 {
     Dataset dataset;
 
+    mDelayTimer.Stop();
+
     SuccessOrExit(Read(dataset));
     StartDelayTimer(dataset);
 
@@ -700,7 +702,8 @@ void PendingDatasetManager::HandleDelayTimer(void)
     Timestamp activeTimestamp;
     bool      shouldReplaceActive = false;
 
-    IgnoreError(Read(dataset));
+    SuccessOrExit(Read(dataset));
+
     LogInfo("Pending delay timer expired");
 
     // Determine whether the Pending Dataset should replace the
