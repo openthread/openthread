@@ -719,8 +719,9 @@ private:
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    void HandleRaPrefixTableChanged(void); // Declare early so we can use in `mSignalTask`
-    void HandleRxRaTrackerEntryTimer(void) { mRxRaTracker.HandleEntryTimer(); }
+    void HandleRxRaTrackerSignalTask(void) { mRxRaTracker.HandleSignalTask(); }
+    void HandleRxRaTrackerExpirationTimer(void) { mRxRaTracker.HandleExpirationTimer(); }
+    void HandleRxRaTrackerStaleTimer(void) { mRxRaTracker.HandleStaleTimer(); }
     void HandleRxRaTrackerRouterTimer(void) { mRxRaTracker.HandleRouterTimer(); }
 
     class RxRaTracker : public InstanceLocator
@@ -740,6 +741,8 @@ private:
     public:
         explicit RxRaTracker(Instance &aInstance);
 
+        void Stop(void);
+
         void ProcessRouterAdvertMessage(const RouterAdvert::RxMessage &aRaMessage,
                                         const Ip6::Address            &aSrcAddress,
                                         RouterAdvOrigin                aRaOrigin);
@@ -754,12 +757,9 @@ private:
         void RemoveOnLinkPrefix(const Ip6::Prefix &aPrefix);
         void RemoveRoutePrefix(const Ip6::Prefix &aPrefix);
 
-        void RemoveAllEntries(void);
         void RemoveOrDeprecateOldEntries(TimeMilli aTimeThreshold);
 
         const RouterAdvert::Header &GetLocalRaHeaderToMirror(void) const { return mLocalRaHeader; }
-
-        TimeMilli CalculateNextStaleTime(TimeMilli aNow) const;
 
         void DetermineAndSetFlags(RouterAdvert::Header &aHeader) const;
 
@@ -767,7 +767,9 @@ private:
         Error GetNextEntry(PrefixTableIterator &aIterator, PrefixTableEntry &aEntry) const;
         Error GetNextRouter(PrefixTableIterator &aIterator, RouterEntry &aEntry) const;
 
-        void HandleEntryTimer(void);
+        void HandleSignalTask(void);
+        void HandleExpirationTimer(void);
+        void HandleStaleTimer(void);
         void HandleRouterTimer(void);
 
     private:
@@ -901,6 +903,7 @@ private:
         void RemoveRoutersWithNoEntriesOrFlags(void);
         void RemoveExpiredEntries(void);
         void SignalTableChanged(void);
+        void ScheduleStaleTimer(void);
         void UpdateRouterOnRx(Router &aRouter);
         void SendNeighborSolicitToRouter(const Router &aRouter);
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
@@ -909,13 +912,15 @@ private:
         template <class Type> Entry<Type> *AllocateEntry(void);
 #endif
 
-        using SignalTask  = TaskletIn<RoutingManager, &RoutingManager::HandleRaPrefixTableChanged>;
-        using EntryTimer  = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerEntryTimer>;
-        using RouterTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
-        using RouterList  = OwningList<Entry<Router>>;
+        using SignalTask      = TaskletIn<RoutingManager, &RoutingManager::HandleRxRaTrackerSignalTask>;
+        using ExpirationTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerExpirationTimer>;
+        using StaleTimer      = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerStaleTimer>;
+        using RouterTimer     = TimerMilliIn<RoutingManager, &RoutingManager::HandleRxRaTrackerRouterTimer>;
+        using RouterList      = OwningList<Entry<Router>>;
 
         RouterList           mRouters;
-        EntryTimer           mEntryTimer;
+        ExpirationTimer      mExpirationTimer;
+        StaleTimer           mStaleTimer;
         RouterTimer          mRouterTimer;
         SignalTask           mSignalTask;
         RouterAdvert::Header mLocalRaHeader;
@@ -1378,8 +1383,6 @@ private:
     void HandleRsSenderFinished(TimeMilli aStartTime);
     void SendRouterAdvertisement(RouterAdvTxMode aRaTxMode);
 
-    void HandleDiscoveredPrefixStaleTimer(void);
-
     void HandleRouterAdvertisement(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleRouterSolicit(const InfraIf::Icmp6Packet &aPacket, const Ip6::Address &aSrcAddress);
     void HandleNeighborAdvertisement(const InfraIf::Icmp6Packet &aPacket);
@@ -1387,7 +1390,8 @@ private:
     bool ShouldProcessRouteInfoOption(const RouteInfoOption &aRio, const Ip6::Prefix &aPrefix);
     void UpdateRxRaTrackerOnNetDataChange(void);
     bool NetworkDataContainsUlaRoute(void) const;
-    void ResetDiscoveredPrefixStaleTimer(void);
+
+    void HandleRaPrefixTableChanged(void);
 
     static bool IsValidBrUlaPrefix(const Ip6::Prefix &aBrUlaPrefix);
     static bool IsValidOnLinkPrefix(const PrefixInfoOption &aPio);
@@ -1401,8 +1405,7 @@ private:
     //------------------------------------------------------------------------------------------------------------------
     // Variables
 
-    using RoutingPolicyTimer         = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
-    using DiscoveredPrefixStaleTimer = TimerMilliIn<RoutingManager, &RoutingManager::HandleDiscoveredPrefixStaleTimer>;
+    using RoutingPolicyTimer = TimerMilliIn<RoutingManager, &RoutingManager::EvaluateRoutingPolicy>;
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
@@ -1441,8 +1444,7 @@ private:
     RsSender   mRsSender;
     Heap::Data mExtraRaOptions;
 
-    DiscoveredPrefixStaleTimer mDiscoveredPrefixStaleTimer;
-    RoutingPolicyTimer         mRoutingPolicyTimer;
+    RoutingPolicyTimer mRoutingPolicyTimer;
 };
 
 #if !OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE
