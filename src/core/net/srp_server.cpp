@@ -95,6 +95,7 @@ Server::Server(Instance &aInstance)
     , mState(kStateDisabled)
     , mAddressMode(kDefaultAddressMode)
     , mAnycastSequenceNumber(0)
+    , mMaxJitter(kUpdateTxMaxDelayLong)
     , mHasRegisteredAnyService(false)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     , mAutoEnable(false)
@@ -111,6 +112,19 @@ Error Server::SetAddressMode(AddressMode aMode)
     VerifyOrExit(mAddressMode != aMode);
     LogInfo("Address Mode: %s -> %s", AddressModeToString(mAddressMode), AddressModeToString(aMode));
     mAddressMode = aMode;
+
+exit:
+    return error;
+}
+
+Error Server::SetMaxJitter(uint8_t aDelay)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
+    mMaxJitter = aDelay;
+
+    LogInfo("Set max jitter(in secs) %d", aDelay);
 
 exit:
     return error;
@@ -159,12 +173,12 @@ void Server::Enable(void)
     {
     case kAddressModeUnicast:
         SelectPort();
-        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort, mMaxJitter);
         break;
 
     case kAddressModeAnycast:
         mPort = kAnycastAddressModePort;
-        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber);
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceAnycast(mAnycastSequenceNumber, mMaxJitter);
         break;
     }
 

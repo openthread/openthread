@@ -102,11 +102,12 @@ typedef void (*otNetDataPrefixPublisherCallback)(otNetDataPublisherEvent aEvent,
  * A call to this function will remove and replace any previous "DNS/SRP Service" entry that was being published (from
  * earlier call to any of `otNetDataPublishDnsSrpService{Type}()` functions).
  *
- * @param[in] aInstance        A pointer to an OpenThread instance.
- * @param[in] aSequenceNUmber  The sequence number of DNS/SRP Anycast Service.
+ * @param[in] aInstance        	    A pointer to an OpenThread instance.
+ * @param[in] aSequenceNumber  	    The sequence number of DNS/SRP Anycast Service.
+ * @param[in] aMaxJitter            The max jitter to be used by SRP client for updates
  *
  */
-void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNUmber);
+void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequenceNumber, uint8_t aMaxJitter);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -119,12 +120,16 @@ void otNetDataPublishDnsSrpServiceAnycast(otInstance *aInstance, uint8_t aSequen
  * Publishes the "DNS/SRP Service Unicast Address" by including the address and port info in the Service
  * TLV data.
  *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aAddress   The DNS/SRP server address to publish (MUST NOT be NULL).
- * @param[in] aPort      The SRP server port number to publish.
+ * @param[in] aInstance  	    A pointer to an OpenThread instance.
+ * @param[in] aAddress   	    The DNS/SRP server address to publish (MUST NOT be NULL).
+ * @param[in] aPort      	    The SRP server port number to publish.
+ * @param[in] aMaxJitter        The max jitter to be used by SRP client for updates
  *
  */
-void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Address *aAddress, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicast(otInstance         *aInstance,
+                                          const otIp6Address *aAddress,
+                                          uint16_t            aPort,
+                                          uint8_t             aMaxJitter);
 
 /**
  * Requests "DNS/SRP Service Unicast Address" to be published in the Thread Network Data.
@@ -138,11 +143,12 @@ void otNetDataPublishDnsSrpServiceUnicast(otInstance *aInstance, const otIp6Addr
  * info in the Service TLV data, this function uses the device's mesh-local EID and includes the info in the Server TLV
  * data.
  *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aPort      The SRP server port number to publish.
+ * @param[in] aInstance  	    A pointer to an OpenThread instance.
+ * @param[in] aPort      	    The SRP server port number to publish.
+ * @param[in] aMaxJitter        The max jitter to be used by SRP client for updates
  *
  */
-void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort);
+void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uint16_t aPort, uint8_t aMaxJitter);
 
 /**
  * Indicates whether or not currently the "DNS/SRP Service" entry is added to the Thread Network Data.

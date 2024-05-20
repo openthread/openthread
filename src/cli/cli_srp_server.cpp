@@ -42,6 +42,44 @@
 
 namespace ot {
 namespace Cli {
+/**
+ * @cli srp server maxjitter (get,set)
+ * @code
+ * srp server maxjitter
+ * Done
+ * @endcode
+ * @code
+ * srp server maxjitter
+ * 20000
+ * Done
+ * @endcode
+ * @cparam srp server maxjitter [@ca{value}]
+ * @par
+ * Gets or sets the max jitter value to be used by the SRP client for updates.
+ * @par
+ * The max jitter value is sent in the network data and tells the maximum jitter the SRP
+ * client should use before updates
+ * @sa otSrpServerGetMaxJitter
+ * @sa otSrpServerSetMaxJitter
+ */
+template <> otError SrpServer::Process<Cmd("maxjitter")>(Arg aArgs[])
+{
+    otError  error     = OT_ERROR_INVALID_ARGS;
+    uint32_t maxjitter = 0;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("%u", otSrpServerGetMaxJitter(GetInstancePtr()));
+        error = OT_ERROR_NONE;
+    }
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(maxjitter));
+        error = otSrpServerSetMaxJitter(GetInstancePtr(), maxjitter);
+    }
+exit:
+    return error;
+}
 
 /**
  * @cli srp server addrmode (get,set)
@@ -54,7 +92,7 @@ namespace Cli {
  * anycast
  * Done
  * @endcode
- * @cparam srp server addrmode [@ca{anycast}|@ca{unicast}]
+ * @cparam srp server addrmode [@ca{value}|@ca{unicast}]
  * @par
  * Gets or sets the address mode used by the SRP server.
  * @par

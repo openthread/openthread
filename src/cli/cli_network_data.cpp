@@ -244,17 +244,17 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
         /**
          * @cli netdata publish dnssrp anycast
          * @code
-         * netdata publish dnssrp anycast 1
+         * netdata publish dnssrp anycast 1 5
          * Done
          * @endcode
-         * @cparam netdata publish dnssrp anycast @ca{seq-num}
+         * @cparam netdata publish dnssrp anycast @ca{seq-num} @ca{maxjitter}
          * @par
-         * Publishes a DNS/SRP Service Anycast Address with a sequence number. Any current
+         * Publishes a DNS/SRP Service Anycast Address with a sequence number and max jitter value. Any current
          * DNS/SRP Service entry being published from a previous `publish dnssrp{anycast|unicast}`
          * command is removed and replaced with the new arguments.
          * @par
          * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
-         * @csa{netdata publish dnssrp unicast (addr,port)}
+         * @csa{netdata publish dnssrp unicast (addr,port,maxjitter)}
          * @csa{netdata publish dnssrp unicast (mle)}
          * @sa otNetDataPublishDnsSrpServiceAnycast
          * @endcli
@@ -262,9 +262,11 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
         if (aArgs[1] == "anycast")
         {
             uint8_t sequenceNumber;
+            uint8_t maxJitter;
 
             SuccessOrExit(error = aArgs[2].ParseAsUint8(sequenceNumber));
-            otNetDataPublishDnsSrpServiceAnycast(GetInstancePtr(), sequenceNumber);
+            SuccessOrExit(error = aArgs[3].ParseAsUint8(maxJitter));
+            otNetDataPublishDnsSrpServiceAnycast(GetInstancePtr(), sequenceNumber, maxJitter);
             ExitNow();
         }
 
@@ -272,46 +274,48 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
         {
             otIp6Address address;
             uint16_t     port;
+            uint8_t      maxJitter;
 
             /**
              * @cli netdata publish dnssrp unicast (mle)
              * @code
-             * netdata publish dnssrp unicast 50152
+             * netdata publish dnssrp unicast 50152 5
              * Done
              * @endcode
-             * @cparam netdata publish dnssrp unicast @ca{port}
+             * @cparam netdata publish dnssrp unicast @ca{port} @ca{maxJitter}
              * @par
-             * Publishes the device's Mesh-Local EID with a port number. MLE and port information is
-             * included in the Server TLV data. To use a different Unicast address, use the
-             * `netdata publish dnssrp unicast (addr,port)` command.
+             * Publishes the device's Mesh-Local EID with a port number and max jitter value for SRP client updates. MLE
+             * and port and maxjitter information information is included in the Server TLV data. To use a different
+             * Unicast address, use the `netdata publish dnssrp unicast (addr,port,maxjitter)` command.
              * @par
              * Any current DNS/SRP Service entry being published from a previous
              * `publish dnssrp{anycast|unicast}` command is removed and replaced with the new arguments.
              * @par
              * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
-             * @csa{netdata publish dnssrp unicast (addr,port)}
+             * @csa{netdata publish dnssrp unicast (addr,port,maxjitter)}
              * @csa{netdata publish dnssrp anycast}
              * @sa otNetDataPublishDnsSrpServiceUnicastMeshLocalEid
              */
             if (aArgs[3].IsEmpty())
             {
                 SuccessOrExit(error = aArgs[2].ParseAsUint16(port));
-                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(GetInstancePtr(), port);
+                SuccessOrExit(error = aArgs[3].ParseAsUint8(maxJitter));
+                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(GetInstancePtr(), port, maxJitter);
                 ExitNow();
             }
 
             /**
-             * @cli netdata publish dnssrp unicast (addr,port)
+             * @cli netdata publish dnssrp unicast (addr,port,maxjitter)
              * @code
-             * netdata publish dnssrp unicast fd00::1234 51525
+             * netdata publish dnssrp unicast fd00::1234 51525 5
              * Done
              * @endcode
-             * @cparam netdata publish dnssrp unicast @ca{address} @ca{port}
+             * @cparam netdata publish dnssrp unicast @ca{address} @ca{port} @ca{maxjitter}
              * @par
-             * Publishes a DNS/SRP Service Unicast Address with an address and port number. The address
-             * and port information is included in Service TLV data. Any current DNS/SRP Service entry being
-             * published from a previous `publish dnssrp{anycast|unicast}` command is removed and replaced
-             * with the new arguments.
+             * Publishes a DNS/SRP Service Unicast Address with an address, port number and max jitter delay for SRP
+             * client updates. The address port and max jitter value information is included in Service TLV data. Any
+             * current DNS/SRP Service entry being published from a previous `publish dnssrp{anycast|unicast}` command
+             * is removed and replaced with the new arguments.
              * @par
              * `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` must be enabled.
              * @csa{netdata publish dnssrp unicast (mle)}
@@ -320,7 +324,8 @@ template <> otError NetworkData::Process<Cmd("publish")>(Arg aArgs[])
              */
             SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
             SuccessOrExit(error = aArgs[3].ParseAsUint16(port));
-            otNetDataPublishDnsSrpServiceUnicast(GetInstancePtr(), &address, port);
+            SuccessOrExit(error = aArgs[4].ParseAsUint8(maxJitter));
+            otNetDataPublishDnsSrpServiceUnicast(GetInstancePtr(), &address, port, maxJitter);
             ExitNow();
         }
     }

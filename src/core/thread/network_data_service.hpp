@@ -173,6 +173,7 @@ public:
     {
         Ip6::Address mAnycastAddress; ///< The anycast address associated with the DNS/SRP servers.
         uint8_t      mSequenceNumber; ///< Sequence number used to notify SRP client if they need to re-register.
+        uint8_t      mMaxJitter;      ///< Max jitter to be used by SRP client if they need to re-register.
     };
 
     /**
@@ -189,9 +190,10 @@ public:
          * @param[in] aSequenceNumber   The sequence number of "DNS/SRP server" service.
          *
          */
-        explicit ServiceData(uint8_t aSequenceNumber)
+        explicit ServiceData(uint8_t aSequenceNumber, uint8_t aMaxJitter)
             : mServiceNumber(kServiceNumber)
             , mSequenceNumber(aSequenceNumber)
+            , mMaxJitter(aMaxJitter)
         {
             OT_UNUSED_VARIABLE(mServiceNumber);
         }
@@ -211,10 +213,19 @@ public:
          *
          */
         uint8_t GetSequenceNumber(void) const { return mSequenceNumber; }
+        
+        /**
+         * Returns the max jitter value for SRP client 
+         *
+         * @returns The max jitter value
+         *
+         */
+        uint8_t GetMaxJitter(void) const { return mMaxJitter; }
 
     private:
         uint8_t mServiceNumber;
         uint8_t mSequenceNumber;
+        uint8_t mMaxJitter;
     } OT_TOOL_PACKED_END;
 
     DnsSrpAnycast(void) = delete;
@@ -273,10 +284,11 @@ public:
          * @param[in] aPort      The port number of DNS/SRP server.
          *
          */
-        explicit ServiceData(const Ip6::Address &aAddress, uint16_t aPort)
+        explicit ServiceData(const Ip6::Address &aAddress, uint16_t aPort, uint8_t aMaxJitter)
             : mServiceNumber(kServiceNumber)
             , mAddress(aAddress)
             , mPort(BigEndian::HostSwap16(aPort))
+            , mMaxJitter(aMaxJitter)
         {
             OT_UNUSED_VARIABLE(mServiceNumber);
         }
@@ -305,10 +317,19 @@ public:
          */
         uint16_t GetPort(void) const { return BigEndian::HostSwap16(mPort); }
 
+        /**
+         * Returns the max jitter to be used by SRP client for updates
+         *
+         * @returns The max jitter to be used by SRP client for updates
+         *
+         */
+        uint8_t GetMaxJitter(void) const { return mMaxJitter; }
+        
     private:
         uint8_t      mServiceNumber;
         Ip6::Address mAddress;
         uint16_t     mPort;
+	    uint8_t      mMaxJitter;
     } OT_TOOL_PACKED_END;
 
     /**
@@ -322,13 +343,15 @@ public:
         /**
          * Initializes the `ServerData` object.
          *
-         * @param[in] aAddress   The IPv6 address of DNS/SRP server.
-         * @param[in] aPort      The port number of DNS/SRP server.
+         * @param[in] aAddress   		The IPv6 address of DNS/SRP server.
+         * @param[in] aPort      		The port number of DNS/SRP server.
+         * @param[in] aMaxJitter      The max jitter to be used by DNS/SRP client before reregistration
          *
          */
-        ServerData(const Ip6::Address &aAddress, uint16_t aPort)
+        ServerData(const Ip6::Address &aAddress, uint16_t aPort, uint8_t aMaxJitter)
             : mAddress(aAddress)
             , mPort(BigEndian::HostSwap16(aPort))
+            , mMaxJitter(aMaxJitter)
         {
         }
 
@@ -356,9 +379,26 @@ public:
          */
         uint16_t GetPort(void) const { return BigEndian::HostSwap16(mPort); }
 
+        /**
+         * Returns the max jitter to be used by SRP client for updates (in seconds)
+         *
+         * @returns Value (in seconds) used to determine max jitter used by clients.
+         *
+         */
+        uint8_t GetMaxJitter(void) const { return mMaxJitter; }
+
+        /**
+         * Sets the Max Jitter Delay for SRP client updates (in seconds)
+         *
+         * @param[in]  aMaxJitter  The Max Jitter Delay for SRP client updates (in seconds)
+         *
+         */
+        void SetMaxJitter(uint16_t aMaxJitter) { mMaxJitter = aMaxJitter; }
+
     private:
         Ip6::Address mAddress;
         uint16_t     mPort;
+        uint8_t      mMaxJitter;
     } OT_TOOL_PACKED_END;
 
     DnsSrpUnicast(void) = delete;

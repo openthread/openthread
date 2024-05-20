@@ -744,7 +744,28 @@ public:
      * @retval kErrorInvalidState   The SRP server is enabled and the address mode cannot be changed.
      *
      */
+
     Error SetAddressMode(AddressMode aMode);
+    /**
+     * Gets the max jitter value used by SRP client for updates
+     *
+     * The max jitter value  is included in "DNS/SRP Service Unicast/Anycast" entry published in the Network Data.
+     *
+     * @returns The max jitter value
+     *
+     */
+    uint8_t GetMaxJitter(void) const { return mMaxJitter; }
+
+    /**
+     * Sets the max jitter value for SRP client updates
+     *
+     * @param[in] aDelay  The  max jitter value to use
+     *
+     * @retval kErrorNone           Successfully set the max jitter for SRP client updates
+     * @retval kErrorInvalidState   The SRP server is enabled and the e max jitter cannot be changed.
+     *
+     */
+    Error SetMaxJitter(uint8_t aMaxJitter);
 
     /**
      * Gets the sequence number used with anycast address mode.
@@ -914,7 +935,8 @@ private:
 
     static constexpr uint16_t kUninitializedPort      = 0;
     static constexpr uint16_t kAnycastAddressModePort = 53;
-
+    static constexpr uint8_t  kUpdateTxMaxDelayLong = OPENTHREAD_CONFIG_SRP_SERVER_UPDATE_TX_MAX_DELAY_LONG; // in sec.
+    
     // Metadata for a received SRP Update message.
     struct MessageMetadata
     {
@@ -1073,6 +1095,7 @@ private:
     State           mState;
     AddressMode     mAddressMode;
     uint8_t         mAnycastSequenceNumber;
+    uint8_t         mMaxJitter;
     bool            mHasRegisteredAnyService : 1;
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     bool mAutoEnable : 1;

@@ -846,9 +846,13 @@ private:
     // that requires an update, the SRP client will wait for a short
     // delay as specified by `kUpdateTxDelay` before sending an SRP
     // update to server. This allows the user to provide more change
-    // that are then all sent in same update message.
-    static constexpr uint32_t kUpdateTxMinDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY; // in msec.
-    static constexpr uint32_t kUpdateTxMaxDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY; // in msec.
+    // that are then all sent in same update message.If the SRP client is
+    // already registered to a server and there is a change in service (e.g., SRP unicast server address
+    // or anycast sequence number changes) `kUpdateTxMaxDelayLong` is chosen as max delay
+    // else `kUpdateTxMaxDelay` is chosen
+    static constexpr uint32_t kUpdateTxMinDelay     = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY;      // in msec.
+    static constexpr uint32_t kUpdateTxMaxDelay     = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY;      // in msec.
+    static constexpr uint32_t kUpdateTxMaxDelayLong = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MAX_DELAY_LONG; // in msec.
 
     // -------------------------------
     // Retry related constants
@@ -1076,6 +1080,8 @@ private:
     uint16_t mUpdateMessageId;
     uint16_t mAutoHostAddressCount;
     uint32_t mRetryWaitInterval;
+    uint32_t mTxDelayLong;
+    bool     mUseUpdateTxDelayLong;
 
     TimeMilli mLeaseRenewTime;
     uint32_t  mTtl;

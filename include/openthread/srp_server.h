@@ -218,6 +218,30 @@ otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance);
 otError otSrpServerSetAddressMode(otInstance *aInstance, otSrpServerAddressMode aMode);
 
 /**
+ * Returns the max jitter for SRP client updates
+ *
+ * The max jitter is included in "DNS/SRP Service Anycast/Unicast" entry published in the Network Data.
+ *
+ * @param[in] aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The max jitter value in seconds
+ *
+ */
+uint8_t otSrpServerGetMaxJitter(otInstance *aInstance);
+
+/**
+ * Sets the sequence number used with anycast address mode.
+ *
+ * @param[in] aInstance        A pointer to an OpenThread instance.
+ * @param[in] aDelay           The  max jitter value for SRP client updates.
+ *
+ * @retval OT_ERROR_NONE            Successfully set the max jitter value
+ * @retval OT_ERROR_INVALID_STATE   The SRP server is enabled and the sequence number cannot be changed.
+ *
+ */
+otError otSrpServerSetMaxJitter(otInstance *aInstance, uint8_t aDelay);
+
+/**
  * Returns the sequence number used with anycast address mode.
  *
  * The sequence number is included in "DNS/SRP Service Anycast Address" entry published in the Network Data.

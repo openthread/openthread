@@ -130,6 +130,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_UPDATE_TX_MAX_DELAY_LONG
+ *
+ * Specifies the maximum value (in sec) for the long random delay wait time for the clients before sending an update
+ * message. Used when SRP client is not running and there is a service change in network data (e.g., SRP unicast server
+ * change or anycast sequence number change) The random delay is chosen uniformly from the min
+ * `OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_MIN_DELAY` up to max value.
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_UPDATE_TX_MAX_DELAY_LONG
+#define OPENTHREAD_CONFIG_SRP_SERVER_UPDATE_TX_MAX_DELAY_LONG 20
+#endif
+
+/**
  * @}
  *
  */

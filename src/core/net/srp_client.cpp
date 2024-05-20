@@ -252,6 +252,8 @@ Client::Client(Instance &aInstance)
     , mUpdateMessageId(0)
     , mAutoHostAddressCount(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
+    , mTxDelayLong(kUpdateTxMaxDelayLong)
+    , mUseUpdateTxDelayLong(false)
     , mTtl(0)
     , mLease(0)
     , mKeyLease(0)
@@ -434,6 +436,7 @@ void Client::HandleRoleChanged(void)
     if (Get<Mle::Mle>().IsAttached())
     {
         VerifyOrExit(GetState() == kStatePaused);
+        mUseUpdateTxDelayLong = true;
         Resume();
     }
     else
@@ -725,9 +728,9 @@ void Client::SetState(State aState)
         break;
 
     case kStateToUpdate:
-        mTimer.Start(Random::NonCrypto::GetUint32InRange(kUpdateTxMinDelay, kUpdateTxMaxDelay));
+        mTimer.Start(Random::NonCrypto::GetUint32InRange(kUpdateTxMinDelay,
+                                                         mUseUpdateTxDelayLong ? mTxDelayLong : kUpdateTxMaxDelay));
         break;
-
     case kStateUpdating:
         mTimer.Start(GetRetryWaitInterval());
         break;
@@ -1733,6 +1736,8 @@ void Client::HandleUpdateDone(void)
     }
 
     ResetRetryWaitInterval();
+    // Use long delays for any re-registrations
+    mUseUpdateTxDelayLong = true;
     SetState(kStateUpdated);
 
     GetRemovedServices(removedServices);
@@ -2056,6 +2061,7 @@ void Client::ProcessAutoStart(void)
     {
         serverSockAddr.SetAddress(anycastInfo.mAnycastAddress);
         serverSockAddr.SetPort(kAnycastServerPort);
+        mTxDelayLong = anycastInfo.mMaxJitter;
 
         // We check if we are selecting an anycast entry for first
         // time, or if the seq number has changed. Even if the

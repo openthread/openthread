@@ -495,22 +495,23 @@ const char *Publisher::Entry::StateToString(State aState)
 
 Publisher::DnsSrpServiceEntry::DnsSrpServiceEntry(Instance &aInstance) { Init(aInstance); }
 
-void Publisher::DnsSrpServiceEntry::PublishAnycast(uint8_t aSequenceNumber)
+void Publisher::DnsSrpServiceEntry::PublishAnycast(uint8_t aSequenceNumber, uint8_t aMaxJitter)
 {
-    LogInfo("Publishing DNS/SRP service anycast (seq-num:%d)", aSequenceNumber);
-    Publish(Info::InfoAnycast(aSequenceNumber));
+    LogInfo("Publishing DNS/SRP service anycast (seq-num:%d) maxjitter:%d", aSequenceNumber, aMaxJitter);
+    Publish(Info::InfoAnycast(aSequenceNumber, aMaxJitter));
 }
 
-void Publisher::DnsSrpServiceEntry::PublishUnicast(const Ip6::Address &aAddress, uint16_t aPort)
+void Publisher::DnsSrpServiceEntry::PublishUnicast(const Ip6::Address &aAddress, uint16_t aPort, uint8_t aMaxJitter)
 {
-    LogInfo("Publishing DNS/SRP service unicast (%s, port:%d)", aAddress.ToString().AsCString(), aPort);
-    Publish(Info::InfoUnicast(kTypeUnicast, aAddress, aPort));
+    LogInfo("Publishing DNS/SRP service unicast (%s, port:%d) maxjitter:%d", aAddress.ToString().AsCString(), aPort,
+            aMaxJitter);
+    Publish(Info::InfoUnicast(kTypeUnicast, aAddress, aPort, aMaxJitter));
 }
 
-void Publisher::DnsSrpServiceEntry::PublishUnicast(uint16_t aPort)
+void Publisher::DnsSrpServiceEntry::PublishUnicast(uint16_t aPort, uint8_t aMaxJitter)
 {
-    LogInfo("Publishing DNS/SRP service unicast (ml-eid, port:%d)", aPort);
-    Publish(Info::InfoUnicast(kTypeUnicastMeshLocalEid, Get<Mle::Mle>().GetMeshLocal64(), aPort));
+    LogInfo("Publishing DNS/SRP service unicast (ml-eid, port:%d) maxjitter:%d", aPort, aMaxJitter);
+    Publish(Info::InfoUnicast(kTypeUnicastMeshLocalEid, Get<Mle::Mle>().GetMeshLocal64(), aPort, aMaxJitter));
 }
 
 void Publisher::DnsSrpServiceEntry::Publish(const Info &aInfo)
@@ -574,17 +575,17 @@ void Publisher::DnsSrpServiceEntry::Add(void)
     {
     case kTypeAnycast:
         SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber(), mInfo.GetMaxJitter())));
         break;
 
     case kTypeUnicast:
         SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort(), mInfo.GetMaxJitter())));
         break;
 
     case kTypeUnicastMeshLocalEid:
         SuccessOrExit(Get<Service::Manager>().Add<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServerData(mInfo.GetAddress(), mInfo.GetPort())));
+            Service::DnsSrpUnicast::ServerData(mInfo.GetAddress(), mInfo.GetPort(), mInfo.GetMaxJitter())));       
         break;
     }
 
@@ -606,12 +607,12 @@ void Publisher::DnsSrpServiceEntry::Remove(State aNextState)
     {
     case kTypeAnycast:
         SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpAnycast>(
-            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber())));
+            Service::DnsSrpAnycast::ServiceData(mInfo.GetSequenceNumber(), mInfo.GetMaxJitter())));
         break;
 
     case kTypeUnicast:
         SuccessOrExit(Get<Service::Manager>().Remove<Service::DnsSrpUnicast>(
-            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort())));
+            Service::DnsSrpUnicast::ServiceData(mInfo.GetAddress(), mInfo.GetPort(), mInfo.GetMaxJitter())));
         break;
 
     case kTypeUnicastMeshLocalEid:
@@ -698,7 +699,7 @@ void Publisher::DnsSrpServiceEntry::CountAnycastEntries(uint8_t &aNumEntries, ui
     // "sequence number" value). We prefer the entries associated with
     // smaller RLCO16.
 
-    Service::DnsSrpAnycast::ServiceData serviceData(mInfo.GetSequenceNumber());
+    Service::DnsSrpAnycast::ServiceData serviceData(mInfo.GetSequenceNumber(), mInfo.GetMaxJitter());
     const ServiceTlv                   *serviceTlv = nullptr;
     ServiceData                         data;
 
@@ -802,9 +803,13 @@ void Publisher::DnsSrpServiceEntry::CountServiceDataUnicastEntries(uint8_t &aNum
 //---------------------------------------------------------------------------------------------------------------------
 // Publisher::DnsSrpServiceEntry::Info
 
-Publisher::DnsSrpServiceEntry::Info::Info(Type aType, uint16_t aPortOrSeqNumber, const Ip6::Address *aAddress)
+Publisher::DnsSrpServiceEntry::Info::Info(Type                aType,
+                                          uint16_t            aPortOrSeqNumber,
+                                          uint8_t             aMaxJitter,
+                                          const Ip6::Address *aAddress)
     : mPortOrSeqNumber(aPortOrSeqNumber)
     , mType(aType)
+    , mMaxJitter(aMaxJitter)
 {
     // It is important to `Clear()` the object since we compare all
     // bytes using overload of operator `==`.
@@ -813,6 +818,7 @@ Publisher::DnsSrpServiceEntry::Info::Info(Type aType, uint16_t aPortOrSeqNumber,
 
     mType            = aType;
     mPortOrSeqNumber = aPortOrSeqNumber;
+    mMaxJitter       = aMaxJitter;
 
     if (aAddress != nullptr)
     {

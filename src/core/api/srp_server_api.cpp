@@ -56,6 +56,16 @@ otSrpServerState otSrpServerGetState(otInstance *aInstance)
 
 uint16_t otSrpServerGetPort(otInstance *aInstance) { return AsCoreType(aInstance).Get<Srp::Server>().GetPort(); }
 
+uint8_t otSrpServerGetMaxJitter(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().GetMaxJitter();
+}
+
+otError otSrpServerSetMaxJitter(otInstance *aInstance, uint8_t aJitter)
+{
+    return AsCoreType(aInstance).Get<Srp::Server>().SetMaxJitter(aJitter);
+}
+
 otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance)
 {
     return MapEnum(AsCoreType(aInstance).Get<Srp::Server>().GetAddressMode());
