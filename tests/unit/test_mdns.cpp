@@ -2728,8 +2728,9 @@ void TestServiceSubTypeReg(void)
 
         dnsMsg = sDnsMessages.GetHead();
         VerifyOrQuit(dnsMsg != nullptr);
-        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 2);
         dnsMsg->ValidateSubType(service.mSubTypeLabels[index], service);
+        dnsMsg->Validate(service, kInAdditionalSection, kCheckSrv | kCheckTxt);
     }
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
@@ -2762,8 +2763,9 @@ void TestServiceSubTypeReg(void)
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
-        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 2);
         dnsMsg->ValidateSubType(service.mSubTypeLabels[3], service);
+        dnsMsg->Validate(service, kInAdditionalSection, kCheckSrv | kCheckTxt);
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
         sDnsMessages.Clear();
     }
@@ -2842,11 +2844,12 @@ void TestServiceSubTypeReg(void)
 
         VerifyOrQuit(!sDnsMessages.IsEmpty());
         dnsMsg = sDnsMessages.GetHead();
-        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 3, /* Auth */ 0, /* Addnl */ 0);
+        dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 3, /* Auth */ 0, /* Addnl */ 2);
 
         dnsMsg->ValidateSubType(kSubTypes1[3], service, kGoodBye);
         dnsMsg->ValidateSubType(kSubTypes2[1], service);
         dnsMsg->ValidateSubType(kSubTypes2[3], service);
+        dnsMsg->Validate(service, kInAdditionalSection, kCheckSrv | kCheckTxt);
 
         VerifyOrQuit(dnsMsg->GetNext() == nullptr);
         sDnsMessages.Clear();
@@ -3513,10 +3516,14 @@ void TestQuery(void)
     VerifyOrQuit(dnsMsg != nullptr);
     VerifyOrQuit(dnsMsg->GetNext() == nullptr);
 
-    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 2, /* Auth */ 0, /* Addnl */ 9);
 
     dnsMsg->ValidateSubType("_s", service1);
     dnsMsg->ValidateSubType("_s", service3);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(service3, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
+    dnsMsg->Validate(host2, kInAdditionalSection);
 
     // Send same query again and make sure it is ignored (rate limit).
 
@@ -3540,8 +3547,10 @@ void TestQuery(void)
     VerifyOrQuit(dnsMsg != nullptr);
     VerifyOrQuit(dnsMsg->GetNext() == nullptr);
 
-    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 0);
+    dnsMsg->ValidateHeader(kMulticastResponse, /* Q */ 0, /* Ans */ 1, /* Auth */ 0, /* Addnl */ 5);
     dnsMsg->ValidateSubType("_r", service1);
+    dnsMsg->Validate(service1, kInAdditionalSection, kCheckSrv | kCheckTxt);
+    dnsMsg->Validate(host1, kInAdditionalSection);
 
     Log("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     Log("Validate that query with other `class` is ignored");
