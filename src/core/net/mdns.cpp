@@ -832,6 +832,7 @@ Core::Entry::Entry(void)
     , mMulticastNsecPending(false)
     , mUnicastNsecPending(false)
     , mAppendedNsec(false)
+    , mBypassCallbackStateCheck(false)
 {
 }
 
@@ -903,6 +904,12 @@ void Core::Entry::SetCallback(const Callback &aCallback)
     ScheduleCallbackTask();
 }
 
+void Core::Entry::MarkToInvokeCallbackUnconditionally(void)
+{
+    mBypassCallbackStateCheck = true;
+    Get<Core>().mEntryTask.Post();
+}
+
 void Core::Entry::ScheduleCallbackTask(void)
 {
     switch (GetState())
@@ -925,6 +932,16 @@ exit:
 void Core::Entry::InvokeCallbacks(void)
 {
     Error error = kErrorNone;
+
+    // `mBypassCallbackStateCheck` is used when host is registered
+    // with no address, which is treated as unregistering the host.
+    // This ensures host registration callback is invoked properly.
+
+    if (mBypassCallbackStateCheck)
+    {
+        mBypassCallbackStateCheck = false;
+        mCallback.InvokeAndClear(GetInstance(), error);
+    }
 
     switch (GetState())
     {
@@ -1332,7 +1349,16 @@ void Core::HostEntry::Register(const Host &aHost, const Callback &aCallback)
         // If host is registered with no addresses, treat it
         // as host being unregistered and announce removal of
         // the old addresses.
+
         Unregister(aHost);
+
+        // Set the callback again as `Unregister()` may clear it.
+        // Also mark to invoke the callback unconditionally (bypassing
+        // entry state check). The callback will be invoked
+        // after returning from this method from the posted tasklet.
+
+        SetCallback(aCallback);
+        MarkToInvokeCallbackUnconditionally();
         ExitNow();
     }
 
