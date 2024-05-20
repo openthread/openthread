@@ -216,8 +216,10 @@ void ChannelManager::HandleTimer(void)
     switch (mState)
     {
     case kStateIdle:
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         LogInfo("Auto-triggered channel select");
         IgnoreError(RequestAutoChannelSelect(false));
+#endif
         StartAutoSelectTimer();
         break;
 
@@ -423,12 +425,14 @@ exit:
 #if OPENTHREAD_FTD
 void ChannelManager::SetAutoNetworkChannelSelectionEnabled(bool aEnabled)
 {
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     if (aEnabled != mAutoSelectEnabled)
     {
         mAutoSelectEnabled = aEnabled;
         IgnoreError(RequestNetworkChannelSelect(false));
         StartAutoSelectTimer();
     }
+#endif
 }
 #endif
 
