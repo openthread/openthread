@@ -286,6 +286,7 @@ private:
     bool  IsActiveDataset(void) const { return mLocal.GetType() == Dataset::kActive; }
     bool  IsPendingDataset(void) const { return mLocal.GetType() == Dataset::kPending; }
     void  Clear(void);
+    Error ApplyConfiguration(const Dataset &aDataset) const;
     void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
     void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
