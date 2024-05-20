@@ -45,16 +45,16 @@ class SpinelManager
 {
 public:
     /**
-     * Returns the static instance of the SpinelDriver.
-     *
-     */
-    static Spinel::SpinelDriver &GetSpinelDriver(void);
-
-    /**
      * Returns the static instance of the SpinelManager.
      *
      */
     static SpinelManager &GetSpinelManager(void);
+
+    /**
+     * Returns the static instance of the SpinelDriver.
+     *
+     */
+    Spinel::SpinelDriver &GetSpinelDriver(void) { return mSpinelDriver; }
 
     /**
      * Constructor of the SpinelManager
