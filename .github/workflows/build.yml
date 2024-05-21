@@ -178,7 +178,7 @@ jobs:
       run: |
         script/check-scan-build
 
-  mbedtls3-build:
+  mbedtls2-build:
     runs-on: ubuntu-20.04
     steps:
     - name: Harden Runner
@@ -196,7 +196,7 @@ jobs:
     - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       with:
         repository: ARMmbed/mbedtls
-        ref: v3.5.0
+        ref: v2.28.8
         path: third_party/mbedtls/repo
     - name: Build
       run: |
