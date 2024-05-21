@@ -359,6 +359,16 @@ public:
     void UpdateRouterIdSet(uint8_t aRouterIdSequence, const Mle::RouterIdSet &aRouterIdSet);
 
     /**
+     * Updates the Router ID allocation set.
+     *
+     * @param[in]  aRouter  A reference to the router.
+     * @param[in]  aNextHop The Router ID of the next hop to this router.
+     * @param[in]  aCost    The cost to this router.
+     *
+     */
+    void SetRouterNextHopAndCost(Router &aRouter, uint8_t aNextHop, uint8_t aCost);
+
+    /**
      * Updates the routes based on a received `RouteTlv` from a neighboring router.
      *
      * @param[in]  aRouteTlv    The received `RouteTlv`

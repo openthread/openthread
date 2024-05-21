@@ -561,6 +561,14 @@ exit:
     return;
 }
 
+void RouterTable::SetRouterNextHopAndCost(Router &aRouter, uint8_t aNextHop, uint8_t aCost)
+{
+    if (aRouter.SetNextHopAndCost(aNextHop, aCost))
+    {
+        SignalTableChanged();
+    }
+}
+
 void RouterTable::UpdateRoutes(const Mle::RouteTlv &aRouteTlv, uint8_t aNeighborId)
 {
     Router          *neighbor;

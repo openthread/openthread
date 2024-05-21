@@ -666,6 +666,8 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
     Error              error = kErrorNone;
     Mac::Addresses     meshAddrs;
     Lowpan::MeshHeader meshHeader;
+    Router            *macSource;
+    Router            *meshSource;
 
     // Security Check: only process Mesh Header frames that had security enabled.
     VerifyOrExit(aLinkInfo.IsLinkSecurityEnabled(), error = kErrorSecurity);
@@ -676,6 +678,14 @@ void MeshForwarder::HandleMesh(FrameData &aFrameData, const Mac::Address &aMacSo
     meshAddrs.mDestination.SetShort(meshHeader.GetDestination());
 
     UpdateRoutes(aFrameData, meshAddrs);
+    macSource  = Get<RouterTable>().FindRouterByRloc16(aMacSource.GetShort());
+    meshSource = Get<RouterTable>().FindRouterByRloc16(meshAddrs.mSource.GetShort());
+    if (macSource != nullptr && meshSource != nullptr && !Get<RouterTable>().FindNextHopOf(*meshSource))
+    {
+        Get<RouterTable>().SetRouterNextHopAndCost(*meshSource, macSource->GetRouterId(),
+                                                   Mle::kMaxRouteCost - 1 -
+                                                       Get<RouterTable>().GetPathCost(aMacSource.GetShort()));
+    }
 
     if (meshAddrs.mDestination.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
         Get<Mle::MleRouter>().IsMinimalChild(meshAddrs.mDestination.GetShort()))
