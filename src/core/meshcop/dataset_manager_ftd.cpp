@@ -110,11 +110,11 @@ Error DatasetManager::ProcessSetOrReplaceRequest(MgmtCommand          aCommand,
         Timestamp pendingTimestamp;
 
         SuccessOrExit(dataset.Read<PendingTimestampTlv>(pendingTimestamp));
-        VerifyOrExit(Timestamp::Compare(&pendingTimestamp, mLocal.GetTimestamp()) > 0);
+        VerifyOrExit(Timestamp::Compare(&pendingTimestamp, GetLocalTimestamp()) > 0);
     }
     else
     {
-        VerifyOrExit(Timestamp::Compare(&activeTimestamp, mLocal.GetTimestamp()) > 0);
+        VerifyOrExit(Timestamp::Compare(&activeTimestamp, GetLocalTimestamp()) > 0);
     }
 
     // Determine whether the new Dataset affects connectivity
@@ -299,7 +299,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
     Dataset dataset;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
-    VerifyOrExit(!mLocal.IsTimestampPresent(), error = kErrorAlready);
+    VerifyOrExit(!mLocalTimestampValid, error = kErrorAlready);
 
     IgnoreError(Read(dataset));
 
@@ -382,7 +382,7 @@ Error ActiveDatasetManager::GenerateLocal(void)
         IgnoreError(dataset.WriteTlv(tlv));
     }
 
-    mLocal.Save(dataset);
+    LocalSave(dataset);
     IgnoreError(Restore());
 
     LogInfo("Generated local dataset");

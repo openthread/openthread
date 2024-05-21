@@ -512,8 +512,6 @@ openthread_core_files = [
   "meshcop/commissioner.hpp",
   "meshcop/dataset.cpp",
   "meshcop/dataset.hpp",
-  "meshcop/dataset_local.cpp",
-  "meshcop/dataset_local.hpp",
   "meshcop/dataset_manager.cpp",
   "meshcop/dataset_manager.hpp",
   "meshcop/dataset_manager_ftd.cpp",

@@ -147,7 +147,6 @@ set(COMMON_SOURCES
     meshcop/border_agent.cpp
     meshcop/commissioner.cpp
     meshcop/dataset.cpp
-    meshcop/dataset_local.cpp
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp

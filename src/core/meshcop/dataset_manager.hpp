@@ -43,7 +43,6 @@
 #include "common/timer.hpp"
 #include "mac/channel_mask.hpp"
 #include "meshcop/dataset.hpp"
-#include "meshcop/dataset_local.hpp"
 #include "net/udp6.hpp"
 #include "thread/tmf.hpp"
 
@@ -92,7 +91,7 @@ public:
      * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    Error Read(Dataset &aDataset) const { return mLocal.Read(aDataset); }
+    Error Read(Dataset &aDataset) const;
 
     /**
      * Retrieves the dataset from non-volatile memory.
@@ -264,6 +263,22 @@ private:
         void Add(uint8_t aTlvType);
     };
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    struct SecurelyStoredTlv
+    {
+        Crypto::Storage::KeyRef GetKeyRef(Dataset::Type aType) const
+        {
+            return (aType == Dataset::kActive) ? mActiveKeyRef : mPendingKeyRef;
+        }
+
+        Tlv::Type               mTlvType;
+        Crypto::Storage::KeyRef mActiveKeyRef;
+        Crypto::Storage::KeyRef mPendingKeyRef;
+    };
+
+    static const SecurelyStoredTlv kSecurelyStoredTlvs[];
+#endif
+
 #if OPENTHREAD_FTD
     enum MgmtCommand : uint8_t
     {
@@ -282,13 +297,13 @@ private:
 
     DatasetManager(Instance &aInstance, Type aType, TimerMilli::Handler aTimerHandler);
 
-    Type  GetType(void) const { return mLocal.GetType(); }
-    bool  IsActiveDataset(void) const { return mLocal.GetType() == Dataset::kActive; }
-    bool  IsPendingDataset(void) const { return mLocal.GetType() == Dataset::kPending; }
+    bool  IsActiveDataset(void) const { return (mType == Dataset::kActive); }
+    bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
     void  Clear(void);
     void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
     void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
+    void  LocalSave(const Dataset &aDataset);
     void  SignalDatasetChange(void) const;
     void  SyncLocalWithLeader(const Dataset &aDataset);
     Error SendSetRequest(const Dataset &aDataset);
@@ -302,6 +317,14 @@ private:
                                       const otMessageInfo *aMessageInfo,
                                       Error                aError);
 
+    const Timestamp *GetLocalTimestamp(void) const { return mLocalTimestampValid ? &mLocalTimestamp : nullptr; }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    void MoveKeysToSecureStorage(Dataset &aDataset) const;
+    void DestroySecurelyStoredKeys(void) const;
+    void EmplaceSecurelyStoredKeys(Dataset &aDataset) const;
+#endif
+
 #if OPENTHREAD_FTD
     Error HandleSetOrReplace(MgmtCommand aCommand, const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     Error ProcessSetOrReplaceRequest(MgmtCommand aCommand, const Coap::Message &aMessage, RequestInfo &aInfo) const;
@@ -310,10 +333,14 @@ private:
                                    StateTlv::State         aState);
 #endif
 
-    DatasetLocal              mLocal;
-    Timestamp                 mTimestamp;
-    bool                      mTimestampValid : 1;
+    Type                      mType;
+    bool                      mLocalSaved : 1;
+    bool                      mLocalTimestampValid : 1;
+    bool                      mNetworkTimestampValid : 1;
     bool                      mMgmtPending : 1;
+    TimeMilli                 mLocalUpdateTime;
+    Timestamp                 mLocalTimestamp;
+    Timestamp                 mNetworkTimestamp;
     TimerMilli                mTimer;
     Callback<MgmtSetCallback> mMgmtSetCallback;
 };

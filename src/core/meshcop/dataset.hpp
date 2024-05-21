@@ -58,7 +58,7 @@ namespace MeshCoP {
  */
 class Dataset
 {
-    friend class DatasetLocal;
+    friend class DatasetManager;
 
 public:
     static constexpr uint8_t kMaxLength = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max length of Dataset (bytes)
