@@ -8,11 +8,7 @@
 #ifndef PSA_CRYPTO_TEST_DRIVERS_CIPHER_H
 #define PSA_CRYPTO_TEST_DRIVERS_CIPHER_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #if defined(PSA_CRYPTO_DRIVER_TEST)
 #include <psa/crypto_driver_common.h>
@@ -27,11 +23,17 @@ typedef struct {
     /* If not PSA_SUCCESS, return this error code instead of processing the
      * function call. */
     psa_status_t forced_status;
+    psa_status_t forced_status_encrypt;
+    psa_status_t forced_status_set_iv;
     /* Count the amount of times one of the cipher driver functions is called. */
     unsigned long hits;
+    unsigned long hits_encrypt;
+    unsigned long hits_set_iv;
 } mbedtls_test_driver_cipher_hooks_t;
 
-#define MBEDTLS_TEST_DRIVER_CIPHER_INIT { NULL, 0, PSA_SUCCESS, 0 }
+#define MBEDTLS_TEST_DRIVER_CIPHER_INIT { NULL, 0, \
+                                          PSA_SUCCESS, PSA_SUCCESS, PSA_SUCCESS, \
+                                          0, 0, 0 }
 static inline mbedtls_test_driver_cipher_hooks_t
 mbedtls_test_driver_cipher_hooks_init(void)
 {

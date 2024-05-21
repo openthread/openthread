@@ -5,28 +5,25 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
+/* md.h is included this early since MD_CAN_XXX macros are defined there. */
+#include "mbedtls/md.h"
 
 #if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_RSA_C) ||  \
-    !defined(MBEDTLS_SHA256_C) || !defined(MBEDTLS_MD_C) || \
+    !defined(MBEDTLS_MD_CAN_SHA256) || !defined(MBEDTLS_MD_C) || \
     !defined(MBEDTLS_FS_IO)
 int main(void)
 {
     mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_RSA_C and/or "
                    "MBEDTLS_MD_C and/or "
-                   "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO not defined.\n");
+                   "MBEDTLS_MD_CAN_SHA256 and/or MBEDTLS_FS_IO not defined.\n");
     mbedtls_exit(0);
 }
 #else
 
 #include "mbedtls/rsa.h"
-#include "mbedtls/md.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -40,11 +37,14 @@ int main(int argc, char *argv[])
     int exit_code = MBEDTLS_EXIT_FAILURE;
     size_t i;
     mbedtls_rsa_context rsa;
+    mbedtls_mpi N, E;
     unsigned char hash[32];
     unsigned char buf[MBEDTLS_MPI_MAX_SIZE];
     char filename[512];
 
-    mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+    mbedtls_rsa_init(&rsa);
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&E);
 
     if (argc != 2) {
         mbedtls_printf("usage: rsa_verify <filename>\n");
@@ -65,15 +65,13 @@ int main(int argc, char *argv[])
         goto exit;
     }
 
-    if ((ret = mbedtls_mpi_read_file(&rsa.N, 16, f)) != 0 ||
-        (ret = mbedtls_mpi_read_file(&rsa.E, 16, f)) != 0) {
+    if ((ret = mbedtls_mpi_read_file(&N, 16, f)) != 0 ||
+        (ret = mbedtls_mpi_read_file(&E, 16, f)) != 0 ||
+        (ret = mbedtls_rsa_import(&rsa, &N, NULL, NULL, NULL, &E) != 0)) {
         mbedtls_printf(" failed\n  ! mbedtls_mpi_read_file returned %d\n\n", ret);
         fclose(f);
         goto exit;
     }
-
-    rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
-
     fclose(f);
 
     /*
@@ -94,7 +92,7 @@ int main(int argc, char *argv[])
 
     fclose(f);
 
-    if (i != rsa.len) {
+    if (i != mbedtls_rsa_get_len(&rsa)) {
         mbedtls_printf("\n  ! Invalid RSA signature format\n\n");
         goto exit;
     }
@@ -113,8 +111,8 @@ int main(int argc, char *argv[])
         goto exit;
     }
 
-    if ((ret = mbedtls_rsa_pkcs1_verify(&rsa, NULL, NULL, MBEDTLS_RSA_PUBLIC,
-                                        MBEDTLS_MD_SHA256, 20, hash, buf)) != 0) {
+    if ((ret = mbedtls_rsa_pkcs1_verify(&rsa, MBEDTLS_MD_SHA256,
+                                        32, hash, buf)) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_rsa_pkcs1_verify returned -0x%0x\n\n",
                        (unsigned int) -ret);
         goto exit;
@@ -127,13 +125,10 @@ int main(int argc, char *argv[])
 exit:
 
     mbedtls_rsa_free(&rsa);
-
-#if defined(_WIN32)
-    mbedtls_printf("  + Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&E);
 
     mbedtls_exit(exit_code);
 }
-#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_RSA_C && MBEDTLS_SHA256_C &&
+#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_RSA_C && MBEDTLS_MD_CAN_SHA256 &&
           MBEDTLS_FS_IO */

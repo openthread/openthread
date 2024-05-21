@@ -1,9 +1,6 @@
 Diffie-Hellman full exchange: tiny x_size
 dhm_do_dhm:"12df4d7689dff4c99d9ae57d7":1:"1e32158a35e34d7b619657d6":0
 
-Diffie-Hellman parameter validation
-dhm_invalid_params:
-
 Diffie-Hellman full exchange: 5-bit, x_size=3
 dhm_do_dhm:"17":3:"5":0
 

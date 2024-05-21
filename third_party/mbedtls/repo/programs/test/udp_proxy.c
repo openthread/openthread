@@ -11,11 +11,8 @@
  * example of good general usage.
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+
+#include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
@@ -63,9 +60,10 @@ int main(void)
 #endif
 #endif /* _MSC_VER */
 #else /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
-#if defined(MBEDTLS_HAVE_TIME)
+#if defined(MBEDTLS_HAVE_TIME) || (defined(MBEDTLS_TIMING_C) && !defined(MBEDTLS_TIMING_ALT))
 #include <sys/time.h>
 #endif
+#include <sys/select.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif /* ( _WIN32 || _WIN32_WCE ) && !EFIX64 && !EFI32 */
@@ -961,11 +959,6 @@ exit:
     mbedtls_net_free(&client_fd);
     mbedtls_net_free(&server_fd);
     mbedtls_net_free(&listen_fd);
-
-#if defined(_WIN32)
-    mbedtls_printf("  Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
 
     mbedtls_exit(exit_code);
 }

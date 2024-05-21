@@ -91,6 +91,7 @@ class PSAMacroEnumerator:
         self.mac_algorithms = set() #type: Set[str]
         self.ka_algorithms = set() #type: Set[str]
         self.kdf_algorithms = set() #type: Set[str]
+        self.pake_algorithms = set() #type: Set[str]
         self.aead_algorithms = set() #type: Set[str]
         self.sign_algorithms = set() #type: Set[str]
         # macro name -> list of argument names
@@ -384,6 +385,7 @@ enumerate
             'asymmetric_signature_algorithm': [self.sign_algorithms],
             'asymmetric_signature_wildcard': [self.algorithms],
             'asymmetric_encryption_algorithm': [],
+            'pake_algorithm': [self.pake_algorithms],
             'other_algorithm': [],
             'lifetime': [self.lifetimes],
         } #type: Dict[str, List[Set[str]]]
@@ -426,6 +428,7 @@ enumerate
         self.mac_algorithms.add('0x03007fff')
         self.ka_algorithms.add('0x09fc0000')
         self.kdf_algorithms.add('0x080000ff')
+        self.pake_algorithms.add('0x0a0000ff')
         # For AEAD algorithms, the only variability is over the tag length,
         # and this only applies to known algorithms, so don't test an
         # unknown algorithm.

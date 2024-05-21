@@ -86,6 +86,9 @@ static psa_status_t psa_its_read_file(psa_storage_uid_t uid,
         return PSA_ERROR_DOES_NOT_EXIST;
     }
 
+    /* Ensure no stdio buffering of secrets, as such buffers cannot be wiped. */
+    mbedtls_setbuf(*p_stream, NULL);
+
     n = fread(&header, 1, sizeof(header), *p_stream);
     if (n != sizeof(header)) {
         return PSA_ERROR_DATA_CORRUPT;
@@ -95,14 +98,9 @@ static psa_status_t psa_its_read_file(psa_storage_uid_t uid,
         return PSA_ERROR_DATA_CORRUPT;
     }
 
-    p_info->size = (header.size[0] |
-                    header.size[1] << 8 |
-                    header.size[2] << 16 |
-                    header.size[3] << 24);
-    p_info->flags = (header.flags[0] |
-                     header.flags[1] << 8 |
-                     header.flags[2] << 16 |
-                     header.flags[3] << 24);
+    p_info->size  = MBEDTLS_GET_UINT32_LE(header.size, 0);
+    p_info->flags = MBEDTLS_GET_UINT32_LE(header.flags, 0);
+
     return PSA_SUCCESS;
 }
 
@@ -195,9 +193,13 @@ psa_status_t psa_its_set(psa_storage_uid_t uid,
 
     psa_its_fill_filename(uid, filename);
     stream = fopen(PSA_ITS_STORAGE_TEMP, "wb");
+
     if (stream == NULL) {
         goto exit;
     }
+
+    /* Ensure no stdio buffering of secrets, as such buffers cannot be wiped. */
+    mbedtls_setbuf(stream, NULL);
 
     status = PSA_ERROR_INSUFFICIENT_STORAGE;
     n = fwrite(&header, 1, sizeof(header), stream);

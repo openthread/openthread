@@ -5,11 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
 
@@ -92,7 +88,8 @@ int main(int argc, char *argv[])
     mbedtls_printf("\n  . Reading private key from '%s'", argv[1]);
     fflush(stdout);
 
-    if ((ret = mbedtls_pk_parse_keyfile(&pk, argv[1], "")) != 0) {
+    if ((ret = mbedtls_pk_parse_keyfile(&pk, argv[1], "",
+                                        mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_pk_parse_keyfile returned -0x%04x\n",
                        (unsigned int) -ret);
         goto exit;
@@ -148,11 +145,6 @@ exit:
         mbedtls_strerror(ret, (char *) buf, sizeof(buf));
         mbedtls_printf("  !  Last error was: %s\n", buf);
     }
-#endif
-
-#if defined(_WIN32)
-    mbedtls_printf("  + Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
 #endif
 
     mbedtls_exit(exit_code);

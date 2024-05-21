@@ -5,22 +5,20 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
+/* md.h is included this early since MD_CAN_XXX macros are defined there. */
+#include "mbedtls/md.h"
 
 #if !defined(MBEDTLS_MD_C) || !defined(MBEDTLS_ENTROPY_C) ||  \
-    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_SHA256_C) ||        \
+    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_MD_CAN_SHA256) ||        \
     !defined(MBEDTLS_PK_PARSE_C) || !defined(MBEDTLS_FS_IO) ||    \
     !defined(MBEDTLS_CTR_DRBG_C)
 int main(void)
 {
     mbedtls_printf("MBEDTLS_MD_C and/or MBEDTLS_ENTROPY_C and/or "
-                   "MBEDTLS_RSA_C and/or MBEDTLS_SHA256_C and/or "
+                   "MBEDTLS_RSA_C and/or MBEDTLS_MD_CAN_SHA256 and/or "
                    "MBEDTLS_PK_PARSE_C and/or MBEDTLS_FS_IO and/or "
                    "MBEDTLS_CTR_DRBG_C not defined.\n");
     mbedtls_exit(0);
@@ -29,7 +27,6 @@ int main(void)
 
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
-#include "mbedtls/md.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/pk.h"
 
@@ -87,7 +84,8 @@ int main(int argc, char *argv[])
     mbedtls_printf("\n  . Reading private key from '%s'", argv[1]);
     fflush(stdout);
 
-    if ((ret = mbedtls_pk_parse_keyfile(&pk, argv[1], "")) != 0) {
+    if ((ret = mbedtls_pk_parse_keyfile(&pk, argv[1], "",
+                                        mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
         mbedtls_printf(" failed\n  ! Could not read key from '%s'\n", argv[1]);
         mbedtls_printf("  ! mbedtls_pk_parse_public_keyfile returned %d\n\n", ret);
         goto exit;
@@ -98,7 +96,12 @@ int main(int argc, char *argv[])
         goto exit;
     }
 
-    mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_SHA256);
+    if ((ret = mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk),
+                                       MBEDTLS_RSA_PKCS_V21,
+                                       MBEDTLS_MD_SHA256)) != 0) {
+        mbedtls_printf(" failed\n  ! Padding not supported\n");
+        goto exit;
+    }
 
     /*
      * Compute the SHA-256 hash of the input file,
@@ -114,7 +117,8 @@ int main(int argc, char *argv[])
         goto exit;
     }
 
-    if ((ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, 0, buf, &olen,
+    if ((ret = mbedtls_pk_sign(&pk, MBEDTLS_MD_SHA256, hash, 0,
+                               buf, sizeof(buf), &olen,
                                mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_pk_sign returned %d\n\n", ret);
         goto exit;
@@ -150,13 +154,8 @@ exit:
     mbedtls_psa_crypto_free();
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
 
-#if defined(_WIN32)
-    mbedtls_printf("  + Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
-
     mbedtls_exit(exit_code);
 }
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_RSA_C &&
-          MBEDTLS_SHA256_C && MBEDTLS_PK_PARSE_C && MBEDTLS_FS_IO &&
+          MBEDTLS_MD_CAN_SHA256 && MBEDTLS_PK_PARSE_C && MBEDTLS_FS_IO &&
           MBEDTLS_CTR_DRBG_C */

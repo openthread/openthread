@@ -14,12 +14,7 @@
 #ifndef TEST_ARGUMENTS_H
 #define TEST_ARGUMENTS_H
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
-
+#include "mbedtls/build_info.h"
 #include <stdint.h>
 #include <stdlib.h>
 

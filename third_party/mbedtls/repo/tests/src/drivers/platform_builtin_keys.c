@@ -8,6 +8,8 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
+#include <test/helpers.h>
+
 #include <psa/crypto.h>
 #include <psa/crypto_extra.h>
 

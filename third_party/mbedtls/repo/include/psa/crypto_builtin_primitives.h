@@ -7,10 +7,10 @@
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.
  *
- * \note This header and its content is not part of the Mbed TLS API and
+ * \note This header and its content are not part of the Mbed TLS API and
  * applications must not depend on it. Its main purpose is to define the
  * multi-part state objects of the Mbed TLS software-based PSA drivers. The
- * definition of these objects are then used by crypto_struct.h to define the
+ * definitions of these objects are then used by crypto_struct.h to define the
  * implementation-defined types of PSA multi-part state objects.
  */
 /*
@@ -20,6 +20,7 @@
 
 #ifndef PSA_CRYPTO_BUILTIN_PRIMITIVES_H
 #define PSA_CRYPTO_BUILTIN_PRIMITIVES_H
+#include "mbedtls/private_access.h"
 
 #include <psa/crypto_driver_common.h>
 
@@ -27,36 +28,31 @@
  * Hash multi-part operation definitions.
  */
 
-#include "mbedtls/md2.h"
-#include "mbedtls/md4.h"
 #include "mbedtls/md5.h"
 #include "mbedtls/ripemd160.h"
 #include "mbedtls/sha1.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/sha512.h"
+#include "mbedtls/sha3.h"
 
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_MD2) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_MD4) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_RIPEMD160) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_1) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_224) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_256) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_384) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512)
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_512) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_224) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
 #define MBEDTLS_PSA_BUILTIN_HASH
 #endif
 
 typedef struct {
-    psa_algorithm_t alg;
+    psa_algorithm_t MBEDTLS_PRIVATE(alg);
     union {
         unsigned dummy; /* Make the union non-empty even with no supported algorithms. */
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_MD2)
-        mbedtls_md2_context md2;
-#endif
-#if defined(MBEDTLS_PSA_BUILTIN_ALG_MD4)
-        mbedtls_md4_context md4;
-#endif
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_MD5)
         mbedtls_md5_context md5;
 #endif
@@ -74,7 +70,13 @@ typedef struct {
         defined(MBEDTLS_PSA_BUILTIN_ALG_SHA_384)
         mbedtls_sha512_context sha512;
 #endif
-    } ctx;
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_224) || \
+        defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_256) || \
+        defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_384) || \
+        defined(MBEDTLS_PSA_BUILTIN_ALG_SHA3_512)
+        mbedtls_sha3_context sha3;
+#endif
+    } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_hash_operation_t;
 
 #define MBEDTLS_PSA_HASH_OPERATION_INIT { 0, { 0 } }
@@ -91,19 +93,20 @@ typedef struct {
     defined(MBEDTLS_PSA_BUILTIN_ALG_OFB) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_ECB_NO_PADDING) || \
     defined(MBEDTLS_PSA_BUILTIN_ALG_CBC_NO_PADDING) || \
-    defined(MBEDTLS_PSA_BUILTIN_ALG_CBC_PKCS7)
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CBC_PKCS7) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CCM_STAR_NO_TAG)
 #define MBEDTLS_PSA_BUILTIN_CIPHER  1
 #endif
 
 typedef struct {
     /* Context structure for the Mbed TLS cipher implementation. */
-    psa_algorithm_t alg;
-    uint8_t iv_length;
-    uint8_t block_length;
+    psa_algorithm_t MBEDTLS_PRIVATE(alg);
+    uint8_t MBEDTLS_PRIVATE(iv_length);
+    uint8_t MBEDTLS_PRIVATE(block_length);
     union {
-        unsigned int dummy;
-        mbedtls_cipher_context_t cipher;
-    } ctx;
+        unsigned int MBEDTLS_PRIVATE(dummy);
+        mbedtls_cipher_context_t MBEDTLS_PRIVATE(cipher);
+    } MBEDTLS_PRIVATE(ctx);
 } mbedtls_psa_cipher_operation_t;
 
 #define MBEDTLS_PSA_CIPHER_OPERATION_INIT { 0, 0, 0, { 0 } }

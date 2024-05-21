@@ -5,11 +5,7 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
 
@@ -54,7 +50,7 @@ int main(void)
     const char *pers = "rsa_genkey";
 
     mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+    mbedtls_rsa_init(&rsa);
     mbedtls_mpi_init(&N); mbedtls_mpi_init(&P); mbedtls_mpi_init(&Q);
     mbedtls_mpi_init(&D); mbedtls_mpi_init(&E); mbedtls_mpi_init(&DP);
     mbedtls_mpi_init(&DQ); mbedtls_mpi_init(&QP);
@@ -138,11 +134,6 @@ exit:
     mbedtls_rsa_free(&rsa);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
-
-#if defined(_WIN32)
-    mbedtls_printf("  Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
 
     mbedtls_exit(exit_code);
 }

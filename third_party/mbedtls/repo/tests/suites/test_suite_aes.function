@@ -3,12 +3,14 @@
 
 /* Test AES with a copied context.
  *
- * enc and dec must be AES context objects. They don't need to
+ * master, enc and dec must be AES context objects. They don't need to
  * be initialized, and are left freed.
  */
-static int test_ctx_alignment(const data_t *key,
-                              mbedtls_aes_context *enc,
-                              mbedtls_aes_context *dec)
+#if !defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+static int test_copy(const data_t *key,
+                     mbedtls_aes_context *master,
+                     mbedtls_aes_context *enc,
+                     mbedtls_aes_context *dec)
 {
     unsigned char plaintext[16] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -18,24 +20,32 @@ static int test_ctx_alignment(const data_t *key,
     unsigned char output[16];
 
     // Set key and encrypt with original context
-    mbedtls_aes_init(enc);
-    TEST_ASSERT(mbedtls_aes_setkey_enc(enc, key->x, key->len * 8) == 0);
-    TEST_ASSERT(mbedtls_aes_crypt_ecb(enc, MBEDTLS_AES_ENCRYPT,
+    mbedtls_aes_init(master);
+    TEST_ASSERT(mbedtls_aes_setkey_enc(master, key->x,
+                                       key->len * 8) == 0);
+    TEST_ASSERT(mbedtls_aes_crypt_ecb(master, MBEDTLS_AES_ENCRYPT,
                                       plaintext, ciphertext) == 0);
+    *enc = *master;
 
     // Set key for decryption with original context
-    mbedtls_aes_init(dec);
-    TEST_ASSERT(mbedtls_aes_setkey_dec(dec, key->x, key->len * 8) == 0);
+    mbedtls_aes_init(master);
+    TEST_ASSERT(mbedtls_aes_setkey_dec(master, key->x,
+                                       key->len * 8) == 0);
+    *dec = *master;
 
     // Wipe the original context to make sure nothing from it is used
-    memset(enc, 0, sizeof(*enc));
+    memset(master, 0, sizeof(*master));
+
+    // Encrypt with copied context
+    TEST_ASSERT(mbedtls_aes_crypt_ecb(enc, MBEDTLS_AES_ENCRYPT,
+                                      plaintext, output) == 0);
+    TEST_MEMORY_COMPARE(ciphertext, 16, output, 16);
     mbedtls_aes_free(enc);
 
-    // Decrypt
+    // Decrypt with copied context
     TEST_ASSERT(mbedtls_aes_crypt_ecb(dec, MBEDTLS_AES_DECRYPT,
                                       ciphertext, output) == 0);
     TEST_MEMORY_COMPARE(plaintext, 16, output, 16);
-
     mbedtls_aes_free(dec);
 
     return 1;
@@ -46,6 +56,7 @@ exit:
      * with alternative implementations. */
     return 0;
 }
+#endif
 
 /* END_HEADER */
 
@@ -77,7 +88,125 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
+void aes_ctr(data_t *key, data_t *ictr, data_t *pt, data_t *ct, int expected)
+{
+    unsigned char *output = NULL;
+    unsigned char ctr[16];
+    unsigned char stream_block[16];
+    mbedtls_aes_context ctx;
+
+    // sanity checks on test input
+    TEST_ASSERT(pt->len == ct->len);
+    TEST_ASSERT(key->len == 16 || key->len == 24 || key->len == 32);
+
+    TEST_CALLOC(output, pt->len);
+
+    // expected result is always success on zero-length input, so skip len == 0 if expecting failure
+    for (size_t len = (expected == 0 ? 0 : 1); len <= pt->len; len++) {
+        for (int i = 0; i < 2; i++) {
+            mbedtls_aes_init(&ctx);
+            TEST_ASSERT(mbedtls_aes_setkey_enc(&ctx, key->x, key->len * 8) == 0);
+
+            memcpy(ctr, ictr->x, 16);
+            memset(stream_block, 0, 16);
+            memset(output, 0, pt->len);
+
+            size_t nc_off = 0;
+
+            if (i == 0) {
+                // encrypt
+                TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, len, &nc_off, ctr,
+                                                 stream_block, pt->x, output), 0);
+                TEST_ASSERT(!!memcmp(output, ct->x, len) == expected);
+            } else {
+                // decrypt
+                TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, len, &nc_off, ctr,
+                                                 stream_block, ct->x, output), 0);
+                TEST_ASSERT(!!memcmp(output, pt->x, len) == expected);
+            }
+        }
+    }
+
+exit:
+    mbedtls_free(output);
+    mbedtls_aes_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CIPHER_MODE_CTR */
+void aes_encrypt_ctr_multipart(int length, int step_size)
+{
+    unsigned char key[16];
+    unsigned char ctr_a[16];
+    unsigned char ctr_b[16];
+    unsigned char stream_block_a[16];
+    unsigned char stream_block_b[16];
+    unsigned char *input = NULL;
+    unsigned char *output_a = NULL;
+    unsigned char *output_b = NULL;
+    mbedtls_aes_context ctx;
+    size_t nc_off_a, nc_off_b;
+
+    TEST_ASSERT(length >= 0);
+    TEST_ASSERT(step_size > 0);
+
+    TEST_CALLOC(input, length);
+    TEST_CALLOC(output_a, length);
+    TEST_CALLOC(output_b, length);
+
+    // set up a random key
+    mbedtls_test_rnd_std_rand(NULL, key, sizeof(key));
+
+    // random input
+    mbedtls_test_rnd_std_rand(NULL, input, length);
+
+
+    // complete encryption in one call
+    mbedtls_aes_init(&ctx);
+    TEST_ASSERT(mbedtls_aes_setkey_enc(&ctx, key, sizeof(key) * 8) == 0);
+    memset(ctr_a, 0, sizeof(ctr_a));
+    memset(stream_block_a, 0, sizeof(stream_block_a));
+    nc_off_a = 0;
+    TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, length, &nc_off_a, ctr_a,
+                                     stream_block_a, input, output_a), 0);
+    mbedtls_aes_free(&ctx);
+
+
+    // encrypt in multiple steps of varying size
+    mbedtls_aes_init(&ctx);
+    TEST_ASSERT(mbedtls_aes_setkey_enc(&ctx, key, sizeof(key) * 8) == 0);
+    memset(ctr_b, 0, sizeof(ctr_b));
+    memset(stream_block_b, 0, sizeof(stream_block_b));
+    nc_off_b = 0;
+    size_t remaining = length;
+    unsigned char *ip = input, *op = output_b;
+    while (remaining != 0) {
+        size_t l = MIN(remaining, (size_t) step_size);
+        step_size *= 2;
+        remaining -= l;
+        TEST_EQUAL(mbedtls_aes_crypt_ctr(&ctx, l, &nc_off_b, ctr_b, stream_block_b, ip, op), 0);
+        ip += l;
+        op += l;
+    }
+
+    // finally, validate that multiple steps produced same result as single-pass
+    TEST_MEMORY_COMPARE(output_a, length, output_b, length);
+    TEST_MEMORY_COMPARE(ctr_a, sizeof(ctr_a), ctr_b, sizeof(ctr_b));
+    TEST_MEMORY_COMPARE(stream_block_a, sizeof(stream_block_a),
+                        stream_block_b, sizeof(stream_block_b));
+    TEST_EQUAL(nc_off_a, nc_off_b);
+
+exit:
+    mbedtls_free(input);
+    mbedtls_free(output_a);
+    mbedtls_free(output_b);
+
+    mbedtls_aes_free(&ctx);
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
 void aes_decrypt_ecb(data_t *key_str, data_t *src_str,
                      data_t *dst, int setkey_result)
 {
@@ -251,9 +380,6 @@ void aes_crypt_xts_size(int size, int retval)
     mbedtls_aes_xts_init(&ctx);
     memset(data_unit, 0x00, sizeof(data_unit));
 
-
-    /* Valid pointers are passed for builds with MBEDTLS_CHECK_PARAMS, as
-     * otherwise we wouldn't get to the size check we're interested in. */
     TEST_ASSERT(mbedtls_aes_crypt_xts(&ctx, MBEDTLS_AES_ENCRYPT, length, data_unit, src,
                                       output) == retval);
 exit:
@@ -411,194 +537,41 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_CHECK_PARAMS:!MBEDTLS_PARAM_FAILED_ALT */
-void aes_check_params()
+/* BEGIN_CASE */
+void aes_invalid_mode()
 {
     mbedtls_aes_context aes_ctx;
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    mbedtls_aes_xts_context xts_ctx;
-#endif
-    const unsigned char key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
     const unsigned char in[16] = { 0 };
     unsigned char out[16];
-    size_t size;
-    const int valid_mode = MBEDTLS_AES_ENCRYPT;
     const int invalid_mode = 42;
 
-    TEST_INVALID_PARAM(mbedtls_aes_init(NULL));
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    TEST_INVALID_PARAM(mbedtls_aes_xts_init(NULL));
-#endif
-
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_setkey_enc(NULL, key, 128));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_setkey_enc(&aes_ctx, NULL, 128));
-
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_setkey_dec(NULL, key, 128));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_setkey_dec(&aes_ctx, NULL, 128));
-
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_xts_setkey_enc(NULL, key, 128));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_xts_setkey_enc(&xts_ctx, NULL, 128));
-
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_xts_setkey_dec(NULL, key, 128));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_xts_setkey_dec(&xts_ctx, NULL, 128));
-#endif
-
-
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ecb(NULL,
-                                                 valid_mode, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ecb(&aes_ctx,
-                                                 invalid_mode, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ecb(&aes_ctx,
-                                                 valid_mode, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ecb(&aes_ctx,
-                                                 valid_mode, in, NULL));
+    TEST_EQUAL(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
+               mbedtls_aes_crypt_ecb(&aes_ctx, invalid_mode, in, out));
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cbc(NULL,
-                                                 valid_mode, 16,
-                                                 out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cbc(&aes_ctx,
-                                                 invalid_mode, 16,
-                                                 out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cbc(&aes_ctx,
-                                                 valid_mode, 16,
-                                                 NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cbc(&aes_ctx,
-                                                 valid_mode, 16,
-                                                 out, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cbc(&aes_ctx,
-                                                 valid_mode, 16,
-                                                 out, in, NULL));
+    TEST_EQUAL(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
+               mbedtls_aes_crypt_cbc(&aes_ctx, invalid_mode, 16,
+                                     out, in, out));
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
 #if defined(MBEDTLS_CIPHER_MODE_XTS)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_xts(NULL,
-                                                 valid_mode, 16,
-                                                 in, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_xts(&xts_ctx,
-                                                 invalid_mode, 16,
-                                                 in, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_xts(&xts_ctx,
-                                                 valid_mode, 16,
-                                                 NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_xts(&xts_ctx,
-                                                 valid_mode, 16,
-                                                 in, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_xts(&xts_ctx,
-                                                 valid_mode, 16,
-                                                 in, in, NULL));
+    mbedtls_aes_xts_context xts_ctx;
+
+    TEST_EQUAL(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
+               mbedtls_aes_crypt_xts(&xts_ctx, invalid_mode, 16,
+                                     in, in, out));
 #endif /* MBEDTLS_CIPHER_MODE_XTS */
 
 #if defined(MBEDTLS_CIPHER_MODE_CFB)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(NULL,
-                                                    valid_mode, 16,
-                                                    &size, out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(&aes_ctx,
-                                                    invalid_mode, 16,
-                                                    &size, out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(&aes_ctx,
-                                                    valid_mode, 16,
-                                                    NULL, out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(&aes_ctx,
-                                                    valid_mode, 16,
-                                                    &size, NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(&aes_ctx,
-                                                    valid_mode, 16,
-                                                    &size, out, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb128(&aes_ctx,
-                                                    valid_mode, 16,
-                                                    &size, out, in, NULL));
+    size_t size;
 
-
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb8(NULL,
-                                                  valid_mode, 16,
-                                                  out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb8(&aes_ctx,
-                                                  invalid_mode, 16,
-                                                  out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb8(&aes_ctx,
-                                                  valid_mode, 16,
-                                                  NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb8(&aes_ctx,
-                                                  valid_mode, 16,
-                                                  out, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_cfb8(&aes_ctx,
-                                                  valid_mode, 16,
-                                                  out, in, NULL));
+    TEST_EQUAL(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
+               mbedtls_aes_crypt_cfb128(&aes_ctx, invalid_mode, 16,
+                                        &size, out, in, out));
+    TEST_EQUAL(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
+               mbedtls_aes_crypt_cfb8(&aes_ctx, invalid_mode, 16,
+                                      out, in, out));
 #endif /* MBEDTLS_CIPHER_MODE_CFB */
-
-#if defined(MBEDTLS_CIPHER_MODE_OFB)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ofb(NULL, 16,
-                                                 &size, out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ofb(&aes_ctx, 16,
-                                                 NULL, out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ofb(&aes_ctx, 16,
-                                                 &size, NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ofb(&aes_ctx, 16,
-                                                 &size, out, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ofb(&aes_ctx, 16,
-                                                 &size, out, in, NULL));
-#endif /* MBEDTLS_CIPHER_MODE_OFB */
-
-#if defined(MBEDTLS_CIPHER_MODE_CTR)
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(NULL, 16, &size, out,
-                                                 out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(&aes_ctx, 16, NULL, out,
-                                                 out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(&aes_ctx, 16, &size, NULL,
-                                                 out, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(&aes_ctx, 16, &size, out,
-                                                 NULL, in, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(&aes_ctx, 16, &size, out,
-                                                 out, NULL, out));
-    TEST_INVALID_PARAM_RET(MBEDTLS_ERR_AES_BAD_INPUT_DATA,
-                           mbedtls_aes_crypt_ctr(&aes_ctx, 16, &size, out,
-                                                 out, in, NULL));
-#endif /* MBEDTLS_CIPHER_MODE_CTR */
 }
 /* END_CASE */
 
@@ -623,12 +596,6 @@ void aes_misc_params()
 #if defined(MBEDTLS_CIPHER_MODE_CFB) || \
     defined(MBEDTLS_CIPHER_MODE_OFB)
     size_t size;
-#endif
-
-    /* These calls accept NULL */
-    TEST_VALID_PARAM(mbedtls_aes_free(NULL));
-#if defined(MBEDTLS_CIPHER_MODE_XTS)
-    TEST_VALID_PARAM(mbedtls_aes_xts_free(NULL));
 #endif
 
 #if defined(MBEDTLS_CIPHER_MODE_CBC)
@@ -665,18 +632,27 @@ void aes_misc_params()
     TEST_ASSERT(mbedtls_aes_crypt_ofb(&aes_ctx, 16, &size, out, in, out)
                 == MBEDTLS_ERR_AES_BAD_INPUT_DATA);
 #endif
+
+/*
+ * The following line needs to be added to make the code compilable
+ * when all the conditions above will be not define in a specific
+ * choice of features.
+ */
+    TEST_ASSERT(1);
+/* TODO: It will be removed when the whole test will be reworked */
 }
 /* END_CASE */
 
-/* BEGIN_CASE */
-void aes_ecb_context_alignment(data_t *key)
+/* BEGIN_CASE depends_on:!MBEDTLS_BLOCK_CIPHER_NO_DECRYPT */
+void aes_ecb_copy_context(data_t *key)
 {
-    /* We test alignment multiple times, with different alignments
-     * of the context and of the plaintext/ciphertext. */
+    /* We test context copying multiple times, with different alignments
+     * of the original and of the copies. */
 
     struct align0 {
         mbedtls_aes_context ctx;
     };
+    struct align0 *src0 = NULL;
     struct align0 *enc0 = NULL;
     struct align0 *dec0 = NULL;
 
@@ -684,56 +660,71 @@ void aes_ecb_context_alignment(data_t *key)
         char bump;
         mbedtls_aes_context ctx;
     };
+    struct align1 *src1 = NULL;
     struct align1 *enc1 = NULL;
     struct align1 *dec1 = NULL;
 
     /* All peak alignment */
+    TEST_CALLOC(src0, 1);
     TEST_CALLOC(enc0, 1);
     TEST_CALLOC(dec0, 1);
-    if (!test_ctx_alignment(key, &enc0->ctx, &dec0->ctx)) {
+    if (!test_copy(key, &src0->ctx, &enc0->ctx, &dec0->ctx)) {
         goto exit;
     }
+    mbedtls_free(src0);
+    src0 = NULL;
     mbedtls_free(enc0);
     enc0 = NULL;
     mbedtls_free(dec0);
     dec0 = NULL;
 
-    /* Enc aligned, dec not */
+    /* Original shifted */
+    TEST_CALLOC(src1, 1);
     TEST_CALLOC(enc0, 1);
-    TEST_CALLOC(dec1, 1);
-    if (!test_ctx_alignment(key, &enc0->ctx, &dec1->ctx)) {
+    TEST_CALLOC(dec0, 1);
+    if (!test_copy(key, &src1->ctx, &enc0->ctx, &dec0->ctx)) {
         goto exit;
     }
+    mbedtls_free(src1);
+    src1 = NULL;
     mbedtls_free(enc0);
     enc0 = NULL;
+    mbedtls_free(dec0);
+    dec0 = NULL;
+
+    /* Copies shifted */
+    TEST_CALLOC(src0, 1);
+    TEST_CALLOC(enc1, 1);
+    TEST_CALLOC(dec1, 1);
+    if (!test_copy(key, &src0->ctx, &enc1->ctx, &dec1->ctx)) {
+        goto exit;
+    }
+    mbedtls_free(src0);
+    src0 = NULL;
+    mbedtls_free(enc1);
+    enc1 = NULL;
     mbedtls_free(dec1);
     dec1 = NULL;
 
-    /* Dec aligned, enc not */
-    TEST_CALLOC(enc1, 1);
-    TEST_CALLOC(dec0, 1);
-    if (!test_ctx_alignment(key, &enc1->ctx, &dec0->ctx)) {
-        goto exit;
-    }
-    mbedtls_free(enc1);
-    enc1 = NULL;
-    mbedtls_free(dec0);
-    dec0 = NULL;
-
-    /* Both shifted */
+    /* Source and copies shifted */
+    TEST_CALLOC(src1, 1);
     TEST_CALLOC(enc1, 1);
     TEST_CALLOC(dec1, 1);
-    if (!test_ctx_alignment(key, &enc1->ctx, &dec1->ctx)) {
+    if (!test_copy(key, &src1->ctx, &enc1->ctx, &dec1->ctx)) {
         goto exit;
     }
+    mbedtls_free(src1);
+    src1 = NULL;
     mbedtls_free(enc1);
     enc1 = NULL;
     mbedtls_free(dec1);
     dec1 = NULL;
 
 exit:
+    mbedtls_free(src0);
     mbedtls_free(enc0);
     mbedtls_free(dec0);
+    mbedtls_free(src1);
     mbedtls_free(enc1);
     mbedtls_free(dec1);
 }

@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 
-# Generate main file, individual apps and solution files for MS Visual Studio
-# 2010
+# Generate main file, individual apps and solution files for
+# MS Visual Studio 2017
 #
-# Must be run from mbedTLS root or scripts directory.
+# Must be run from Mbed TLS root or scripts directory.
 # Takes no argument.
 #
 # Copyright The Mbed TLS Contributors
@@ -13,12 +13,12 @@ use warnings;
 use strict;
 use Digest::MD5 'md5_hex';
 
-my $vsx_dir = "visualc/VS2010";
+my $vsx_dir = "visualc/VS2017";
 my $vsx_ext = "vcxproj";
-my $vsx_app_tpl_file = "scripts/data_files/vs2010-app-template.$vsx_ext";
-my $vsx_main_tpl_file = "scripts/data_files/vs2010-main-template.$vsx_ext";
+my $vsx_app_tpl_file = "scripts/data_files/vs2017-app-template.$vsx_ext";
+my $vsx_main_tpl_file = "scripts/data_files/vs2017-main-template.$vsx_ext";
 my $vsx_main_file = "$vsx_dir/mbedTLS.$vsx_ext";
-my $vsx_sln_tpl_file = "scripts/data_files/vs2010-sln-template.sln";
+my $vsx_sln_tpl_file = "scripts/data_files/vs2017-sln-template.sln";
 my $vsx_sln_file = "$vsx_dir/mbedTLS.sln";
 
 my $programs_dir = 'programs';
@@ -46,7 +46,7 @@ my @include_directories = qw(
     include
     3rdparty/everest/include/
     3rdparty/everest/include/everest
-    3rdparty/everest/include/everest/vs2010
+    3rdparty/everest/include/everest/vs2013
     3rdparty/everest/include/everest/kremlib
     tests/include
 );
@@ -67,31 +67,30 @@ my @excluded_files = qw(
 my %excluded_files = ();
 foreach (@excluded_files) { $excluded_files{$_} = 1 }
 
-# Need windows line endings!
 my $vsx_hdr_tpl = <<EOT;
-    <ClInclude Include="..\\..\\{NAME}" />\r
+    <ClInclude Include="..\\..\\{NAME}" />
 EOT
 my $vsx_src_tpl = <<EOT;
-    <ClCompile Include="..\\..\\{NAME}" />\r
+    <ClCompile Include="..\\..\\{NAME}" />
 EOT
 
 my $vsx_sln_app_entry_tpl = <<EOT;
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "{APPNAME}", "{APPNAME}.vcxproj", "{GUID}"\r
-	ProjectSection(ProjectDependencies) = postProject\r
-		{46CF2D25-6A36-4189-B59C-E4815388E554} = {46CF2D25-6A36-4189-B59C-E4815388E554}\r
-	EndProjectSection\r
-EndProject\r
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "{APPNAME}", "{APPNAME}.vcxproj", "{GUID}"
+	ProjectSection(ProjectDependencies) = postProject
+		{46CF2D25-6A36-4189-B59C-E4815388E554} = {46CF2D25-6A36-4189-B59C-E4815388E554}
+	EndProjectSection
+EndProject
 EOT
 
 my $vsx_sln_conf_entry_tpl = <<EOT;
-		{GUID}.Debug|Win32.ActiveCfg = Debug|Win32\r
-		{GUID}.Debug|Win32.Build.0 = Debug|Win32\r
-		{GUID}.Debug|x64.ActiveCfg = Debug|x64\r
-		{GUID}.Debug|x64.Build.0 = Debug|x64\r
-		{GUID}.Release|Win32.ActiveCfg = Release|Win32\r
-		{GUID}.Release|Win32.Build.0 = Release|Win32\r
-		{GUID}.Release|x64.ActiveCfg = Release|x64\r
-		{GUID}.Release|x64.Build.0 = Release|x64\r
+		{GUID}.Debug|Win32.ActiveCfg = Debug|Win32
+		{GUID}.Debug|Win32.Build.0 = Debug|Win32
+		{GUID}.Debug|x64.ActiveCfg = Debug|x64
+		{GUID}.Debug|x64.Build.0 = Debug|x64
+		{GUID}.Release|Win32.ActiveCfg = Release|Win32
+		{GUID}.Release|Win32.Build.0 = Release|Win32
+		{GUID}.Release|x64.ActiveCfg = Release|x64
+		{GUID}.Release|x64.Build.0 = Release|x64
 EOT
 
 exit( main() );
@@ -115,7 +114,7 @@ sub slurp_file {
     my ($filename) = @_;
 
     local $/ = undef;
-    open my $fh, '<', $filename or die "Could not read $filename\n";
+    open my $fh, '<:crlf', $filename or die "Could not read $filename\n";
     my $content = <$fh>;
     close $fh;
 
@@ -125,7 +124,7 @@ sub slurp_file {
 sub content_to_file {
     my ($content, $filename) = @_;
 
-    open my $fh, '>', $filename or die "Could not write to $filename\n";
+    open my $fh, '>:crlf', $filename or die "Could not write to $filename\n";
     print $fh $content;
     close $fh;
 }
@@ -145,30 +144,33 @@ sub gen_app {
     my $guid = gen_app_guid( $path );
     $path =~ s!/!\\!g;
     (my $appname = $path) =~ s/.*\\//;
+    my $is_test_app = ($path =~ m/^test\\/);
 
     my $srcs = "<ClCompile Include=\"..\\..\\programs\\$path.c\" \/>";
     if( $appname eq "ssl_client2" or $appname eq "ssl_server2" or
         $appname eq "query_compile_time_config" ) {
-        $srcs .= "\r\n    <ClCompile Include=\"..\\..\\programs\\test\\query_config.c\" \/>";
+        $srcs .= "\n    <ClCompile Include=\"..\\..\\programs\\test\\query_config.c\" \/>";
     }
     if( $appname eq "ssl_client2" or $appname eq "ssl_server2" ) {
-        $srcs .= "\r\n    <ClCompile Include=\"..\\..\\programs\\ssl\\ssl_test_lib.c\" \/>";
+        $srcs .= "\n    <ClCompile Include=\"..\\..\\programs\\ssl\\ssl_test_lib.c\" \/>";
     }
 
     my $content = $template;
     $content =~ s/<SOURCES>/$srcs/g;
     $content =~ s/<APPNAME>/$appname/g;
     $content =~ s/<GUID>/$guid/g;
-    $content =~ s/INCLUDE_DIRECTORIES\r\n/$include_directories/g;
+    $content =~ s/INCLUDE_DIRECTORIES\n/($is_test_app ?
+                                         $library_include_directories :
+                                         $include_directories)/ge;
 
     content_to_file( $content, "$dir/$appname.$ext" );
 }
 
 sub get_app_list {
-    my $app_list = `cd $programs_dir && make list`;
-    die "make list failed: $!\n" if $?;
-
-    return split /\s+/, $app_list;
+    my $makefile_contents = slurp_file('programs/Makefile');
+    $makefile_contents =~ /\n\s*APPS\s*=[\\\s]*(.*?)(?<!\\)[\#\n]/s
+      or die "Cannot find APPS = ... in programs/Makefile\n";
+    return split /(?:\s|\\)+/, $1;
 }
 
 sub gen_app_files {
@@ -202,9 +204,9 @@ sub gen_main_file {
     my $source_entries = gen_entry_list( $src_tpl, @$sources );
 
     my $out = slurp_file( $main_tpl );
-    $out =~ s/SOURCE_ENTRIES\r\n/$source_entries/m;
-    $out =~ s/HEADER_ENTRIES\r\n/$header_entries/m;
-    $out =~ s/INCLUDE_DIRECTORIES\r\n/$library_include_directories/g;
+    $out =~ s/SOURCE_ENTRIES\n/$source_entries/m;
+    $out =~ s/HEADER_ENTRIES\n/$header_entries/m;
+    $out =~ s/INCLUDE_DIRECTORIES\n/$library_include_directories/g;
 
     content_to_file( $out, $main_out );
 }
@@ -230,8 +232,8 @@ sub gen_vsx_solution {
     }
 
     my $out = slurp_file( $vsx_sln_tpl_file );
-    $out =~ s/APP_ENTRIES\r\n/$app_entries/m;
-    $out =~ s/CONF_ENTRIES\r\n/$conf_entries/m;
+    $out =~ s/APP_ENTRIES\n/$app_entries/m;
+    $out =~ s/CONF_ENTRIES\n/$conf_entries/m;
 
     content_to_file( $out, $vsx_sln_file );
 }
@@ -245,7 +247,7 @@ sub del_vsx_files {
 sub main {
     if( ! check_dirs() ) {
         chdir '..' or die;
-        check_dirs or die "Must but run from mbedTLS root or scripts dir\n";
+        check_dirs or die "Must be run from Mbed TLS root or scripts dir\n";
     }
 
     # Remove old files to ensure that, for example, project files from deleted

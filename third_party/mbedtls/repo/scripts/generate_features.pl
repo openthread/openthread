@@ -33,13 +33,13 @@ my @sections = ( "System support", "Mbed TLS modules",
 my $line_separator = $/;
 undef $/;
 
-open(FORMAT_FILE, "$feature_format_file") or die "Opening feature format file '$feature_format_file': $!";
+open(FORMAT_FILE, '<:crlf', "$feature_format_file") or die "Opening feature format file '$feature_format_file': $!";
 my $feature_format = <FORMAT_FILE>;
 close(FORMAT_FILE);
 
 $/ = $line_separator;
 
-open(CONFIG_H, "$include_dir/config.h") || die("Failure when opening config.h: $!");
+open(CONFIG_H, '<:crlf', "$include_dir/mbedtls_config.h") || die("Failure when opening mbedtls_config.h: $!");
 
 my $feature_defines = "";
 my $in_section = 0;
@@ -54,11 +54,14 @@ while (my $line = <CONFIG_H>)
             $in_section = 0;
             next;
         }
-
-        my ($define) = $line =~ /#define (\w+)/;
-        $feature_defines .= "#if defined(${define})\n";
-        $feature_defines .= "    \"${define}\",\n";
-        $feature_defines .= "#endif /* ${define} */\n";
+        # Strip leading MBEDTLS_ to save binary size
+        my ($mbedtls_prefix, $define) = $line =~ /#define (MBEDTLS_)?(\w+)/;
+        if (!$mbedtls_prefix) {
+            die "Feature does not start with 'MBEDTLS_': $line\n";
+        }
+        $feature_defines .= "#if defined(MBEDTLS_${define})\n";
+        $feature_defines .= "    \"${define}\", //no-check-names\n";
+        $feature_defines .= "#endif /* MBEDTLS_${define} */\n";
     }
 
     if (!$in_section) {

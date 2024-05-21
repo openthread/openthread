@@ -5,24 +5,21 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
+/* md.h is included this early since MD_CAN_XXX macros are defined there. */
+#include "mbedtls/md.h"
 
 #if defined(MBEDTLS_AES_C) && defined(MBEDTLS_DHM_C) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_NET_C) && \
     defined(MBEDTLS_RSA_C) && defined(MBEDTLS_SHA256_C) && \
-    defined(MBEDTLS_FS_IO) && defined(MBEDTLS_CTR_DRBG_C) && \
-    defined(MBEDTLS_SHA1_C)
+    defined(MBEDTLS_FS_IO) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/aes.h"
 #include "mbedtls/dhm.h"
 #include "mbedtls/rsa.h"
-#include "mbedtls/sha1.h"
+#include "mbedtls/sha256.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 
@@ -36,14 +33,20 @@
 #if !defined(MBEDTLS_AES_C) || !defined(MBEDTLS_DHM_C) ||     \
     !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_NET_C) ||  \
     !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_SHA256_C) ||    \
-    !defined(MBEDTLS_FS_IO) || !defined(MBEDTLS_CTR_DRBG_C) || \
-    !defined(MBEDTLS_SHA1_C)
+    !defined(MBEDTLS_FS_IO) || !defined(MBEDTLS_CTR_DRBG_C)
 int main(void)
 {
     mbedtls_printf("MBEDTLS_AES_C and/or MBEDTLS_DHM_C and/or MBEDTLS_ENTROPY_C "
                    "and/or MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
-                   "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO and/or "
-                   "MBEDTLS_CTR_DRBG_C not defined.\n");
+                   "MBEDTLS_MD_CAN_SHA256 and/or MBEDTLS_FS_IO and/or "
+                   "MBEDTLS_CTR_DRBG_C and/or MBEDTLS_SHA1_C not defined.\n");
+    mbedtls_exit(0);
+}
+
+#elif defined(MBEDTLS_BLOCK_CIPHER_NO_DECRYPT)
+int main(void)
+{
+    mbedtls_printf("MBEDTLS_BLOCK_CIPHER_NO_DECRYPT defined.\n");
     mbedtls_exit(0);
 }
 #else
@@ -55,12 +58,14 @@ int main(void)
 
     int ret = 1;
     int exit_code = MBEDTLS_EXIT_FAILURE;
+    unsigned int mdlen;
     size_t n, buflen;
     mbedtls_net_context server_fd;
 
     unsigned char *p, *end;
     unsigned char buf[2048];
-    unsigned char hash[32];
+    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
+    mbedtls_mpi N, E;
     const char *pers = "dh_client";
 
     mbedtls_entropy_context entropy;
@@ -70,10 +75,11 @@ int main(void)
     mbedtls_aes_context aes;
 
     mbedtls_net_init(&server_fd);
-    mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_SHA256);
     mbedtls_dhm_init(&dhm);
     mbedtls_aes_init(&aes);
     mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&E);
 
     /*
      * 1. Setup the RNG
@@ -101,17 +107,14 @@ int main(void)
         goto exit;
     }
 
-    mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
-
-    if ((ret = mbedtls_mpi_read_file(&rsa.N, 16, f)) != 0 ||
-        (ret = mbedtls_mpi_read_file(&rsa.E, 16, f)) != 0) {
+    mbedtls_rsa_init(&rsa);
+    if ((ret = mbedtls_mpi_read_file(&N, 16, f)) != 0 ||
+        (ret = mbedtls_mpi_read_file(&E, 16, f)) != 0 ||
+        (ret = mbedtls_rsa_import(&rsa, &N, NULL, NULL, NULL, &E) != 0)) {
         mbedtls_printf(" failed\n  ! mbedtls_mpi_read_file returned %d\n\n", ret);
         fclose(f);
         goto exit;
     }
-
-    rsa.len = (mbedtls_mpi_bitlen(&rsa.N) + 7) >> 3;
-
     fclose(f);
 
     /*
@@ -163,7 +166,8 @@ int main(void)
         goto exit;
     }
 
-    if (dhm.len < 64 || dhm.len > 512) {
+    n = mbedtls_dhm_get_len(&dhm);
+    if (n < 64 || n > 512) {
         mbedtls_printf(" failed\n  ! Invalid DHM modulus size\n\n");
         goto exit;
     }
@@ -177,18 +181,24 @@ int main(void)
 
     p += 2;
 
-    if ((n = (size_t) (end - p)) != rsa.len) {
+    if ((n = (size_t) (end - p)) != mbedtls_rsa_get_len(&rsa)) {
         mbedtls_printf(" failed\n  ! Invalid RSA signature size\n\n");
         goto exit;
     }
 
-    if ((ret = mbedtls_sha1_ret(buf, (int) (p - 2 - buf), hash)) != 0) {
-        mbedtls_printf(" failed\n  ! mbedtls_sha1_ret returned %d\n\n", ret);
+    mdlen = (unsigned int) mbedtls_md_get_size(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256));
+    if (mdlen == 0) {
+        mbedtls_printf(" failed\n  ! Invalid digest type\n\n");
         goto exit;
     }
 
-    if ((ret = mbedtls_rsa_pkcs1_verify(&rsa, NULL, NULL, MBEDTLS_RSA_PUBLIC,
-                                        MBEDTLS_MD_SHA256, 0, hash, p)) != 0) {
+    if ((ret = mbedtls_sha256(buf, (int) (p - 2 - buf), hash, 0)) != 0) {
+        mbedtls_printf(" failed\n  ! mbedtls_sha256 returned %d\n\n", ret);
+        goto exit;
+    }
+
+    if ((ret = mbedtls_rsa_pkcs1_verify(&rsa, MBEDTLS_MD_SHA256,
+                                        mdlen, hash, p)) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_rsa_pkcs1_verify returned %d\n\n", ret);
         goto exit;
     }
@@ -199,8 +209,8 @@ int main(void)
     mbedtls_printf("\n  . Sending own public value to server");
     fflush(stdout);
 
-    n = dhm.len;
-    if ((ret = mbedtls_dhm_make_public(&dhm, (int) dhm.len, buf, n,
+    n = mbedtls_dhm_get_len(&dhm);
+    if ((ret = mbedtls_dhm_make_public(&dhm, (int) n, buf, n,
                                        mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
         mbedtls_printf(" failed\n  ! mbedtls_dhm_make_public returned %d\n\n", ret);
         goto exit;
@@ -268,14 +278,11 @@ exit:
     mbedtls_dhm_free(&dhm);
     mbedtls_ctr_drbg_free(&ctr_drbg);
     mbedtls_entropy_free(&entropy);
-
-#if defined(_WIN32)
-    mbedtls_printf("  + Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&E);
 
     mbedtls_exit(exit_code);
 }
 #endif /* MBEDTLS_AES_C && MBEDTLS_DHM_C && MBEDTLS_ENTROPY_C &&
-          MBEDTLS_NET_C && MBEDTLS_RSA_C && MBEDTLS_SHA256_C &&
+          MBEDTLS_NET_C && MBEDTLS_RSA_C && MBEDTLS_MD_CAN_SHA256 &&
           MBEDTLS_FS_IO && MBEDTLS_CTR_DRBG_C */

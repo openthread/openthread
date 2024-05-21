@@ -112,12 +112,10 @@ static psa_status_t psa_get_se_driver_its_file_uid(
         return PSA_ERROR_NOT_SUPPORTED;
     }
 
-#if SIZE_MAX > UINT32_MAX
     /* ITS file sizes are limited to 32 bits. */
     if (driver->u.internal.persistent_data_size > UINT32_MAX) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
-#endif
 
     /* See the documentation of PSA_CRYPTO_SE_DRIVER_ITS_UID_BASE. */
     *uid = PSA_CRYPTO_SE_DRIVER_ITS_UID_BASE + driver->location;
@@ -304,6 +302,7 @@ psa_status_t psa_register_se_driver(
      * location because it means a transparent key. */
     MBEDTLS_STATIC_ASSERT(PSA_KEY_LOCATION_LOCAL_STORAGE == 0,
                           "Secure element support requires 0 to mean a local key");
+
     if (location == PSA_KEY_LOCATION_LOCAL_STORAGE) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }

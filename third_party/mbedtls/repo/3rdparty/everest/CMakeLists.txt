@@ -1,16 +1,30 @@
-list (APPEND everest_src)
-list (APPEND everest_inc_public)
-list (APPEND everest_inc)
-list (APPEND everest_def)
+set(everest_target "${MBEDTLS_TARGET_PREFIX}everest")
 
-set(everest_src
-  ${CMAKE_CURRENT_SOURCE_DIR}/library/everest.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/library/x25519.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/library/Hacl_Curve25519_joined.c
-)
+add_library(${everest_target}
+  library/everest.c
+  library/x25519.c
+  library/Hacl_Curve25519_joined.c)
 
-list(APPEND everest_inc_public ${CMAKE_CURRENT_SOURCE_DIR}/include)
-list(APPEND everest_inc ${CMAKE_CURRENT_SOURCE_DIR}/include/everest ${CMAKE_CURRENT_SOURCE_DIR}/include/everest/kremlib)
+target_include_directories(${everest_target}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<BUILD_INTERFACE:${MBEDTLS_DIR}/include>
+         $<INSTALL_INTERFACE:include>
+  PRIVATE include/everest
+          include/everest/kremlib
+          ${MBEDTLS_DIR}/library/)
+
+# Pass-through MBEDTLS_CONFIG_FILE and MBEDTLS_USER_CONFIG_FILE
+# This must be duplicated from library/CMakeLists.txt because
+# everest is not directly linked against any mbedtls targets
+# so does not inherit the compile definitions.
+if(MBEDTLS_CONFIG_FILE)
+    target_compile_definitions(${everest_target}
+        PUBLIC MBEDTLS_CONFIG_FILE="${MBEDTLS_CONFIG_FILE}")
+endif()
+if(MBEDTLS_USER_CONFIG_FILE)
+    target_compile_definitions(${everest_target}
+        PUBLIC MBEDTLS_USER_CONFIG_FILE="${MBEDTLS_USER_CONFIG_FILE}")
+endif()
 
 if(INSTALL_MBEDTLS_HEADERS)
 
@@ -22,7 +36,7 @@ if(INSTALL_MBEDTLS_HEADERS)
 
 endif(INSTALL_MBEDTLS_HEADERS)
 
-set(thirdparty_src ${thirdparty_src} ${everest_src} PARENT_SCOPE)
-set(thirdparty_inc_public ${thirdparty_inc_public} ${everest_inc_public} PARENT_SCOPE)
-set(thirdparty_inc ${thirdparty_inc} ${everest_inc} PARENT_SCOPE)
-set(thirdparty_def ${thirdparty_def} ${everest_def} PARENT_SCOPE)
+install(TARGETS ${everest_target}
+  EXPORT MbedTLSTargets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)

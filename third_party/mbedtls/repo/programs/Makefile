@@ -1,22 +1,5 @@
-
-# To compile on SunOS: add "-lsocket -lnsl" to LDFLAGS
-# To compile with PKCS11: add "-lpkcs11-helper" to LDFLAGS
-
-CFLAGS	?= -O2
-WARNING_CFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
-WARNING_CXXFLAGS ?= -Wall -Wextra -Wformat=2 -Wno-format-nonliteral
-LDFLAGS ?=
-
-MBEDTLS_TEST_PATH:=../tests/src
-MBEDTLS_TEST_OBJS:=$(patsubst %.c,%.o,$(wildcard ${MBEDTLS_TEST_PATH}/*.c ${MBEDTLS_TEST_PATH}/drivers/*.c))
-
-LOCAL_CFLAGS = $(WARNING_CFLAGS) -I../tests/include -I../include -D_FILE_OFFSET_BITS=64
-LOCAL_CXXFLAGS = $(WARNING_CXXFLAGS) -I../include -D_FILE_OFFSET_BITS=64
-LOCAL_LDFLAGS = ${MBEDTLS_TEST_OBJS} 		\
-		-L../library 			\
-		-lmbedtls$(SHARED_SUFFIX)	\
-		-lmbedx509$(SHARED_SUFFIX)	\
-		-lmbedcrypto$(SHARED_SUFFIX)
+MBEDTLS_TEST_PATH = ../tests
+include ../scripts/common.make
 
 ifeq ($(shell uname -s),Linux)
 DLOPEN_LDFLAGS ?= -ldl
@@ -24,42 +7,10 @@ else
 DLOPEN_LDFLAGS ?=
 endif
 
-include ../3rdparty/Makefile.inc
-LOCAL_CFLAGS+=$(THIRDPARTY_INCLUDES)
-
-ifndef SHARED
-MBEDLIBS=../library/libmbedcrypto.a ../library/libmbedx509.a ../library/libmbedtls.a
-else
-MBEDLIBS=../library/libmbedcrypto.$(DLEXT) ../library/libmbedx509.$(DLEXT) ../library/libmbedtls.$(DLEXT)
+ifdef RECORD_PSA_STATUS_COVERAGE_LOG
+LOCAL_CFLAGS += -Werror -DRECORD_PSA_STATUS_COVERAGE_LOG
 endif
 DEP=${MBEDLIBS} ${MBEDTLS_TEST_OBJS}
-
-ifdef DEBUG
-LOCAL_CFLAGS += -g3
-endif
-
-# if we're running on Windows, build for Windows
-ifdef WINDOWS
-WINDOWS_BUILD=1
-endif
-
-ifdef WINDOWS_BUILD
-DLEXT=dll
-EXEXT=.exe
-LOCAL_LDFLAGS += -lws2_32
-ifdef SHARED
-SHARED_SUFFIX=.$(DLEXT)
-endif
-else
-DLEXT ?= so
-EXEXT=
-SHARED_SUFFIX=
-endif
-
-# Zlib shared library extensions:
-ifdef ZLIB
-LOCAL_LDFLAGS += -lz
-endif
 
 # Only build the dlopen test in shared library builds, and not when building
 # for Windows.
@@ -73,63 +24,74 @@ else
 BUILD_DLOPEN =
 endif
 
+## The following assignment is the list of base names of applications that
+## will be built on Windows. Extra Linux/Unix/POSIX-only applications can
+## be declared by appending with `APPS += ...` afterwards.
+## See the get_app_list function in scripts/generate_visualc_files.pl and
+## make sure to check that it still works if you tweak the format here.
 APPS = \
-	aes/crypt_and_hash$(EXEXT) \
-	hash/generic_sum$(EXEXT) \
-	hash/hello$(EXEXT) \
-	pkey/dh_client$(EXEXT) \
-	pkey/dh_genprime$(EXEXT) \
-	pkey/dh_server$(EXEXT) \
-	pkey/ecdh_curve25519$(EXEXT) \
-	pkey/ecdsa$(EXEXT) \
-	pkey/gen_key$(EXEXT) \
-	pkey/key_app$(EXEXT) \
-	pkey/key_app_writer$(EXEXT) \
-	pkey/mpi_demo$(EXEXT) \
-	pkey/pk_decrypt$(EXEXT) \
-	pkey/pk_encrypt$(EXEXT) \
-	pkey/pk_sign$(EXEXT) \
-	pkey/pk_verify$(EXEXT) \
-	pkey/rsa_decrypt$(EXEXT) \
-	pkey/rsa_encrypt$(EXEXT) \
-	pkey/rsa_genkey$(EXEXT) \
-	pkey/rsa_sign$(EXEXT) \
-	pkey/rsa_sign_pss$(EXEXT) \
-	pkey/rsa_verify$(EXEXT) \
-	pkey/rsa_verify_pss$(EXEXT) \
-	psa/crypto_examples$(EXEXT) \
-	psa/key_ladder_demo$(EXEXT) \
-	psa/psa_constant_names$(EXEXT) \
-	random/gen_entropy$(EXEXT) \
-	random/gen_random_ctr_drbg$(EXEXT) \
-	random/gen_random_havege$(EXEXT) \
-	ssl/dtls_client$(EXEXT) \
-	ssl/dtls_server$(EXEXT) \
-	ssl/mini_client$(EXEXT) \
-	ssl/ssl_client1$(EXEXT) \
-	ssl/ssl_client2$(EXEXT) \
-	ssl/ssl_context_info$(EXEXT) \
-	ssl/ssl_fork_server$(EXEXT) \
-	ssl/ssl_mail_client$(EXEXT) \
-	ssl/ssl_server$(EXEXT) \
-	ssl/ssl_server2$(EXEXT) \
-	test/benchmark$(EXEXT) \
-	test/query_compile_time_config$(EXEXT) \
-	test/selftest$(EXEXT) \
-	test/udp_proxy$(EXEXT) \
-	test/zeroize$(EXEXT) \
-	util/pem2der$(EXEXT) \
-	util/strerror$(EXEXT) \
-	x509/cert_app$(EXEXT) \
-	x509/cert_req$(EXEXT) \
-	x509/cert_write$(EXEXT) \
-	x509/crl_app$(EXEXT) \
-	x509/load_roots$(EXEXT) \
-	x509/req_app$(EXEXT) \
+	aes/crypt_and_hash \
+	cipher/cipher_aead_demo \
+	hash/generic_sum \
+	hash/hello \
+	hash/md_hmac_demo \
+	pkey/dh_client \
+	pkey/dh_genprime \
+	pkey/dh_server \
+	pkey/ecdh_curve25519 \
+	pkey/ecdsa \
+	pkey/gen_key \
+	pkey/key_app \
+	pkey/key_app_writer \
+	pkey/mpi_demo \
+	pkey/pk_decrypt \
+	pkey/pk_encrypt \
+	pkey/pk_sign \
+	pkey/pk_verify \
+	pkey/rsa_decrypt \
+	pkey/rsa_encrypt \
+	pkey/rsa_genkey \
+	pkey/rsa_sign \
+	pkey/rsa_sign_pss \
+	pkey/rsa_verify \
+	pkey/rsa_verify_pss \
+	psa/aead_demo \
+	psa/crypto_examples \
+	psa/hmac_demo \
+	psa/key_ladder_demo \
+	psa/psa_constant_names \
+	psa/psa_hash \
+	random/gen_entropy \
+	random/gen_random_ctr_drbg \
+	ssl/dtls_client \
+	ssl/dtls_server \
+	ssl/mini_client \
+	ssl/ssl_client1 \
+	ssl/ssl_client2 \
+	ssl/ssl_context_info \
+	ssl/ssl_fork_server \
+	ssl/ssl_mail_client \
+	ssl/ssl_server \
+	ssl/ssl_server2 \
+	test/benchmark \
+	test/metatest \
+	test/query_compile_time_config \
+	test/query_included_headers \
+	test/selftest \
+	test/udp_proxy \
+	test/zeroize \
+	util/pem2der \
+	util/strerror \
+	x509/cert_app \
+	x509/cert_req \
+	x509/cert_write \
+	x509/crl_app \
+	x509/load_roots \
+	x509/req_app \
 # End of APPS
 
-ifdef PTHREAD
-APPS +=	ssl/ssl_pthread_server$(EXEXT)
+ifeq ($(THREADING),pthread)
+APPS +=	ssl/ssl_pthread_server
 endif
 
 ifdef BUILD_DLOPEN
@@ -137,14 +99,16 @@ APPS +=	test/dlopen
 endif
 
 ifdef TEST_CPP
-APPS += test/cpp_dummy_build$(EXEXT)
+APPS += test/cpp_dummy_build
 endif
+
+EXES = $(patsubst %,%$(EXEXT),$(APPS))
 
 .SILENT:
 
 .PHONY: all clean list fuzz
 
-all: $(APPS)
+all: $(EXES)
 ifndef WINDOWS
 # APPS doesn't include the fuzzing programs, which aren't "normal"
 # sample or test programs, and don't build with MSVC which is
@@ -153,25 +117,54 @@ all: fuzz
 endif
 
 fuzz: ${MBEDTLS_TEST_OBJS}
-	$(MAKE) -C fuzz THIRDPARTY_INCLUDES=$(THIRDPARTY_INCLUDES)
-
-$(MBEDLIBS):
-	$(MAKE) -C ../library
+	$(MAKE) -C fuzz
 
 ${MBEDTLS_TEST_OBJS}:
 	$(MAKE) -C ../tests mbedtls_test
+
+.PHONY: generated_files
+GENERATED_FILES = psa/psa_constant_names_generated.c test/query_config.c
+generated_files: $(GENERATED_FILES)
+
+psa/psa_constant_names_generated.c: $(gen_file_dep) ../scripts/generate_psa_constants.py
+psa/psa_constant_names_generated.c: $(gen_file_dep) ../include/psa/crypto_values.h
+psa/psa_constant_names_generated.c: $(gen_file_dep) ../include/psa/crypto_extra.h
+psa/psa_constant_names_generated.c: $(gen_file_dep) ../tests/suites/test_suite_psa_crypto_metadata.data
+psa/psa_constant_names_generated.c:
+	echo "  Gen   $@"
+	$(PYTHON) ../scripts/generate_psa_constants.py
+
+test/query_config.c: $(gen_file_dep) ../scripts/generate_query_config.pl
+## The generated file only depends on the options that are present in mbedtls_config.h,
+## not on which options are set. To avoid regenerating this file all the time
+## when switching between configurations, don't declare mbedtls_config.h as a
+## dependency. Remove this file from your working tree if you've just added or
+## removed an option in mbedtls_config.h.
+#test/query_config.c: $(gen_file_dep) ../include/mbedtls/mbedtls_config.h
+test/query_config.c: $(gen_file_dep) ../scripts/data_files/query_config.fmt
+test/query_config.c:
+	echo "  Gen   $@"
+	$(PERL) ../scripts/generate_query_config.pl
 
 aes/crypt_and_hash$(EXEXT): aes/crypt_and_hash.c $(DEP)
 	echo "  CC    aes/crypt_and_hash.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) aes/crypt_and_hash.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-hash/hello$(EXEXT): hash/hello.c $(DEP)
-	echo "  CC    hash/hello.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) hash/hello.c       $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+cipher/cipher_aead_demo$(EXEXT): cipher/cipher_aead_demo.c $(DEP)
+	echo "  CC    cipher/cipher_aead_demo.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) cipher/cipher_aead_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 hash/generic_sum$(EXEXT): hash/generic_sum.c $(DEP)
 	echo "  CC    hash/generic_sum.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) hash/generic_sum.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+hash/hello$(EXEXT): hash/hello.c $(DEP)
+	echo "  CC    hash/hello.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) hash/hello.c       $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+hash/md_hmac_demo$(EXEXT): hash/md_hmac_demo.c $(DEP)
+	echo "  CC    hash/md_hmac_demo.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) hash/md_hmac_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 pkey/dh_client$(EXEXT): pkey/dh_client.c $(DEP)
 	echo "  CC    pkey/dh_client.c"
@@ -253,6 +246,18 @@ pkey/rsa_encrypt$(EXEXT): pkey/rsa_encrypt.c $(DEP)
 	echo "  CC    pkey/rsa_encrypt.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) pkey/rsa_encrypt.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+psa/aead_demo$(EXEXT): psa/aead_demo.c $(DEP)
+	echo "  CC    psa/aead_demo.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/aead_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+psa/crypto_examples$(EXEXT): psa/crypto_examples.c $(DEP)
+	echo "  CC    psa/crypto_examples.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/crypto_examples.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
+psa/hmac_demo$(EXEXT): psa/hmac_demo.c $(DEP)
+	echo "  CC    psa/hmac_demo.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/hmac_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
 psa/key_ladder_demo$(EXEXT): psa/key_ladder_demo.c $(DEP)
 	echo "  CC    psa/key_ladder_demo.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/key_ladder_demo.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
@@ -261,13 +266,13 @@ psa/psa_constant_names$(EXEXT): psa/psa_constant_names.c psa/psa_constant_names_
 	echo "  CC    psa/psa_constant_names.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/psa_constant_names.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
+psa/psa_hash$(EXEXT): psa/psa_hash.c $(DEP)
+	echo "  CC    psa/psa_hash.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/psa_hash.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
 random/gen_entropy$(EXEXT): random/gen_entropy.c $(DEP)
 	echo "  CC    random/gen_entropy.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) random/gen_entropy.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
-
-random/gen_random_havege$(EXEXT): random/gen_random_havege.c $(DEP)
-	echo "  CC    random/gen_random_havege.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) random/gen_random_havege.c $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 random/gen_random_ctr_drbg$(EXEXT): random/gen_random_ctr_drbg.c $(DEP)
 	echo "  CC    random/gen_random_ctr_drbg.c"
@@ -349,9 +354,17 @@ test/dlopen$(EXEXT): test/dlopen.c $(DEP)
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/dlopen.c $(LDFLAGS) $(DLOPEN_LDFLAGS) -o $@
 endif
 
+test/metatest$(EXEXT): test/metatest.c $(DEP)
+	echo "  CC    test/metatest.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -I ../library test/metatest.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
+
 test/query_config.o: test/query_config.c test/query_config.h $(DEP)
 	echo "  CC    test/query_config.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) -c test/query_config.c -o $@
+
+test/query_included_headers$(EXEXT): test/query_included_headers.c $(DEP)
+	echo "  CC    test/query_included_headers.c"
+	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) test/query_included_headers.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
 test/selftest$(EXEXT): test/selftest.c $(DEP)
 	echo "  CC    test/selftest.c"
@@ -401,13 +414,9 @@ x509/req_app$(EXEXT): x509/req_app.c $(DEP)
 	echo "  CC    x509/req_app.c"
 	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) x509/req_app.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
 
-psa/crypto_examples$(EXEXT): psa/crypto_examples.c $(DEP)
-	echo "  CC    psa/crypto_examples.c"
-	$(CC) $(LOCAL_CFLAGS) $(CFLAGS) psa/crypto_examples.c    $(LOCAL_LDFLAGS) $(LDFLAGS) -o $@
-
 clean:
 ifndef WINDOWS
-	rm -f $(APPS)
+	rm -f $(EXES)
 	-rm -f ssl/ssl_pthread_server$(EXEXT)
 	-rm -f test/cpp_dummy_build.cpp test/cpp_dummy_build$(EXEXT)
 	-rm -f test/dlopen$(EXEXT)
@@ -419,4 +428,4 @@ endif
 	$(MAKE) -C fuzz clean
 
 list:
-	echo $(APPS)
+	echo $(EXES)

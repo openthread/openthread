@@ -21,14 +21,23 @@
 #ifndef PSA_CRYPTO_TYPES_H
 #define PSA_CRYPTO_TYPES_H
 
-#include "crypto_platform.h"
-
-/* If MBEDTLS_PSA_CRYPTO_C is defined, make sure MBEDTLS_PSA_CRYPTO_CLIENT
- * is defined as well to include all PSA code.
+/*
+ * Include the build-time configuration information header. Here, we do not
+ * include `"mbedtls/build_info.h"` directly but `"psa/build_info.h"`, which
+ * is basically just an alias to it. This is to ease the maintenance of the
+ * TF-PSA-Crypto repository which has a different build system and
+ * configuration.
  */
-#if defined(MBEDTLS_PSA_CRYPTO_C)
-#define MBEDTLS_PSA_CRYPTO_CLIENT
-#endif /* MBEDTLS_PSA_CRYPTO_C */
+#include "psa/build_info.h"
+
+/* Define the MBEDTLS_PRIVATE macro. */
+#include "mbedtls/private_access.h"
+
+#if defined(MBEDTLS_PSA_CRYPTO_PLATFORM_FILE)
+#include MBEDTLS_PSA_CRYPTO_PLATFORM_FILE
+#else
+#include "crypto_platform.h"
+#endif
 
 #include <stdint.h>
 
@@ -289,8 +298,8 @@ typedef psa_key_id_t mbedtls_svc_key_id_t;
  * functions such as psa_open_key().
  */
 typedef struct {
-    psa_key_id_t key_id;
-    mbedtls_key_owner_id_t owner;
+    psa_key_id_t MBEDTLS_PRIVATE(key_id);
+    mbedtls_key_owner_id_t MBEDTLS_PRIVATE(owner);
 } mbedtls_svc_key_id_t;
 
 #endif /* !MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */
@@ -445,6 +454,30 @@ typedef uint64_t psa_key_slot_number_t;
  * `PSA_KEY_DERIVATION_INPUT_xxx`.
  */
 typedef uint16_t psa_key_derivation_step_t;
+
+/** \brief Custom parameters for key generation or key derivation.
+ *
+ * This is a structure type with at least the following fields:
+ *
+ * - \c flags: an unsigned integer type. 0 for the default production parameters.
+ * - \c data: a flexible array of bytes.
+ *
+ * The interpretation of this structure depend on the type of the
+ * created key.
+ *
+ * - #PSA_KEY_TYPE_RSA_KEY_PAIR:
+ *     - \c flags: must be 0.
+ *     - \c data: the public exponent, in little-endian order.
+ *       This must be an odd integer and must not be 1.
+ *       Implementations must support 65537, should support 3 and may
+ *       support other values.
+ *       When not using a driver, Mbed TLS supports values up to \c INT_MAX.
+ *       If this is empty or if the custom production parameters are omitted
+ *       altogether, the default value 65537 is used.
+ * - Other key types: reserved for future use. \c flags must be 0.
+ *
+ */
+typedef struct psa_key_production_parameters_s psa_key_production_parameters_t;
 
 /**@}*/
 

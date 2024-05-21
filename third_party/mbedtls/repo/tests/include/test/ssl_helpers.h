@@ -11,6 +11,8 @@
 #ifndef SSL_HELPERS_H
 #define SSL_HELPERS_H
 
+#include "mbedtls/build_info.h"
+
 #include <string.h>
 
 #include <test/helpers.h>
@@ -19,47 +21,86 @@
 #include <test/psa_crypto_helpers.h>
 
 #if defined(MBEDTLS_SSL_TLS_C)
-#include <mbedtls/ssl_internal.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/certs.h>
+#include <ssl_misc.h>
 #include <mbedtls/timing.h>
 #include <mbedtls/debug.h>
-#include <ssl_tls13_keys.h>
+
+#include "test/certs.h"
 
 #if defined(MBEDTLS_SSL_CACHE_C)
 #include "mbedtls/ssl_cache.h"
 #endif
 
-#if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) || \
-    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) || \
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+#define PSA_TO_MBEDTLS_ERR(status) PSA_TO_MBEDTLS_ERR_LIST(status, \
+                                                           psa_to_ssl_errors, \
+                                                           psa_generic_status_to_mbedtls)
+#endif
+
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3)
+#if defined(MBEDTLS_SSL_HAVE_AES)
+#if defined(MBEDTLS_SSL_HAVE_GCM)
+#if defined(MBEDTLS_MD_CAN_SHA384)
+#define MBEDTLS_TEST_HAS_TLS1_3_AES_256_GCM_SHA384
+#endif
+#if defined(MBEDTLS_MD_CAN_SHA256)
+#define MBEDTLS_TEST_HAS_TLS1_3_AES_128_GCM_SHA256
+#endif
+#endif /* MBEDTLS_SSL_HAVE_GCM */
+#if defined(MBEDTLS_SSL_HAVE_CCM) && defined(MBEDTLS_MD_CAN_SHA256)
+#define MBEDTLS_TEST_HAS_TLS1_3_AES_128_CCM_SHA256
+#define MBEDTLS_TEST_HAS_TLS1_3_AES_128_CCM_8_SHA256
+#endif
+#endif /* MBEDTLS_SSL_HAVE_AES */
+#if defined(MBEDTLS_SSL_HAVE_CHACHAPOLY) && defined(MBEDTLS_MD_CAN_SHA256)
+#define MBEDTLS_TEST_HAS_TLS1_3_CHACHA20_POLY1305_SHA256
+#endif
+
+#if defined(MBEDTLS_TEST_HAS_TLS1_3_AES_256_GCM_SHA384) || \
+    defined(MBEDTLS_TEST_HAS_TLS1_3_AES_128_GCM_SHA256) || \
+    defined(MBEDTLS_TEST_HAS_TLS1_3_AES_128_CCM_SHA256) || \
+    defined(MBEDTLS_TEST_HAS_TLS1_3_AES_128_CCM_8_SHA256) || \
+    defined(MBEDTLS_TEST_HAS_TLS1_3_CHACHA20_POLY1305_SHA256)
+#define MBEDTLS_TEST_AT_LEAST_ONE_TLS1_3_CIPHERSUITE
+#endif
+
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3 */
+
+#if defined(MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED) ||    \
+    defined(MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED) ||  \
     defined(MBEDTLS_KEY_EXCHANGE_RSA_ENABLED)
 #define MBEDTLS_CAN_HANDLE_RSA_TEST_KEY
 #endif
-
 enum {
-#define MBEDTLS_SSL_TLS1_3_LABEL(name, string)   \
-    tls1_3_label_ ## name,
+#define MBEDTLS_SSL_TLS1_3_LABEL(name, string)          \
+    tls13_label_ ## name,
     MBEDTLS_SSL_TLS1_3_LABEL_LIST
 #undef MBEDTLS_SSL_TLS1_3_LABEL
 };
+
+#if defined(MBEDTLS_SSL_ALPN)
+#define MBEDTLS_TEST_MAX_ALPN_LIST_SIZE 10
+#endif
 
 typedef struct mbedtls_test_ssl_log_pattern {
     const char *pattern;
     size_t counter;
 } mbedtls_test_ssl_log_pattern;
 
-/* Invalid minor version used when not specifying a min/max version or expecting a test to fail */
-#define TEST_SSL_MINOR_VERSION_NONE -1
-
 typedef struct mbedtls_test_handshake_test_options {
     const char *cipher;
-    int client_min_version;
-    int client_max_version;
-    int server_min_version;
-    int server_max_version;
-    int expected_negotiated_version;
+    uint16_t *group_list;
+    mbedtls_ssl_protocol_version client_min_version;
+    mbedtls_ssl_protocol_version client_max_version;
+    mbedtls_ssl_protocol_version server_min_version;
+    mbedtls_ssl_protocol_version server_max_version;
+    mbedtls_ssl_protocol_version expected_negotiated_version;
+    int expected_handshake_result;
+    int expected_ciphersuite;
     int pk_alg;
+    int opaque_alg;
+    int opaque_alg2;
+    int opaque_usage;
     data_t *psk_str;
     int dtls;
     int srv_auth_mode;
@@ -76,6 +117,14 @@ typedef struct mbedtls_test_handshake_test_options {
     void (*srv_log_fun)(void *, int, const char *, int, const char *);
     void (*cli_log_fun)(void *, int, const char *, int, const char *);
     int resize_buffers;
+    int early_data;
+    int max_early_data_size;
+#if defined(MBEDTLS_SSL_CACHE_C)
+    mbedtls_ssl_cache_context *cache;
+#endif
+#if defined(MBEDTLS_SSL_ALPN)
+    const char *alpn_list[MBEDTLS_TEST_MAX_ALPN_LIST_SIZE];
+#endif
 } mbedtls_test_handshake_test_options;
 
 /*
@@ -130,10 +179,7 @@ typedef struct mbedtls_test_message_socket_context {
     mbedtls_test_mock_socket *socket;
 } mbedtls_test_message_socket_context;
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && \
-    defined(MBEDTLS_CERTS_C) && \
-    defined(MBEDTLS_ENTROPY_C) && \
-    defined(MBEDTLS_CTR_DRBG_C)
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
 
 /*
  * Structure with endpoint's certificates for SSL communication tests.
@@ -151,14 +197,18 @@ typedef struct mbedtls_test_ssl_endpoint {
     const char *name;
     mbedtls_ssl_context ssl;
     mbedtls_ssl_config conf;
-    mbedtls_ctr_drbg_context ctr_drbg;
-    mbedtls_entropy_context entropy;
     mbedtls_test_mock_socket socket;
     mbedtls_test_ssl_endpoint_certificate cert;
 } mbedtls_test_ssl_endpoint;
 
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_CERTS_C &&
-          MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */
+#endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
+
+/*
+ * Random number generator aimed for TLS unitary tests. Its main purpose is to
+ * simplify the set-up of a random number generator for TLS
+ * unitary tests: no need to set up a good entropy source for example.
+ */
+int mbedtls_test_random(void *p_rng, unsigned char *output, size_t output_len);
 
 /*
  * This function can be passed to mbedtls to receive output logs from it. In
@@ -170,6 +220,9 @@ void mbedtls_test_ssl_log_analyzer(void *ctx, int level,
                                    const char *str);
 
 void mbedtls_test_init_handshake_options(
+    mbedtls_test_handshake_test_options *opts);
+
+void mbedtls_test_free_handshake_options(
     mbedtls_test_handshake_test_options *opts);
 
 /*
@@ -296,6 +349,7 @@ int mbedtls_test_mock_socket_connect(mbedtls_test_mock_socket *peer1,
                                      mbedtls_test_mock_socket *peer2,
                                      size_t bufsize);
 
+
 /*
  * Callbacks for simulating blocking I/O over connection-oriented transport.
  */
@@ -370,10 +424,7 @@ int mbedtls_test_mock_tcp_send_msg(void *ctx,
 int mbedtls_test_mock_tcp_recv_msg(void *ctx,
                                    unsigned char *buf, size_t buf_len);
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && \
-    defined(MBEDTLS_CERTS_C) && \
-    defined(MBEDTLS_ENTROPY_C) && \
-    defined(MBEDTLS_CTR_DRBG_C)
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
 
 /*
  * Initializes \p ep_cert structure and assigns it to endpoint
@@ -382,7 +433,9 @@ int mbedtls_test_mock_tcp_recv_msg(void *ctx,
  * \retval  0 on success, otherwise error code.
  */
 int mbedtls_test_ssl_endpoint_certificate_init(mbedtls_test_ssl_endpoint *ep,
-                                               int pk_alg);
+                                               int pk_alg,
+                                               int opaque_alg, int opaque_alg2,
+                                               int opaque_usage);
 
 /*
  * Initializes \p ep structure. It is important to call
@@ -400,11 +453,11 @@ int mbedtls_test_ssl_endpoint_certificate_init(mbedtls_test_ssl_endpoint *ep,
  * \retval  0 on success, otherwise error code.
  */
 int mbedtls_test_ssl_endpoint_init(
-    mbedtls_test_ssl_endpoint *ep, int endpoint_type, int pk_alg,
+    mbedtls_test_ssl_endpoint *ep, int endpoint_type,
+    mbedtls_test_handshake_test_options *options,
     mbedtls_test_message_socket_context *dtls_context,
     mbedtls_test_ssl_message_queue *input_queue,
-    mbedtls_test_ssl_message_queue *output_queue,
-    const mbedtls_ecp_group_id *curves);
+    mbedtls_test_ssl_message_queue *output_queue);
 
 /*
  * Deinitializes endpoint represented by \p ep.
@@ -424,15 +477,13 @@ int mbedtls_test_move_handshake_to_state(mbedtls_ssl_context *ssl,
                                          mbedtls_ssl_context *second_ssl,
                                          int state);
 
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_CERTS_C &&
-          MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */
+#endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
 
 /*
  * Helper function setting up inverse record transformations
  * using given cipher, hash, EtM mode, authentication tag length,
  * and version.
  */
-
 #define CHK(x)                                  \
     do                                          \
     {                                           \
@@ -449,14 +500,27 @@ int mbedtls_test_move_handshake_to_state(mbedtls_ssl_context *ssl,
 #define SSL_CID_LEN_MIN MBEDTLS_SSL_CID_OUT_LEN_MAX
 #endif
 
+#if defined(MBEDTLS_SSL_PROTO_TLS1_2) && \
+    defined(MBEDTLS_SSL_HAVE_CBC) && defined(MBEDTLS_SSL_HAVE_AES)
+int mbedtls_test_psa_cipher_encrypt_helper(mbedtls_ssl_transform *transform,
+                                           const unsigned char *iv,
+                                           size_t iv_len,
+                                           const unsigned char *input,
+                                           size_t ilen,
+                                           unsigned char *output,
+                                           size_t *olen);
+#endif /* MBEDTLS_SSL_PROTO_TLS1_2 && MBEDTLS_SSL_HAVE_CBC &&
+          MBEDTLS_SSL_HAVE_AES */
+
 int mbedtls_test_ssl_build_transforms(mbedtls_ssl_transform *t_in,
                                       mbedtls_ssl_transform *t_out,
                                       int cipher_type, int hash_id,
-                                      int etm, int tag_mode, int ver,
+                                      int etm, int tag_mode,
+                                      mbedtls_ssl_protocol_version tls_version,
                                       size_t cid0_len,
                                       size_t cid1_len);
 
-#if defined(MBEDTLS_SSL_SOME_MODES_USE_MAC)
+#if defined(MBEDTLS_SSL_SOME_SUITES_USE_MAC)
 /**
  * \param[in,out] record        The record to prepare.
  *                              It must contain the data to MAC at offset
@@ -475,15 +539,22 @@ int mbedtls_test_ssl_build_transforms(mbedtls_ssl_transform *t_in,
  */
 int mbedtls_test_ssl_prepare_record_mac(mbedtls_record *record,
                                         mbedtls_ssl_transform *transform_out);
-#endif /* MBEDTLS_SSL_SOME_MODES_USE_MAC */
+#endif /* MBEDTLS_SSL_SOME_SUITES_USE_MAC */
 
 /*
  * Populate a session structure for serialization tests.
  * Choose dummy values, mostly non-0 to distinguish from the init default.
  */
-int mbedtls_test_ssl_populate_session(mbedtls_ssl_session *session,
-                                      int ticket_len,
-                                      const char *crt_file);
+int mbedtls_test_ssl_tls12_populate_session(mbedtls_ssl_session *session,
+                                            int ticket_len,
+                                            int endpoint_type,
+                                            const char *crt_file);
+
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3)
+int mbedtls_test_ssl_tls13_populate_session(mbedtls_ssl_session *session,
+                                            int ticket_len,
+                                            int endpoint_type);
+#endif /* MBEDTLS_SSL_PROTO_TLS1_3 */
 
 /*
  * Perform data exchanging between \p ssl_1 and \p ssl_2 and check if the
@@ -513,14 +584,81 @@ int mbedtls_test_ssl_exchange_data(
     mbedtls_ssl_context *ssl_2,
     int msg_len_2, const int expected_fragments_2);
 
-#if defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED) && \
-    defined(MBEDTLS_CERTS_C) && \
-    defined(MBEDTLS_ENTROPY_C) && \
-    defined(MBEDTLS_CTR_DRBG_C)
+#if defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
 void mbedtls_test_ssl_perform_handshake(
     mbedtls_test_handshake_test_options *options);
-#endif /* MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED && MBEDTLS_CERTS_C &&
-          MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */
+#endif /* MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED */
+
+#if defined(MBEDTLS_TEST_HOOKS)
+/*
+ * Tweak vector lengths in a TLS 1.3 Certificate message
+ *
+ * \param[in]       buf    Buffer containing the Certificate message to tweak
+ * \param[in]]out]  end    End of the buffer to parse
+ * \param           tweak  Tweak identifier (from 1 to the number of tweaks).
+ * \param[out]  expected_result  Error code expected from the parsing function
+ * \param[out]  args  Arguments of the MBEDTLS_SSL_CHK_BUF_READ_PTR call that
+ *                    is expected to fail. All zeroes if no
+ *                    MBEDTLS_SSL_CHK_BUF_READ_PTR failure is expected.
+ */
+int mbedtls_test_tweak_tls13_certificate_msg_vector_len(
+    unsigned char *buf, unsigned char **end, int tweak,
+    int *expected_result, mbedtls_ssl_chk_buf_ptr_args *args);
+#endif /* MBEDTLS_TEST_HOOKS */
+
+#if defined(MBEDTLS_SSL_SESSION_TICKETS)
+int mbedtls_test_ticket_write(
+    void *p_ticket, const mbedtls_ssl_session *session,
+    unsigned char *start, const unsigned char *end,
+    size_t *tlen, uint32_t *ticket_lifetime);
+
+int mbedtls_test_ticket_parse(void *p_ticket, mbedtls_ssl_session *session,
+                              unsigned char *buf, size_t len);
+#endif /* MBEDTLS_SSL_SESSION_TICKETS */
+
+#if defined(MBEDTLS_SSL_CLI_C) && defined(MBEDTLS_SSL_SRV_C) && \
+    defined(MBEDTLS_SSL_PROTO_TLS1_3) && defined(MBEDTLS_SSL_SESSION_TICKETS) && \
+    defined(MBEDTLS_SSL_HANDSHAKE_WITH_CERT_ENABLED)
+int mbedtls_test_get_tls13_ticket(
+    mbedtls_test_handshake_test_options *client_options,
+    mbedtls_test_handshake_test_options *server_options,
+    mbedtls_ssl_session *session);
+#endif
+
+#define ECJPAKE_TEST_PWD        "bla"
+
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+#define ECJPAKE_TEST_SET_PASSWORD(exp_ret_val)                            \
+    ret = (use_opaque_arg) ?                                              \
+          mbedtls_ssl_set_hs_ecjpake_password_opaque(&ssl, pwd_slot) :    \
+          mbedtls_ssl_set_hs_ecjpake_password(&ssl, pwd_string, pwd_len); \
+    TEST_EQUAL(ret, exp_ret_val)
+#else
+#define ECJPAKE_TEST_SET_PASSWORD(exp_ret_val)                            \
+    ret = mbedtls_ssl_set_hs_ecjpake_password(&ssl,                       \
+                                              pwd_string, pwd_len);       \
+    TEST_EQUAL(ret, exp_ret_val)
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+#define TEST_AVAILABLE_ECC(tls_id_, group_id_, psa_family_, psa_bits_)   \
+    TEST_EQUAL(mbedtls_ssl_get_ecp_group_id_from_tls_id(tls_id_),        \
+               group_id_);                                               \
+    TEST_EQUAL(mbedtls_ssl_get_tls_id_from_ecp_group_id(group_id_),      \
+               tls_id_);                                                 \
+    TEST_EQUAL(mbedtls_ssl_get_psa_curve_info_from_tls_id(tls_id_,       \
+                                                          &psa_type, &psa_bits), PSA_SUCCESS);                \
+    TEST_EQUAL(psa_family_, PSA_KEY_TYPE_ECC_GET_FAMILY(psa_type));    \
+    TEST_EQUAL(psa_bits_, psa_bits);
+
+#define TEST_UNAVAILABLE_ECC(tls_id_, group_id_, psa_family_, psa_bits_) \
+    TEST_EQUAL(mbedtls_ssl_get_ecp_group_id_from_tls_id(tls_id_),        \
+               MBEDTLS_ECP_DP_NONE);                                     \
+    TEST_EQUAL(mbedtls_ssl_get_tls_id_from_ecp_group_id(group_id_),      \
+               0);                                                       \
+    TEST_EQUAL(mbedtls_ssl_get_psa_curve_info_from_tls_id(tls_id_,       \
+                                                          &psa_type, &psa_bits), \
+               PSA_ERROR_NOT_SUPPORTED);
+
 #endif /* MBEDTLS_SSL_TLS_C */
 
 #endif /* SSL_HELPERS_H */

@@ -2,25 +2,28 @@
 #include "mbedtls/bignum.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
+#include "x509_internal.h"
 #include "mbedtls/pem.h"
 #include "mbedtls/oid.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/asn1write.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/psa_util.h"
 
 #if defined(MBEDTLS_RSA_C)
-int mbedtls_rsa_decrypt_func(void *ctx, int mode, size_t *olen,
+int mbedtls_rsa_decrypt_func(void *ctx, size_t *olen,
                              const unsigned char *input, unsigned char *output,
                              size_t output_max_len)
 {
-    return mbedtls_rsa_pkcs1_decrypt((mbedtls_rsa_context *) ctx, NULL, NULL, mode, olen,
-                                     input, output, output_max_len);
+    return mbedtls_rsa_pkcs1_decrypt((mbedtls_rsa_context *) ctx, NULL, NULL,
+                                     olen, input, output, output_max_len);
 }
 int mbedtls_rsa_sign_func(void *ctx,
                           int (*f_rng)(void *, unsigned char *, size_t), void *p_rng,
-                          int mode, mbedtls_md_type_t md_alg, unsigned int hashlen,
+                          mbedtls_md_type_t md_alg, unsigned int hashlen,
                           const unsigned char *hash, unsigned char *sig)
 {
-    return mbedtls_rsa_pkcs1_sign((mbedtls_rsa_context *) ctx, f_rng, p_rng, mode,
+    return mbedtls_rsa_pkcs1_sign((mbedtls_rsa_context *) ctx, f_rng, p_rng,
                                   md_alg, hashlen, hash, sig);
 }
 size_t mbedtls_rsa_key_len_func(void *ctx)
@@ -33,8 +36,7 @@ size_t mbedtls_rsa_key_len_func(void *ctx)
     defined(MBEDTLS_PEM_WRITE_C) && defined(MBEDTLS_X509_CSR_WRITE_C)
 static int x509_crt_verifycsr(const unsigned char *buf, size_t buflen)
 {
-    unsigned char hash[MBEDTLS_MD_MAX_SIZE];
-    const mbedtls_md_info_t *md_info;
+    unsigned char hash[PSA_HASH_MAX_SIZE];
     mbedtls_x509_csr csr;
     int ret = 0;
 
@@ -45,15 +47,19 @@ static int x509_crt_verifycsr(const unsigned char *buf, size_t buflen)
         goto cleanup;
     }
 
-    md_info = mbedtls_md_info_from_type(csr.sig_md);
-    if (mbedtls_md(md_info, csr.cri.p, csr.cri.len, hash) != 0) {
+    psa_algorithm_t psa_alg = mbedtls_md_psa_alg_from_type(csr.sig_md);
+    size_t hash_size = 0;
+    psa_status_t status = psa_hash_compute(psa_alg, csr.cri.p, csr.cri.len,
+                                           hash, PSA_HASH_MAX_SIZE, &hash_size);
+
+    if (status != PSA_SUCCESS) {
         /* Note: this can't happen except after an internal error */
         ret = MBEDTLS_ERR_X509_BAD_INPUT_DATA;
         goto cleanup;
     }
 
     if (mbedtls_pk_verify_ext(csr.sig_pk, csr.sig_opts, &csr.pk,
-                              csr.sig_md, hash, mbedtls_md_get_size(md_info),
+                              csr.sig_md, hash, mbedtls_md_get_size_from_type(csr.sig_md),
                               csr.sig.p, csr.sig.len) != 0) {
         ret = MBEDTLS_ERR_X509_CERT_VERIFY_FAILED;
         goto cleanup;
@@ -113,16 +119,23 @@ static int csr_set_extended_key_usage(mbedtls_x509write_csr *ctx,
     ret = mbedtls_x509write_csr_set_extension(ctx,
                                               MBEDTLS_OID_EXTENDED_KEY_USAGE,
                                               MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE),
+                                              0,
                                               p,
                                               len);
 
     return ret;
 }
 #endif  /* MBEDTLS_X509_CSR_WRITE_C */
+
+/* Due to inconsistencies in the input size limits applied by different
+ * library functions, some write-parse tests may fail. */
+#define MAY_FAIL_GET_NAME       0x0001
+#define MAY_FAIL_DN_GETS        0x0002
+
 /* END_HEADER */
 
 /* BEGIN_DEPENDENCIES
- * depends_on:MBEDTLS_BIGNUM_C:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C
+ * depends_on:MBEDTLS_FS_IO:MBEDTLS_PK_PARSE_C
  * END_DEPENDENCIES
  */
 
@@ -134,21 +147,66 @@ void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
     mbedtls_pk_context key;
     mbedtls_x509write_csr req;
     unsigned char buf[4096];
-    unsigned char check_buf[4000];
     int ret;
-    size_t olen = 0, pem_len = 0, buf_index;
-    int der_len = -1;
+#if !defined(MBEDTLS_USE_PSA_CRYPTO)
+    unsigned char check_buf[4000];
     FILE *f;
+    size_t olen = 0;
+#endif /* !MBEDTLS_USE_PSA_CRYPTO */
+    size_t pem_len = 0, buf_index;
+    int der_len = -1;
     const char *subject_name = "C=NL,O=PolarSSL,CN=PolarSSL Server 1";
     mbedtls_test_rnd_pseudo_info rnd_info;
+    mbedtls_x509_san_list san_ip;
+    mbedtls_x509_san_list san_dns;
+    mbedtls_x509_san_list san_uri;
+    mbedtls_x509_san_list san_mail;
+    mbedtls_x509_san_list san_dn;
+    mbedtls_x509_san_list *san_list = NULL;
+    mbedtls_asn1_named_data *ext_san_dirname = NULL;
+
+    const char san_ip_name[] = { 0x7f, 0x00, 0x00, 0x01 }; // 127.0.0.1
+    const char *san_dns_name = "example.com";
+    const char *san_dn_name = "C=UK,O=Mbed TLS,CN=Mbed TLS directoryName SAN";
+    const char *san_mail_name = "mail@example.com";
+    const char *san_uri_name = "http://pki.example.com";
+
+    san_mail.node.type = MBEDTLS_X509_SAN_RFC822_NAME;
+    san_mail.node.san.unstructured_name.p = (unsigned char *) san_mail_name;
+    san_mail.node.san.unstructured_name.len = strlen(san_mail_name);
+    san_mail.next = NULL;
+
+    san_dns.node.type = MBEDTLS_X509_SAN_DNS_NAME;
+    san_dns.node.san.unstructured_name.p = (unsigned char *) san_dns_name;
+    san_dns.node.san.unstructured_name.len = strlen(san_dns_name);
+    san_dns.next = &san_mail;
+
+    san_dn.node.type = MBEDTLS_X509_SAN_DIRECTORY_NAME;
+    TEST_ASSERT(mbedtls_x509_string_to_names(&ext_san_dirname,
+                                             san_dn_name) == 0);
+    san_dn.node.san.directory_name = *ext_san_dirname;
+    san_dn.next = &san_dns;
+
+    san_ip.node.type = MBEDTLS_X509_SAN_IP_ADDRESS;
+    san_ip.node.san.unstructured_name.p = (unsigned char *) san_ip_name;
+    san_ip.node.san.unstructured_name.len = sizeof(san_ip_name);
+    san_ip.next = &san_dn;
+
+    san_uri.node.type = MBEDTLS_X509_SAN_UNIFORM_RESOURCE_IDENTIFIER;
+    san_uri.node.san.unstructured_name.p = (unsigned char *) san_uri_name;
+    san_uri.node.san.unstructured_name.len = strlen(san_uri_name);
+    san_uri.next = &san_ip;
+
+    san_list = &san_uri;
 
     memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
 
     mbedtls_x509write_csr_init(&req);
     mbedtls_pk_init(&key);
-    USE_PSA_INIT();
+    MD_OR_USE_PSA_INIT();
 
-    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL) == 0);
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL,
+                                         mbedtls_test_rnd_std_rand, NULL) == 0);
 
     mbedtls_x509write_csr_set_md_alg(&req, md_type);
     mbedtls_x509write_csr_set_key(&req, &key);
@@ -162,6 +220,8 @@ void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
     if (set_extension != 0) {
         TEST_ASSERT(csr_set_extended_key_usage(&req, MBEDTLS_OID_SERVER_AUTH,
                                                MBEDTLS_OID_SIZE(MBEDTLS_OID_SERVER_AUTH)) == 0);
+
+        TEST_ASSERT(mbedtls_x509write_csr_set_subject_alternative_name(&req, san_list) == 0);
     }
 
     ret = mbedtls_x509write_csr_pem(&req, buf, sizeof(buf),
@@ -174,6 +234,12 @@ void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
         TEST_ASSERT(buf[buf_index] == 0);
     }
 
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    // When using PSA crypto, RNG isn't controllable, so cert_req_check_file can't be used
+    (void) cert_req_check_file;
+    buf[pem_len] = '\0';
+    TEST_ASSERT(x509_crt_verifycsr(buf, pem_len + 1) == 0);
+#else
     f = fopen(cert_req_check_file, "r");
     TEST_ASSERT(f != NULL);
     olen = fread(check_buf, 1, sizeof(check_buf), f);
@@ -181,6 +247,7 @@ void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
 
     TEST_ASSERT(olen >= pem_len - 1);
     TEST_ASSERT(memcmp(buf, check_buf, pem_len - 1) == 0);
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
 
     der_len = mbedtls_x509write_csr_der(&req, buf, sizeof(buf),
                                         mbedtls_test_rnd_pseudo_rand,
@@ -191,14 +258,23 @@ void x509_csr_check(char *key_file, char *cert_req_check_file, int md_type,
         goto exit;
     }
 
-    ret = mbedtls_x509write_csr_der(&req, buf, (size_t) (der_len - 1),
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    // When using PSA crypto, RNG isn't controllable, result length isn't
+    // deterministic over multiple runs, removing a single byte isn't enough to
+    // go into the MBEDTLS_ERR_ASN1_BUF_TOO_SMALL error case
+    der_len /= 2;
+#else
+    der_len -= 1;
+#endif
+    ret = mbedtls_x509write_csr_der(&req, buf, (size_t) (der_len),
                                     mbedtls_test_rnd_pseudo_rand, &rnd_info);
     TEST_ASSERT(ret == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
 
 exit:
+    mbedtls_asn1_free_named_data_list(&ext_san_dirname);
     mbedtls_x509write_csr_free(&req);
     mbedtls_pk_free(&key);
-    USE_PSA_DONE();
+    MD_OR_USE_PSA_DONE();
 }
 /* END_CASE */
 
@@ -208,7 +284,7 @@ void x509_csr_check_opaque(char *key_file, int md_type, int key_usage,
 {
     mbedtls_pk_context key;
     mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
-    psa_algorithm_t md_alg_psa;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
     mbedtls_x509write_csr req;
     unsigned char buf[4096];
     int ret;
@@ -216,18 +292,21 @@ void x509_csr_check_opaque(char *key_file, int md_type, int key_usage,
     const char *subject_name = "C=NL,O=PolarSSL,CN=PolarSSL Server 1";
     mbedtls_test_rnd_pseudo_info rnd_info;
 
+    mbedtls_x509write_csr_init(&req);
+    MD_OR_USE_PSA_INIT();
+
     memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
 
-    mbedtls_x509write_csr_init(&req);
-
-    USE_PSA_INIT();
-
-    md_alg_psa = mbedtls_psa_translate_md((mbedtls_md_type_t) md_type);
-    TEST_ASSERT(md_alg_psa != MBEDTLS_MD_NONE);
-
     mbedtls_pk_init(&key);
-    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL) == 0);
-    TEST_ASSERT(mbedtls_pk_wrap_as_opaque(&key, &key_id, md_alg_psa) == 0);
+    TEST_ASSERT(mbedtls_pk_parse_keyfile(&key, key_file, NULL,
+                                         mbedtls_test_rnd_std_rand, NULL) == 0);
+
+    /* Turn the PK context into an opaque one. */
+    TEST_EQUAL(mbedtls_pk_get_psa_attributes(&key, PSA_KEY_USAGE_SIGN_HASH, &key_attr), 0);
+    TEST_EQUAL(mbedtls_pk_import_into_psa(&key, &key_attr, &key_id), 0);
+    mbedtls_pk_free(&key);
+    mbedtls_pk_init(&key);
+    TEST_EQUAL(mbedtls_pk_setup_opaque(&key, key_id), 0);
 
     mbedtls_x509write_csr_set_md_alg(&req, md_type);
     mbedtls_x509write_csr_set_key(&req, &key);
@@ -248,22 +327,25 @@ void x509_csr_check_opaque(char *key_file, int md_type, int key_usage,
     buf[pem_len] = '\0';
     TEST_ASSERT(x509_crt_verifycsr(buf, pem_len + 1) == 0);
 
+
 exit:
     mbedtls_x509write_csr_free(&req);
     mbedtls_pk_free(&key);
     psa_destroy_key(key_id);
-    USE_PSA_DONE();
+    MD_OR_USE_PSA_DONE();
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CRT_WRITE_C:MBEDTLS_SHA1_C */
+/* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CRT_WRITE_C:MBEDTLS_X509_CRT_PARSE_C:MBEDTLS_MD_CAN_SHA1 */
 void x509_crt_check(char *subject_key_file, char *subject_pwd,
                     char *subject_name, char *issuer_key_file,
                     char *issuer_pwd, char *issuer_name,
-                    char *serial_str, char *not_before, char *not_after,
+                    data_t *serial_arg, char *not_before, char *not_after,
                     int md_type, int key_usage, int set_key_usage,
+                    char *ext_key_usage,
                     int cert_type, int set_cert_type, int auth_ident,
-                    int ver, char *cert_check_file, int rsa_alt, int is_ca)
+                    int ver, char *cert_check_file, int pk_wrap, int is_ca,
+                    char *cert_verify_file, int set_subjectAltNames)
 {
     mbedtls_pk_context subject_key, issuer_key, issuer_key_alt;
     mbedtls_pk_context *key = &issuer_key;
@@ -273,32 +355,84 @@ void x509_crt_check(char *subject_key_file, char *subject_pwd,
     unsigned char check_buf[5000];
     unsigned char *p, *end;
     unsigned char tag, sz;
-    mbedtls_mpi serial;
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi serial_mpi;
+#endif
     int ret, before_tag, after_tag;
     size_t olen = 0, pem_len = 0, buf_index = 0;
     int der_len = -1;
     FILE *f;
     mbedtls_test_rnd_pseudo_info rnd_info;
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    mbedtls_svc_key_id_t key_id = MBEDTLS_SVC_KEY_ID_INIT;
+    psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+#endif
+    mbedtls_pk_type_t issuer_key_type;
+    mbedtls_x509_san_list san_ip;
+    mbedtls_x509_san_list san_dns;
+    mbedtls_x509_san_list san_uri;
+    mbedtls_x509_san_list san_mail;
+    mbedtls_x509_san_list san_dn;
+    mbedtls_asn1_named_data *ext_san_dirname = NULL;
+    const char san_ip_name[] = { 0x01, 0x02, 0x03, 0x04 };
+    const char *san_dns_name = "example.com";
+    const char *san_dn_name = "C=UK,O=Mbed TLS,CN=SubjectAltName test";
+    const char *san_mail_name = "mail@example.com";
+    const char *san_uri_name = "http://pki.example.com";
+    mbedtls_x509_san_list *san_list = NULL;
+
+    if (set_subjectAltNames) {
+        san_mail.node.type = MBEDTLS_X509_SAN_RFC822_NAME;
+        san_mail.node.san.unstructured_name.p = (unsigned char *) san_mail_name;
+        san_mail.node.san.unstructured_name.len = strlen(san_mail_name);
+        san_mail.next = NULL;
+
+        san_dns.node.type = MBEDTLS_X509_SAN_DNS_NAME;
+        san_dns.node.san.unstructured_name.p = (unsigned char *) san_dns_name;
+        san_dns.node.san.unstructured_name.len = strlen(san_dns_name);
+        san_dns.next = &san_mail;
+
+        san_dn.node.type = MBEDTLS_X509_SAN_DIRECTORY_NAME;
+        TEST_ASSERT(mbedtls_x509_string_to_names(&ext_san_dirname,
+                                                 san_dn_name) == 0);
+        san_dn.node.san.directory_name = *ext_san_dirname;
+        san_dn.next = &san_dns;
+
+        san_ip.node.type = MBEDTLS_X509_SAN_IP_ADDRESS;
+        san_ip.node.san.unstructured_name.p = (unsigned char *) san_ip_name;
+        san_ip.node.san.unstructured_name.len = sizeof(san_ip_name);
+        san_ip.next = &san_dn;
+
+        san_uri.node.type = MBEDTLS_X509_SAN_UNIFORM_RESOURCE_IDENTIFIER;
+        san_uri.node.san.unstructured_name.p = (unsigned char *) san_uri_name;
+        san_uri.node.san.unstructured_name.len = strlen(san_uri_name);
+        san_uri.next = &san_ip;
+
+        san_list = &san_uri;
+    }
 
     memset(&rnd_info, 0x2a, sizeof(mbedtls_test_rnd_pseudo_info));
-    mbedtls_mpi_init(&serial);
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi_init(&serial_mpi);
+#endif
 
     mbedtls_pk_init(&subject_key);
     mbedtls_pk_init(&issuer_key);
     mbedtls_pk_init(&issuer_key_alt);
-
     mbedtls_x509write_crt_init(&crt);
-    USE_PSA_INIT();
+    MD_OR_USE_PSA_INIT();
 
     TEST_ASSERT(mbedtls_pk_parse_keyfile(&subject_key, subject_key_file,
-                                         subject_pwd) == 0);
+                                         subject_pwd, mbedtls_test_rnd_std_rand, NULL) == 0);
 
     TEST_ASSERT(mbedtls_pk_parse_keyfile(&issuer_key, issuer_key_file,
-                                         issuer_pwd) == 0);
+                                         issuer_pwd, mbedtls_test_rnd_std_rand, NULL) == 0);
+
+    issuer_key_type = mbedtls_pk_get_type(&issuer_key);
 
 #if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PK_RSA_ALT_SUPPORT)
     /* For RSA PK contexts, create a copy as an alternative RSA context. */
-    if (rsa_alt == 1 && mbedtls_pk_get_type(&issuer_key) == MBEDTLS_PK_RSA) {
+    if (pk_wrap == 1 && issuer_key_type == MBEDTLS_PK_RSA) {
         TEST_ASSERT(mbedtls_pk_setup_rsa_alt(&issuer_key_alt,
                                              mbedtls_pk_rsa(issuer_key),
                                              mbedtls_rsa_decrypt_func,
@@ -307,17 +441,36 @@ void x509_crt_check(char *subject_key_file, char *subject_pwd,
 
         key = &issuer_key_alt;
     }
-#else
-    (void) rsa_alt;
 #endif
 
-    TEST_ASSERT(mbedtls_test_read_mpi(&serial, serial_str) == 0);
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    /* Turn the issuer PK context into an opaque one. */
+    if (pk_wrap == 2) {
+        TEST_EQUAL(mbedtls_pk_get_psa_attributes(&issuer_key, PSA_KEY_USAGE_SIGN_HASH,
+                                                 &key_attr), 0);
+        TEST_EQUAL(mbedtls_pk_import_into_psa(&issuer_key, &key_attr, &key_id), 0);
+        mbedtls_pk_free(&issuer_key);
+        mbedtls_pk_init(&issuer_key);
+        TEST_EQUAL(mbedtls_pk_setup_opaque(&issuer_key, key_id), 0);
+    }
+#endif /* MBEDTLS_USE_PSA_CRYPTO */
+
+    if (pk_wrap == 2) {
+        TEST_ASSERT(mbedtls_pk_get_type(&issuer_key) == MBEDTLS_PK_OPAQUE);
+    }
 
     if (ver != -1) {
         mbedtls_x509write_crt_set_version(&crt, ver);
     }
 
-    TEST_ASSERT(mbedtls_x509write_crt_set_serial(&crt, &serial) == 0);
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
+    TEST_ASSERT(mbedtls_mpi_read_binary(&serial_mpi, serial_arg->x,
+                                        serial_arg->len) == 0);
+    TEST_ASSERT(mbedtls_x509write_crt_set_serial(&crt, &serial_mpi) == 0);
+#else
+    TEST_ASSERT(mbedtls_x509write_crt_set_serial_raw(&crt, serial_arg->x,
+                                                     serial_arg->len) == 0);
+#endif
     TEST_ASSERT(mbedtls_x509write_crt_set_validity(&crt, not_before,
                                                    not_after) == 0);
     mbedtls_x509write_crt_set_md_alg(&crt, md_type);
@@ -341,8 +494,32 @@ void x509_crt_check(char *subject_key_file, char *subject_pwd,
         if (set_cert_type != 0) {
             TEST_ASSERT(mbedtls_x509write_crt_set_ns_cert_type(&crt, cert_type) == 0);
         }
+        if (strcmp(ext_key_usage, "NULL") != 0) {
+            mbedtls_asn1_sequence exts[2];
+            memset(exts, 0, sizeof(exts));
+
+#define SET_OID(x, oid)                \
+    do {                               \
+        x.len = MBEDTLS_OID_SIZE(oid); \
+        x.p   = (unsigned char *) oid;   \
+        x.tag = MBEDTLS_ASN1_OID;      \
+    }                                  \
+    while (0)
+
+            if (strcmp(ext_key_usage, "serverAuth") == 0) {
+                SET_OID(exts[0].buf, MBEDTLS_OID_SERVER_AUTH);
+            } else if (strcmp(ext_key_usage, "codeSigning,timeStamping") == 0) {
+                SET_OID(exts[0].buf, MBEDTLS_OID_CODE_SIGNING);
+                exts[0].next = &exts[1];
+                SET_OID(exts[1].buf, MBEDTLS_OID_TIME_STAMPING);
+            }
+            TEST_ASSERT(mbedtls_x509write_crt_set_ext_key_usage(&crt, exts) == 0);
+        }
     }
 
+    if (set_subjectAltNames) {
+        TEST_ASSERT(mbedtls_x509write_crt_set_subject_alternative_name(&crt, san_list) == 0);
+    }
     ret = mbedtls_x509write_crt_pem(&crt, buf, sizeof(buf),
                                     mbedtls_test_rnd_pseudo_rand, &rnd_info);
     TEST_ASSERT(ret == 0);
@@ -354,12 +531,34 @@ void x509_crt_check(char *subject_key_file, char *subject_pwd,
         TEST_ASSERT(buf[buf_index] == 0);
     }
 
-    if (*cert_check_file != '\0') {
+    if (issuer_key_type != MBEDTLS_PK_RSA) {
+        mbedtls_x509_crt crt_parse, trusted;
+        uint32_t flags;
+
+        mbedtls_x509_crt_init(&crt_parse);
+        mbedtls_x509_crt_init(&trusted);
+
+        TEST_ASSERT(mbedtls_x509_crt_parse_file(&trusted,
+                                                cert_verify_file) == 0);
+        TEST_ASSERT(mbedtls_x509_crt_parse(&crt_parse,
+                                           buf, sizeof(buf)) == 0);
+
+        ret = mbedtls_x509_crt_verify(&crt_parse, &trusted, NULL, NULL, &flags,
+                                      NULL, NULL);
+
+        mbedtls_x509_crt_free(&crt_parse);
+        mbedtls_x509_crt_free(&trusted);
+
+        TEST_EQUAL(flags, 0);
+        TEST_EQUAL(ret, 0);
+    } else if (*cert_check_file != '\0') {
         f = fopen(cert_check_file, "r");
         TEST_ASSERT(f != NULL);
         olen = fread(check_buf, 1, sizeof(check_buf), f);
         fclose(f);
         TEST_ASSERT(olen < sizeof(check_buf));
+
+        TEST_EQUAL(olen, pem_len);
         TEST_ASSERT(olen >= pem_len - 1);
         TEST_ASSERT(memcmp(buf, check_buf, pem_len - 1) == 0);
     }
@@ -414,17 +613,33 @@ void x509_crt_check(char *subject_key_file, char *subject_pwd,
         TEST_ASSERT(p < end);
     }
 
-    ret = mbedtls_x509write_crt_der(&crt, buf, (size_t) (der_len - 1),
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    // When using PSA crypto, RNG isn't controllable, result length isn't
+    // deterministic over multiple runs, removing a single byte isn't enough to
+    // go into the MBEDTLS_ERR_ASN1_BUF_TOO_SMALL error case
+    if (issuer_key_type != MBEDTLS_PK_RSA) {
+        der_len /= 2;
+    } else
+#endif
+    der_len -= 1;
+
+    ret = mbedtls_x509write_crt_der(&crt, buf, (size_t) (der_len),
                                     mbedtls_test_rnd_pseudo_rand, &rnd_info);
     TEST_ASSERT(ret == MBEDTLS_ERR_ASN1_BUF_TOO_SMALL);
 
 exit:
+    mbedtls_asn1_free_named_data_list(&ext_san_dirname);
     mbedtls_x509write_crt_free(&crt);
     mbedtls_pk_free(&issuer_key_alt);
     mbedtls_pk_free(&subject_key);
     mbedtls_pk_free(&issuer_key);
-    mbedtls_mpi_free(&serial);
-    USE_PSA_DONE();
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi_free(&serial_mpi);
+#endif
+#if defined(MBEDTLS_USE_PSA_CRYPTO)
+    psa_destroy_key(key_id);
+#endif
+    MD_OR_USE_PSA_DONE();
 }
 /* END_CASE */
 
@@ -432,58 +647,81 @@ exit:
 void x509_set_serial_check()
 {
     mbedtls_x509write_cert ctx;
-    mbedtls_mpi serial_mpi;
     uint8_t invalid_serial[MBEDTLS_X509_RFC5280_MAX_SERIAL_LEN + 1];
+
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
+    mbedtls_mpi serial_mpi;
+    mbedtls_mpi_init(&serial_mpi);
+#endif
 
     USE_PSA_INIT();
     memset(invalid_serial, 0x01, sizeof(invalid_serial));
 
-    mbedtls_mpi_init(&serial_mpi);
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
     TEST_EQUAL(mbedtls_mpi_read_binary(&serial_mpi, invalid_serial,
                                        sizeof(invalid_serial)), 0);
     TEST_EQUAL(mbedtls_x509write_crt_set_serial(&ctx, &serial_mpi),
                MBEDTLS_ERR_X509_BAD_INPUT_DATA);
+#endif
+
+    TEST_EQUAL(mbedtls_x509write_crt_set_serial_raw(&ctx, invalid_serial,
+                                                    sizeof(invalid_serial)),
+               MBEDTLS_ERR_X509_BAD_INPUT_DATA);
 
 exit:
+#if defined(MBEDTLS_TEST_DEPRECATED) && defined(MBEDTLS_BIGNUM_C)
     mbedtls_mpi_free(&serial_mpi);
+#else
+    ;
+#endif
     USE_PSA_DONE();
 }
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_X509_CREATE_C:MBEDTLS_X509_USE_C */
-void mbedtls_x509_string_to_names(char *name, char *parsed_name, int result
-                                  )
+void mbedtls_x509_string_to_names(char *name, char *parsed_name,
+                                  int result, int may_fail)
 {
     int ret;
     size_t len = 0;
     mbedtls_asn1_named_data *names = NULL;
-    mbedtls_x509_name parsed, *parsed_cur, *parsed_prv;
-    unsigned char buf[1024], out[1024], *c;
+    mbedtls_x509_name parsed;
+    memset(&parsed, 0, sizeof(parsed));
+    mbedtls_x509_name *parsed_cur = NULL;
+    mbedtls_x509_name *parsed_prv = NULL;
+    unsigned char buf[1024] = { 0 };
+    unsigned char out[1024] = { 0 };
+    unsigned char *c = buf + sizeof(buf);
 
     USE_PSA_INIT();
 
-    memset(&parsed, 0, sizeof(parsed));
-    memset(out, 0, sizeof(out));
-    memset(buf, 0, sizeof(buf));
-    c = buf + sizeof(buf);
-
     ret = mbedtls_x509_string_to_names(&names, name);
-    TEST_ASSERT(ret == result);
+    TEST_EQUAL(ret, result);
 
     if (ret != 0) {
         goto exit;
     }
 
     ret = mbedtls_x509_write_names(&c, buf, names);
-    TEST_ASSERT(ret > 0);
+    TEST_LE_S(1, ret);
 
-    TEST_ASSERT(mbedtls_asn1_get_tag(&c, buf + sizeof(buf), &len,
-                                     MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0);
-    TEST_ASSERT(mbedtls_x509_get_name(&c, buf + sizeof(buf), &parsed) == 0);
+    TEST_EQUAL(mbedtls_asn1_get_tag(&c, buf + sizeof(buf), &len,
+                                    MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE), 0);
+    ret = mbedtls_x509_get_name(&c, buf + sizeof(buf), &parsed);
+    if ((may_fail & MAY_FAIL_GET_NAME) && ret < 0) {
+        /* Validation inconsistency between mbedtls_x509_string_to_names() and
+         * mbedtls_x509_get_name(). Accept it for now. */
+        goto exit;
+    }
+    TEST_EQUAL(ret, 0);
 
     ret = mbedtls_x509_dn_gets((char *) out, sizeof(out), &parsed);
-    TEST_ASSERT(ret > 0);
-
+    if ((may_fail & MAY_FAIL_DN_GETS) && ret < 0) {
+        /* Validation inconsistency between mbedtls_x509_string_to_names() and
+         * mbedtls_x509_dn_gets(). Accept it for now. */
+        goto exit;
+    }
+    TEST_LE_S(1, ret);
     TEST_ASSERT(strcmp((char *) out, parsed_name) == 0);
 
 exit:
@@ -510,7 +748,7 @@ void x509_set_extension_length_check()
     unsigned char buf[EXT_KEY_USAGE_TMP_BUF_MAX_LENGTH] = { 0 };
     unsigned char *p = buf + sizeof(buf);
 
-    ret = mbedtls_x509_set_extension(&(ctx.extensions),
+    ret = mbedtls_x509_set_extension(&(ctx.MBEDTLS_PRIVATE(extensions)),
                                      MBEDTLS_OID_EXTENDED_KEY_USAGE,
                                      MBEDTLS_OID_SIZE(MBEDTLS_OID_EXTENDED_KEY_USAGE),
                                      0,

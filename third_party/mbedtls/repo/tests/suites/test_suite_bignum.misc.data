@@ -1,9 +1,3 @@
-MPI - Valid parameters
-mpi_valid_param:
-
-MPI - Invalid parameters
-mpi_invalid_param:
-
 Arguments with no value
 mpi_null:
 
@@ -88,6 +82,9 @@ mpi_read_write_string:16:"":2:"0":4:0:0
 Test mpi_write_string #10 (Negative hex with odd number of digits)
 mpi_read_write_string:16:"-1":16:"":3:0:MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL
 
+Provide NULL buffer with 0 length
+mpi_zero_length_buffer_is_null
+
 Base test mbedtls_mpi_read_binary #1
 mpi_read_binary:"0941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":"0941379D00FED1491FE15DF284DFDE4A142F68AA8D412023195CEE66883E6290FFE703F4EA5963BF212713CEE46B107C09182B5EDCD955ADAC418BF4918E2889AF48E1099D513830CEC85C26AC1E158B52620E33BA8692F893EFBB2F958B4424"
 
@@ -145,29 +142,38 @@ mpi_lsb:"24":2
 Base test mbedtls_mpi_lsb #4
 mpi_lsb:"2000":13
 
-Base test mbedtls_mpi_bitlen #1
+Test mbedtls_mpi_bitlen 764-bit
 mpi_bitlen:"941379d00fed1491fe15df284dfde4a142f68aa8d412023195cee66883e6290ffe703f4ea5963bf212713cee46b107c09182b5edcd955adac418bf4918e2889af48e1099d513830cec85c26ac1e158b52620e33ba8692f893efbb2f958b4424":764
 
-Base test mbedtls_mpi_bitlen #2
+Test mbedtls_mpi_bitlen 0x18
 mpi_bitlen:"18":5
 
-Base test mbedtls_mpi_bitlen #3
+Test mbedtls_mpi_bitlen 0x18 with leading 0 limb(s)
+mpi_bitlen:"00000000000000018":5
+
+Test mbedtls_mpi_bitlen 0x18 << 64
+mpi_bitlen:"180000000000000000":69
+
+Test mbedtls_mpi_bitlen 0x01
 mpi_bitlen:"1":1
 
-Base test mbedtls_mpi_bitlen #4
+Test mbedtls_mpi_bitlen 0x0f
 mpi_bitlen:"f":4
 
-Base test mbedtls_mpi_bitlen #5
+Test mbedtls_mpi_bitlen 0x10
 mpi_bitlen:"10":5
 
-Base test mbedtls_mpi_bitlen #6
+Test mbedtls_mpi_bitlen 0x0a
 mpi_bitlen:"a":4
 
-Base test mbedtls_mpi_bitlen: 0 (null)
+Test mbedtls_mpi_bitlen: 0 (null)
 mpi_bitlen:"":0
 
-Base test mbedtls_mpi_bitlen: 0 (1 limb)
+Test mbedtls_mpi_bitlen: 0 (1 limb)
 mpi_bitlen:"0":0
+
+Test mbedtls_mpi_bitlen: -0x18
+mpi_bitlen:"-18":5
 
 Base test mbedtls_mpi_cmp_int #1
 mpi_cmp_int:693:693:0
@@ -1356,6 +1362,9 @@ mpi_exp_mod:"04":"00":"09":"1":0
 Test mbedtls_mpi_exp_mod: 10 ^ 0 (1 limb) mod 9
 mpi_exp_mod:"0a":"00":"09":"1":0
 
+Test mbedtls_mpi_exp_mod: -3 ^ 3 mod 27
+mpi_exp_mod:"-3":"3":"1b":"1b":0
+
 Test mbedtls_mpi_exp_mod: MAX_SIZE exponent
 mpi_exp_mod_size:2:MBEDTLS_MPI_MAX_SIZE:10:"":0
 
@@ -1384,6 +1393,14 @@ mpi_exp_mod:"-2540be400":"2540be400":"1869f":"1":0
 Test mbedtls_mpi_exp_mod (Negative base) [#2]
 depends_on:MPI_MAX_BITS_LARGER_THAN_792
 mpi_exp_mod:"-9f13012cd92aa72fb86ac8879d2fde4f7fd661aaae43a00971f081cc60ca277059d5c37e89652e2af2585d281d66ef6a9d38a117e9608e9e7574cd142dc55278838a2161dd56db9470d4c1da2d5df15a908ee2eb886aaa890f23be16de59386663a12f1afbb325431a3e835e3fd89b98b96a6f77382f458ef9a37e1f84a03045c8676ab55291a94c2228ea15448ee96b626b998":"40a54d1b9e86789f06d9607fb158672d64867665c73ee9abb545fc7a785634b354c7bae5b962ce8040cf45f2c1f3d3659b2ee5ede17534c8fc2ec85c815e8df1fe7048d12c90ee31b88a68a081f17f0d8ce5f4030521e9400083bcea73a429031d4ca7949c2000d597088e0c39a6014d8bf962b73bb2e8083bd0390a4e00b9b3":"eeaf0ab9adb38dd69c33f80afa8fc5e86072618775ff3c0b9ea2314c9c256576d674df7496ea81d3383b4813d692c6e0e0d5d8e250b98be48e495c1d6089dad15dc7d7b46154d6b6ce8ef4ad69b15d4982559b297bcf1885c529f566660e57ec68edbc3c05726cc02fd4cbf4976eaa9afd5138fe8376435b9fc61d2fc0eb06e3":"21acc7199e1b90f9b4844ffe12c19f00ec548c5d32b21c647d48b6015d8eb9ec9db05b4f3d44db4227a2b5659c1a7cceb9d5fa8fa60376047953ce7397d90aaeb7465e14e820734f84aa52ad0fc66701bcbb991d57715806a11531268e1e83dd48288c72b424a6287e9ce4e5cc4db0dd67614aecc23b0124a5776d36e5c89483":0
+
+Test mbedtls_mpi_exp_mod (N.n=3, RR.n=1 on 32 bit)
+depends_on:MBEDTLS_HAVE_INT32
+mpi_exp_mod_min_RR:"10":"2":"10000000100000001":"100":0
+
+Test mbedtls_mpi_exp_mod (N.n=3, RR.n=1 on 64 bit)
+depends_on:MBEDTLS_HAVE_INT64
+mpi_exp_mod_min_RR:"10":"2":"100000000000000010000000000000001":"100":0
 
 Base test GCD #1
 mpi_gcd:"2b5":"261":"15"
@@ -1784,176 +1801,6 @@ mpi_fill_random:16:15:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
 
 Fill random: MAX_SIZE bytes, RNG failure after MAX_SIZE-1 bytes
 mpi_fill_random:MBEDTLS_MPI_MAX_SIZE:MBEDTLS_MPI_MAX_SIZE-1:0:MBEDTLS_ERR_ENTROPY_SOURCE_FAILED
-
-MPI random in range: 1..2
-mpi_random_many:1:"02":1000
-
-MPI random in range: 1..3
-mpi_random_many:1:"03":1000
-
-MPI random in range: 1..4
-mpi_random_many:1:"04":1000
-
-MPI random in range: 1..5
-mpi_random_many:1:"05":1000
-
-MPI random in range: 1..6
-mpi_random_many:1:"06":1000
-
-MPI random in range: 1..7
-mpi_random_many:1:"07":1000
-
-MPI random in range: 1..8
-mpi_random_many:1:"08":1000
-
-MPI random in range: 1..9
-mpi_random_many:1:"09":1000
-
-MPI random in range: 1..10
-mpi_random_many:1:"0a":1000
-
-MPI random in range: 1..11
-mpi_random_many:1:"0b":1000
-
-MPI random in range: 1..12
-mpi_random_many:1:"0c":1000
-
-MPI random in range: 1..255
-mpi_random_many:1:"ff":100
-
-MPI random in range: 1..256
-mpi_random_many:1:"0100":100
-
-MPI random in range: 1..257
-mpi_random_many:1:"0101":100
-
-MPI random in range: 1..272
-mpi_random_many:1:"0110":100
-
-MPI random in range: 1..2^64-1
-mpi_random_many:1:"ffffffffffffffff":100
-
-MPI random in range: 1..2^64
-mpi_random_many:1:"010000000000000000":100
-
-MPI random in range: 1..2^64+1
-mpi_random_many:1:"010000000000000001":100
-
-MPI random in range: 1..2^64+2^63
-mpi_random_many:1:"018000000000000000":100
-
-MPI random in range: 1..2^65-1
-mpi_random_many:1:"01ffffffffffffffff":100
-
-MPI random in range: 1..2^65
-mpi_random_many:1:"020000000000000000":100
-
-MPI random in range: 1..2^65+1
-mpi_random_many:1:"020000000000000001":100
-
-MPI random in range: 1..2^65+2^64
-mpi_random_many:1:"030000000000000000":100
-
-MPI random in range: 1..2^66+2^65
-mpi_random_many:1:"060000000000000000":100
-
-MPI random in range: 1..2^71-1
-mpi_random_many:1:"7fffffffffffffffff":100
-
-MPI random in range: 1..2^71
-mpi_random_many:1:"800000000000000000":100
-
-MPI random in range: 1..2^71+1
-mpi_random_many:1:"800000000000000001":100
-
-MPI random in range: 1..2^71+2^70
-mpi_random_many:1:"c00000000000000000":100
-
-MPI random in range: 1..2^72-1
-mpi_random_many:1:"ffffffffffffffffff":100
-
-MPI random in range: 1..2^72
-mpi_random_many:1:"01000000000000000000":100
-
-MPI random in range: 1..2^72+1
-mpi_random_many:1:"01000000000000000001":100
-
-MPI random in range: 1..2^72+2^71
-mpi_random_many:1:"01800000000000000000":100
-
-MPI random in range: 0..1
-mpi_random_many:0:"04":10000
-
-MPI random in range: 0..4
-mpi_random_many:0:"04":10000
-
-MPI random in range: 2..4
-mpi_random_many:2:"04":10000
-
-MPI random in range: 3..4
-mpi_random_many:3:"04":10000
-
-MPI random in range: smaller result
-mpi_random_sizes:1:"aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb":1:0
-
-MPI random in range: same size result (32-bit limbs)
-mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":2:0
-
-MPI random in range: same size result (64-bit limbs)
-mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":1:0
-
-MPI random in range: larger result
-mpi_random_sizes:1:"aaaaaaaaaaaaaaaa":3:0
-
-## The "0 limb in upper bound" tests rely on the fact that
-## mbedtls_mpi_read_binary() bases the size of the MPI on the size of
-## the input, without first checking for leading zeros. If this was
-## not the case, the tests would still pass, but would not exercise
-## the advertised behavior.
-MPI random in range: leading 0 limb in upper bound #0
-mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":0:0
-
-MPI random in range: leading 0 limb in upper bound #1
-mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":1:0
-
-MPI random in range: leading 0 limb in upper bound #2
-mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":2:0
-
-MPI random in range: leading 0 limb in upper bound #3
-mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":3:0
-
-MPI random in range: leading 0 limb in upper bound #4
-mpi_random_sizes:1:"00aaaaaaaaaaaaaaaa":4:0
-
-MPI random in range: previously small >0
-mpi_random_sizes:1:"1234567890":4:1
-
-MPI random in range: previously small <0
-mpi_random_sizes:1:"1234567890":4:-1
-
-MPI random in range: previously large >0
-mpi_random_sizes:1:"1234":4:65
-
-MPI random in range: previously large <0
-mpi_random_sizes:1:"1234":4:-65
-
-MPI random bad arguments: min < 0
-mpi_random_fail:-1:"04":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
-
-MPI random bad arguments: min = N = 0
-mpi_random_fail:0:"00":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
-
-MPI random bad arguments: min = N = 1
-mpi_random_fail:1:"01":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
-
-MPI random bad arguments: min > N = 0
-mpi_random_fail:1:"00":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
-
-MPI random bad arguments: min > N = 1
-mpi_random_fail:2:"01":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
-
-MPI random bad arguments: min > N = 1, 0 limb in upper bound
-mpi_random_fail:2:"000000000000000001":MBEDTLS_ERR_MPI_BAD_INPUT_DATA
 
 Most negative mbedtls_mpi_sint
 most_negative_mpi_sint:

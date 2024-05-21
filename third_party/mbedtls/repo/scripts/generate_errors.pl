@@ -33,18 +33,18 @@ if( @ARGV ) {
 
 my $error_format_file = $data_dir.'/error.fmt';
 
-my @low_level_modules = qw( AES ARC4 ARIA ASN1 BASE64 BIGNUM BLOWFISH
+my @low_level_modules = qw( AES ARIA ASN1 BASE64 BIGNUM
                             CAMELLIA CCM CHACHA20 CHACHAPOLY CMAC CTR_DRBG DES
-                            ENTROPY ERROR GCM HKDF HMAC_DRBG MD2 MD4 MD5
+                            ENTROPY ERROR GCM HKDF HMAC_DRBG LMS MD5
                             NET OID PADLOCK PBKDF2 PLATFORM POLY1305 RIPEMD160
-                            SHA1 SHA256 SHA512 THREADING XTEA );
+                            SHA1 SHA256 SHA512 SHA3 THREADING );
 my @high_level_modules = qw( CIPHER DHM ECP MD
                              PEM PK PKCS12 PKCS5
-                             RSA SSL X509 );
+                             RSA SSL X509 PKCS7 );
 
 undef $/;
 
-open(FORMAT_FILE, "$error_format_file") or die "Opening error format file '$error_format_file': $!";
+open(FORMAT_FILE, '<:crlf', "$error_format_file") or die "Opening error format file '$error_format_file': $!";
 my $error_format = <FORMAT_FILE>;
 close(FORMAT_FILE);
 
@@ -124,6 +124,7 @@ foreach my $match (@matches)
     $define_name = "ASN1_PARSE" if ($define_name eq "ASN1");
     $define_name = "SSL_TLS" if ($define_name eq "SSL");
     $define_name = "PEM_PARSE,PEM_WRITE" if ($define_name eq "PEM");
+    $define_name = "PKCS7" if ($define_name eq "PKCS7");
 
     my $include_name = $module_name;
     $include_name =~ tr/A-Z/a-z/;

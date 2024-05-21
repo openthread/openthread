@@ -5,19 +5,18 @@
  *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE)
-#include "mbedtls/config.h"
-#else
-#include MBEDTLS_CONFIG_FILE
-#endif
+#include "mbedtls/build_info.h"
 
 #include "mbedtls/platform.h"
 
 #if defined(MBEDTLS_BIGNUM_C) && \
-    defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_FS_IO)
+    defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_FS_IO) && \
+    defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/error.h"
 #include "mbedtls/rsa.h"
 #include "mbedtls/pk.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
 
 #include <string.h>
 #endif
@@ -42,15 +41,82 @@
     "\n"
 
 #if !defined(MBEDTLS_BIGNUM_C) ||                                  \
-    !defined(MBEDTLS_PK_PARSE_C) || !defined(MBEDTLS_FS_IO)
+    !defined(MBEDTLS_PK_PARSE_C) || !defined(MBEDTLS_FS_IO) || \
+    !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_CTR_DRBG_C)
 int main(void)
 {
     mbedtls_printf("MBEDTLS_BIGNUM_C and/or "
-                   "MBEDTLS_PK_PARSE_C and/or MBEDTLS_FS_IO not defined.\n");
+                   "MBEDTLS_PK_PARSE_C and/or MBEDTLS_FS_IO and/or "
+                   "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C not defined.\n");
     mbedtls_exit(0);
 }
 #else
 
+
+#if defined(MBEDTLS_ECP_C)
+static int show_ecp_key(const mbedtls_ecp_keypair *ecp, int has_private)
+{
+    int ret = 0;
+
+    const mbedtls_ecp_curve_info *curve_info =
+        mbedtls_ecp_curve_info_from_grp_id(
+            mbedtls_ecp_keypair_get_group_id(ecp));
+    mbedtls_printf("curve: %s\n", curve_info->name);
+
+    mbedtls_ecp_group grp;
+    mbedtls_ecp_group_init(&grp);
+    mbedtls_mpi D;
+    mbedtls_mpi_init(&D);
+    mbedtls_ecp_point pt;
+    mbedtls_ecp_point_init(&pt);
+    mbedtls_mpi X, Y;
+    mbedtls_mpi_init(&X); mbedtls_mpi_init(&Y);
+
+    MBEDTLS_MPI_CHK(mbedtls_ecp_export(ecp, &grp,
+                                       (has_private ? &D : NULL),
+                                       &pt));
+
+    unsigned char point_bin[MBEDTLS_ECP_MAX_PT_LEN];
+    size_t len = 0;
+    MBEDTLS_MPI_CHK(mbedtls_ecp_point_write_binary(
+                        &grp, &pt, MBEDTLS_ECP_PF_UNCOMPRESSED,
+                        &len, point_bin, sizeof(point_bin)));
+    switch (mbedtls_ecp_get_type(&grp)) {
+        case MBEDTLS_ECP_TYPE_SHORT_WEIERSTRASS:
+            if ((len & 1) == 0 || point_bin[0] != 0x04) {
+                /* Point in an unxepected format. This shouldn't happen. */
+                ret = -1;
+                goto cleanup;
+            }
+            MBEDTLS_MPI_CHK(
+                mbedtls_mpi_read_binary(&X, point_bin + 1, len / 2));
+            MBEDTLS_MPI_CHK(
+                mbedtls_mpi_read_binary(&Y, point_bin + 1 + len / 2, len / 2));
+            mbedtls_mpi_write_file("X_Q:   ", &X, 16, NULL);
+            mbedtls_mpi_write_file("Y_Q:   ", &Y, 16, NULL);
+            break;
+        case MBEDTLS_ECP_TYPE_MONTGOMERY:
+            MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&X, point_bin, len));
+            mbedtls_mpi_write_file("X_Q:   ", &X, 16, NULL);
+            break;
+        default:
+            mbedtls_printf(
+                "This program does not yet support listing coordinates for this curve type.\n");
+            break;
+    }
+
+    if (has_private) {
+        mbedtls_mpi_write_file("D:     ", &D, 16, NULL);
+    }
+
+cleanup:
+    mbedtls_ecp_group_free(&grp);
+    mbedtls_mpi_free(&D);
+    mbedtls_ecp_point_free(&pt);
+    mbedtls_mpi_free(&X); mbedtls_mpi_free(&Y);
+    return ret;
+}
+#endif
 
 /*
  * global options
@@ -70,12 +136,19 @@ int main(int argc, char *argv[])
     int i;
     char *p, *q;
 
+    const char *pers = "pkey/key_app";
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+
     mbedtls_pk_context pk;
     mbedtls_mpi N, P, Q, D, E, DP, DQ, QP;
 
     /*
      * Set to sane values
      */
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+
     mbedtls_pk_init(&pk);
     memset(buf, 0, sizeof(buf));
 
@@ -166,7 +239,16 @@ usage:
         mbedtls_printf("\n  . Loading the private key ...");
         fflush(stdout);
 
-        ret = mbedtls_pk_parse_keyfile(&pk, opt.filename, opt.password);
+        if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                         (const unsigned char *) pers,
+                                         strlen(pers))) != 0) {
+            mbedtls_printf(" failed\n  !  mbedtls_ctr_drbg_seed returned -0x%04x\n",
+                           (unsigned int) -ret);
+            goto cleanup;
+        }
+
+        ret = mbedtls_pk_parse_keyfile(&pk, opt.filename, opt.password,
+                                       mbedtls_ctr_drbg_random, &ctr_drbg);
 
         if (ret != 0) {
             mbedtls_printf(" failed\n  !  mbedtls_pk_parse_keyfile returned -0x%04x\n",
@@ -202,11 +284,10 @@ usage:
 #endif
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY) {
-            mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(pk);
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(X): ", &ecp->Q.X, 16, NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Y): ", &ecp->Q.Y, 16, NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Z): ", &ecp->Q.Z, 16, NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("D   : ", &ecp->d, 16, NULL));
+            if (show_ecp_key(mbedtls_pk_ec(pk), 1) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto cleanup;
+            }
         } else
 #endif
         {
@@ -246,10 +327,10 @@ usage:
 #endif
 #if defined(MBEDTLS_ECP_C)
         if (mbedtls_pk_get_type(&pk) == MBEDTLS_PK_ECKEY) {
-            mbedtls_ecp_keypair *ecp = mbedtls_pk_ec(pk);
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(X): ", &ecp->Q.X, 16, NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Y): ", &ecp->Q.Y, 16, NULL));
-            MBEDTLS_MPI_CHK(mbedtls_mpi_write_file("Q(Z): ", &ecp->Q.Z, 16, NULL));
+            if (show_ecp_key(mbedtls_pk_ec(pk), 0) != 0) {
+                mbedtls_printf(" failed\n  ! could not export ECC parameters\n\n");
+                goto cleanup;
+            }
         } else
 #endif
         {
@@ -271,6 +352,8 @@ cleanup:
     }
 #endif
 
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
     mbedtls_pk_free(&pk);
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
     mbedtls_psa_crypto_free();
@@ -279,11 +362,7 @@ cleanup:
     mbedtls_mpi_free(&D); mbedtls_mpi_free(&E); mbedtls_mpi_free(&DP);
     mbedtls_mpi_free(&DQ); mbedtls_mpi_free(&QP);
 
-#if defined(_WIN32)
-    mbedtls_printf("  + Press Enter to exit this program.\n");
-    fflush(stdout); getchar();
-#endif
-
     mbedtls_exit(exit_code);
 }
-#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_PK_PARSE_C && MBEDTLS_FS_IO */
+#endif /* MBEDTLS_BIGNUM_C && MBEDTLS_PK_PARSE_C && MBEDTLS_FS_IO &&
+          MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C */

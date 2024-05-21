@@ -18,13 +18,20 @@
 
 /* END_HEADER */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_C:!MBEDTLS_TEST_NULL_ENTROPY:!MBEDTLS_PSA_INJECT_ENTROPY:MBEDTLS_CTR_DRBG_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_C:!MBEDTLS_PSA_INJECT_ENTROPY:MBEDTLS_CTR_DRBG_C */
 void random_twice_with_ctr_drbg()
 {
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context drbg;
     unsigned char output1[OUTPUT_SIZE];
     unsigned char output2[OUTPUT_SIZE];
+
+#if defined(MBEDTLS_AES_C)
+    MD_PSA_INIT();
+#else
+    USE_PSA_INIT();
+#endif
+
 
     /* First round */
     mbedtls_entropy_init(&entropy);
@@ -54,10 +61,15 @@ void random_twice_with_ctr_drbg()
 exit:
     mbedtls_ctr_drbg_free(&drbg);
     mbedtls_entropy_free(&entropy);
+#if defined(MBEDTLS_AES_C)
+    MD_PSA_DONE();
+#else
+    USE_PSA_DONE();
+#endif
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_C:!MBEDTLS_TEST_NULL_ENTROPY:!MBEDTLS_PSA_INJECT_ENTROPY:MBEDTLS_HMAC_DRBG_C */
+/* BEGIN_CASE depends_on:MBEDTLS_ENTROPY_C:!MBEDTLS_PSA_INJECT_ENTROPY:MBEDTLS_HMAC_DRBG_C */
 void random_twice_with_hmac_drbg(int md_type)
 {
     mbedtls_entropy_context entropy;
@@ -65,6 +77,8 @@ void random_twice_with_hmac_drbg(int md_type)
     unsigned char output1[OUTPUT_SIZE];
     unsigned char output2[OUTPUT_SIZE];
     const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(md_type);
+
+    MD_PSA_INIT();
 
     /* First round */
     mbedtls_entropy_init(&entropy);
@@ -94,10 +108,11 @@ void random_twice_with_hmac_drbg(int md_type)
 exit:
     mbedtls_hmac_drbg_free(&drbg);
     mbedtls_entropy_free(&entropy);
+    MD_PSA_DONE();
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_TEST_NULL_ENTROPY:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void random_twice_with_psa_from_classic()
 {
     unsigned char output1[OUTPUT_SIZE];
@@ -123,7 +138,7 @@ exit:
 }
 /* END_CASE */
 
-/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_TEST_NULL_ENTROPY:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+/* BEGIN_CASE depends_on:MBEDTLS_PSA_CRYPTO_C:!MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
 void random_twice_with_psa_from_psa()
 {
     unsigned char output1[OUTPUT_SIZE];
