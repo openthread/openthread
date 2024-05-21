@@ -1108,8 +1108,10 @@ struct InfraRouter
     InfraRouter(const Ip6::Address &aAddress,
                 bool                aManagedAddressConfigFlag,
                 bool                aOtherConfigFlag,
-                bool                aStubRouterFlag)
+                bool                aStubRouterFlag,
+                bool                aIsLocalDevice = false)
         : mAddress(aAddress)
+        , mIsLocalDevice(aIsLocalDevice)
     {
         mFlags.Clear();
         mFlags.mManagedAddressConfigFlag = aManagedAddressConfigFlag;
@@ -1119,6 +1121,7 @@ struct InfraRouter
 
     Ip6::Address mAddress;
     RaFlags      mFlags;
+    bool         mIsLocalDevice;
 };
 
 template <uint16_t kNumRouters> void VerifyDiscoveredRouters(const InfraRouter (&aRouters)[kNumRouters])
@@ -1140,8 +1143,9 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
     {
         bool didFind = false;
 
-        Log("   address:%s, M:%u, O:%u, StubRouter:%u", AsCoreType(&entry.mAddress).ToString().AsCString(),
-            entry.mManagedAddressConfigFlag, entry.mOtherConfigFlag, entry.mStubRouterFlag);
+        Log("   address:%s, M:%u, O:%u, StubRouter:%u%s", AsCoreType(&entry.mAddress).ToString().AsCString(),
+            entry.mManagedAddressConfigFlag, entry.mOtherConfigFlag, entry.mStubRouterFlag,
+            entry.mIsLocalDevice ? " (this BR)" : "");
 
         for (uint16_t index = 0; index < aNumRouters; index++)
         {
@@ -1150,6 +1154,7 @@ void VerifyDiscoveredRouters(const InfraRouter *aRouters, uint16_t aNumRouters)
                 VerifyOrQuit(entry.mManagedAddressConfigFlag == aRouters[index].mFlags.mManagedAddressConfigFlag);
                 VerifyOrQuit(entry.mOtherConfigFlag == aRouters[index].mFlags.mOtherConfigFlag);
                 VerifyOrQuit(entry.mStubRouterFlag == aRouters[index].mFlags.mStubRouterFlag);
+                VerifyOrQuit(entry.mIsLocalDevice == aRouters[index].mIsLocalDevice);
                 didFind = true;
             }
         }
@@ -3015,7 +3020,8 @@ void TestLearnRaHeader(void)
     SendRouterAdvert(sInfraIfAddress, DefaultRoute(1000, NetworkData::kRoutePreferenceLow));
 
     AdvanceTime(1);
-    VerifyDiscoveredRouters({InfraRouter(sInfraIfAddress, /* M */ false, /* O */ false, /* StubRouter */ false)});
+    VerifyDiscoveredRouters(
+        {InfraRouter(sInfraIfAddress, /* M */ false, /* O */ false, /* StubRouter */ false, /* IsLocalDevice */ true)});
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // RoutingManager should learn the header from the

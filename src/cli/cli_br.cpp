@@ -557,16 +557,17 @@ void Br::OutputRouterInfo(const otBorderRoutingRouterEntry &aEntry, RouterOutput
     OutputFormat(" (M:%u O:%u Stub:%u)", aEntry.mManagedAddressConfigFlag, aEntry.mOtherConfigFlag,
                  aEntry.mStubRouterFlag);
 
-    switch (aMode)
+    if (aMode == kLongVersion)
     {
-    case kShortVersion:
-        OutputNewLine();
-        break;
+        OutputFormat(" ms-since-rx:%lu", ToUlong(aEntry.mMsecSinceLastUpdate));
 
-    case kLongVersion:
-        OutputLine(" ms-since-rx:%lu", ToUlong(aEntry.mMsecSinceLastUpdate));
-        break;
+        if (aEntry.mIsLocalDevice)
+        {
+            OutputFormat(" (this BR)");
+        }
     }
+
+    OutputNewLine();
 }
 
 template <> otError Br::Process<Cmd("raoptions")>(Arg aArgs[])
