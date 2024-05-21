@@ -41,6 +41,7 @@
 #include "common/code_utils.hpp"
 #include "common/new.hpp"
 #include "posix/platform/radio.hpp"
+#include "posix/platform/spinel_driver_getter.hpp"
 #include "posix/platform/spinel_manager.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -89,7 +90,7 @@ void Radio::Init(const char *aUrl)
     skipCompatibilityCheck = mRadioUrl.HasParam("skip-rcp-compatibility-check");
 
     mRadioSpinel.SetCallbacks(callbacks);
-    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &SpinelManager::GetSpinelDriver());
+    mRadioSpinel.Init(skipCompatibilityCheck, resetRadio, &GetSpinelDriver());
 
     ProcessRadioUrl(mRadioUrl);
 }
