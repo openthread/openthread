@@ -98,7 +98,7 @@ Error DatasetManager::Restore(void)
 
     if (IsActiveDataset())
     {
-        IgnoreError(dataset.ApplyConfiguration(GetInstance()));
+        IgnoreError(ApplyConfiguration(dataset));
     }
 
     SignalDatasetChange();
@@ -172,7 +172,71 @@ Error DatasetManager::ApplyConfiguration(void) const
     Dataset dataset;
 
     SuccessOrExit(error = Read(dataset));
-    SuccessOrExit(error = dataset.ApplyConfiguration(GetInstance()));
+    error = ApplyConfiguration(dataset);
+
+exit:
+    return error;
+}
+
+Error DatasetManager::ApplyConfiguration(const Dataset &aDataset) const
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = aDataset.ValidateTlvs());
+
+    for (const Tlv *cur = aDataset.GetTlvsStart(); cur < aDataset.GetTlvsEnd(); cur = cur->GetNext())
+    {
+        switch (cur->GetType())
+        {
+        case Tlv::kChannel:
+        {
+            uint8_t channel = static_cast<uint8_t>(cur->ReadValueAs<ChannelTlv>().GetChannel());
+
+            error = Get<Mac::Mac>().SetPanChannel(channel);
+
+            if (error != kErrorNone)
+            {
+                LogWarn("ApplyConfiguration() Failed to set channel to %d (%s)", channel, ErrorToString(error));
+                ExitNow();
+            }
+
+            break;
+        }
+
+        case Tlv::kPanId:
+            Get<Mac::Mac>().SetPanId(cur->ReadValueAs<PanIdTlv>());
+            break;
+
+        case Tlv::kExtendedPanId:
+            Get<ExtendedPanIdManager>().SetExtPanId(cur->ReadValueAs<ExtendedPanIdTlv>());
+            break;
+
+        case Tlv::kNetworkName:
+            IgnoreError(Get<NetworkNameManager>().SetNetworkName(As<NetworkNameTlv>(cur)->GetNetworkName()));
+            break;
+
+        case Tlv::kNetworkKey:
+            Get<KeyManager>().SetNetworkKey(cur->ReadValueAs<NetworkKeyTlv>());
+            break;
+
+#if OPENTHREAD_FTD
+        case Tlv::kPskc:
+            Get<KeyManager>().SetPskc(cur->ReadValueAs<PskcTlv>());
+            break;
+#endif
+
+        case Tlv::kMeshLocalPrefix:
+            Get<Mle::MleRouter>().SetMeshLocalPrefix(cur->ReadValueAs<MeshLocalPrefixTlv>());
+            break;
+
+        case Tlv::kSecurityPolicy:
+            Get<KeyManager>().SetSecurityPolicy(As<SecurityPolicyTlv>(cur)->GetSecurityPolicy());
+            break;
+
+        default:
+            break;
+        }
+    }
 
 exit:
     return error;
@@ -237,7 +301,7 @@ Error DatasetManager::Save(const Dataset &aDataset, bool aAllowOlderTimestamp)
 
         if (IsActiveDataset())
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance()));
+            SuccessOrExit(error = ApplyConfiguration(aDataset));
         }
     }
 

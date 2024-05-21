@@ -300,6 +300,7 @@ private:
     bool  IsActiveDataset(void) const { return (mType == Dataset::kActive); }
     bool  IsPendingDataset(void) const { return (mType == Dataset::kPending); }
     void  Clear(void);
+    Error ApplyConfiguration(const Dataset &aDataset) const;
     void  HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const;
     void  HandleTimer(void);
     Error Save(const Dataset &aDataset, bool aAllowOlderTimestamp);
